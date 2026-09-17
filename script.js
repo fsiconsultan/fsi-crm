@@ -1,832 +1,318 @@
-// ======================================================
-// FSI CRM - SCRIPT.JS
-// ======================================================
+// ================================
+// CRM FSI - SUPABASE CONFIG
+// ================================
 
+const SUPABASE_URL = "https://yoyszukutqwoxxdolzcg.supabase.co";
 
-// ======================================================
-// SUPABASE CONFIG
-// ======================================================
+// PASTE PUBLISHABLE KEY SUPABASE KAMU DI SINI
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_QcPULwc5-Axry0HRzfmq1A_CeXgiAHL";
 
-const SUPABASE_URL =
-  "https://yoyszukutqwoxxdolzcg.supabase.co";
-
-const SUPABASE_PUBLISHABLE_KEY =
-  "sb_publishable_QcPULwc5-Axry0HRzfmq1A_CeXgiAHL";
-
-const { createClient } = window.supabase;
-
-const supabaseClient = createClient(
+const supabaseClient = window.supabase.createClient(
   SUPABASE_URL,
   SUPABASE_PUBLISHABLE_KEY
 );
 
 
-// ======================================================
+// ================================
 // GLOBAL VARIABLES
-// ======================================================
+// ================================
 
 let currentUser = null;
 let currentProfile = null;
+let leadsData = [];
+let salesUsersData = [];
 
-let leads = [];
-let salesUsers = [];
+
+// ================================
+// START APP
+// ================================
+
+document.addEventListener("DOMContentLoaded", async () => {
+  console.log("CRM FSI started");
+
+  setupModalEvents();
+  await checkSession();
+});
 
 
-// ======================================================
-// DOM READY
-// ======================================================
+// ================================
+// AUTH SESSION
+// ================================
 
-document.addEventListener(
-  "DOMContentLoaded",
-  async () => {
+async function checkSession() {
+  try {
+    const {
+      data: { session },
+      error
+    } = await supabaseClient.auth.getSession();
 
-    const loginForm =
-      document.getElementById("loginForm");
-
-    if (loginForm) {
-
-      loginForm.addEventListener(
-        "submit",
-        (event) => {
-
-          event.preventDefault();
-
-          login();
-
-        }
-      );
-
+    if (error) {
+      console.error(error);
+      showLogin();
+      return;
     }
 
-    await checkSession();
+    if (!session) {
+      showLogin();
+      return;
+    }
 
+    currentUser = session.user;
+
+    await loadProfile();
+
+  } catch (error) {
+    console.error("checkSession error:", error);
+    showLogin();
   }
-);
+}
 
 
-// ======================================================
+// ================================
 // LOGIN
-// ======================================================
+// ================================
 
 async function login() {
+  const username = document.getElementById("loginUsername").value.trim();
+  const password = document.getElementById("loginPassword").value;
 
-  const usernameInput =
-    document.getElementById(
-      "loginUsername"
-    );
-
-  const passwordInput =
-    document.getElementById(
-      "loginPassword"
-    );
-
-  const username =
-    usernameInput
-      ? usernameInput.value.trim()
-      : "";
-
-  const password =
-    passwordInput
-      ? passwordInput.value
-      : "";
+  const message = document.getElementById("loginMessage");
 
   if (!username || !password) {
-
-    alert(
-      "Username dan password wajib diisi."
-    );
-
+    message.textContent = "Username dan password wajib diisi.";
     return;
-
   }
 
-
-  const loginButton =
-    document.querySelector(
-      "#loginPage button"
-    );
-
+  message.textContent = "Logging in...";
 
   try {
 
-    if (loginButton) {
-
-      loginButton.disabled = true;
-
-      loginButton.textContent =
-        "LOGGING IN...";
-
-    }
-
-
-    // --------------------------------------------------
-    // CARI EMAIL BERDASARKAN USERNAME
-    // --------------------------------------------------
-
+    // Cari email berdasarkan username
     const {
       data: email,
       error: emailError
-    } =
-      await supabaseClient.rpc(
-        "get_login_email",
-        {
-          p_username: username
-        }
-      );
-
+    } = await supabaseClient.rpc(
+      "get_login_email",
+      {
+        p_username: username
+      }
+    );
 
     if (emailError) {
-
-      console.error(
-        "Username lookup error:",
-        emailError
-      );
-
-      alert(
-        "Gagal mencari username.\n\n" +
-        emailError.message
-      );
-
+      console.error(emailError);
+      message.textContent = emailError.message;
       return;
-
     }
-
 
     if (!email) {
-
-      alert(
-        "Username tidak ditemukan."
-      );
-
+      message.textContent = "Username tidak ditemukan atau tidak aktif.";
       return;
-
     }
 
-
-    // --------------------------------------------------
-    // LOGIN SUPABASE AUTH
-    // --------------------------------------------------
-
+    // Login menggunakan Supabase Auth
     const {
       data,
       error
-    } =
-      await supabaseClient.auth.signInWithPassword(
-        {
-          email: email,
-          password: password
-        }
-      );
-
+    } = await supabaseClient.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
 
     if (error) {
-
-      console.error(
-        "Auth login error:",
-        error
-      );
-
-      alert(
-        "Username atau password salah."
-      );
-
+      console.error(error);
+      message.textContent = error.message;
       return;
-
     }
 
+    currentUser = data.user;
 
-    currentUser =
-      data.user;
+    await loadProfile();
 
-
-    // --------------------------------------------------
-    // LOAD PROFILE
-    // --------------------------------------------------
-
-    const profileLoaded =
-      await loadProfile();
-
-
-    if (!profileLoaded) {
-
-      await supabaseClient.auth.signOut();
-
-      alert(
-        "Profile CRM tidak ditemukan."
-      );
-
-      return;
-
-    }
-
-
-    // --------------------------------------------------
-    // CHECK STATUS
-    // --------------------------------------------------
-
-    if (
-      currentProfile.status !==
-      "Active"
-    ) {
-
-      await supabaseClient.auth.signOut();
-
-      alert(
-        "Akun kamu sedang tidak aktif."
-      );
-
-      return;
-
-    }
-
-
-    // --------------------------------------------------
-    // SHOW APPLICATION
-    // --------------------------------------------------
-
-    showApp();
-
-
-    // --------------------------------------------------
-    // LOAD DATA
-    // --------------------------------------------------
-
-    await loadLeads();
-
-
-    if (
-      currentProfile.role ===
-      "Admin"
-    ) {
-
-      await loadSalesUsers();
-
-    }
-
-
-    showDashboard();
-
+  } catch (error) {
+    console.error("login error:", error);
+    message.textContent = "Terjadi kesalahan saat login.";
   }
-
-  catch (error) {
-
-    console.error(
-      "Login error:",
-      error
-    );
-
-    alert(
-      error.message ||
-      "Login gagal."
-    );
-
-  }
-
-  finally {
-
-    if (loginButton) {
-
-      loginButton.disabled = false;
-
-      loginButton.textContent =
-        "LOGIN";
-
-    }
-
-  }
-
 }
 
 
-// ======================================================
-// LOGOUT
-// ======================================================
-
-async function logout() {
-
-  try {
-
-    await supabaseClient.auth.signOut();
-
-  }
-
-  catch (error) {
-
-    console.error(
-      "Logout error:",
-      error
-    );
-
-  }
-
-
-  currentUser = null;
-  currentProfile = null;
-
-  leads = [];
-  salesUsers = [];
-
-
-  showLogin();
-
-}
-
-
-// ======================================================
-// CHECK SESSION
-// ======================================================
-
-async function checkSession() {
-
-  try {
-
-    const {
-      data: {
-        session
-      }
-    } =
-      await supabaseClient.auth.getSession();
-
-
-    if (!session) {
-
-      showLogin();
-
-      return;
-
-    }
-
-
-    currentUser =
-      session.user;
-
-
-    const profileLoaded =
-      await loadProfile();
-
-
-    if (!profileLoaded) {
-
-      await supabaseClient.auth.signOut();
-
-      showLogin();
-
-      return;
-
-    }
-
-
-    if (
-      currentProfile.status !==
-      "Active"
-    ) {
-
-      await supabaseClient.auth.signOut();
-
-      showLogin();
-
-      alert(
-        "Akun kamu sedang tidak aktif."
-      );
-
-      return;
-
-    }
-
-
-    showApp();
-
-
-    await loadLeads();
-
-
-    if (
-      currentProfile.role ===
-      "Admin"
-    ) {
-
-      await loadSalesUsers();
-
-    }
-
-
-    showDashboard();
-
-  }
-
-  catch (error) {
-
-    console.error(
-      "Session error:",
-      error
-    );
-
-    showLogin();
-
-  }
-
-}
-
-
-// ======================================================
-// LOAD PROFILE
-// ======================================================
+// ================================
+// LOAD USER PROFILE
+// ================================
 
 async function loadProfile() {
 
   if (!currentUser) {
-
-    currentProfile = null;
-
-    return false;
-
-  }
-
-
-  const {
-    data,
-    error
-  } =
-    await supabaseClient
-      .from("sales_users")
-      .select("*")
-      .eq(
-        "auth_user-id",
-        currentUser.id
-      )
-      .single();
-
-
-  if (error) {
-
-    console.error(
-      "Profile error:",
-      error
-    );
-
-    currentProfile = null;
-
-    return false;
-
-  }
-
-
-  currentProfile =
-    data;
-
-
-  return true;
-
-}
-
-
-// ======================================================
-// SHOW LOGIN
-// ======================================================
-
-function showLogin() {
-
-  const loginPage =
-    document.getElementById(
-      "loginPage"
-    );
-
-  const app =
-    document.getElementById(
-      "app"
-    );
-
-
-  if (loginPage) {
-
-    loginPage.style.display =
-      "flex";
-
-  }
-
-
-  if (app) {
-
-    app.style.display =
-      "none";
-
-  }
-
-
-  const password =
-    document.getElementById(
-      "loginPassword"
-    );
-
-
-  if (password) {
-
-    password.value = "";
-
-  }
-
-}
-
-
-// ======================================================
-// SHOW APP
-// ======================================================
-
-function showApp() {
-
-  const loginPage =
-    document.getElementById(
-      "loginPage"
-    );
-
-  const app =
-    document.getElementById(
-      "app"
-    );
-
-
-  if (loginPage) {
-
-    loginPage.style.display =
-      "none";
-
-  }
-
-
-  if (app) {
-
-    app.style.display =
-      "flex";
-
-  }
-
-
-  updateUserInfo();
-
-  setupRoleAccess();
-
-}
-
-
-// ======================================================
-// USER INFORMATION
-// ======================================================
-
-function updateUserInfo() {
-
-  if (!currentProfile) {
+    showLogin();
     return;
   }
 
+  try {
 
-  const userInfo =
-    document.getElementById(
-      "userInfo"
-    );
+    const {
+      data,
+      error
+    } = await supabaseClient
+      .from("sales_users")
+      .select("*")
+      .eq("auth_user-id", currentUser.id)
+      .single();
 
-  const currentUserElement =
-    document.getElementById(
-      "currentUser"
-    );
+    if (error) {
+      console.error("Profile error:", error);
+      alert("Profile user tidak ditemukan.");
+      await logout();
+      return;
+    }
+
+    currentProfile = data;
+
+    updateUserInfo();
+    setupRoleAccess();
+    showApp();
+
+    await loadLeads();
+    await updateDashboard();
+
+  } catch (error) {
+    console.error("loadProfile error:", error);
+  }
+}
 
 
-  const displayName =
-    currentProfile.name ||
-    currentProfile.username ||
-    "";
+// ================================
+// SHOW / HIDE APP
+// ================================
+
+function showLogin() {
+
+  document.getElementById("loginPage").style.display = "flex";
+  document.getElementById("app").style.display = "none";
+
+}
+
+function showApp() {
+
+  document.getElementById("loginPage").style.display = "none";
+  document.getElementById("app").style.display = "flex";
+
+  showDashboard();
+
+}
 
 
-  const displayRole =
-    currentProfile.role ||
-    "";
+// ================================
+// USER INFO
+// ================================
 
+function updateUserInfo() {
+
+  if (!currentProfile) return;
+
+  const userInfo = document.getElementById("userInfo");
+  const currentUserElement = document.getElementById("currentUser");
 
   if (userInfo) {
-
     userInfo.innerHTML = `
-      <strong>
-        ${escapeHTML(displayName)}
-      </strong>
-
-      <small>
-        ${escapeHTML(displayRole)}
-      </small>
+      <strong>${escapeHTML(currentProfile.name)}</strong>
+      <small>${escapeHTML(currentProfile.role)}</small>
     `;
-
   }
 
-
   if (currentUserElement) {
-
     currentUserElement.textContent =
-      displayName;
-
+      `${currentProfile.name} (${currentProfile.role})`;
   }
 
 }
 
 
-// ======================================================
+// ================================
 // ROLE ACCESS
-// ======================================================
+// ================================
 
 function setupRoleAccess() {
 
   const manageSalesBtn =
-    document.getElementById(
-      "manageSalesBtn"
-    );
+    document.getElementById("manageSalesBtn");
 
+  if (!manageSalesBtn || !currentProfile) return;
 
-  if (!manageSalesBtn) {
-    return;
-  }
-
-
-  if (
-    currentProfile &&
-    currentProfile.role ===
-    "Admin"
-  ) {
-
-    manageSalesBtn.style.display =
-      "block";
-
-  }
-
-  else {
-
-    manageSalesBtn.style.display =
-      "none";
-
+  if (currentProfile.role === "Admin") {
+    manageSalesBtn.style.display = "block";
+  } else {
+    manageSalesBtn.style.display = "none";
   }
 
 }
 
 
-// ======================================================
-// DASHBOARD
-// ======================================================
-
-function showDashboard() {
-
-  hideAllPages();
-
-
-  const dashboardPage =
-    document.getElementById(
-      "dashboardPage"
-    );
-
-
-  if (dashboardPage) {
-
-    dashboardPage.style.display =
-      "block";
-
-  }
-
-
-  setPageTitle(
-    "Dashboard"
-  );
-
-
-  updateDashboard();
-
-}
-
-
-// ======================================================
-// MY LEADS
-// ======================================================
-
-function showLeads() {
-
-  hideAllPages();
-
-
-  const leadsPage =
-    document.getElementById(
-      "leadsPage"
-    );
-
-
-  if (leadsPage) {
-
-    leadsPage.style.display =
-      "block";
-
-  }
-
-
-  setPageTitle(
-    "My Leads"
-  );
-
-
-  renderLeads();
-
-}
-
-
-// ======================================================
-// MANAGE SALES
-// ======================================================
-
-function showSales() {
-
-  if (
-    !currentProfile ||
-    currentProfile.role !==
-    "Admin"
-  ) {
-
-    alert(
-      "Hanya Admin yang dapat mengakses Manage Sales."
-    );
-
-    return;
-
-  }
-
-
-  hideAllPages();
-
-
-  const salesPage =
-    document.getElementById(
-      "salesPage"
-    );
-
-
-  if (salesPage) {
-
-    salesPage.style.display =
-      "block";
-
-  }
-
-
-  setPageTitle(
-    "Manage Sales"
-  );
-
-
-  loadSalesUsers();
-
-}
-
-
-// ======================================================
-// HIDE ALL PAGES
-// ======================================================
+// ================================
+// NAVIGATION
+// ================================
 
 function hideAllPages() {
 
-  const pages =
-    document.querySelectorAll(
-      ".content"
-    );
-
-
-  pages.forEach(
-    (page) => {
-
-      page.style.display =
-        "none";
-
-    }
-  );
+  document.getElementById("dashboardPage").style.display = "none";
+  document.getElementById("leadsPage").style.display = "none";
+  document.getElementById("salesPage").style.display = "none";
 
 }
 
-
-// ======================================================
-// PAGE TITLE
-// ======================================================
-
 function setPageTitle(title) {
 
-  const pageTitle =
-    document.getElementById(
-      "pageTitle"
-    );
+  const titleElement = document.getElementById("pageTitle");
 
-
-  if (pageTitle) {
-
-    pageTitle.textContent =
-      title;
-
+  if (titleElement) {
+    titleElement.textContent = title;
   }
 
 }
 
+async function showDashboard() {
 
-// ======================================================
+  hideAllPages();
+
+  document.getElementById("dashboardPage").style.display = "block";
+
+  setPageTitle("Dashboard");
+
+  await updateDashboard();
+
+}
+
+async function showLeads() {
+
+  hideAllPages();
+
+  document.getElementById("leadsPage").style.display = "block";
+
+  setPageTitle("My Leads");
+
+  await loadLeads();
+
+}
+
+async function showSales() {
+
+  if (!currentProfile || currentProfile.role !== "Admin") {
+    alert("Access denied.");
+    return;
+  }
+
+  hideAllPages();
+
+  document.getElementById("salesPage").style.display = "block";
+
+  setPageTitle("Manage Sales");
+
+  await loadSalesUsers();
+
+}
+
+
+// ================================
 // LOAD LEADS
-// ======================================================
+// ================================
 
 async function loadLeads() {
 
@@ -835,609 +321,354 @@ async function loadLeads() {
     const {
       data,
       error
-    } =
-      await supabaseClient
-        .from("leads")
-        .select("*")
-        .order(
-          "created_at",
-          {
-            ascending: false
-          }
-        );
-
+    } = await supabaseClient
+      .from("leads")
+      .select("*")
+      .order("created_at", {
+        ascending: false
+      });
 
     if (error) {
-
-      console.error(
-        "Load leads error:",
-        error
-      );
-
-      alert(
-        "Gagal mengambil data leads.\n\n" +
-        error.message
-      );
-
+      console.error("Load leads error:", error);
+      alert(error.message);
       return;
-
     }
 
+    leadsData = data || [];
 
-    leads =
-      data || [];
-
-
+    renderLeads(leadsData);
     updateDashboard();
 
-    renderLeads();
-
-  }
-
-  catch (error) {
-
-    console.error(
-      "Load leads exception:",
-      error
-    );
-
+  } catch (error) {
+    console.error(error);
   }
 
 }
 
 
-// ======================================================
+// ================================
 // RENDER LEADS
-// ======================================================
+// ================================
 
-function renderLeads() {
+function renderLeads(data) {
 
-  const tbody =
-    document.getElementById(
-      "leadsTable"
-    );
+  const table = document.getElementById("leadsTable");
 
+  if (!table) return;
 
-  if (!tbody) {
-    return;
-  }
+  table.innerHTML = "";
 
+  if (!data || data.length === 0) {
 
-  const searchInput =
-    document.getElementById(
-      "leadSearch"
-    );
-
-  const statusFilter =
-    document.getElementById(
-      "statusFilter"
-    );
-
-
-  const search =
-    searchInput
-      ? searchInput.value
-          .toLowerCase()
-          .trim()
-      : "";
-
-
-  const selectedStatus =
-    statusFilter
-      ? statusFilter.value
-      : "";
-
-
-  let filteredLeads =
-    [...leads];
-
-
-  // --------------------------------------------------
-  // SEARCH
-  // --------------------------------------------------
-
-  if (search) {
-
-    filteredLeads =
-      filteredLeads.filter(
-        (lead) => {
-
-          return (
-
-            (lead.customer_name || "")
-              .toLowerCase()
-              .includes(search)
-
-            ||
-
-            (lead.phone || "")
-              .toLowerCase()
-              .includes(search)
-
-            ||
-
-            (lead.business || "")
-              .toLowerCase()
-              .includes(search)
-
-            ||
-
-            (lead.location || "")
-              .toLowerCase()
-              .includes(search)
-
-          );
-
-        }
-      );
-
-  }
-
-
-  // --------------------------------------------------
-  // STATUS FILTER
-  // --------------------------------------------------
-
-  if (selectedStatus) {
-
-    filteredLeads =
-      filteredLeads.filter(
-        (lead) =>
-          lead.status ===
-          selectedStatus
-      );
-
-  }
-
-
-  // --------------------------------------------------
-  // EMPTY
-  // --------------------------------------------------
-
-  if (
-    filteredLeads.length ===
-    0
-  ) {
-
-    tbody.innerHTML = `
+    table.innerHTML = `
       <tr>
-        <td
-          colspan="10"
-          style="text-align:center;"
-        >
-          Belum ada data lead.
+        <td colspan="10" style="text-align:center;">
+          No leads found
         </td>
       </tr>
     `;
 
     return;
-
   }
 
+  data.forEach(lead => {
 
-  // --------------------------------------------------
-  // TABLE
-  // --------------------------------------------------
+    const tr = document.createElement("tr");
 
-  tbody.innerHTML =
-    filteredLeads
-      .map(
-        (lead) => {
+    tr.innerHTML = `
+      <td>${escapeHTML(getValue(lead.customer_name))}</td>
 
-          return `
-            <tr>
-
-              <td>
-                ${escapeHTML(
-                  lead.customer_name
-                )}
-              </td>
-
-              <td>
-
-                ${
-                  lead.phone
-                    ? `
-                      <a
-                        href="${whatsappLink(
-                          lead.phone
-                        )}"
-                        target="_blank"
-                        rel="noopener"
-                      >
-                        ${escapeHTML(
-                          lead.phone
-                        )}
-                      </a>
-                    `
-                    : "-"
-                }
-
-              </td>
-
-              <td>
-                ${escapeHTML(
-                  lead.business
-                )}
-              </td>
-
-              <td>
-                ${escapeHTML(
-                  lead.location
-                )}
-              </td>
-
-              <td>
-
-                <span
-                  class="status-badge ${statusClass(
-                    lead.status
-                  )}"
-                >
-                  ${escapeHTML(
-                    lead.status ||
-                    "-"
-                  )}
-                </span>
-
-              </td>
-
-              <td>
-                ${formatDate(
-                  lead.follow_up_date
-                )}
-              </td>
-
-              <td>
-                ${formatDate(
-                  lead.appointment
-                )}
-              </td>
-
-              <td>
-                ${formatDate(
-                  lead.quotation
-                )}
-              </td>
-
-              <td>
-                ${formatDate(
-                  lead.closing
-                )}
-              </td>
-
-              <td>
-
-                <button
-                  class="btn-small"
-                  onclick="editLead('${lead.id}')"
-                >
-                  Edit
-                </button>
-
-                <button
-                  class="btn-small btn-danger"
-                  onclick="deleteLead('${lead.id}')"
-                >
-                  Delete
-                </button>
-
-              </td>
-
-            </tr>
-          `;
-
+      <td>
+        ${
+          lead.phone
+            ? `<a href="${whatsappLink(lead.phone)}"
+                 target="_blank"
+                 class="wa-link">
+                 ${escapeHTML(lead.phone)}
+               </a>`
+            : "-"
         }
-      )
-      .join("");
+      </td>
+
+      <td>${escapeHTML(getValue(lead.business))}</td>
+
+      <td>${escapeHTML(getValue(lead.location))}</td>
+
+      <td>
+        <span class="status-badge ${statusClass(lead.status)}">
+          ${escapeHTML(getValue(lead.status))}
+        </span>
+      </td>
+
+      <td>${formatDate(lead.follow_up_date)}</td>
+
+      <td>${formatDate(lead.appointment)}</td>
+
+      <td>${formatDate(lead.quotation)}</td>
+
+      <td>${formatDate(lead.closing)}</td>
+
+      <td>
+        <button
+          class="secondary-btn small-btn"
+          onclick="editLead('${lead.id}')">
+          Edit
+        </button>
+
+        <button
+          class="secondary-btn small-btn"
+          onclick="deleteLead('${lead.id}')">
+          Delete
+        </button>
+      </td>
+    `;
+
+    table.appendChild(tr);
+
+  });
 
 }
 
 
-// ======================================================
+// ================================
 // FILTER LEADS
-// ======================================================
+// ================================
 
 function filterLeads() {
 
-  renderLeads();
+  const search =
+    document.getElementById("leadSearch")
+      ?.value
+      .toLowerCase()
+      .trim() || "";
+
+  const status =
+    document.getElementById("statusFilter")
+      ?.value || "";
+
+  const filtered = leadsData.filter(lead => {
+
+    const customer =
+      getValue(lead.customer_name).toLowerCase();
+
+    const phone =
+      getValue(lead.phone).toLowerCase();
+
+    const business =
+      getValue(lead.business).toLowerCase();
+
+    const location =
+      getValue(lead.location).toLowerCase();
+
+    const matchesSearch =
+      !search ||
+      customer.includes(search) ||
+      phone.includes(search) ||
+      business.includes(search) ||
+      location.includes(search);
+
+    const matchesStatus =
+      !status ||
+      lead.status === status;
+
+    return matchesSearch && matchesStatus;
+
+  });
+
+  renderLeads(filtered);
 
 }
 
 
-// ======================================================
-// OPEN LEAD MODAL
-// ======================================================
+// ================================
+// ADD LEAD MODAL
+// ================================
 
 function openLeadModal() {
 
-  const modal =
-    document.getElementById(
-      "leadModal"
-    );
+  console.log("openLeadModal clicked");
 
+  const modal =
+    document.getElementById("leadModal");
 
   if (!modal) {
+    alert("Lead modal tidak ditemukan di index.html.");
     return;
   }
 
-
   clearLeadForm();
 
-
   const title =
-    document.getElementById(
-      "leadModalTitle"
-    );
-
+    document.getElementById("leadModalTitle");
 
   if (title) {
-
-    title.textContent =
-      "Add Lead";
-
+    title.textContent = "Add Lead";
   }
 
+  modal.classList.add("show");
 
-  modal.style.display =
-    "flex";
+  // Backup jika CSS modal memakai display
+  modal.style.display = "flex";
 
 }
-
-
-// ======================================================
-// CLOSE LEAD MODAL
-// ======================================================
 
 function closeLeadModal() {
 
   const modal =
-    document.getElementById(
-      "leadModal"
-    );
+    document.getElementById("leadModal");
 
+  if (!modal) return;
 
-  if (modal) {
+  modal.classList.remove("show");
 
-    modal.style.display =
-      "none";
-
-  }
+  modal.style.display = "none";
 
 }
-
-
-// ======================================================
-// CLEAR LEAD FORM
-// ======================================================
 
 function clearLeadForm() {
 
-  const ids = [
-
-    "leadId",
-
-    "leadCustomer",
-
-    "leadPhone",
-
-    "leadBusiness",
-
-    "leadLocation",
-
-    "leadStatus",
-
-    "leadFollowUp",
-
-    "leadAppointment",
-
-    "leadSiteSurvey",
-
-    "leadQuotation",
-
-    "leadSPK",
-
-    "leadClosing",
-
-    "leadNotes"
-
-  ];
-
-
-  ids.forEach(
-    (id) => {
-
-      const element =
-        document.getElementById(
-          id
-        );
-
-
-      if (!element) {
-        return;
-      }
-
-
-      if (
-        element.tagName ===
-        "SELECT"
-      ) {
-
-        element.selectedIndex =
-          0;
-
-      }
-
-      else {
-
-        element.value =
-          "";
-
-      }
-
-    }
-  );
+  setValue("leadId", "");
+  setValue("leadCustomer", "");
+  setValue("leadPhone", "");
+  setValue("leadBusiness", "");
+  setValue("leadLocation", "");
+  setValue("leadStatus", "New");
+  setValue("leadFollowUp", "");
+  setValue("leadAppointment", "");
+  setValue("leadSiteSurvey", "");
+  setValue("leadQuotation", "");
+  setValue("leadSPK", "");
+  setValue("leadClosing", "");
+  setValue("leadNotes", "");
 
 }
 
 
-// ======================================================
+// ================================
 // SAVE LEAD
-// ======================================================
+// ================================
 
 async function saveLead() {
 
   if (!currentProfile) {
-
-    alert(
-      "Session tidak ditemukan."
-    );
-
+    alert("User profile belum siap.");
     return;
-
   }
 
+  const customer =
+    document.getElementById("leadCustomer").value.trim();
+
+  if (!customer) {
+    alert("Customer wajib diisi.");
+    return;
+  }
 
   const leadId =
-    getValue("leadId");
-
+    document.getElementById("leadId").value;
 
   const payload = {
 
     customer_name:
-      getValue("leadCustomer"),
+      document.getElementById("leadCustomer").value.trim(),
 
     phone:
-      getValue("leadPhone"),
+      document.getElementById("leadPhone").value.trim(),
 
     business:
-      getValue("leadBusiness"),
+      document.getElementById("leadBusiness").value.trim(),
 
     location:
-      getValue("leadLocation"),
+      document.getElementById("leadLocation").value.trim(),
 
     status:
-      getValue("leadStatus"),
+      document.getElementById("leadStatus").value,
 
     follow_up_date:
-      getValue("leadFollowUp") ||
-      null,
+      document.getElementById("leadFollowUp").value || null,
 
     appointment:
-      getValue("leadAppointment") ||
-      null,
+      document.getElementById("leadAppointment").value || null,
 
     site_survey:
-      getValue("leadSiteSurvey") ||
-      null,
+      document.getElementById("leadSiteSurvey").value || null,
 
     quotation:
-      getValue("leadQuotation") ||
-      null,
+      document.getElementById("leadQuotation").value || null,
 
     spk:
-      getValue("leadSPK") ||
-      null,
+      document.getElementById("leadSPK").value || null,
 
     closing:
-      getValue("leadClosing") ||
-      null,
+      document.getElementById("leadClosing").value || null,
 
     notes:
-      getValue("leadNotes")
+      document.getElementById("leadNotes").value.trim()
 
   };
 
 
   try {
 
-    let result;
-
-
-    // --------------------------------------------------
-    // UPDATE
-    // --------------------------------------------------
+    // ============================
+    // EDIT
+    // ============================
 
     if (leadId) {
 
-      result =
-        await supabaseClient
-          .from("leads")
-          .update(payload)
-          .eq(
-            "id",
-            leadId
-          );
+      const {
+        error
+      } = await supabaseClient
+        .from("leads")
+        .update(payload)
+        .eq("id", leadId);
+
+      if (error) {
+        console.error(error);
+        alert("Gagal update lead:\n" + error.message);
+        return;
+      }
+
+      alert("Lead berhasil diupdate.");
 
     }
 
-
-    // --------------------------------------------------
-    // INSERT
-    // --------------------------------------------------
+    // ============================
+    // ADD
+    // ============================
 
     else {
 
-      payload.sales_id =
-        currentProfile.id;
+      payload.sales_id = currentProfile.id;
 
+      const {
+        error
+      } = await supabaseClient
+        .from("leads")
+        .insert([payload]);
 
-      result =
-        await supabaseClient
-          .from("leads")
-          .insert(
-            payload
-          );
+      if (error) {
+        console.error(error);
+        alert("Gagal menambahkan lead:\n" + error.message);
+        return;
+      }
 
-    }
-
-
-    if (result.error) {
-
-      console.error(
-        "Save lead error:",
-        result.error
-      );
-
-
-      alert(
-        result.error.message ||
-        "Gagal menyimpan lead."
-      );
-
-
-      return;
+      alert("Lead berhasil ditambahkan.");
 
     }
-
-
-    alert(
-      leadId
-        ? "Lead berhasil diperbarui."
-        : "Lead berhasil ditambahkan."
-    );
-
 
     closeLeadModal();
 
-
     await loadLeads();
 
+    await updateDashboard();
 
-    showLeads();
+  } catch (error) {
 
-  }
-
-  catch (error) {
-
-    console.error(
-      "Save lead exception:",
-      error
-    );
-
+    console.error("saveLead error:", error);
 
     alert(
-      "Terjadi kesalahan saat menyimpan lead."
+      "Terjadi kesalahan:\n" +
+      error.message
     );
 
   }
@@ -1445,409 +676,245 @@ async function saveLead() {
 }
 
 
-// ======================================================
+// ================================
 // EDIT LEAD
-// ======================================================
+// ================================
 
 function editLead(id) {
 
   const lead =
-    leads.find(
-      (item) =>
-        item.id === id
-    );
-
+    leadsData.find(item => item.id === id);
 
   if (!lead) {
-
-    alert(
-      "Data lead tidak ditemukan."
-    );
-
+    alert("Lead tidak ditemukan.");
     return;
-
   }
 
-
-  setValue(
-    "leadId",
-    lead.id
-  );
-
-
-  setValue(
-    "leadCustomer",
-    lead.customer_name
-  );
-
-
-  setValue(
-    "leadPhone",
-    lead.phone
-  );
-
-
-  setValue(
-    "leadBusiness",
-    lead.business
-  );
-
-
-  setValue(
-    "leadLocation",
-    lead.location
-  );
-
-
-  setValue(
-    "leadStatus",
-    lead.status
-  );
-
-
-  setValue(
-    "leadFollowUp",
-    lead.follow_up_date
-  );
-
-
-  setValue(
-    "leadAppointment",
-    lead.appointment
-  );
-
-
-  setValue(
-    "leadSiteSurvey",
-    lead.site_survey
-  );
-
-
-  setValue(
-    "leadQuotation",
-    lead.quotation
-  );
-
-
-  setValue(
-    "leadSPK",
-    lead.spk
-  );
-
-
-  setValue(
-    "leadClosing",
-    lead.closing
-  );
-
-
-  setValue(
-    "leadNotes",
-    lead.notes
-  );
-
+  setValue("leadId", lead.id);
+  setValue("leadCustomer", lead.customer_name);
+  setValue("leadPhone", lead.phone);
+  setValue("leadBusiness", lead.business);
+  setValue("leadLocation", lead.location);
+  setValue("leadStatus", lead.status || "New");
+  setValue("leadFollowUp", lead.follow_up_date);
+  setValue("leadAppointment", lead.appointment);
+  setValue("leadSiteSurvey", lead.site_survey);
+  setValue("leadQuotation", lead.quotation);
+  setValue("leadSPK", lead.spk);
+  setValue("leadClosing", lead.closing);
+  setValue("leadNotes", lead.notes);
 
   const title =
-    document.getElementById(
-      "leadModalTitle"
-    );
-
+    document.getElementById("leadModalTitle");
 
   if (title) {
-
-    title.textContent =
-      "Edit Lead";
-
+    title.textContent = "Edit Lead";
   }
 
-
   const modal =
-    document.getElementById(
-      "leadModal"
-    );
-
+    document.getElementById("leadModal");
 
   if (modal) {
 
-    modal.style.display =
-      "flex";
+    modal.classList.add("show");
+
+    modal.style.display = "flex";
 
   }
 
 }
 
 
-// ======================================================
+// ================================
 // DELETE LEAD
-// ======================================================
+// ================================
 
 async function deleteLead(id) {
 
-  const lead =
-    leads.find(
-      (item) =>
-        item.id === id
-    );
+  const confirmDelete =
+    confirm("Hapus lead ini?");
 
+  if (!confirmDelete) return;
 
-  if (!lead) {
-    return;
-  }
+  try {
 
-
-  const confirmed =
-    confirm(
-      `Hapus lead "${
-        lead.customer_name ||
-        "ini"
-      }"?`
-    );
-
-
-  if (!confirmed) {
-    return;
-  }
-
-
-  const {
-    error
-  } =
-    await supabaseClient
+    const {
+      error
+    } = await supabaseClient
       .from("leads")
       .delete()
-      .eq(
-        "id",
-        id
+      .eq("id", id);
+
+    if (error) {
+
+      console.error(error);
+
+      alert(
+        "Gagal menghapus lead:\n" +
+        error.message
       );
 
+      return;
+    }
 
-  if (error) {
+    await loadLeads();
 
-    console.error(
-      "Delete lead error:",
-      error
-    );
+    await updateDashboard();
 
+  } catch (error) {
 
-    alert(
-      error.message ||
-      "Gagal menghapus lead."
-    );
+    console.error(error);
 
-
-    return;
+    alert(error.message);
 
   }
 
-
-  alert(
-    "Lead berhasil dihapus."
-  );
-
-
-  await loadLeads();
-
-
-  showLeads();
-
 }
 
 
-// ======================================================
-// DASHBOARD STATISTICS
-// ======================================================
+// ================================
+// DASHBOARD
+// ================================
 
-function updateDashboard() {
+async function updateDashboard() {
 
-  setText(
-    "statTotal",
-    leads.length
-  );
-
-
-  setText(
-    "statNew",
-    countStatus([
-      "New"
-    ])
-  );
-
-
-  setText(
-    "statInterested",
-    countStatus([
-      "Interested"
-    ])
-  );
-
-
-  setText(
-    "statFollowUp",
-    countStatus([
-      "Follow-up",
-      "Follow Up"
-    ])
-  );
-
-
-  setText(
-    "statAppointment",
-    leads.filter(
-      (lead) =>
-        !!lead.appointment
-    ).length
-  );
-
-
-  setText(
-    "statSiteSurvey",
-    leads.filter(
-      (lead) =>
-        !!lead.site_survey
-    ).length
-  );
-
-
-  setText(
-    "statQuotation",
-    leads.filter(
-      (lead) =>
-        !!lead.quotation
-    ).length
-  );
-
-
-  setText(
-    "statClosing",
-    leads.filter(
-      (lead) =>
-        !!lead.closing
-    ).length
-  );
-
-}
-
-
-// ======================================================
-// COUNT STATUS
-// ======================================================
-
-function countStatus(
-  statuses
-) {
-
-  return leads.filter(
-    (lead) =>
-      statuses.includes(
-        lead.status
-      )
-  ).length;
-
-}
-
-
-// ======================================================
-// LOAD SALES USERS
-// ======================================================
-
-async function loadSalesUsers() {
-
-  if (
-    !currentProfile ||
-    currentProfile.role !==
-    "Admin"
-  ) {
-
-    return;
-
-  }
-
+  if (!currentProfile) return;
 
   try {
 
     const {
       data,
       error
-    } =
-      await supabaseClient
-        .from("sales_users")
-        .select("*")
-        .order(
-          "name",
-          {
-            ascending: true
-          }
-        );
-
+    } = await supabaseClient
+      .from("leads")
+      .select("status");
 
     if (error) {
 
-      console.error(
-        "Load sales users error:",
-        error
-      );
-
-
-      alert(
-        "Gagal mengambil data Sales.\n\n" +
-        error.message
-      );
-
+      console.error(error);
 
       return;
-
     }
 
+    const dataList = data || [];
 
-    salesUsers =
-      data || [];
+    setText(
+      "statTotal",
+      dataList.length
+    );
 
+    setText(
+      "statNew",
+      countStatus(dataList, "New")
+    );
 
-    renderSalesUsers();
+    setText(
+      "statInterested",
+      countStatus(dataList, "Interested")
+    );
+
+    setText(
+      "statFollowUp",
+      countStatus(dataList, "Follow-up")
+    );
+
+    setText(
+      "statAppointment",
+      countStatus(dataList, "Appointment")
+    );
+
+    setText(
+      "statSiteSurvey",
+      countStatus(dataList, "Site Survey")
+    );
+
+    setText(
+      "statQuotation",
+      countStatus(dataList, "Quotation")
+    );
+
+    setText(
+      "statClosing",
+      countStatus(dataList, "Closing")
+    );
+
+  } catch (error) {
+
+    console.error(error);
 
   }
 
-  catch (error) {
+}
 
-    console.error(
-      "Load sales users exception:",
+function countStatus(data, status) {
+
+  return data.filter(
+    item => item.status === status
+  ).length;
+
+}
+
+
+// ================================
+// MANAGE SALES
+// ================================
+
+async function loadSalesUsers() {
+
+  if (!currentProfile ||
+      currentProfile.role !== "Admin") {
+    return;
+  }
+
+  try {
+
+    const {
+      data,
       error
-    );
+    } = await supabaseClient
+      .from("sales_users")
+      .select("*")
+      .order("created_at", {
+        ascending: true
+      });
+
+    if (error) {
+
+      console.error(error);
+
+      alert(error.message);
+
+      return;
+    }
+
+    salesUsersData = data || [];
+
+    renderSalesUsers(salesUsersData);
+
+  } catch (error) {
+
+    console.error(error);
 
   }
 
 }
 
 
-// ======================================================
-// RENDER SALES USERS
-// ======================================================
+function renderSalesUsers(data) {
 
-function renderSalesUsers() {
+  const table =
+    document.getElementById("salesTable");
 
-  const tbody =
-    document.getElementById(
-      "salesTable"
-    );
+  if (!table) return;
 
+  table.innerHTML = "";
 
-  if (!tbody) {
-    return;
-  }
+  if (!data || data.length === 0) {
 
-
-  if (
-    salesUsers.length ===
-    0
-  ) {
-
-    tbody.innerHTML = `
+    table.innerHTML = `
       <tr>
-        <td
-          colspan="6"
-          style="text-align:center;"
-        >
-          Belum ada Sales.
+        <td colspan="6" style="text-align:center;">
+          No sales found
         </td>
       </tr>
     `;
@@ -1856,242 +923,142 @@ function renderSalesUsers() {
 
   }
 
+  data.forEach(sales => {
 
-  tbody.innerHTML =
-    salesUsers
-      .map(
-        (sales) => {
+    const tr =
+      document.createElement("tr");
 
-          const leadCount =
-            leads.filter(
-              (lead) =>
-                lead.sales_id ===
-                sales.id
-            ).length;
+    tr.innerHTML = `
 
+      <td>
+        ${escapeHTML(getValue(sales.name))}
+      </td>
 
-          return `
-            <tr>
+      <td>
+        ${escapeHTML(getValue(sales.username))}
+      </td>
 
-              <td>
-                ${escapeHTML(
-                  sales.name
-                )}
-              </td>
+      <td>
+        ${escapeHTML(getValue(sales.role))}
+      </td>
 
-              <td>
-                ${escapeHTML(
-                  sales.username
-                )}
-              </td>
+      <td>
+        <span class="status-badge ${
+          sales.status === "Active"
+            ? "status-active"
+            : "status-inactive"
+        }">
+          ${escapeHTML(getValue(sales.status))}
+        </span>
+      </td>
 
-              <td>
-                ${escapeHTML(
-                  sales.role
-                )}
-              </td>
+      <td>
+        -
+      </td>
 
-              <td>
+      <td>
 
-                <span
-                  class="status-badge ${
-                    sales.status ===
-                    "Active"
-                      ? "status-active"
-                      : "status-inactive"
-                  }"
-                >
-                  ${escapeHTML(
-                    sales.status
-                  )}
-                </span>
+        <button
+          class="secondary-btn small-btn"
+          onclick="toggleSalesStatus(
+            '${sales.id}',
+            '${sales.status}'
+          )">
 
-              </td>
+          ${
+            sales.status === "Active"
+              ? "Deactivate"
+              : "Activate"
+          }
 
-              <td>
-                ${leadCount}
-              </td>
+        </button>
 
-              <td>
+      </td>
 
-                ${
-                  sales.role ===
-                  "Sales"
+    `;
 
-                    ? `
-                      <button
-                        class="btn-small"
-                        onclick="toggleSalesStatus(
-                          '${sales.id}',
-                          '${sales.status}'
-                        )"
-                      >
-                        ${
-                          sales.status ===
-                          "Active"
-                            ? "Deactivate"
-                            : "Activate"
-                        }
-                      </button>
-                    `
+    table.appendChild(tr);
 
-                    : "-"
-                }
-
-              </td>
-
-            </tr>
-          `;
-
-        }
-      )
-      .join("");
+  });
 
 }
 
 
-// ======================================================
-// OPEN SALES MODAL
-// ======================================================
+// ================================
+// SALES MODAL
+// ================================
 
 function openSalesModal() {
 
-  if (
-    !currentProfile ||
-    currentProfile.role !==
-    "Admin"
-  ) {
+  const modal =
+    document.getElementById("salesModal");
 
-    alert(
-      "Hanya Admin yang dapat membuat Sales."
-    );
+  if (!modal) {
+
+    alert("Sales modal tidak ditemukan.");
 
     return;
 
   }
 
+  clearSalesForm();
 
-  const modal =
-    document.getElementById(
-      "salesModal"
-    );
+  modal.classList.add("show");
 
-
-  if (modal) {
-
-    modal.style.display =
-      "flex";
-
-  }
+  modal.style.display = "flex";
 
 }
 
-
-// ======================================================
-// CLOSE SALES MODAL
-// ======================================================
 
 function closeSalesModal() {
 
   const modal =
-    document.getElementById(
-      "salesModal"
-    );
+    document.getElementById("salesModal");
 
+  if (!modal) return;
 
-  if (modal) {
+  modal.classList.remove("show");
 
-    modal.style.display =
-      "none";
-
-  }
-
-
-  clearSalesForm();
+  modal.style.display = "none";
 
 }
 
-
-// ======================================================
-// CLEAR SALES FORM
-// ======================================================
 
 function clearSalesForm() {
 
-  setValue(
-    "salesName",
-    ""
-  );
-
-  setValue(
-    "salesUsername",
-    ""
-  );
-
-  setValue(
-    "salesPassword",
-    ""
-  );
+  setValue("salesName", "");
+  setValue("salesUsername", "");
+  setValue("salesPassword", "");
 
 }
 
 
-// ======================================================
+// ================================
 // CREATE SALES
-// ======================================================
+// ================================
 
 async function createSales() {
 
-  if (
-    !currentProfile ||
-    currentProfile.role !==
-    "Admin"
-  ) {
-
-    alert(
-      "Hanya Admin yang dapat membuat Sales."
-    );
-
-    return;
-
-  }
-
-
   const name =
-    getValue(
-      "salesName"
-    );
+    document.getElementById("salesName").value.trim();
 
   const username =
-    getValue(
-      "salesUsername"
-    );
+    document.getElementById("salesUsername").value.trim();
 
   const password =
-    getValue(
-      "salesPassword"
-    );
+    document.getElementById("salesPassword").value;
 
-
-  if (
-    !name ||
-    !username ||
-    !password
-  ) {
+  if (!name || !username || !password) {
 
     alert(
-      "Nama, username, dan password wajib diisi."
+      "Name, Username dan Password wajib diisi."
     );
 
     return;
 
   }
 
-
-  if (
-    password.length <
-    6
-  ) {
+  if (password.length < 6) {
 
     alert(
       "Password minimal 6 karakter."
@@ -2101,159 +1068,107 @@ async function createSales() {
 
   }
 
-
   /*
-   * Untuk keamanan, pembuatan user Auth
-   * tidak boleh dilakukan langsung dari browser.
-   *
-   * Nanti kita sambungkan dengan
-   * Supabase Edge Function.
-   */
+    PENTING:
 
+    Pembuatan user Supabase Auth TIDAK boleh
+    dilakukan langsung dari frontend.
+
+    Nanti bagian ini kita hubungkan ke
+    Supabase Edge Function.
+
+    Jadi untuk sekarang jangan memasukkan
+    service_role key ke script.js.
+  */
 
   alert(
-    "Form Sales sudah siap. Pembuatan akun Auth otomatis akan kita sambungkan melalui server."
+    "Form Add Sales sudah aktif.\n\n" +
+    "Tahap berikutnya adalah menghubungkan " +
+    "CREATE SALES ke Supabase Auth secara aman."
   );
 
 }
 
 
-// ======================================================
+// ================================
 // TOGGLE SALES STATUS
-// ======================================================
+// ================================
 
-async function toggleSalesStatus(
-  id,
-  currentStatus
-) {
-
-  if (
-    !currentProfile ||
-    currentProfile.role !==
-    "Admin"
-  ) {
-
-    alert(
-      "Hanya Admin yang dapat mengubah status Sales."
-    );
-
-    return;
-
-  }
-
+async function toggleSalesStatus(id, currentStatus) {
 
   const newStatus =
-    currentStatus ===
-    "Active"
+    currentStatus === "Active"
       ? "Inactive"
       : "Active";
 
-
-  const confirmed =
+  const confirmChange =
     confirm(
       `Ubah status Sales menjadi ${newStatus}?`
     );
 
+  if (!confirmChange) return;
 
-  if (!confirmed) {
-    return;
-  }
+  try {
 
-
-  const {
-    error
-  } =
-    await supabaseClient
+    const {
+      error
+    } = await supabaseClient
       .from("sales_users")
       .update({
-        status:
-          newStatus
+        status: newStatus
       })
-      .eq(
-        "id",
-        id
-      );
+      .eq("id", id);
 
+    if (error) {
 
-  if (error) {
+      console.error(error);
 
-    console.error(
-      "Update sales status error:",
-      error
-    );
+      alert(error.message);
 
+      return;
 
-    alert(
-      error.message ||
-      "Gagal mengubah status."
-    );
+    }
 
+    await loadSalesUsers();
 
-    return;
+  } catch (error) {
+
+    console.error(error);
+
+    alert(error.message);
 
   }
-
-
-  await loadSalesUsers();
 
 }
 
 
-// ======================================================
+// ================================
 // WHATSAPP
-// ======================================================
+// ================================
 
-function whatsappLink(
-  phone
-) {
+function whatsappLink(phone) {
 
   const number =
-    normalizePhone(
-      phone
-    );
-
+    normalizePhone(phone);
 
   if (!number) {
-
     return "#";
-
   }
 
-
-  return (
-    "https://wa.me/" +
-    number
-  );
+  return `https://wa.me/${number}`;
 
 }
 
 
-// ======================================================
-// NORMALIZE PHONE
-// ======================================================
+function normalizePhone(phone) {
 
-function normalizePhone(
-  phone
-) {
-
-  if (!phone) {
-    return "";
-  }
-
+  if (!phone) return "";
 
   let number =
     String(phone)
-      .replace(
-        /\D/g,
-        ""
-      );
+      .replace(/\D/g, "");
 
-
-  if (
-    number.startsWith(
-      "0"
-    )
-  ) {
+  if (number.startsWith("0")) {
 
     number =
       "62" +
@@ -2261,12 +1176,7 @@ function normalizePhone(
 
   }
 
-
-  else if (
-    number.startsWith(
-      "8"
-    )
-  ) {
+  if (number.startsWith("8")) {
 
     number =
       "62" +
@@ -2274,388 +1184,226 @@ function normalizePhone(
 
   }
 
-
   return number;
 
 }
 
 
-// ======================================================
-// DATE FORMAT
-// ======================================================
+// ================================
+// MODAL EVENTS
+// ================================
 
-function formatDate(
-  value
-) {
+function setupModalEvents() {
 
-  if (!value) {
+  const leadModal =
+    document.getElementById("leadModal");
 
-    return "-";
-
-  }
+  const salesModal =
+    document.getElementById("salesModal");
 
 
-  const date =
-    new Date(
-      value
-    );
+  // Klik area gelap modal
+  if (leadModal) {
 
+    leadModal.addEventListener(
+      "click",
+      function(event) {
 
-  if (
-    Number.isNaN(
-      date.getTime()
-    )
-  ) {
+        if (event.target === leadModal) {
+          closeLeadModal();
+        }
 
-    return escapeHTML(
-      String(value)
+      }
     );
 
   }
 
 
-  return date.toLocaleDateString(
-    "id-ID",
-    {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric"
+  if (salesModal) {
+
+    salesModal.addEventListener(
+      "click",
+      function(event) {
+
+        if (event.target === salesModal) {
+          closeSalesModal();
+        }
+
+      }
+    );
+
+  }
+
+}
+
+
+// ================================
+// LOGOUT
+// ================================
+
+async function logout() {
+
+  try {
+
+    await supabaseClient.auth.signOut();
+
+  } catch (error) {
+
+    console.error(error);
+
+  }
+
+  currentUser = null;
+  currentProfile = null;
+  leadsData = [];
+  salesUsersData = [];
+
+  showLogin();
+
+}
+
+
+// ================================
+// HELPER FUNCTIONS
+// ================================
+
+function formatDate(date) {
+
+  if (!date) return "-";
+
+  try {
+
+    const d =
+      new Date(date + "T00:00:00");
+
+    if (isNaN(d.getTime())) {
+      return date;
     }
+
+    return d.toLocaleDateString(
+      "id-ID",
+      {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+      }
+    );
+
+  } catch {
+
+    return date;
+
+  }
+
+}
+
+
+function statusClass(status) {
+
+  if (!status) return "";
+
+  return (
+    "status-" +
+    String(status)
+      .toLowerCase()
+      .replace(/\s+/g, "-")
   );
 
 }
 
 
-// ======================================================
-// STATUS CLASS
-// ======================================================
+function escapeHTML(value) {
 
-function statusClass(
-  status
-) {
-
-  if (!status) {
+  if (value === null ||
+      value === undefined) {
     return "";
   }
 
-
-  const value =
-    status.toLowerCase();
-
-
-  if (
-    value.includes(
-      "new"
-    ) ||
-    value.includes(
-      "baru"
-    )
-  ) {
-
-    return "status-new";
-
-  }
-
-
-  if (
-    value.includes(
-      "interested"
-    ) ||
-    value.includes(
-      "tertarik"
-    )
-  ) {
-
-    return "status-interested";
-
-  }
-
-
-  if (
-    value.includes(
-      "follow"
-    )
-  ) {
-
-    return "status-followup";
-
-  }
-
-
-  if (
-    value.includes(
-      "closing"
-    ) ||
-    value.includes(
-      "closed"
-    )
-  ) {
-
-    return "status-closing";
-
-  }
-
-
-  if (
-    value.includes(
-      "not"
-    ) ||
-    value.includes(
-      "tidak"
-    )
-  ) {
-
-    return "status-not-interested";
-
-  }
-
-
-  return "";
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 
 }
 
 
-// ======================================================
-// HTML ESCAPE
-// ======================================================
-
-function escapeHTML(
-  value
-) {
+function getValue(value) {
 
   if (
     value === null ||
-    value === undefined
+    value === undefined ||
+    value === ""
   ) {
-
-    return "";
-
-  }
-
-
-  return String(value)
-
-    .replace(
-      /&/g,
-      "&amp;"
-    )
-
-    .replace(
-      /</g,
-      "&lt;"
-    )
-
-    .replace(
-      />/g,
-      "&gt;"
-    )
-
-    .replace(
-      /"/g,
-      "&quot;"
-    )
-
-    .replace(
-      /'/g,
-      "&#039;"
-    );
-
-}
-
-
-// ======================================================
-// GET VALUE
-// ======================================================
-
-function getValue(
-  id
-) {
-
-  const element =
-    document.getElementById(
-      id
-    );
-
-
-  if (!element) {
     return "";
   }
 
-
-  return element.value.trim();
+  return String(value);
 
 }
 
 
-// ======================================================
-// SET VALUE
-// ======================================================
-
-function setValue(
-  id,
-  value
-) {
+function setValue(id, value) {
 
   const element =
-    document.getElementById(
-      id
-    );
+    document.getElementById(id);
 
+  if (!element) return;
 
-  if (element) {
-
-    element.value =
-      value || "";
-
-  }
+  element.value =
+    value === null ||
+    value === undefined
+      ? ""
+      : value;
 
 }
 
 
-// ======================================================
-// SET TEXT
-// ======================================================
-
-function setText(
-  id,
-  value
-) {
+function setText(id, value) {
 
   const element =
-    document.getElementById(
-      id
-    );
+    document.getElementById(id);
 
+  if (!element) return;
 
-  if (element) {
-
-    element.textContent =
-      value ?? 0;
-
-  }
+  element.textContent = value;
 
 }
 
 
-// ======================================================
-// CLOSE MODALS WHEN CLICKING OUTSIDE
-// ======================================================
-
-window.addEventListener(
-  "click",
-  (event) => {
-
-    const leadModal =
-      document.getElementById(
-        "leadModal"
-      );
-
-    const salesModal =
-      document.getElementById(
-        "salesModal"
-      );
-
-
-    if (
-      event.target ===
-      leadModal
-    ) {
-
-      closeLeadModal();
-
-    }
-
-
-    if (
-      event.target ===
-      salesModal
-    ) {
-
-      closeSalesModal();
-
-    }
-
-  }
-);
-
-
-// ======================================================
-// AUTH STATE CHANGE
-// ======================================================
+// ================================
+// SUPABASE AUTH STATE
+// ================================
 
 supabaseClient.auth.onAuthStateChange(
-  async (
-    event,
-    session
-  ) => {
+  async (event, session) => {
 
-    if (
-      event ===
-        "SIGNED_OUT" ||
-      !session
-    ) {
+    console.log(
+      "Auth event:",
+      event
+    );
+
+    if (session && !currentProfile) {
+
+      currentUser = session.user;
+
+      // Beri waktu sedikit agar auth state stabil
+      setTimeout(
+        async () => {
+          await loadProfile();
+        },
+        100
+      );
+
+    }
+
+    if (!session) {
 
       currentUser = null;
       currentProfile = null;
 
-      leads = [];
-      salesUsers = [];
-
       showLogin();
-
-      return;
-
-    }
-
-
-    if (
-      event ===
-        "SIGNED_IN" ||
-      event ===
-        "INITIAL_SESSION" ||
-      event ===
-        "TOKEN_REFRESHED"
-    ) {
-
-      currentUser =
-        session.user;
-
-
-      const profileLoaded =
-        await loadProfile();
-
-
-      if (!profileLoaded) {
-        return;
-      }
-
-
-      if (
-        currentProfile.status !==
-        "Active"
-      ) {
-
-        await supabaseClient.auth.signOut();
-
-        return;
-
-      }
-
-
-      showApp();
-
-
-      await loadLeads();
-
-
-      if (
-        currentProfile.role ===
-        "Admin"
-      ) {
-
-        await loadSalesUsers();
-
-      }
 
     }
 
