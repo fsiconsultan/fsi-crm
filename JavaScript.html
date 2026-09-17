@@ -1,1387 +1,2115 @@
-```html
-<script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
 
-let sessionToken = '';
-let currentUser = null;
-let allLeads = [];
-let allSales = [];
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
+    <meta
+        name="description"
+        content="CRM FSI - French Solar Industry"
+    >
 
-/* =========================
-   LOGIN
-========================= */
+    <title>CRM FSI</title>
 
-function login() {
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
 
-  const username =
-    document.getElementById('loginUsername').value.trim();
+<body>
 
-  const password =
-    document.getElementById('loginPassword').value;
+    <!-- =====================================================
+         LOGIN PAGE
+         ===================================================== -->
 
-  if (!username || !password) {
-    setLoginMessage('Username dan password wajib diisi.');
-    return;
-  }
+    <div id="loginPage" class="login-page">
 
-  setLoginMessage('Logging in...');
+        <div class="login-container">
 
-  google.script.run
-    .withSuccessHandler(function(result) {
+            <!-- Logo -->
+            <div class="login-logo">
 
-      sessionToken = result.token;
-      currentUser = result.user;
+                <div class="logo-placeholder">
+                    FSI
+                </div>
 
-      localStorage.setItem(
-        'fsi_session',
-        sessionToken
-      );
+                <div class="company-name">
+                    French Solar Industry
+                </div>
 
-      showApp();
+            </div>
 
-    })
-    .withFailureHandler(function(error) {
 
-      setLoginMessage(
-        error.message || 'Login gagal.'
-      );
+            <!-- Login Card -->
+            <div class="login-card">
 
-    })
-    .login(username, password);
-}
+                <div class="login-header">
 
+                    <h1>Welcome Back</h1>
 
-/* =========================
-   SESSION
-========================= */
+                    <p>
+                        Sign in to your CRM account
+                    </p>
 
-function checkSession() {
+                </div>
 
-  const token =
-    localStorage.getItem('fsi_session');
 
-  if (!token) return;
+                <!-- Login Form -->
+                <form id="loginForm">
 
-  google.script.run
-    .withSuccessHandler(function(user) {
+                    <!-- Username -->
+                    <div class="form-group">
 
-      sessionToken = token;
-      currentUser = user;
+                        <label for="username">
+                            Username
+                        </label>
 
-      showApp();
+                        <input
+                            type="text"
+                            id="username"
+                            name="username"
+                            placeholder="Enter your username"
+                            autocomplete="username"
+                            required
+                        >
 
-    })
-    .withFailureHandler(function() {
+                    </div>
 
-      localStorage.removeItem('fsi_session');
 
-    })
-    .getCurrentUser(token);
-}
+                    <!-- Password -->
+                    <div class="form-group">
 
+                        <label for="password">
+                            Password
+                        </label>
 
-function logout() {
+                        <div class="password-wrapper">
 
-  google.script.run
-    .withSuccessHandler(function() {
+                            <input
+                                type="password"
+                                id="password"
+                                name="password"
+                                placeholder="Enter your password"
+                                autocomplete="current-password"
+                                required
+                            >
 
-      localStorage.removeItem('fsi_session');
+                            <button
+                                type="button"
+                                id="togglePassword"
+                                class="password-toggle"
+                                aria-label="Show password"
+                            >
+                                Show
+                            </button>
 
-      sessionToken = '';
-      currentUser = null;
+                        </div>
 
-      document.getElementById('app').style.display = 'none';
-      document.getElementById('loginPage').style.display = 'flex';
+                    </div>
 
-      setLoginMessage('');
 
-    })
-    .withFailureHandler(function(error) {
+                    <!-- Remember Me -->
+                    <div class="login-options">
 
-      showError(error);
+                        <label class="remember-me">
 
-    })
-    .logout(sessionToken);
-}
+                            <input
+                                type="checkbox"
+                                id="rememberMe"
+                            >
 
+                            <span>
+                                Remember me
+                            </span>
 
-/* =========================
-   SHOW APP
-========================= */
+                        </label>
 
-function showApp() {
+                    </div>
 
-  document.getElementById('loginPage').style.display = 'none';
-  document.getElementById('app').style.display = 'flex';
 
-  document.getElementById('userInfo').innerHTML =
-    '<strong>' +
-    escapeHtml(currentUser.name) +
-    '</strong><br>' +
-    '<span>' +
-    escapeHtml(currentUser.role) +
-    '</span>';
+                    <!-- Login Button -->
+                    <button
+                        type="submit"
+                        class="login-button"
+                    >
+                        Login
+                    </button>
 
-  document.getElementById('currentUser').innerText =
-    currentUser.name;
 
-  const manageSalesBtn =
-    document.getElementById('manageSalesBtn');
+                    <!-- Login Error -->
+                    <div
+                        id="loginError"
+                        class="login-error"
+                        hidden
+                    >
+                        Invalid username or password.
+                    </div>
 
-  if (currentUser.role === 'Admin') {
-    manageSalesBtn.style.display = 'block';
-  } else {
-    manageSalesBtn.style.display = 'none';
-  }
+                </form>
 
-  showDashboard();
-}
+            </div>
 
 
-/* =========================
-   DASHBOARD
-========================= */
+            <!-- Footer -->
+            <div class="login-footer">
 
-function showDashboard() {
+                <p>
+                    CRM FSI
+                </p>
 
-  hidePages();
+                <span>
+                    French Solar Industry
+                </span>
 
-  document.getElementById('dashboardPage').style.display = 'block';
-
-  document.getElementById('pageTitle').innerText = 'Dashboard';
-
-  loadDashboard();
-}
-
-
-function loadDashboard() {
-
-  google.script.run
-    .withSuccessHandler(function(stats) {
-
-      setStat('statTotal', stats.total);
-      setStat('statNew', stats.new);
-      setStat('statInterested', stats.interested);
-      setStat('statFollowUp', stats.followUp);
-      setStat('statAppointment', stats.appointment);
-      setStat('statSiteSurvey', stats.siteSurvey);
-      setStat('statQuotation', stats.quotation);
-      setStat('statClosing', stats.closing);
-
-    })
-    .withFailureHandler(showError)
-    .getDashboardStats(sessionToken);
-}
-
-
-function setStat(id, value) {
-
-  const element = document.getElementById(id);
-
-  if (element) {
-    element.innerText =
-      value === null ||
-      value === undefined
-        ? 0
-        : value;
-  }
-}
-
-
-/* =========================
-   LEADS
-========================= */
-
-function showLeads() {
-
-  hidePages();
-
-  document.getElementById('leadsPage').style.display = 'block';
-
-  document.getElementById('pageTitle').innerText = 'My Leads';
-
-  loadLeads();
-}
-
-
-function loadLeads() {
-
-  showTableLoading('leadsTable', 10);
-
-  google.script.run
-    .withSuccessHandler(function(leads) {
-
-      allLeads = Array.isArray(leads)
-        ? leads
-        : [];
-
-      renderLeads(allLeads);
-
-    })
-    .withFailureHandler(function(error) {
-
-      showError(error);
-
-      renderLeads([]);
-
-    })
-    .getMyLeads(sessionToken);
-}
-
-
-function renderLeads(leads) {
-
-  const tbody =
-    document.getElementById('leadsTable');
-
-  tbody.innerHTML = '';
-
-  if (!leads || !leads.length) {
-
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="10" class="empty-state">
-          <div class="empty-icon">📋</div>
-          <strong>Belum ada lead</strong>
-          <span>Tambahkan lead baru untuk mulai bekerja.</span>
-        </td>
-      </tr>
-    `;
-
-    return;
-  }
-
-  leads.forEach(function(lead) {
-
-    const tr =
-      document.createElement('tr');
-
-    const phone =
-      cleanPhone(lead.phone);
-
-    const whatsappLink =
-      phone
-        ? `
-          <a
-            href="https://wa.me/${phone}"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="whatsapp-link">
-            ${escapeHtml(lead.phone)}
-          </a>
-        `
-        : '-';
-
-    tr.innerHTML = `
-
-      <td>
-        <strong class="customer-name">
-          ${escapeHtml(lead.customer)}
-        </strong>
-      </td>
-
-      <td>
-        ${whatsappLink}
-      </td>
-
-      <td>
-        ${escapeHtml(lead.business)}
-      </td>
-
-      <td>
-        ${escapeHtml(lead.location)}
-      </td>
-
-      <td>
-        ${getStatusBadge(lead.status)}
-      </td>
-
-      <td>
-        ${formatDateValue(lead.followUp)}
-      </td>
-
-      <td>
-        ${formatDateValue(lead.appointment)}
-      </td>
-
-      <td>
-        ${formatDateValue(lead.quotation)}
-      </td>
-
-      <td>
-        ${formatDateValue(lead.closing)}
-      </td>
-
-      <td>
-        <button
-          type="button"
-          class="table-action-btn"
-          onclick="editLeadByIndex(${allLeads.indexOf(lead)})">
-          Edit
-        </button>
-      </td>
-
-    `;
-
-    tbody.appendChild(tr);
-
-  });
-}
-
-
-/* =========================
-   SAFE EDIT LEAD
-========================= */
-
-function editLeadByIndex(index) {
-
-  if (
-    index < 0 ||
-    index >= allLeads.length
-  ) {
-    return;
-  }
-
-  editLead(allLeads[index]);
-}
-
-
-function editLead(lead) {
-
-  if (!lead) return;
-
-  document.getElementById(
-    'leadModalTitle'
-  ).innerText = 'Edit Lead';
-
-  document.getElementById(
-    'leadRow'
-  ).value = lead.row || '';
-
-  document.getElementById(
-    'leadId'
-  ).value = lead.leadId || '';
-
-  document.getElementById(
-    'leadCustomer'
-  ).value = lead.customer || '';
-
-  document.getElementById(
-    'leadPhone'
-  ).value = lead.phone || '';
-
-  document.getElementById(
-    'leadBusiness'
-  ).value = lead.business || '';
-
-  document.getElementById(
-    'leadLocation'
-  ).value = lead.location || '';
-
-  document.getElementById(
-    'leadStatus'
-  ).value = lead.status || 'New';
-
-  document.getElementById(
-    'leadFollowUp'
-  ).value = normalizeDateForInput(lead.followUp);
-
-  document.getElementById(
-    'leadAppointment'
-  ).value = normalizeDateForInput(lead.appointment);
-
-  document.getElementById(
-    'leadSiteSurvey'
-  ).value = normalizeDateForInput(lead.siteSurvey);
-
-  document.getElementById(
-    'leadQuotation'
-  ).value = normalizeDateForInput(lead.quotation);
-
-  document.getElementById(
-    'leadSPK'
-  ).value = normalizeDateForInput(lead.spk);
-
-  document.getElementById(
-    'leadClosing'
-  ).value = normalizeDateForInput(lead.closing);
-
-  document.getElementById(
-    'leadNotes'
-  ).value = lead.notes || '';
-
-  document.getElementById(
-    'leadModal'
-  ).style.display = 'flex';
-}
-
-
-/* =========================
-   FILTER
-========================= */
-
-function filterLeads() {
-
-  const search =
-    document.getElementById(
-      'leadSearch'
-    ).value
-    .toLowerCase()
-    .trim();
-
-  const status =
-    document.getElementById(
-      'statusFilter'
-    ).value;
-
-  const filtered =
-    allLeads.filter(function(lead) {
-
-      const customer =
-        String(lead.customer || '')
-          .toLowerCase();
-
-      const phone =
-        String(lead.phone || '')
-          .toLowerCase();
-
-      const business =
-        String(lead.business || '')
-          .toLowerCase();
-
-      const location =
-        String(lead.location || '')
-          .toLowerCase();
-
-      const matchesSearch =
-        !search ||
-        customer.includes(search) ||
-        phone.includes(search) ||
-        business.includes(search) ||
-        location.includes(search);
-
-      const matchesStatus =
-        !status ||
-        lead.status === status;
-
-      return matchesSearch && matchesStatus;
-
-    });
-
-  renderLeads(filtered);
-}
-
-
-/* =========================
-   LEAD MODAL
-========================= */
-
-function openLeadModal() {
-
-  clearLeadForm();
-
-  document.getElementById(
-    'leadModalTitle'
-  ).innerText = 'Add Lead';
-
-  document.getElementById(
-    'leadModal'
-  ).style.display = 'flex';
-}
-
-
-function closeLeadModal() {
-
-  document.getElementById(
-    'leadModal'
-  ).style.display = 'none';
-}
-
-
-function clearLeadForm() {
-
-  [
-    'leadRow',
-    'leadId',
-    'leadCustomer',
-    'leadPhone',
-    'leadBusiness',
-    'leadLocation',
-    'leadFollowUp',
-    'leadAppointment',
-    'leadSiteSurvey',
-    'leadQuotation',
-    'leadSPK',
-    'leadClosing',
-    'leadNotes'
-  ].forEach(function(id) {
-
-    const element =
-      document.getElementById(id);
-
-    if (element) {
-      element.value = '';
-    }
-
-  });
-
-  document.getElementById(
-    'leadStatus'
-  ).value = 'New';
-}
-
-
-/* =========================
-   SAVE LEAD
-========================= */
-
-function saveLead() {
-
-  const row =
-    document.getElementById(
-      'leadRow'
-    ).value;
-
-  const lead = {
-
-    row: row,
-
-    leadId:
-      document.getElementById(
-        'leadId'
-      ).value,
-
-    customer:
-      document.getElementById(
-        'leadCustomer'
-      ).value.trim(),
-
-    phone:
-      document.getElementById(
-        'leadPhone'
-      ).value.trim(),
-
-    business:
-      document.getElementById(
-        'leadBusiness'
-      ).value.trim(),
-
-    location:
-      document.getElementById(
-        'leadLocation'
-      ).value.trim(),
-
-    status:
-      document.getElementById(
-        'leadStatus'
-      ).value,
-
-    followUp:
-      document.getElementById(
-        'leadFollowUp'
-      ).value,
-
-    appointment:
-      document.getElementById(
-        'leadAppointment'
-      ).value,
-
-    siteSurvey:
-      document.getElementById(
-        'leadSiteSurvey'
-      ).value,
-
-    quotation:
-      document.getElementById(
-        'leadQuotation'
-      ).value,
-
-    spk:
-      document.getElementById(
-        'leadSPK'
-      ).value,
-
-    closing:
-      document.getElementById(
-        'leadClosing'
-      ).value,
-
-    notes:
-      document.getElementById(
-        'leadNotes'
-      ).value.trim()
-  };
-
-
-  if (!lead.customer) {
-
-    showToast(
-      'Nama customer wajib diisi.',
-      'error'
-    );
-
-    document.getElementById(
-      'leadCustomer'
-    ).focus();
-
-    return;
-  }
-
-
-  if (row) {
-
-    google.script.run
-      .withSuccessHandler(function() {
-
-        closeLeadModal();
-
-        showToast(
-          'Lead berhasil diperbarui.',
-          'success'
-        );
-
-        loadLeads();
-        loadDashboard();
-
-      })
-      .withFailureHandler(showError)
-      .updateLead(
-        sessionToken,
-        lead
-      );
-
-  } else {
-
-    google.script.run
-      .withSuccessHandler(function(result) {
-
-        closeLeadModal();
-
-        showToast(
-          'Lead berhasil ditambahkan. Lead ID: ' +
-          result.leadId,
-          'success'
-        );
-
-        loadLeads();
-        loadDashboard();
-
-      })
-      .withFailureHandler(showError)
-      .addLead(
-        sessionToken,
-        lead
-      );
-  }
-}
-
-
-/* =========================
-   MANAGE SALES
-========================= */
-
-function showSales() {
-
-  if (
-    !currentUser ||
-    currentUser.role !== 'Admin'
-  ) {
-    return;
-  }
-
-  hidePages();
-
-  document.getElementById(
-    'salesPage'
-  ).style.display = 'block';
-
-  document.getElementById(
-    'pageTitle'
-  ).innerText = 'Manage Sales';
-
-  loadSales();
-}
-
-
-function loadSales() {
-
-  showTableLoading('salesTable', 6);
-
-  google.script.run
-    .withSuccessHandler(function(sales) {
-
-      allSales = Array.isArray(sales)
-        ? sales
-        : [];
-
-      renderSales(allSales);
-
-    })
-    .withFailureHandler(function(error) {
-
-      showError(error);
-
-      renderSales([]);
-
-    })
-    .getSales(sessionToken);
-}
-
-
-function renderSales(sales) {
-
-  const tbody =
-    document.getElementById(
-      'salesTable'
-    );
-
-  tbody.innerHTML = '';
-
-  if (!sales || !sales.length) {
-
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="6" class="empty-state">
-          <div class="empty-icon">👥</div>
-          <strong>Belum ada sales</strong>
-          <span>Tambahkan user sales baru.</span>
-        </td>
-      </tr>
-    `;
-
-    return;
-  }
-
-  sales.forEach(function(salesUser) {
-
-    const tr =
-      document.createElement('tr');
-
-    const statusClass =
-      salesUser.status === 'Active'
-        ? 'active'
-        : 'inactive';
-
-    tr.innerHTML = `
-
-      <td>
-        <strong>
-          ${escapeHtml(salesUser.name)}
-        </strong>
-      </td>
-
-      <td>
-        ${escapeHtml(salesUser.username)}
-      </td>
-
-      <td>
-        ${escapeHtml(salesUser.role)}
-      </td>
-
-      <td>
-        <span class="sales-status ${statusClass}">
-          ${escapeHtml(salesUser.status)}
-        </span>
-      </td>
-
-      <td>
-        ${escapeHtml(salesUser.sheetName)}
-      </td>
-
-      <td>
-
-        <div class="action-group">
-
-          <button
-            type="button"
-            class="table-action-btn"
-            onclick="changeSalesStatus(
-              ${JSON.stringify(salesUser.username)},
-              ${JSON.stringify(salesUser.name)},
-              ${JSON.stringify(salesUser.status)}
-            )">
-
-            ${
-              salesUser.status === 'Active'
-                ? 'Deactivate'
-                : 'Activate'
-            }
-
-          </button>
-
-          <button
-            type="button"
-            class="table-action-btn secondary"
-            onclick="resetPassword(
-              ${JSON.stringify(salesUser.username)}
-            )">
-
-            Reset Password
-
-          </button>
+            </div>
 
         </div>
 
-      </td>
+    </div>
 
-    `;
 
-    tbody.appendChild(tr);
 
-  });
-}
+    <!-- =====================================================
+         CRM APPLICATION
+         ===================================================== -->
 
+    <div id="crmApp" class="crm-app" hidden>
 
-/* =========================
-   SALES MODAL
-========================= */
 
-function openSalesModal() {
+        <!-- =================================================
+             SIDEBAR
+             ================================================= -->
 
-  document.getElementById(
-    'salesName'
-  ).value = '';
+        <aside class="sidebar" id="sidebar">
 
-  document.getElementById(
-    'salesUsername'
-  ).value = '';
+            <!-- Sidebar Logo -->
+            <div class="sidebar-header">
 
-  document.getElementById(
-    'salesPassword'
-  ).value = '';
+                <div class="sidebar-logo">
 
-  document.getElementById(
-    'salesModal'
-  ).style.display = 'flex';
-}
+                    <div class="logo-placeholder small">
+                        FSI
+                    </div>
 
+                    <div class="sidebar-brand">
 
-function closeSalesModal() {
+                        <strong>CRM FSI</strong>
 
-  document.getElementById(
-    'salesModal'
-  ).style.display = 'none';
-}
+                        <span>
+                            French Solar Industry
+                        </span>
 
+                    </div>
 
-/* =========================
-   CREATE SALES
-========================= */
+                </div>
 
-function createSales() {
+                <!-- Mobile Close -->
+                <button
+                    type="button"
+                    id="closeSidebar"
+                    class="sidebar-close"
+                    aria-label="Close menu"
+                >
+                    ×
+                </button>
 
-  const name =
-    document.getElementById(
-      'salesName'
-    ).value.trim();
+            </div>
 
-  const username =
-    document.getElementById(
-      'salesUsername'
-    ).value.trim();
 
-  const password =
-    document.getElementById(
-      'salesPassword'
-    ).value;
+            <!-- User -->
+            <div class="sidebar-user">
 
-  if (!name || !username || !password) {
+                <div class="user-avatar">
+                    A
+                </div>
 
-    showToast(
-      'Name, username dan password wajib diisi.',
-      'error'
-    );
+                <div class="user-info">
 
-    return;
-  }
+                    <strong id="sidebarUserName">
+                        Admin
+                    </strong>
 
-  if (password.length < 6) {
+                    <span id="sidebarUserRole">
+                        Administrator
+                    </span>
 
-    showToast(
-      'Password minimal 6 karakter.',
-      'error'
-    );
+                </div>
 
-    return;
-  }
+            </div>
 
-  google.script.run
-    .withSuccessHandler(function(result) {
 
-      closeSalesModal();
+            <!-- Navigation -->
+            <nav class="sidebar-nav">
 
-      showToast(
-        'Sales ' +
-        result.sales.name +
-        ' berhasil dibuat.',
-        'success'
-      );
+                <div class="nav-section-title">
+                    MAIN
+                </div>
 
-      loadSales();
 
-    })
-    .withFailureHandler(showError)
-    .createSales(
-      sessionToken,
-      name,
-      username,
-      password
-    );
-}
-
-
-/* =========================
-   SALES STATUS
-========================= */
-
-function changeSalesStatus(
-  username,
-  name,
-  currentStatus
-) {
-
-  const newStatus =
-    currentStatus === 'Active'
-      ? 'Inactive'
-      : 'Active';
-
-  if (
-    !confirm(
-      'Ubah status ' +
-      name +
-      ' menjadi ' +
-      newStatus +
-      '?'
-    )
-  ) {
-    return;
-  }
-
-  google.script.run
-    .withSuccessHandler(function() {
-
-      showToast(
-        'Status ' +
-        name +
-        ' berhasil diubah.',
-        'success'
-      );
-
-      loadSales();
-
-    })
-    .withFailureHandler(showError)
-    .updateSales(
-      sessionToken,
-      username,
-      name,
-      newStatus
-    );
-}
-
-
-/* =========================
-   RESET PASSWORD
-========================= */
-
-function resetPassword(username) {
+                <button
+                    type="button"
+                    class="nav-item active"
+                    data-page="dashboard"
+                >
 
-  const password =
-    prompt(
-      'Masukkan password baru minimal 6 karakter:'
-    );
+                    <span class="nav-icon">⌂</span>
 
-  if (!password) return;
+                    <span>
+                        Dashboard
+                    </span>
 
-  if (password.length < 6) {
+                </button>
 
-    showToast(
-      'Password minimal 6 karakter.',
-      'error'
-    );
 
-    return;
-  }
+                <button
+                    type="button"
+                    class="nav-item"
+                    data-page="leads"
+                >
 
-  google.script.run
-    .withSuccessHandler(function() {
-
-      showToast(
-        'Password berhasil direset.',
-        'success'
-      );
+                    <span class="nav-icon">◫</span>
 
-    })
-    .withFailureHandler(showError)
-    .resetSalesPassword(
-      sessionToken,
-      username,
-      password
-    );
-}
+                    <span>
+                        Leads
+                    </span>
 
+                    <span class="nav-badge">
+                        24
+                    </span>
 
-/* =========================
-   STATUS BADGE
-========================= */
+                </button>
 
-function getStatusBadge(status) {
 
-  const value =
-    String(status || 'New');
+                <div
+                    id="adminNavigation"
+                    class="admin-navigation"
+                >
 
-  const safeStatus =
-    escapeHtml(value);
+                    <div class="nav-section-title">
+                        MANAGEMENT
+                    </div>
 
-  const className =
-    value
-      .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9-]/g, '');
 
-  return `
-    <span class="status status-${className}">
-      ${safeStatus}
-    </span>
-  `;
-}
-
+                    <button
+                        type="button"
+                        class="nav-item"
+                        data-page="sales"
+                    >
 
-/* =========================
-   PHONE CLEANUP
-========================= */
+                        <span class="nav-icon">♙</span>
 
-function cleanPhone(phone) {
+                        <span>
+                            Sales
+                        </span>
 
-  let value =
-    String(phone || '')
-      .trim()
-      .replace(/[^\d+]/g, '');
+                    </button>
 
-  if (!value) return '';
 
-  if (value.startsWith('+62')) {
-    value = value.substring(1);
-  }
+                    <button
+                        type="button"
+                        class="nav-item"
+                        data-page="reports"
+                    >
 
-  if (value.startsWith('62')) {
-    return value;
-  }
-
-  if (value.startsWith('0')) {
-    return '62' + value.substring(1);
-  }
-
-  return value;
-}
+                        <span class="nav-icon">▥</span>
 
-
-/* =========================
-   DATE HELPERS
-========================= */
-
-function formatDateValue(value) {
-
-  if (!value) return '-';
-
-  const date =
-    normalizeDateForInput(value);
+                        <span>
+                            Reports
+                        </span>
 
-  if (!date) {
-    return escapeHtml(String(value));
-  }
+                    </button>
 
-  const parts =
-    date.split('-');
+                </div>
 
-  if (parts.length !== 3) {
-    return escapeHtml(String(value));
-  }
 
-  return (
-    parts[2] +
-    '/' +
-    parts[1] +
-    '/' +
-    parts[0]
-  );
-}
+                <div class="nav-section-title">
+                    SYSTEM
+                </div>
 
 
-function normalizeDateForInput(value) {
+                <button
+                    type="button"
+                    class="nav-item"
+                    data-page="settings"
+                >
 
-  if (!value) return '';
-
-  if (
-    typeof value === 'string' &&
-    /^\d{4}-\d{2}-\d{2}$/.test(value)
-  ) {
-    return value;
-  }
+                    <span class="nav-icon">⚙</span>
 
-  const date =
-    new Date(value);
+                    <span>
+                        Settings
+                    </span>
 
-  if (isNaN(date.getTime())) {
-    return '';
-  }
+                </button>
 
-  const year =
-    date.getFullYear();
+            </nav>
 
-  const month =
-    String(date.getMonth() + 1)
-      .padStart(2, '0');
 
-  const day =
-    String(date.getDate())
-      .padStart(2, '0');
+            <!-- Sidebar Bottom -->
+            <div class="sidebar-bottom">
 
-  return (
-    year +
-    '-' +
-    month +
-    '-' +
-    day
-  );
-}
+                <button
+                    type="button"
+                    id="logoutButton"
+                    class="logout-button"
+                >
 
+                    <span class="nav-icon">
+                        ↪
+                    </span>
 
-/* =========================
-   UI HELPERS
-========================= */
+                    <span>
+                        Logout
+                    </span>
 
-function showTableLoading(
-  tableId,
-  colspan
-) {
+                </button>
 
-  const tbody =
-    document.getElementById(tableId);
+            </div>
 
-  if (!tbody) return;
+        </aside>
 
-  tbody.innerHTML = `
-    <tr>
-      <td colspan="${colspan}" class="loading-state">
-        <div class="loading-spinner"></div>
-        <span>Loading data...</span>
-      </td>
-    </tr>
-  `;
-}
 
 
-function showToast(
-  message,
-  type
-) {
+        <!-- =================================================
+             MAIN CONTENT
+             ================================================= -->
 
-  let container =
-    document.getElementById(
-      'fsiToastContainer'
-    );
+        <main class="main-content">
 
-  if (!container) {
 
-    container =
-      document.createElement('div');
+            <!-- Topbar -->
+            <header class="topbar">
 
-    container.id =
-      'fsiToastContainer';
+                <div class="topbar-left">
 
-    container.className =
-      'toast-container';
+                    <button
+                        type="button"
+                        id="openSidebar"
+                        class="mobile-menu-button"
+                        aria-label="Open menu"
+                    >
+                        ☰
+                    </button>
 
-    document.body.appendChild(container);
-  }
+                    <div>
 
-  const toast =
-    document.createElement('div');
+                        <h2 id="pageTitle">
+                            Dashboard
+                        </h2>
 
-  toast.className =
-    'fsi-toast ' +
-    (type || 'success');
+                        <p id="pageSubtitle">
+                            Overview of your CRM activity
+                        </p>
 
-  toast.innerHTML = `
-    <span class="toast-icon">
-      ${
-        type === 'error'
-          ? '!'
-          : '✓'
-      }
-    </span>
+                    </div>
 
-    <span class="toast-message">
-      ${escapeHtml(message)}
-    </span>
-  `;
+                </div>
 
-  container.appendChild(toast);
 
-  setTimeout(function() {
+                <div class="topbar-right">
 
-    toast.classList.add('show');
+                    <button
+                        type="button"
+                        class="notification-button"
+                        aria-label="Notifications"
+                    >
+                        🔔
 
-  }, 10);
+                        <span class="notification-dot"></span>
 
-  setTimeout(function() {
+                    </button>
 
-    toast.classList.remove('show');
 
-    setTimeout(function() {
+                    <div class="topbar-user">
 
-      toast.remove();
+                        <div class="user-avatar small-avatar">
+                            A
+                        </div>
 
-    }, 300);
+                        <div>
 
-  }, 3500);
-}
+                            <strong id="topbarUserName">
+                                Admin
+                            </strong>
 
+                            <span id="topbarUserRole">
+                                Administrator
+                            </span>
 
-/* =========================
-   PAGE HELPERS
-========================= */
+                        </div>
 
-function hidePages() {
+                    </div>
 
-  document.getElementById(
-    'dashboardPage'
-  ).style.display = 'none';
+                </div>
 
-  document.getElementById(
-    'leadsPage'
-  ).style.display = 'none';
+            </header>
 
-  document.getElementById(
-    'salesPage'
-  ).style.display = 'none';
-}
 
 
-function setLoginMessage(message) {
+            <!-- =============================================
+                 PAGE: DASHBOARD
+                 ============================================= -->
 
-  const element =
-    document.getElementById(
-      'loginMessage'
-    );
+            <section
+                id="dashboardPage"
+                class="page-content active-page"
+            >
 
-  if (element) {
-    element.innerText =
-      message || '';
-  }
-}
+                <!-- Welcome -->
+                <div class="welcome-card">
 
+                    <div>
 
-function showError(error) {
+                        <span class="welcome-label">
+                            Welcome back
+                        </span>
 
-  const message =
-    error &&
-    error.message
-      ? error.message
-      : 'Terjadi kesalahan.';
+                        <h1 id="welcomeName">
+                            Admin
+                        </h1>
 
-  showToast(
-    message,
-    'error'
-  );
-}
+                        <p>
+                            Here's what's happening with your CRM today.
+                        </p>
 
+                    </div>
 
-/* =========================
-   SECURITY HELPERS
-========================= */
+                    <div class="welcome-decoration">
+                        ☀
+                    </div>
 
-function escapeHtml(value) {
+                </div>
 
-  if (
-    value === null ||
-    value === undefined
-  ) {
-    return '';
-  }
 
-  return String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
+                <!-- Statistics -->
+                <div class="stats-grid">
 
 
-function escapeAttr(value) {
+                    <!-- Total Leads -->
+                    <div class="stat-card">
 
-  return String(value || '')
-    .replace(/\\/g, '\\\\')
-    .replace(/'/g, "\\'");
-}
+                        <div class="stat-card-top">
 
+                            <div class="stat-icon blue">
+                                ◫
+                            </div>
 
-/* =========================
-   MODAL CLICK OUTSIDE
-========================= */
+                            <span class="stat-label">
+                                Total Leads
+                            </span>
 
-document.addEventListener(
-  'click',
-  function(event) {
+                        </div>
 
-    const leadModal =
-      document.getElementById('leadModal');
+                        <div class="stat-value">
+                            248
+                        </div>
 
-    const salesModal =
-      document.getElementById('salesModal');
+                        <div class="stat-footer">
 
-    if (
-      event.target === leadModal
-    ) {
-      closeLeadModal();
-    }
+                            <span class="stat-positive">
+                                +12%
+                            </span>
 
-    if (
-      event.target === salesModal
-    ) {
-      closeSalesModal();
-    }
+                            <span>
+                                from last month
+                            </span>
 
-  }
-);
+                        </div>
 
+                    </div>
 
-/* =========================
-   ENTER KEY LOGIN
-========================= */
 
-document.addEventListener(
-  'keydown',
-  function(event) {
+                    <!-- Interested -->
+                    <div class="stat-card">
 
-    if (
-      event.key === 'Enter' &&
-      document.activeElement &&
-      (
-        document.activeElement.id ===
-          'loginUsername' ||
-        document.activeElement.id ===
-          'loginPassword'
-      )
-    ) {
-      login();
-    }
+                        <div class="stat-card-top">
 
-  }
-);
+                            <div class="stat-icon green">
+                                ✓
+                            </div>
 
+                            <span class="stat-label">
+                                Interested
+                            </span>
 
-/* =========================
-   START
-========================= */
+                        </div>
 
-window.onload = function() {
+                        <div class="stat-value">
+                            42
+                        </div>
 
-  checkSession();
+                        <div class="stat-footer">
 
-};
+                            <span class="stat-positive">
+                                +8%
+                            </span>
 
-</script>
-```
+                            <span>
+                                from last month
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Appointments -->
+                    <div class="stat-card">
+
+                        <div class="stat-card-top">
+
+                            <div class="stat-icon orange">
+                                ◷
+                            </div>
+
+                            <span class="stat-label">
+                                Appointments
+                            </span>
+
+                        </div>
+
+                        <div class="stat-value">
+                            18
+                        </div>
+
+                        <div class="stat-footer">
+
+                            <span class="stat-positive">
+                                +5%
+                            </span>
+
+                            <span>
+                                from last month
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Closing -->
+                    <div class="stat-card">
+
+                        <div class="stat-card-top">
+
+                            <div class="stat-icon purple">
+                                Rp
+                            </div>
+
+                            <span class="stat-label">
+                                Closing
+                            </span>
+
+                        </div>
+
+                        <div class="stat-value">
+                            8
+                        </div>
+
+                        <div class="stat-footer">
+
+                            <span class="stat-positive">
+                                +15%
+                            </span>
+
+                            <span>
+                                from last month
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- Dashboard Grid -->
+                <div class="dashboard-grid">
+
+
+                    <!-- Recent Leads -->
+                    <div class="content-card large-card">
+
+                        <div class="card-header">
+
+                            <div>
+
+                                <h3>
+                                    Recent Leads
+                                </h3>
+
+                                <p>
+                                    Latest customer activity
+                                </p>
+
+                            </div>
+
+                            <button
+                                type="button"
+                                class="text-button"
+                                data-page-button="leads"
+                            >
+                                View All
+                            </button>
+
+                        </div>
+
+
+                        <div class="table-wrapper">
+
+                            <table class="data-table">
+
+                                <thead>
+
+                                    <tr>
+
+                                        <th>
+                                            Customer
+                                        </th>
+
+                                        <th>
+                                            Business
+                                        </th>
+
+                                        <th>
+                                            Sales
+                                        </th>
+
+                                        <th>
+                                            Status
+                                        </th>
+
+                                        <th>
+                                            Updated
+                                        </th>
+
+                                    </tr>
+
+                                </thead>
+
+                                <tbody>
+
+                                    <tr>
+
+                                        <td>
+                                            <div class="customer-cell">
+
+                                                <div class="customer-avatar">
+                                                    PA
+                                                </div>
+
+                                                <div>
+                                                    <strong>
+                                                        Pak Agung
+                                                    </strong>
+
+                                                    <span>
+                                                        +62 812 0000 0001
+                                                    </span>
+                                                </div>
+
+                                            </div>
+                                        </td>
+
+                                        <td>
+                                            Fish Farm
+                                        </td>
+
+                                        <td>
+                                            Ris
+                                        </td>
+
+                                        <td>
+                                            <span class="status-badge interested">
+                                                Interested
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            Today
+                                        </td>
+
+                                    </tr>
+
+
+                                    <tr>
+
+                                        <td>
+                                            <div class="customer-cell">
+
+                                                <div class="customer-avatar">
+                                                    PO
+                                                </div>
+
+                                                <div>
+                                                    <strong>
+                                                        Pak Ony
+                                                    </strong>
+
+                                                    <span>
+                                                        +62 812 0000 0002
+                                                    </span>
+                                                </div>
+
+                                            </div>
+                                        </td>
+
+                                        <td>
+                                            Villa
+                                        </td>
+
+                                        <td>
+                                            Ris
+                                        </td>
+
+                                        <td>
+                                            <span class="status-badge appointment">
+                                                Appointment
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            Today
+                                        </td>
+
+                                    </tr>
+
+
+                                    <tr>
+
+                                        <td>
+                                            <div class="customer-cell">
+
+                                                <div class="customer-avatar">
+                                                    CB
+                                                </div>
+
+                                                <div>
+                                                    <strong>
+                                                        Conato Bakery
+                                                    </strong>
+
+                                                    <span>
+                                                        +62 812 0000 0003
+                                                    </span>
+                                                </div>
+
+                                            </div>
+                                        </td>
+
+                                        <td>
+                                            Bakery
+                                        </td>
+
+                                        <td>
+                                            Budi
+                                        </td>
+
+                                        <td>
+                                            <span class="status-badge quotation">
+                                                Quotation
+                                            </span>
+                                        </td>
+
+                                        <td>
+                                            Yesterday
+                                        </td>
+
+                                    </tr>
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- Quick Actions -->
+                    <div class="content-card">
+
+                        <div class="card-header">
+
+                            <div>
+
+                                <h3>
+                                    Quick Actions
+                                </h3>
+
+                                <p>
+                                    Common CRM actions
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="quick-actions">
+
+                            <button
+                                type="button"
+                                class="quick-action"
+                                data-action="add-lead"
+                            >
+
+                                <span class="quick-action-icon">
+                                    +
+                                </span>
+
+                                <div>
+
+                                    <strong>
+                                        Add New Lead
+                                    </strong>
+
+                                    <span>
+                                        Create customer lead
+                                    </span>
+
+                                </div>
+
+                            </button>
+
+
+                            <button
+                                type="button"
+                                class="quick-action admin-only-action"
+                                data-action="add-sales"
+                            >
+
+                                <span class="quick-action-icon">
+                                    +
+                                </span>
+
+                                <div>
+
+                                    <strong>
+                                        Add New Sales
+                                    </strong>
+
+                                    <span>
+                                        Create sales account
+                                    </span>
+
+                                </div>
+
+                            </button>
+
+
+                            <button
+                                type="button"
+                                class="quick-action"
+                                data-action="export"
+                            >
+
+                                <span class="quick-action-icon">
+                                    ↓
+                                </span>
+
+                                <div>
+
+                                    <strong>
+                                        Export Data
+                                    </strong>
+
+                                    <span>
+                                        Download CRM data
+                                    </span>
+
+                                </div>
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+
+            <!-- =============================================
+                 PAGE: LEADS
+                 ============================================= -->
+
+            <section
+                id="leadsPage"
+                class="page-content"
+                hidden
+            >
+
+                <div class="page-toolbar">
+
+                    <div>
+
+                        <h3>
+                            Lead Management
+                        </h3>
+
+                        <p>
+                            Manage and track customer leads.
+                        </p>
+
+                    </div>
+
+                    <button
+                        type="button"
+                        class="primary-button"
+                        data-action="add-lead"
+                    >
+                        + Add New Lead
+                    </button>
+
+                </div>
+
+
+                <!-- Filters -->
+                <div class="filter-card">
+
+                    <div class="search-box">
+
+                        <span>
+                            🔍
+                        </span>
+
+                        <input
+                            type="search"
+                            id="leadSearch"
+                            placeholder="Search customer, phone, business..."
+                        >
+
+                    </div>
+
+
+                    <select id="statusFilter">
+
+                        <option value="all">
+                            All Status
+                        </option>
+
+                        <option value="new">
+                            New
+                        </option>
+
+                        <option value="interested">
+                            Interested
+                        </option>
+
+                        <option value="follow-up">
+                            Follow Up
+                        </option>
+
+                        <option value="appointment">
+                            Appointment
+                        </option>
+
+                        <option value="quotation">
+                            Quotation
+                        </option>
+
+                        <option value="spk">
+                            SPK
+                        </option>
+
+                        <option value="closing">
+                            Closing
+                        </option>
+
+                        <option value="not-interested">
+                            Not Interested
+                        </option>
+
+                    </select>
+
+
+                    <select id="salesFilter">
+
+                        <option value="all">
+                            All Sales
+                        </option>
+
+                        <option value="ris">
+                            Ris
+                        </option>
+
+                        <option value="budi">
+                            Budi
+                        </option>
+
+                        <option value="andi">
+                            Andi
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- Leads Table -->
+                <div class="content-card">
+
+                    <div class="table-wrapper">
+
+                        <table class="data-table leads-table">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>
+                                        Customer
+                                    </th>
+
+                                    <th>
+                                        Business
+                                    </th>
+
+                                    <th>
+                                        Location
+                                    </th>
+
+                                    <th>
+                                        Sales
+                                    </th>
+
+                                    <th>
+                                        Status
+                                    </th>
+
+                                    <th>
+                                        Follow Up
+                                    </th>
+
+                                    <th>
+                                        Updated
+                                    </th>
+
+                                    <th>
+                                        Action
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody id="leadsTableBody">
+
+                                <tr>
+
+                                    <td>
+                                        <div class="customer-cell">
+
+                                            <div class="customer-avatar">
+                                                PA
+                                            </div>
+
+                                            <div>
+
+                                                <strong>
+                                                    Pak Agung
+                                                </strong>
+
+                                                <span>
+                                                    +62 812 0000 0001
+                                                </span>
+
+                                            </div>
+
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        Fish Farm
+                                    </td>
+
+                                    <td>
+                                        Denpasar
+                                    </td>
+
+                                    <td>
+                                        Ris
+                                    </td>
+
+                                    <td>
+                                        <span class="status-badge interested">
+                                            Interested
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        18 Sep 2026
+                                    </td>
+
+                                    <td>
+                                        Today
+                                    </td>
+
+                                    <td>
+
+                                        <button
+                                            type="button"
+                                            class="icon-button"
+                                            title="View"
+                                        >
+                                            •••
+                                        </button>
+
+                                    </td>
+
+                                </tr>
+
+
+                                <tr>
+
+                                    <td>
+                                        <div class="customer-cell">
+
+                                            <div class="customer-avatar">
+                                                PO
+                                            </div>
+
+                                            <div>
+
+                                                <strong>
+                                                    Pak Ony
+                                                </strong>
+
+                                                <span>
+                                                    +62 812 0000 0002
+                                                </span>
+
+                                            </div>
+
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        Villa
+                                    </td>
+
+                                    <td>
+                                        Canggu
+                                    </td>
+
+                                    <td>
+                                        Ris
+                                    </td>
+
+                                    <td>
+                                        <span class="status-badge appointment">
+                                            Appointment
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        19 Sep 2026
+                                    </td>
+
+                                    <td>
+                                        Today
+                                    </td>
+
+                                    <td>
+
+                                        <button
+                                            type="button"
+                                            class="icon-button"
+                                            title="View"
+                                        >
+                                            •••
+                                        </button>
+
+                                    </td>
+
+                                </tr>
+
+
+                                <tr>
+
+                                    <td>
+                                        <div class="customer-cell">
+
+                                            <div class="customer-avatar">
+                                                CB
+                                            </div>
+
+                                            <div>
+
+                                                <strong>
+                                                    Conato Bakery
+                                                </strong>
+
+                                                <span>
+                                                    +62 812 0000 0003
+                                                </span>
+
+                                            </div>
+
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        Bakery
+                                    </td>
+
+                                    <td>
+                                        Kerobokan
+                                    </td>
+
+                                    <td>
+                                        Budi
+                                    </td>
+
+                                    <td>
+                                        <span class="status-badge quotation">
+                                            Quotation
+                                        </span>
+
+                                    </td>
+
+                                    <td>
+                                        20 Sep 2026
+                                    </td>
+
+                                    <td>
+                                        Yesterday
+                                    </td>
+
+                                    <td>
+
+                                        <button
+                                            type="button"
+                                            class="icon-button"
+                                            title="View"
+                                        >
+                                            •••
+                                        </button>
+
+                                    </td>
+
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+
+            <!-- =============================================
+                 PAGE: SALES
+                 ============================================= -->
+
+            <section
+                id="salesPage"
+                class="page-content"
+                hidden
+            >
+
+                <div class="page-toolbar">
+
+                    <div>
+
+                        <h3>
+                            Sales Management
+                        </h3>
+
+                        <p>
+                            Manage CRM sales accounts and performance.
+                        </p>
+
+                    </div>
+
+                    <button
+                        type="button"
+                        class="primary-button"
+                        data-action="add-sales"
+                    >
+                        + Add New Sales
+                    </button>
+
+                </div>
+
+
+                <div class="content-card">
+
+                    <div class="table-wrapper">
+
+                        <table class="data-table">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>
+                                        Sales
+                                    </th>
+
+                                    <th>
+                                        Username
+                                    </th>
+
+                                    <th>
+                                        Role
+                                    </th>
+
+                                    <th>
+                                        Leads
+                                    </th>
+
+                                    <th>
+                                        Closing
+                                    </th>
+
+                                    <th>
+                                        Status
+                                    </th>
+
+                                    <th>
+                                        Action
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody>
+
+                                <tr>
+
+                                    <td>
+
+                                        <div class="customer-cell">
+
+                                            <div class="customer-avatar">
+                                                R
+                                            </div>
+
+                                            <div>
+
+                                                <strong>
+                                                    Ris
+                                                </strong>
+
+                                                <span>
+                                                    Sales
+                                                </span>
+
+                                            </div>
+
+                                        </div>
+
+                                    </td>
+
+                                    <td>
+                                        ris
+                                    </td>
+
+                                    <td>
+                                        Sales
+                                    </td>
+
+                                    <td>
+                                        128
+                                    </td>
+
+                                    <td>
+                                        3
+                                    </td>
+
+                                    <td>
+                                        <span class="status-badge active">
+                                            Active
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        <button
+                                            type="button"
+                                            class="icon-button"
+                                        >
+                                            •••
+                                        </button>
+                                    </td>
+
+                                </tr>
+
+
+                                <tr>
+
+                                    <td>
+
+                                        <div class="customer-cell">
+
+                                            <div class="customer-avatar">
+                                                B
+                                            </div>
+
+                                            <div>
+
+                                                <strong>
+                                                    Budi
+                                                </strong>
+
+                                                <span>
+                                                    Sales
+                                                </span>
+
+                                            </div>
+
+                                        </div>
+
+                                    </td>
+
+                                    <td>
+                                        budi
+                                    </td>
+
+                                    <td>
+                                        Sales
+                                    </td>
+
+                                    <td>
+                                        76
+                                    </td>
+
+                                    <td>
+                                        2
+                                    </td>
+
+                                    <td>
+                                        <span class="status-badge active">
+                                            Active
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        <button
+                                            type="button"
+                                            class="icon-button"
+                                        >
+                                            •••
+                                        </button>
+                                    </td>
+
+                                </tr>
+
+
+                                <tr>
+
+                                    <td>
+
+                                        <div class="customer-cell">
+
+                                            <div class="customer-avatar">
+                                                A
+                                            </div>
+
+                                            <div>
+
+                                                <strong>
+                                                    Andi
+                                                </strong>
+
+                                                <span>
+                                                    Sales
+                                                </span>
+
+                                            </div>
+
+                                        </div>
+
+                                    </td>
+
+                                    <td>
+                                        andi
+                                    </td>
+
+                                    <td>
+                                        Sales
+                                    </td>
+
+                                    <td>
+                                        44
+                                    </td>
+
+                                    <td>
+                                        1
+                                    </td>
+
+                                    <td>
+                                        <span class="status-badge inactive">
+                                            Inactive
+                                        </span>
+
+                                    </td>
+
+                                    <td>
+                                        <button
+                                            type="button"
+                                            class="icon-button"
+                                        >
+                                            •••
+                                        </button>
+                                    </td>
+
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+
+            <!-- =============================================
+                 PAGE: REPORTS
+                 ============================================= -->
+
+            <section
+                id="reportsPage"
+                class="page-content"
+                hidden
+            >
+
+                <div class="page-toolbar">
+
+                    <div>
+
+                        <h3>
+                            Reports
+                        </h3>
+
+                        <p>
+                            CRM performance and sales reports.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="empty-state">
+
+                    <div class="empty-icon">
+                        ▥
+                    </div>
+
+                    <h3>
+                        Reports Center
+                    </h3>
+
+                    <p>
+                        Detailed reports will be connected to your CRM database later.
+                    </p>
+
+                </div>
+
+            </section>
+
+
+
+            <!-- =============================================
+                 PAGE: SETTINGS
+                 ============================================= -->
+
+            <section
+                id="settingsPage"
+                class="page-content"
+                hidden
+            >
+
+                <div class="page-toolbar">
+
+                    <div>
+
+                        <h3>
+                            Settings
+                        </h3>
+
+                        <p>
+                            Manage your CRM preferences.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="settings-grid">
+
+                    <div class="content-card">
+
+                        <div class="card-header">
+
+                            <div>
+
+                                <h3>
+                                    Account
+                                </h3>
+
+                                <p>
+                                    Your account information
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                        <div class="settings-row">
+
+                            <span>
+                                Name
+                            </span>
+
+                            <strong id="settingsName">
+                                Admin
+                            </strong>
+
+                        </div>
+
+                        <div class="settings-row">
+
+                            <span>
+                                Role
+                            </span>
+
+                            <strong id="settingsRole">
+                                Administrator
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="content-card">
+
+                        <div class="card-header">
+
+                            <div>
+
+                                <h3>
+                                    System
+                                </h3>
+
+                                <p>
+                                    CRM configuration
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                        <div class="settings-row">
+
+                            <span>
+                                Version
+                            </span>
+
+                            <strong>
+                                1.0.0
+                            </strong>
+
+                        </div>
+
+                        <div class="settings-row">
+
+                            <span>
+                                Platform
+                            </span>
+
+                            <strong>
+                                CRM FSI
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         ADD LEAD MODAL
+         ===================================================== -->
+
+    <div
+        id="leadModal"
+        class="modal-overlay"
+        hidden
+    >
+
+        <div class="modal">
+
+            <div class="modal-header">
+
+                <div>
+
+                    <h3>
+                        Add New Lead
+                    </h3>
+
+                    <p>
+                        Create a new customer lead.
+                    </p>
+
+                </div>
+
+                <button
+                    type="button"
+                    class="modal-close"
+                    data-close-modal="leadModal"
+                >
+                    ×
+                </button>
+
+            </div>
+
+
+            <form id="leadForm">
+
+                <div class="modal-body">
+
+                    <div class="form-grid">
+
+                        <div class="form-group">
+
+                            <label>
+                                Customer Name
+                            </label>
+
+                            <input
+                                type="text"
+                                placeholder="Customer name"
+                                required
+                            >
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>
+                                Phone
+                            </label>
+
+                            <input
+                                type="tel"
+                                placeholder="+62..."
+                                required
+                            >
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>
+                                Business
+                            </label>
+
+                            <input
+                                type="text"
+                                placeholder="Villa, Hotel, Restaurant..."
+                            >
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>
+                                Location
+                            </label>
+
+                            <input
+                                type="text"
+                                placeholder="Location"
+                            >
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>
+                                Status
+                            </label>
+
+                            <select>
+
+                                <option>
+                                    New
+                                </option>
+
+                                <option>
+                                    Interested
+                                </option>
+
+                                <option>
+                                    Follow Up
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>
+                                Follow Up
+                            </label>
+
+                            <input
+                                type="date"
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Notes
+                        </label>
+
+                        <textarea
+                            rows="4"
+                            placeholder="Customer notes..."
+                        ></textarea>
+
+                    </div>
+
+                </div>
+
+
+                <div class="modal-footer">
+
+                    <button
+                        type="button"
+                        class="secondary-button"
+                        data-close-modal="leadModal"
+                    >
+                        Cancel
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="primary-button"
+                    >
+                        Save Lead
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         ADD SALES MODAL
+         ===================================================== -->
+
+    <div
+        id="salesModal"
+        class="modal-overlay"
+        hidden
+    >
+
+        <div class="modal">
+
+            <div class="modal-header">
+
+                <div>
+
+                    <h3>
+                        Add New Sales
+                    </h3>
+
+                    <p>
+                        Create a new sales account.
+                    </p>
+
+                </div>
+
+                <button
+                    type="button"
+                    class="modal-close"
+                    data-close-modal="salesModal"
+                >
+                    ×
+                </button>
+
+            </div>
+
+
+            <form id="salesForm">
+
+                <div class="modal-body">
+
+                    <div class="form-group">
+
+                        <label>
+                            Sales Name
+                        </label>
+
+                        <input
+                            type="text"
+                            id="salesName"
+                            placeholder="Full name"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Username
+                        </label>
+
+                        <input
+                            type="text"
+                            id="salesUsername"
+                            placeholder="Username"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="form-grid">
+
+                        <div class="form-group">
+
+                            <label>
+                                Password
+                            </label>
+
+                            <input
+                                type="password"
+                                id="salesPassword"
+                                placeholder="Password"
+                                required
+                            >
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>
+                                Confirm Password
+                            </label>
+
+                            <input
+                                type="password"
+                                id="salesConfirmPassword"
+                                placeholder="Confirm password"
+                                required
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Status
+                        </label>
+
+                        <select id="salesStatus">
+
+                            <option value="active">
+                                Active
+                            </option>
+
+                            <option value="inactive">
+                                Inactive
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+
+                <div class="modal-footer">
+
+                    <button
+                        type="button"
+                        class="secondary-button"
+                        data-close-modal="salesModal"
+                    >
+                        Cancel
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="primary-button"
+                    >
+                        Create Sales
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- Mobile Overlay -->
+    <div
+        id="sidebarOverlay"
+        class="sidebar-overlay"
+        hidden
+    ></div>
+
+
+
+    <!-- JavaScript -->
+    <script src="script.js"></script>
+
+</body>
+</html>
