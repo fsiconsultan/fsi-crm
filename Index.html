@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+  <base target="_top">
+
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1">
+
+  <title>CRM FSI</title>
+
+  <?!= include('Style'); ?>
+
+</head>
+
+
+<body>
+
+<!-- LOGIN -->
+
+<div id="loginPage"
+     class="page">
+
+  <div class="login-box">
+
+    <div class="logo">
+      FSI
+    </div>
+
+    <h1>CRM FSI</h1>
+
+    <p class="subtitle">
+      French Solar Industry
+    </p>
+
+    <input
+      id="loginUsername"
+      type="text"
+      placeholder="Username">
+
+    <input
+      id="loginPassword"
+      type="password"
+      placeholder="Password">
+
+    <button
+      onclick="login()"
+      class="primary-btn">
+
+      LOGIN
+
+    </button>
+
+    <div id="loginMessage"
+         class="message">
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- APP -->
+
+<div id="app"
+     style="display:none">
+
+
+  <!-- SIDEBAR -->
+
+  <aside class="sidebar">
+
+    <div class="brand">
+      <strong>FSI CRM</strong>
+    </div>
+
+    <div id="userInfo"
+         class="user-info">
+    </div>
+
+    <nav>
+
+      <button
+        onclick="showDashboard()">
+
+        Dashboard
+
+      </button>
+
+      <button
+        onclick="showLeads()">
+
+        My Leads
+
+      </button>
+
+      <button
+        id="manageSalesBtn"
+        onclick="showSales()"
+        style="display:none">
+
+        Manage Sales
+
+      </button>
+
+    </nav>
+
+    <button
+      onclick="logout()"
+      class="logout-btn">
+
+      Logout
+
+    </button>
+
+  </aside>
+
+
+  <!-- MAIN -->
+
+  <main class="main">
+
+
+    <!-- TOPBAR -->
+
+    <header class="topbar">
+
+      <h2 id="pageTitle">
+        Dashboard
+      </h2>
+
+      <span id="currentUser">
+      </span>
+
+    </header>
+
+
+    <!-- DASHBOARD -->
+
+    <section id="dashboardPage"
+             class="content">
+
+      <div class="stats-grid">
+
+        <div class="stat-card">
+          <span>Total Leads</span>
+          <strong id="statTotal">0</strong>
+        </div>
+
+        <div class="stat-card">
+          <span>New</span>
+          <strong id="statNew">0</strong>
+        </div>
+
+        <div class="stat-card">
+          <span>Interested</span>
+          <strong id="statInterested">0</strong>
+        </div>
+
+        <div class="stat-card">
+          <span>Follow-up</span>
+          <strong id="statFollowUp">0</strong>
+        </div>
+
+        <div class="stat-card">
+          <span>Appointment</span>
+          <strong id="statAppointment">0</strong>
+        </div>
+
+        <div class="stat-card">
+          <span>Site Survey</span>
+          <strong id="statSiteSurvey">0</strong>
+        </div>
+
+        <div class="stat-card">
+          <span>Quotation</span>
+          <strong id="statQuotation">0</strong>
+        </div>
+
+        <div class="stat-card">
+          <span>Closing</span>
+          <strong id="statClosing">0</strong>
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- LEADS -->
+
+    <section id="leadsPage"
+             class="content"
+             style="display:none">
+
+      <div class="toolbar">
+
+        <input
+          id="leadSearch"
+          placeholder="Search customer / phone..."
+          oninput="filterLeads()">
+
+        <select
+          id="statusFilter"
+          onchange="filterLeads()">
+
+          <option value="">All Status</option>
+
+          <option>New</option>
+          <option>Contacted</option>
+          <option>Interested</option>
+          <option>Follow-up</option>
+          <option>Appointment</option>
+          <option>Site Survey</option>
+          <option>Quotation</option>
+          <option>SPK</option>
+          <option>Closing</option>
+          <option>Not Interested</option>
+
+        </select>
+
+        <button
+          class="primary-btn"
+          onclick="openLeadModal()">
+
+          + Add Lead
+
+        </button>
+
+      </div>
+
+      <div class="table-wrapper">
+
+        <table>
+
+          <thead>
+
+            <tr>
+
+              <th>Customer</th>
+              <th>Phone</th>
+              <th>Business</th>
+              <th>Location</th>
+              <th>Status</th>
+              <th>Follow-up</th>
+              <th>Appointment</th>
+              <th>Quotation</th>
+              <th>Closing</th>
+              <th>Action</th>
+
+            </tr>
+
+          </thead>
+
+          <tbody id="leadsTable">
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </section>
+
+
+    <!-- MANAGE SALES -->
+
+    <section id="salesPage"
+             class="content"
+             style="display:none">
+
+      <div class="toolbar">
+
+        <button
+          class="primary-btn"
+          onclick="openSalesModal()">
+
+          + Add Sales
+
+        </button>
+
+      </div>
+
+      <div class="table-wrapper">
+
+        <table>
+
+          <thead>
+
+            <tr>
+
+              <th>Name</th>
+              <th>Username</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Database</th>
+              <th>Action</th>
+
+            </tr>
+
+          </thead>
+
+          <tbody id="salesTable">
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</div>
+
+
+<!-- LEAD MODAL -->
+
+<div id="leadModal"
+     class="modal">
+
+  <div class="modal-box">
+
+    <h2 id="leadModalTitle">
+      Add Lead
+    </h2>
+
+    <input type="hidden"
+           id="leadRow">
+
+    <input type="hidden"
+           id="leadId">
+
+    <label>Customer</label>
+    <input id="leadCustomer">
+
+    <label>Phone</label>
+    <input id="leadPhone">
+
+    <label>Business</label>
+    <input id="leadBusiness">
+
+    <label>Location</label>
+    <input id="leadLocation">
+
+    <label>Status</label>
+
+    <select id="leadStatus">
+
+      <option>New</option>
+      <option>Contacted</option>
+      <option>Interested</option>
+      <option>Follow-up</option>
+      <option>Appointment</option>
+      <option>Site Survey</option>
+      <option>Quotation</option>
+      <option>SPK</option>
+      <option>Closing</option>
+      <option>Not Interested</option>
+
+    </select>
+
+    <label>Follow-up</label>
+    <input type="date"
+           id="leadFollowUp">
+
+    <label>Appointment</label>
+    <input type="date"
+           id="leadAppointment">
+
+    <label>Site Survey</label>
+    <input type="date"
+           id="leadSiteSurvey">
+
+    <label>Quotation</label>
+    <input type="date"
+           id="leadQuotation">
+
+    <label>SPK</label>
+    <input type="date"
+           id="leadSPK">
+
+    <label>Closing</label>
+    <input type="date"
+           id="leadClosing">
+
+    <label>Notes</label>
+    <textarea id="leadNotes"></textarea>
+
+    <div class="modal-actions">
+
+      <button
+        onclick="closeLeadModal()"
+        class="secondary-btn">
+
+        Cancel
+
+      </button>
+
+      <button
+        onclick="saveLead()"
+        class="primary-btn">
+
+        Save
+
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- SALES MODAL -->
+
+<div id="salesModal"
+     class="modal">
+
+  <div class="modal-box">
+
+    <h2>Add New Sales</h2>
+
+    <label>Name</label>
+
+    <input
+      id="salesName"
+      placeholder="Example: Budi">
+
+    <label>Username</label>
+
+    <input
+      id="salesUsername"
+      placeholder="Example: budi">
+
+    <label>Password</label>
+
+    <input
+      id="salesPassword"
+      type="password"
+      placeholder="Minimum 6 characters">
+
+    <div class="modal-actions">
+
+      <button
+        onclick="closeSalesModal()"
+        class="secondary-btn">
+
+        Cancel
+
+      </button>
+
+      <button
+        onclick="createSales()"
+        class="primary-btn">
+
+        CREATE SALES
+
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<?!= include('JavaScript'); ?>
+
+</body>
+
+</html>
