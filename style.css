@@ -52,16 +52,12 @@ body {
   width: 70px;
   height: 70px;
   margin: 0 auto 18px;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   border-radius: 16px;
-
   background: #111827;
   color: #ffffff;
-
   font-size: 22px;
   font-weight: 700;
   letter-spacing: 1px;
@@ -87,20 +83,13 @@ input,
 select,
 textarea {
   width: 100%;
-
   border: 1px solid #d1d5db;
   border-radius: 10px;
-
   padding: 12px 14px;
-
   background: #ffffff;
-
   color: #111827;
-
   font-size: 14px;
-
   outline: none;
-
   transition:
     border-color 0.2s,
     box-shadow 0.2s;
@@ -110,14 +99,7 @@ input:focus,
 select:focus,
 textarea:focus {
   border-color: #111827;
-
-  box-shadow:
-    0 0 0 3px rgba(
-      17,
-      24,
-      39,
-      0.08
-    );
+  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.08);
 }
 
 .login-box input {
@@ -137,14 +119,10 @@ textarea {
 button {
   border: none;
   border-radius: 9px;
-
   padding: 10px 15px;
-
   cursor: pointer;
-
   font-size: 14px;
   font-weight: 600;
-
   transition:
     transform 0.15s,
     opacity 0.15s,
@@ -174,6 +152,11 @@ button:active {
   color: #ffffff;
 }
 
+.small-btn {
+  padding: 7px 10px;
+  font-size: 12px;
+}
+
 
 /* ================================
    LOGIN MESSAGE
@@ -182,7 +165,6 @@ button:active {
 .message {
   min-height: 20px;
   margin-top: 14px;
-
   font-size: 13px;
   color: #dc2626;
 }
@@ -205,38 +187,35 @@ button:active {
 .sidebar {
   width: 240px;
   min-height: 100vh;
-
   background: #111827;
   color: #ffffff;
-
   padding: 22px 16px;
-
   display: flex;
   flex-direction: column;
 }
 
 .brand {
   padding: 8px 10px 25px;
-
   font-size: 19px;
 }
 
 .user-info {
   padding: 12px 10px;
   margin-bottom: 18px;
-
-  background: rgba(
-    255,
-    255,
-    255,
-    0.08
-  );
-
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 10px;
-
   font-size: 13px;
-
   color: #d1d5db;
+}
+
+.user-info strong,
+.user-info small {
+  display: block;
+}
+
+.user-info small {
+  margin-top: 4px;
+  color: #9ca3af;
 }
 
 .sidebar nav {
@@ -247,25 +226,15 @@ button:active {
 
 .sidebar nav button {
   width: 100%;
-
   background: transparent;
   color: #d1d5db;
-
   text-align: left;
-
   padding: 12px 10px;
-
   font-weight: 500;
 }
 
 .sidebar nav button:hover {
-  background: rgba(
-    255,
-    255,
-    255,
-    0.08
-  );
-
+  background: rgba(255, 255, 255, 0.08);
   color: #ffffff;
 }
 
@@ -282,7 +251,6 @@ button:active {
 .main {
   flex: 1;
   min-width: 0;
-
   background: #f5f7fa;
 }
 
@@ -293,13 +261,9 @@ button:active {
 
 .topbar {
   height: 70px;
-
   background: #ffffff;
-
   border-bottom: 1px solid #e5e7eb;
-
   padding: 0 28px;
-
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -330,46 +294,29 @@ button:active {
 
 .stats-grid {
   display: grid;
-
-  grid-template-columns:
-    repeat(4, minmax(0, 1fr));
-
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 18px;
 }
 
 .stat-card {
   background: #ffffff;
-
   border: 1px solid #e5e7eb;
-
   border-radius: 14px;
-
   padding: 22px;
-
   min-height: 120px;
-
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-
-  box-shadow:
-    0 3px 12px rgba(
-      0,
-      0,
-      0,
-      0.04
-    );
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.04);
 }
 
 .stat-card span {
   color: #6b7280;
-
   font-size: 13px;
 }
 
 .stat-card strong {
   font-size: 30px;
-
   color: #111827;
 }
 
@@ -380,18 +327,12 @@ button:active {
 
 .toolbar {
   background: #ffffff;
-
   border: 1px solid #e5e7eb;
-
   border-radius: 14px;
-
   padding: 15px;
-
   margin-bottom: 18px;
-
   display: flex;
   align-items: center;
-
   gap: 10px;
 }
 
@@ -414,19 +355,335 @@ button:active {
 
 .table-wrapper {
   width: 100%;
-
   overflow-x: auto;
-
   background: #ffffff;
-
   border: 1px solid #e5e7eb;
-
   border-radius: 14px;
 }
 
 table {
   width: 100%;
-
   min-width: 1000px;
+  border-collapse: collapse;
+}
 
-  border
+thead {
+  background: #f9fafb;
+}
+
+th,
+td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+th {
+  color: #4b5563;
+  font-weight: 700;
+}
+
+td {
+  color: #374151;
+}
+
+tbody tr:hover {
+  background: #f9fafb;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+
+/* ================================
+   STATUS
+================================ */
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  color: #374151;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.status-new {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.status-contacted {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-interested {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-follow-up {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-appointment {
+  background: #ede9fe;
+  color: #5b21b6;
+}
+
+.status-site-survey {
+  background: #cffafe;
+  color: #155e75;
+}
+
+.status-quotation {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.status-spk {
+  background: #fce7f3;
+  color: #9d174d;
+}
+
+.status-closing {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-not-interested {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.status-active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-inactive {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+
+/* ================================
+   WHATSAPP
+================================ */
+
+.wa-link {
+  color: #166534;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.wa-link:hover {
+  text-decoration: underline;
+}
+
+
+/* ================================
+   MODAL
+================================ */
+
+/*
+  IMPORTANT:
+  Modal default hidden.
+  JavaScript akan mengubah display menjadi flex
+  saat openLeadModal() / openSalesModal() dipanggil.
+*/
+
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.55);
+
+  align-items: center;
+  justify-content: center;
+
+  z-index: 9999;
+
+  overflow-y: auto;
+}
+
+.modal.show {
+  display: flex;
+}
+
+.modal-box {
+  width: 100%;
+  max-width: 560px;
+
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+
+  background: #ffffff;
+
+  border-radius: 16px;
+
+  padding: 24px;
+
+  box-shadow:
+    0 25px 70px rgba(0, 0, 0, 0.25);
+}
+
+.modal-box h2 {
+  margin-bottom: 20px;
+  font-size: 21px;
+  color: #111827;
+}
+
+.modal-box label {
+  display: block;
+
+  margin-top: 13px;
+  margin-bottom: 6px;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  color: #374151;
+}
+
+.modal-box input,
+.modal-box select,
+.modal-box textarea {
+  margin-bottom: 2px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+
+  margin-top: 22px;
+
+  padding-top: 16px;
+
+  border-top: 1px solid #e5e7eb;
+}
+
+
+/* ================================
+   MOBILE
+================================ */
+
+@media (max-width: 900px) {
+
+  .sidebar {
+    width: 210px;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .content {
+    padding: 20px;
+  }
+
+}
+
+
+@media (max-width: 700px) {
+
+  #app {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    min-height: auto;
+
+    padding: 12px;
+
+    flex-direction: column;
+  }
+
+  .brand {
+    padding: 8px 10px 12px;
+  }
+
+  .user-info {
+    margin-bottom: 10px;
+  }
+
+  .sidebar nav {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .sidebar .logout-btn {
+    margin-top: 10px;
+  }
+
+  .topbar {
+    height: 60px;
+    padding: 0 18px;
+  }
+
+  .topbar h2 {
+    font-size: 18px;
+  }
+
+  #currentUser {
+    font-size: 12px;
+  }
+
+  .content {
+    padding: 15px;
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .toolbar input,
+  .toolbar select {
+    max-width: none;
+  }
+
+  .toolbar .primary-btn {
+    margin-left: 0;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .stat-card {
+    min-height: 100px;
+  }
+
+  .modal {
+    padding: 12px;
+  }
+
+  .modal-box {
+    max-height: calc(100vh - 24px);
+    padding: 20px;
+    border-radius: 14px;
+  }
+
+  .modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .modal-actions button {
+    width: 100%;
+  }
+
+}
