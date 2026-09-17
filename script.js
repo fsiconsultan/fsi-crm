@@ -41,6 +41,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 async function checkSession() {
   try {
+
     const {
       data: { session },
       error
@@ -62,8 +63,10 @@ async function checkSession() {
     await loadProfile();
 
   } catch (error) {
+
     console.error("checkSession error:", error);
     showLogin();
+
   }
 }
 
@@ -73,13 +76,21 @@ async function checkSession() {
 // ================================
 
 async function login() {
-  const username = document.getElementById("loginUsername").value.trim();
-  const password = document.getElementById("loginPassword").value;
 
-  const message = document.getElementById("loginMessage");
+  const username =
+    document.getElementById("loginUsername").value.trim();
+
+  const password =
+    document.getElementById("loginPassword").value;
+
+  const message =
+    document.getElementById("loginMessage");
 
   if (!username || !password) {
-    message.textContent = "Username dan password wajib diisi.";
+
+    message.textContent =
+      "Username dan password wajib diisi.";
+
     return;
   }
 
@@ -99,13 +110,20 @@ async function login() {
     );
 
     if (emailError) {
+
       console.error(emailError);
-      message.textContent = emailError.message;
+
+      message.textContent =
+        emailError.message;
+
       return;
     }
 
     if (!email) {
-      message.textContent = "Username tidak ditemukan atau tidak aktif.";
+
+      message.textContent =
+        "Username tidak ditemukan atau tidak aktif.";
+
       return;
     }
 
@@ -119,8 +137,12 @@ async function login() {
     });
 
     if (error) {
+
       console.error(error);
-      message.textContent = error.message;
+
+      message.textContent =
+        error.message;
+
       return;
     }
 
@@ -129,8 +151,12 @@ async function login() {
     await loadProfile();
 
   } catch (error) {
+
     console.error("login error:", error);
-    message.textContent = "Terjadi kesalahan saat login.";
+
+    message.textContent =
+      "Terjadi kesalahan saat login.";
+
   }
 }
 
@@ -142,8 +168,10 @@ async function login() {
 async function loadProfile() {
 
   if (!currentUser) {
+
     showLogin();
     return;
+
   }
 
   try {
@@ -158,9 +186,18 @@ async function loadProfile() {
       .single();
 
     if (error) {
-      console.error("Profile error:", error);
-      alert("Profile user tidak ditemukan.");
+
+      console.error(
+        "Profile error:",
+        error
+      );
+
+      alert(
+        "Profile user tidak ditemukan."
+      );
+
       await logout();
+
       return;
     }
 
@@ -174,7 +211,12 @@ async function loadProfile() {
     await updateDashboard();
 
   } catch (error) {
-    console.error("loadProfile error:", error);
+
+    console.error(
+      "loadProfile error:",
+      error
+    );
+
   }
 }
 
@@ -185,15 +227,26 @@ async function loadProfile() {
 
 function showLogin() {
 
-  document.getElementById("loginPage").style.display = "flex";
-  document.getElementById("app").style.display = "none";
+  document.getElementById(
+    "loginPage"
+  ).style.display = "flex";
+
+  document.getElementById(
+    "app"
+  ).style.display = "none";
 
 }
 
+
 function showApp() {
 
-  document.getElementById("loginPage").style.display = "none";
-  document.getElementById("app").style.display = "flex";
+  document.getElementById(
+    "loginPage"
+  ).style.display = "none";
+
+  document.getElementById(
+    "app"
+  ).style.display = "flex";
 
   showDashboard();
 
@@ -208,19 +261,26 @@ function updateUserInfo() {
 
   if (!currentProfile) return;
 
-  const userInfo = document.getElementById("userInfo");
-  const currentUserElement = document.getElementById("currentUser");
+  const userInfo =
+    document.getElementById("userInfo");
+
+  const currentUserElement =
+    document.getElementById("currentUser");
 
   if (userInfo) {
+
     userInfo.innerHTML = `
       <strong>${escapeHTML(currentProfile.name)}</strong>
       <small>${escapeHTML(currentProfile.role)}</small>
     `;
+
   }
 
   if (currentUserElement) {
+
     currentUserElement.textContent =
       `${currentProfile.name} (${currentProfile.role})`;
+
   }
 
 }
@@ -233,14 +293,25 @@ function updateUserInfo() {
 function setupRoleAccess() {
 
   const manageSalesBtn =
-    document.getElementById("manageSalesBtn");
+    document.getElementById(
+      "manageSalesBtn"
+    );
 
-  if (!manageSalesBtn || !currentProfile) return;
+  if (!manageSalesBtn ||
+      !currentProfile) {
+    return;
+  }
 
   if (currentProfile.role === "Admin") {
-    manageSalesBtn.style.display = "block";
+
+    manageSalesBtn.style.display =
+      "block";
+
   } else {
-    manageSalesBtn.style.display = "none";
+
+    manageSalesBtn.style.display =
+      "none";
+
   }
 
 }
@@ -252,27 +323,45 @@ function setupRoleAccess() {
 
 function hideAllPages() {
 
-  document.getElementById("dashboardPage").style.display = "none";
-  document.getElementById("leadsPage").style.display = "none";
-  document.getElementById("salesPage").style.display = "none";
+  document.getElementById(
+    "dashboardPage"
+  ).style.display = "none";
+
+  document.getElementById(
+    "leadsPage"
+  ).style.display = "none";
+
+  document.getElementById(
+    "salesPage"
+  ).style.display = "none";
 
 }
+
 
 function setPageTitle(title) {
 
-  const titleElement = document.getElementById("pageTitle");
+  const titleElement =
+    document.getElementById(
+      "pageTitle"
+    );
 
   if (titleElement) {
-    titleElement.textContent = title;
+
+    titleElement.textContent =
+      title;
+
   }
 
 }
+
 
 async function showDashboard() {
 
   hideAllPages();
 
-  document.getElementById("dashboardPage").style.display = "block";
+  document.getElementById(
+    "dashboardPage"
+  ).style.display = "block";
 
   setPageTitle("Dashboard");
 
@@ -280,11 +369,14 @@ async function showDashboard() {
 
 }
 
+
 async function showLeads() {
 
   hideAllPages();
 
-  document.getElementById("leadsPage").style.display = "block";
+  document.getElementById(
+    "leadsPage"
+  ).style.display = "block";
 
   setPageTitle("My Leads");
 
@@ -292,16 +384,24 @@ async function showLeads() {
 
 }
 
+
 async function showSales() {
 
-  if (!currentProfile || currentProfile.role !== "Admin") {
+  if (
+    !currentProfile ||
+    currentProfile.role !== "Admin"
+  ) {
+
     alert("Access denied.");
+
     return;
   }
 
   hideAllPages();
 
-  document.getElementById("salesPage").style.display = "block";
+  document.getElementById(
+    "salesPage"
+  ).style.display = "block";
 
   setPageTitle("Manage Sales");
 
@@ -329,18 +429,27 @@ async function loadLeads() {
       });
 
     if (error) {
-      console.error("Load leads error:", error);
+
+      console.error(
+        "Load leads error:",
+        error
+      );
+
       alert(error.message);
+
       return;
     }
 
     leadsData = data || [];
 
     renderLeads(leadsData);
+
     updateDashboard();
 
   } catch (error) {
+
     console.error(error);
+
   }
 
 }
@@ -352,7 +461,10 @@ async function loadLeads() {
 
 function renderLeads(data) {
 
-  const table = document.getElementById("leadsTable");
+  const table =
+    document.getElementById(
+      "leadsTable"
+    );
 
   if (!table) return;
 
@@ -373,42 +485,79 @@ function renderLeads(data) {
 
   data.forEach(lead => {
 
-    const tr = document.createElement("tr");
+    const tr =
+      document.createElement("tr");
 
     tr.innerHTML = `
-      <td>${escapeHTML(getValue(lead.customer_name))}</td>
+
+      <td>
+        ${escapeHTML(
+          getValue(lead.customer_name)
+        )}
+      </td>
 
       <td>
         ${
           lead.phone
-            ? `<a href="${whatsappLink(lead.phone)}"
-                 target="_blank"
-                 class="wa-link">
-                 ${escapeHTML(lead.phone)}
-               </a>`
+            ? `
+              <a
+                href="${whatsappLink(lead.phone)}"
+                target="_blank"
+                class="wa-link">
+                ${escapeHTML(lead.phone)}
+              </a>
+            `
             : "-"
         }
       </td>
 
-      <td>${escapeHTML(getValue(lead.business))}</td>
-
-      <td>${escapeHTML(getValue(lead.location))}</td>
+      <td>
+        ${escapeHTML(
+          getValue(lead.business)
+        )}
+      </td>
 
       <td>
-        <span class="status-badge ${statusClass(lead.status)}">
-          ${escapeHTML(getValue(lead.status))}
+        ${escapeHTML(
+          getValue(lead.location)
+        )}
+      </td>
+
+      <td>
+        <span
+          class="status-badge ${statusClass(lead.status)}">
+          ${escapeHTML(
+            getValue(lead.status)
+          )}
         </span>
       </td>
 
-      <td>${formatDate(lead.follow_up_date)}</td>
-
-      <td>${formatDate(lead.appointment)}</td>
-
-      <td>${formatDate(lead.quotation)}</td>
-
-      <td>${formatDate(lead.closing)}</td>
+      <td>
+        ${formatDate(
+          lead.follow_up_date
+        )}
+      </td>
 
       <td>
+        ${formatDate(
+          lead.appointment
+        )}
+      </td>
+
+      <td>
+        ${formatDate(
+          lead.quotation
+        )}
+      </td>
+
+      <td>
+        ${formatDate(
+          lead.closing
+        )}
+      </td>
+
+      <td>
+
         <button
           class="secondary-btn small-btn"
           onclick="editLead('${lead.id}')">
@@ -420,7 +569,9 @@ function renderLeads(data) {
           onclick="deleteLead('${lead.id}')">
           Delete
         </button>
+
       </td>
+
     `;
 
     table.appendChild(tr);
@@ -437,43 +588,57 @@ function renderLeads(data) {
 function filterLeads() {
 
   const search =
-    document.getElementById("leadSearch")
-      ?.value
+    document.getElementById(
+      "leadSearch"
+    )?.value
       .toLowerCase()
       .trim() || "";
 
   const status =
-    document.getElementById("statusFilter")
-      ?.value || "";
+    document.getElementById(
+      "statusFilter"
+    )?.value || "";
 
-  const filtered = leadsData.filter(lead => {
+  const filtered =
+    leadsData.filter(lead => {
 
-    const customer =
-      getValue(lead.customer_name).toLowerCase();
+      const customer =
+        getValue(
+          lead.customer_name
+        ).toLowerCase();
 
-    const phone =
-      getValue(lead.phone).toLowerCase();
+      const phone =
+        getValue(
+          lead.phone
+        ).toLowerCase();
 
-    const business =
-      getValue(lead.business).toLowerCase();
+      const business =
+        getValue(
+          lead.business
+        ).toLowerCase();
 
-    const location =
-      getValue(lead.location).toLowerCase();
+      const location =
+        getValue(
+          lead.location
+        ).toLowerCase();
 
-    const matchesSearch =
-      !search ||
-      customer.includes(search) ||
-      phone.includes(search) ||
-      business.includes(search) ||
-      location.includes(search);
+      const matchesSearch =
+        !search ||
+        customer.includes(search) ||
+        phone.includes(search) ||
+        business.includes(search) ||
+        location.includes(search);
 
-    const matchesStatus =
-      !status ||
-      lead.status === status;
+      const matchesStatus =
+        !status ||
+        lead.status === status;
 
-    return matchesSearch && matchesStatus;
+      return (
+        matchesSearch &&
+        matchesStatus
+      );
 
-  });
+    });
 
   renderLeads(filtered);
 
@@ -486,36 +651,51 @@ function filterLeads() {
 
 function openLeadModal() {
 
-  console.log("openLeadModal clicked");
+  console.log(
+    "openLeadModal clicked"
+  );
 
   const modal =
-    document.getElementById("leadModal");
+    document.getElementById(
+      "leadModal"
+    );
 
   if (!modal) {
-    alert("Lead modal tidak ditemukan di index.html.");
+
+    alert(
+      "Lead modal tidak ditemukan di index.html."
+    );
+
     return;
   }
 
   clearLeadForm();
 
   const title =
-    document.getElementById("leadModalTitle");
+    document.getElementById(
+      "leadModalTitle"
+    );
 
   if (title) {
-    title.textContent = "Add Lead";
+
+    title.textContent =
+      "Add Lead";
+
   }
 
   modal.classList.add("show");
 
-  // Backup jika CSS modal memakai display
   modal.style.display = "flex";
 
 }
 
+
 function closeLeadModal() {
 
   const modal =
-    document.getElementById("leadModal");
+    document.getElementById(
+      "leadModal"
+    );
 
   if (!modal) return;
 
@@ -524,6 +704,7 @@ function closeLeadModal() {
   modal.style.display = "none";
 
 }
+
 
 function clearLeadForm() {
 
@@ -551,58 +732,94 @@ function clearLeadForm() {
 async function saveLead() {
 
   if (!currentProfile) {
-    alert("User profile belum siap.");
+
+    alert(
+      "User profile belum siap."
+    );
+
     return;
   }
 
   const customer =
-    document.getElementById("leadCustomer").value.trim();
+    document.getElementById(
+      "leadCustomer"
+    ).value.trim();
 
   if (!customer) {
-    alert("Customer wajib diisi.");
+
+    alert(
+      "Customer wajib diisi."
+    );
+
     return;
   }
 
   const leadId =
-    document.getElementById("leadId").value;
+    document.getElementById(
+      "leadId"
+    ).value;
 
   const payload = {
 
     customer_name:
-      document.getElementById("leadCustomer").value.trim(),
+      document.getElementById(
+        "leadCustomer"
+      ).value.trim(),
 
     phone:
-      document.getElementById("leadPhone").value.trim(),
+      document.getElementById(
+        "leadPhone"
+      ).value.trim(),
 
     business:
-      document.getElementById("leadBusiness").value.trim(),
+      document.getElementById(
+        "leadBusiness"
+      ).value.trim(),
 
     location:
-      document.getElementById("leadLocation").value.trim(),
+      document.getElementById(
+        "leadLocation"
+      ).value.trim(),
 
     status:
-      document.getElementById("leadStatus").value,
+      document.getElementById(
+        "leadStatus"
+      ).value,
 
     follow_up_date:
-      document.getElementById("leadFollowUp").value || null,
+      document.getElementById(
+        "leadFollowUp"
+      ).value || null,
 
     appointment:
-      document.getElementById("leadAppointment").value || null,
+      document.getElementById(
+        "leadAppointment"
+      ).value || null,
 
     site_survey:
-      document.getElementById("leadSiteSurvey").value || null,
+      document.getElementById(
+        "leadSiteSurvey"
+      ).value || null,
 
     quotation:
-      document.getElementById("leadQuotation").value || null,
+      document.getElementById(
+        "leadQuotation"
+      ).value || null,
 
     spk:
-      document.getElementById("leadSPK").value || null,
+      document.getElementById(
+        "leadSPK"
+      ).value || null,
 
     closing:
-      document.getElementById("leadClosing").value || null,
+      document.getElementById(
+        "leadClosing"
+      ).value || null,
 
     notes:
-      document.getElementById("leadNotes").value.trim()
+      document.getElementById(
+        "leadNotes"
+      ).value.trim()
 
   };
 
@@ -623,12 +840,20 @@ async function saveLead() {
         .eq("id", leadId);
 
       if (error) {
+
         console.error(error);
-        alert("Gagal update lead:\n" + error.message);
+
+        alert(
+          "Gagal update lead:\n" +
+          error.message
+        );
+
         return;
       }
 
-      alert("Lead berhasil diupdate.");
+      alert(
+        "Lead berhasil diupdate."
+      );
 
     }
 
@@ -638,7 +863,8 @@ async function saveLead() {
 
     else {
 
-      payload.sales_id = currentProfile.id;
+      payload.sales_id =
+        currentProfile.id;
 
       const {
         error
@@ -647,12 +873,20 @@ async function saveLead() {
         .insert([payload]);
 
       if (error) {
+
         console.error(error);
-        alert("Gagal menambahkan lead:\n" + error.message);
+
+        alert(
+          "Gagal menambahkan lead:\n" +
+          error.message
+        );
+
         return;
       }
 
-      alert("Lead berhasil ditambahkan.");
+      alert(
+        "Lead berhasil ditambahkan."
+      );
 
     }
 
@@ -664,7 +898,10 @@ async function saveLead() {
 
   } catch (error) {
 
-    console.error("saveLead error:", error);
+    console.error(
+      "saveLead error:",
+      error
+    );
 
     alert(
       "Terjadi kesalahan:\n" +
@@ -680,47 +917,176 @@ async function saveLead() {
 // EDIT LEAD
 // ================================
 
-function editLead(id) {
+async function editLead(id) {
 
-  const lead =
-    leadsData.find(item => item.id === id);
+  console.log(
+    "Edit Lead ID:",
+    id
+  );
 
+  // Cari dulu di data lokal
+  let lead =
+    leadsData.find(
+      item =>
+        String(item.id) ===
+        String(id)
+    );
+
+
+  // Kalau tidak ditemukan,
+  // ambil langsung dari Supabase
   if (!lead) {
-    alert("Lead tidak ditemukan.");
+
+    console.log(
+      "Lead tidak ada di leadsData, mengambil dari Supabase..."
+    );
+
+    const {
+      data,
+      error
+    } = await supabaseClient
+      .from("leads")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (error) {
+
+      console.error(
+        "Get lead untuk edit error:",
+        error
+      );
+
+      alert(
+        "Gagal mengambil data lead:\n" +
+        error.message
+      );
+
+      return;
+    }
+
+    if (!data) {
+
+      alert(
+        "Lead tidak ditemukan."
+      );
+
+      return;
+    }
+
+    lead = data;
+
+  }
+
+
+  // ============================
+  // ISI FORM EDIT
+  // ============================
+
+  setValue(
+    "leadId",
+    lead.id
+  );
+
+  setValue(
+    "leadCustomer",
+    lead.customer_name
+  );
+
+  setValue(
+    "leadPhone",
+    lead.phone
+  );
+
+  setValue(
+    "leadBusiness",
+    lead.business
+  );
+
+  setValue(
+    "leadLocation",
+    lead.location
+  );
+
+  setValue(
+    "leadStatus",
+    lead.status || "New"
+  );
+
+  setValue(
+    "leadFollowUp",
+    lead.follow_up_date
+  );
+
+  setValue(
+    "leadAppointment",
+    lead.appointment
+  );
+
+  setValue(
+    "leadSiteSurvey",
+    lead.site_survey
+  );
+
+  setValue(
+    "leadQuotation",
+    lead.quotation
+  );
+
+  setValue(
+    "leadSPK",
+    lead.spk
+  );
+
+  setValue(
+    "leadClosing",
+    lead.closing
+  );
+
+  setValue(
+    "leadNotes",
+    lead.notes
+  );
+
+
+  // ============================
+  // UBAH JUDUL MODAL
+  // ============================
+
+  const title =
+    document.getElementById(
+      "leadModalTitle"
+    );
+
+  if (title) {
+
+    title.textContent =
+      "Edit Lead";
+
+  }
+
+
+  // ============================
+  // BUKA MODAL
+  // ============================
+
+  const modal =
+    document.getElementById(
+      "leadModal"
+    );
+
+  if (!modal) {
+
+    alert(
+      "Lead modal tidak ditemukan."
+    );
+
     return;
   }
 
-  setValue("leadId", lead.id);
-  setValue("leadCustomer", lead.customer_name);
-  setValue("leadPhone", lead.phone);
-  setValue("leadBusiness", lead.business);
-  setValue("leadLocation", lead.location);
-  setValue("leadStatus", lead.status || "New");
-  setValue("leadFollowUp", lead.follow_up_date);
-  setValue("leadAppointment", lead.appointment);
-  setValue("leadSiteSurvey", lead.site_survey);
-  setValue("leadQuotation", lead.quotation);
-  setValue("leadSPK", lead.spk);
-  setValue("leadClosing", lead.closing);
-  setValue("leadNotes", lead.notes);
+  modal.classList.add("show");
 
-  const title =
-    document.getElementById("leadModalTitle");
-
-  if (title) {
-    title.textContent = "Edit Lead";
-  }
-
-  const modal =
-    document.getElementById("leadModal");
-
-  if (modal) {
-
-    modal.classList.add("show");
-
-    modal.style.display = "flex";
-
-  }
+  modal.style.display = "flex";
 
 }
 
@@ -732,7 +1098,9 @@ function editLead(id) {
 async function deleteLead(id) {
 
   const confirmDelete =
-    confirm("Hapus lead ini?");
+    confirm(
+      "Hapus lead ini?"
+    );
 
   if (!confirmDelete) return;
 
@@ -796,7 +1164,8 @@ async function updateDashboard() {
       return;
     }
 
-    const dataList = data || [];
+    const dataList =
+      data || [];
 
     setText(
       "statTotal",
@@ -805,37 +1174,58 @@ async function updateDashboard() {
 
     setText(
       "statNew",
-      countStatus(dataList, "New")
+      countStatus(
+        dataList,
+        "New"
+      )
     );
 
     setText(
       "statInterested",
-      countStatus(dataList, "Interested")
+      countStatus(
+        dataList,
+        "Interested"
+      )
     );
 
     setText(
       "statFollowUp",
-      countStatus(dataList, "Follow-up")
+      countStatus(
+        dataList,
+        "Follow-up"
+      )
     );
 
     setText(
       "statAppointment",
-      countStatus(dataList, "Appointment")
+      countStatus(
+        dataList,
+        "Appointment"
+      )
     );
 
     setText(
       "statSiteSurvey",
-      countStatus(dataList, "Site Survey")
+      countStatus(
+        dataList,
+        "Site Survey"
+      )
     );
 
     setText(
       "statQuotation",
-      countStatus(dataList, "Quotation")
+      countStatus(
+        dataList,
+        "Quotation"
+      )
     );
 
     setText(
       "statClosing",
-      countStatus(dataList, "Closing")
+      countStatus(
+        dataList,
+        "Closing"
+      )
     );
 
   } catch (error) {
@@ -846,10 +1236,15 @@ async function updateDashboard() {
 
 }
 
-function countStatus(data, status) {
+
+function countStatus(
+  data,
+  status
+) {
 
   return data.filter(
-    item => item.status === status
+    item =>
+      item.status === status
   ).length;
 
 }
@@ -861,9 +1256,13 @@ function countStatus(data, status) {
 
 async function loadSalesUsers() {
 
-  if (!currentProfile ||
-      currentProfile.role !== "Admin") {
+  if (
+    !currentProfile ||
+    currentProfile.role !== "Admin"
+  ) {
+
     return;
+
   }
 
   try {
@@ -887,9 +1286,12 @@ async function loadSalesUsers() {
       return;
     }
 
-    salesUsersData = data || [];
+    salesUsersData =
+      data || [];
 
-    renderSalesUsers(salesUsersData);
+    renderSalesUsers(
+      salesUsersData
+    );
 
   } catch (error) {
 
@@ -903,24 +1305,30 @@ async function loadSalesUsers() {
 function renderSalesUsers(data) {
 
   const table =
-    document.getElementById("salesTable");
+    document.getElementById(
+      "salesTable"
+    );
 
   if (!table) return;
 
   table.innerHTML = "";
 
-  if (!data || data.length === 0) {
+  if (
+    !data ||
+    data.length === 0
+  ) {
 
     table.innerHTML = `
       <tr>
-        <td colspan="6" style="text-align:center;">
+        <td
+          colspan="6"
+          style="text-align:center;">
           No sales found
         </td>
       </tr>
     `;
 
     return;
-
   }
 
   data.forEach(sales => {
@@ -931,24 +1339,35 @@ function renderSalesUsers(data) {
     tr.innerHTML = `
 
       <td>
-        ${escapeHTML(getValue(sales.name))}
+        ${escapeHTML(
+          getValue(sales.name)
+        )}
       </td>
 
       <td>
-        ${escapeHTML(getValue(sales.username))}
+        ${escapeHTML(
+          getValue(sales.username)
+        )}
       </td>
 
       <td>
-        ${escapeHTML(getValue(sales.role))}
+        ${escapeHTML(
+          getValue(sales.role)
+        )}
       </td>
 
       <td>
-        <span class="status-badge ${
-          sales.status === "Active"
-            ? "status-active"
-            : "status-inactive"
-        }">
-          ${escapeHTML(getValue(sales.status))}
+        <span
+          class="status-badge ${
+            sales.status === "Active"
+              ? "status-active"
+              : "status-inactive"
+          }">
+
+          ${escapeHTML(
+            getValue(sales.status)
+          )}
+
         </span>
       </td>
 
@@ -991,14 +1410,17 @@ function renderSalesUsers(data) {
 function openSalesModal() {
 
   const modal =
-    document.getElementById("salesModal");
+    document.getElementById(
+      "salesModal"
+    );
 
   if (!modal) {
 
-    alert("Sales modal tidak ditemukan.");
+    alert(
+      "Sales modal tidak ditemukan."
+    );
 
     return;
-
   }
 
   clearSalesForm();
@@ -1013,7 +1435,9 @@ function openSalesModal() {
 function closeSalesModal() {
 
   const modal =
-    document.getElementById("salesModal");
+    document.getElementById(
+      "salesModal"
+    );
 
   if (!modal) return;
 
@@ -1026,9 +1450,20 @@ function closeSalesModal() {
 
 function clearSalesForm() {
 
-  setValue("salesName", "");
-  setValue("salesUsername", "");
-  setValue("salesPassword", "");
+  setValue(
+    "salesName",
+    ""
+  );
+
+  setValue(
+    "salesUsername",
+    ""
+  );
+
+  setValue(
+    "salesPassword",
+    ""
+  );
 
 }
 
@@ -1040,22 +1475,31 @@ function clearSalesForm() {
 async function createSales() {
 
   const name =
-    document.getElementById("salesName").value.trim();
+    document.getElementById(
+      "salesName"
+    ).value.trim();
 
   const username =
-    document.getElementById("salesUsername").value.trim();
+    document.getElementById(
+      "salesUsername"
+    ).value.trim();
 
   const password =
-    document.getElementById("salesPassword").value;
+    document.getElementById(
+      "salesPassword"
+    ).value;
 
-  if (!name || !username || !password) {
+  if (
+    !name ||
+    !username ||
+    !password
+  ) {
 
     alert(
       "Name, Username dan Password wajib diisi."
     );
 
     return;
-
   }
 
   if (password.length < 6) {
@@ -1065,20 +1509,20 @@ async function createSales() {
     );
 
     return;
-
   }
 
   /*
     PENTING:
 
-    Pembuatan user Supabase Auth TIDAK boleh
-    dilakukan langsung dari frontend.
+    Pembuatan user Supabase Auth
+    tidak boleh dilakukan langsung
+    dari frontend.
 
-    Nanti bagian ini kita hubungkan ke
-    Supabase Edge Function.
+    Nanti bagian ini kita hubungkan
+    ke Supabase Edge Function.
 
-    Jadi untuk sekarang jangan memasukkan
-    service_role key ke script.js.
+    Jangan memasukkan service_role
+    key ke script.js.
   */
 
   alert(
@@ -1094,7 +1538,10 @@ async function createSales() {
 // TOGGLE SALES STATUS
 // ================================
 
-async function toggleSalesStatus(id, currentStatus) {
+async function toggleSalesStatus(
+  id,
+  currentStatus
+) {
 
   const newStatus =
     currentStatus === "Active"
@@ -1126,7 +1573,6 @@ async function toggleSalesStatus(id, currentStatus) {
       alert(error.message);
 
       return;
-
     }
 
     await loadSalesUsers();
@@ -1152,7 +1598,9 @@ function whatsappLink(phone) {
     normalizePhone(phone);
 
   if (!number) {
+
     return "#";
+
   }
 
   return `https://wa.me/${number}`;
@@ -1168,7 +1616,9 @@ function normalizePhone(phone) {
     String(phone)
       .replace(/\D/g, "");
 
-  if (number.startsWith("0")) {
+  if (
+    number.startsWith("0")
+  ) {
 
     number =
       "62" +
@@ -1176,7 +1626,9 @@ function normalizePhone(phone) {
 
   }
 
-  if (number.startsWith("8")) {
+  if (
+    number.startsWith("8")
+  ) {
 
     number =
       "62" +
@@ -1196,10 +1648,14 @@ function normalizePhone(phone) {
 function setupModalEvents() {
 
   const leadModal =
-    document.getElementById("leadModal");
+    document.getElementById(
+      "leadModal"
+    );
 
   const salesModal =
-    document.getElementById("salesModal");
+    document.getElementById(
+      "salesModal"
+    );
 
 
   // Klik area gelap modal
@@ -1209,8 +1665,13 @@ function setupModalEvents() {
       "click",
       function(event) {
 
-        if (event.target === leadModal) {
+        if (
+          event.target ===
+          leadModal
+        ) {
+
           closeLeadModal();
+
         }
 
       }
@@ -1225,8 +1686,13 @@ function setupModalEvents() {
       "click",
       function(event) {
 
-        if (event.target === salesModal) {
+        if (
+          event.target ===
+          salesModal
+        ) {
+
           closeSalesModal();
+
         }
 
       }
@@ -1274,10 +1740,16 @@ function formatDate(date) {
   try {
 
     const d =
-      new Date(date + "T00:00:00");
+      new Date(
+        date + "T00:00:00"
+      );
 
-    if (isNaN(d.getTime())) {
+    if (
+      isNaN(d.getTime())
+    ) {
+
       return date;
+
     }
 
     return d.toLocaleDateString(
@@ -1314,17 +1786,36 @@ function statusClass(status) {
 
 function escapeHTML(value) {
 
-  if (value === null ||
-      value === undefined) {
+  if (
+    value === null ||
+    value === undefined
+  ) {
+
     return "";
+
   }
 
   return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+    .replace(
+      /</g,
+      "&lt;"
+    )
+    .replace(
+      />/g,
+      "&gt;"
+    )
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+    .replace(
+      /'/g,
+      "&#039;"
+    );
 
 }
 
@@ -1336,7 +1827,9 @@ function getValue(value) {
     value === undefined ||
     value === ""
   ) {
+
     return "";
+
   }
 
   return String(value);
@@ -1344,7 +1837,10 @@ function getValue(value) {
 }
 
 
-function setValue(id, value) {
+function setValue(
+  id,
+  value
+) {
 
   const element =
     document.getElementById(id);
@@ -1360,14 +1856,18 @@ function setValue(id, value) {
 }
 
 
-function setText(id, value) {
+function setText(
+  id,
+  value
+) {
 
   const element =
     document.getElementById(id);
 
   if (!element) return;
 
-  element.textContent = value;
+  element.textContent =
+    value;
 
 }
 
@@ -1377,21 +1877,29 @@ function setText(id, value) {
 // ================================
 
 supabaseClient.auth.onAuthStateChange(
-  async (event, session) => {
+  async (
+    event,
+    session
+  ) => {
 
     console.log(
       "Auth event:",
       event
     );
 
-    if (session && !currentProfile) {
+    if (
+      session &&
+      !currentProfile
+    ) {
 
-      currentUser = session.user;
+      currentUser =
+        session.user;
 
-      // Beri waktu sedikit agar auth state stabil
       setTimeout(
         async () => {
+
           await loadProfile();
+
         },
         100
       );
@@ -1401,6 +1909,7 @@ supabaseClient.auth.onAuthStateChange(
     if (!session) {
 
       currentUser = null;
+
       currentProfile = null;
 
       showLogin();
