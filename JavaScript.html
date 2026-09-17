@@ -1,3 +1,4 @@
+```html
 <script>
 
 let sessionToken = '';
@@ -13,14 +14,15 @@ let allSales = [];
 function login() {
 
   const username =
-    document.getElementById(
-      'loginUsername'
-    ).value;
+    document.getElementById('loginUsername').value.trim();
 
   const password =
-    document.getElementById(
-      'loginPassword'
-    ).value;
+    document.getElementById('loginPassword').value;
+
+  if (!username || !password) {
+    setLoginMessage('Username dan password wajib diisi.');
+    return;
+  }
 
   setLoginMessage('Logging in...');
 
@@ -56,9 +58,7 @@ function login() {
 function checkSession() {
 
   const token =
-    localStorage.getItem(
-      'fsi_session'
-    );
+    localStorage.getItem('fsi_session');
 
   if (!token) return;
 
@@ -73,9 +73,7 @@ function checkSession() {
     })
     .withFailureHandler(function() {
 
-      localStorage.removeItem(
-        'fsi_session'
-      );
+      localStorage.removeItem('fsi_session');
 
     })
     .getCurrentUser(token);
@@ -87,20 +85,20 @@ function logout() {
   google.script.run
     .withSuccessHandler(function() {
 
-      localStorage.removeItem(
-        'fsi_session'
-      );
+      localStorage.removeItem('fsi_session');
 
       sessionToken = '';
       currentUser = null;
 
-      document.getElementById(
-        'app'
-      ).style.display = 'none';
+      document.getElementById('app').style.display = 'none';
+      document.getElementById('loginPage').style.display = 'flex';
 
-      document.getElementById(
-        'loginPage'
-      ).style.display = 'flex';
+      setLoginMessage('');
+
+    })
+    .withFailureHandler(function(error) {
+
+      showError(error);
 
     })
     .logout(sessionToken);
@@ -113,33 +111,27 @@ function logout() {
 
 function showApp() {
 
-  document.getElementById(
-    'loginPage'
-  ).style.display = 'none';
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
 
-  document.getElementById(
-    'app'
-  ).style.display = 'flex';
-
-  document.getElementById(
-    'userInfo'
-  ).innerHTML =
+  document.getElementById('userInfo').innerHTML =
     '<strong>' +
     escapeHtml(currentUser.name) +
     '</strong><br>' +
-    escapeHtml(currentUser.role);
+    '<span>' +
+    escapeHtml(currentUser.role) +
+    '</span>';
 
-  document.getElementById(
-    'currentUser'
-  ).innerText =
+  document.getElementById('currentUser').innerText =
     currentUser.name;
 
+  const manageSalesBtn =
+    document.getElementById('manageSalesBtn');
+
   if (currentUser.role === 'Admin') {
-
-    document.getElementById(
-      'manageSalesBtn'
-    ).style.display = 'block';
-
+    manageSalesBtn.style.display = 'block';
+  } else {
+    manageSalesBtn.style.display = 'none';
   }
 
   showDashboard();
@@ -154,13 +146,9 @@ function showDashboard() {
 
   hidePages();
 
-  document.getElementById(
-    'dashboardPage'
-  ).style.display = 'block';
+  document.getElementById('dashboardPage').style.display = 'block';
 
-  document.getElementById(
-    'pageTitle'
-  ).innerText = 'Dashboard';
+  document.getElementById('pageTitle').innerText = 'Dashboard';
 
   loadDashboard();
 }
@@ -171,41 +159,32 @@ function loadDashboard() {
   google.script.run
     .withSuccessHandler(function(stats) {
 
-      document.getElementById(
-        'statTotal'
-      ).innerText = stats.total;
-
-      document.getElementById(
-        'statNew'
-      ).innerText = stats.new;
-
-      document.getElementById(
-        'statInterested'
-      ).innerText = stats.interested;
-
-      document.getElementById(
-        'statFollowUp'
-      ).innerText = stats.followUp;
-
-      document.getElementById(
-        'statAppointment'
-      ).innerText = stats.appointment;
-
-      document.getElementById(
-        'statSiteSurvey'
-      ).innerText = stats.siteSurvey;
-
-      document.getElementById(
-        'statQuotation'
-      ).innerText = stats.quotation;
-
-      document.getElementById(
-        'statClosing'
-      ).innerText = stats.closing;
+      setStat('statTotal', stats.total);
+      setStat('statNew', stats.new);
+      setStat('statInterested', stats.interested);
+      setStat('statFollowUp', stats.followUp);
+      setStat('statAppointment', stats.appointment);
+      setStat('statSiteSurvey', stats.siteSurvey);
+      setStat('statQuotation', stats.quotation);
+      setStat('statClosing', stats.closing);
 
     })
     .withFailureHandler(showError)
     .getDashboardStats(sessionToken);
+}
+
+
+function setStat(id, value) {
+
+  const element = document.getElementById(id);
+
+  if (element) {
+    element.innerText =
+      value === null ||
+      value === undefined
+        ? 0
+        : value;
+  }
 }
 
 
@@ -217,13 +196,9 @@ function showLeads() {
 
   hidePages();
 
-  document.getElementById(
-    'leadsPage'
-  ).style.display = 'block';
+  document.getElementById('leadsPage').style.display = 'block';
 
-  document.getElementById(
-    'pageTitle'
-  ).innerText = 'My Leads';
+  document.getElementById('pageTitle').innerText = 'My Leads';
 
   loadLeads();
 }
@@ -231,15 +206,25 @@ function showLeads() {
 
 function loadLeads() {
 
+  showTableLoading('leadsTable', 10);
+
   google.script.run
     .withSuccessHandler(function(leads) {
 
-      allLeads = leads;
+      allLeads = Array.isArray(leads)
+        ? leads
+        : [];
 
-      renderLeads(leads);
+      renderLeads(allLeads);
 
     })
-    .withFailureHandler(showError)
+    .withFailureHandler(function(error) {
+
+      showError(error);
+
+      renderLeads([]);
+
+    })
     .getMyLeads(sessionToken);
 }
 
@@ -247,18 +232,21 @@ function loadLeads() {
 function renderLeads(leads) {
 
   const tbody =
-    document.getElementById(
-      'leadsTable'
-    );
+    document.getElementById('leadsTable');
 
   tbody.innerHTML = '';
 
-  if (!leads.length) {
+  if (!leads || !leads.length) {
 
-    tbody.innerHTML =
-      '<tr><td colspan="10">' +
-      'Belum ada lead.' +
-      '</td></tr>';
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="10" class="empty-state">
+          <div class="empty-icon">📋</div>
+          <strong>Belum ada lead</strong>
+          <span>Tambahkan lead baru untuk mulai bekerja.</span>
+        </td>
+      </tr>
+    `;
 
     return;
   }
@@ -268,47 +256,69 @@ function renderLeads(leads) {
     const tr =
       document.createElement('tr');
 
+    const phone =
+      cleanPhone(lead.phone);
+
+    const whatsappLink =
+      phone
+        ? `
+          <a
+            href="https://wa.me/${phone}"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="whatsapp-link">
+            ${escapeHtml(lead.phone)}
+          </a>
+        `
+        : '-';
+
     tr.innerHTML = `
 
-      <td>${escapeHtml(lead.customer)}</td>
-
       <td>
-        <a
-          href="https://wa.me/${lead.phone}"
-          target="_blank">
-
-          ${escapeHtml(lead.phone)}
-
-        </a>
+        <strong class="customer-name">
+          ${escapeHtml(lead.customer)}
+        </strong>
       </td>
 
-      <td>${escapeHtml(lead.business)}</td>
-
-      <td>${escapeHtml(lead.location)}</td>
-
       <td>
-        <span class="status">
-          ${escapeHtml(lead.status)}
-        </span>
+        ${whatsappLink}
       </td>
 
-      <td>${escapeHtml(lead.followUp)}</td>
-
-      <td>${escapeHtml(lead.appointment)}</td>
-
-      <td>${escapeHtml(lead.quotation)}</td>
-
-      <td>${escapeHtml(lead.closing)}</td>
+      <td>
+        ${escapeHtml(lead.business)}
+      </td>
 
       <td>
+        ${escapeHtml(lead.location)}
+      </td>
 
+      <td>
+        ${getStatusBadge(lead.status)}
+      </td>
+
+      <td>
+        ${formatDateValue(lead.followUp)}
+      </td>
+
+      <td>
+        ${formatDateValue(lead.appointment)}
+      </td>
+
+      <td>
+        ${formatDateValue(lead.quotation)}
+      </td>
+
+      <td>
+        ${formatDateValue(lead.closing)}
+      </td>
+
+      <td>
         <button
-          onclick='editLead(${JSON.stringify(lead)})'>
-
+          type="button"
+          class="table-action-btn"
+          onclick="editLeadByIndex(${allLeads.indexOf(lead)})">
           Edit
-
         </button>
-
       </td>
 
     `;
@@ -316,6 +326,93 @@ function renderLeads(leads) {
     tbody.appendChild(tr);
 
   });
+}
+
+
+/* =========================
+   SAFE EDIT LEAD
+========================= */
+
+function editLeadByIndex(index) {
+
+  if (
+    index < 0 ||
+    index >= allLeads.length
+  ) {
+    return;
+  }
+
+  editLead(allLeads[index]);
+}
+
+
+function editLead(lead) {
+
+  if (!lead) return;
+
+  document.getElementById(
+    'leadModalTitle'
+  ).innerText = 'Edit Lead';
+
+  document.getElementById(
+    'leadRow'
+  ).value = lead.row || '';
+
+  document.getElementById(
+    'leadId'
+  ).value = lead.leadId || '';
+
+  document.getElementById(
+    'leadCustomer'
+  ).value = lead.customer || '';
+
+  document.getElementById(
+    'leadPhone'
+  ).value = lead.phone || '';
+
+  document.getElementById(
+    'leadBusiness'
+  ).value = lead.business || '';
+
+  document.getElementById(
+    'leadLocation'
+  ).value = lead.location || '';
+
+  document.getElementById(
+    'leadStatus'
+  ).value = lead.status || 'New';
+
+  document.getElementById(
+    'leadFollowUp'
+  ).value = normalizeDateForInput(lead.followUp);
+
+  document.getElementById(
+    'leadAppointment'
+  ).value = normalizeDateForInput(lead.appointment);
+
+  document.getElementById(
+    'leadSiteSurvey'
+  ).value = normalizeDateForInput(lead.siteSurvey);
+
+  document.getElementById(
+    'leadQuotation'
+  ).value = normalizeDateForInput(lead.quotation);
+
+  document.getElementById(
+    'leadSPK'
+  ).value = normalizeDateForInput(lead.spk);
+
+  document.getElementById(
+    'leadClosing'
+  ).value = normalizeDateForInput(lead.closing);
+
+  document.getElementById(
+    'leadNotes'
+  ).value = lead.notes || '';
+
+  document.getElementById(
+    'leadModal'
+  ).style.display = 'flex';
 }
 
 
@@ -328,7 +425,9 @@ function filterLeads() {
   const search =
     document.getElementById(
       'leadSearch'
-    ).value.toLowerCase();
+    ).value
+    .toLowerCase()
+    .trim();
 
   const status =
     document.getElementById(
@@ -338,25 +437,34 @@ function filterLeads() {
   const filtered =
     allLeads.filter(function(lead) {
 
+      const customer =
+        String(lead.customer || '')
+          .toLowerCase();
+
+      const phone =
+        String(lead.phone || '')
+          .toLowerCase();
+
+      const business =
+        String(lead.business || '')
+          .toLowerCase();
+
+      const location =
+        String(lead.location || '')
+          .toLowerCase();
+
       const matchesSearch =
-        String(lead.customer)
-          .toLowerCase()
-          .includes(search) ||
-
-        String(lead.phone)
-          .toLowerCase()
-          .includes(search) ||
-
-        String(lead.business)
-          .toLowerCase()
-          .includes(search);
+        !search ||
+        customer.includes(search) ||
+        phone.includes(search) ||
+        business.includes(search) ||
+        location.includes(search);
 
       const matchesStatus =
         !status ||
         lead.status === status;
 
-      return matchesSearch &&
-             matchesStatus;
+      return matchesSearch && matchesStatus;
 
     });
 
@@ -408,81 +516,18 @@ function clearLeadForm() {
     'leadNotes'
   ].forEach(function(id) {
 
-    document.getElementById(id).value = '';
+    const element =
+      document.getElementById(id);
+
+    if (element) {
+      element.value = '';
+    }
 
   });
 
   document.getElementById(
     'leadStatus'
   ).value = 'New';
-}
-
-
-function editLead(lead) {
-
-  document.getElementById(
-    'leadModalTitle'
-  ).innerText = 'Edit Lead';
-
-  document.getElementById(
-    'leadRow'
-  ).value = lead.row;
-
-  document.getElementById(
-    'leadId'
-  ).value = lead.leadId;
-
-  document.getElementById(
-    'leadCustomer'
-  ).value = lead.customer;
-
-  document.getElementById(
-    'leadPhone'
-  ).value = lead.phone;
-
-  document.getElementById(
-    'leadBusiness'
-  ).value = lead.business;
-
-  document.getElementById(
-    'leadLocation'
-  ).value = lead.location;
-
-  document.getElementById(
-    'leadStatus'
-  ).value = lead.status;
-
-  document.getElementById(
-    'leadFollowUp'
-  ).value = lead.followUp;
-
-  document.getElementById(
-    'leadAppointment'
-  ).value = lead.appointment;
-
-  document.getElementById(
-    'leadSiteSurvey'
-  ).value = lead.siteSurvey;
-
-  document.getElementById(
-    'leadQuotation'
-  ).value = lead.quotation;
-
-  document.getElementById(
-    'leadSPK'
-  ).value = lead.spk;
-
-  document.getElementById(
-    'leadClosing'
-  ).value = lead.closing;
-
-  document.getElementById(
-    'leadNotes'
-  ).value = lead.notes;
-
-  document.getElementById(
-    'leadModal'
-  ).style.display = 'flex';
 }
 
 
@@ -509,22 +554,22 @@ function saveLead() {
     customer:
       document.getElementById(
         'leadCustomer'
-      ).value,
+      ).value.trim(),
 
     phone:
       document.getElementById(
         'leadPhone'
-      ).value,
+      ).value.trim(),
 
     business:
       document.getElementById(
         'leadBusiness'
-      ).value,
+      ).value.trim(),
 
     location:
       document.getElementById(
         'leadLocation'
-      ).value,
+      ).value.trim(),
 
     status:
       document.getElementById(
@@ -564,13 +609,20 @@ function saveLead() {
     notes:
       document.getElementById(
         'leadNotes'
-      ).value
+      ).value.trim()
   };
 
 
   if (!lead.customer) {
 
-    alert('Nama customer wajib diisi.');
+    showToast(
+      'Nama customer wajib diisi.',
+      'error'
+    );
+
+    document.getElementById(
+      'leadCustomer'
+    ).focus();
 
     return;
   }
@@ -581,14 +633,14 @@ function saveLead() {
     google.script.run
       .withSuccessHandler(function() {
 
-        alert(
-          'Lead berhasil diperbarui.'
-        );
-
         closeLeadModal();
 
-        loadLeads();
+        showToast(
+          'Lead berhasil diperbarui.',
+          'success'
+        );
 
+        loadLeads();
         loadDashboard();
 
       })
@@ -603,16 +655,15 @@ function saveLead() {
     google.script.run
       .withSuccessHandler(function(result) {
 
-        alert(
-          'Lead berhasil ditambahkan.\n' +
-          'Lead ID: ' +
-          result.leadId
-        );
-
         closeLeadModal();
 
-        loadLeads();
+        showToast(
+          'Lead berhasil ditambahkan. Lead ID: ' +
+          result.leadId,
+          'success'
+        );
 
+        loadLeads();
         loadDashboard();
 
       })
@@ -631,7 +682,10 @@ function saveLead() {
 
 function showSales() {
 
-  if (currentUser.role !== 'Admin') {
+  if (
+    !currentUser ||
+    currentUser.role !== 'Admin'
+  ) {
     return;
   }
 
@@ -651,15 +705,25 @@ function showSales() {
 
 function loadSales() {
 
+  showTableLoading('salesTable', 6);
+
   google.script.run
     .withSuccessHandler(function(sales) {
 
-      allSales = sales;
+      allSales = Array.isArray(sales)
+        ? sales
+        : [];
 
-      renderSales(sales);
+      renderSales(allSales);
 
     })
-    .withFailureHandler(showError)
+    .withFailureHandler(function(error) {
+
+      showError(error);
+
+      renderSales([]);
+
+    })
     .getSales(sessionToken);
 }
 
@@ -673,15 +737,37 @@ function renderSales(sales) {
 
   tbody.innerHTML = '';
 
+  if (!sales || !sales.length) {
+
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" class="empty-state">
+          <div class="empty-icon">👥</div>
+          <strong>Belum ada sales</strong>
+          <span>Tambahkan user sales baru.</span>
+        </td>
+      </tr>
+    `;
+
+    return;
+  }
+
   sales.forEach(function(salesUser) {
 
     const tr =
       document.createElement('tr');
 
+    const statusClass =
+      salesUser.status === 'Active'
+        ? 'active'
+        : 'inactive';
+
     tr.innerHTML = `
 
       <td>
-        ${escapeHtml(salesUser.name)}
+        <strong>
+          ${escapeHtml(salesUser.name)}
+        </strong>
       </td>
 
       <td>
@@ -693,7 +779,9 @@ function renderSales(sales) {
       </td>
 
       <td>
-        ${escapeHtml(salesUser.status)}
+        <span class="sales-status ${statusClass}">
+          ${escapeHtml(salesUser.status)}
+        </span>
       </td>
 
       <td>
@@ -702,29 +790,37 @@ function renderSales(sales) {
 
       <td>
 
-        <button
-          onclick="changeSalesStatus(
-            '${escapeAttr(salesUser.username)}',
-            '${escapeAttr(salesUser.name)}',
-            '${salesUser.status}'
-          )">
+        <div class="action-group">
 
-          ${
-            salesUser.status === 'Active'
-              ? 'Deactivate'
-              : 'Activate'
-          }
+          <button
+            type="button"
+            class="table-action-btn"
+            onclick="changeSalesStatus(
+              ${JSON.stringify(salesUser.username)},
+              ${JSON.stringify(salesUser.name)},
+              ${JSON.stringify(salesUser.status)}
+            )">
 
-        </button>
+            ${
+              salesUser.status === 'Active'
+                ? 'Deactivate'
+                : 'Activate'
+            }
 
-        <button
-          onclick="resetPassword(
-            '${escapeAttr(salesUser.username)}'
-          )">
+          </button>
 
-          Reset Password
+          <button
+            type="button"
+            class="table-action-btn secondary"
+            onclick="resetPassword(
+              ${JSON.stringify(salesUser.username)}
+            )">
 
-        </button>
+            Reset Password
+
+          </button>
+
+        </div>
 
       </td>
 
@@ -791,8 +887,19 @@ function createSales() {
 
   if (!name || !username || !password) {
 
-    alert(
-      'Name, username dan password wajib diisi.'
+    showToast(
+      'Name, username dan password wajib diisi.',
+      'error'
+    );
+
+    return;
+  }
+
+  if (password.length < 6) {
+
+    showToast(
+      'Password minimal 6 karakter.',
+      'error'
     );
 
     return;
@@ -801,14 +908,14 @@ function createSales() {
   google.script.run
     .withSuccessHandler(function(result) {
 
-      alert(
-        'Sales berhasil dibuat.\n\n' +
-        'Name: ' + result.sales.name +
-        '\nUsername: ' + result.sales.username +
-        '\nDatabase: ' + result.sales.sheetName
-      );
-
       closeSalesModal();
+
+      showToast(
+        'Sales ' +
+        result.sales.name +
+        ' berhasil dibuat.',
+        'success'
+      );
 
       loadSales();
 
@@ -853,6 +960,13 @@ function changeSalesStatus(
   google.script.run
     .withSuccessHandler(function() {
 
+      showToast(
+        'Status ' +
+        name +
+        ' berhasil diubah.',
+        'success'
+      );
+
       loadSales();
 
     })
@@ -879,11 +993,22 @@ function resetPassword(username) {
 
   if (!password) return;
 
+  if (password.length < 6) {
+
+    showToast(
+      'Password minimal 6 karakter.',
+      'error'
+    );
+
+    return;
+  }
+
   google.script.run
     .withSuccessHandler(function() {
 
-      alert(
-        'Password berhasil direset.'
+      showToast(
+        'Password berhasil direset.',
+        'success'
       );
 
     })
@@ -897,7 +1022,225 @@ function resetPassword(username) {
 
 
 /* =========================
-   UTILITIES
+   STATUS BADGE
+========================= */
+
+function getStatusBadge(status) {
+
+  const value =
+    String(status || 'New');
+
+  const safeStatus =
+    escapeHtml(value);
+
+  const className =
+    value
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '');
+
+  return `
+    <span class="status status-${className}">
+      ${safeStatus}
+    </span>
+  `;
+}
+
+
+/* =========================
+   PHONE CLEANUP
+========================= */
+
+function cleanPhone(phone) {
+
+  let value =
+    String(phone || '')
+      .trim()
+      .replace(/[^\d+]/g, '');
+
+  if (!value) return '';
+
+  if (value.startsWith('+62')) {
+    value = value.substring(1);
+  }
+
+  if (value.startsWith('62')) {
+    return value;
+  }
+
+  if (value.startsWith('0')) {
+    return '62' + value.substring(1);
+  }
+
+  return value;
+}
+
+
+/* =========================
+   DATE HELPERS
+========================= */
+
+function formatDateValue(value) {
+
+  if (!value) return '-';
+
+  const date =
+    normalizeDateForInput(value);
+
+  if (!date) {
+    return escapeHtml(String(value));
+  }
+
+  const parts =
+    date.split('-');
+
+  if (parts.length !== 3) {
+    return escapeHtml(String(value));
+  }
+
+  return (
+    parts[2] +
+    '/' +
+    parts[1] +
+    '/' +
+    parts[0]
+  );
+}
+
+
+function normalizeDateForInput(value) {
+
+  if (!value) return '';
+
+  if (
+    typeof value === 'string' &&
+    /^\d{4}-\d{2}-\d{2}$/.test(value)
+  ) {
+    return value;
+  }
+
+  const date =
+    new Date(value);
+
+  if (isNaN(date.getTime())) {
+    return '';
+  }
+
+  const year =
+    date.getFullYear();
+
+  const month =
+    String(date.getMonth() + 1)
+      .padStart(2, '0');
+
+  const day =
+    String(date.getDate())
+      .padStart(2, '0');
+
+  return (
+    year +
+    '-' +
+    month +
+    '-' +
+    day
+  );
+}
+
+
+/* =========================
+   UI HELPERS
+========================= */
+
+function showTableLoading(
+  tableId,
+  colspan
+) {
+
+  const tbody =
+    document.getElementById(tableId);
+
+  if (!tbody) return;
+
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="${colspan}" class="loading-state">
+        <div class="loading-spinner"></div>
+        <span>Loading data...</span>
+      </td>
+    </tr>
+  `;
+}
+
+
+function showToast(
+  message,
+  type
+) {
+
+  let container =
+    document.getElementById(
+      'fsiToastContainer'
+    );
+
+  if (!container) {
+
+    container =
+      document.createElement('div');
+
+    container.id =
+      'fsiToastContainer';
+
+    container.className =
+      'toast-container';
+
+    document.body.appendChild(container);
+  }
+
+  const toast =
+    document.createElement('div');
+
+  toast.className =
+    'fsi-toast ' +
+    (type || 'success');
+
+  toast.innerHTML = `
+    <span class="toast-icon">
+      ${
+        type === 'error'
+          ? '!'
+          : '✓'
+      }
+    </span>
+
+    <span class="toast-message">
+      ${escapeHtml(message)}
+    </span>
+  `;
+
+  container.appendChild(toast);
+
+  setTimeout(function() {
+
+    toast.classList.add('show');
+
+  }, 10);
+
+  setTimeout(function() {
+
+    toast.classList.remove('show');
+
+    setTimeout(function() {
+
+      toast.remove();
+
+    }, 300);
+
+  }, 3500);
+}
+
+
+/* =========================
+   PAGE HELPERS
 ========================= */
 
 function hidePages() {
@@ -918,28 +1261,44 @@ function hidePages() {
 
 function setLoginMessage(message) {
 
-  document.getElementById(
-    'loginMessage'
-  ).innerText = message;
+  const element =
+    document.getElementById(
+      'loginMessage'
+    );
+
+  if (element) {
+    element.innerText =
+      message || '';
+  }
 }
 
 
 function showError(error) {
 
-  alert(
-    error.message ||
-    'Terjadi kesalahan.'
+  const message =
+    error &&
+    error.message
+      ? error.message
+      : 'Terjadi kesalahan.';
+
+  showToast(
+    message,
+    'error'
   );
 }
 
 
+/* =========================
+   SECURITY HELPERS
+========================= */
+
 function escapeHtml(value) {
 
-  if (value === null ||
-      value === undefined) {
-
+  if (
+    value === null ||
+    value === undefined
+  ) {
     return '';
-
   }
 
   return String(value)
@@ -960,6 +1319,61 @@ function escapeAttr(value) {
 
 
 /* =========================
+   MODAL CLICK OUTSIDE
+========================= */
+
+document.addEventListener(
+  'click',
+  function(event) {
+
+    const leadModal =
+      document.getElementById('leadModal');
+
+    const salesModal =
+      document.getElementById('salesModal');
+
+    if (
+      event.target === leadModal
+    ) {
+      closeLeadModal();
+    }
+
+    if (
+      event.target === salesModal
+    ) {
+      closeSalesModal();
+    }
+
+  }
+);
+
+
+/* =========================
+   ENTER KEY LOGIN
+========================= */
+
+document.addEventListener(
+  'keydown',
+  function(event) {
+
+    if (
+      event.key === 'Enter' &&
+      document.activeElement &&
+      (
+        document.activeElement.id ===
+          'loginUsername' ||
+        document.activeElement.id ===
+          'loginPassword'
+      )
+    ) {
+      login();
+    }
+
+  }
+);
+
+
+/* =========================
    START
 ========================= */
 
@@ -970,3 +1384,4 @@ window.onload = function() {
 };
 
 </script>
+```
