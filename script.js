@@ -1,5 +1,5 @@
-const SUPABASE_URL = "PASTE_API_URL_DI_SINI";
-const SUPABASE_PUBLISHABLE_KEY = "PASTE_PUBLISHABLE_KEY_DI_SINI";
+const SUPABASE_URL = "https://yoyszukutqwoxxdolzcg.supabase.co/rest/v1/";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_QcPULwc5-Axry0HRzfmq1A_CeXgiAHL";
 
 const { createClient } = window.supabase;
 
