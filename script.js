@@ -2,14 +2,16 @@
 // FSI CRM - SCRIPT.JS
 // ======================================================
 
-// =========================
+
+// ======================================================
 // SUPABASE CONFIG
-// =========================
+// ======================================================
 
-const SUPABASE_URL = "https://yoyszukutqwoxxdolzcg.supabase.co";
+const SUPABASE_URL =
+  "https://yoyszukutqwoxxdolzcg.supabase.co";
 
-// MASUKKAN PUBLISHABLE KEY SUPABASE KAMU DI SINI
-const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_QcPULwc5-Axry0HRzfmq1A_CeXgiAHL";
+const SUPABASE_PUBLISHABLE_KEY =
+  "sb_publishable_QcPULwc5-Axry0HRzfmq1A_CeXgiAHL";
 
 const { createClient } = window.supabase;
 
@@ -19,655 +21,1289 @@ const supabaseClient = createClient(
 );
 
 
-// =========================
+// ======================================================
 // GLOBAL VARIABLES
-// =========================
+// ======================================================
 
 let currentUser = null;
 let currentProfile = null;
+
 let leads = [];
 let salesUsers = [];
 
 
-// =========================
+// ======================================================
 // DOM READY
-// =========================
+// ======================================================
 
-document.addEventListener("DOMContentLoaded", () => {
-  checkSession();
+document.addEventListener(
+  "DOMContentLoaded",
+  async () => {
 
-  const loginForm = document.getElementById("loginForm");
+    const loginForm =
+      document.getElementById("loginForm");
 
-  if (loginForm) {
-    loginForm.addEventListener("submit", (event) => {
-      event.preventDefault();
-      login();
-    });
+    if (loginForm) {
+
+      loginForm.addEventListener(
+        "submit",
+        (event) => {
+
+          event.preventDefault();
+
+          login();
+
+        }
+      );
+
+    }
+
+    await checkSession();
+
   }
-});
+);
 
 
-// =========================
+// ======================================================
 // LOGIN
-// =========================
+// ======================================================
 
 async function login() {
-  const usernameInput = document.getElementById("loginUsername");
-  const passwordInput = document.getElementById("loginPassword");
-  const loginButton = document.querySelector("#loginForm button");
 
-  const username = usernameInput?.value.trim();
-  const password = passwordInput?.value;
+  const usernameInput =
+    document.getElementById(
+      "loginUsername"
+    );
+
+  const passwordInput =
+    document.getElementById(
+      "loginPassword"
+    );
+
+  const username =
+    usernameInput
+      ? usernameInput.value.trim()
+      : "";
+
+  const password =
+    passwordInput
+      ? passwordInput.value
+      : "";
 
   if (!username || !password) {
-    alert("Username dan password wajib diisi.");
+
+    alert(
+      "Username dan password wajib diisi."
+    );
+
     return;
+
   }
 
+
+  const loginButton =
+    document.querySelector(
+      "#loginPage button"
+    );
+
+
   try {
+
     if (loginButton) {
+
       loginButton.disabled = true;
-      loginButton.textContent = "Logging in...";
+
+      loginButton.textContent =
+        "LOGGING IN...";
+
     }
 
-    // Cari email berdasarkan username
-    const { data: email, error: emailError } =
-      await supabaseClient.rpc("get_login_email", {
-        p_username: username
-      });
+
+    // --------------------------------------------------
+    // CARI EMAIL BERDASARKAN USERNAME
+    // --------------------------------------------------
+
+    const {
+      data: email,
+      error: emailError
+    } =
+      await supabaseClient.rpc(
+        "get_login_email",
+        {
+          p_username: username
+        }
+      );
+
 
     if (emailError) {
-      console.error("Username lookup error:", emailError);
+
+      console.error(
+        "Username lookup error:",
+        emailError
+      );
+
       alert(
-        "Sistem login tidak dapat menghubungi Supabase.\n\n" +
-        "Detail: " +
+        "Gagal mencari username.\n\n" +
         emailError.message
       );
+
       return;
+
     }
+
 
     if (!email) {
-      alert("Username tidak ditemukan.");
+
+      alert(
+        "Username tidak ditemukan."
+      );
+
       return;
+
     }
 
-    // Login ke Supabase Auth
-    const { data, error } =
-      await supabaseClient.auth.signInWithPassword({
-        email: email,
-        password: password
-      });
+
+    // --------------------------------------------------
+    // LOGIN SUPABASE AUTH
+    // --------------------------------------------------
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient.auth.signInWithPassword(
+        {
+          email: email,
+          password: password
+        }
+      );
+
 
     if (error) {
-      console.error("Auth login error:", error);
-      alert("Username atau password salah.");
+
+      console.error(
+        "Auth login error:",
+        error
+      );
+
+      alert(
+        "Username atau password salah."
+      );
+
       return;
+
     }
 
-    currentUser = data.user;
 
-    // Ambil profile CRM
-    await loadProfile();
+    currentUser =
+      data.user;
 
-    if (!currentProfile) {
+
+    // --------------------------------------------------
+    // LOAD PROFILE
+    // --------------------------------------------------
+
+    const profileLoaded =
+      await loadProfile();
+
+
+    if (!profileLoaded) {
+
       await supabaseClient.auth.signOut();
-      alert("Profile CRM tidak ditemukan.");
+
+      alert(
+        "Profile CRM tidak ditemukan."
+      );
+
       return;
+
     }
 
-    // Cek status
-    if (currentProfile.status !== "Active") {
+
+    // --------------------------------------------------
+    // CHECK STATUS
+    // --------------------------------------------------
+
+    if (
+      currentProfile.status !==
+      "Active"
+    ) {
+
       await supabaseClient.auth.signOut();
-      alert("Akun kamu sedang tidak aktif.");
+
+      alert(
+        "Akun kamu sedang tidak aktif."
+      );
+
       return;
+
     }
 
-    // Masuk ke aplikasi
+
+    // --------------------------------------------------
+    // SHOW APPLICATION
+    // --------------------------------------------------
+
     showApp();
 
-    // Load leads
+
+    // --------------------------------------------------
+    // LOAD DATA
+    // --------------------------------------------------
+
     await loadLeads();
 
-    // Admin bisa melihat semua Sales
-    if (currentProfile.role === "Admin") {
+
+    if (
+      currentProfile.role ===
+      "Admin"
+    ) {
+
       await loadSalesUsers();
+
     }
+
 
     showDashboard();
 
-  } catch (error) {
-    console.error("Login error:", error);
-    alert(error.message || "Login gagal.");
-  } finally {
-    if (loginButton) {
-      loginButton.disabled = false;
-      loginButton.textContent = "Login";
-    }
   }
+
+  catch (error) {
+
+    console.error(
+      "Login error:",
+      error
+    );
+
+    alert(
+      error.message ||
+      "Login gagal."
+    );
+
+  }
+
+  finally {
+
+    if (loginButton) {
+
+      loginButton.disabled = false;
+
+      loginButton.textContent =
+        "LOGIN";
+
+    }
+
+  }
+
 }
 
 
-// =========================
+// ======================================================
 // LOGOUT
-// =========================
+// ======================================================
 
 async function logout() {
-  await supabaseClient.auth.signOut();
+
+  try {
+
+    await supabaseClient.auth.signOut();
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "Logout error:",
+      error
+    );
+
+  }
+
 
   currentUser = null;
   currentProfile = null;
+
   leads = [];
   salesUsers = [];
 
+
   showLogin();
+
 }
 
 
-// =========================
-// SESSION CHECK
-// =========================
+// ======================================================
+// CHECK SESSION
+// ======================================================
 
 async function checkSession() {
+
   try {
+
     const {
-      data: { session }
-    } = await supabaseClient.auth.getSession();
+      data: {
+        session
+      }
+    } =
+      await supabaseClient.auth.getSession();
+
 
     if (!session) {
+
       showLogin();
+
       return;
+
     }
 
-    currentUser = session.user;
 
-    await loadProfile();
+    currentUser =
+      session.user;
 
-    if (!currentProfile) {
+
+    const profileLoaded =
+      await loadProfile();
+
+
+    if (!profileLoaded) {
+
       await supabaseClient.auth.signOut();
+
       showLogin();
+
       return;
+
     }
 
-    if (currentProfile.status !== "Active") {
+
+    if (
+      currentProfile.status !==
+      "Active"
+    ) {
+
       await supabaseClient.auth.signOut();
+
       showLogin();
-      alert("Akun kamu sedang tidak aktif.");
+
+      alert(
+        "Akun kamu sedang tidak aktif."
+      );
+
       return;
+
     }
+
 
     showApp();
 
+
     await loadLeads();
 
-    if (currentProfile.role === "Admin") {
+
+    if (
+      currentProfile.role ===
+      "Admin"
+    ) {
+
       await loadSalesUsers();
+
     }
+
 
     showDashboard();
 
-  } catch (error) {
-    console.error("Session error:", error);
-    showLogin();
   }
+
+  catch (error) {
+
+    console.error(
+      "Session error:",
+      error
+    );
+
+    showLogin();
+
+  }
+
 }
 
 
-// =========================
+// ======================================================
 // LOAD PROFILE
-// =========================
+// ======================================================
 
 async function loadProfile() {
+
   if (!currentUser) {
+
     currentProfile = null;
-    return;
+
+    return false;
+
   }
 
-  const { data, error } = await supabaseClient
-    .from("sales_users")
-    .select("*")
-    .eq("auth_user-id", currentUser.id)
-    .single();
+
+  const {
+    data,
+    error
+  } =
+    await supabaseClient
+      .from("sales_users")
+      .select("*")
+      .eq(
+        "auth_user-id",
+        currentUser.id
+      )
+      .single();
+
 
   if (error) {
-    console.error("Profile error:", error);
+
+    console.error(
+      "Profile error:",
+      error
+    );
+
     currentProfile = null;
-    return;
+
+    return false;
+
   }
 
-  currentProfile = data;
+
+  currentProfile =
+    data;
+
+
+  return true;
+
 }
 
 
-// =========================
+// ======================================================
 // SHOW LOGIN
-// =========================
+// ======================================================
 
 function showLogin() {
-  const loginPage = document.getElementById("loginPage");
-  const app = document.getElementById("app");
+
+  const loginPage =
+    document.getElementById(
+      "loginPage"
+    );
+
+  const app =
+    document.getElementById(
+      "app"
+    );
+
 
   if (loginPage) {
-    loginPage.style.display = "flex";
+
+    loginPage.style.display =
+      "flex";
+
   }
+
 
   if (app) {
-    app.style.display = "none";
+
+    app.style.display =
+      "none";
+
   }
 
-  const username = document.getElementById("loginUsername");
-  const password = document.getElementById("loginPassword");
+
+  const password =
+    document.getElementById(
+      "loginPassword"
+    );
+
 
   if (password) {
+
     password.value = "";
+
   }
 
-  if (username) {
-    username.focus();
-  }
 }
 
 
-// =========================
+// ======================================================
 // SHOW APP
-// =========================
+// ======================================================
 
 function showApp() {
-  const loginPage = document.getElementById("loginPage");
-  const app = document.getElementById("app");
+
+  const loginPage =
+    document.getElementById(
+      "loginPage"
+    );
+
+  const app =
+    document.getElementById(
+      "app"
+    );
+
 
   if (loginPage) {
-    loginPage.style.display = "none";
+
+    loginPage.style.display =
+      "none";
+
   }
+
 
   if (app) {
-    app.style.display = "flex";
+
+    app.style.display =
+      "flex";
+
   }
+
 
   updateUserInfo();
+
   setupRoleAccess();
+
 }
 
 
-// =========================
-// USER INFO
-// =========================
+// ======================================================
+// USER INFORMATION
+// ======================================================
 
 function updateUserInfo() {
-  if (!currentProfile) return;
 
-  const nameElements = [
-    document.getElementById("currentUserName"),
-    document.getElementById("userName"),
-    document.getElementById("profileName")
-  ];
-
-  nameElements.forEach((element) => {
-    if (element) {
-      element.textContent =
-        currentProfile.name || currentProfile.username || "";
-    }
-  });
-
-  const roleElements = [
-    document.getElementById("currentUserRole"),
-    document.getElementById("userRole"),
-    document.getElementById("profileRole")
-  ];
-
-  roleElements.forEach((element) => {
-    if (element) {
-      element.textContent = currentProfile.role || "";
-    }
-  });
-}
-
-
-// =========================
-// ROLE ACCESS
-// =========================
-
-function setupRoleAccess() {
-  const manageSalesMenu =
-    document.getElementById("manageSalesMenu");
-
-  if (!manageSalesMenu) return;
-
-  if (currentProfile?.role === "Admin") {
-    manageSalesMenu.style.display = "block";
-  } else {
-    manageSalesMenu.style.display = "none";
-  }
-}
-
-
-// =========================
-// PAGE NAVIGATION
-// =========================
-
-function showPage(pageName) {
-  const pages = document.querySelectorAll(".page");
-
-  pages.forEach((page) => {
-    page.style.display = "none";
-  });
-
-  const targetPage =
-    document.getElementById(`${pageName}Page`);
-
-  if (targetPage) {
-    targetPage.style.display = "block";
-  }
-
-  const menuItems =
-    document.querySelectorAll("[data-page]");
-
-  menuItems.forEach((item) => {
-    item.classList.remove("active");
-
-    if (item.dataset.page === pageName) {
-      item.classList.add("active");
-    }
-  });
-
-  if (pageName === "dashboard") {
-    updateDashboard();
-  }
-
-  if (pageName === "leads") {
-    renderLeads();
-  }
-
-  if (
-    pageName === "sales" &&
-    currentProfile?.role === "Admin"
-  ) {
-    loadSalesUsers();
-  }
-}
-
-
-function showDashboard() {
-  showPage("dashboard");
-}
-
-
-// =========================
-// LOAD LEADS
-// =========================
-
-async function loadLeads() {
-  let query = supabaseClient
-    .from("leads")
-    .select("*")
-    .order("created_at", {
-      ascending: false
-    });
-
-  const { data, error } = await query;
-
-  if (error) {
-    console.error("Load leads error:", error);
-    alert(
-      "Gagal mengambil data leads.\n\n" +
-      error.message
-    );
+  if (!currentProfile) {
     return;
   }
 
-  leads = data || [];
 
-  renderLeads();
-  updateDashboard();
+  const userInfo =
+    document.getElementById(
+      "userInfo"
+    );
+
+  const currentUserElement =
+    document.getElementById(
+      "currentUser"
+    );
+
+
+  const displayName =
+    currentProfile.name ||
+    currentProfile.username ||
+    "";
+
+
+  const displayRole =
+    currentProfile.role ||
+    "";
+
+
+  if (userInfo) {
+
+    userInfo.innerHTML = `
+      <strong>
+        ${escapeHTML(displayName)}
+      </strong>
+
+      <small>
+        ${escapeHTML(displayRole)}
+      </small>
+    `;
+
+  }
+
+
+  if (currentUserElement) {
+
+    currentUserElement.textContent =
+      displayName;
+
+  }
+
 }
 
 
-// =========================
+// ======================================================
+// ROLE ACCESS
+// ======================================================
+
+function setupRoleAccess() {
+
+  const manageSalesBtn =
+    document.getElementById(
+      "manageSalesBtn"
+    );
+
+
+  if (!manageSalesBtn) {
+    return;
+  }
+
+
+  if (
+    currentProfile &&
+    currentProfile.role ===
+    "Admin"
+  ) {
+
+    manageSalesBtn.style.display =
+      "block";
+
+  }
+
+  else {
+
+    manageSalesBtn.style.display =
+      "none";
+
+  }
+
+}
+
+
+// ======================================================
+// DASHBOARD
+// ======================================================
+
+function showDashboard() {
+
+  hideAllPages();
+
+
+  const dashboardPage =
+    document.getElementById(
+      "dashboardPage"
+    );
+
+
+  if (dashboardPage) {
+
+    dashboardPage.style.display =
+      "block";
+
+  }
+
+
+  setPageTitle(
+    "Dashboard"
+  );
+
+
+  updateDashboard();
+
+}
+
+
+// ======================================================
+// MY LEADS
+// ======================================================
+
+function showLeads() {
+
+  hideAllPages();
+
+
+  const leadsPage =
+    document.getElementById(
+      "leadsPage"
+    );
+
+
+  if (leadsPage) {
+
+    leadsPage.style.display =
+      "block";
+
+  }
+
+
+  setPageTitle(
+    "My Leads"
+  );
+
+
+  renderLeads();
+
+}
+
+
+// ======================================================
+// MANAGE SALES
+// ======================================================
+
+function showSales() {
+
+  if (
+    !currentProfile ||
+    currentProfile.role !==
+    "Admin"
+  ) {
+
+    alert(
+      "Hanya Admin yang dapat mengakses Manage Sales."
+    );
+
+    return;
+
+  }
+
+
+  hideAllPages();
+
+
+  const salesPage =
+    document.getElementById(
+      "salesPage"
+    );
+
+
+  if (salesPage) {
+
+    salesPage.style.display =
+      "block";
+
+  }
+
+
+  setPageTitle(
+    "Manage Sales"
+  );
+
+
+  loadSalesUsers();
+
+}
+
+
+// ======================================================
+// HIDE ALL PAGES
+// ======================================================
+
+function hideAllPages() {
+
+  const pages =
+    document.querySelectorAll(
+      ".content"
+    );
+
+
+  pages.forEach(
+    (page) => {
+
+      page.style.display =
+        "none";
+
+    }
+  );
+
+}
+
+
+// ======================================================
+// PAGE TITLE
+// ======================================================
+
+function setPageTitle(title) {
+
+  const pageTitle =
+    document.getElementById(
+      "pageTitle"
+    );
+
+
+  if (pageTitle) {
+
+    pageTitle.textContent =
+      title;
+
+  }
+
+}
+
+
+// ======================================================
+// LOAD LEADS
+// ======================================================
+
+async function loadLeads() {
+
+  try {
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient
+        .from("leads")
+        .select("*")
+        .order(
+          "created_at",
+          {
+            ascending: false
+          }
+        );
+
+
+    if (error) {
+
+      console.error(
+        "Load leads error:",
+        error
+      );
+
+      alert(
+        "Gagal mengambil data leads.\n\n" +
+        error.message
+      );
+
+      return;
+
+    }
+
+
+    leads =
+      data || [];
+
+
+    updateDashboard();
+
+    renderLeads();
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "Load leads exception:",
+      error
+    );
+
+  }
+
+}
+
+
+// ======================================================
 // RENDER LEADS
-// =========================
+// ======================================================
 
 function renderLeads() {
-  const tbody =
-    document.getElementById("leadsTableBody");
 
-  if (!tbody) return;
+  const tbody =
+    document.getElementById(
+      "leadsTable"
+    );
+
+
+  if (!tbody) {
+    return;
+  }
+
 
   const searchInput =
-    document.getElementById("leadSearch");
+    document.getElementById(
+      "leadSearch"
+    );
 
   const statusFilter =
-    document.getElementById("statusFilter");
+    document.getElementById(
+      "statusFilter"
+    );
 
-  const search = searchInput
-    ? searchInput.value.toLowerCase().trim()
-    : "";
 
-  const selectedStatus = statusFilter
-    ? statusFilter.value
-    : "";
+  const search =
+    searchInput
+      ? searchInput.value
+          .toLowerCase()
+          .trim()
+      : "";
 
-  let filteredLeads = [...leads];
+
+  const selectedStatus =
+    statusFilter
+      ? statusFilter.value
+      : "";
+
+
+  let filteredLeads =
+    [...leads];
+
+
+  // --------------------------------------------------
+  // SEARCH
+  // --------------------------------------------------
 
   if (search) {
-    filteredLeads = filteredLeads.filter((lead) => {
-      return (
-        (lead.customer_name || "")
-          .toLowerCase()
-          .includes(search) ||
 
-        (lead.phone || "")
-          .toLowerCase()
-          .includes(search) ||
+    filteredLeads =
+      filteredLeads.filter(
+        (lead) => {
 
-        (lead.business || "")
-          .toLowerCase()
-          .includes(search) ||
+          return (
 
-        (lead.location || "")
-          .toLowerCase()
-          .includes(search)
+            (lead.customer_name || "")
+              .toLowerCase()
+              .includes(search)
+
+            ||
+
+            (lead.phone || "")
+              .toLowerCase()
+              .includes(search)
+
+            ||
+
+            (lead.business || "")
+              .toLowerCase()
+              .includes(search)
+
+            ||
+
+            (lead.location || "")
+              .toLowerCase()
+              .includes(search)
+
+          );
+
+        }
       );
-    });
+
   }
+
+
+  // --------------------------------------------------
+  // STATUS FILTER
+  // --------------------------------------------------
 
   if (selectedStatus) {
-    filteredLeads = filteredLeads.filter(
-      (lead) =>
-        lead.status === selectedStatus
-    );
+
+    filteredLeads =
+      filteredLeads.filter(
+        (lead) =>
+          lead.status ===
+          selectedStatus
+      );
+
   }
 
-  if (filteredLeads.length === 0) {
+
+  // --------------------------------------------------
+  // EMPTY
+  // --------------------------------------------------
+
+  if (
+    filteredLeads.length ===
+    0
+  ) {
+
     tbody.innerHTML = `
       <tr>
-        <td colspan="10" style="text-align:center;">
+        <td
+          colspan="10"
+          style="text-align:center;"
+        >
           Belum ada data lead.
         </td>
       </tr>
     `;
 
     return;
+
   }
 
-  tbody.innerHTML = filteredLeads
-    .map((lead) => {
-      return `
-        <tr>
 
-          <td>
-            ${escapeHTML(lead.customer_name)}
-          </td>
+  // --------------------------------------------------
+  // TABLE
+  // --------------------------------------------------
 
-          <td>
-            ${
-              lead.phone
-                ? `
-                  <a
-                    href="${whatsappLink(lead.phone)}"
-                    target="_blank"
-                    rel="noopener"
-                  >
-                    ${escapeHTML(lead.phone)}
-                  </a>
-                `
-                : "-"
-            }
-          </td>
+  tbody.innerHTML =
+    filteredLeads
+      .map(
+        (lead) => {
 
-          <td>
-            ${escapeHTML(lead.business)}
-          </td>
+          return `
+            <tr>
 
-          <td>
-            ${escapeHTML(lead.location)}
-          </td>
+              <td>
+                ${escapeHTML(
+                  lead.customer_name
+                )}
+              </td>
 
-          <td>
-            <span class="status-badge ${statusClass(
-              lead.status
-            )}">
-              ${escapeHTML(
-                lead.status || "-"
-              )}
-            </span>
-          </td>
+              <td>
 
-          <td>
-            ${formatDate(lead.follow_up_date)}
-          </td>
+                ${
+                  lead.phone
+                    ? `
+                      <a
+                        href="${whatsappLink(
+                          lead.phone
+                        )}"
+                        target="_blank"
+                        rel="noopener"
+                      >
+                        ${escapeHTML(
+                          lead.phone
+                        )}
+                      </a>
+                    `
+                    : "-"
+                }
 
-          <td>
-            ${formatDate(lead.appointment)}
-          </td>
+              </td>
 
-          <td>
-            ${formatDate(lead.quotation)}
-          </td>
+              <td>
+                ${escapeHTML(
+                  lead.business
+                )}
+              </td>
 
-          <td>
-            ${formatDate(lead.closing)}
-          </td>
+              <td>
+                ${escapeHTML(
+                  lead.location
+                )}
+              </td>
 
-          <td>
+              <td>
 
-            <button
-              class="btn-small"
-              onclick="editLead('${lead.id}')"
-            >
-              Edit
-            </button>
+                <span
+                  class="status-badge ${statusClass(
+                    lead.status
+                  )}"
+                >
+                  ${escapeHTML(
+                    lead.status ||
+                    "-"
+                  )}
+                </span>
 
-            <button
-              class="btn-small btn-danger"
-              onclick="deleteLead('${lead.id}')"
-            >
-              Delete
-            </button>
+              </td>
 
-          </td>
+              <td>
+                ${formatDate(
+                  lead.follow_up_date
+                )}
+              </td>
 
-        </tr>
-      `;
-    })
-    .join("");
+              <td>
+                ${formatDate(
+                  lead.appointment
+                )}
+              </td>
+
+              <td>
+                ${formatDate(
+                  lead.quotation
+                )}
+              </td>
+
+              <td>
+                ${formatDate(
+                  lead.closing
+                )}
+              </td>
+
+              <td>
+
+                <button
+                  class="btn-small"
+                  onclick="editLead('${lead.id}')"
+                >
+                  Edit
+                </button>
+
+                <button
+                  class="btn-small btn-danger"
+                  onclick="deleteLead('${lead.id}')"
+                >
+                  Delete
+                </button>
+
+              </td>
+
+            </tr>
+          `;
+
+        }
+      )
+      .join("");
+
 }
 
 
-// =========================
-// SEARCH / FILTER
-// =========================
+// ======================================================
+// FILTER LEADS
+// ======================================================
 
 function filterLeads() {
+
   renderLeads();
+
 }
 
 
-// =========================
-// OPEN ADD LEAD MODAL
-// =========================
+// ======================================================
+// OPEN LEAD MODAL
+// ======================================================
 
 function openLeadModal() {
+
   const modal =
-    document.getElementById("leadModal");
-
-  if (!modal) return;
-
-  clearLeadForm();
-
-  const title =
-    document.getElementById("leadModalTitle");
-
-  if (title) {
-    title.textContent = "Add New Lead";
-  }
-
-  modal.style.display = "flex";
-}
+    document.getElementById(
+      "leadModal"
+    );
 
 
-// =========================
-// CLOSE LEAD MODAL
-// =========================
-
-function closeLeadModal() {
-  const modal =
-    document.getElementById("leadModal");
-
-  if (modal) {
-    modal.style.display = "none";
-  }
-}
-
-
-// =========================
-// CLEAR LEAD FORM
-// =========================
-
-function clearLeadForm() {
-  const ids = [
-    "leadId",
-    "leadCustomer",
-    "leadPhone",
-    "leadBusiness",
-    "leadLocation",
-    "leadStatus",
-    "leadFollowUp",
-    "leadAppointment",
-    "leadSiteSurvey",
-    "leadQuotation",
-    "leadSPK",
-    "leadClosing",
-    "leadNotes"
-  ];
-
-  ids.forEach((id) => {
-    const element =
-      document.getElementById(id);
-
-    if (!element) return;
-
-    if (element.tagName === "SELECT") {
-      element.selectedIndex = 0;
-    } else {
-      element.value = "";
-    }
-  });
-}
-
-
-// =========================
-// SAVE LEAD
-// =========================
-
-async function saveLead() {
-  if (!currentProfile) {
-    alert("Session tidak ditemukan.");
+  if (!modal) {
     return;
   }
 
+
+  clearLeadForm();
+
+
+  const title =
+    document.getElementById(
+      "leadModalTitle"
+    );
+
+
+  if (title) {
+
+    title.textContent =
+      "Add Lead";
+
+  }
+
+
+  modal.style.display =
+    "flex";
+
+}
+
+
+// ======================================================
+// CLOSE LEAD MODAL
+// ======================================================
+
+function closeLeadModal() {
+
+  const modal =
+    document.getElementById(
+      "leadModal"
+    );
+
+
+  if (modal) {
+
+    modal.style.display =
+      "none";
+
+  }
+
+}
+
+
+// ======================================================
+// CLEAR LEAD FORM
+// ======================================================
+
+function clearLeadForm() {
+
+  const ids = [
+
+    "leadId",
+
+    "leadCustomer",
+
+    "leadPhone",
+
+    "leadBusiness",
+
+    "leadLocation",
+
+    "leadStatus",
+
+    "leadFollowUp",
+
+    "leadAppointment",
+
+    "leadSiteSurvey",
+
+    "leadQuotation",
+
+    "leadSPK",
+
+    "leadClosing",
+
+    "leadNotes"
+
+  ];
+
+
+  ids.forEach(
+    (id) => {
+
+      const element =
+        document.getElementById(
+          id
+        );
+
+
+      if (!element) {
+        return;
+      }
+
+
+      if (
+        element.tagName ===
+        "SELECT"
+      ) {
+
+        element.selectedIndex =
+          0;
+
+      }
+
+      else {
+
+        element.value =
+          "";
+
+      }
+
+    }
+  );
+
+}
+
+
+// ======================================================
+// SAVE LEAD
+// ======================================================
+
+async function saveLead() {
+
+  if (!currentProfile) {
+
+    alert(
+      "Session tidak ditemukan."
+    );
+
+    return;
+
+  }
+
+
   const leadId =
-    document.getElementById("leadId")?.value;
+    getValue("leadId");
+
 
   const payload = {
+
     customer_name:
       getValue("leadCustomer"),
 
@@ -684,60 +1320,96 @@ async function saveLead() {
       getValue("leadStatus"),
 
     follow_up_date:
-      getValue("leadFollowUp") || null,
+      getValue("leadFollowUp") ||
+      null,
 
     appointment:
-      getValue("leadAppointment") || null,
+      getValue("leadAppointment") ||
+      null,
 
     site_survey:
-      getValue("leadSiteSurvey") || null,
+      getValue("leadSiteSurvey") ||
+      null,
 
     quotation:
-      getValue("leadQuotation") || null,
+      getValue("leadQuotation") ||
+      null,
 
     spk:
-      getValue("leadSPK") || null,
+      getValue("leadSPK") ||
+      null,
 
     closing:
-      getValue("leadClosing") || null,
+      getValue("leadClosing") ||
+      null,
 
     notes:
       getValue("leadNotes")
+
   };
 
+
   try {
+
     let result;
+
+
+    // --------------------------------------------------
+    // UPDATE
+    // --------------------------------------------------
 
     if (leadId) {
 
-      result = await supabaseClient
-        .from("leads")
-        .update(payload)
-        .eq("id", leadId);
+      result =
+        await supabaseClient
+          .from("leads")
+          .update(payload)
+          .eq(
+            "id",
+            leadId
+          );
 
-    } else {
+    }
+
+
+    // --------------------------------------------------
+    // INSERT
+    // --------------------------------------------------
+
+    else {
 
       payload.sales_id =
         currentProfile.id;
 
-      result = await supabaseClient
-        .from("leads")
-        .insert(payload);
+
+      result =
+        await supabaseClient
+          .from("leads")
+          .insert(
+            payload
+          );
+
     }
 
+
     if (result.error) {
+
       console.error(
         "Save lead error:",
         result.error
       );
+
 
       alert(
         result.error.message ||
         "Gagal menyimpan lead."
       );
 
+
       return;
+
     }
+
 
     alert(
       leadId
@@ -745,159 +1417,245 @@ async function saveLead() {
         : "Lead berhasil ditambahkan."
     );
 
+
     closeLeadModal();
+
 
     await loadLeads();
 
-  } catch (error) {
-    console.error(error);
+
+    showLeads();
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "Save lead exception:",
+      error
+    );
+
 
     alert(
       "Terjadi kesalahan saat menyimpan lead."
     );
+
   }
+
 }
 
 
-// =========================
+// ======================================================
 // EDIT LEAD
-// =========================
+// ======================================================
 
 function editLead(id) {
+
   const lead =
-    leads.find((item) => item.id === id);
+    leads.find(
+      (item) =>
+        item.id === id
+    );
+
 
   if (!lead) {
-    alert("Data lead tidak ditemukan.");
+
+    alert(
+      "Data lead tidak ditemukan."
+    );
+
     return;
+
   }
+
 
   setValue(
     "leadId",
     lead.id
   );
 
+
   setValue(
     "leadCustomer",
     lead.customer_name
   );
+
 
   setValue(
     "leadPhone",
     lead.phone
   );
 
+
   setValue(
     "leadBusiness",
     lead.business
   );
+
 
   setValue(
     "leadLocation",
     lead.location
   );
 
+
   setValue(
     "leadStatus",
     lead.status
   );
+
 
   setValue(
     "leadFollowUp",
     lead.follow_up_date
   );
 
+
   setValue(
     "leadAppointment",
     lead.appointment
   );
+
 
   setValue(
     "leadSiteSurvey",
     lead.site_survey
   );
 
+
   setValue(
     "leadQuotation",
     lead.quotation
   );
+
 
   setValue(
     "leadSPK",
     lead.spk
   );
 
+
   setValue(
     "leadClosing",
     lead.closing
   );
+
 
   setValue(
     "leadNotes",
     lead.notes
   );
 
+
   const title =
-    document.getElementById("leadModalTitle");
+    document.getElementById(
+      "leadModalTitle"
+    );
+
 
   if (title) {
-    title.textContent = "Edit Lead";
+
+    title.textContent =
+      "Edit Lead";
+
   }
+
 
   const modal =
-    document.getElementById("leadModal");
+    document.getElementById(
+      "leadModal"
+    );
+
 
   if (modal) {
-    modal.style.display = "flex";
+
+    modal.style.display =
+      "flex";
+
   }
+
 }
 
 
-// =========================
+// ======================================================
 // DELETE LEAD
-// =========================
+// ======================================================
 
 async function deleteLead(id) {
+
   const lead =
-    leads.find((item) => item.id === id);
+    leads.find(
+      (item) =>
+        item.id === id
+    );
 
-  if (!lead) return;
 
-  const confirmed = confirm(
-    `Hapus lead "${lead.customer_name || "ini"}"?`
-  );
+  if (!lead) {
+    return;
+  }
 
-  if (!confirmed) return;
 
-  const { error } =
+  const confirmed =
+    confirm(
+      `Hapus lead "${
+        lead.customer_name ||
+        "ini"
+      }"?`
+    );
+
+
+  if (!confirmed) {
+    return;
+  }
+
+
+  const {
+    error
+  } =
     await supabaseClient
       .from("leads")
       .delete()
-      .eq("id", id);
+      .eq(
+        "id",
+        id
+      );
+
 
   if (error) {
+
     console.error(
       "Delete lead error:",
       error
     );
+
 
     alert(
       error.message ||
       "Gagal menghapus lead."
     );
 
+
     return;
+
   }
 
-  alert("Lead berhasil dihapus.");
+
+  alert(
+    "Lead berhasil dihapus."
+  );
+
 
   await loadLeads();
+
+
+  showLeads();
+
 }
 
 
-// =========================
-// DASHBOARD
-// =========================
+// ======================================================
+// DASHBOARD STATISTICS
+// ======================================================
 
 function updateDashboard() {
 
@@ -906,311 +1664,332 @@ function updateDashboard() {
     leads.length
   );
 
+
   setText(
     "statNew",
     countStatus([
-      "New",
-      "Baru"
+      "New"
     ])
   );
+
 
   setText(
     "statInterested",
     countStatus([
-      "Interested",
-      "Tertarik"
+      "Interested"
     ])
   );
+
 
   setText(
     "statFollowUp",
     countStatus([
-      "Follow Up",
-      "Follow-up"
+      "Follow-up",
+      "Follow Up"
     ])
   );
+
 
   setText(
     "statAppointment",
     leads.filter(
-      (lead) => !!lead.appointment
+      (lead) =>
+        !!lead.appointment
     ).length
   );
+
 
   setText(
     "statSiteSurvey",
     leads.filter(
-      (lead) => !!lead.site_survey
+      (lead) =>
+        !!lead.site_survey
     ).length
   );
+
 
   setText(
     "statQuotation",
     leads.filter(
-      (lead) => !!lead.quotation
+      (lead) =>
+        !!lead.quotation
     ).length
   );
+
 
   setText(
     "statClosing",
     leads.filter(
-      (lead) => !!lead.closing
+      (lead) =>
+        !!lead.closing
     ).length
   );
+
 }
 
 
-function countStatus(statuses) {
-  return leads.filter((lead) =>
-    statuses.includes(lead.status)
+// ======================================================
+// COUNT STATUS
+// ======================================================
+
+function countStatus(
+  statuses
+) {
+
+  return leads.filter(
+    (lead) =>
+      statuses.includes(
+        lead.status
+      )
   ).length;
+
 }
 
 
-// =========================
-// SALES MANAGEMENT
-// =========================
+// ======================================================
+// LOAD SALES USERS
+// ======================================================
 
 async function loadSalesUsers() {
 
-  if (currentProfile?.role !== "Admin") {
+  if (
+    !currentProfile ||
+    currentProfile.role !==
+    "Admin"
+  ) {
+
     return;
+
   }
 
-  const { data, error } =
-    await supabaseClient
-      .from("sales_users")
-      .select("*")
-      .order("name", {
-        ascending: true
-      });
 
-  if (error) {
+  try {
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient
+        .from("sales_users")
+        .select("*")
+        .order(
+          "name",
+          {
+            ascending: true
+          }
+        );
+
+
+    if (error) {
+
+      console.error(
+        "Load sales users error:",
+        error
+      );
+
+
+      alert(
+        "Gagal mengambil data Sales.\n\n" +
+        error.message
+      );
+
+
+      return;
+
+    }
+
+
+    salesUsers =
+      data || [];
+
+
+    renderSalesUsers();
+
+  }
+
+  catch (error) {
+
     console.error(
-      "Load sales users error:",
+      "Load sales users exception:",
       error
     );
 
-    alert(
-      "Gagal mengambil data Sales.\n\n" +
-      error.message
-    );
-
-    return;
   }
 
-  salesUsers = data || [];
-
-  renderSalesUsers();
 }
 
 
-// =========================
-// RENDER SALES
-// =========================
+// ======================================================
+// RENDER SALES USERS
+// ======================================================
 
 function renderSalesUsers() {
 
   const tbody =
     document.getElementById(
-      "salesTableBody"
+      "salesTable"
     );
 
-  if (!tbody) return;
 
-  if (salesUsers.length === 0) {
+  if (!tbody) {
+    return;
+  }
+
+
+  if (
+    salesUsers.length ===
+    0
+  ) {
 
     tbody.innerHTML = `
       <tr>
-        <td colspan="6" style="text-align:center;">
+        <td
+          colspan="6"
+          style="text-align:center;"
+        >
           Belum ada Sales.
         </td>
       </tr>
     `;
 
     return;
+
   }
 
-  tbody.innerHTML = salesUsers
-    .map((sales) => {
 
-      const leadCount =
-        leads.filter(
-          (lead) =>
-            lead.sales_id === sales.id
-        ).length;
+  tbody.innerHTML =
+    salesUsers
+      .map(
+        (sales) => {
 
-      return `
-        <tr>
+          const leadCount =
+            leads.filter(
+              (lead) =>
+                lead.sales_id ===
+                sales.id
+            ).length;
 
-          <td>
-            ${escapeHTML(sales.name)}
-          </td>
 
-          <td>
-            ${escapeHTML(sales.username)}
-          </td>
+          return `
+            <tr>
 
-          <td>
-            ${escapeHTML(sales.role)}
-          </td>
+              <td>
+                ${escapeHTML(
+                  sales.name
+                )}
+              </td>
 
-          <td>
+              <td>
+                ${escapeHTML(
+                  sales.username
+                )}
+              </td>
 
-            <span class="status-badge ${
-              sales.status === "Active"
-                ? "status-active"
-                : "status-inactive"
-            }">
+              <td>
+                ${escapeHTML(
+                  sales.role
+                )}
+              </td>
 
-              ${escapeHTML(
-                sales.status
-              )}
+              <td>
 
-            </span>
+                <span
+                  class="status-badge ${
+                    sales.status ===
+                    "Active"
+                      ? "status-active"
+                      : "status-inactive"
+                  }"
+                >
+                  ${escapeHTML(
+                    sales.status
+                  )}
+                </span>
 
-          </td>
+              </td>
 
-          <td>
-            ${leadCount}
-          </td>
+              <td>
+                ${leadCount}
+              </td>
 
-          <td>
+              <td>
 
-            ${
-              sales.role === "Sales"
-                ? `
-                  <button
-                    class="btn-small"
-                    onclick="toggleSalesStatus(
-                      '${sales.id}',
-                      '${sales.status}'
-                    )"
-                  >
-                    ${
-                      sales.status === "Active"
-                        ? "Deactivate"
-                        : "Activate"
-                    }
-                  </button>
-                `
-                : "-"
-            }
+                ${
+                  sales.role ===
+                  "Sales"
 
-          </td>
+                    ? `
+                      <button
+                        class="btn-small"
+                        onclick="toggleSalesStatus(
+                          '${sales.id}',
+                          '${sales.status}'
+                        )"
+                      >
+                        ${
+                          sales.status ===
+                          "Active"
+                            ? "Deactivate"
+                            : "Activate"
+                        }
+                      </button>
+                    `
 
-        </tr>
-      `;
-    })
-    .join("");
+                    : "-"
+                }
+
+              </td>
+
+            </tr>
+          `;
+
+        }
+      )
+      .join("");
+
 }
 
 
-// =========================
-// CREATE SALES
-// =========================
+// ======================================================
+// OPEN SALES MODAL
+// ======================================================
 
-async function createSales() {
+function openSalesModal() {
 
-  if (currentProfile?.role !== "Admin") {
+  if (
+    !currentProfile ||
+    currentProfile.role !==
+    "Admin"
+  ) {
+
     alert(
       "Hanya Admin yang dapat membuat Sales."
     );
-    return;
-  }
-
-  const name =
-    getValue("salesName");
-
-  const username =
-    getValue("salesUsername");
-
-  const password =
-    getValue("salesPassword");
-
-  if (!name || !username || !password) {
-    alert(
-      "Nama, username, dan password wajib diisi."
-    );
-    return;
-  }
-
-  alert(
-    "Fitur pembuatan akun Sales otomatis akan kita sambungkan setelah login CRM selesai."
-  );
-}
-
-
-// =========================
-// TOGGLE SALES STATUS
-// =========================
-
-async function toggleSalesStatus(
-  id,
-  currentStatus
-) {
-
-  if (currentProfile?.role !== "Admin") {
-    alert(
-      "Hanya Admin yang dapat mengubah status Sales."
-    );
-    return;
-  }
-
-  const newStatus =
-    currentStatus === "Active"
-      ? "Inactive"
-      : "Active";
-
-  const confirmed = confirm(
-    `Ubah status Sales menjadi ${newStatus}?`
-  );
-
-  if (!confirmed) return;
-
-  const { error } =
-    await supabaseClient
-      .from("sales_users")
-      .update({
-        status: newStatus
-      })
-      .eq("id", id);
-
-  if (error) {
-
-    console.error(
-      "Update sales status error:",
-      error
-    );
-
-    alert(
-      error.message ||
-      "Gagal mengubah status."
-    );
 
     return;
+
   }
 
-  await loadSalesUsers();
-}
-
-
-// =========================
-// SALES MODAL
-// =========================
-
-function openSalesModal() {
 
   const modal =
     document.getElementById(
       "salesModal"
     );
 
+
   if (modal) {
-    modal.style.display = "flex";
+
+    modal.style.display =
+      "flex";
+
   }
+
 }
 
+
+// ======================================================
+// CLOSE SALES MODAL
+// ======================================================
 
 function closeSalesModal() {
 
@@ -1219,13 +1998,23 @@ function closeSalesModal() {
       "salesModal"
     );
 
+
   if (modal) {
-    modal.style.display = "none";
+
+    modal.style.display =
+      "none";
+
   }
 
+
   clearSalesForm();
+
 }
 
+
+// ======================================================
+// CLEAR SALES FORM
+// ======================================================
 
 function clearSalesForm() {
 
@@ -1243,73 +2032,287 @@ function clearSalesForm() {
     "salesPassword",
     ""
   );
+
 }
 
 
-// =========================
-// WHATSAPP
-// =========================
+// ======================================================
+// CREATE SALES
+// ======================================================
 
-function whatsappLink(phone) {
+async function createSales() {
 
-  const number =
-    normalizePhone(phone);
+  if (
+    !currentProfile ||
+    currentProfile.role !==
+    "Admin"
+  ) {
 
-  if (!number) {
-    return "#";
-  }
-
-  return `https://wa.me/${number}`;
-}
-
-
-function normalizePhone(phone) {
-
-  if (!phone) return "";
-
-  let number =
-    String(phone).replace(
-      /\D/g,
-      ""
+    alert(
+      "Hanya Admin yang dapat membuat Sales."
     );
 
-  if (number.startsWith("0")) {
+    return;
+
+  }
+
+
+  const name =
+    getValue(
+      "salesName"
+    );
+
+  const username =
+    getValue(
+      "salesUsername"
+    );
+
+  const password =
+    getValue(
+      "salesPassword"
+    );
+
+
+  if (
+    !name ||
+    !username ||
+    !password
+  ) {
+
+    alert(
+      "Nama, username, dan password wajib diisi."
+    );
+
+    return;
+
+  }
+
+
+  if (
+    password.length <
+    6
+  ) {
+
+    alert(
+      "Password minimal 6 karakter."
+    );
+
+    return;
+
+  }
+
+
+  /*
+   * Untuk keamanan, pembuatan user Auth
+   * tidak boleh dilakukan langsung dari browser.
+   *
+   * Nanti kita sambungkan dengan
+   * Supabase Edge Function.
+   */
+
+
+  alert(
+    "Form Sales sudah siap. Pembuatan akun Auth otomatis akan kita sambungkan melalui server."
+  );
+
+}
+
+
+// ======================================================
+// TOGGLE SALES STATUS
+// ======================================================
+
+async function toggleSalesStatus(
+  id,
+  currentStatus
+) {
+
+  if (
+    !currentProfile ||
+    currentProfile.role !==
+    "Admin"
+  ) {
+
+    alert(
+      "Hanya Admin yang dapat mengubah status Sales."
+    );
+
+    return;
+
+  }
+
+
+  const newStatus =
+    currentStatus ===
+    "Active"
+      ? "Inactive"
+      : "Active";
+
+
+  const confirmed =
+    confirm(
+      `Ubah status Sales menjadi ${newStatus}?`
+    );
+
+
+  if (!confirmed) {
+    return;
+  }
+
+
+  const {
+    error
+  } =
+    await supabaseClient
+      .from("sales_users")
+      .update({
+        status:
+          newStatus
+      })
+      .eq(
+        "id",
+        id
+      );
+
+
+  if (error) {
+
+    console.error(
+      "Update sales status error:",
+      error
+    );
+
+
+    alert(
+      error.message ||
+      "Gagal mengubah status."
+    );
+
+
+    return;
+
+  }
+
+
+  await loadSalesUsers();
+
+}
+
+
+// ======================================================
+// WHATSAPP
+// ======================================================
+
+function whatsappLink(
+  phone
+) {
+
+  const number =
+    normalizePhone(
+      phone
+    );
+
+
+  if (!number) {
+
+    return "#";
+
+  }
+
+
+  return (
+    "https://wa.me/" +
+    number
+  );
+
+}
+
+
+// ======================================================
+// NORMALIZE PHONE
+// ======================================================
+
+function normalizePhone(
+  phone
+) {
+
+  if (!phone) {
+    return "";
+  }
+
+
+  let number =
+    String(phone)
+      .replace(
+        /\D/g,
+        ""
+      );
+
+
+  if (
+    number.startsWith(
+      "0"
+    )
+  ) {
+
     number =
       "62" +
       number.substring(1);
+
   }
 
-  if (number.startsWith("8")) {
+
+  else if (
+    number.startsWith(
+      "8"
+    )
+  ) {
+
     number =
-      "62" + number;
+      "62" +
+      number;
+
   }
+
 
   return number;
+
 }
 
 
-// =========================
+// ======================================================
 // DATE FORMAT
-// =========================
+// ======================================================
 
-function formatDate(value) {
+function formatDate(
+  value
+) {
 
   if (!value) {
+
     return "-";
+
   }
 
+
   const date =
-    new Date(value);
+    new Date(
+      value
+    );
+
 
   if (
     Number.isNaN(
       date.getTime()
     )
   ) {
+
     return escapeHTML(
       String(value)
     );
+
   }
+
 
   return date.toLocaleDateString(
     "id-ID",
@@ -1319,112 +2322,174 @@ function formatDate(value) {
       year: "numeric"
     }
   );
+
 }
 
 
-// =========================
+// ======================================================
 // STATUS CLASS
-// =========================
+// ======================================================
 
-function statusClass(status) {
+function statusClass(
+  status
+) {
 
   if (!status) {
     return "";
   }
 
+
   const value =
     status.toLowerCase();
 
+
   if (
-    value.includes("new") ||
-    value.includes("baru")
+    value.includes(
+      "new"
+    ) ||
+    value.includes(
+      "baru"
+    )
   ) {
+
     return "status-new";
+
   }
 
+
   if (
-    value.includes("interested") ||
-    value.includes("tertarik")
+    value.includes(
+      "interested"
+    ) ||
+    value.includes(
+      "tertarik"
+    )
   ) {
+
     return "status-interested";
+
   }
 
+
   if (
-    value.includes("follow") ||
-    value.includes("follow-up")
+    value.includes(
+      "follow"
+    )
   ) {
+
     return "status-followup";
+
   }
 
+
   if (
-    value.includes("closing") ||
-    value.includes("closed")
+    value.includes(
+      "closing"
+    ) ||
+    value.includes(
+      "closed"
+    )
   ) {
+
     return "status-closing";
+
   }
 
+
   if (
-    value.includes("not") ||
-    value.includes("tidak")
+    value.includes(
+      "not"
+    ) ||
+    value.includes(
+      "tidak"
+    )
   ) {
+
     return "status-not-interested";
+
   }
+
 
   return "";
+
 }
 
 
-// =========================
+// ======================================================
 // HTML ESCAPE
-// =========================
+// ======================================================
 
-function escapeHTML(value) {
+function escapeHTML(
+  value
+) {
 
   if (
     value === null ||
     value === undefined
   ) {
+
     return "";
+
   }
 
+
   return String(value)
+
     .replace(
       /&/g,
       "&amp;"
     )
+
     .replace(
       /</g,
       "&lt;"
     )
+
     .replace(
       />/g,
       "&gt;"
     )
+
     .replace(
       /"/g,
       "&quot;"
     )
+
     .replace(
       /'/g,
       "&#039;"
     );
+
 }
 
 
-// =========================
-// HELPERS
-// =========================
+// ======================================================
+// GET VALUE
+// ======================================================
 
-function getValue(id) {
+function getValue(
+  id
+) {
 
   const element =
-    document.getElementById(id);
+    document.getElementById(
+      id
+    );
 
-  return element
-    ? element.value.trim()
-    : "";
+
+  if (!element) {
+    return "";
+  }
+
+
+  return element.value.trim();
+
 }
 
+
+// ======================================================
+// SET VALUE
+// ======================================================
 
 function setValue(
   id,
@@ -1432,14 +2497,24 @@ function setValue(
 ) {
 
   const element =
-    document.getElementById(id);
+    document.getElementById(
+      id
+    );
+
 
   if (element) {
+
     element.value =
       value || "";
+
   }
+
 }
 
+
+// ======================================================
+// SET TEXT
+// ======================================================
 
 function setText(
   id,
@@ -1447,18 +2522,24 @@ function setText(
 ) {
 
   const element =
-    document.getElementById(id);
+    document.getElementById(
+      id
+    );
+
 
   if (element) {
+
     element.textContent =
       value ?? 0;
+
   }
+
 }
 
 
-// =========================
-// CLOSE MODALS OUTSIDE
-// =========================
+// ======================================================
+// CLOSE MODALS WHEN CLICKING OUTSIDE
+// ======================================================
 
 window.addEventListener(
   "click",
@@ -1474,57 +2555,80 @@ window.addEventListener(
         "salesModal"
       );
 
-    if (
-      event.target === leadModal
-    ) {
-      closeLeadModal();
-    }
 
     if (
-      event.target === salesModal
+      event.target ===
+      leadModal
     ) {
-      closeSalesModal();
+
+      closeLeadModal();
+
     }
+
+
+    if (
+      event.target ===
+      salesModal
+    ) {
+
+      closeSalesModal();
+
+    }
+
   }
 );
 
 
-// =========================
-// AUTH STATE LISTENER
-// =========================
+// ======================================================
+// AUTH STATE CHANGE
+// ======================================================
 
 supabaseClient.auth.onAuthStateChange(
-  async (event, session) => {
+  async (
+    event,
+    session
+  ) => {
 
     if (
-      event === "SIGNED_OUT" ||
+      event ===
+        "SIGNED_OUT" ||
       !session
     ) {
 
       currentUser = null;
       currentProfile = null;
+
       leads = [];
       salesUsers = [];
 
       showLogin();
 
       return;
+
     }
 
+
     if (
-      event === "SIGNED_IN" ||
-      event === "INITIAL_SESSION" ||
-      event === "TOKEN_REFRESHED"
+      event ===
+        "SIGNED_IN" ||
+      event ===
+        "INITIAL_SESSION" ||
+      event ===
+        "TOKEN_REFRESHED"
     ) {
 
       currentUser =
         session.user;
 
-      await loadProfile();
 
-      if (!currentProfile) {
+      const profileLoaded =
+        await loadProfile();
+
+
+      if (!profileLoaded) {
         return;
       }
+
 
       if (
         currentProfile.status !==
@@ -1534,20 +2638,26 @@ supabaseClient.auth.onAuthStateChange(
         await supabaseClient.auth.signOut();
 
         return;
+
       }
+
 
       showApp();
 
+
       await loadLeads();
+
 
       if (
         currentProfile.role ===
         "Admin"
       ) {
+
         await loadSalesUsers();
+
       }
 
-      showDashboard();
     }
+
   }
 );
