@@ -1,0 +1,972 @@
+<script>
+
+let sessionToken = '';
+let currentUser = null;
+let allLeads = [];
+let allSales = [];
+
+
+/* =========================
+   LOGIN
+========================= */
+
+function login() {
+
+  const username =
+    document.getElementById(
+      'loginUsername'
+    ).value;
+
+  const password =
+    document.getElementById(
+      'loginPassword'
+    ).value;
+
+  setLoginMessage('Logging in...');
+
+  google.script.run
+    .withSuccessHandler(function(result) {
+
+      sessionToken = result.token;
+      currentUser = result.user;
+
+      localStorage.setItem(
+        'fsi_session',
+        sessionToken
+      );
+
+      showApp();
+
+    })
+    .withFailureHandler(function(error) {
+
+      setLoginMessage(
+        error.message || 'Login gagal.'
+      );
+
+    })
+    .login(username, password);
+}
+
+
+/* =========================
+   SESSION
+========================= */
+
+function checkSession() {
+
+  const token =
+    localStorage.getItem(
+      'fsi_session'
+    );
+
+  if (!token) return;
+
+  google.script.run
+    .withSuccessHandler(function(user) {
+
+      sessionToken = token;
+      currentUser = user;
+
+      showApp();
+
+    })
+    .withFailureHandler(function() {
+
+      localStorage.removeItem(
+        'fsi_session'
+      );
+
+    })
+    .getCurrentUser(token);
+}
+
+
+function logout() {
+
+  google.script.run
+    .withSuccessHandler(function() {
+
+      localStorage.removeItem(
+        'fsi_session'
+      );
+
+      sessionToken = '';
+      currentUser = null;
+
+      document.getElementById(
+        'app'
+      ).style.display = 'none';
+
+      document.getElementById(
+        'loginPage'
+      ).style.display = 'flex';
+
+    })
+    .logout(sessionToken);
+}
+
+
+/* =========================
+   SHOW APP
+========================= */
+
+function showApp() {
+
+  document.getElementById(
+    'loginPage'
+  ).style.display = 'none';
+
+  document.getElementById(
+    'app'
+  ).style.display = 'flex';
+
+  document.getElementById(
+    'userInfo'
+  ).innerHTML =
+    '<strong>' +
+    escapeHtml(currentUser.name) +
+    '</strong><br>' +
+    escapeHtml(currentUser.role);
+
+  document.getElementById(
+    'currentUser'
+  ).innerText =
+    currentUser.name;
+
+  if (currentUser.role === 'Admin') {
+
+    document.getElementById(
+      'manageSalesBtn'
+    ).style.display = 'block';
+
+  }
+
+  showDashboard();
+}
+
+
+/* =========================
+   DASHBOARD
+========================= */
+
+function showDashboard() {
+
+  hidePages();
+
+  document.getElementById(
+    'dashboardPage'
+  ).style.display = 'block';
+
+  document.getElementById(
+    'pageTitle'
+  ).innerText = 'Dashboard';
+
+  loadDashboard();
+}
+
+
+function loadDashboard() {
+
+  google.script.run
+    .withSuccessHandler(function(stats) {
+
+      document.getElementById(
+        'statTotal'
+      ).innerText = stats.total;
+
+      document.getElementById(
+        'statNew'
+      ).innerText = stats.new;
+
+      document.getElementById(
+        'statInterested'
+      ).innerText = stats.interested;
+
+      document.getElementById(
+        'statFollowUp'
+      ).innerText = stats.followUp;
+
+      document.getElementById(
+        'statAppointment'
+      ).innerText = stats.appointment;
+
+      document.getElementById(
+        'statSiteSurvey'
+      ).innerText = stats.siteSurvey;
+
+      document.getElementById(
+        'statQuotation'
+      ).innerText = stats.quotation;
+
+      document.getElementById(
+        'statClosing'
+      ).innerText = stats.closing;
+
+    })
+    .withFailureHandler(showError)
+    .getDashboardStats(sessionToken);
+}
+
+
+/* =========================
+   LEADS
+========================= */
+
+function showLeads() {
+
+  hidePages();
+
+  document.getElementById(
+    'leadsPage'
+  ).style.display = 'block';
+
+  document.getElementById(
+    'pageTitle'
+  ).innerText = 'My Leads';
+
+  loadLeads();
+}
+
+
+function loadLeads() {
+
+  google.script.run
+    .withSuccessHandler(function(leads) {
+
+      allLeads = leads;
+
+      renderLeads(leads);
+
+    })
+    .withFailureHandler(showError)
+    .getMyLeads(sessionToken);
+}
+
+
+function renderLeads(leads) {
+
+  const tbody =
+    document.getElementById(
+      'leadsTable'
+    );
+
+  tbody.innerHTML = '';
+
+  if (!leads.length) {
+
+    tbody.innerHTML =
+      '<tr><td colspan="10">' +
+      'Belum ada lead.' +
+      '</td></tr>';
+
+    return;
+  }
+
+  leads.forEach(function(lead) {
+
+    const tr =
+      document.createElement('tr');
+
+    tr.innerHTML = `
+
+      <td>${escapeHtml(lead.customer)}</td>
+
+      <td>
+        <a
+          href="https://wa.me/${lead.phone}"
+          target="_blank">
+
+          ${escapeHtml(lead.phone)}
+
+        </a>
+      </td>
+
+      <td>${escapeHtml(lead.business)}</td>
+
+      <td>${escapeHtml(lead.location)}</td>
+
+      <td>
+        <span class="status">
+          ${escapeHtml(lead.status)}
+        </span>
+      </td>
+
+      <td>${escapeHtml(lead.followUp)}</td>
+
+      <td>${escapeHtml(lead.appointment)}</td>
+
+      <td>${escapeHtml(lead.quotation)}</td>
+
+      <td>${escapeHtml(lead.closing)}</td>
+
+      <td>
+
+        <button
+          onclick='editLead(${JSON.stringify(lead)})'>
+
+          Edit
+
+        </button>
+
+      </td>
+
+    `;
+
+    tbody.appendChild(tr);
+
+  });
+}
+
+
+/* =========================
+   FILTER
+========================= */
+
+function filterLeads() {
+
+  const search =
+    document.getElementById(
+      'leadSearch'
+    ).value.toLowerCase();
+
+  const status =
+    document.getElementById(
+      'statusFilter'
+    ).value;
+
+  const filtered =
+    allLeads.filter(function(lead) {
+
+      const matchesSearch =
+        String(lead.customer)
+          .toLowerCase()
+          .includes(search) ||
+
+        String(lead.phone)
+          .toLowerCase()
+          .includes(search) ||
+
+        String(lead.business)
+          .toLowerCase()
+          .includes(search);
+
+      const matchesStatus =
+        !status ||
+        lead.status === status;
+
+      return matchesSearch &&
+             matchesStatus;
+
+    });
+
+  renderLeads(filtered);
+}
+
+
+/* =========================
+   LEAD MODAL
+========================= */
+
+function openLeadModal() {
+
+  clearLeadForm();
+
+  document.getElementById(
+    'leadModalTitle'
+  ).innerText = 'Add Lead';
+
+  document.getElementById(
+    'leadModal'
+  ).style.display = 'flex';
+}
+
+
+function closeLeadModal() {
+
+  document.getElementById(
+    'leadModal'
+  ).style.display = 'none';
+}
+
+
+function clearLeadForm() {
+
+  [
+    'leadRow',
+    'leadId',
+    'leadCustomer',
+    'leadPhone',
+    'leadBusiness',
+    'leadLocation',
+    'leadFollowUp',
+    'leadAppointment',
+    'leadSiteSurvey',
+    'leadQuotation',
+    'leadSPK',
+    'leadClosing',
+    'leadNotes'
+  ].forEach(function(id) {
+
+    document.getElementById(id).value = '';
+
+  });
+
+  document.getElementById(
+    'leadStatus'
+  ).value = 'New';
+}
+
+
+function editLead(lead) {
+
+  document.getElementById(
+    'leadModalTitle'
+  ).innerText = 'Edit Lead';
+
+  document.getElementById(
+    'leadRow'
+  ).value = lead.row;
+
+  document.getElementById(
+    'leadId'
+  ).value = lead.leadId;
+
+  document.getElementById(
+    'leadCustomer'
+  ).value = lead.customer;
+
+  document.getElementById(
+    'leadPhone'
+  ).value = lead.phone;
+
+  document.getElementById(
+    'leadBusiness'
+  ).value = lead.business;
+
+  document.getElementById(
+    'leadLocation'
+  ).value = lead.location;
+
+  document.getElementById(
+    'leadStatus'
+  ).value = lead.status;
+
+  document.getElementById(
+    'leadFollowUp'
+  ).value = lead.followUp;
+
+  document.getElementById(
+    'leadAppointment'
+  ).value = lead.appointment;
+
+  document.getElementById(
+    'leadSiteSurvey'
+  ).value = lead.siteSurvey;
+
+  document.getElementById(
+    'leadQuotation'
+  ).value = lead.quotation;
+
+  document.getElementById(
+    'leadSPK'
+  ).value = lead.spk;
+
+  document.getElementById(
+    'leadClosing'
+  ).value = lead.closing;
+
+  document.getElementById(
+    'leadNotes'
+  ).value = lead.notes;
+
+  document.getElementById(
+    'leadModal'
+  ).style.display = 'flex';
+}
+
+
+/* =========================
+   SAVE LEAD
+========================= */
+
+function saveLead() {
+
+  const row =
+    document.getElementById(
+      'leadRow'
+    ).value;
+
+  const lead = {
+
+    row: row,
+
+    leadId:
+      document.getElementById(
+        'leadId'
+      ).value,
+
+    customer:
+      document.getElementById(
+        'leadCustomer'
+      ).value,
+
+    phone:
+      document.getElementById(
+        'leadPhone'
+      ).value,
+
+    business:
+      document.getElementById(
+        'leadBusiness'
+      ).value,
+
+    location:
+      document.getElementById(
+        'leadLocation'
+      ).value,
+
+    status:
+      document.getElementById(
+        'leadStatus'
+      ).value,
+
+    followUp:
+      document.getElementById(
+        'leadFollowUp'
+      ).value,
+
+    appointment:
+      document.getElementById(
+        'leadAppointment'
+      ).value,
+
+    siteSurvey:
+      document.getElementById(
+        'leadSiteSurvey'
+      ).value,
+
+    quotation:
+      document.getElementById(
+        'leadQuotation'
+      ).value,
+
+    spk:
+      document.getElementById(
+        'leadSPK'
+      ).value,
+
+    closing:
+      document.getElementById(
+        'leadClosing'
+      ).value,
+
+    notes:
+      document.getElementById(
+        'leadNotes'
+      ).value
+  };
+
+
+  if (!lead.customer) {
+
+    alert('Nama customer wajib diisi.');
+
+    return;
+  }
+
+
+  if (row) {
+
+    google.script.run
+      .withSuccessHandler(function() {
+
+        alert(
+          'Lead berhasil diperbarui.'
+        );
+
+        closeLeadModal();
+
+        loadLeads();
+
+        loadDashboard();
+
+      })
+      .withFailureHandler(showError)
+      .updateLead(
+        sessionToken,
+        lead
+      );
+
+  } else {
+
+    google.script.run
+      .withSuccessHandler(function(result) {
+
+        alert(
+          'Lead berhasil ditambahkan.\n' +
+          'Lead ID: ' +
+          result.leadId
+        );
+
+        closeLeadModal();
+
+        loadLeads();
+
+        loadDashboard();
+
+      })
+      .withFailureHandler(showError)
+      .addLead(
+        sessionToken,
+        lead
+      );
+  }
+}
+
+
+/* =========================
+   MANAGE SALES
+========================= */
+
+function showSales() {
+
+  if (currentUser.role !== 'Admin') {
+    return;
+  }
+
+  hidePages();
+
+  document.getElementById(
+    'salesPage'
+  ).style.display = 'block';
+
+  document.getElementById(
+    'pageTitle'
+  ).innerText = 'Manage Sales';
+
+  loadSales();
+}
+
+
+function loadSales() {
+
+  google.script.run
+    .withSuccessHandler(function(sales) {
+
+      allSales = sales;
+
+      renderSales(sales);
+
+    })
+    .withFailureHandler(showError)
+    .getSales(sessionToken);
+}
+
+
+function renderSales(sales) {
+
+  const tbody =
+    document.getElementById(
+      'salesTable'
+    );
+
+  tbody.innerHTML = '';
+
+  sales.forEach(function(salesUser) {
+
+    const tr =
+      document.createElement('tr');
+
+    tr.innerHTML = `
+
+      <td>
+        ${escapeHtml(salesUser.name)}
+      </td>
+
+      <td>
+        ${escapeHtml(salesUser.username)}
+      </td>
+
+      <td>
+        ${escapeHtml(salesUser.role)}
+      </td>
+
+      <td>
+        ${escapeHtml(salesUser.status)}
+      </td>
+
+      <td>
+        ${escapeHtml(salesUser.sheetName)}
+      </td>
+
+      <td>
+
+        <button
+          onclick="changeSalesStatus(
+            '${escapeAttr(salesUser.username)}',
+            '${escapeAttr(salesUser.name)}',
+            '${salesUser.status}'
+          )">
+
+          ${
+            salesUser.status === 'Active'
+              ? 'Deactivate'
+              : 'Activate'
+          }
+
+        </button>
+
+        <button
+          onclick="resetPassword(
+            '${escapeAttr(salesUser.username)}'
+          )">
+
+          Reset Password
+
+        </button>
+
+      </td>
+
+    `;
+
+    tbody.appendChild(tr);
+
+  });
+}
+
+
+/* =========================
+   SALES MODAL
+========================= */
+
+function openSalesModal() {
+
+  document.getElementById(
+    'salesName'
+  ).value = '';
+
+  document.getElementById(
+    'salesUsername'
+  ).value = '';
+
+  document.getElementById(
+    'salesPassword'
+  ).value = '';
+
+  document.getElementById(
+    'salesModal'
+  ).style.display = 'flex';
+}
+
+
+function closeSalesModal() {
+
+  document.getElementById(
+    'salesModal'
+  ).style.display = 'none';
+}
+
+
+/* =========================
+   CREATE SALES
+========================= */
+
+function createSales() {
+
+  const name =
+    document.getElementById(
+      'salesName'
+    ).value.trim();
+
+  const username =
+    document.getElementById(
+      'salesUsername'
+    ).value.trim();
+
+  const password =
+    document.getElementById(
+      'salesPassword'
+    ).value;
+
+  if (!name || !username || !password) {
+
+    alert(
+      'Name, username dan password wajib diisi.'
+    );
+
+    return;
+  }
+
+  google.script.run
+    .withSuccessHandler(function(result) {
+
+      alert(
+        'Sales berhasil dibuat.\n\n' +
+        'Name: ' + result.sales.name +
+        '\nUsername: ' + result.sales.username +
+        '\nDatabase: ' + result.sales.sheetName
+      );
+
+      closeSalesModal();
+
+      loadSales();
+
+    })
+    .withFailureHandler(showError)
+    .createSales(
+      sessionToken,
+      name,
+      username,
+      password
+    );
+}
+
+
+/* =========================
+   SALES STATUS
+========================= */
+
+function changeSalesStatus(
+  username,
+  name,
+  currentStatus
+) {
+
+  const newStatus =
+    currentStatus === 'Active'
+      ? 'Inactive'
+      : 'Active';
+
+  if (
+    !confirm(
+      'Ubah status ' +
+      name +
+      ' menjadi ' +
+      newStatus +
+      '?'
+    )
+  ) {
+    return;
+  }
+
+  google.script.run
+    .withSuccessHandler(function() {
+
+      loadSales();
+
+    })
+    .withFailureHandler(showError)
+    .updateSales(
+      sessionToken,
+      username,
+      name,
+      newStatus
+    );
+}
+
+
+/* =========================
+   RESET PASSWORD
+========================= */
+
+function resetPassword(username) {
+
+  const password =
+    prompt(
+      'Masukkan password baru minimal 6 karakter:'
+    );
+
+  if (!password) return;
+
+  google.script.run
+    .withSuccessHandler(function() {
+
+      alert(
+        'Password berhasil direset.'
+      );
+
+    })
+    .withFailureHandler(showError)
+    .resetSalesPassword(
+      sessionToken,
+      username,
+      password
+    );
+}
+
+
+/* =========================
+   UTILITIES
+========================= */
+
+function hidePages() {
+
+  document.getElementById(
+    'dashboardPage'
+  ).style.display = 'none';
+
+  document.getElementById(
+    'leadsPage'
+  ).style.display = 'none';
+
+  document.getElementById(
+    'salesPage'
+  ).style.display = 'none';
+}
+
+
+function setLoginMessage(message) {
+
+  document.getElementById(
+    'loginMessage'
+  ).innerText = message;
+}
+
+
+function showError(error) {
+
+  alert(
+    error.message ||
+    'Terjadi kesalahan.'
+  );
+}
+
+
+function escapeHtml(value) {
+
+  if (value === null ||
+      value === undefined) {
+
+    return '';
+
+  }
+
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+
+function escapeAttr(value) {
+
+  return String(value || '')
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'");
+}
+
+
+/* =========================
+   START
+========================= */
+
+window.onload = function() {
+
+  checkSession();
+
+};
+
+</script>
