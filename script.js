@@ -2,15 +2,17 @@
 // CRM FSI - SUPABASE CONFIG
 // ================================
 
-const SUPABASE_URL = "https://yoyszukutqwoxxdolzcg.supabase.co";
+const SUPABASE_URL =
+  "https://yoyszukutqwoxxdolzcg.supabase.co";
 
-// PASTE PUBLISHABLE KEY SUPABASE KAMU DI SINI
-const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_QcPULwc5-Axry0HRzfmq1A_CeXgiAHL";
+const SUPABASE_PUBLISHABLE_KEY =
+  "sb_publishable_QcPULwc5-Axry0HRzfmq1A_CeXgiAHL";
 
-const supabaseClient = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_PUBLISHABLE_KEY
-);
+const supabaseClient =
+  window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY
+  );
 
 
 // ================================
@@ -27,12 +29,18 @@ let salesUsersData = [];
 // START APP
 // ================================
 
-document.addEventListener("DOMContentLoaded", async () => {
-  console.log("CRM FSI started");
+document.addEventListener(
+  "DOMContentLoaded",
+  async () => {
 
-  setupModalEvents();
-  await checkSession();
-});
+    console.log("CRM FSI started");
+
+    setupModalEvents();
+
+    await checkSession();
+
+  }
+);
 
 
 // ================================
@@ -40,34 +48,47 @@ document.addEventListener("DOMContentLoaded", async () => {
 // ================================
 
 async function checkSession() {
+
   try {
 
     const {
       data: { session },
       error
-    } = await supabaseClient.auth.getSession();
+    } =
+      await supabaseClient.auth.getSession();
 
     if (error) {
+
       console.error(error);
+
       showLogin();
+
       return;
     }
 
     if (!session) {
+
       showLogin();
+
       return;
     }
 
-    currentUser = session.user;
+    currentUser =
+      session.user;
 
     await loadProfile();
 
   } catch (error) {
 
-    console.error("checkSession error:", error);
+    console.error(
+      "checkSession error:",
+      error
+    );
+
     showLogin();
 
   }
+
 }
 
 
@@ -78,13 +99,21 @@ async function checkSession() {
 async function login() {
 
   const username =
-    document.getElementById("loginUsername").value.trim();
+    document
+      .getElementById("loginUsername")
+      .value
+      .trim();
 
   const password =
-    document.getElementById("loginPassword").value;
+    document
+      .getElementById("loginPassword")
+      .value;
 
   const message =
-    document.getElementById("loginMessage");
+    document.getElementById(
+      "loginMessage"
+    );
+
 
   if (!username || !password) {
 
@@ -94,7 +123,10 @@ async function login() {
     return;
   }
 
-  message.textContent = "Logging in...";
+
+  message.textContent =
+    "Logging in...";
+
 
   try {
 
@@ -102,22 +134,27 @@ async function login() {
     const {
       data: email,
       error: emailError
-    } = await supabaseClient.rpc(
-      "get_login_email",
-      {
-        p_username: username
-      }
-    );
+    } =
+      await supabaseClient.rpc(
+        "get_login_email",
+        {
+          p_username: username
+        }
+      );
+
 
     if (emailError) {
 
-      console.error(emailError);
+      console.error(
+        emailError
+      );
 
       message.textContent =
         emailError.message;
 
       return;
     }
+
 
     if (!email) {
 
@@ -127,18 +164,23 @@ async function login() {
       return;
     }
 
-    // Login menggunakan Supabase Auth
+
+    // Login Supabase Auth
     const {
       data,
       error
-    } = await supabaseClient.auth.signInWithPassword({
-      email: email,
-      password: password
-    });
+    } =
+      await supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+
 
     if (error) {
 
-      console.error(error);
+      console.error(
+        error
+      );
 
       message.textContent =
         error.message;
@@ -146,18 +188,24 @@ async function login() {
       return;
     }
 
-    currentUser = data.user;
+
+    currentUser =
+      data.user;
 
     await loadProfile();
 
   } catch (error) {
 
-    console.error("login error:", error);
+    console.error(
+      "login error:",
+      error
+    );
 
     message.textContent =
       "Terjadi kesalahan saat login.";
 
   }
+
 }
 
 
@@ -170,20 +218,26 @@ async function loadProfile() {
   if (!currentUser) {
 
     showLogin();
-    return;
 
+    return;
   }
+
 
   try {
 
     const {
       data,
       error
-    } = await supabaseClient
-      .from("sales_users")
-      .select("*")
-      .eq("auth_user-id", currentUser.id)
-      .single();
+    } =
+      await supabaseClient
+        .from("sales_users")
+        .select("*")
+        .eq(
+          "auth_user-id",
+          currentUser.id
+        )
+        .single();
+
 
     if (error) {
 
@@ -201,14 +255,21 @@ async function loadProfile() {
       return;
     }
 
-    currentProfile = data;
+
+    currentProfile =
+      data;
+
 
     updateUserInfo();
+
     setupRoleAccess();
+
     showApp();
 
     await loadLeads();
+
     await updateDashboard();
+
 
   } catch (error) {
 
@@ -218,6 +279,7 @@ async function loadProfile() {
     );
 
   }
+
 }
 
 
@@ -227,26 +289,63 @@ async function loadProfile() {
 
 function showLogin() {
 
-  document.getElementById(
-    "loginPage"
-  ).style.display = "flex";
+  const loginPage =
+    document.getElementById(
+      "loginPage"
+    );
 
-  document.getElementById(
-    "app"
-  ).style.display = "none";
+  const app =
+    document.getElementById(
+      "app"
+    );
+
+
+  if (loginPage) {
+
+    loginPage.style.display =
+      "flex";
+
+  }
+
+
+  if (app) {
+
+    app.style.display =
+      "none";
+
+  }
 
 }
 
 
 function showApp() {
 
-  document.getElementById(
-    "loginPage"
-  ).style.display = "none";
+  const loginPage =
+    document.getElementById(
+      "loginPage"
+    );
 
-  document.getElementById(
-    "app"
-  ).style.display = "flex";
+  const app =
+    document.getElementById(
+      "app"
+    );
+
+
+  if (loginPage) {
+
+    loginPage.style.display =
+      "none";
+
+  }
+
+
+  if (app) {
+
+    app.style.display =
+      "flex";
+
+  }
+
 
   showDashboard();
 
@@ -261,20 +360,36 @@ function updateUserInfo() {
 
   if (!currentProfile) return;
 
+
   const userInfo =
-    document.getElementById("userInfo");
+    document.getElementById(
+      "userInfo"
+    );
 
   const currentUserElement =
-    document.getElementById("currentUser");
+    document.getElementById(
+      "currentUser"
+    );
+
 
   if (userInfo) {
 
     userInfo.innerHTML = `
-      <strong>${escapeHTML(currentProfile.name)}</strong>
-      <small>${escapeHTML(currentProfile.role)}</small>
+      <strong>
+        ${escapeHTML(
+          currentProfile.name
+        )}
+      </strong>
+
+      <small>
+        ${escapeHTML(
+          currentProfile.role
+        )}
+      </small>
     `;
 
   }
+
 
   if (currentUserElement) {
 
@@ -297,12 +412,21 @@ function setupRoleAccess() {
       "manageSalesBtn"
     );
 
-  if (!manageSalesBtn ||
-      !currentProfile) {
+
+  if (
+    !manageSalesBtn ||
+    !currentProfile
+  ) {
+
     return;
+
   }
 
-  if (currentProfile.role === "Admin") {
+
+  if (
+    currentProfile.role ===
+    "Admin"
+  ) {
 
     manageSalesBtn.style.display =
       "block";
@@ -323,17 +447,26 @@ function setupRoleAccess() {
 
 function hideAllPages() {
 
-  document.getElementById(
-    "dashboardPage"
-  ).style.display = "none";
-
-  document.getElementById(
-    "leadsPage"
-  ).style.display = "none";
-
-  document.getElementById(
+  const pages = [
+    "dashboardPage",
+    "leadsPage",
     "salesPage"
-  ).style.display = "none";
+  ];
+
+
+  pages.forEach(id => {
+
+    const element =
+      document.getElementById(id);
+
+    if (element) {
+
+      element.style.display =
+        "none";
+
+    }
+
+  });
 
 }
 
@@ -344,6 +477,7 @@ function setPageTitle(title) {
     document.getElementById(
       "pageTitle"
     );
+
 
   if (titleElement) {
 
@@ -359,11 +493,25 @@ async function showDashboard() {
 
   hideAllPages();
 
-  document.getElementById(
-    "dashboardPage"
-  ).style.display = "block";
 
-  setPageTitle("Dashboard");
+  const page =
+    document.getElementById(
+      "dashboardPage"
+    );
+
+
+  if (page) {
+
+    page.style.display =
+      "block";
+
+  }
+
+
+  setPageTitle(
+    "Dashboard"
+  );
+
 
   await updateDashboard();
 
@@ -374,11 +522,25 @@ async function showLeads() {
 
   hideAllPages();
 
-  document.getElementById(
-    "leadsPage"
-  ).style.display = "block";
 
-  setPageTitle("My Leads");
+  const page =
+    document.getElementById(
+      "leadsPage"
+    );
+
+
+  if (page) {
+
+    page.style.display =
+      "block";
+
+  }
+
+
+  setPageTitle(
+    "My Leads"
+  );
+
 
   await loadLeads();
 
@@ -389,21 +551,39 @@ async function showSales() {
 
   if (
     !currentProfile ||
-    currentProfile.role !== "Admin"
+    currentProfile.role !==
+      "Admin"
   ) {
 
-    alert("Access denied.");
+    alert(
+      "Access denied."
+    );
 
     return;
   }
 
+
   hideAllPages();
 
-  document.getElementById(
-    "salesPage"
-  ).style.display = "block";
 
-  setPageTitle("Manage Sales");
+  const page =
+    document.getElementById(
+      "salesPage"
+    );
+
+
+  if (page) {
+
+    page.style.display =
+      "block";
+
+  }
+
+
+  setPageTitle(
+    "Manage Sales"
+  );
+
 
   await loadSalesUsers();
 
@@ -421,12 +601,17 @@ async function loadLeads() {
     const {
       data,
       error
-    } = await supabaseClient
-      .from("leads")
-      .select("*")
-      .order("created_at", {
-        ascending: false
-      });
+    } =
+      await supabaseClient
+        .from("leads")
+        .select("*")
+        .order(
+          "created_at",
+          {
+            ascending: false
+          }
+        );
+
 
     if (error) {
 
@@ -435,20 +620,32 @@ async function loadLeads() {
         error
       );
 
-      alert(error.message);
+      alert(
+        error.message
+      );
 
       return;
     }
 
-    leadsData = data || [];
 
-    renderLeads(leadsData);
+    leadsData =
+      data || [];
 
-    updateDashboard();
+
+    renderLeads(
+      leadsData
+    );
+
+
+    await updateDashboard();
+
 
   } catch (error) {
 
-    console.error(error);
+    console.error(
+      "loadLeads error:",
+      error
+    );
 
   }
 
@@ -466,15 +663,24 @@ function renderLeads(data) {
       "leadsTable"
     );
 
+
   if (!table) return;
 
-  table.innerHTML = "";
 
-  if (!data || data.length === 0) {
+  table.innerHTML =
+    "";
+
+
+  if (
+    !data ||
+    data.length === 0
+  ) {
 
     table.innerHTML = `
       <tr>
-        <td colspan="10" style="text-align:center;">
+        <td
+          colspan="10"
+          style="text-align:center;">
           No leads found
         </td>
       </tr>
@@ -483,100 +689,123 @@ function renderLeads(data) {
     return;
   }
 
-  data.forEach(lead => {
 
-    const tr =
-      document.createElement("tr");
+  data.forEach(
+    lead => {
 
-    tr.innerHTML = `
+      const tr =
+        document.createElement(
+          "tr"
+        );
 
-      <td>
-        ${escapeHTML(
-          getValue(lead.customer_name)
-        )}
-      </td>
 
-      <td>
-        ${
-          lead.phone
-            ? `
-              <a
-                href="${whatsappLink(lead.phone)}"
-                target="_blank"
-                class="wa-link">
-                ${escapeHTML(lead.phone)}
-              </a>
-            `
-            : "-"
-        }
-      </td>
+      tr.innerHTML = `
 
-      <td>
-        ${escapeHTML(
-          getValue(lead.business)
-        )}
-      </td>
-
-      <td>
-        ${escapeHTML(
-          getValue(lead.location)
-        )}
-      </td>
-
-      <td>
-        <span
-          class="status-badge ${statusClass(lead.status)}">
+        <td>
           ${escapeHTML(
-            getValue(lead.status)
+            getValue(
+              lead.customer_name
+            )
           )}
-        </span>
-      </td>
+        </td>
 
-      <td>
-        ${formatDate(
-          lead.follow_up_date
-        )}
-      </td>
+        <td>
+          ${
+            lead.phone
+              ? `
+                <a
+                  href="${whatsappLink(
+                    lead.phone
+                  )}"
+                  target="_blank"
+                  class="wa-link">
+                  ${escapeHTML(
+                    lead.phone
+                  )}
+                </a>
+              `
+              : "-"
+          }
+        </td>
 
-      <td>
-        ${formatDate(
-          lead.appointment
-        )}
-      </td>
+        <td>
+          ${escapeHTML(
+            getValue(
+              lead.business
+            )
+          )}
+        </td>
 
-      <td>
-        ${formatDate(
-          lead.quotation
-        )}
-      </td>
+        <td>
+          ${escapeHTML(
+            getValue(
+              lead.location
+            )
+          )}
+        </td>
 
-      <td>
-        ${formatDate(
-          lead.closing
-        )}
-      </td>
+        <td>
+          <span
+            class="status-badge ${statusClass(
+              lead.status
+            )}">
+            ${escapeHTML(
+              getValue(
+                lead.status
+              )
+            )}
+          </span>
+        </td>
 
-      <td>
+        <td>
+          ${formatDate(
+            lead.follow_up_date
+          )}
+        </td>
 
-        <button
-          class="secondary-btn small-btn"
-          onclick="editLead('${lead.id}')">
-          Edit
-        </button>
+        <td>
+          ${formatDate(
+            lead.appointment
+          )}
+        </td>
 
-        <button
-          class="secondary-btn small-btn"
-          onclick="deleteLead('${lead.id}')">
-          Delete
-        </button>
+        <td>
+          ${formatDate(
+            lead.quotation
+          )}
+        </td>
 
-      </td>
+        <td>
+          ${formatDate(
+            lead.closing
+          )}
+        </td>
 
-    `;
+        <td>
 
-    table.appendChild(tr);
+          <button
+            class="secondary-btn small-btn"
+            onclick="editLead('${lead.id}')">
+            Edit
+          </button>
 
-  });
+          <button
+            class="secondary-btn small-btn"
+            onclick="deleteLead('${lead.id}')">
+            Delete
+          </button>
+
+        </td>
+
+      `;
+
+
+      table.appendChild(
+        tr
+      );
+
+    }
+  );
 
 }
 
@@ -588,59 +817,83 @@ function renderLeads(data) {
 function filterLeads() {
 
   const search =
-    document.getElementById(
-      "leadSearch"
-    )?.value
+    document
+      .getElementById(
+        "leadSearch"
+      )
+      ?.value
       .toLowerCase()
       .trim() || "";
+
 
   const status =
     document.getElementById(
       "statusFilter"
     )?.value || "";
 
+
   const filtered =
-    leadsData.filter(lead => {
+    leadsData.filter(
+      lead => {
 
-      const customer =
-        getValue(
-          lead.customer_name
-        ).toLowerCase();
+        const customer =
+          getValue(
+            lead.customer_name
+          ).toLowerCase();
 
-      const phone =
-        getValue(
-          lead.phone
-        ).toLowerCase();
 
-      const business =
-        getValue(
-          lead.business
-        ).toLowerCase();
+        const phone =
+          getValue(
+            lead.phone
+          ).toLowerCase();
 
-      const location =
-        getValue(
-          lead.location
-        ).toLowerCase();
 
-      const matchesSearch =
-        !search ||
-        customer.includes(search) ||
-        phone.includes(search) ||
-        business.includes(search) ||
-        location.includes(search);
+        const business =
+          getValue(
+            lead.business
+          ).toLowerCase();
 
-      const matchesStatus =
-        !status ||
-        lead.status === status;
 
-      return (
-        matchesSearch &&
-        matchesStatus
-      );
+        const location =
+          getValue(
+            lead.location
+          ).toLowerCase();
 
-    });
 
-  renderLeads(filtered);
+        const matchesSearch =
+          !search ||
+          customer.includes(
+            search
+          ) ||
+          phone.includes(
+            search
+          ) ||
+          business.includes(
+            search
+          ) ||
+          location.includes(
+            search
+          );
+
+
+        const matchesStatus =
+          !status ||
+          lead.status ===
+            status;
+
+
+        return (
+          matchesSearch &&
+          matchesStatus
+        );
+
+      }
+    );
+
+
+  renderLeads(
+    filtered
+  );
 
 }
 
@@ -655,10 +908,12 @@ function openLeadModal() {
     "openLeadModal clicked"
   );
 
+
   const modal =
     document.getElementById(
       "leadModal"
     );
+
 
   if (!modal) {
 
@@ -669,12 +924,15 @@ function openLeadModal() {
     return;
   }
 
+
   clearLeadForm();
+
 
   const title =
     document.getElementById(
       "leadModalTitle"
     );
+
 
   if (title) {
 
@@ -683,9 +941,13 @@ function openLeadModal() {
 
   }
 
-  modal.classList.add("show");
 
-  modal.style.display = "flex";
+  modal.classList.add(
+    "show"
+  );
+
+  modal.style.display =
+    "flex";
 
 }
 
@@ -697,30 +959,86 @@ function closeLeadModal() {
       "leadModal"
     );
 
+
   if (!modal) return;
 
-  modal.classList.remove("show");
 
-  modal.style.display = "none";
+  modal.classList.remove(
+    "show"
+  );
+
+  modal.style.display =
+    "none";
 
 }
 
 
 function clearLeadForm() {
 
-  setValue("leadId", "");
-  setValue("leadCustomer", "");
-  setValue("leadPhone", "");
-  setValue("leadBusiness", "");
-  setValue("leadLocation", "");
-  setValue("leadStatus", "New");
-  setValue("leadFollowUp", "");
-  setValue("leadAppointment", "");
-  setValue("leadSiteSurvey", "");
-  setValue("leadQuotation", "");
-  setValue("leadSPK", "");
-  setValue("leadClosing", "");
-  setValue("leadNotes", "");
+  setValue(
+    "leadId",
+    ""
+  );
+
+  setValue(
+    "leadCustomer",
+    ""
+  );
+
+  setValue(
+    "leadPhone",
+    ""
+  );
+
+  setValue(
+    "leadBusiness",
+    ""
+  );
+
+  setValue(
+    "leadLocation",
+    ""
+  );
+
+  setValue(
+    "leadStatus",
+    "New"
+  );
+
+  setValue(
+    "leadFollowUp",
+    ""
+  );
+
+  setValue(
+    "leadAppointment",
+    ""
+  );
+
+  setValue(
+    "leadSiteSurvey",
+    ""
+  );
+
+  setValue(
+    "leadQuotation",
+    ""
+  );
+
+  setValue(
+    "leadSPK",
+    ""
+  );
+
+  setValue(
+    "leadClosing",
+    ""
+  );
+
+  setValue(
+    "leadNotes",
+    ""
+  );
 
 }
 
@@ -740,10 +1058,15 @@ async function saveLead() {
     return;
   }
 
+
   const customer =
-    document.getElementById(
-      "leadCustomer"
-    ).value.trim();
+    document
+      .getElementById(
+        "leadCustomer"
+      )
+      .value
+      .trim();
+
 
   if (!customer) {
 
@@ -754,32 +1077,46 @@ async function saveLead() {
     return;
   }
 
+
   const leadId =
     document.getElementById(
       "leadId"
     ).value;
 
+
   const payload = {
 
     customer_name:
-      document.getElementById(
-        "leadCustomer"
-      ).value.trim(),
+      document
+        .getElementById(
+          "leadCustomer"
+        )
+        .value
+        .trim(),
 
     phone:
-      document.getElementById(
-        "leadPhone"
-      ).value.trim(),
+      document
+        .getElementById(
+          "leadPhone"
+        )
+        .value
+        .trim(),
 
     business:
-      document.getElementById(
-        "leadBusiness"
-      ).value.trim(),
+      document
+        .getElementById(
+          "leadBusiness"
+        )
+        .value
+        .trim(),
 
     location:
-      document.getElementById(
-        "leadLocation"
-      ).value.trim(),
+      document
+        .getElementById(
+          "leadLocation"
+        )
+        .value
+        .trim(),
 
     status:
       document.getElementById(
@@ -789,37 +1126,44 @@ async function saveLead() {
     follow_up_date:
       document.getElementById(
         "leadFollowUp"
-      ).value || null,
+      ).value ||
+      null,
 
     appointment:
       document.getElementById(
         "leadAppointment"
-      ).value || null,
+      ).value ||
+      null,
 
     site_survey:
       document.getElementById(
         "leadSiteSurvey"
-      ).value || null,
+      ).value ||
+      null,
 
     quotation:
       document.getElementById(
         "leadQuotation"
-      ).value || null,
+      ).value ||
+      null,
 
     spk:
       document.getElementById(
         "leadSPK"
-      ).value || null,
+      ).value ||
+      null,
 
     closing:
       document.getElementById(
         "leadClosing"
-      ).value || null,
+      ).value ||
+      null,
 
     notes:
       document.getElementById(
         "leadNotes"
-      ).value.trim()
+      ).value
+      .trim()
 
   };
 
@@ -834,14 +1178,23 @@ async function saveLead() {
 
       const {
         error
-      } = await supabaseClient
-        .from("leads")
-        .update(payload)
-        .eq("id", leadId);
+      } =
+        await supabaseClient
+          .from("leads")
+          .update(
+            payload
+          )
+          .eq(
+            "id",
+            leadId
+          );
+
 
       if (error) {
 
-        console.error(error);
+        console.error(
+          error
+        );
 
         alert(
           "Gagal update lead:\n" +
@@ -851,11 +1204,13 @@ async function saveLead() {
         return;
       }
 
+
       alert(
         "Lead berhasil diupdate."
       );
 
     }
+
 
     // ============================
     // ADD
@@ -866,15 +1221,22 @@ async function saveLead() {
       payload.sales_id =
         currentProfile.id;
 
+
       const {
         error
-      } = await supabaseClient
-        .from("leads")
-        .insert([payload]);
+      } =
+        await supabaseClient
+          .from("leads")
+          .insert([
+            payload
+          ]);
+
 
       if (error) {
 
-        console.error(error);
+        console.error(
+          error
+        );
 
         alert(
           "Gagal menambahkan lead:\n" +
@@ -884,17 +1246,20 @@ async function saveLead() {
         return;
       }
 
+
       alert(
         "Lead berhasil ditambahkan."
       );
 
     }
 
+
     closeLeadModal();
 
     await loadLeads();
 
     await updateDashboard();
+
 
   } catch (error) {
 
@@ -924,7 +1289,7 @@ async function editLead(id) {
     id
   );
 
-  // Cari dulu di data lokal
+
   let lead =
     leadsData.find(
       item =>
@@ -933,22 +1298,26 @@ async function editLead(id) {
     );
 
 
-  // Kalau tidak ditemukan,
-  // ambil langsung dari Supabase
   if (!lead) {
 
     console.log(
       "Lead tidak ada di leadsData, mengambil dari Supabase..."
     );
 
+
     const {
       data,
       error
-    } = await supabaseClient
-      .from("leads")
-      .select("*")
-      .eq("id", id)
-      .maybeSingle();
+    } =
+      await supabaseClient
+        .from("leads")
+        .select("*")
+        .eq(
+          "id",
+          id
+        )
+        .maybeSingle();
+
 
     if (error) {
 
@@ -965,6 +1334,7 @@ async function editLead(id) {
       return;
     }
 
+
     if (!data) {
 
       alert(
@@ -974,14 +1344,12 @@ async function editLead(id) {
       return;
     }
 
-    lead = data;
+
+    lead =
+      data;
 
   }
 
-
-  // ============================
-  // ISI FORM EDIT
-  // ============================
 
   setValue(
     "leadId",
@@ -1010,7 +1378,8 @@ async function editLead(id) {
 
   setValue(
     "leadStatus",
-    lead.status || "New"
+    lead.status ||
+      "New"
   );
 
   setValue(
@@ -1049,14 +1418,11 @@ async function editLead(id) {
   );
 
 
-  // ============================
-  // UBAH JUDUL MODAL
-  // ============================
-
   const title =
     document.getElementById(
       "leadModalTitle"
     );
+
 
   if (title) {
 
@@ -1066,14 +1432,11 @@ async function editLead(id) {
   }
 
 
-  // ============================
-  // BUKA MODAL
-  // ============================
-
   const modal =
     document.getElementById(
       "leadModal"
     );
+
 
   if (!modal) {
 
@@ -1084,9 +1447,13 @@ async function editLead(id) {
     return;
   }
 
-  modal.classList.add("show");
 
-  modal.style.display = "flex";
+  modal.classList.add(
+    "show"
+  );
+
+  modal.style.display =
+    "flex";
 
 }
 
@@ -1102,20 +1469,30 @@ async function deleteLead(id) {
       "Hapus lead ini?"
     );
 
-  if (!confirmDelete) return;
+
+  if (!confirmDelete)
+    return;
+
 
   try {
 
     const {
       error
-    } = await supabaseClient
-      .from("leads")
-      .delete()
-      .eq("id", id);
+    } =
+      await supabaseClient
+        .from("leads")
+        .delete()
+        .eq(
+          "id",
+          id
+        );
+
 
     if (error) {
 
-      console.error(error);
+      console.error(
+        error
+      );
 
       alert(
         "Gagal menghapus lead:\n" +
@@ -1125,15 +1502,21 @@ async function deleteLead(id) {
       return;
     }
 
+
     await loadLeads();
 
     await updateDashboard();
 
+
   } catch (error) {
 
-    console.error(error);
+    console.error(
+      error
+    );
 
-    alert(error.message);
+    alert(
+      error.message
+    );
 
   }
 
@@ -1146,31 +1529,40 @@ async function deleteLead(id) {
 
 async function updateDashboard() {
 
-  if (!currentProfile) return;
+  if (!currentProfile)
+    return;
+
 
   try {
 
     const {
       data,
       error
-    } = await supabaseClient
-      .from("leads")
-      .select("status");
+    } =
+      await supabaseClient
+        .from("leads")
+        .select("status");
+
 
     if (error) {
 
-      console.error(error);
+      console.error(
+        error
+      );
 
       return;
     }
 
+
     const dataList =
       data || [];
+
 
     setText(
       "statTotal",
       dataList.length
     );
+
 
     setText(
       "statNew",
@@ -1180,6 +1572,7 @@ async function updateDashboard() {
       )
     );
 
+
     setText(
       "statInterested",
       countStatus(
@@ -1187,6 +1580,7 @@ async function updateDashboard() {
         "Interested"
       )
     );
+
 
     setText(
       "statFollowUp",
@@ -1196,6 +1590,7 @@ async function updateDashboard() {
       )
     );
 
+
     setText(
       "statAppointment",
       countStatus(
@@ -1203,6 +1598,7 @@ async function updateDashboard() {
         "Appointment"
       )
     );
+
 
     setText(
       "statSiteSurvey",
@@ -1212,6 +1608,7 @@ async function updateDashboard() {
       )
     );
 
+
     setText(
       "statQuotation",
       countStatus(
@@ -1219,6 +1616,7 @@ async function updateDashboard() {
         "Quotation"
       )
     );
+
 
     setText(
       "statClosing",
@@ -1228,9 +1626,12 @@ async function updateDashboard() {
       )
     );
 
+
   } catch (error) {
 
-    console.error(error);
+    console.error(
+      error
+    );
 
   }
 
@@ -1244,7 +1645,8 @@ function countStatus(
 
   return data.filter(
     item =>
-      item.status === status
+      item.status ===
+      status
   ).length;
 
 }
@@ -1258,60 +1660,87 @@ async function loadSalesUsers() {
 
   if (
     !currentProfile ||
-    currentProfile.role !== "Admin"
+    currentProfile.role !==
+      "Admin"
   ) {
 
     return;
 
   }
 
+
   try {
 
     const {
       data,
       error
-    } = await supabaseClient
-      .from("sales_users")
-      .select("*")
-      .order("created_at", {
-        ascending: true
-      });
+    } =
+      await supabaseClient
+        .from("sales_users")
+        .select("*")
+        .order(
+          "created_at",
+          {
+            ascending: true
+          }
+        );
+
 
     if (error) {
 
-      console.error(error);
+      console.error(
+        error
+      );
 
-      alert(error.message);
+      alert(
+        error.message
+      );
 
       return;
     }
 
+
     salesUsersData =
       data || [];
+
 
     renderSalesUsers(
       salesUsersData
     );
 
+
   } catch (error) {
 
-    console.error(error);
+    console.error(
+      error
+    );
 
   }
 
 }
 
 
-function renderSalesUsers(data) {
+// ================================
+// RENDER SALES
+// ================================
+
+function renderSalesUsers(
+  data
+) {
 
   const table =
     document.getElementById(
       "salesTable"
     );
 
-  if (!table) return;
 
-  table.innerHTML = "";
+  if (!table)
+    return;
+
+
+  table.innerHTML =
+    "";
+
 
   if (
     !data ||
@@ -1331,74 +1760,95 @@ function renderSalesUsers(data) {
     return;
   }
 
-  data.forEach(sales => {
 
-    const tr =
-      document.createElement("tr");
+  data.forEach(
+    sales => {
 
-    tr.innerHTML = `
+      const tr =
+        document.createElement(
+          "tr"
+        );
 
-      <td>
-        ${escapeHTML(
-          getValue(sales.name)
-        )}
-      </td>
 
-      <td>
-        ${escapeHTML(
-          getValue(sales.username)
-        )}
-      </td>
+      tr.innerHTML = `
 
-      <td>
-        ${escapeHTML(
-          getValue(sales.role)
-        )}
-      </td>
-
-      <td>
-        <span
-          class="status-badge ${
-            sales.status === "Active"
-              ? "status-active"
-              : "status-inactive"
-          }">
-
+        <td>
           ${escapeHTML(
-            getValue(sales.status)
+            getValue(
+              sales.name
+            )
           )}
+        </td>
 
-        </span>
-      </td>
+        <td>
+          ${escapeHTML(
+            getValue(
+              sales.username
+            )
+          )}
+        </td>
 
-      <td>
-        -
-      </td>
+        <td>
+          ${escapeHTML(
+            getValue(
+              sales.role
+            )
+          )}
+        </td>
 
-      <td>
+        <td>
 
-        <button
-          class="secondary-btn small-btn"
-          onclick="toggleSalesStatus(
-            '${sales.id}',
-            '${sales.status}'
-          )">
+          <span
+            class="status-badge ${
+              sales.status ===
+              "Active"
+                ? "status-active"
+                : "status-inactive"
+            }">
 
-          ${
-            sales.status === "Active"
-              ? "Deactivate"
-              : "Activate"
-          }
+            ${escapeHTML(
+              getValue(
+                sales.status
+              )
+            )}
 
-        </button>
+          </span>
 
-      </td>
+        </td>
 
-    `;
+        <td>
+          -
+        </td>
 
-    table.appendChild(tr);
+        <td>
 
-  });
+          <button
+            class="secondary-btn small-btn"
+            onclick="toggleSalesStatus(
+              '${sales.id}',
+              '${sales.status}'
+            )">
+
+            ${
+              sales.status ===
+              "Active"
+                ? "Deactivate"
+                : "Activate"
+            }
+
+          </button>
+
+        </td>
+
+      `;
+
+
+      table.appendChild(
+        tr
+      );
+
+    }
+  );
 
 }
 
@@ -1414,6 +1864,7 @@ function openSalesModal() {
       "salesModal"
     );
 
+
   if (!modal) {
 
     alert(
@@ -1423,11 +1874,16 @@ function openSalesModal() {
     return;
   }
 
+
   clearSalesForm();
 
-  modal.classList.add("show");
 
-  modal.style.display = "flex";
+  modal.classList.add(
+    "show"
+  );
+
+  modal.style.display =
+    "flex";
 
 }
 
@@ -1439,11 +1895,17 @@ function closeSalesModal() {
       "salesModal"
     );
 
-  if (!modal) return;
 
-  modal.classList.remove("show");
+  if (!modal)
+    return;
 
-  modal.style.display = "none";
+
+  modal.classList.remove(
+    "show"
+  );
+
+  modal.style.display =
+    "none";
 
 }
 
@@ -1475,19 +1937,30 @@ function clearSalesForm() {
 async function createSales() {
 
   const name =
-    document.getElementById(
-      "salesName"
-    ).value.trim();
+    document
+      .getElementById(
+        "salesName"
+      )
+      .value
+      .trim();
+
 
   const username =
-    document.getElementById(
-      "salesUsername"
-    ).value.trim();
+    document
+      .getElementById(
+        "salesUsername"
+      )
+      .value
+      .trim();
+
 
   const password =
-    document.getElementById(
-      "salesPassword"
-    ).value;
+    document
+      .getElementById(
+        "salesPassword"
+      )
+      .value;
+
 
   if (
     !name ||
@@ -1502,7 +1975,10 @@ async function createSales() {
     return;
   }
 
-  if (password.length < 6) {
+
+  if (
+    password.length < 6
+  ) {
 
     alert(
       "Password minimal 6 karakter."
@@ -1511,25 +1987,167 @@ async function createSales() {
     return;
   }
 
-  /*
-    PENTING:
 
-    Pembuatan user Supabase Auth
-    tidak boleh dilakukan langsung
-    dari frontend.
+  if (
+    !currentProfile ||
+    currentProfile.role !==
+      "Admin"
+  ) {
 
-    Nanti bagian ini kita hubungkan
-    ke Supabase Edge Function.
+    alert(
+      "Hanya Admin yang dapat membuat Sales."
+    );
 
-    Jangan memasukkan service_role
-    key ke script.js.
-  */
+    return;
+  }
 
-  alert(
-    "Form Add Sales sudah aktif.\n\n" +
-    "Tahap berikutnya adalah menghubungkan " +
-    "CREATE SALES ke Supabase Auth secara aman."
-  );
+
+  const confirmCreate =
+    confirm(
+      `Buat akun Sales "${name}" dengan username "${username}"?`
+    );
+
+
+  if (!confirmCreate)
+    return;
+
+
+  const createButton =
+    document.querySelector(
+      "#salesModal .primary-btn"
+    );
+
+
+  try {
+
+    if (createButton) {
+
+      createButton.disabled =
+        true;
+
+      createButton.textContent =
+        "CREATING...";
+
+    }
+
+
+    console.log(
+      "Calling Edge Function create-sales..."
+    );
+
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient.functions.invoke(
+        "create-sales",
+        {
+          body: {
+            name:
+              name,
+            username:
+              username,
+            password:
+              password
+          }
+        }
+      );
+
+
+    console.log(
+      "Create Sales response:",
+      data,
+      error
+    );
+
+
+    if (error) {
+
+      console.error(
+        "Create Sales Function Error:",
+        error
+      );
+
+
+      alert(
+        "Gagal membuat Sales:\n\n" +
+        error.message
+      );
+
+      return;
+    }
+
+
+    if (
+      data &&
+      data.error
+    ) {
+
+      console.error(
+        "Create Sales Server Error:",
+        data
+      );
+
+
+      alert(
+        data.error +
+        (
+          data.detail
+            ? "\n\n" +
+              data.detail
+            : ""
+        )
+      );
+
+      return;
+    }
+
+
+    alert(
+      "Sales berhasil dibuat!\n\n" +
+      "Name: " +
+      name +
+      "\n" +
+      "Username: " +
+      username
+    );
+
+
+    clearSalesForm();
+
+    closeSalesModal();
+
+    await loadSalesUsers();
+
+
+  } catch (error) {
+
+    console.error(
+      "createSales error:",
+      error
+    );
+
+
+    alert(
+      "Terjadi kesalahan saat membuat Sales:\n\n" +
+      error.message
+    );
+
+
+  } finally {
+
+    if (createButton) {
+
+      createButton.disabled =
+        false;
+
+      createButton.textContent =
+        "CREATE SALES";
+
+    }
+
+  }
 
 }
 
@@ -1544,44 +2162,65 @@ async function toggleSalesStatus(
 ) {
 
   const newStatus =
-    currentStatus === "Active"
+    currentStatus ===
+    "Active"
       ? "Inactive"
       : "Active";
+
 
   const confirmChange =
     confirm(
       `Ubah status Sales menjadi ${newStatus}?`
     );
 
-  if (!confirmChange) return;
+
+  if (!confirmChange)
+    return;
+
 
   try {
 
     const {
       error
-    } = await supabaseClient
-      .from("sales_users")
-      .update({
-        status: newStatus
-      })
-      .eq("id", id);
+    } =
+      await supabaseClient
+        .from("sales_users")
+        .update({
+          status:
+            newStatus
+        })
+        .eq(
+          "id",
+          id
+        );
+
 
     if (error) {
 
-      console.error(error);
+      console.error(
+        error
+      );
 
-      alert(error.message);
+      alert(
+        error.message
+      );
 
       return;
     }
 
+
     await loadSalesUsers();
+
 
   } catch (error) {
 
-    console.error(error);
+    console.error(
+      error
+    );
 
-    alert(error.message);
+    alert(
+      error.message
+    );
 
   }
 
@@ -1592,10 +2231,15 @@ async function toggleSalesStatus(
 // WHATSAPP
 // ================================
 
-function whatsappLink(phone) {
+function whatsappLink(
+  phone
+) {
 
   const number =
-    normalizePhone(phone);
+    normalizePhone(
+      phone
+    );
+
 
   if (!number) {
 
@@ -1603,31 +2247,47 @@ function whatsappLink(phone) {
 
   }
 
+
   return `https://wa.me/${number}`;
 
 }
 
 
-function normalizePhone(phone) {
+function normalizePhone(
+  phone
+) {
 
-  if (!phone) return "";
+  if (!phone)
+    return "";
+
 
   let number =
     String(phone)
-      .replace(/\D/g, "");
+      .replace(
+        /\D/g,
+        ""
+      );
+
 
   if (
-    number.startsWith("0")
+    number.startsWith(
+      "0"
+    )
   ) {
 
     number =
       "62" +
-      number.substring(1);
+      number.substring(
+        1
+      );
 
   }
 
+
   if (
-    number.startsWith("8")
+    number.startsWith(
+      "8"
+    )
   ) {
 
     number =
@@ -1635,6 +2295,7 @@ function normalizePhone(phone) {
       number;
 
   }
+
 
   return number;
 
@@ -1658,7 +2319,6 @@ function setupModalEvents() {
     );
 
 
-  // Klik area gelap modal
   if (leadModal) {
 
     leadModal.addEventListener(
@@ -1715,14 +2375,25 @@ async function logout() {
 
   } catch (error) {
 
-    console.error(error);
+    console.error(
+      error
+    );
 
   }
 
-  currentUser = null;
-  currentProfile = null;
-  leadsData = [];
-  salesUsersData = [];
+
+  currentUser =
+    null;
+
+  currentProfile =
+    null;
+
+  leadsData =
+    [];
+
+  salesUsersData =
+    [];
+
 
   showLogin();
 
@@ -1733,33 +2404,46 @@ async function logout() {
 // HELPER FUNCTIONS
 // ================================
 
-function formatDate(date) {
+function formatDate(
+  date
+) {
 
-  if (!date) return "-";
+  if (!date)
+    return "-";
+
 
   try {
 
     const d =
       new Date(
-        date + "T00:00:00"
+        date +
+        "T00:00:00"
       );
 
+
     if (
-      isNaN(d.getTime())
+      isNaN(
+        d.getTime()
+      )
     ) {
 
       return date;
 
     }
 
+
     return d.toLocaleDateString(
       "id-ID",
       {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric"
+        day:
+          "2-digit",
+        month:
+          "2-digit",
+        year:
+          "numeric"
       }
     );
+
 
   } catch {
 
@@ -1770,21 +2454,30 @@ function formatDate(date) {
 }
 
 
-function statusClass(status) {
+function statusClass(
+  status
+) {
 
-  if (!status) return "";
+  if (!status)
+    return "";
+
 
   return (
     "status-" +
     String(status)
       .toLowerCase()
-      .replace(/\s+/g, "-")
+      .replace(
+        /\s+/g,
+        "-"
+      )
   );
 
 }
 
 
-function escapeHTML(value) {
+function escapeHTML(
+  value
+) {
 
   if (
     value === null ||
@@ -1794,6 +2487,7 @@ function escapeHTML(value) {
     return "";
 
   }
+
 
   return String(value)
     .replace(
@@ -1820,7 +2514,9 @@ function escapeHTML(value) {
 }
 
 
-function getValue(value) {
+function getValue(
+  value
+) {
 
   if (
     value === null ||
@@ -1831,6 +2527,7 @@ function getValue(value) {
     return "";
 
   }
+
 
   return String(value);
 
@@ -1843,9 +2540,14 @@ function setValue(
 ) {
 
   const element =
-    document.getElementById(id);
+    document.getElementById(
+      id
+    );
 
-  if (!element) return;
+
+  if (!element)
+    return;
+
 
   element.value =
     value === null ||
@@ -1862,9 +2564,14 @@ function setText(
 ) {
 
   const element =
-    document.getElementById(id);
+    document.getElementById(
+      id
+    );
 
-  if (!element) return;
+
+  if (!element)
+    return;
+
 
   element.textContent =
     value;
@@ -1887,6 +2594,7 @@ supabaseClient.auth.onAuthStateChange(
       event
     );
 
+
     if (
       session &&
       !currentProfile
@@ -1894,6 +2602,7 @@ supabaseClient.auth.onAuthStateChange(
 
       currentUser =
         session.user;
+
 
       setTimeout(
         async () => {
@@ -1906,11 +2615,14 @@ supabaseClient.auth.onAuthStateChange(
 
     }
 
+
     if (!session) {
 
-      currentUser = null;
+      currentUser =
+        null;
 
-      currentProfile = null;
+      currentProfile =
+        null;
 
       showLogin();
 
