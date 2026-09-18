@@ -72,7 +72,7 @@ textarea {
   text-align: center;
 }
 
-/* FIX: Logo French Solar Industry Terkunci Presisi */
+/* FIX: Logo Halaman Login */
 .login-logo {
   width: 100% !important;
   max-width: 200px !important;
@@ -233,27 +233,30 @@ textarea {
   min-width: 0;
 }
 
-/* Brand Logo Navbar */
+/* Brand Logo Navbar (DIPERBESAR SUPAYA JELAS) */
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   flex-shrink: 0;
 }
 
 .brand-logo {
-  width: 36px !important;
-  height: 36px !important;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
+  width: 52px !important;
+  height: 52px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
 }
 
 .brand-logo img {
-  max-width: 100% !important;
-  max-height: 100% !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 52px !important;
+  max-height: 52px !important;
   object-fit: contain !important;
+  display: block !important;
 }
 
 .brand-text {
@@ -263,13 +266,13 @@ textarea {
 }
 
 .brand-text strong {
-  font-size: 14px;
+  font-size: 15px;
   color: #111827;
 }
 
 .brand-text span {
   margin-top: 2px;
-  font-size: 10px;
+  font-size: 11px;
   color: #6b7280;
 }
 
@@ -402,9 +405,9 @@ textarea {
 
 .page-content {
   width: 100%;
-  max-width: 1400px;
+  max-width: 100% !important;
   margin: 0 auto;
-  padding: 24px;
+  padding: 20px !important;
 }
 
 .page-heading {
@@ -426,7 +429,7 @@ textarea {
   color: #6b7280;
 }
 
-/* Dashboard Stats Grid (4 Kolom Presisi) */
+/* Dashboard Stats Grid */
 .stats-grid {
   width: 100%;
   display: grid;
@@ -494,7 +497,7 @@ textarea {
 
 
 /* ==================================================
-   9. TABLE & SALES AVATAR FIX (KUNCI GAMBAR TABEL)
+   9. TABLE FIX (MENCEGAH KEPOTONG & EDIT TERKUNCI)
 ================================================== */
 
 .table-card {
@@ -512,9 +515,10 @@ textarea {
 }
 
 table {
-  width: 100%;
+  width: 100% !important;
+  min-width: 100% !important;
   border-collapse: collapse;
-  min-width: 900px;
+  table-layout: auto !important;
 }
 
 thead {
@@ -522,35 +526,68 @@ thead {
 }
 
 th {
-  padding: 12px 14px;
+  padding: 10px 8px !important;
   border-bottom: 1px solid #e5e7eb;
   color: #6b7280;
-  font-size: 11px;
+  font-size: 11px !important;
   font-weight: 700;
   text-transform: uppercase;
   text-align: left;
-  white-space: nowrap;
+  white-space: nowrap !important;
 }
 
 td {
-  padding: 12px 14px;
+  padding: 10px 8px !important;
   border-bottom: 1px solid #f1f5f9;
   color: #374151;
-  font-size: 13px;
+  font-size: 12px !important;
   vertical-align: middle;
-  white-space: nowrap;
+  white-space: nowrap !important;
 }
 
 tbody tr:hover {
   background: #fafafa;
 }
 
-/* FIX KETAT: Mencegah foto jas/sales meledak di dalam tabel */
+/* Kolom Action (Edit) Terkunci Presisi di Kanan */
+th:last-child,
+td:last-child {
+  text-align: center !important;
+  width: 80px !important;
+  position: sticky !important;
+  right: 0 !important;
+  background: #ffffff !important;
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Tombol Edit Rapi */
+.small-btn, 
+td button,
+td a.edit-btn {
+  padding: 5px 12px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  background-color: #eff6ff !important;
+  color: #2563eb !important;
+  border: 1px solid #bfdbfe !important;
+  border-radius: 6px !important;
+  display: inline-block !important;
+  text-decoration: none !important;
+}
+
+.small-btn:hover,
+td button:hover,
+td a.edit-btn:hover {
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+}
+
+/* Kunci Gambar Sales/Foto */
 .sales-photo-wrapper {
-  width: 36px !important;
-  height: 36px !important;
-  min-width: 36px !important;
-  min-height: 36px !important;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -562,18 +599,18 @@ tbody tr:hover {
 
 .sales-avatar,
 td img {
-  width: 36px !important;
-  height: 36px !important;
-  max-width: 36px !important;
-  max-height: 36px !important;
+  width: 32px !important;
+  height: 32px !important;
+  max-width: 32px !important;
+  max-height: 32px !important;
   object-fit: cover !important;
   border-radius: 50% !important;
   display: block !important;
 }
 
 .sales-avatar-placeholder {
-  width: 36px !important;
-  height: 36px !important;
+  width: 32px !important;
+  height: 32px !important;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -581,7 +618,7 @@ td img {
   background: #e5e7eb;
   color: #374151;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 
