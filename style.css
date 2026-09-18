@@ -59,14 +59,14 @@ textarea {
 
 .login-card {
   width: 100%;
-  max-width: 410px;
+  max-width: 420px;
 
   background: #ffffff;
 
   border: 1px solid #e5e7eb;
   border-radius: 16px;
 
-  padding: 38px;
+  padding: 40px;
 
   box-shadow: 0 12px 35px rgba(0, 0, 0, 0.08);
 
@@ -74,10 +74,10 @@ textarea {
 }
 
 .login-logo {
-  width: 190px;
-  height: 80px;
+  width: 220px;
+  height: 95px;
 
-  margin: 0 auto 20px;
+  margin: 0 auto 18px;
 
   display: flex;
   align-items: center;
@@ -89,11 +89,10 @@ textarea {
 .login-logo img {
   display: block;
 
-  max-width: 100%;
-  max-height: 100%;
+  width: 100%;
+  max-width: 220px;
 
-  width: auto;
-  height: auto;
+  max-height: 95px;
 
   object-fit: contain;
 }
@@ -101,6 +100,7 @@ textarea {
 .login-card h1 {
   font-size: 25px;
   font-weight: 700;
+
   color: #111827;
 }
 
@@ -140,6 +140,8 @@ textarea {
 .filter-group select {
   width: 100%;
 
+  min-height: 42px;
+
   border: 1px solid #d1d5db;
   border-radius: 8px;
 
@@ -148,7 +150,7 @@ textarea {
 
   font-size: 14px;
 
-  padding: 11px 12px;
+  padding: 10px 12px;
 
   outline: none;
 
@@ -174,9 +176,11 @@ textarea {
 
 .primary-btn,
 .secondary-btn {
+  min-height: 40px;
+
   border-radius: 8px;
 
-  padding: 10px 16px;
+  padding: 9px 15px;
 
   font-size: 13px;
   font-weight: 700;
@@ -249,7 +253,7 @@ textarea {
 
 .topbar {
   width: 100%;
-  min-height: 68px;
+  min-height: 72px;
 
   background: #ffffff;
 
@@ -258,7 +262,7 @@ textarea {
   display: flex;
   align-items: center;
 
-  padding: 0 24px;
+  padding: 0 28px;
 
   position: sticky;
   top: 0;
@@ -267,7 +271,9 @@ textarea {
 }
 
 
-/* LEFT AREA */
+/* ==================================================
+   TOPBAR LEFT
+================================================== */
 
 .topbar-left {
   display: flex;
@@ -277,45 +283,56 @@ textarea {
 }
 
 
-/* FSI LOGO */
+/* ==================================================
+   FSI BRAND / LOGO
+================================================== */
 
 .brand {
   display: flex;
   align-items: center;
 
-  gap: 10px;
+  gap: 12px;
 
   flex-shrink: 0;
+
+  min-width: 125px;
 }
 
 .brand-logo {
-  width: 42px;
-  height: 42px;
+  width: 115px;
+  height: 48px;
 
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
 
   overflow: hidden;
+
+  flex-shrink: 0;
 }
 
 .brand-logo img {
   display: block;
 
-  max-width: 100%;
-  max-height: 100%;
+  width: 115px;
+  height: 48px;
 
-  width: auto;
-  height: auto;
+  max-width: 115px;
+  max-height: 48px;
 
   object-fit: contain;
 }
+
+
+/* Brand text hanya jika memang ada */
 
 .brand-text {
   display: flex;
   flex-direction: column;
 
   line-height: 1.15;
+
+  min-width: 0;
 }
 
 .brand-text strong {
@@ -331,10 +348,12 @@ textarea {
 }
 
 
-/* PAGE TITLE */
+/* ==================================================
+   PAGE TITLE
+================================================== */
 
 .topbar-left h2 {
-  margin-left: 26px;
+  margin-left: 28px;
 
   font-size: 18px;
   font-weight: 700;
@@ -353,9 +372,9 @@ textarea {
   display: flex;
   align-items: center;
 
-  gap: 4px;
+  gap: 5px;
 
-  margin-left: 28px;
+  margin-left: 24px;
 
   min-width: 0;
 }
@@ -367,9 +386,9 @@ textarea {
 
   gap: 7px;
 
-  min-height: 38px;
+  min-height: 40px;
 
-  padding: 8px 13px;
+  padding: 8px 14px;
 
   border: none;
   border-radius: 8px;
@@ -419,16 +438,18 @@ textarea {
   display: flex;
   align-items: center;
 
-  gap: 10px;
+  gap: 12px;
 
   flex-shrink: 0;
 }
 
 
-/* USER INFO */
+/* ==================================================
+   USER INFO
+================================================== */
 
 .user-info {
-  min-height: 42px;
+  min-height: 44px;
 
   display: flex;
   align-items: center;
@@ -451,8 +472,8 @@ textarea {
 }
 
 .user-avatar {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
 
   border-radius: 50%;
 
@@ -464,12 +485,14 @@ textarea {
 }
 
 
-/* LOGOUT */
+/* ==================================================
+   LOGOUT
+================================================== */
 
 .logout-btn {
-  min-height: 36px;
+  min-height: 38px;
 
-  padding: 8px 12px;
+  padding: 8px 13px;
 
   border: 1px solid #e5e7eb;
   border-radius: 8px;
@@ -505,7 +528,7 @@ textarea {
 .main-content {
   width: 100%;
   min-width: 0;
-  min-height: calc(100vh - 68px);
+  min-height: calc(100vh - 72px);
 
   margin-left: 0;
 
@@ -523,7 +546,7 @@ textarea {
 
   margin: 0 auto;
 
-  padding: 28px 30px;
+  padding: 30px;
 }
 
 .page-heading {
@@ -538,6 +561,8 @@ textarea {
 
 .page-heading h1 {
   font-size: 24px;
+  line-height: 1.25;
+
   color: #111827;
 }
 
@@ -545,6 +570,8 @@ textarea {
   margin-top: 6px;
 
   font-size: 13px;
+  line-height: 1.5;
+
   color: #6b7280;
 }
 
@@ -575,7 +602,7 @@ textarea {
   border: 1px solid #e5e7eb;
   border-radius: 12px;
 
-  padding: 20px;
+  padding: 19px;
 
   box-shadow:
     0 2px 5px rgba(0, 0, 0, 0.02);
@@ -583,15 +610,19 @@ textarea {
 
 .stat-label {
   font-size: 13px;
+  line-height: 1.4;
+
   font-weight: 600;
 
   color: #6b7280;
 }
 
 .stat-number {
-  margin-top: 14px;
+  margin-top: 13px;
 
-  font-size: 30px;
+  font-size: 29px;
+  line-height: 1;
+
   font-weight: 700;
 
   color: #111827;
@@ -610,7 +641,7 @@ textarea {
   border: 1px solid #e5e7eb;
   border-radius: 12px;
 
-  padding: 16px;
+  padding: 15px;
 
   display: flex;
   align-items: flex-end;
@@ -621,7 +652,7 @@ textarea {
 }
 
 .filter-group {
-  width: 190px;
+  width: 185px;
 
   min-width: 0;
 }
@@ -629,7 +660,7 @@ textarea {
 .filter-group label {
   display: block;
 
-  margin-bottom: 7px;
+  margin-bottom: 6px;
 
   font-size: 12px;
   font-weight: 600;
@@ -683,7 +714,7 @@ thead {
 }
 
 th {
-  padding: 13px 14px;
+  padding: 12px 14px;
 
   border-bottom: 1px solid #e5e7eb;
 
@@ -700,7 +731,7 @@ th {
 }
 
 td {
-  padding: 13px 14px;
+  padding: 12px 14px;
 
   border-bottom: 1px solid #f1f5f9;
 
@@ -826,8 +857,8 @@ tbody tr:last-child td {
 ================================================== */
 
 .sales-photo-wrapper {
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
 
   display: flex;
   align-items: center;
@@ -841,8 +872,8 @@ tbody tr:last-child td {
 }
 
 .sales-avatar {
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
 
   object-fit: cover;
 
@@ -852,8 +883,8 @@ tbody tr:last-child td {
 }
 
 .sales-avatar-placeholder {
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
 
   border-radius: 50%;
 
@@ -998,17 +1029,29 @@ tbody tr:last-child td {
 
 
 /* ==================================================
-   RESPONSIVE — TABLET / SMALL LAPTOP
+   RESPONSIVE — 1100px
 ================================================== */
 
 @media (max-width: 1100px) {
 
   .topbar {
-    padding: 0 18px;
+    padding: 0 20px;
   }
 
-  .brand-text {
-    display: none;
+  .brand {
+    min-width: 105px;
+  }
+
+  .brand-logo,
+  .brand-logo img {
+    width: 105px;
+    max-width: 105px;
+  }
+
+  .brand-logo,
+  .brand-logo img {
+    height: 44px;
+    max-height: 44px;
   }
 
   .topbar-left h2 {
@@ -1038,22 +1081,22 @@ tbody tr:last-child td {
   }
 
   .search-group {
-    width: calc(100% - 0px);
+    width: 100%;
     flex-basis: 100%;
   }
 }
 
 
 /* ==================================================
-   RESPONSIVE — TABLET PORTRAIT
+   RESPONSIVE — 850px
 ================================================== */
 
 @media (max-width: 850px) {
 
   .topbar {
-    min-height: 64px;
+    min-height: 66px;
 
-    padding: 8px 14px;
+    padding: 7px 14px;
 
     flex-wrap: wrap;
 
@@ -1064,16 +1107,29 @@ tbody tr:last-child td {
     min-width: 0;
   }
 
+  .brand {
+    min-width: 95px;
+  }
+
+  .brand-logo,
+  .brand-logo img {
+    width: 95px;
+    max-width: 95px;
+
+    height: 42px;
+    max-height: 42px;
+  }
+
   .topbar-left h2 {
     display: none;
   }
 
   .topbar-nav {
-    margin-left: 12px;
+    margin-left: 10px;
 
     overflow-x: auto;
 
-    max-width: 45vw;
+    max-width: 43vw;
 
     scrollbar-width: none;
   }
@@ -1084,14 +1140,23 @@ tbody tr:last-child td {
 
   .nav-item {
     flex-shrink: 0;
+
+    min-height: 38px;
+
+    padding: 7px 11px;
   }
 
   .topbar-right {
-    gap: 6px;
+    gap: 7px;
   }
 
   .user-info {
     padding-left: 2px;
+  }
+
+  .user-avatar {
+    width: 38px;
+    height: 38px;
   }
 
   .logout-btn {
@@ -1120,7 +1185,7 @@ tbody tr:last-child td {
 
 
 /* ==================================================
-   RESPONSIVE — MOBILE
+   RESPONSIVE — 650px
 ================================================== */
 
 @media (max-width: 650px) {
@@ -1128,12 +1193,20 @@ tbody tr:last-child td {
   .topbar {
     min-height: auto;
 
-    padding: 9px 12px;
+    padding: 8px 12px;
   }
 
-  .brand-logo {
-    width: 38px;
+  .brand {
+    min-width: 80px;
+  }
+
+  .brand-logo,
+  .brand-logo img {
+    width: 80px;
+    max-width: 80px;
+
     height: 38px;
+    max-height: 38px;
   }
 
   .topbar-nav {
@@ -1166,6 +1239,7 @@ tbody tr:last-child td {
 
   .logout-btn {
     font-size: 11px;
+
     padding: 7px 9px;
   }
 
@@ -1179,6 +1253,7 @@ tbody tr:last-child td {
 
   .page-heading {
     align-items: flex-start;
+
     flex-direction: column;
 
     gap: 12px;
@@ -1254,9 +1329,13 @@ tbody tr:last-child td {
 
 @media (max-width: 450px) {
 
-  .brand-logo {
-    width: 34px;
+  .brand-logo,
+  .brand-logo img {
+    width: 72px;
+    max-width: 72px;
+
     height: 34px;
+    max-height: 34px;
   }
 
   .nav-item {
@@ -1284,6 +1363,12 @@ tbody tr:last-child td {
   }
 
   .login-logo {
-    width: 170px;
+    width: 180px;
+    height: 80px;
+  }
+
+  .login-logo img {
+    max-width: 180px;
+    max-height: 80px;
   }
 }
