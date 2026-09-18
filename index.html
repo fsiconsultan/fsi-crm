@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -50,7 +50,7 @@
             id="loginUsername"
             type="text"
             autocomplete="username"
-            placeholder="Masukkan username"
+            placeholder="Enter username"
           >
 
         </div>
@@ -66,7 +66,7 @@
             id="loginPassword"
             type="password"
             autocomplete="current-password"
-            placeholder="Masukkan password"
+            placeholder="Enter password"
           >
 
         </div>
@@ -426,7 +426,7 @@
             <div>
 
               <span>
-                Tertarik
+                Interested
               </span>
 
               <strong id="statInterested">
@@ -564,7 +564,7 @@
               </h3>
 
               <p>
-                Ringkasan aktivitas lead berdasarkan akun yang sedang login.
+                Lead activity summary based on the currently logged-in account.
               </p>
 
             </div>
@@ -601,7 +601,7 @@
               </h3>
 
               <p>
-                Kelola dan follow-up customer dari satu tempat.
+                Manage and follow up with customers from one place.
               </p>
 
             </div>
@@ -641,7 +641,7 @@
               <input
                 id="leadSearch"
                 type="search"
-                placeholder="Search customer, phone, business, location..."
+                placeholder="Search customer, phone, email, business, location..."
                 oninput="onSearchInput()"
               >
 
@@ -660,12 +660,8 @@
                 All Status
               </option>
 
-              <option value="New">
-                New
-              </option>
-
               <option value="Belum Dihubungi">
-                Belum Dihubungi
+                Not Contacted
               </option>
 
               <option value="Flyer Sent">
@@ -673,7 +669,7 @@
               </option>
 
               <option value="Tertarik">
-                Tertarik
+                Interested
               </option>
 
               <option value="Follow Up">
@@ -685,7 +681,7 @@
               </option>
 
               <option value="Tidak Tertarik">
-                Tidak Tertarik
+                Not Interested
               </option>
 
             </select>
@@ -870,7 +866,7 @@
               </h3>
 
               <p>
-                Kelola akun dan status tim Sales FSI.
+                Manage FSI Sales accounts and team status.
               </p>
 
             </div>
@@ -1109,7 +1105,7 @@
             <select id="leadStatus">
 
               <option value="Belum Dihubungi">
-                Belum Dihubungi
+                Not Contacted
               </option>
 
               <option value="Flyer Sent">
@@ -1117,7 +1113,7 @@
               </option>
 
               <option value="Tertarik">
-                Tertarik
+                Interested
               </option>
 
               <option value="Follow Up">
@@ -1129,11 +1125,7 @@
               </option>
 
               <option value="Tidak Tertarik">
-                Tidak Tertarik
-              </option>
-
-              <option value="New">
-                New
+                Not Interested
               </option>
 
             </select>
@@ -1142,7 +1134,7 @@
 
 
 
-          <!-- SALES -->
+          <!-- SALES ASSIGNMENT -->
 
           <div class="form-group">
 
@@ -1153,7 +1145,7 @@
             <select id="leadSalesAssign">
 
               <option value="">
-                -- Pilih Sales --
+                Select Sales
               </option>
 
             </select>
@@ -1275,7 +1267,7 @@
             <textarea
               id="leadNotes"
               rows="4"
-              placeholder="Catatan customer..."
+              placeholder="Customer notes..."
             ></textarea>
 
           </div>
