@@ -1070,13 +1070,13 @@ textarea:focus {
 
 
 /* =========================================================
-   TABLE
+   TABLE — COMPACT & RESPONSIVE
 ========================================================= */
 
 .table-wrap {
   width: 100%;
 
-  overflow-x: auto;
+  overflow-x: hidden;
 
   -webkit-overflow-scrolling: touch;
 }
@@ -1084,15 +1084,20 @@ textarea:focus {
 .crm-table {
   width: 100%;
 
-  min-width: 1050px;
+  max-width: 100%;
+
+  min-width: 0;
+
+  table-layout: fixed;
 
   border-collapse: separate;
 
   border-spacing: 0;
 }
 
+/* Header lebih compact */
 .crm-table thead th {
-  padding: 13px 14px;
+  padding: 10px 8px;
 
   color: var(--slate-500);
 
@@ -1101,35 +1106,38 @@ textarea:focus {
   border-bottom:
     1px solid var(--slate-200);
 
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 800;
 
-  letter-spacing: 0.55px;
+  letter-spacing: 0.35px;
 
   text-align: left;
 
   text-transform: uppercase;
 
   white-space: nowrap;
+
+  overflow: hidden;
 }
 
-.crm-table thead th:first-child {
-  padding-left: 24px;
-}
-
+/* Body lebih compact */
 .crm-table tbody td {
-  padding: 14px;
+  padding: 9px 8px;
 
   color: var(--slate-600);
 
   border-bottom:
     1px solid var(--slate-100);
 
-  font-size: 12px;
+  font-size: 11px;
 
   vertical-align: middle;
 
   white-space: nowrap;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
 }
 
 .crm-table tbody tr {
@@ -1144,17 +1152,23 @@ textarea:focus {
   border-bottom: 0;
 }
 
+.crm-table thead th:first-child,
 .crm-table tbody td:first-child {
-  padding-left: 24px;
+  width: 32px;
+
+  padding-left: 8px;
+  padding-right: 4px;
+
+  text-align: center;
 }
 
 .check-col {
-  width: 45px;
+  width: 32px;
 }
 
 .crm-table input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
 
   accent-color: var(--primary);
 
@@ -1162,13 +1176,130 @@ textarea:focus {
 }
 
 .wa-link {
+  display: inline-block;
+
+  max-width: 100%;
+
+  overflow: hidden;
+
   color: var(--success);
 
   font-weight: 700;
+
+  text-overflow: ellipsis;
+
+  vertical-align: middle;
 }
 
 .wa-link:hover {
   text-decoration: underline;
+}
+
+/* Customer */
+.crm-table thead th:nth-child(2),
+.crm-table tbody td:nth-child(2) {
+  width: 14%;
+}
+
+/* Phone / WhatsApp */
+.crm-table thead th:nth-child(3),
+.crm-table tbody td:nth-child(3) {
+  width: 11%;
+}
+
+/* Email */
+.crm-table thead th:nth-child(4),
+.crm-table tbody td:nth-child(4) {
+  width: 12%;
+}
+
+/* Business */
+.crm-table thead th:nth-child(5),
+.crm-table tbody td:nth-child(5) {
+  width: 9%;
+}
+
+/* Location */
+.crm-table thead th:nth-child(6),
+.crm-table tbody td:nth-child(6) {
+  width: 10%;
+}
+
+/* Sales */
+.crm-table thead th:nth-child(7),
+.crm-table tbody td:nth-child(7) {
+  width: 9%;
+}
+
+/* Status */
+.crm-table thead th:nth-child(8),
+.crm-table tbody td:nth-child(8) {
+  width: 10%;
+}
+
+/* Follow Up */
+.crm-table thead th:nth-child(9),
+.crm-table tbody td:nth-child(9) {
+  width: 8%;
+}
+
+/* Next Step */
+.crm-table thead th:nth-child(10),
+.crm-table tbody td:nth-child(10) {
+  width: 8%;
+}
+
+/* Action */
+.crm-table thead th:nth-child(11),
+.crm-table tbody td:nth-child(11) {
+  width: 9%;
+
+  min-width: 82px;
+
+  text-align: center;
+
+  overflow: visible;
+
+  white-space: nowrap;
+}
+
+/* Action buttons */
+.crm-table td:last-child button {
+  width: 28px;
+  height: 28px;
+
+  min-width: 28px;
+
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  margin: 0 2px;
+
+  border-radius: 7px;
+}
+
+.crm-table td:last-child button svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Status badge dibuat lebih kecil */
+.crm-table .status-badge {
+  max-width: 100%;
+
+  min-height: 24px;
+
+  padding: 0 7px;
+
+  overflow: hidden;
+
+  font-size: 9px;
+
+  text-overflow: ellipsis;
 }
 
 
