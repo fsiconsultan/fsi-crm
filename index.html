@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
 
@@ -11,47 +10,33 @@
 
   <title>FSI CRM</title>
 
-  <link
-    rel="stylesheet"
-    href="style.css"
-  >
-
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="style.css">
 </head>
-
 
 <body>
 
   <!-- ==================================================
        LOGIN PAGE
-  =================================================== -->
+  ================================================== -->
 
-  <div
-    id="loginPage"
-    class="login-page"
-  >
+  <section id="loginPage" class="login-page">
 
     <div class="login-card">
 
       <div class="login-logo">
-
         <img
           src="logo-fsi.png"
-          alt="French Solar Industry"
+          alt="FSI"
         >
-
       </div>
-
 
       <h1>FSI CRM</h1>
 
       <p class="login-subtitle">
-        French Solar Industry
+        Sales Management System
       </p>
 
-
-      <div class="form-group">
+      <div class="login-form">
 
         <label for="loginUsername">
           Username
@@ -64,11 +49,6 @@
           autocomplete="username"
         >
 
-      </div>
-
-
-      <div class="form-group">
-
         <label for="loginPassword">
           Password
         </label>
@@ -80,329 +60,349 @@
           autocomplete="current-password"
         >
 
+        <button
+          class="primary-btn login-btn"
+          onclick="login()"
+        >
+          LOGIN
+        </button>
+
+        <div
+          id="loginMessage"
+          class="login-message"
+        ></div>
+
       </div>
-
-
-      <button
-        class="primary-btn login-btn"
-        onclick="login()"
-      >
-        LOGIN
-      </button>
-
-
-      <div
-        id="loginMessage"
-        class="login-message"
-      ></div>
 
     </div>
 
-  </div>
+  </section>
 
 
   <!-- ==================================================
        MAIN APP
-  =================================================== -->
+  ================================================== -->
 
-  <div
-    id="app"
-    class="app"
-    style="display:none;"
-  >
+  <div id="app" class="app">
 
     <!-- ==================================================
-         SIDEBAR
-    =================================================== -->
+         TOP NAVIGATION
+    ================================================== -->
 
-    <aside class="sidebar">
+    <header class="topbar">
 
-      <div class="brand">
+      <div class="topbar-left">
 
-        <div class="brand-logo">
+        <div class="brand">
 
           <img
             src="logo-fsi.png"
-            alt="FSI Logo"
+            alt="FSI"
+            class="brand-logo"
           >
 
         </div>
 
+        <nav class="main-nav">
 
-        <div class="brand-text">
-
-          <strong>
-            French Solar
-          </strong>
-
-          <span>
-            Industry
-          </span>
-
-        </div>
-
-      </div>
-
-
-      <div class="sidebar-divider"></div>
-
-
-      <nav class="sidebar-nav">
-
-        <button
-          class="nav-item"
-          onclick="showDashboard()"
-        >
-
-          <span class="nav-icon">
-            ▦
-          </span>
-
-          <span>
+          <button
+            class="nav-btn active"
+            onclick="showDashboard()"
+          >
             Dashboard
-          </span>
+          </button>
 
-        </button>
-
-
-        <button
-          class="nav-item"
-          onclick="showLeads()"
-        >
-
-          <span class="nav-icon">
-            ◉
-          </span>
-
-          <span>
+          <button
+            class="nav-btn"
+            onclick="showLeads()"
+          >
             My Leads
-          </span>
+          </button>
 
-        </button>
-
-
-        <button
-          id="manageSalesBtn"
-          class="nav-item"
-          onclick="showSales()"
-          style="display:none;"
-        >
-
-          <span class="nav-icon">
-            ◌
-          </span>
-
-          <span>
+          <button
+            id="manageSalesBtn"
+            class="nav-btn"
+            onclick="showSales()"
+            style="display:none;"
+          >
             Manage Sales
-          </span>
+          </button>
 
-        </button>
-
-      </nav>
-
-
-      <div class="sidebar-bottom">
-
-        <button
-          class="logout-btn"
-          onclick="logout()"
-        >
-
-          <span class="nav-icon">
-            ⇥
-          </span>
-
-          <span>
-            Logout
-          </span>
-
-        </button>
+        </nav>
 
       </div>
 
-    </aside>
 
+      <div class="topbar-right">
 
-    <!-- ==================================================
-         MAIN CONTENT
-    =================================================== -->
-
-    <main class="main-content">
-
-      <!-- TOPBAR -->
-
-      <header class="topbar">
-
-        <div class="topbar-left">
-
-          <h2 id="pageTitle">
-            Dashboard
-          </h2>
-
-        </div>
-
+        <button
+          class="notification-btn"
+          title="Notifications"
+          type="button"
+        >
+          🔔
+        </button>
 
         <div
           id="userInfo"
           class="user-info"
-        ></div>
+        >
+          <!-- Filled by script.js -->
+        </div>
 
-      </header>
+        <div class="user-menu-arrow">
+          ▾
+        </div>
+
+      </div>
+
+    </header>
 
 
-      <!-- ==================================================
-           DASHBOARD PAGE
-      =================================================== -->
+    <!-- ==================================================
+         CONTENT
+    ================================================== -->
 
-      <section
-        id="dashboardPage"
-        class="page-content"
-      >
+    <main class="main-content">
 
-        <div class="page-heading">
+      <!-- PAGE TITLE -->
 
-          <div>
+      <div class="page-heading">
 
-            <h1>
-              Dashboard
-            </h1>
+        <div>
 
-            <p>
-              Welcome back! Here's your sales overview.
-            </p>
+          <h1 id="pageTitle">
+            Dashboard
+          </h1>
 
-          </div>
+          <p>
+            Welcome back! Here's your sales overview.
+          </p>
 
         </div>
 
+        <div
+          id="currentUser"
+          class="current-user"
+        ></div>
 
-        <!-- STAT CARDS -->
+      </div>
+
+
+      <!-- ==================================================
+           DASHBOARD
+      ================================================== -->
+
+      <section
+        id="dashboardPage"
+        class="page"
+      >
 
         <div class="stats-grid">
 
+          <!-- TOTAL -->
+
           <div class="stat-card">
 
-            <div class="stat-label">
-              Total Leads
+            <div class="stat-icon">
+              👥
             </div>
 
-            <div
-              id="statTotal"
-              class="stat-number"
-            >
-              0
+            <div class="stat-info">
+
+              <span class="stat-label">
+                Total Leads
+              </span>
+
+              <strong
+                id="statTotal"
+                class="stat-number"
+              >
+                0
+              </strong>
+
             </div>
 
           </div>
 
 
+          <!-- NEW -->
+
           <div class="stat-card">
 
-            <div class="stat-label">
-              New Leads
+            <div class="stat-icon">
+              👤
             </div>
 
-            <div
-              id="statNew"
-              class="stat-number"
-            >
-              0
+            <div class="stat-info">
+
+              <span class="stat-label">
+                New Leads
+              </span>
+
+              <strong
+                id="statNew"
+                class="stat-number"
+              >
+                0
+              </strong>
+
             </div>
 
           </div>
 
 
+          <!-- INTERESTED -->
+
           <div class="stat-card">
 
-            <div class="stat-label">
-              Interested
+            <div class="stat-icon">
+              ♡
             </div>
 
-            <div
-              id="statInterested"
-              class="stat-number"
-            >
-              0
+            <div class="stat-info">
+
+              <span class="stat-label">
+                Interested
+              </span>
+
+              <strong
+                id="statInterested"
+                class="stat-number"
+              >
+                0
+              </strong>
+
             </div>
 
           </div>
 
 
+          <!-- FOLLOW UP -->
+
           <div class="stat-card">
 
-            <div class="stat-label">
-              Follow Up
+            <div class="stat-icon">
+              ↻
             </div>
 
-            <div
-              id="statFollowUp"
-              class="stat-number"
-            >
-              0
+            <div class="stat-info">
+
+              <span class="stat-label">
+                Follow Up
+              </span>
+
+              <strong
+                id="statFollowUp"
+                class="stat-number"
+              >
+                0
+              </strong>
+
             </div>
 
           </div>
 
 
+          <!-- APPOINTMENT -->
+
           <div class="stat-card">
 
-            <div class="stat-label">
-              Appointment
+            <div class="stat-icon">
+              📅
             </div>
 
-            <div
-              id="statAppointment"
-              class="stat-number"
-            >
-              0
+            <div class="stat-info">
+
+              <span class="stat-label">
+                Appointment
+              </span>
+
+              <strong
+                id="statAppointment"
+                class="stat-number"
+              >
+                0
+              </strong>
+
             </div>
 
           </div>
 
 
+          <!-- SITE SURVEY -->
+
           <div class="stat-card">
 
-            <div class="stat-label">
-              Site Survey
+            <div class="stat-icon">
+              📍
             </div>
 
-            <div
-              id="statSiteSurvey"
-              class="stat-number"
-            >
-              0
+            <div class="stat-info">
+
+              <span class="stat-label">
+                Site Survey
+              </span>
+
+              <strong
+                id="statSiteSurvey"
+                class="stat-number"
+              >
+                0
+              </strong>
+
             </div>
 
           </div>
 
 
+          <!-- QUOTATION -->
+
           <div class="stat-card">
 
-            <div class="stat-label">
-              Quotation
+            <div class="stat-icon">
+              📄
             </div>
 
-            <div
-              id="statQuotation"
-              class="stat-number"
-            >
-              0
+            <div class="stat-info">
+
+              <span class="stat-label">
+                Quotation
+              </span>
+
+              <strong
+                id="statQuotation"
+                class="stat-number"
+              >
+                0
+              </strong>
+
             </div>
 
           </div>
 
 
+          <!-- CLOSING -->
+
           <div class="stat-card">
 
-            <div class="stat-label">
-              Closing
+            <div class="stat-icon">
+              ✓
             </div>
 
-            <div
-              id="statClosing"
-              class="stat-number"
-            >
-              0
+            <div class="stat-info">
+
+              <span class="stat-label">
+                Closing
+              </span>
+
+              <strong
+                id="statClosing"
+                class="stat-number"
+              >
+                0
+              </strong>
+
             </div>
 
           </div>
@@ -414,116 +414,174 @@
 
       <!-- ==================================================
            LEADS PAGE
-      =================================================== -->
+      ================================================== -->
 
       <section
         id="leadsPage"
-        class="page-content"
+        class="page"
         style="display:none;"
       >
 
-        <div class="page-heading">
+        <div class="section-header">
 
           <div>
 
-            <h1>
-              My Leads
-            </h1>
+            <h2>
+              Leads
+            </h2>
 
             <p>
-              Manage and monitor your customer leads.
+              Manage and follow up your customers.
             </p>
 
           </div>
-
 
           <button
             class="primary-btn"
             onclick="openLeadModal()"
           >
-            + ADD LEAD
+            + Add Lead
           </button>
 
         </div>
 
 
-        <!-- FILTERS -->
+        <!-- FILTER BAR -->
 
-        <div class="filter-card">
+        <div class="filter-bar">
 
-          <div class="filter-group search-group">
+          <select
+            id="statusFilter"
+            onchange="filterLeads()"
+          >
 
-            <label>
-              Search
-            </label>
+            <option value="">
+              All Status
+            </option>
+
+            <option value="New">
+              New
+            </option>
+
+            <option value="Interested">
+              Interested
+            </option>
+
+            <option value="Follow-up">
+              Follow-up
+            </option>
+
+            <option value="Appointment">
+              Appointment
+            </option>
+
+            <option value="Site Survey">
+              Site Survey
+            </option>
+
+            <option value="Quotation">
+              Quotation
+            </option>
+
+            <option value="Closing">
+              Closing
+            </option>
+
+          </select>
+
+
+          <select id="businessFilter">
+
+            <option value="">
+              Business
+            </option>
+
+            <option value="Hotel">
+              Hotel
+            </option>
+
+            <option value="Villa">
+              Villa
+            </option>
+
+            <option value="Restaurant">
+              Restaurant
+            </option>
+
+            <option value="Office">
+              Office
+            </option>
+
+            <option value="Factory">
+              Factory
+            </option>
+
+          </select>
+
+
+          <select id="locationFilter">
+
+            <option value="">
+              Location
+            </option>
+
+            <option value="Bali">
+              Bali
+            </option>
+
+            <option value="Denpasar">
+              Denpasar
+            </option>
+
+            <option value="Canggu">
+              Canggu
+            </option>
+
+            <option value="Seminyak">
+              Seminyak
+            </option>
+
+            <option value="Ubud">
+              Ubud
+            </option>
+
+          </select>
+
+
+          <select id="salesFilter">
+
+            <option value="">
+              Sales
+            </option>
+
+          </select>
+
+
+          <div class="search-box">
+
+            <span>
+              🔍
+            </span>
 
             <input
               type="text"
               id="leadSearch"
-              placeholder="Customer, phone, business..."
+              placeholder="Search customer..."
               oninput="filterLeads()"
             >
-
-          </div>
-
-
-          <div class="filter-group">
-
-            <label>
-              Status
-            </label>
-
-            <select
-              id="statusFilter"
-              onchange="filterLeads()"
-            >
-
-              <option value="">
-                All Status
-              </option>
-
-              <option value="New">
-                New
-              </option>
-
-              <option value="Interested">
-                Interested
-              </option>
-
-              <option value="Follow-up">
-                Follow-up
-              </option>
-
-              <option value="Appointment">
-                Appointment
-              </option>
-
-              <option value="Site Survey">
-                Site Survey
-              </option>
-
-              <option value="Quotation">
-                Quotation
-              </option>
-
-              <option value="Closing">
-                Closing
-              </option>
-
-            </select>
 
           </div>
 
         </div>
 
 
-        <!-- LEADS TABLE -->
+        <!-- TABLE -->
 
         <div class="table-card">
 
           <div class="table-wrapper">
 
-            <table>
+            <table class="crm-table">
 
               <thead>
 
@@ -581,7 +639,6 @@
 
               </thead>
 
-
               <tbody id="leadsTable">
 
               </tbody>
@@ -596,22 +653,22 @@
 
 
       <!-- ==================================================
-           MANAGE SALES PAGE
-      =================================================== -->
+           MANAGE SALES
+      ================================================== -->
 
       <section
         id="salesPage"
-        class="page-content"
+        class="page"
         style="display:none;"
       >
 
-        <div class="page-heading">
+        <div class="section-header">
 
           <div>
 
-            <h1>
+            <h2>
               Manage Sales
-            </h1>
+            </h2>
 
             <p>
               Manage FSI sales team accounts.
@@ -619,35 +676,28 @@
 
           </div>
 
-
           <button
             class="primary-btn"
             onclick="openSalesModal()"
           >
-            + CREATE SALES
+            + Add Sales
           </button>
 
         </div>
 
 
-        <!-- SALES TABLE -->
-
         <div class="table-card">
 
           <div class="table-wrapper">
 
-            <table>
+            <table class="crm-table sales-table">
 
               <thead>
 
                 <tr>
 
                   <th>
-                    Photo
-                  </th>
-
-                  <th>
-                    Name
+                    Sales
                   </th>
 
                   <th>
@@ -663,13 +713,16 @@
                   </th>
 
                   <th>
+                    Photo
+                  </th>
+
+                  <th>
                     Action
                   </th>
 
                 </tr>
 
               </thead>
-
 
               <tbody id="salesTable">
 
@@ -689,15 +742,15 @@
 
 
   <!-- ==================================================
-       LEAD MODAL
-  =================================================== -->
+       ADD / EDIT LEAD MODAL
+  ================================================== -->
 
   <div
     id="leadModal"
     class="modal"
   >
 
-    <div class="modal-card">
+    <div class="modal-card large-modal">
 
       <div class="modal-header">
 
@@ -708,11 +761,10 @@
           </h2>
 
           <p>
-            Customer lead information
+            Add customer information
           </p>
 
         </div>
-
 
         <button
           class="modal-close"
@@ -737,7 +789,7 @@
           <div class="form-group">
 
             <label>
-              Customer Name
+              Customer
             </label>
 
             <input
@@ -758,7 +810,7 @@
             <input
               type="text"
               id="leadPhone"
-              placeholder="08xxxxxxxxxx"
+              placeholder="+62..."
             >
 
           </div>
@@ -773,7 +825,7 @@
             <input
               type="text"
               id="leadBusiness"
-              placeholder="Business / Company"
+              placeholder="Hotel / Villa / Restaurant..."
             >
 
           </div>
@@ -928,7 +980,7 @@
             <textarea
               id="leadNotes"
               rows="4"
-              placeholder="Additional notes..."
+              placeholder="Notes..."
             ></textarea>
 
           </div>
@@ -944,9 +996,8 @@
           class="secondary-btn"
           onclick="closeLeadModal()"
         >
-          CANCEL
+          Cancel
         </button>
-
 
         <button
           class="primary-btn"
@@ -963,22 +1014,22 @@
 
 
   <!-- ==================================================
-       SALES MODAL
-  =================================================== -->
+       CREATE SALES MODAL
+  ================================================== -->
 
   <div
     id="salesModal"
     class="modal"
   >
 
-    <div class="modal-card sales-modal-card">
+    <div class="modal-card">
 
       <div class="modal-header">
 
         <div>
 
           <h2>
-            Create Sales
+            Add Sales
           </h2>
 
           <p>
@@ -986,7 +1037,6 @@
           </p>
 
         </div>
-
 
         <button
           class="modal-close"
@@ -1003,7 +1053,7 @@
         <div class="form-group">
 
           <label>
-            Full Name
+            Name
           </label>
 
           <input
@@ -1053,9 +1103,8 @@
           class="secondary-btn"
           onclick="closeSalesModal()"
         >
-          CANCEL
+          Cancel
         </button>
-
 
         <button
           class="primary-btn"
@@ -1073,10 +1122,11 @@
 
   <!-- ==================================================
        SCRIPT
-  =================================================== -->
+  ================================================== -->
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script src="script.js"></script>
 
 </body>
-
 </html>
