@@ -1,776 +1,160 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FSI CRM - Sales Management System</title>
-​<style>
-/* ==========================================================================
-RESET & ROOT VARIABLES
-========================================================================== */
-:root {
---primary: #2563eb;
---primary-hover: #1d4ed8;
---primary-light: #eff6ff;
---primary-border: #bfdbfe;
-​--bg-app: #f8fafc;
---surface: #ffffff;
---surface-subtle: #f1f5f9;
-​--border: #e2e8f0;
---border-strong: #cbd5e1;
-​--text-main: #0f172a;
---text-body: #334155;
---text-muted: #64748b;
-​--danger: #dc2626;
---danger-bg: #fef2f2;
---danger-border: #fecaca;
-​--radius-sm: 6px;
---radius-md: 10px;
---radius-lg: 16px;
-​--shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px 0 rgba(0, 0, 0, 0.04);
---shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
---shadow-modal: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
-}
-​* {
-box-sizing: border-box;
-margin: 0;
-padding: 0;
-}
-​html, body {
-width: 100%;
-min-height: 100vh;
-background-color: var(--bg-app);
-color: var(--text-main);
-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-font-size: 14px;
-line-height: 1.5;
--webkit-font-smoothing: antialiased;
-}
-​button, input, select, textarea {
-font-family: inherit;
-font-size: inherit;
-color: inherit;
-}
-​button {
-cursor: pointer;
-border: none;
-background: none;
-}
-​/* ==========================================================================
-LOGIN PAGE
-========================================================================== */
-.login-page {
-min-height: 100vh;
-width: 100%;
-display: flex;
-align-items: center;
-justify-content: center;
-padding: 24px;
-background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-}
-​.login-card {
-width: 100%;
-max-width: 400px;
-background: var(--surface);
-border: 1px solid var(--border);
-border-radius: var(--radius-lg);
-padding: 36px 32px;
-box-shadow: var(--shadow-modal);
-text-align: center;
-}
-​.login-logo {
-display: flex;
-justify-content: center;
-align-items: center;
-margin-bottom: 20px;
-}
-​.login-logo img {
-max-height: 52px;
-width: auto;
-object-fit: contain;
-}
-​.login-card h1 {
-font-size: 22px;
-font-weight: 700;
-color: var(--text-main);
-}
-​.login-subtitle {
-color: var(--text-muted);
-font-size: 13px;
-margin-top: 4px;
-margin-bottom: 24px;
-}
-​.login-btn {
-width: 100%;
-height: 42px;
-background: var(--primary);
-color: #ffffff;
-font-weight: 600;
-border-radius: var(--radius-sm);
-transition: background 0.15s ease;
-margin-top: 8px;
-}
-​.login-btn:hover {
-background: var(--primary-hover);
-}
-​.login-message {
-margin-top: 14px;
-font-size: 13px;
-color: var(--danger);
-min-height: 20px;
-}
-​/* ==========================================================================
-APP LAYOUT & TOPBAR
-========================================================================== */
-.app {
-min-height: 100vh;
-display: flex;
-flex-direction: column;
-}
-​.topbar {
-height: 64px;
-background: var(--surface);
-border-bottom: 1px solid var(--border);
-display: flex;
-align-items: center;
-justify-content: space-between;
-padding: 0 28px;
-position: sticky;
-top: 0;
-z-index: 100;
-box-shadow: var(--shadow-sm);
-}
-​.topbar-left {
-display: flex;
-align-items: center;
-gap: 28px;
-}
-​.brand {
-display: flex;
-align-items: center;
-}
-​.brand-logo {
-height: 38px;
-width: auto;
-object-fit: contain;
-}
-​/* Navigation Tabs */
-.main-nav {
-display: flex;
-align-items: center;
-gap: 6px;
-background: var(--surface-subtle);
-padding: 4px;
-border-radius: var(--radius-md);
-border: 1px solid var(--border);
-}
-​.nav-btn {
-padding: 6px 16px;
-border-radius: var(--radius-sm);
-color: var(--text-muted);
-font-weight: 600;
-font-size: 13px;
-transition: all 0.15s ease;
-white-space: nowrap;
-}
-​.nav-btn:hover {
-color: var(--text-main);
-background: rgba(255, 255, 255, 0.7);
-}
-​.nav-btn.active {
-background: var(--surface);
-color: var(--primary);
-box-shadow: var(--shadow-sm);
-}
-​/* Topbar Right Profile */
-.topbar-right {
-display: flex;
-align-items: center;
-gap: 16px;
-}
-​.notification-btn {
-width: 36px;
-height: 36px;
-border-radius: 50%;
-background: var(--surface-subtle);
-border: 1px solid var(--border);
-display: flex;
-align-items: center;
-justify-content: center;
-font-size: 15px;
-color: var(--text-muted);
-transition: all 0.15s ease;
-}
-​.notification-btn:hover {
-background: var(--border);
-color: var(--text-main);
-}
-​.user-info {
-display: flex;
-align-items: center;
-gap: 10px;
-font-weight: 600;
-font-size: 13px;
-color: var(--text-main);
-}
-​.user-info img,
-.user-avatar {
-width: 34px;
-height: 34px;
-border-radius: 50%;
-object-fit: cover;
-border: 1px solid var(--border-strong);
-}
-​.logout-btn {
-padding: 6px 14px;
-border: 1px solid var(--border);
-border-radius: var(--radius-sm);
-background: var(--surface);
-color: var(--text-muted);
-font-weight: 600;
-font-size: 12px;
-transition: all 0.15s ease;
-}
-​.logout-btn:hover {
-background: var(--danger-bg);
-color: var(--danger);
-border-color: var(--danger-border);
-}
-​/* ==========================================================================
-MAIN CONTENT & PAGE HEADERS
-========================================================================== */
-.main-content {
-flex: 1;
-max-width: 1440px;
-width: 100%;
-margin: 0 auto;
-padding: 28px 32px;
-}
-​.page-header {
-display: flex;
-align-items: center;
-justify-content: space-between;
-margin-bottom: 24px;
-}
-​.page-header h1 {
-font-size: 22px;
-font-weight: 700;
-color: var(--text-main);
-letter-spacing: -0.01em;
-}
-​.page-header p {
-font-size: 13px;
-color: var(--text-muted);
-margin-top: 2px;
-}
-​.primary-btn {
-background: var(--primary);
-color: #ffffff;
-padding: 9px 16px;
-border-radius: var(--radius-sm);
-font-weight: 600;
-font-size: 13px;
-box-shadow: var(--shadow-sm);
-transition: background 0.15s ease;
-display: inline-flex;
-align-items: center;
-gap: 6px;
-}
-​.primary-btn:hover {
-background: var(--primary-hover);
-}
-​.secondary-btn {
-background: var(--surface);
-color: var(--text-body);
-border: 1px solid var(--border-strong);
-padding: 8px 14px;
-border-radius: var(--radius-sm);
-font-weight: 600;
-font-size: 13px;
-transition: background 0.15s ease;
-}
-​.secondary-btn:hover {
-background: var(--surface-subtle);
-}
-​/* ==========================================================================
-DASHBOARD STATS GRID (4 Columns x 2 Rows)
-========================================================================== */
-.stats-grid {
-display: grid;
-grid-template-columns: repeat(4, 1fr);
-gap: 16px;
-margin-bottom: 28px;
-}
-​.stat-card {
-background: var(--surface);
-border: 1px solid var(--border);
-border-radius: var(--radius-md);
-padding: 18px 20px;
-display: flex;
-align-items: center;
-gap: 16px;
-box-shadow: var(--shadow-sm);
-transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-​.stat-card:hover {
-transform: translateY(-2px);
-box-shadow: var(--shadow-md);
-}
-​.stat-icon {
-width: 44px;
-height: 44px;
-border-radius: var(--radius-md);
-background: var(--primary-light);
-color: var(--primary);
-display: flex;
-align-items: center;
-justify-content: center;
-font-size: 20px;
-flex-shrink: 0;
-}
-​.stat-content {
-display: flex;
-flex-direction: column;
-}
-​.stat-label {
-font-size: 11px;
-font-weight: 700;
-color: var(--text-muted);
-text-transform: uppercase;
-letter-spacing: 0.04em;
-}
-​.stat-value {
-font-size: 22px;
-font-weight: 800;
-color: var(--text-main);
-margin-top: 2px;
-line-height: 1.2;
-}
-​.dashboard-table-card {
-background: var(--surface);
-border: 1px solid var(--border);
-border-radius: var(--radius-md);
-box-shadow: var(--shadow-sm);
-overflow: hidden;
-}
-​/* ==========================================================================
-FILTER BAR & SEARCH BOX
-========================================================================== */
-.filter-card {
-background: var(--surface);
-border: 1px solid var(--border);
-border-radius: var(--radius-md);
-padding: 14px 18px;
-display: flex;
-align-items: flex-end;
-gap: 12px;
-margin-bottom: 20px;
-box-shadow: var(--shadow-sm);
-flex-wrap: wrap;
-}
-​.filter-group {
-display: flex;
-flex-direction: column;
-gap: 4px;
-flex: 1;
-min-width: 130px;
-}
-​.filter-group label,
-.form-group label {
-font-size: 11px;
-font-weight: 700;
-color: var(--text-muted);
-text-transform: uppercase;
-letter-spacing: 0.03em;
-}
-​.filter-group select,
-.form-group input,
-.form-group select,
-.form-group textarea {
-width: 100%;
-padding: 8px 12px;
-border: 1px solid var(--border-strong);
-border-radius: var(--radius-sm);
-background: var(--surface);
-color: var(--text-main);
-outline: none;
-transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-​.filter-group select:focus,
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
-border-color: var(--primary);
-box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-}
-​.search-box {
-display: flex;
-align-items: center;
-background: var(--surface);
-border: 1px solid var(--border-strong);
-border-radius: var(--radius-sm);
-padding: 0 10px;
-flex: 1.5;
-min-width: 220px;
-height: 36px;
-}
-​.search-box span {
-font-size: 13px;
-margin-right: 8px;
-color: var(--text-muted);
-}
-​.search-box input {
-border: none;
-outline: none;
-width: 100%;
-font-size: 13px;
-background: transparent;
-}
-​/* ==========================================================================
-TABLE DESIGN
-========================================================================== */
-.table-card {
-background: var(--surface);
-border: 1px solid var(--border);
-border-radius: var(--radius-md);
-box-shadow: var(--shadow-sm);
-overflow: hidden;
-}
-​.table-wrapper {
-width: 100%;
-overflow-x: auto;
-}
-​table {
-width: 100%;
-border-collapse: collapse;
-text-align: left;
-}
-​thead {
-background: var(--bg-app);
-border-bottom: 1px solid var(--border);
-}
-​th {
-padding: 12px 14px;
-font-size: 11px;
-font-weight: 700;
-color: var(--text-muted);
-text-transform: uppercase;
-letter-spacing: 0.05em;
-white-space: nowrap;
-}
-​td {
-padding: 12px 14px;
-font-size: 13px;
-color: var(--text-body);
-border-bottom: 1px solid var(--surface-subtle);
-white-space: nowrap;
-}
-​tbody tr:hover {
-background-color: var(--bg-app);
-}
-​td.empty-table {
-text-align: center;
-color: var(--text-muted);
-padding: 32px;
-}
-​/* ==========================================================================
-MODALS
-========================================================================== */
-.modal {
-position: fixed;
-inset: 0;
-z-index: 1000;
-display: flex;
-align-items: center;
-justify-content: center;
-padding: 20px;
-}
-​.modal-overlay {
-position: absolute;
-inset: 0;
-background: rgba(15, 23, 42, 0.5);
-backdrop-filter: blur(2px);
-}
-​.modal-content {
-position: relative;
-z-index: 10;
-background: var(--surface);
-border-radius: var(--radius-lg);
-width: 100%;
-max-width: 680px;
-max-height: 90vh;
-overflow-y: auto;
-box-shadow: var(--shadow-modal);
-}
-​.small-modal {
-max-width: 420px;
-}
-​.modal-header {
-padding: 18px 24px;
-border-bottom: 1px solid var(--border);
-display: flex;
-align-items: center;
-justify-content: space-between;
-}
-​.modal-header h2 {
-font-size: 17px;
-font-weight: 700;
-}
-​.modal-header p {
-font-size: 12px;
-color: var(--text-muted);
-}
-​.modal-close {
-background: transparent;
-border: none;
-font-size: 22px;
-color: var(--text-muted);
-width: 32px;
-height: 32px;
-border-radius: 50%;
-display: flex;
-align-items: center;
-justify-content: center;
-transition: background 0.15s ease;
-}
-​.modal-close:hover {
-background: var(--surface-subtle);
-color: var(--text-main);
-}
-​.modal-body {
-padding: 24px;
-}
-​.modal-footer {
-padding: 16px 24px;
-border-top: 1px solid var(--border);
-display: flex;
-justify-content: flex-end;
-gap: 10px;
-background: var(--bg-app);
-}
-​.form-grid {
-display: grid;
-grid-template-columns: repeat(2, 1fr);
-gap: 14px;
-}
-​.form-group {
-display: flex;
-flex-direction: column;
-gap: 6px;
-}
-​.full-width {
-grid-column: 1 / -1;
-}
-​/* Responsive Breakdown */
-@media (max-width: 1024px) {
-.stats-grid { grid-template-columns: repeat(2, 1fr); }
-}
-@media (max-width: 640px) {
-.topbar { padding: 0 16px; }
-.main-content { padding: 16px; }
-.stats-grid { grid-template-columns: 1fr; }
-.form-grid { grid-template-columns: 1fr; }
-}
-</style>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FSI CRM</title>
+
+<link rel="stylesheet" href="style.css">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script defer src="script.js"></script>
 </head>
-​<body>
-​<!-- =========================================================
-LOGIN PAGE
-========================================================== -->
+
+<body>
+
+<!-- LOGIN -->
 <div id="loginPage" class="login-page">
-<div class="login-card">
-<div class="login-logo">
-<img src="logo-fsi.png" alt="FSI CRM">
+
+  <div class="login-card">
+
+    <h2>FSI CRM</h2>
+
+    <input id="loginUsername" placeholder="Username">
+    <input id="loginPassword" type="password" placeholder="Password">
+
+    <button onclick="login()">Login</button>
+
+    <p id="loginMessage"></p>
+
+  </div>
+
 </div>
-<h1>FSI CRM</h1>
-<p class="login-subtitle">Sales Management System</p>
-​<div class="form-group" style="text-align: left; margin-bottom: 14px;">
-<label for="loginUsername">Username</label>
-<input type="text" id="loginUsername" placeholder="Enter username" autocomplete="username">
+
+<!-- APP -->
+<div id="app" class="app">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+
+<div class="logo">
+  <span>☀️</span>
+  <strong>FSI</strong>
 </div>
-​<div class="form-group" style="text-align: left; margin-bottom: 14px;">
-<label for="loginPassword">Password</label>
-<input type="password" id="loginPassword" placeholder="Enter password" autocomplete="current-password">
-</div>
-​<button type="button" class="login-btn" onclick="login()">Login</button>
-<div id="loginMessage" class="login-message"></div>
-</div>
-</div>
-​<!-- =========================================================
-MAIN APPLICATION
-========================================================== -->
-<div id="app" class="app" style="display:none;">
-​<!-- TOP NAVIGATION NAVBAR -->
+
+<button onclick="showDashboard()">Dashboard</button>
+
+<button onclick="showLeads()">My Leads</button>
+
+<button id="manageSalesBtn" onclick="showSales()">Manage Sales</button>
+
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+<!-- TOPBAR -->
 <header class="topbar">
-<div class="topbar-left">
-<div class="brand">
-<img src="logo-fsi.png" alt="FSI Logo" class="brand-logo">
+
+<div>
+<h2 id="pageTitle">Dashboard</h2>
+<p>Welcome back!</p>
 </div>
-​<nav class="main-nav">
-<button type="button" class="nav-btn active" onclick="showDashboard()">Dashboard</button>
-<button type="button" class="nav-btn" onclick="showLeads()">My Leads</button>
-<button type="button" id="manageSalesBtn" class="nav-btn" onclick="showSales()" style="display:none;">Manage Sales</button>
-</nav>
-</div>
-​<div class="topbar-right">
-<button type="button" class="notification-btn" title="Notifications">🔔</button>
-​<!-- Dynamic User Info Filled by script.js -->
+
 <div id="userInfo" class="user-info"></div>
-​<button type="button" class="logout-btn" onclick="logout()">Logout</button>
-</div>
+
 </header>
-​<!-- MAIN CONTENT CONTAINER -->
-<main class="main-content">
-​<!-- =====================================================
-1. DASHBOARD SECTION
-====================================================== -->
-<section id="dashboardPage" class="page-section">
-<div class="page-header">
-<div>
-<h1 id="pageTitle">Dashboard</h1>
-<p>Welcome back! Here's your sales overview.</p>
-</div>
-</div>
-​<!-- 8 STATISTICAL CARDS IN GRID (4 Columns x 2 Rows) -->
+
+<!-- DASHBOARD -->
+<section id="dashboardPage">
+
 <div class="stats-grid">
-<!-- Total Leads -->
+
 <div class="stat-card">
-<div class="stat-icon">👥</div>
-<div class="stat-content">
-<div class="stat-label">Total Leads</div>
-<div id="statTotal" class="stat-value">0</div>
+<div class="icon">👥</div>
+<h3 id="statTotal">0</h3>
+<p>Total Leads</p>
 </div>
-</div>
-​<!-- New Leads -->
+
 <div class="stat-card">
-<div class="stat-icon">👤</div>
-<div class="stat-content">
-<div class="stat-label">New Leads</div>
-<div id="statNew" class="stat-value">0</div>
+<div class="icon">👤</div>
+<h3 id="statNew">0</h3>
+<p>New Leads</p>
 </div>
-</div>
-​<!-- Interested -->
+
 <div class="stat-card">
-<div class="stat-icon">♡</div>
-<div class="stat-content">
-<div class="stat-label">Interested</div>
-<div id="statInterested" class="stat-value">0</div>
+<div class="icon">❤️</div>
+<h3 id="statInterested">0</h3>
+<p>Interested</p>
 </div>
-</div>
-​<!-- Follow Up -->
+
 <div class="stat-card">
-<div class="stat-icon">↻</div>
-<div class="stat-content">
-<div class="stat-label">Follow Up</div>
-<div id="statFollowUp" class="stat-value">0</div>
+<div class="icon">🔄</div>
+<h3 id="statFollowUp">0</h3>
+<p>Follow Up</p>
 </div>
-</div>
-​<!-- Appointment -->
+
 <div class="stat-card">
-<div class="stat-icon">📅</div>
-<div class="stat-content">
-<div class="stat-label">Appointment</div>
-<div id="statAppointment" class="stat-value">0</div>
+<div class="icon">📅</div>
+<h3 id="statAppointment">0</h3>
+<p>Appointment</p>
 </div>
-</div>
-​<!-- Site Survey -->
+
 <div class="stat-card">
-<div class="stat-icon">📍</div>
-<div class="stat-content">
-<div class="stat-label">Site Survey</div>
-<div id="statSiteSurvey" class="stat-value">0</div>
+<div class="icon">📍</div>
+<h3 id="statSiteSurvey">0</h3>
+<p>Site Survey</p>
 </div>
-</div>
-​<!-- Quotation -->
+
 <div class="stat-card">
-<div class="stat-icon">📄</div>
-<div class="stat-content">
-<div class="stat-label">Quotation</div>
-<div id="statQuotation" class="stat-value">0</div>
+<div class="icon">📄</div>
+<h3 id="statQuotation">0</h3>
+<p>Quotation</p>
 </div>
-</div>
-​<!-- Closing / SPK -->
+
 <div class="stat-card">
-<div class="stat-icon">✓</div>
-<div class="stat-content">
-<div class="stat-label">Closing / SPK</div>
-<div id="statClosing" class="stat-value">0</div>
+<div class="icon">📝</div>
+<h3 id="statClosing">0</h3>
+<p>Closing</p>
 </div>
+
 </div>
-</div>
-​<!-- RECENT ACTIVITY FOOTER -->
-<div class="dashboard-table-card">
-<div class="modal-header">
-<div>
-<h2>Recent Leads</h2>
-<p>Latest customer activity and assignments</p>
-</div>
-<button type="button" class="secondary-btn" onclick="showLeads()">View All Leads</button>
-</div>
-</div>
+
 </section>
-​<!-- =====================================================
-2. MY LEADS SECTION
-====================================================== -->
-<section id="leadsPage" class="page-section" style="display:none;">
-<div class="page-header">
-<div>
-<h1>My Leads</h1>
-<p>Manage and follow up your customer leads.</p>
-</div>
-<button type="button" class="primary-btn" onclick="openLeadModal()">+ Add Lead</button>
-</div>
-​<!-- FILTER BAR -->
-<div class="filter-card">
-<div class="filter-group">
-<label>Status</label>
-<select id="statusFilter">
+
+<!-- LEADS -->
+<section id="leadsPage" style="display:none;">
+
+<div class="toolbar">
+
+<select id="statusFilter" onchange="filterLeads()">
 <option value="">All Status</option>
-<option value="New">New</option>
-<option value="Interested">Interested</option>
-<option value="Follow-up">Follow-up</option>
-<option value="Appointment">Appointment</option>
-<option value="Site Survey">Site Survey</option>
-<option value="Quotation">Quotation</option>
-<option value="Closing">Closing</option>
+<option>New</option>
+<option>Interested</option>
+<option>Follow-up</option>
+<option>Appointment</option>
+<option>Site Survey</option>
+<option>Quotation</option>
+<option>Closing</option>
 </select>
+
+<input
+id="leadSearch"
+placeholder="Search..."
+oninput="filterLeads()">
+
+<button class="add-btn" onclick="openLeadModal()">+</button>
+
 </div>
-​<div class="filter-group">
-<label>Business</label>
-<select id="businessFilter">
-<option value="">All Business</option>
-<option value="Residential">Residential</option>
-<option value="Villa">Villa</option>
-<option value="Hotel">Hotel</option>
-<option value="Restaurant">Restaurant</option>
-<option value="Office">Office</option>
-<option value="Factory">Factory</option>
-<option value="Warehouse">Warehouse</option>
-</select>
-</div>
-​<div class="filter-group">
-<label>Location</label>
-<select id="locationFilter">
-<option value="">All Location</option>
-</select>
-</div>
-​<div class="filter-group">
-<label>Sales</label>
-<select id="salesFilter">
-<option value="">All Sales</option>
-</select>
-</div>
-​<div class="search-box">
-<span>🔍</span>
-<input type="text" id="leadSearch" placeholder="Search customer, phone...">
-</div>
-</div>
-​<!-- LEADS TABLE -->
+
 <div class="table-card">
-<div class="table-wrapper">
+
 <table>
+
 <thead>
+
 <tr>
+
 <th>Customer</th>
 <th>Phone</th>
 <th>Business</th>
@@ -783,169 +167,131 @@ MAIN APPLICATION
 <th>Quotation</th>
 <th>Closing</th>
 <th>Action</th>
+
 </tr>
+
 </thead>
-<tbody id="leadsTable">
-<tr>
-<td colspan="12" class="empty-table">Loading leads...</td>
-</tr>
-</tbody>
+
+<tbody id="leadsTable"></tbody>
+
 </table>
+
 </div>
-</div>
+
 </section>
-​<!-- =====================================================
-3. MANAGE SALES SECTION
-====================================================== -->
-<section id="salesPage" class="page-section" style="display:none;">
-<div class="page-header">
-<div>
-<h1>Manage Sales</h1>
-<p>Manage FSI sales team accounts.</p>
+
+<!-- SALES -->
+<section id="salesPage" style="display:none;">
+
+<div class="toolbar">
+
+<button onclick="openSalesModal()">+ Sales</button>
+
 </div>
-<button type="button" class="primary-btn" onclick="openSalesModal()">+ Add Sales</button>
-</div>
-​<div class="table-card">
-<div class="table-wrapper">
+
+<div class="table-card">
+
 <table>
+
 <thead>
+
 <tr>
+
 <th>Name</th>
 <th>Username</th>
 <th>Role</th>
 <th>Status</th>
-<th>Photo</th>
+<th>Last Login</th>
 <th>Action</th>
+
 </tr>
+
 </thead>
-<tbody id="salesTable">
-<tr>
-<td colspan="6" class="empty-table">Loading sales...</td>
-</tr>
-</tbody>
+
+<tbody id="salesTable"></tbody>
+
 </table>
+
 </div>
-</div>
+
 </section>
-​</main>
+
+</main>
+
 </div>
-​<!-- =========================================================
-LEAD MODAL
-========================================================== -->
-<div id="leadModal" class="modal" style="display:none;">
-<div class="modal-overlay" onclick="closeLeadModal()"></div>
+
+<!-- LEAD MODAL -->
+<div id="leadModal" class="modal">
+
 <div class="modal-content">
-<div class="modal-header">
-<div>
-<h2 id="leadModalTitle">Add Lead</h2>
-<p>Enter customer information below.</p>
-</div>
-<button type="button" class="modal-close" onclick="closeLeadModal()">×</button>
-</div>
-​<div class="modal-body">
-<input type="hidden" id="leadId">
-​<div class="form-grid">
-<div class="form-group">
-<label for="leadCustomer">Customer *</label>
-<input type="text" id="leadCustomer" placeholder="Customer name">
-</div>
-​<div class="form-group">
-<label for="leadPhone">Phone *</label>
-<input type="text" id="leadPhone" placeholder="08xxxxxxxxxx">
-</div>
-​<div class="form-group">
-<label for="leadBusiness">Business</label>
-<input type="text" id="leadBusiness" placeholder="Hotel / Villa / Office...">
-</div>
-​<div class="form-group">
-<label for="leadLocation">Location</label>
-<input type="text" id="leadLocation" placeholder="Location">
-</div>
-​<div class="form-group">
-<label for="leadStatus">Status</label>
+
+<h3 id="leadModalTitle">Add Lead</h3>
+
+<input id="leadId" type="hidden">
+
+<input id="leadCustomer" placeholder="Customer">
+
+<input id="leadPhone" placeholder="Phone">
+
+<input id="leadBusiness" placeholder="Business">
+
+<input id="leadLocation" placeholder="Location">
+
 <select id="leadStatus">
-<option value="New">New</option>
-<option value="Interested">Interested</option>
-<option value="Follow-up">Follow-up</option>
-<option value="Appointment">Appointment</option>
-<option value="Site Survey">Site Survey</option>
-<option value="Quotation">Quotation</option>
-<option value="Closing">Closing</option>
+<option>New</option>
+<option>Interested</option>
+<option>Follow-up</option>
+<option>Appointment</option>
+<option>Site Survey</option>
+<option>Quotation</option>
+<option>Closing</option>
 </select>
+
+<input id="leadFollowUp" type="date">
+<input id="leadAppointment" type="date">
+<input id="leadSiteSurvey" type="date">
+<input id="leadQuotation" type="date">
+<input id="leadSPK" type="date">
+<input id="leadClosing" type="date">
+
+<textarea id="leadNotes" placeholder="Notes"></textarea>
+
+<div class="modal-actions">
+
+<button onclick="closeLeadModal()">Cancel</button>
+
+<button onclick="saveLead()">Save</button>
+
 </div>
-​<div class="form-group">
-<label for="leadSales">Sales</label>
-<select id="leadSales">
-<option value="">Select Sales</option>
-</select>
+
 </div>
-​<div class="form-group">
-<label for="leadFollowUp">Follow Up</label>
-<input type="date" id="leadFollowUp">
+
 </div>
-​<div class="form-group">
-<label for="leadAppointment">Appointment</label>
-<input type="date" id="leadAppointment">
+
+<!-- SALES MODAL -->
+<div id="salesModal" class="modal">
+
+<div class="modal-content">
+
+<h3>Create Sales</h3>
+
+<input id="salesName" placeholder="Name">
+
+<input id="salesUsername" placeholder="Username">
+
+<input id="salesPassword" type="password" placeholder="Password">
+
+<div class="modal-actions">
+
+<button onclick="closeSalesModal()">Cancel</button>
+
+<button onclick="createSales()">Create</button>
+
 </div>
-​<div class="form-group">
-<label for="leadSiteSurvey">Site Survey</label>
-<input type="date" id="leadSiteSurvey">
+
 </div>
-​<div class="form-group">
-<label for="leadQuotation">Quotation</label>
-<input type="date" id="leadQuotation">
+
 </div>
-​<div class="form-group">
-<label for="leadClosing">Closing</label>
-<input type="date" id="leadClosing">
-</div>
-</div>
-​<div class="form-group full-width" style="margin-top: 14px;">
-<label for="leadNotes">Notes</label>
-<textarea id="leadNotes" rows="3" placeholder="Additional notes..."></textarea>
-</div>
-</div>
-​<div class="modal-footer">
-<button type="button" class="secondary-btn" onclick="closeLeadModal()">Cancel</button>
-<button type="button" class="primary-btn" onclick="saveLead()">Save Lead</button>
-</div>
-</div>
-</div>
-​<!-- =========================================================
-SALES MODAL
-========================================================== -->
-<div id="salesModal" class="modal" style="display:none;">
-<div class="modal-overlay" onclick="closeSalesModal()"></div>
-<div class="modal-content small-modal">
-<div class="modal-header">
-<div>
-<h2>Create Sales Account</h2>
-<p>Add a new member to the sales team.</p>
-</div>
-<button type="button" class="modal-close" onclick="closeSalesModal()">×</button>
-</div>
-​<div class="modal-body">
-<div class="form-group">
-<label for="salesName">Full Name *</label>
-<input type="text" id="salesName" placeholder="Full name">
-</div>
-​<div class="form-group" style="margin-top: 14px;">
-<label for="salesUsername">Username *</label>
-<input type="text" id="salesUsername" placeholder="Username">
-</div>
-​<div class="form-group" style="margin-top: 14px;">
-<label for="salesPassword">Password *</label>
-<input type="password" id="salesPassword" placeholder="Password">
-</div>
-</div>
-​<div class="modal-footer">
-<button type="button" class="secondary-btn" onclick="closeSalesModal()">Cancel</button>
-<button type="button" class="primary-btn" onclick="createSales()">Create Sales</button>
-</div>
-</div>
-</div>
-​<!-- SUPABASE & SCRIPT INTEGRATION -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="script.js"></script>
+
 </body>
 </html>
