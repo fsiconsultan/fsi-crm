@@ -264,6 +264,11 @@ async function loadProfile() {
 
     showApp();
 
+    // Load daftar Sales terlebih dahulu
+    // agar nama Sales dan Created By
+    // bisa ditampilkan di Leads
+    await loadSalesLookup();
+
     await loadLeads();
 
     await updateDashboard();
@@ -605,12 +610,124 @@ async function showSales() {
 
 
 // ================================
+// LOAD SALES LOOKUP
+// ================================
+// Dipakai untuk mencari nama Sales
+// berdasarkan sales_users.id
+//
+// sales_id  -> nama Sales
+// created_by -> nama pembuat Lead
+// ================================
+
+async function loadSalesLookup() {
+
+  try {
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient
+        .from("sales_users")
+        .select(
+          "id, name, username, role, status"
+        )
+        .order(
+          "name",
+          {
+            ascending: true
+          }
+        );
+
+
+    if (error) {
+
+      console.error(
+        "Load sales lookup error:",
+        error
+      );
+
+      return;
+    }
+
+
+    salesUsersData =
+      data || [];
+
+
+    console.log(
+      "Sales lookup loaded:",
+      salesUsersData
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "loadSalesLookup error:",
+      error
+    );
+
+  }
+
+}
+
+
+// ================================
+// GET SALES NAME
+// ================================
+
+function getSalesName(id) {
+
+  if (!id) {
+
+    return "-";
+
+  }
+
+
+  const sales =
+    salesUsersData.find(
+      user =>
+        String(user.id) ===
+        String(id)
+    );
+
+
+  if (!sales) {
+
+    return "-";
+
+  }
+
+
+  return (
+    sales.name ||
+    sales.username ||
+    "-"
+  );
+
+}
+
+
+// ================================
 // LOAD LEADS
 // ================================
 
 async function loadLeads() {
 
   try {
+
+    // Pastikan daftar Sales tersedia
+    if (
+      !salesUsersData ||
+      salesUsersData.length === 0
+    ) {
+
+      await loadSalesLookup();
+
+    }
+
 
     const {
       data,
@@ -693,7 +810,7 @@ function renderLeads(data) {
     table.innerHTML = `
       <tr>
         <td
-          colspan="10"
+          colspan="12"
           style="text-align:center;">
           No leads found
         </td>
@@ -710,6 +827,20 @@ function renderLeads(data) {
       const tr =
         document.createElement(
           "tr"
+        );
+
+
+      // Cari nama Sales
+      const salesName =
+        getSalesName(
+          lead.sales_id
+        );
+
+
+      // Cari nama pembuat Lead
+      const createdByName =
+        getSalesName(
+          lead.created_by
         );
 
 
@@ -756,6 +887,28 @@ function renderLeads(data) {
               lead.location
             )
           )}
+        </td>
+
+        <!-- SALES -->
+        <td>
+          ${
+            salesName !== "-"
+              ? escapeHTML(
+                  salesName
+                )
+              : "-"
+          }
+        </td>
+
+        <!-- CREATED BY -->
+        <td>
+          ${
+            createdByName !== "-"
+              ? escapeHTML(
+                  createdByName
+                )
+              : "-"
+          }
         </td>
 
         <td>
@@ -1186,7 +1339,6 @@ async function saveLead() {
 
     if (leadId) {
 
-      // TAMBAHAN
       payload.updated_by =
         currentProfile.id;
 
@@ -1231,11 +1383,9 @@ async function saveLead() {
       payload.sales_id =
         currentProfile.id;
 
-      // TAMBAHAN
       payload.created_by =
         currentProfile.id;
 
-      // TAMBAHAN
       payload.updated_by =
         currentProfile.id;
 
@@ -2126,6 +2276,12 @@ async function createSales() {
 
     await loadSalesUsers();
 
+    // Refresh lookup supaya Sales baru
+    // langsung tersedia untuk Leads
+    await loadSalesLookup();
+
+    await loadLeads();
+
 
   } catch (error) {
 
@@ -2216,6 +2372,10 @@ async function toggleSalesStatus(
 
 
     await loadSalesUsers();
+
+    await loadSalesLookup();
+
+    await loadLeads();
 
 
   } catch (error) {
