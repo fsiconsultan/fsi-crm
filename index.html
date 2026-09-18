@@ -23,9 +23,9 @@
 
 <body>
 
-  <!-- =====================================================
+  <!-- ==================================================
        LOGIN PAGE
-  ====================================================== -->
+  =================================================== -->
 
   <div
     id="loginPage"
@@ -34,25 +34,22 @@
 
     <div class="login-card">
 
-      <!-- FSI LOGO -->
       <div class="login-logo">
+
         <img
           src="logo-fsi.png"
-          alt="FSI Logo"
+          alt="French Solar Industry"
         >
+
       </div>
 
 
-      <h1>
-        Welcome Back
-      </h1>
+      <h1>FSI CRM</h1>
 
-      <p>
-        Sign in to your FSI CRM account
+      <p class="login-subtitle">
+        French Solar Industry
       </p>
 
-
-      <!-- USERNAME -->
 
       <div class="form-group">
 
@@ -70,8 +67,6 @@
       </div>
 
 
-      <!-- PASSWORD -->
-
       <div class="form-group">
 
         <label for="loginPassword">
@@ -88,8 +83,6 @@
       </div>
 
 
-      <!-- LOGIN BUTTON -->
-
       <button
         class="primary-btn login-btn"
         onclick="login()"
@@ -97,8 +90,6 @@
         LOGIN
       </button>
 
-
-      <!-- LOGIN MESSAGE -->
 
       <div
         id="loginMessage"
@@ -110,10 +101,9 @@
   </div>
 
 
-
-  <!-- =====================================================
-       MAIN APPLICATION
-  ====================================================== -->
+  <!-- ==================================================
+       MAIN APP
+  =================================================== -->
 
   <div
     id="app"
@@ -121,15 +111,11 @@
     style="display:none;"
   >
 
-
-    <!-- ===================================================
+    <!-- ==================================================
          SIDEBAR
-    ==================================================== -->
+    =================================================== -->
 
     <aside class="sidebar">
-
-
-      <!-- BRAND -->
 
       <div class="brand">
 
@@ -158,16 +144,13 @@
       </div>
 
 
+      <div class="sidebar-divider"></div>
 
-      <!-- NAVIGATION -->
 
       <nav class="sidebar-nav">
 
-
-        <!-- DASHBOARD -->
-
         <button
-          class="nav-item active"
+          class="nav-item"
           onclick="showDashboard()"
         >
 
@@ -182,15 +165,13 @@
         </button>
 
 
-        <!-- MY LEADS -->
-
         <button
           class="nav-item"
           onclick="showLeads()"
         >
 
           <span class="nav-icon">
-            ♧
+            ◉
           </span>
 
           <span>
@@ -200,8 +181,6 @@
         </button>
 
 
-        <!-- MANAGE SALES -->
-
         <button
           id="manageSalesBtn"
           class="nav-item"
@@ -210,7 +189,7 @@
         >
 
           <span class="nav-icon">
-            ♙
+            ◌
           </span>
 
           <span>
@@ -222,16 +201,21 @@
       </nav>
 
 
-
-      <!-- SIDEBAR BOTTOM -->
-
       <div class="sidebar-bottom">
 
         <button
           class="logout-btn"
           onclick="logout()"
         >
-          ⇥ &nbsp; Logout
+
+          <span class="nav-icon">
+            ⇥
+          </span>
+
+          <span>
+            Logout
+          </span>
+
         </button>
 
       </div>
@@ -239,700 +223,459 @@
     </aside>
 
 
-
-    <!-- ===================================================
+    <!-- ==================================================
          MAIN CONTENT
-    ==================================================== -->
+    =================================================== -->
 
     <main class="main-content">
 
-
-      <!-- =================================================
-           TOPBAR
-      ================================================== -->
+      <!-- TOPBAR -->
 
       <header class="topbar">
 
+        <div class="topbar-left">
 
-        <!-- MOBILE MENU -->
-
-        <div class="mobile-menu">
-          ☰
-        </div>
-
-
-        <!-- PAGE TITLE -->
-
-        <div class="topbar-title">
-
-          <span id="pageTitle">
+          <h2 id="pageTitle">
             Dashboard
-          </span>
+          </h2>
 
         </div>
 
 
-        <!-- TOPBAR RIGHT -->
-
-        <div class="topbar-right">
-
-
-          <!-- NOTIFICATION -->
-
-          <button class="notification-btn">
-
-            ♢
-
-            <span class="notification-dot"></span>
-
-          </button>
-
-
-          <!-- USER INFO -->
-
-          <div
-            id="userInfo"
-            class="user-info"
-          ></div>
-
-
-          <!-- DROPDOWN -->
-
-          <button class="user-dropdown">
-            ▾
-          </button>
-
-        </div>
+        <div
+          id="userInfo"
+          class="user-info"
+        ></div>
 
       </header>
 
 
+      <!-- ==================================================
+           DASHBOARD PAGE
+      =================================================== -->
 
-      <!-- =================================================
-           PAGE CONTENT
-      ================================================== -->
+      <section
+        id="dashboardPage"
+        class="page-content"
+      >
 
-      <section class="content-area">
+        <div class="page-heading">
 
+          <div>
 
-        <!-- =================================================
-             DASHBOARD PAGE
-        ================================================== -->
+            <h1>
+              Dashboard
+            </h1>
 
-        <div
-          id="dashboardPage"
-          class="page"
-        >
-
-
-          <!-- PAGE HEADING -->
-
-          <div class="page-heading">
-
-            <div>
-
-              <h1>
-                Dashboard
-              </h1>
-
-              <p>
-                Welcome back, Rist! Here's your sales overview.
-              </p>
-
-            </div>
-
-          </div>
-
-
-
-          <!-- =================================================
-               STATISTICS
-          ================================================== -->
-
-          <div class="stats-grid">
-
-
-            <!-- TOTAL LEADS -->
-
-            <div class="stat-card">
-
-              <div class="stat-icon blue">
-                👥
-              </div>
-
-              <div class="stat-info">
-
-                <span>
-                  Total Leads
-                </span>
-
-                <strong id="statTotal">
-                  0
-                </strong>
-
-              </div>
-
-            </div>
-
-
-
-            <!-- NEW LEADS -->
-
-            <div class="stat-card">
-
-              <div class="stat-icon purple">
-                👤
-              </div>
-
-              <div class="stat-info">
-
-                <span>
-                  New Leads
-                </span>
-
-                <strong id="statNew">
-                  0
-                </strong>
-
-              </div>
-
-            </div>
-
-
-
-            <!-- INTERESTED -->
-
-            <div class="stat-card">
-
-              <div class="stat-icon pink">
-                ♡
-              </div>
-
-              <div class="stat-info">
-
-                <span>
-                  Interested
-                </span>
-
-                <strong id="statInterested">
-                  0
-                </strong>
-
-              </div>
-
-            </div>
-
-
-
-            <!-- FOLLOW UP -->
-
-            <div class="stat-card">
-
-              <div class="stat-icon orange">
-                ↻
-              </div>
-
-              <div class="stat-info">
-
-                <span>
-                  Follow Up
-                </span>
-
-                <strong id="statFollowUp">
-                  0
-                </strong>
-
-              </div>
-
-            </div>
-
-
-
-            <!-- APPOINTMENT -->
-
-            <div class="stat-card">
-
-              <div class="stat-icon green">
-                ◷
-              </div>
-
-              <div class="stat-info">
-
-                <span>
-                  Appointment
-                </span>
-
-                <strong id="statAppointment">
-                  0
-                </strong>
-
-              </div>
-
-            </div>
-
-
-
-            <!-- SITE SURVEY -->
-
-            <div class="stat-card">
-
-              <div class="stat-icon cyan">
-                ⌖
-              </div>
-
-              <div class="stat-info">
-
-                <span>
-                  Site Survey
-                </span>
-
-                <strong id="statSiteSurvey">
-                  0
-                </strong>
-
-              </div>
-
-            </div>
-
-
-
-            <!-- QUOTATION -->
-
-            <div class="stat-card">
-
-              <div class="stat-icon yellow">
-                ▤
-              </div>
-
-              <div class="stat-info">
-
-                <span>
-                  Quotation
-                </span>
-
-                <strong id="statQuotation">
-                  0
-                </strong>
-
-              </div>
-
-            </div>
-
-
-
-            <!-- CLOSING -->
-
-            <div class="stat-card">
-
-              <div class="stat-icon dark">
-                ✓
-              </div>
-
-              <div class="stat-info">
-
-                <span>
-                  Closing / SPK
-                </span>
-
-                <strong id="statClosing">
-                  0
-                </strong>
-
-              </div>
-
-            </div>
-
-          </div>
-
-
-
-          <!-- =================================================
-               RECENT LEADS
-          ================================================== -->
-
-          <div class="dashboard-panel">
-
-            <div class="panel-header">
-
-              <div>
-
-                <h2>
-                  Recent Leads
-                </h2>
-
-                <p>
-                  Latest customer activity
-                </p>
-
-              </div>
-
-
-              <button
-                class="secondary-btn"
-                onclick="showLeads()"
-              >
-                View All
-              </button>
-
-            </div>
+            <p>
+              Welcome back! Here's your sales overview.
+            </p>
 
           </div>
 
         </div>
 
 
+        <!-- STAT CARDS -->
 
-        <!-- =================================================
-             LEADS PAGE
-        ================================================== -->
+        <div class="stats-grid">
 
-        <div
-          id="leadsPage"
-          class="page"
-          style="display:none;"
-        >
+          <div class="stat-card">
 
-
-          <!-- PAGE HEADING -->
-
-          <div class="page-heading">
-
-            <div>
-
-              <h1>
-                My Leads
-              </h1>
-
-              <p>
-                Manage and follow up your customer leads.
-              </p>
-
+            <div class="stat-label">
+              Total Leads
             </div>
 
-
-            <button
-              class="primary-btn"
-              onclick="openLeadModal()"
+            <div
+              id="statTotal"
+              class="stat-number"
             >
-              + Add Lead
-            </button>
-
-          </div>
-
-
-
-          <!-- =================================================
-               FILTER BAR
-          ================================================== -->
-
-          <div class="filter-card">
-
-
-            <!-- STATUS -->
-
-            <div class="filter-group">
-
-              <select id="statusFilter">
-
-                <option value="">
-                  All Status
-                </option>
-
-                <option value="New">
-                  New
-                </option>
-
-                <option value="Interested">
-                  Interested
-                </option>
-
-                <option value="Follow-up">
-                  Follow-up
-                </option>
-
-                <option value="Appointment">
-                  Appointment
-                </option>
-
-                <option value="Site Survey">
-                  Site Survey
-                </option>
-
-                <option value="Quotation">
-                  Quotation
-                </option>
-
-                <option value="Closing">
-                  Closing
-                </option>
-
-              </select>
-
-            </div>
-
-
-
-            <!-- BUSINESS -->
-
-            <div class="filter-group">
-
-              <select>
-
-                <option>
-                  All Business
-                </option>
-
-                <option>
-                  Hotel
-                </option>
-
-                <option>
-                  Villa
-                </option>
-
-                <option>
-                  Restaurant
-                </option>
-
-                <option>
-                  Bar
-                </option>
-
-                <option>
-                  Office
-                </option>
-
-                <option>
-                  Factory
-                </option>
-
-              </select>
-
-            </div>
-
-
-
-            <!-- LOCATION -->
-
-            <div class="filter-group">
-
-              <select>
-
-                <option>
-                  All Location
-                </option>
-
-                <option>
-                  Bali
-                </option>
-
-                <option>
-                  Canggu
-                </option>
-
-                <option>
-                  Seminyak
-                </option>
-
-                <option>
-                  Ubud
-                </option>
-
-                <option>
-                  Denpasar
-                </option>
-
-              </select>
-
-            </div>
-
-
-
-            <!-- SEARCH -->
-
-            <div class="search-box">
-
-              <span>
-                🔍
-              </span>
-
-              <input
-                type="text"
-                id="leadSearch"
-                placeholder="Search customer..."
-                oninput="filterLeads()"
-              >
-
+              0
             </div>
 
           </div>
 
 
+          <div class="stat-card">
 
-          <!-- =================================================
-               LEADS TABLE
-          ================================================== -->
+            <div class="stat-label">
+              New Leads
+            </div>
 
-          <div class="table-card">
+            <div
+              id="statNew"
+              class="stat-number"
+            >
+              0
+            </div>
 
-            <div class="table-wrapper">
-
-              <table>
-
-                <thead>
-
-                  <tr>
-
-                    <th>
-                      Customer
-                    </th>
-
-                    <th>
-                      Phone
-                    </th>
-
-                    <th>
-                      Business
-                    </th>
-
-                    <th>
-                      Location
-                    </th>
-
-                    <th>
-                      Sales
-                    </th>
-
-                    <th>
-                      Created By
-                    </th>
-
-                    <th>
-                      Status
-                    </th>
-
-                    <th>
-                      Follow Up
-                    </th>
-
-                    <th>
-                      Appointment
-                    </th>
-
-                    <th>
-                      Quotation
-                    </th>
-
-                    <th>
-                      Closing
-                    </th>
-
-                    <th>
-                      Action
-                    </th>
-
-                  </tr>
-
-                </thead>
+          </div>
 
 
-                <tbody id="leadsTable"></tbody>
+          <div class="stat-card">
 
-              </table>
+            <div class="stat-label">
+              Interested
+            </div>
 
+            <div
+              id="statInterested"
+              class="stat-number"
+            >
+              0
+            </div>
+
+          </div>
+
+
+          <div class="stat-card">
+
+            <div class="stat-label">
+              Follow Up
+            </div>
+
+            <div
+              id="statFollowUp"
+              class="stat-number"
+            >
+              0
+            </div>
+
+          </div>
+
+
+          <div class="stat-card">
+
+            <div class="stat-label">
+              Appointment
+            </div>
+
+            <div
+              id="statAppointment"
+              class="stat-number"
+            >
+              0
+            </div>
+
+          </div>
+
+
+          <div class="stat-card">
+
+            <div class="stat-label">
+              Site Survey
+            </div>
+
+            <div
+              id="statSiteSurvey"
+              class="stat-number"
+            >
+              0
+            </div>
+
+          </div>
+
+
+          <div class="stat-card">
+
+            <div class="stat-label">
+              Quotation
+            </div>
+
+            <div
+              id="statQuotation"
+              class="stat-number"
+            >
+              0
+            </div>
+
+          </div>
+
+
+          <div class="stat-card">
+
+            <div class="stat-label">
+              Closing
+            </div>
+
+            <div
+              id="statClosing"
+              class="stat-number"
+            >
+              0
             </div>
 
           </div>
 
         </div>
 
+      </section>
 
 
-        <!-- =================================================
-             SALES PAGE
-        ================================================== -->
+      <!-- ==================================================
+           LEADS PAGE
+      =================================================== -->
 
-        <div
-          id="salesPage"
-          class="page"
-          style="display:none;"
-        >
+      <section
+        id="leadsPage"
+        class="page-content"
+        style="display:none;"
+      >
 
+        <div class="page-heading">
 
-          <!-- PAGE HEADING -->
+          <div>
 
-          <div class="page-heading">
+            <h1>
+              My Leads
+            </h1>
 
-            <div>
-
-              <h1>
-                Manage Sales
-              </h1>
-
-              <p>
-                Manage FSI sales team accounts.
-              </p>
-
-            </div>
-
-
-            <button
-              class="primary-btn"
-              onclick="openSalesModal()"
-            >
-              + Add Sales
-            </button>
+            <p>
+              Manage and monitor your customer leads.
+            </p>
 
           </div>
 
 
+          <button
+            class="primary-btn"
+            onclick="openLeadModal()"
+          >
+            + ADD LEAD
+          </button>
 
-          <!-- SALES TABLE -->
-
-          <div class="table-card">
-
-            <div class="table-wrapper">
-
-              <table>
-
-                <thead>
-
-                  <tr>
-
-                    <th>
-                      Name
-                    </th>
-
-                    <th>
-                      Username
-                    </th>
-
-                    <th>
-                      Role
-                    </th>
-
-                    <th>
-                      Status
-                    </th>
-
-                    <th>
-                      Last Login
-                    </th>
-
-                    <th>
-                      Action
-                    </th>
-
-                  </tr>
-
-                </thead>
+        </div>
 
 
-                <tbody id="salesTable"></tbody>
+        <!-- FILTERS -->
 
-              </table>
+        <div class="filter-card">
 
-            </div>
+          <div class="filter-group search-group">
+
+            <label>
+              Search
+            </label>
+
+            <input
+              type="text"
+              id="leadSearch"
+              placeholder="Customer, phone, business..."
+              oninput="filterLeads()"
+            >
+
+          </div>
+
+
+          <div class="filter-group">
+
+            <label>
+              Status
+            </label>
+
+            <select
+              id="statusFilter"
+              onchange="filterLeads()"
+            >
+
+              <option value="">
+                All Status
+              </option>
+
+              <option value="New">
+                New
+              </option>
+
+              <option value="Interested">
+                Interested
+              </option>
+
+              <option value="Follow-up">
+                Follow-up
+              </option>
+
+              <option value="Appointment">
+                Appointment
+              </option>
+
+              <option value="Site Survey">
+                Site Survey
+              </option>
+
+              <option value="Quotation">
+                Quotation
+              </option>
+
+              <option value="Closing">
+                Closing
+              </option>
+
+            </select>
+
+          </div>
+
+        </div>
+
+
+        <!-- LEADS TABLE -->
+
+        <div class="table-card">
+
+          <div class="table-wrapper">
+
+            <table>
+
+              <thead>
+
+                <tr>
+
+                  <th>
+                    Customer
+                  </th>
+
+                  <th>
+                    Phone
+                  </th>
+
+                  <th>
+                    Business
+                  </th>
+
+                  <th>
+                    Location
+                  </th>
+
+                  <th>
+                    Sales
+                  </th>
+
+                  <th>
+                    Created By
+                  </th>
+
+                  <th>
+                    Status
+                  </th>
+
+                  <th>
+                    Follow Up
+                  </th>
+
+                  <th>
+                    Appointment
+                  </th>
+
+                  <th>
+                    Quotation
+                  </th>
+
+                  <th>
+                    Closing
+                  </th>
+
+                  <th>
+                    Action
+                  </th>
+
+                </tr>
+
+              </thead>
+
+
+              <tbody id="leadsTable">
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- ==================================================
+           MANAGE SALES PAGE
+      =================================================== -->
+
+      <section
+        id="salesPage"
+        class="page-content"
+        style="display:none;"
+      >
+
+        <div class="page-heading">
+
+          <div>
+
+            <h1>
+              Manage Sales
+            </h1>
+
+            <p>
+              Manage FSI sales team accounts.
+            </p>
+
+          </div>
+
+
+          <button
+            class="primary-btn"
+            onclick="openSalesModal()"
+          >
+            + CREATE SALES
+          </button>
+
+        </div>
+
+
+        <!-- SALES TABLE -->
+
+        <div class="table-card">
+
+          <div class="table-wrapper">
+
+            <table>
+
+              <thead>
+
+                <tr>
+
+                  <th>
+                    Photo
+                  </th>
+
+                  <th>
+                    Name
+                  </th>
+
+                  <th>
+                    Username
+                  </th>
+
+                  <th>
+                    Role
+                  </th>
+
+                  <th>
+                    Status
+                  </th>
+
+                  <th>
+                    Action
+                  </th>
+
+                </tr>
+
+              </thead>
+
+
+              <tbody id="salesTable">
+
+              </tbody>
+
+            </table>
 
           </div>
 
@@ -945,20 +688,16 @@
   </div>
 
 
-
-  <!-- =====================================================
+  <!-- ==================================================
        LEAD MODAL
-  ====================================================== -->
+  =================================================== -->
 
   <div
     id="leadModal"
-    class="modal-overlay"
+    class="modal"
   >
 
-    <div class="modal">
-
-
-      <!-- MODAL HEADER -->
+    <div class="modal-card">
 
       <div class="modal-header">
 
@@ -969,7 +708,7 @@
           </h2>
 
           <p>
-            Add customer information
+            Customer lead information
           </p>
 
         </div>
@@ -985,11 +724,7 @@
       </div>
 
 
-
-      <!-- MODAL BODY -->
-
       <div class="modal-body">
-
 
         <input
           type="hidden"
@@ -999,84 +734,69 @@
 
         <div class="form-grid">
 
-
-          <!-- CUSTOMER -->
-
           <div class="form-group">
 
-            <label for="leadCustomer">
-              Customer Name *
+            <label>
+              Customer Name
             </label>
 
             <input
-              id="leadCustomer"
               type="text"
+              id="leadCustomer"
               placeholder="Customer name"
             >
 
           </div>
 
 
-
-          <!-- PHONE -->
-
           <div class="form-group">
 
-            <label for="leadPhone">
-              Phone / WhatsApp
+            <label>
+              Phone
             </label>
 
             <input
-              id="leadPhone"
               type="text"
-              placeholder="+62..."
+              id="leadPhone"
+              placeholder="08xxxxxxxxxx"
             >
 
           </div>
 
 
-
-          <!-- BUSINESS -->
-
           <div class="form-group">
 
-            <label for="leadBusiness">
+            <label>
               Business
             </label>
 
             <input
-              id="leadBusiness"
               type="text"
-              placeholder="Hotel / Villa / Restaurant"
+              id="leadBusiness"
+              placeholder="Business / Company"
             >
 
           </div>
 
 
-
-          <!-- LOCATION -->
-
           <div class="form-group">
 
-            <label for="leadLocation">
+            <label>
               Location
             </label>
 
             <input
-              id="leadLocation"
               type="text"
-              placeholder="Canggu / Ubud / Denpasar"
+              id="leadLocation"
+              placeholder="Location"
             >
 
           </div>
 
 
-
-          <!-- STATUS -->
-
           <div class="form-group">
 
-            <label for="leadStatus">
+            <label>
               Status
             </label>
 
@@ -1115,121 +835,100 @@
           </div>
 
 
-
-          <!-- FOLLOW UP -->
-
           <div class="form-group">
 
-            <label for="leadFollowUp">
+            <label>
               Follow Up
             </label>
 
             <input
-              id="leadFollowUp"
               type="date"
+              id="leadFollowUp"
             >
 
           </div>
 
 
-
-          <!-- APPOINTMENT -->
-
           <div class="form-group">
 
-            <label for="leadAppointment">
+            <label>
               Appointment
             </label>
 
             <input
-              id="leadAppointment"
               type="date"
+              id="leadAppointment"
             >
 
           </div>
 
 
-
-          <!-- SITE SURVEY -->
-
           <div class="form-group">
 
-            <label for="leadSiteSurvey">
+            <label>
               Site Survey
             </label>
 
             <input
-              id="leadSiteSurvey"
               type="date"
+              id="leadSiteSurvey"
             >
 
           </div>
 
 
-
-          <!-- QUOTATION -->
-
           <div class="form-group">
 
-            <label for="leadQuotation">
+            <label>
               Quotation
             </label>
 
             <input
-              id="leadQuotation"
               type="date"
+              id="leadQuotation"
             >
 
           </div>
 
 
-
-          <!-- SPK -->
-
           <div class="form-group">
 
-            <label for="leadSPK">
+            <label>
               SPK
             </label>
 
             <input
-              id="leadSPK"
               type="date"
+              id="leadSPK"
             >
 
           </div>
 
 
-
-          <!-- CLOSING -->
-
           <div class="form-group">
 
-            <label for="leadClosing">
+            <label>
               Closing
             </label>
 
             <input
-              id="leadClosing"
               type="date"
+              id="leadClosing"
             >
 
           </div>
 
 
+          <div class="form-group full-width">
 
-          <!-- NOTES -->
-
-          <div class="form-group full">
-
-            <label for="leadNotes">
+            <label>
               Notes
             </label>
 
             <textarea
               id="leadNotes"
               rows="4"
-              placeholder="Customer notes..."
+              placeholder="Additional notes..."
             ></textarea>
 
           </div>
@@ -1239,16 +938,13 @@
       </div>
 
 
-
-      <!-- MODAL FOOTER -->
-
       <div class="modal-footer">
 
         <button
           class="secondary-btn"
           onclick="closeLeadModal()"
         >
-          Cancel
+          CANCEL
         </button>
 
 
@@ -1266,31 +962,27 @@
   </div>
 
 
-
-  <!-- =====================================================
+  <!-- ==================================================
        SALES MODAL
-  ====================================================== -->
+  =================================================== -->
 
   <div
     id="salesModal"
-    class="modal-overlay"
+    class="modal"
   >
 
-    <div class="modal small-modal">
-
-
-      <!-- MODAL HEADER -->
+    <div class="modal-card sales-modal-card">
 
       <div class="modal-header">
 
         <div>
 
           <h2>
-            Add Sales
+            Create Sales
           </h2>
 
           <p>
-            Create a new sales account
+            Create a new FSI sales account.
           </p>
 
         </div>
@@ -1306,59 +998,47 @@
       </div>
 
 
-
-      <!-- MODAL BODY -->
-
       <div class="modal-body">
-
-
-        <!-- NAME -->
 
         <div class="form-group">
 
-          <label for="salesName">
+          <label>
             Full Name
           </label>
 
           <input
-            id="salesName"
             type="text"
+            id="salesName"
             placeholder="Sales name"
           >
 
         </div>
 
 
-
-        <!-- USERNAME -->
-
         <div class="form-group">
 
-          <label for="salesUsername">
+          <label>
             Username
           </label>
 
           <input
-            id="salesUsername"
             type="text"
+            id="salesUsername"
             placeholder="Username"
           >
 
         </div>
 
 
-
-        <!-- PASSWORD -->
-
         <div class="form-group">
 
-          <label for="salesPassword">
+          <label>
             Password
           </label>
 
           <input
-            id="salesPassword"
             type="password"
+            id="salesPassword"
             placeholder="Minimum 6 characters"
           >
 
@@ -1367,16 +1047,13 @@
       </div>
 
 
-
-      <!-- MODAL FOOTER -->
-
       <div class="modal-footer">
 
         <button
           class="secondary-btn"
           onclick="closeSalesModal()"
         >
-          Cancel
+          CANCEL
         </button>
 
 
@@ -1394,24 +1071,12 @@
   </div>
 
 
-
-  <!-- =====================================================
-       JAVASCRIPT
-  ====================================================== -->
+  <!-- ==================================================
+       SCRIPT
+  =================================================== -->
 
   <script src="script.js"></script>
 
 </body>
 
 </html>
-
-Pastikan di GitHub file-nya persis:
-
-index.html
-style.css
-script.js
-logo-fsi.png
-
-Kalau nama file logonya "logo.png", tinggal ubah dua "src="logo-fsi.png"" menjadi "src="logo.png"".
-
-Setelah upload/commit, refresh CRM. Logo yang sama akan muncul di login dan di sidebar setelah login.
