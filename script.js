@@ -1,4 +1,3 @@
-```javascript
 // ================================
 // CRM FSI - SUPABASE CONFIG
 // ================================
@@ -839,7 +838,7 @@ async function loadSalesLookup() {
       await supabaseClient
         .from("sales_users")
         .select(
-          "id, name, username, role, status, created_at, avatar_url"
+          "id, name, username, role, status, created_at"
         )
         .order(
           "name",
@@ -1533,50 +1532,6 @@ async function loadLeads(page = 1) {
 
 
     // ================================
-    // ROLE FILTER
-    // ================================
-
-    // ADMIN
-    // Admin can see all leads,
-    // optionally filtered by Sales.
-
-    if (
-      currentProfile &&
-      currentProfile.role ===
-        "Admin"
-    ) {
-
-      if (salesFilter) {
-
-        query =
-          query.eq(
-            "sales_id",
-            salesFilter
-          );
-
-      }
-
-    }
-
-    // SALES
-    // Sales can ONLY see their own leads.
-
-    else if (
-      currentProfile &&
-      currentProfile.role ===
-        "Sales"
-    ) {
-
-      query =
-        query.eq(
-          "sales_id",
-          currentProfile.id
-        );
-
-    }
-
-
-    // ================================
     // SEARCH
     // ================================
 
@@ -1648,6 +1603,27 @@ async function loadLeads(page = 1) {
         query.eq(
           "location",
           location
+        );
+
+    }
+
+
+    // ================================
+    // SALES FILTER
+    // ADMIN ONLY
+    // ================================
+
+    if (
+      salesFilter &&
+      currentProfile &&
+      currentProfile.role ===
+        "Admin"
+    ) {
+
+      query =
+        query.eq(
+          "sales_id",
+          salesFilter
         );
 
     }
@@ -2538,7 +2514,6 @@ async function saveLead() {
       currentPage
     );
 
-    // REFRESH DASHBOARD
     await updateDashboard();
 
 
@@ -2805,7 +2780,6 @@ async function deleteLead(id) {
       currentPage
     );
 
-    // REFRESH DASHBOARD
     await updateDashboard();
 
 
@@ -2836,60 +2810,20 @@ async function updateDashboard() {
 
   try {
 
-    console.log(
-      "Updating dashboard for:",
-      currentProfile.role,
-      currentProfile.id
-    );
-
-
-    // ================================
-    // IMPORTANT:
-    // QUERY DATABASE DIRECTLY
-    // NOT leadsData
-    // ================================
-
-    let query =
-      supabaseClient
-        .from("leads")
-        .select(
-          "status, appointment, site_survey, quotation, closing, sales_id"
-        );
-
-
-    // ================================
-    // SALES ONLY SEES OWN STATISTICS
-    // ================================
-
-    if (
-      currentProfile.role ===
-      "Sales"
-    ) {
-
-      query =
-        query.eq(
-          "sales_id",
-          currentProfile.id
-        );
-
-    }
-
-
-    // ADMIN:
-    // no sales_id filter = all leads
-
-
     const {
       data,
       error
     } =
-      await query;
+      await supabaseClient
+        .from("leads")
+        .select(
+          "status, appointment, site_survey, quotation, closing"
+        );
 
 
     if (error) {
 
       console.error(
-        "Dashboard query error:",
         error
       );
 
@@ -2902,25 +2836,11 @@ async function updateDashboard() {
       data || [];
 
 
-    console.log(
-      "Dashboard lead count:",
-      dataList.length
-    );
-
-
-    // ================================
-    // TOTAL
-    // ================================
-
     setText(
       "statTotal",
       dataList.length
     );
 
-
-    // ================================
-    // NEW
-    // ================================
 
     setText(
       "statNew",
@@ -2931,10 +2851,6 @@ async function updateDashboard() {
     );
 
 
-    // ================================
-    // INTERESTED
-    // ================================
-
     setText(
       "statInterested",
       countNormalizedStatus(
@@ -2943,10 +2859,6 @@ async function updateDashboard() {
       )
     );
 
-
-    // ================================
-    // FOLLOW UP
-    // ================================
 
     setText(
       "statFollowUp",
@@ -2957,10 +2869,6 @@ async function updateDashboard() {
     );
 
 
-    // ================================
-    // APPOINTMENT
-    // ================================
-
     setText(
       "statAppointment",
       countDateField(
@@ -2969,10 +2877,6 @@ async function updateDashboard() {
       )
     );
 
-
-    // ================================
-    // SITE SURVEY
-    // ================================
 
     setText(
       "statSiteSurvey",
@@ -2983,10 +2887,6 @@ async function updateDashboard() {
     );
 
 
-    // ================================
-    // QUOTATION
-    // ================================
-
     setText(
       "statQuotation",
       countDateField(
@@ -2995,10 +2895,6 @@ async function updateDashboard() {
       )
     );
 
-
-    // ================================
-    // CLOSING
-    // ================================
 
     setText(
       "statClosing",
@@ -3011,7 +2907,6 @@ async function updateDashboard() {
   } catch (error) {
 
     console.error(
-      "updateDashboard error:",
       error
     );
 
@@ -3594,8 +3489,6 @@ async function createSales() {
       currentPage
     );
 
-    await updateDashboard();
-
 
   } catch (error) {
 
@@ -3693,8 +3586,6 @@ async function toggleSalesStatus(
     await loadLeads(
       currentPage
     );
-
-    await updateDashboard();
 
 
   } catch (error) {
@@ -4232,4 +4123,3 @@ supabaseClient.auth.onAuthStateChange(
 
   }
 );
-```
