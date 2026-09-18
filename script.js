@@ -1,6 +1,12 @@
-// ================================
-// CRM FSI - SUPABASE CONFIG
-// ================================
+/* =========================================================
+   FSI CRM — SCRIPT.JS
+   Supabase CRM
+   ========================================================= */
+
+
+/* =========================================================
+   SUPABASE CONFIG
+   ========================================================= */
 
 const SUPABASE_URL =
   "https://yoyszukutqwoxxdolzcg.supabase.co";
@@ -15,24 +21,24 @@ const supabaseClient =
   );
 
 
-// ================================
-// GLOBAL VARIABLES
-// ================================
+/* =========================================================
+   GLOBAL STATE
+   ========================================================= */
 
 let currentUser = null;
 let currentProfile = null;
+
 let leadsData = [];
 let salesUsersData = [];
 
-// PAGINATION
 let currentPage = 1;
 const pageSize = 20;
 let totalLeadsCount = 0;
 
 
-// ================================
-// CRM STATUS
-// ================================
+/* =========================================================
+   LEAD STATUS
+   ========================================================= */
 
 const LEAD_STATUSES = [
   "New",
@@ -44,156 +50,56 @@ const LEAD_STATUSES = [
 ];
 
 
-// ================================
-// START APP
-// ================================
+/* =========================================================
+   INITIALIZATION
+   ========================================================= */
 
-document.addEventListener(
-  "DOMContentLoaded",
-  async () => {
+document.addEventListener("DOMContentLoaded", async function () {
 
-    console.log("CRM FSI started");
+  setupModalEvents();
+  setupEnglishStatusOptions();
 
-    setupModalEvents();
+  await checkSession();
 
-    setupEnglishStatusOptions();
-
-    await checkSession();
-
-  }
-);
+});
 
 
-// ================================
-// ENGLISH STATUS OPTIONS
-// ================================
-
-function setupEnglishStatusOptions() {
-
-  const statusFilter =
-    document.getElementById(
-      "statusFilter"
-    );
-
-  const leadStatus =
-    document.getElementById(
-      "leadStatus"
-    );
-
-
-  if (statusFilter) {
-
-    statusFilter.innerHTML = "";
-
-    const allOption =
-      document.createElement(
-        "option"
-      );
-
-    allOption.value = "";
-
-    allOption.textContent =
-      "All Status";
-
-    statusFilter.appendChild(
-      allOption
-    );
-
-
-    LEAD_STATUSES.forEach(
-      status => {
-
-        const option =
-          document.createElement(
-            "option"
-          );
-
-        option.value =
-          status;
-
-        option.textContent =
-          status;
-
-        statusFilter.appendChild(
-          option
-        );
-
-      }
-    );
-
-  }
-
-
-  if (leadStatus) {
-
-    leadStatus.innerHTML = "";
-
-    LEAD_STATUSES.forEach(
-      status => {
-
-        const option =
-          document.createElement(
-            "option"
-          );
-
-        option.value =
-          status;
-
-        option.textContent =
-          status;
-
-        leadStatus.appendChild(
-          option
-        );
-
-      }
-    );
-
-  }
-
-}
-
-
-// ================================
-// AUTH SESSION
-// ================================
+/* =========================================================
+   SESSION
+   ========================================================= */
 
 async function checkSession() {
 
   try {
 
     const {
-      data: { session },
+      data,
       error
-    } =
-      await supabaseClient.auth.getSession();
-
+    } = await supabaseClient.auth.getSession();
 
     if (error) {
 
-      console.error(error);
+      console.error(
+        "Session error:",
+        error
+      );
 
       showLogin();
 
       return;
-
     }
 
+    if (data && data.session) {
 
-    if (!session) {
+      currentUser = data.session.user;
+
+      await loadProfile();
+
+    } else {
 
       showLogin();
 
-      return;
-
     }
-
-
-    currentUser =
-      session.user;
-
-    await loadProfile();
-
 
   } catch (error) {
 
@@ -209,177 +115,221 @@ async function checkSession() {
 }
 
 
-// ================================
-// LOGIN
-// ================================
+/* =========================================================
+   LOGIN
+   ========================================================= */
 
 async function login() {
 
+  const usernameEl =
+    document.getElementById("loginUsername");
+
+  const passwordEl =
+    document.getElementById("loginPassword");
+
+  const messageEl =
+    document.getElementById("loginMessage");
+
+  if (!usernameEl || !passwordEl) {
+    return;
+  }
+
   const username =
-    document
-      .getElementById("loginUsername")
-      .value
-      .trim();
+    usernameEl.value.trim();
 
   const password =
-    document
-      .getElementById("loginPassword")
-      .value;
-
-  const message =
-    document.getElementById(
-      "loginMessage"
-    );
-
+    passwordEl.value;
 
   if (!username || !password) {
 
-    message.textContent =
-      "Username and password are required.";
+    if (messageEl) {
+      messageEl.textContent =
+        "Username dan password wajib diisi.";
+    }
 
     return;
-
   }
 
-
-  message.textContent =
-    "Logging in...";
-
+  if (messageEl) {
+    messageEl.textContent =
+      "Logging in...";
+  }
 
   try {
 
-    const {
-      data: email,
-      error: emailError
-    } =
-      await supabaseClient.rpc(
-        "get_login_email",
-        {
-          p_username: username
-        }
-      );
+    /*
+      Username -> email melalui RPC
+      yang sudah digunakan oleh sistem sebelumnya.
+    */
 
+    const {
+      data: emailData,
+      error: emailError
+    } = await supabaseClient.rpc(
+      "get_login_email",
+      {
+        p_username: username
+      }
+    );
 
     if (emailError) {
 
       console.error(
+        "get_login_email error:",
         emailError
       );
 
-      message.textContent =
-        emailError.message;
+      throw new Error(
+        emailError.message ||
+        "Username tidak ditemukan."
+      );
+    }
 
-      return;
+    let loginEmail = null;
+
+    if (typeof emailData === "string") {
+
+      loginEmail = emailData;
+
+    } else if (
+      Array.isArray(emailData) &&
+      emailData.length > 0
+    ) {
+
+      const row = emailData[0];
+
+      loginEmail =
+        row.email ||
+        row.login_email ||
+        row.get_login_email ||
+        Object.values(row)[0];
+
+    } else if (
+      emailData &&
+      typeof emailData === "object"
+    ) {
+
+      loginEmail =
+        emailData.email ||
+        emailData.login_email ||
+        emailData.get_login_email ||
+        Object.values(emailData)[0];
 
     }
 
+    if (!loginEmail) {
 
-    if (!email) {
-
-      message.textContent =
-        "Username not found or inactive.";
-
-      return;
-
+      throw new Error(
+        "Username tidak ditemukan."
+      );
     }
 
 
     const {
       data,
       error
-    } =
-      await supabaseClient.auth.signInWithPassword({
-        email: email,
-        password: password
-      });
+    } = await supabaseClient.auth.signInWithPassword({
+      email: loginEmail,
+      password: password
+    });
 
 
     if (error) {
 
       console.error(
+        "Supabase login error:",
         error
       );
 
-      message.textContent =
-        error.message;
-
-      return;
-
+      throw new Error(
+        error.message ||
+        "Username atau password salah."
+      );
     }
 
 
     currentUser =
-      data.user;
+      data.user || null;
+
+
+    if (!currentUser) {
+
+      throw new Error(
+        "User login tidak ditemukan."
+      );
+    }
+
+
+    if (messageEl) {
+      messageEl.textContent = "";
+    }
+
 
     await loadProfile();
-
 
   } catch (error) {
 
     console.error(
-      "login error:",
+      "Login error:",
       error
     );
 
-    message.textContent =
-      "An error occurred while logging in.";
+    if (messageEl) {
+
+      messageEl.textContent =
+        error.message ||
+        "Login gagal.";
+
+    }
 
   }
 
 }
 
 
-// ================================
-// LOAD USER PROFILE
-// ================================
+/* =========================================================
+   LOAD PROFILE
+   ========================================================= */
 
 async function loadProfile() {
 
   if (!currentUser) {
-
-    showLogin();
-
     return;
-
   }
-
 
   try {
 
     const {
       data,
       error
-    } =
-      await supabaseClient
-        .from("sales_users")
-        .select("*")
-        .eq(
-          "auth_user-id",
-          currentUser.id
-        )
-        .single();
+    } = await supabaseClient
+      .from("sales_users")
+      .select("*")
+      .eq("auth_user-id", currentUser.id)
+      .single();
 
 
     if (error) {
 
       console.error(
-        "Profile error:",
+        "loadProfile error:",
         error
       );
 
-      alert(
-        "User profile not found."
+      /*
+        Jangan langsung logout jika profile
+        belum ditemukan karena error bisa berasal
+        dari query / RLS.
+      */
+
+      throw new Error(
+        "Profile user tidak dapat dimuat: " +
+        error.message
       );
-
-      await logout();
-
-      return;
-
     }
 
 
-    currentProfile =
-      data;
+    currentProfile = data;
 
 
     console.log(
@@ -388,27 +338,36 @@ async function loadProfile() {
     );
 
 
-    updateUserInfo();
+    showApp();
+
 
     setupRoleAccess();
 
-    showApp();
 
     await loadSalesLookup();
+
+    populateSalesDropdowns();
 
     await loadFilterOptions();
 
     await loadLeads(1);
 
-    // FORCE REFRESH DASHBOARD
     await updateDashboard();
+
+
+    updateUserUI();
 
 
   } catch (error) {
 
     console.error(
-      "loadProfile error:",
+      "Profile loading error:",
       error
+    );
+
+    alert(
+      error.message ||
+      "Profile tidak dapat dimuat."
     );
 
   }
@@ -416,36 +375,24 @@ async function loadProfile() {
 }
 
 
-// ================================
-// SHOW / HIDE APP
-// ================================
+/* =========================================================
+   SHOW / HIDE LOGIN
+   ========================================================= */
 
 function showLogin() {
 
   const loginPage =
-    document.getElementById(
-      "loginPage"
-    );
+    document.getElementById("loginPage");
 
   const app =
-    document.getElementById(
-      "app"
-    );
-
+    document.getElementById("app");
 
   if (loginPage) {
-
-    loginPage.style.display =
-      "flex";
-
+    loginPage.style.display = "flex";
   }
 
-
   if (app) {
-
-    app.style.display =
-      "none";
-
+    app.style.display = "none";
   }
 
 }
@@ -454,105 +401,100 @@ function showLogin() {
 function showApp() {
 
   const loginPage =
-    document.getElementById(
-      "loginPage"
-    );
+    document.getElementById("loginPage");
 
   const app =
-    document.getElementById(
-      "app"
-    );
-
+    document.getElementById("app");
 
   if (loginPage) {
-
-    loginPage.style.display =
-      "none";
-
+    loginPage.style.display = "none";
   }
-
 
   if (app) {
-
-    app.style.display =
-      "flex";
-
+    app.style.display = "block";
   }
-
-
-  showDashboard();
 
 }
 
 
-// ================================
-// USER INFO
-// ================================
+/* =========================================================
+   USER UI
+   ========================================================= */
 
-function updateUserInfo() {
-
-  if (!currentProfile) return;
-
+function updateUserUI() {
 
   const userInfo =
-    document.getElementById(
-      "userInfo"
-    );
+    document.getElementById("userInfo");
 
-  const currentUserElement =
-    document.getElementById(
-      "currentUser"
-    );
+  const currentUserEl =
+    document.getElementById("currentUser");
+
+
+  const name =
+    currentProfile?.name ||
+    currentProfile?.username ||
+    currentUser?.email ||
+    "User";
+
+
+  const role =
+    currentProfile?.role ||
+    "";
 
 
   if (userInfo) {
 
-    const avatarUrl =
-      currentProfile.avatar_url || "";
-
-
-    userInfo.innerHTML = `
-      ${
-        avatarUrl
-          ? `
-            <img
-              src="${escapeHTML(avatarUrl)}"
-              alt="${escapeHTML(currentProfile.name)}"
-              class="user-avatar"
-            >
-          `
-          : ""
-      }
-
-      <strong>
-        ${escapeHTML(
-          currentProfile.name
-        )}
-      </strong>
-
-      <small>
-        ${escapeHTML(
-          currentProfile.role
-        )}
-      </small>
-    `;
+    userInfo.textContent =
+      role
+        ? `${name} · ${role}`
+        : name;
 
   }
 
 
-  if (currentUserElement) {
+  if (currentUserEl) {
 
-    currentUserElement.textContent =
-      `${currentProfile.name} (${currentProfile.role})`;
+    currentUserEl.textContent =
+      role
+        ? `${name} — ${role}`
+        : name;
 
   }
 
 }
 
 
-// ================================
-// ROLE ACCESS
-// ================================
+/* =========================================================
+   ROLE HELPERS
+   ========================================================= */
+
+function isAdmin() {
+
+  const role =
+    String(
+      currentProfile?.role || ""
+    ).toLowerCase();
+
+  return role === "admin";
+
+}
+
+
+function isSales() {
+
+  const role =
+    String(
+      currentProfile?.role || ""
+    ).toLowerCase();
+
+  return role === "sales";
+
+}
+
+
+/* =========================================================
+   ROLE ACCESS
+   ========================================================= */
 
 function setupRoleAccess() {
 
@@ -566,61 +508,60 @@ function setupRoleAccess() {
       "mobileManageSalesBtn"
     );
 
-  const salesFilter =
-    document.getElementById(
-      "salesFilter"
-    );
-
   const salesDropdownContainer =
     document.getElementById(
       "salesDropdownContainer"
     );
 
-
-  if (!currentProfile) return;
-
-
-  const isAdmin =
-    currentProfile.role ===
-    "Admin";
+  const salesFilter =
+    document.getElementById(
+      "salesFilter"
+    );
 
 
-  if (manageSalesBtn) {
+  if (isAdmin()) {
 
-    manageSalesBtn.style.display =
-      isAdmin
-        ? "block"
-        : "none";
+    if (manageSalesBtn) {
+      manageSalesBtn.style.display =
+        "flex";
+    }
 
-  }
+    if (mobileManageSalesBtn) {
+      mobileManageSalesBtn.style.display =
+        "flex";
+    }
 
+    if (salesDropdownContainer) {
+      salesDropdownContainer.style.display =
+        "block";
+    }
 
-  if (mobileManageSalesBtn) {
+    if (salesFilter) {
+      salesFilter.style.display =
+        "block";
+    }
 
-    mobileManageSalesBtn.style.display =
-      isAdmin
-        ? "block"
-        : "none";
+  } else {
 
-  }
+    if (manageSalesBtn) {
+      manageSalesBtn.style.display =
+        "none";
+    }
 
+    if (mobileManageSalesBtn) {
+      mobileManageSalesBtn.style.display =
+        "none";
+    }
 
-  if (salesDropdownContainer) {
+    if (salesDropdownContainer) {
+      salesDropdownContainer.style.display =
+        "none";
+    }
 
-    salesDropdownContainer.style.display =
-      isAdmin
-        ? "block"
-        : "none";
-
-  }
-
-
-  if (salesFilter) {
-
-    salesFilter.style.display =
-      isAdmin
-        ? ""
-        : "none";
+    if (salesFilter) {
+      salesFilter.style.display =
+        "none";
+    }
 
   }
 
@@ -630,217 +571,37 @@ function setupRoleAccess() {
 }
 
 
-// ================================
-// SALES ASSIGNMENT ACCESS
-// ================================
+/* =========================================================
+   SALES ASSIGNMENT ACCESS
+   ========================================================= */
 
 function setupSalesAssignmentAccess() {
 
-  const field =
+  const salesAssign =
     document.getElementById(
       "leadSalesAssign"
     );
 
-
-  if (!field || !currentProfile)
+  if (!salesAssign) {
     return;
+  }
 
+  if (isAdmin()) {
 
-  if (
-    currentProfile.role ===
-    "Admin"
-  ) {
-
-    field.disabled =
-      false;
-
-    field.style.display =
-      "block";
+    salesAssign.disabled = false;
 
   } else {
 
-    field.disabled =
-      true;
-
-    field.style.display =
-      "block";
+    salesAssign.disabled = true;
 
   }
 
 }
 
 
-// ================================
-// NAVIGATION
-// ================================
-
-function hideAllPages() {
-
-  const pages = [
-    "dashboardPage",
-    "leadsPage",
-    "salesPage"
-  ];
-
-
-  pages.forEach(id => {
-
-    const element =
-      document.getElementById(id);
-
-    if (element) {
-
-      element.style.display =
-        "none";
-
-    }
-
-  });
-
-}
-
-
-function setPageTitle(title) {
-
-  const titleElement =
-    document.getElementById(
-      "pageTitle"
-    );
-
-
-  if (titleElement) {
-
-    titleElement.textContent =
-      title;
-
-  }
-
-}
-
-
-// ================================
-// SHOW DASHBOARD
-// ================================
-
-async function showDashboard() {
-
-  hideAllPages();
-
-
-  const page =
-    document.getElementById(
-      "dashboardPage"
-    );
-
-
-  if (page) {
-
-    page.style.display =
-      "block";
-
-  }
-
-
-  setPageTitle(
-    "Dashboard"
-  );
-
-
-  // ALWAYS GET FRESH DATA
-  await updateDashboard();
-
-}
-
-
-// ================================
-// SHOW LEADS
-// ================================
-
-async function showLeads() {
-
-  hideAllPages();
-
-
-  const page =
-    document.getElementById(
-      "leadsPage"
-    );
-
-
-  if (page) {
-
-    page.style.display =
-      "block";
-
-  }
-
-
-  setPageTitle(
-    currentProfile &&
-    currentProfile.role === "Admin"
-      ? "All Leads"
-      : "My Leads"
-  );
-
-
-  await loadFilterOptions();
-
-  await loadLeads(1);
-
-}
-
-
-// ================================
-// SHOW SALES
-// ================================
-
-async function showSales() {
-
-  if (
-    !currentProfile ||
-    currentProfile.role !==
-      "Admin"
-  ) {
-
-    alert(
-      "Access denied."
-    );
-
-    return;
-
-  }
-
-
-  hideAllPages();
-
-
-  const page =
-    document.getElementById(
-      "salesPage"
-    );
-
-
-  if (page) {
-
-    page.style.display =
-      "block";
-
-  }
-
-
-  setPageTitle(
-    "Manage Sales"
-  );
-
-
-  await loadSalesUsers();
-
-}
-
-
-// ================================
-// LOAD SALES LOOKUP
-// ================================
+/* =========================================================
+   SALES LOOKUP
+   ========================================================= */
 
 async function loadSalesLookup() {
 
@@ -849,26 +610,27 @@ async function loadSalesLookup() {
     const {
       data,
       error
-    } =
-      await supabaseClient
-        .from("sales_users")
-        .select(
-          "id, name, username, role, status, created_at"
-        )
-        .order(
-          "name",
-          {
-            ascending: true
-          }
-        );
+    } = await supabaseClient
+      .from("sales_users")
+      .select(
+        "id, name, username, role, status, created_at"
+      )
+      .order(
+        "name",
+        {
+          ascending: true
+        }
+      );
 
 
     if (error) {
 
       console.error(
-        "Load sales lookup error:",
+        "loadSalesLookup error:",
         error
       );
+
+      salesUsersData = [];
 
       return;
 
@@ -879,30 +641,23 @@ async function loadSalesLookup() {
       data || [];
 
 
-    populateSalesDropdowns();
-
-
-    console.log(
-      "Sales lookup loaded:",
-      salesUsersData
-    );
-
-
   } catch (error) {
 
     console.error(
-      "loadSalesLookup error:",
+      "Sales lookup error:",
       error
     );
+
+    salesUsersData = [];
 
   }
 
 }
 
 
-// ================================
-// POPULATE SALES DROPDOWNS
-// ================================
+/* =========================================================
+   POPULATE SALES DROPDOWNS
+   ========================================================= */
 
 function populateSalesDropdowns() {
 
@@ -911,336 +666,179 @@ function populateSalesDropdowns() {
       "salesFilter"
     );
 
-
-  if (salesFilter) {
-
-    const currentValue =
-      salesFilter.value;
-
-
-    salesFilter.innerHTML =
-      "";
-
-
-    const allOption =
-      document.createElement(
-        "option"
-      );
-
-
-    allOption.value =
-      "";
-
-
-    allOption.textContent =
-      "All Sales";
-
-
-    salesFilter.appendChild(
-      allOption
-    );
-
-
-    salesUsersData
-      .filter(
-        sales =>
-          sales.role === "Sales"
-      )
-      .forEach(
-        sales => {
-
-          const option =
-            document.createElement(
-              "option"
-            );
-
-
-          option.value =
-            sales.id;
-
-
-          option.textContent =
-            sales.name ||
-            sales.username ||
-            "Sales";
-
-
-          salesFilter.appendChild(
-            option
-          );
-
-        }
-      );
-
-
-    if (
-      salesUsersData.some(
-        sales =>
-          String(sales.id) ===
-          String(currentValue)
-      )
-    ) {
-
-      salesFilter.value =
-        currentValue;
-
-    } else {
-
-      salesFilter.value =
-        "";
-
-    }
-
-  }
-
-
-  const salesDropdownMenu =
+  const salesMenu =
     document.getElementById(
       "salesDropdownMenu"
     );
 
-
-  if (salesDropdownMenu) {
-
-    salesDropdownMenu.innerHTML =
-      "";
-
-
-    const allSalesButton =
-      document.createElement(
-        "button"
-      );
-
-
-    allSalesButton.type =
-      "button";
-
-    allSalesButton.className =
-      "nav-dropdown-item";
-
-    allSalesButton.dataset.salesId =
-      "";
-
-    allSalesButton.textContent =
-      "All Sales";
-
-
-    allSalesButton.onclick =
-      function(event) {
-
-        event.stopPropagation();
-
-
-        if (
-          typeof selectSalesFilter ===
-          "function"
-        ) {
-
-          selectSalesFilter(
-            "",
-            "All Sales"
-          );
-
-        }
-
-      };
-
-
-    salesDropdownMenu.appendChild(
-      allSalesButton
-    );
-
-
-    salesUsersData
-      .filter(
-        sales =>
-          sales.role === "Sales"
-      )
-      .forEach(
-        sales => {
-
-          const salesButton =
-            document.createElement(
-              "button"
-            );
-
-
-          salesButton.type =
-            "button";
-
-          salesButton.className =
-            "nav-dropdown-item";
-
-          salesButton.dataset.salesId =
-            sales.id;
-
-          salesButton.textContent =
-            sales.name ||
-            sales.username ||
-            "Sales";
-
-
-          salesButton.onclick =
-            function(event) {
-
-              event.stopPropagation();
-
-
-              if (
-                typeof selectSalesFilter ===
-                "function"
-              ) {
-
-                selectSalesFilter(
-                  sales.id,
-                  sales.name ||
-                    sales.username ||
-                    "Sales"
-                );
-
-              }
-
-            };
-
-
-          salesDropdownMenu.appendChild(
-            salesButton
-          );
-
-        }
-      );
-
-  }
-
-
-  const leadSalesAssign =
+  const salesAssign =
     document.getElementById(
       "leadSalesAssign"
     );
 
 
-  if (leadSalesAssign) {
+  /*
+    SALES FILTER
+  */
+
+  if (salesFilter) {
 
     const currentValue =
-      leadSalesAssign.value;
+      salesFilter.value || "";
+
+    salesFilter.innerHTML = `
+      <option value="">
+        All Sales
+      </option>
+    `;
+
+    salesUsersData
+      .filter(user =>
+        String(user.role || "")
+          .toLowerCase() === "sales"
+      )
+      .forEach(user => {
+
+        const option =
+          document.createElement("option");
+
+        option.value =
+          user.id;
+
+        option.textContent =
+          user.name ||
+          user.username ||
+          "Sales";
+
+        salesFilter.appendChild(
+          option
+        );
+
+      });
 
 
-    leadSalesAssign.innerHTML =
-      "";
+    salesFilter.value =
+      currentValue;
+
+  }
 
 
-    const selectOption =
-      document.createElement(
-        "option"
-      );
+  /*
+    TOP NAV SALES DROPDOWN
+  */
 
+  if (salesMenu) {
 
-    selectOption.value =
-      "";
-
-
-    selectOption.textContent =
-      "Select Sales";
-
-
-    leadSalesAssign.appendChild(
-      selectOption
-    );
+    salesMenu.innerHTML = `
+      <button
+        type="button"
+        class="nav-dropdown-item"
+        data-sales-id=""
+        onclick="selectSalesFilter('', 'All Sales')"
+      >
+        All Sales
+      </button>
+    `;
 
 
     salesUsersData
-      .filter(
-        sales =>
-          sales.role === "Sales"
+      .filter(user =>
+        String(user.role || "")
+          .toLowerCase() === "sales"
       )
-      .forEach(
-        sales => {
+      .forEach(user => {
 
-          const option =
-            document.createElement(
-              "option"
+        const button =
+          document.createElement("button");
+
+        button.type =
+          "button";
+
+        button.className =
+          "nav-dropdown-item";
+
+        button.dataset.salesId =
+          user.id;
+
+        button.textContent =
+          user.name ||
+          user.username ||
+          "Sales";
+
+        button.onclick =
+          function () {
+
+            selectSalesFilter(
+              user.id,
+              user.name ||
+              user.username
             );
 
-
-          option.value =
-            sales.id;
+          };
 
 
-          option.textContent =
-            sales.name ||
-            sales.username ||
-            "Sales";
+        salesMenu.appendChild(
+          button
+        );
+
+      });
+
+  }
 
 
-          leadSalesAssign.appendChild(
-            option
-          );
+  /*
+    LEAD ASSIGNMENT
+  */
 
-        }
-      );
+  if (salesAssign) {
+
+    const currentValue =
+      salesAssign.value || "";
+
+    salesAssign.innerHTML = `
+      <option value="">
+        Select Sales
+      </option>
+    `;
 
 
-    if (
-      salesUsersData.some(
-        sales =>
-          String(sales.id) ===
-          String(currentValue)
+    salesUsersData
+      .filter(user =>
+        String(user.role || "")
+          .toLowerCase() === "sales"
       )
-    ) {
+      .forEach(user => {
 
-      leadSalesAssign.value =
-        currentValue;
+        const option =
+          document.createElement("option");
 
-    }
+        option.value =
+          user.id;
+
+        option.textContent =
+          user.name ||
+          user.username ||
+          "Sales";
+
+        salesAssign.appendChild(
+          option
+        );
+
+      });
 
 
-    setupSalesAssignmentAccess();
+    salesAssign.value =
+      currentValue;
 
   }
+
 
 }
 
 
-// ================================
-// GET SALES NAME
-// ================================
-
-function getSalesName(id) {
-
-  if (!id) {
-
-    return "-";
-
-  }
-
-
-  const sales =
-    salesUsersData.find(
-      user =>
-        String(user.id) ===
-        String(id)
-    );
-
-
-  if (!sales) {
-
-    return "-";
-
-  }
-
-
-  return (
-    sales.name ||
-    sales.username ||
-    "-"
-  );
-
-}
-
-
-// ================================
-// LOAD FILTER OPTIONS
-// ================================
+/* =========================================================
+   FILTER OPTIONS
+   ========================================================= */
 
 async function loadFilterOptions() {
 
@@ -1249,18 +847,17 @@ async function loadFilterOptions() {
     const {
       data,
       error
-    } =
-      await supabaseClient
-        .from("leads")
-        .select(
-          "business, location"
-        );
+    } = await supabaseClient
+      .from("leads")
+      .select(
+        "business, location"
+      );
 
 
     if (error) {
 
       console.error(
-        "Load filter options error:",
+        "loadFilterOptions error:",
         error
       );
 
@@ -1269,77 +866,119 @@ async function loadFilterOptions() {
     }
 
 
-    const leads =
-      data || [];
-
-
-    const businesses =
+    const businessValues =
       [
         ...new Set(
-          leads
-            .map(
-              lead =>
-                getValue(
-                  lead.business
-                ).trim()
+          (data || [])
+            .map(row =>
+              row.business
             )
-            .filter(
-              value =>
-                value !== ""
-            )
+            .filter(Boolean)
         )
-      ].sort(
-        (a, b) =>
-          a.localeCompare(
-            b
-          )
+      ]
+      .sort();
+
+
+    const locationValues =
+      [
+        ...new Set(
+          (data || [])
+            .map(row =>
+              row.location
+            )
+            .filter(Boolean)
+        )
+      ]
+      .sort();
+
+
+    const businessFilter =
+      document.getElementById(
+        "businessFilter"
+      );
+
+    const locationFilter =
+      document.getElementById(
+        "locationFilter"
       );
 
 
-    const locations =
-      [
-        ...new Set(
-          leads
-            .map(
-              lead =>
-                getValue(
-                  lead.location
-                ).trim()
-            )
-            .filter(
-              value =>
-                value !== ""
-            )
-        )
-      ].sort(
-        (a, b) =>
-          a.localeCompare(
-            b
-          )
-      );
+    if (businessFilter) {
+
+      const currentValue =
+        businessFilter.value;
+
+      businessFilter.innerHTML = `
+        <option value="">
+          All Business
+        </option>
+      `;
 
 
-    populateFilter(
-      "businessFilter",
-      businesses,
-      "All Business"
-    );
+      businessValues.forEach(value => {
+
+        const option =
+          document.createElement("option");
+
+        option.value =
+          value;
+
+        option.textContent =
+          value;
+
+        businessFilter.appendChild(
+          option
+        );
+
+      });
 
 
-    populateFilter(
-      "locationFilter",
-      locations,
-      "All Location"
-    );
+      businessFilter.value =
+        currentValue;
+
+    }
 
 
-    populateSalesDropdowns();
+    if (locationFilter) {
+
+      const currentValue =
+        locationFilter.value;
+
+      locationFilter.innerHTML = `
+        <option value="">
+          All Location
+        </option>
+      `;
+
+
+      locationValues.forEach(value => {
+
+        const option =
+          document.createElement("option");
+
+        option.value =
+          value;
+
+        option.textContent =
+          value;
+
+        locationFilter.appendChild(
+          option
+        );
+
+      });
+
+
+      locationFilter.value =
+        currentValue;
+
+    }
 
 
   } catch (error) {
 
     console.error(
-      "loadFilterOptions error:",
+      "Filter options error:",
       error
     );
 
@@ -1348,200 +987,159 @@ async function loadFilterOptions() {
 }
 
 
-// ================================
-// POPULATE FILTER DROPDOWN
-// ================================
+/* =========================================================
+   LOAD LEADS
+   ========================================================= */
 
-function populateFilter(
-  id,
-  values,
-  defaultText
+async function loadLeads(
+  page = 1
 ) {
 
-  const select =
+  currentPage =
+    Math.max(
+      1,
+      Number(page) || 1
+    );
+
+
+  const search =
     document.getElementById(
-      id
+      "leadSearch"
+    )?.value.trim() || "";
+
+
+  const status =
+    document.getElementById(
+      "statusFilter"
+    )?.value || "";
+
+
+  const business =
+    document.getElementById(
+      "businessFilter"
+    )?.value || "";
+
+
+  const location =
+    document.getElementById(
+      "locationFilter"
+    )?.value || "";
+
+
+  const salesFilter =
+    document.getElementById(
+      "salesFilter"
     );
 
-
-  if (!select)
-    return;
-
-
-  const currentValue =
-    select.value;
-
-
-  select.innerHTML = "";
-
-
-  const defaultOption =
-    document.createElement(
-      "option"
-    );
-
-
-  defaultOption.value =
-    "";
-
-
-  defaultOption.textContent =
-    defaultText;
-
-
-  select.appendChild(
-    defaultOption
-  );
-
-
-  values.forEach(
-    value => {
-
-      const option =
-        document.createElement(
-          "option"
-        );
-
-
-      option.value =
-        value;
-
-
-      option.textContent =
-        value;
-
-
-      select.appendChild(
-        option
-      );
-
-    }
-  );
-
-
-  if (
-    values.includes(
-      currentValue
-    )
-  ) {
-
-    select.value =
-      currentValue;
-
-  } else {
-
-    select.value =
-      "";
-
-  }
-
-}
-
-
-// ================================
-// LOAD LEADS
-// ================================
-
-async function loadLeads(page = 1) {
 
   try {
-
-    currentPage =
-      Math.max(
-        1,
-        Number(page) || 1
-      );
-
-
-    if (
-      !salesUsersData ||
-      salesUsersData.length === 0
-    ) {
-
-      await loadSalesLookup();
-
-    }
-
-
-    const search =
-      document
-        .getElementById(
-          "leadSearch"
-        )
-        ?.value
-        .trim() || "";
-
-
-    const status =
-      document
-        .getElementById(
-          "statusFilter"
-        )
-        ?.value || "";
-
-
-    const business =
-      document
-        .getElementById(
-          "businessFilter"
-        )
-        ?.value || "";
-
-
-    const location =
-      document
-        .getElementById(
-          "locationFilter"
-        )
-        ?.value || "";
-
-
-    const salesFilter =
-      document
-        .getElementById(
-          "salesFilter"
-        )
-        ?.value || "";
-
 
     let query =
       supabaseClient
         .from("leads")
         .select(
-          "*",
+          `
+            id,
+            customer_name,
+            phone,
+            email,
+            business,
+            location,
+            status,
+            follow_up_date,
+            notes,
+            created_at,
+            sales_id,
+            appointment,
+            site_survey,
+            quotation,
+            spk,
+            closing
+          `,
           {
             count: "exact"
           }
         );
 
 
+    /*
+      SALES USER:
+      hanya boleh melihat lead miliknya.
+    */
+
+    if (isSales()) {
+
+      if (!currentProfile?.id) {
+
+        console.error(
+          "Sales profile ID tidak tersedia."
+        );
+
+        leadsData = [];
+
+        renderLeads();
+
+        return;
+
+      }
+
+      query =
+        query.eq(
+          "sales_id",
+          currentProfile.id
+        );
+
+    }
+
+
+    /*
+      ADMIN SALES FILTER
+    */
+
+    if (
+      isAdmin() &&
+      salesFilter &&
+      salesFilter.value
+    ) {
+
+      query =
+        query.eq(
+          "sales_id",
+          salesFilter.value
+        );
+
+    }
+
+
+    /*
+      SEARCH
+    */
+
     if (search) {
 
-      const safeSearch =
+      const escapedSearch =
         search
-          .replace(
-            /%/g,
-            ""
-          )
-          .replace(
-            /,/g,
-            " "
-          );
-
+          .replace(/%/g, "\\%")
+          .replace(/_/g, "\\_")
+          .replace(/,/g, "");
 
       query =
         query.or(
           [
-            `customer_name.ilike.%${safeSearch}%`,
-            `phone.ilike.%${safeSearch}%`,
-            `email.ilike.%${safeSearch}%`,
-            `business.ilike.%${safeSearch}%`,
-            `location.ilike.%${safeSearch}%`
+            `customer_name.ilike.%${escapedSearch}%`,
+            `phone.ilike.%${escapedSearch}%`,
+            `email.ilike.%${escapedSearch}%`,
+            `business.ilike.%${escapedSearch}%`,
+            `location.ilike.%${escapedSearch}%`
           ].join(",")
         );
 
     }
 
+
+    /*
+      FILTER STATUS
+    */
 
     if (status) {
 
@@ -1554,6 +1152,10 @@ async function loadLeads(page = 1) {
     }
 
 
+    /*
+      FILTER BUSINESS
+    */
+
     if (business) {
 
       query =
@@ -1564,6 +1166,10 @@ async function loadLeads(page = 1) {
 
     }
 
+
+    /*
+      FILTER LOCATION
+    */
 
     if (location) {
 
@@ -1576,38 +1182,9 @@ async function loadLeads(page = 1) {
     }
 
 
-    // ADMIN CAN FILTER SALES
-    if (
-      salesFilter &&
-      currentProfile &&
-      currentProfile.role ===
-        "Admin"
-    ) {
-
-      query =
-        query.eq(
-          "sales_id",
-          salesFilter
-        );
-
-    }
-
-
-    // SALES ONLY SEES OWN LEADS
-    if (
-      currentProfile &&
-      currentProfile.role ===
-        "Sales"
-    ) {
-
-      query =
-        query.eq(
-          "sales_id",
-          currentProfile.id
-        );
-
-    }
-
+    /*
+      PAGINATION
+    */
 
     const from =
       (currentPage - 1) *
@@ -1637,20 +1214,21 @@ async function loadLeads(page = 1) {
       data,
       error,
       count
-    } =
-      await query;
+    } = await query;
 
 
     if (error) {
 
       console.error(
-        "Load leads error:",
+        "loadLeads error:",
         error
       );
 
-      alert(
-        error.message
-      );
+      leadsData = [];
+
+      totalLeadsCount = 0;
+
+      renderLeads();
 
       return;
 
@@ -1660,43 +1238,241 @@ async function loadLeads(page = 1) {
     leadsData =
       data || [];
 
-
     totalLeadsCount =
-      count || 0;
+      Number(count || 0);
 
 
-    renderLeads(
-      leadsData
-    );
-
-
-    updatePagination();
+    renderLeads();
 
 
   } catch (error) {
 
     console.error(
-      "loadLeads error:",
+      "Unexpected loadLeads error:",
       error
     );
+
+    leadsData = [];
+
+    totalLeadsCount = 0;
+
+    renderLeads();
 
   }
 
 }
 
 
-// ================================
-// PAGINATION
-// ================================
+/* =========================================================
+   RENDER LEADS
+   ========================================================= */
+
+function renderLeads() {
+
+  const table =
+    document.getElementById(
+      "leadsTable"
+    );
+
+  if (!table) {
+    return;
+  }
+
+
+  table.innerHTML = "";
+
+
+  if (!leadsData.length) {
+
+    table.innerHTML = `
+      <tr>
+        <td
+          colspan="10"
+          style="text-align:center; padding:30px;"
+        >
+          No leads found.
+        </td>
+      </tr>
+    `;
+
+    updatePagination();
+
+    return;
+
+  }
+
+
+  leadsData.forEach(lead => {
+
+    const row =
+      document.createElement("tr");
+
+
+    const status =
+      normalizeLeadStatus(
+        lead.status
+      );
+
+
+    const sales =
+      getSalesName(
+        lead.sales_id
+      );
+
+
+    const followUp =
+      lead.follow_up_date
+        ? formatDate(
+            lead.follow_up_date
+          )
+        : "-";
+
+
+    const nextStep =
+      getNextStep(
+        lead
+      );
+
+
+    row.innerHTML = `
+
+      <td>
+        <strong>
+          ${escapeHtml(
+            lead.customer_name || "-"
+          )}
+        </strong>
+      </td>
+
+
+      <td>
+        ${
+          lead.phone
+            ? `
+              <a
+                href="${getWhatsAppLink(
+                  lead.phone
+                )}"
+                target="_blank"
+                rel="noopener"
+                class="whatsapp-link"
+              >
+                ${escapeHtml(
+                  lead.phone
+                )}
+              </a>
+            `
+            : "-"
+        }
+      </td>
+
+
+      <td>
+        ${
+          lead.email
+            ? `
+              <a
+                href="mailto:${escapeAttribute(
+                  lead.email
+                )}"
+              >
+                ${escapeHtml(
+                  lead.email
+                )}
+              </a>
+            `
+            : "-"
+        }
+      </td>
+
+
+      <td>
+        ${escapeHtml(
+          lead.business || "-"
+        )}
+      </td>
+
+
+      <td>
+        ${escapeHtml(
+          lead.location || "-"
+        )}
+      </td>
+
+
+      <td>
+        ${escapeHtml(
+          sales || "-"
+        )}
+      </td>
+
+
+      <td>
+        <span class="status-badge ${getStatusClass(status)}">
+          ${escapeHtml(status)}
+        </span>
+      </td>
+
+
+      <td>
+        ${followUp}
+      </td>
+
+
+      <td>
+        ${escapeHtml(nextStep)}
+      </td>
+
+
+      <td>
+        <div class="table-actions">
+
+          <button
+            type="button"
+            class="secondary-btn small-btn"
+            onclick="editLead('${lead.id}')"
+          >
+            Edit
+          </button>
+
+          <button
+            type="button"
+            class="danger-btn small-btn"
+            onclick="deleteLead('${lead.id}')"
+          >
+            Delete
+          </button>
+
+        </div>
+      </td>
+
+    `;
+
+
+    table.appendChild(
+      row
+    );
+
+  });
+
+
+  updatePagination();
+
+}
+
+
+/* =========================================================
+   PAGINATION
+   ========================================================= */
 
 function updatePagination() {
 
-  const paginationInfo =
+  const info =
     document.getElementById(
       "paginationInfo"
     );
 
-  const pageIndicator =
+  const indicator =
     document.getElementById(
       "pageIndicator"
     );
@@ -1712,45 +1488,52 @@ function updatePagination() {
     );
 
 
+  const total =
+    Number(
+      totalLeadsCount || 0
+    );
+
+
   const totalPages =
     Math.max(
       1,
       Math.ceil(
-        totalLeadsCount /
-        pageSize
+        total / pageSize
       )
     );
 
 
-  if (paginationInfo) {
-
-    const start =
-      totalLeadsCount === 0
-        ? 0
-        : (
-            (currentPage - 1) *
-            pageSize
-          ) + 1;
+  const start =
+    total === 0
+      ? 0
+      : (
+          (currentPage - 1) *
+          pageSize
+        ) + 1;
 
 
-    const end =
-      Math.min(
-        currentPage *
+  const end =
+    total === 0
+      ? 0
+      : Math.min(
+          currentPage *
           pageSize,
-        totalLeadsCount
-      );
+          total
+        );
 
 
-    paginationInfo.textContent =
-      `${start}-${end} of ${totalLeadsCount} leads`;
+  if (info) {
+
+    info.textContent =
+      `Showing ${start} to ${end} of ${total} leads`;
 
   }
 
 
-  if (pageIndicator) {
+  if (indicator) {
 
-    pageIndicator.textContent =
-      `Page ${currentPage} / ${totalPages}`;
+    indicator.textContent =
+      `Page ${currentPage} of ${totalPages}`;
 
   }
 
@@ -1773,7 +1556,13 @@ function updatePagination() {
 }
 
 
-function changePage(direction) {
+/* =========================================================
+   CHANGE PAGE
+   ========================================================= */
+
+function changePage(
+  direction
+) {
 
   const totalPages =
     Math.max(
@@ -1794,9 +1583,7 @@ function changePage(direction) {
     newPage < 1 ||
     newPage > totalPages
   ) {
-
     return;
-
   }
 
 
@@ -1807,237 +1594,85 @@ function changePage(direction) {
 }
 
 
-// ================================
-// RENDER LEADS
-// ================================
+/* =========================================================
+   SEARCH
+   ========================================================= */
 
-function renderLeads(data) {
+let searchTimer = null;
 
-  const table =
-    document.getElementById(
-      "leadsTable"
-    );
+function onSearchInput() {
 
-
-  if (!table) return;
-
-
-  table.innerHTML =
-    "";
-
-
-  if (
-    !data ||
-    data.length === 0
-  ) {
-
-    table.innerHTML = `
-      <tr>
-        <td
-          colspan="10"
-          style="text-align:center;">
-          No leads found
-        </td>
-      </tr>
-    `;
-
-    return;
-
-  }
-
-
-  data.forEach(
-    lead => {
-
-      const tr =
-        document.createElement(
-          "tr"
-        );
-
-
-      const salesName =
-        getSalesName(
-          lead.sales_id
-        );
-
-
-      const displayStatus =
-        normalizeLeadStatus(
-          lead.status
-        );
-
-
-      tr.innerHTML = `
-
-        <td>
-          ${escapeHTML(
-            getValue(
-              lead.customer_name
-            )
-          )}
-        </td>
-
-        <td>
-          ${
-            lead.phone
-              ? `
-                <a
-                  href="${whatsappLink(
-                    lead.phone
-                  )}"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="wa-link">
-                  ${escapeHTML(
-                    lead.phone
-                  )}
-                </a>
-              `
-              : "-"
-          }
-        </td>
-
-        <td>
-          ${
-            lead.email
-              ? `
-                <a
-                  href="mailto:${escapeHTML(
-                    lead.email
-                  )}">
-                  ${escapeHTML(
-                    lead.email
-                  )}
-                </a>
-              `
-              : "-"
-          }
-        </td>
-
-        <td>
-          ${escapeHTML(
-            getValue(
-              lead.business
-            )
-          )}
-        </td>
-
-        <td>
-          ${escapeHTML(
-            getValue(
-              lead.location
-            )
-          )}
-        </td>
-
-        <td>
-          ${
-            salesName !== "-"
-              ? escapeHTML(
-                  salesName
-                )
-              : "-"
-          }
-        </td>
-
-        <td>
-          <span
-            class="status-badge ${statusClass(
-              displayStatus
-            )}">
-            ${escapeHTML(
-              displayStatus
-            )}
-          </span>
-        </td>
-
-        <td>
-          ${formatDate(
-            lead.follow_up_date
-          )}
-        </td>
-
-        <td>
-          ${formatDate(
-            lead.appointment
-          )}
-        </td>
-
-        <td>
-
-          <button
-            class="secondary-btn small-btn"
-            onclick="editLead('${lead.id}')">
-            Edit
-          </button>
-
-          <button
-            class="secondary-btn small-btn"
-            onclick="deleteLead('${lead.id}')">
-            Delete
-          </button>
-
-        </td>
-
-      `;
-
-
-      table.appendChild(
-        tr
-      );
-
-    }
+  clearTimeout(
+    searchTimer
   );
+
+
+  searchTimer =
+    setTimeout(
+      function () {
+
+        loadLeads(1);
+
+      },
+      300
+    );
 
 }
 
 
-// ================================
-// NORMALIZE OLD STATUS VALUES
-// ================================
+/* =========================================================
+   NORMALIZE STATUS
+   ========================================================= */
 
-function normalizeLeadStatus(status) {
-
-  if (!status)
-    return "New";
-
+function normalizeLeadStatus(
+  status
+) {
 
   const value =
-    String(status)
-      .trim()
-      .toLowerCase();
+    String(
+      status || ""
+    ).trim();
 
 
   const map = {
 
-    "new":
+    "Belum Dihubungi":
       "New",
 
-    "belum dihubungi":
+    "Belum dihubungi":
       "New",
 
-    "flyer sent":
+    "New":
+      "New",
+
+    "Flyer Sent":
       "Flyer Sent",
 
-    "tertarik":
+    "Tertarik":
       "Interested",
 
-    "interested":
+    "Interested":
       "Interested",
 
-    "follow up":
+    "Follow Up":
       "Follow Up",
 
-    "follow-up":
+    "Followup":
       "Follow Up",
 
-    "closing":
+    "Follow-up":
+      "Follow Up",
+
+    "Closing":
       "Closing",
 
-    "tidak tertarik":
+    "Tidak Tertarik":
       "Not Interested",
 
-    "not interested":
+    "Tidak tertarik":
+      "Not Interested",
+
+    "Not Interested":
       "Not Interested"
 
   };
@@ -2045,44 +1680,755 @@ function normalizeLeadStatus(status) {
 
   return (
     map[value] ||
-    status
+    value ||
+    "New"
   );
 
 }
 
 
-// ================================
-// FILTER LEADS
-// ================================
+/* =========================================================
+   STATUS CLASS
+   ========================================================= */
 
-function filterLeads() {
+function getStatusClass(
+  status
+) {
 
-  loadLeads(1);
+  switch (
+    normalizeLeadStatus(status)
+  ) {
+
+    case "New":
+      return "status-new";
+
+    case "Flyer Sent":
+      return "status-flyer";
+
+    case "Interested":
+      return "status-interested";
+
+    case "Follow Up":
+      return "status-followup";
+
+    case "Closing":
+      return "status-closing";
+
+    case "Not Interested":
+      return "status-not-interested";
+
+    default:
+      return "";
+
+  }
 
 }
 
 
-// ================================
-// SEARCH INPUT
-// ================================
+/* =========================================================
+   SET STATUS OPTIONS
+   ========================================================= */
 
-function onSearchInput() {
+function setupEnglishStatusOptions() {
 
-  loadLeads(1);
+  const select =
+    document.getElementById(
+      "leadStatus"
+    );
+
+  if (!select) {
+    return;
+  }
+
+
+  /*
+    Tetap menyimpan nilai database
+    yang sekarang digunakan.
+  */
+
+  select.innerHTML = `
+
+    <option value="New">
+      New
+    </option>
+
+    <option value="Flyer Sent">
+      Flyer Sent
+    </option>
+
+    <option value="Interested">
+      Interested
+    </option>
+
+    <option value="Follow Up">
+      Follow Up
+    </option>
+
+    <option value="Closing">
+      Closing
+    </option>
+
+    <option value="Not Interested">
+      Not Interested
+    </option>
+
+  `;
 
 }
 
 
-// ================================
-// ADD LEAD MODAL
-// ================================
+/* =========================================================
+   DASHBOARD — IMPORTANT
+   ========================================================= */
 
-function openLeadModal() {
+/*
+  Ini bagian utama yang diperbaiki.
+
+  Dashboard TIDAK mengambil angka dari leadsData,
+  karena leadsData hanya berisi 20 lead pada halaman aktif.
+
+  Dashboard mengambil langsung seluruh lead yang
+  boleh dilihat oleh user dari Supabase.
+*/
+
+async function updateDashboard() {
 
   console.log(
-    "openLeadModal clicked"
+    "========== DASHBOARD REFRESH =========="
   );
 
+  console.log(
+    "User:",
+    currentUser?.id
+  );
+
+  console.log(
+    "Profile:",
+    currentProfile
+  );
+
+
+  try {
+
+    let query =
+      supabaseClient
+        .from("leads")
+        .select(
+          `
+            id,
+            status,
+            appointment,
+            site_survey,
+            quotation,
+            closing,
+            sales_id
+          `
+        );
+
+
+    /*
+      SALES:
+      hanya hitung lead miliknya.
+    */
+
+    if (isSales()) {
+
+      if (!currentProfile?.id) {
+
+        console.error(
+          "Dashboard: currentProfile.id tidak tersedia."
+        );
+
+        resetDashboard();
+
+        return;
+
+      }
+
+
+      query =
+        query.eq(
+          "sales_id",
+          currentProfile.id
+        );
+
+    }
+
+
+    /*
+      ADMIN:
+      tidak diberikan filter sales_id,
+      sehingga menghitung seluruh lead.
+    */
+
+
+    const {
+      data,
+      error
+    } = await query;
+
+
+    if (error) {
+
+      console.error(
+        "DASHBOARD SUPABASE ERROR:",
+        error
+      );
+
+      resetDashboard();
+
+      return;
+
+    }
+
+
+    const dataList =
+      Array.isArray(data)
+        ? data
+        : [];
+
+
+    /*
+      LOG PENTING
+      -------------------------------------
+      Ini akan menunjukkan jumlah data
+      yang benar-benar diterima Dashboard
+      dari Supabase.
+    */
+
+    console.log(
+      "Dashboard menerima data dari Supabase:",
+      dataList.length,
+      "leads"
+    );
+
+
+    /*
+      HITUNG STATISTIK
+    */
+
+    const total =
+      dataList.length;
+
+
+    const newLeads =
+      countNormalizedStatus(
+        dataList,
+        "New"
+      );
+
+
+    const interested =
+      countNormalizedStatus(
+        dataList,
+        "Interested"
+      );
+
+
+    const followUp =
+      countNormalizedStatus(
+        dataList,
+        "Follow Up"
+      );
+
+
+    const appointment =
+      countDateField(
+        dataList,
+        "appointment"
+      );
+
+
+    const siteSurvey =
+      countDateField(
+        dataList,
+        "site_survey"
+      );
+
+
+    const quotation =
+      countDateField(
+        dataList,
+        "quotation"
+      );
+
+
+    const closing =
+      countClosing(
+        dataList
+      );
+
+
+    /*
+      UPDATE DOM
+    */
+
+    setText(
+      "statTotal",
+      total
+    );
+
+
+    setText(
+      "statNew",
+      newLeads
+    );
+
+
+    setText(
+      "statInterested",
+      interested
+    );
+
+
+    setText(
+      "statFollowUp",
+      followUp
+    );
+
+
+    setText(
+      "statAppointment",
+      appointment
+    );
+
+
+    setText(
+      "statSiteSurvey",
+      siteSurvey
+    );
+
+
+    setText(
+      "statQuotation",
+      quotation
+    );
+
+
+    setText(
+      "statClosing",
+      closing
+    );
+
+
+    console.log(
+      "DASHBOARD RESULT:",
+      {
+        total,
+        newLeads,
+        interested,
+        followUp,
+        appointment,
+        siteSurvey,
+        quotation,
+        closing
+      }
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "Unexpected dashboard error:",
+      error
+    );
+
+    resetDashboard();
+
+  }
+
+}
+
+
+/* =========================================================
+   RESET DASHBOARD
+   ========================================================= */
+
+function resetDashboard() {
+
+  setText(
+    "statTotal",
+    0
+  );
+
+  setText(
+    "statNew",
+    0
+  );
+
+  setText(
+    "statInterested",
+    0
+  );
+
+  setText(
+    "statFollowUp",
+    0
+  );
+
+  setText(
+    "statAppointment",
+    0
+  );
+
+  setText(
+    "statSiteSurvey",
+    0
+  );
+
+  setText(
+    "statQuotation",
+    0
+  );
+
+  setText(
+    "statClosing",
+    0
+  );
+
+}
+
+
+/* =========================================================
+   DASHBOARD COUNT HELPERS
+   ========================================================= */
+
+function countNormalizedStatus(
+  data,
+  target
+) {
+
+  return data.filter(
+    row =>
+      normalizeLeadStatus(
+        row.status
+      ) === target
+  ).length;
+
+}
+
+
+function countDateField(
+  data,
+  field
+) {
+
+  return data.filter(
+    row => {
+
+      const value =
+        row[field];
+
+      return (
+        value !== null &&
+        value !== undefined &&
+        String(value).trim() !== ""
+      );
+
+    }
+  ).length;
+
+}
+
+
+function countClosing(
+  data
+) {
+
+  return data.filter(
+    row => {
+
+      const status =
+        normalizeLeadStatus(
+          row.status
+        );
+
+
+      const closingDate =
+        row.closing;
+
+
+      return (
+        status === "Closing" ||
+        (
+          closingDate !== null &&
+          closingDate !== undefined &&
+          String(
+            closingDate
+          ).trim() !== ""
+        )
+      );
+
+    }
+  ).length;
+
+}
+
+
+/* =========================================================
+   SET TEXT
+   ========================================================= */
+
+function setText(
+  id,
+  value
+) {
+
+  const element =
+    document.getElementById(id);
+
+
+  if (!element) {
+
+    console.warn(
+      `Dashboard element #${id} tidak ditemukan.`
+    );
+
+    return;
+
+  }
+
+
+  element.textContent =
+    Number.isFinite(
+      Number(value)
+    )
+      ? Number(value).toLocaleString("id-ID")
+      : String(value ?? "0");
+
+}
+
+
+/* =========================================================
+   SHOW DASHBOARD
+   ========================================================= */
+
+async function showDashboard() {
+
+  hideAllPages();
+
+
+  const dashboard =
+    document.getElementById(
+      "dashboardPage"
+    );
+
+
+  if (dashboard) {
+
+    dashboard.style.display =
+      "block";
+
+  }
+
+
+  setText(
+    "pageTitle",
+    "Dashboard"
+  );
+
+
+  setActiveNav(
+    "dashboardNav"
+  );
+
+
+  /*
+    PENTING:
+    setiap kali Dashboard dibuka,
+    ambil ulang data dari Supabase.
+  */
+
+  await updateDashboard();
+
+}
+
+
+/* =========================================================
+   SHOW LEADS
+   ========================================================= */
+
+async function showLeads() {
+
+  hideAllPages();
+
+
+  const leads =
+    document.getElementById(
+      "leadsPage"
+    );
+
+
+  if (leads) {
+
+    leads.style.display =
+      "block";
+
+  }
+
+
+  setText(
+    "pageTitle",
+    "My Leads"
+  );
+
+
+  setActiveNav(
+    "leadsNav"
+  );
+
+
+  /*
+    Refresh data setiap kali My Leads dibuka.
+  */
+
+  await loadFilterOptions();
+
+  await loadSalesLookup();
+
+  populateSalesDropdowns();
+
+  await loadLeads(
+    currentPage || 1
+  );
+
+}
+
+
+/* =========================================================
+   SHOW SALES
+   ========================================================= */
+
+async function showSales() {
+
+  if (!isAdmin()) {
+
+    console.warn(
+      "Akses Manage Sales ditolak."
+    );
+
+    return;
+
+  }
+
+
+  hideAllPages();
+
+
+  const salesPage =
+    document.getElementById(
+      "salesPage"
+    );
+
+
+  if (salesPage) {
+
+    salesPage.style.display =
+      "block";
+
+  }
+
+
+  setText(
+    "pageTitle",
+    "Manage Sales"
+  );
+
+
+  setActiveNav();
+
+
+  await loadSalesTable();
+
+}
+
+
+/* =========================================================
+   HIDE ALL PAGES
+   ========================================================= */
+
+function hideAllPages() {
+
+  const pages = [
+    "dashboardPage",
+    "leadsPage",
+    "salesPage"
+  ];
+
+
+  pages.forEach(
+    id => {
+
+      const element =
+        document.getElementById(
+          id
+        );
+
+      if (element) {
+
+        element.style.display =
+          "none";
+
+      }
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   ACTIVE NAV
+   ========================================================= */
+
+function setActiveNav(
+  activeId
+) {
+
+  document
+    .querySelectorAll(
+      ".nav-link"
+    )
+    .forEach(
+      button => {
+
+        button.classList.remove(
+          "active"
+        );
+
+      }
+    );
+
+
+  if (!activeId) {
+    return;
+  }
+
+
+  const active =
+    document.getElementById(
+      activeId
+    );
+
+
+  if (active) {
+
+    active.classList.add(
+      "active"
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   OPEN LEAD MODAL
+   ========================================================= */
+
+function openLeadModal(
+  lead = null
+) {
 
   const modal =
     document.getElementById(
@@ -2091,17 +2437,11 @@ function openLeadModal() {
 
 
   if (!modal) {
-
-    alert(
-      "Lead modal not found."
-    );
-
     return;
-
   }
 
 
-  clearLeadForm();
+  resetLeadForm();
 
 
   const title =
@@ -2110,23 +2450,61 @@ function openLeadModal() {
     );
 
 
-  if (title) {
+  if (lead) {
 
-    title.textContent =
-      "Add Lead";
+    if (title) {
+      title.textContent =
+        "Edit Lead";
+    }
+
+
+    fillLeadForm(
+      lead
+    );
+
+  } else {
+
+    if (title) {
+      title.textContent =
+        "Add Lead";
+    }
+
+
+    /*
+      Default Sales untuk Sales user.
+    */
+
+    if (
+      isSales() &&
+      currentProfile?.id
+    ) {
+
+      const salesAssign =
+        document.getElementById(
+          "leadSalesAssign"
+        );
+
+      if (salesAssign) {
+
+        salesAssign.value =
+          currentProfile.id;
+
+      }
+
+    }
 
   }
 
-
-  modal.classList.add(
-    "show"
-  );
 
   modal.style.display =
     "flex";
 
 }
 
+
+/* =========================================================
+   CLOSE LEAD MODAL
+   ========================================================= */
 
 function closeLeadModal() {
 
@@ -2136,450 +2514,95 @@ function closeLeadModal() {
     );
 
 
-  if (!modal) return;
+  if (modal) {
 
+    modal.style.display =
+      "none";
 
-  modal.classList.remove(
-    "show"
-  );
-
-  modal.style.display =
-    "none";
+  }
 
 }
 
 
-function clearLeadForm() {
+/* =========================================================
+   RESET LEAD FORM
+   ========================================================= */
 
-  setValue(
+function resetLeadForm() {
+
+  const fields = [
     "leadId",
-    ""
-  );
-
-  setValue(
     "leadCustomer",
-    ""
-  );
-
-  setValue(
     "leadPhone",
-    ""
-  );
-
-  setValue(
     "leadEmail",
-    ""
-  );
-
-  setValue(
     "leadBusiness",
-    ""
-  );
-
-  setValue(
     "leadLocation",
-    ""
-  );
-
-  setValue(
-    "leadStatus",
-    "New"
-  );
-
-  setValue(
-    "leadSalesAssign",
-    currentProfile &&
-    currentProfile.role ===
-      "Sales"
-      ? currentProfile.id
-      : ""
-  );
-
-  setValue(
     "leadFollowUp",
-    ""
-  );
-
-  setValue(
     "leadAppointment",
-    ""
-  );
-
-  setValue(
     "leadSiteSurvey",
-    ""
-  );
-
-  setValue(
     "leadQuotation",
-    ""
-  );
-
-  setValue(
     "leadSPK",
-    ""
-  );
-
-  setValue(
     "leadClosing",
-    ""
-  );
-
-  setValue(
-    "leadNotes",
-    ""
-  );
+    "leadNotes"
+  ];
 
 
-  setupSalesAssignmentAccess();
+  fields.forEach(
+    id => {
 
-}
-
-
-// ================================
-// SAVE LEAD
-// ================================
-
-async function saveLead() {
-
-  if (!currentProfile) {
-
-    alert(
-      "User profile is not ready."
-    );
-
-    return;
-
-  }
-
-
-  const customer =
-    document
-      .getElementById(
-        "leadCustomer"
-      )
-      .value
-      .trim();
-
-
-  if (!customer) {
-
-    alert(
-      "Customer name is required."
-    );
-
-    return;
-
-  }
-
-
-  const leadId =
-    document.getElementById(
-      "leadId"
-    ).value;
-
-
-  const payload = {
-
-    customer_name:
-      document
-        .getElementById(
-          "leadCustomer"
-        )
-        .value
-        .trim(),
-
-    phone:
-      document
-        .getElementById(
-          "leadPhone"
-        )
-        .value
-        .trim(),
-
-    email:
-      document
-        .getElementById(
-          "leadEmail"
-        )
-        .value
-        .trim(),
-
-    business:
-      document
-        .getElementById(
-          "leadBusiness"
-        )
-        .value
-        .trim(),
-
-    location:
-      document
-        .getElementById(
-          "leadLocation"
-        )
-        .value
-        .trim(),
-
-    status:
-      normalizeLeadStatus(
+      const element =
         document.getElementById(
-          "leadStatus"
-        ).value
-      ),
+          id
+        );
 
-    follow_up_date:
-      document.getElementById(
-        "leadFollowUp"
-      ).value ||
-      null,
+      if (element) {
 
-    appointment:
-      document.getElementById(
-        "leadAppointment"
-      ).value ||
-      null,
+        element.value =
+          "";
 
-    site_survey:
-      document.getElementById(
-        "leadSiteSurvey"
-      ).value ||
-      null,
+      }
 
-    quotation:
-      document.getElementById(
-        "leadQuotation"
-      ).value ||
-      null,
-
-    spk:
-      document.getElementById(
-        "leadSPK"
-      ).value ||
-      null,
-
-    closing:
-      document.getElementById(
-        "leadClosing"
-      ).value ||
-      null,
-
-    notes:
-      document.getElementById(
-        "leadNotes"
-      ).value
-      .trim()
-
-  };
+    }
+  );
 
 
-  const selectedSales =
+  const status =
+    document.getElementById(
+      "leadStatus"
+    );
+
+
+  if (status) {
+
+    status.value =
+      "New";
+
+  }
+
+
+  const sales =
     document.getElementById(
       "leadSalesAssign"
-    )?.value || "";
-
-
-  if (
-    currentProfile.role ===
-    "Admin"
-  ) {
-
-    payload.sales_id =
-      selectedSales ||
-      null;
-
-  } else {
-
-    payload.sales_id =
-      currentProfile.id;
-
-  }
-
-
-  try {
-
-    if (leadId) {
-
-      payload.updated_by =
-        currentProfile.id;
-
-
-      const {
-        error
-      } =
-        await supabaseClient
-          .from("leads")
-          .update(
-            payload
-          )
-          .eq(
-            "id",
-            leadId
-          );
-
-
-      if (error) {
-
-        console.error(
-          error
-        );
-
-        alert(
-          "Failed to update lead:\n" +
-          error.message
-        );
-
-        return;
-
-      }
-
-
-      alert(
-        "Lead updated successfully."
-      );
-
-    }
-
-    else {
-
-      payload.created_by =
-        currentProfile.id;
-
-      payload.updated_by =
-        currentProfile.id;
-
-
-      const {
-        error
-      } =
-        await supabaseClient
-          .from("leads")
-          .insert([
-            payload
-          ]);
-
-
-      if (error) {
-
-        console.error(
-          error
-        );
-
-        alert(
-          "Failed to add lead:\n" +
-          error.message
-        );
-
-        return;
-
-      }
-
-
-      alert(
-        "Lead added successfully."
-      );
-
-    }
-
-
-    closeLeadModal();
-
-    // REFRESH ALL RELATED DATA
-    await loadFilterOptions();
-
-    await loadLeads(
-      currentPage
     );
 
-    await updateDashboard();
 
+  if (sales) {
 
-  } catch (error) {
-
-    console.error(
-      "saveLead error:",
-      error
-    );
-
-    alert(
-      "An error occurred:\n" +
-      error.message
-    );
+    sales.value =
+      "";
 
   }
 
 }
 
 
-// ================================
-// EDIT LEAD
-// ================================
+/* =========================================================
+   FILL LEAD FORM
+   ========================================================= */
 
-async function editLead(id) {
-
-  console.log(
-    "Edit Lead ID:",
-    id
-  );
-
-
-  let lead =
-    leadsData.find(
-      item =>
-        String(item.id) ===
-        String(id)
-    );
-
-
-  if (!lead) {
-
-    const {
-      data,
-      error
-    } =
-      await supabaseClient
-        .from("leads")
-        .select("*")
-        .eq(
-          "id",
-          id
-        )
-        .maybeSingle();
-
-
-    if (error) {
-
-      console.error(
-        "Get lead for edit error:",
-        error
-      );
-
-      alert(
-        "Failed to get lead:\n" +
-        error.message
-      );
-
-      return;
-
-    }
-
-
-    if (!data) {
-
-      alert(
-        "Lead not found."
-      );
-
-      return;
-
-    }
-
-
-    lead =
-      data;
-
-  }
-
+function fillLeadForm(
+  lead
+) {
 
   setValue(
     "leadId",
@@ -2611,16 +2634,16 @@ async function editLead(id) {
     lead.location
   );
 
-  setValue(
+
+  setStatusValue(
     "leadStatus",
-    normalizeLeadStatus(
-      lead.status
-    )
+    lead.status
   );
+
 
   setValue(
     "leadSalesAssign",
-    lead.sales_id || ""
+    lead.sales_id
   );
 
   setValue(
@@ -2659,72 +2682,344 @@ async function editLead(id) {
   );
 
 
+  /*
+    Sales user tidak boleh mengubah assignment.
+  */
+
   setupSalesAssignmentAccess();
-
-
-  const title =
-    document.getElementById(
-      "leadModalTitle"
-    );
-
-
-  if (title) {
-
-    title.textContent =
-      "Edit Lead";
-
-  }
-
-
-  const modal =
-    document.getElementById(
-      "leadModal"
-    );
-
-
-  if (!modal) {
-
-    alert(
-      "Lead modal not found."
-    );
-
-    return;
-
-  }
-
-
-  modal.classList.add(
-    "show"
-  );
-
-  modal.style.display =
-    "flex";
 
 }
 
 
-// ================================
-// DELETE LEAD
-// ================================
+/* =========================================================
+   EDIT LEAD
+   ========================================================= */
 
-async function deleteLead(id) {
-
-  const confirmDelete =
-    confirm(
-      "Delete this lead?"
-    );
-
-
-  if (!confirmDelete)
-    return;
-
+async function editLead(
+  id
+) {
 
   try {
 
     const {
+      data,
       error
-    } =
-      await supabaseClient
+    } = await supabaseClient
+      .from("leads")
+      .select("*")
+      .eq(
+        "id",
+        id
+      )
+      .single();
+
+
+    if (error) {
+
+      console.error(
+        "editLead error:",
+        error
+      );
+
+      alert(
+        "Lead tidak dapat dimuat."
+      );
+
+      return;
+
+    }
+
+
+    /*
+      Security tambahan untuk Sales:
+      hanya boleh edit lead miliknya.
+    */
+
+    if (
+      isSales() &&
+      data.sales_id !==
+      currentProfile?.id
+    ) {
+
+      alert(
+        "Anda tidak memiliki akses ke lead ini."
+      );
+
+      return;
+
+    }
+
+
+    openLeadModal(
+      data
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "Unexpected editLead error:",
+      error
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   SAVE LEAD
+   ========================================================= */
+
+async function saveLead() {
+
+  const leadId =
+    getValue("leadId");
+
+
+  const customerName =
+    getValue("leadCustomer").trim();
+
+
+  if (!customerName) {
+
+    alert(
+      "Customer Name wajib diisi."
+    );
+
+    return;
+
+  }
+
+
+  let salesId =
+    getValue(
+      "leadSalesAssign"
+    ) || null;
+
+
+  /*
+    Sales selalu menggunakan dirinya sendiri.
+  */
+
+  if (isSales()) {
+
+    salesId =
+      currentProfile?.id ||
+      null;
+
+  }
+
+
+  const payload = {
+
+    customer_name:
+      customerName,
+
+    phone:
+      getValue("leadPhone").trim() ||
+      null,
+
+    email:
+      getValue("leadEmail").trim() ||
+      null,
+
+    business:
+      getValue("leadBusiness").trim() ||
+      null,
+
+    location:
+      getValue("leadLocation").trim() ||
+      null,
+
+    status:
+      getValue("leadStatus") ||
+      "New",
+
+    follow_up_date:
+      getValue("leadFollowUp") ||
+      null,
+
+    notes:
+      getValue("leadNotes").trim() ||
+      null,
+
+    sales_id:
+      salesId,
+
+    appointment:
+      getValue("leadAppointment") ||
+      null,
+
+    site_survey:
+      getValue("leadSiteSurvey") ||
+      null,
+
+    quotation:
+      getValue("leadQuotation") ||
+      null,
+
+    spk:
+      getValue("leadSPK") ||
+      null,
+
+    closing:
+      getValue("leadClosing") ||
+      null
+
+  };
+
+
+  try {
+
+    let response;
+
+
+    if (leadId) {
+
+      /*
+        EDIT
+      */
+
+      let query =
+        supabaseClient
+          .from("leads")
+          .update(payload)
+          .eq(
+            "id",
+            leadId
+          );
+
+
+      if (isSales()) {
+
+        query =
+          query.eq(
+            "sales_id",
+            currentProfile.id
+          );
+
+      }
+
+
+      response =
+        await query;
+
+
+    } else {
+
+      /*
+        INSERT
+      */
+
+      response =
+        await supabaseClient
+          .from("leads")
+          .insert(
+            payload
+          );
+
+    }
+
+
+    if (response.error) {
+
+      console.error(
+        "saveLead Supabase error:",
+        response.error
+      );
+
+      alert(
+        response.error.message ||
+        "Lead gagal disimpan."
+      );
+
+      return;
+
+    }
+
+
+    console.log(
+      "Lead saved successfully."
+    );
+
+
+    closeLeadModal();
+
+
+    /*
+      Refresh semua data setelah save.
+    */
+
+    await loadFilterOptions();
+
+    await loadSalesLookup();
+
+    populateSalesDropdowns();
+
+    await loadLeads(
+      currentPage
+    );
+
+
+    /*
+      Dashboard mengambil ulang
+      data terbaru langsung dari Supabase.
+    */
+
+    await updateDashboard();
+
+
+    /*
+      Kalau sedang di Dashboard,
+      tetap refresh angka.
+    */
+
+    console.log(
+      "Dashboard refreshed after save."
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "Unexpected saveLead error:",
+      error
+    );
+
+    alert(
+      error.message ||
+      "Terjadi kesalahan saat menyimpan lead."
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   DELETE LEAD
+   ========================================================= */
+
+async function deleteLead(
+  id
+) {
+
+  const confirmed =
+    confirm(
+      "Apakah Anda yakin ingin menghapus lead ini?"
+    );
+
+
+  if (!confirmed) {
+    return;
+  }
+
+
+  try {
+
+    let query =
+      supabaseClient
         .from("leads")
         .delete()
         .eq(
@@ -2733,91 +3028,11 @@ async function deleteLead(id) {
         );
 
 
-    if (error) {
+    /*
+      Sales hanya boleh delete lead miliknya.
+    */
 
-      console.error(
-        error
-      );
-
-      alert(
-        "Failed to delete lead:\n" +
-        error.message
-      );
-
-      return;
-
-    }
-
-
-    await loadFilterOptions();
-
-    await loadLeads(
-      currentPage
-    );
-
-    // REFRESH DASHBOARD AFTER DELETE
-    await updateDashboard();
-
-
-  } catch (error) {
-
-    console.error(
-      error
-    );
-
-    alert(
-      error.message
-    );
-
-  }
-
-}
-
-
-// ================================
-// DASHBOARD
-// ================================
-// IMPORTANT:
-// Dashboard data is ALWAYS fetched
-// directly from Supabase.
-// ================================
-
-async function updateDashboard() {
-
-  if (!currentProfile) {
-
-    console.warn(
-      "Dashboard skipped: no current profile."
-    );
-
-    return;
-
-  }
-
-
-  console.log(
-    "Refreshing dashboard from Supabase..."
-  );
-
-
-  try {
-
-    let query =
-      supabaseClient
-        .from("leads")
-        .select(
-          "id, sales_id, status, appointment, site_survey, quotation, spk, closing"
-        );
-
-
-    // =====================================
-    // SALES = ONLY THEIR OWN LEADS
-    // =====================================
-
-    if (
-      currentProfile.role ===
-      "Sales"
-    ) {
+    if (isSales()) {
 
       query =
         query.eq(
@@ -2829,17 +3044,20 @@ async function updateDashboard() {
 
 
     const {
-      data,
       error
-    } =
-      await query;
+    } = await query;
 
 
     if (error) {
 
       console.error(
-        "Dashboard query error:",
+        "deleteLead error:",
         error
+      );
+
+      alert(
+        error.message ||
+        "Lead gagal dihapus."
       );
 
       return;
@@ -2847,157 +3065,33 @@ async function updateDashboard() {
     }
 
 
-    const dataList =
-      Array.isArray(data)
-        ? data
-        : [];
+    /*
+      Refresh data setelah delete.
+    */
 
+    await loadFilterOptions();
+
+    await loadLeads(
+      currentPage
+    );
+
+    await updateDashboard();
+
+
+    /*
+      Jika halaman aktif Dashboard,
+      angka langsung diperbarui.
+    */
 
     console.log(
-      "Dashboard fresh data:",
-      dataList
-    );
-
-
-    // =====================================
-    // TOTAL LEADS
-    // =====================================
-
-    const total =
-      dataList.length;
-
-
-    // =====================================
-    // STATUS COUNTS
-    // =====================================
-
-    const newCount =
-      countNormalizedStatus(
-        dataList,
-        "New"
-      );
-
-
-    const interestedCount =
-      countNormalizedStatus(
-        dataList,
-        "Interested"
-      );
-
-
-    const followUpCount =
-      countNormalizedStatus(
-        dataList,
-        "Follow Up"
-      );
-
-
-    // =====================================
-    // DATE COUNTS
-    // =====================================
-
-    const appointmentCount =
-      countDateField(
-        dataList,
-        "appointment"
-      );
-
-
-    const siteSurveyCount =
-      countDateField(
-        dataList,
-        "site_survey"
-      );
-
-
-    const quotationCount =
-      countDateField(
-        dataList,
-        "quotation"
-      );
-
-
-    // =====================================
-    // CLOSING
-    // =====================================
-
-    const closingCount =
-      countClosing(
-        dataList
-      );
-
-
-    // =====================================
-    // UPDATE UI
-    // =====================================
-
-    setText(
-      "statTotal",
-      total
-    );
-
-
-    setText(
-      "statNew",
-      newCount
-    );
-
-
-    setText(
-      "statInterested",
-      interestedCount
-    );
-
-
-    setText(
-      "statFollowUp",
-      followUpCount
-    );
-
-
-    setText(
-      "statAppointment",
-      appointmentCount
-    );
-
-
-    setText(
-      "statSiteSurvey",
-      siteSurveyCount
-    );
-
-
-    setText(
-      "statQuotation",
-      quotationCount
-    );
-
-
-    setText(
-      "statClosing",
-      closingCount
-    );
-
-
-    console.log(
-      "Dashboard updated:",
-      {
-        total,
-        newCount,
-        interestedCount,
-        followUpCount,
-        appointmentCount,
-        siteSurveyCount,
-        quotationCount,
-        closingCount
-      }
+      "Dashboard refreshed after delete."
     );
 
 
   } catch (error) {
 
     console.error(
-      "updateDashboard error:",
+      "Unexpected deleteLead error:",
       error
     );
 
@@ -3006,128 +3100,33 @@ async function updateDashboard() {
 }
 
 
-// ================================
-// COUNT NORMALIZED STATUS
-// ================================
+/* =========================================================
+   MANAGE SALES
+   ========================================================= */
 
-function countNormalizedStatus(
-  data,
-  status
-) {
+async function loadSalesTable() {
 
-  return data.filter(
-    item =>
-      normalizeLeadStatus(
-        item.status
-      ) === status
-  ).length;
-
-}
+  const table =
+    document.getElementById(
+      "salesTable"
+    );
 
 
-// ================================
-// COUNT DATE FIELD
-// ================================
-
-function countDateField(
-  data,
-  field
-) {
-
-  return data.filter(
-    item => {
-
-      const value =
-        item[field];
-
-
-      return (
-        value !== null &&
-        value !== undefined &&
-        String(value).trim() !== ""
-      );
-
-    }
-  ).length;
-
-}
-
-
-// ================================
-// COUNT CLOSING
-// ================================
-
-function countClosing(
-  data
-) {
-
-  return data.filter(
-    item => {
-
-      const status =
-        normalizeLeadStatus(
-          item.status
-        );
-
-
-      const closingDate =
-        item.closing;
-
-
-      return (
-        status === "Closing" ||
-        (
-          closingDate !== null &&
-          closingDate !== undefined &&
-          String(
-            closingDate
-          ).trim() !== ""
-        )
-      );
-
-    }
-  ).length;
-
-}
-
-
-// ================================
-// OLD HELPER COMPATIBILITY
-// ================================
-
-function countStatus(
-  data,
-  status
-) {
-
-  return data.filter(
-    item =>
-      normalizeLeadStatus(
-        item.status
-      ) ===
-      normalizeLeadStatus(
-        status
-      )
-  ).length;
-
-}
-
-
-// ================================
-// MANAGE SALES
-// ================================
-
-async function loadSalesUsers() {
-
-  if (
-    !currentProfile ||
-    currentProfile.role !==
-      "Admin"
-  ) {
-
+  if (!table) {
     return;
-
   }
+
+
+  table.innerHTML = `
+    <tr>
+      <td
+        colspan="6"
+        style="text-align:center; padding:30px;"
+      >
+        Loading...
+      </td>
+    </tr>
+  `;
 
 
   try {
@@ -3135,27 +3134,36 @@ async function loadSalesUsers() {
     const {
       data,
       error
-    } =
-      await supabaseClient
-        .from("sales_users")
-        .select("*")
-        .order(
-          "created_at",
-          {
-            ascending: true
-          }
-        );
+    } = await supabaseClient
+      .from("sales_users")
+      .select(
+        "id, name, username, role, status, created_at"
+      )
+      .order(
+        "created_at",
+        {
+          ascending: false
+        }
+      );
 
 
     if (error) {
 
       console.error(
+        "loadSalesTable error:",
         error
       );
 
-      alert(
-        error.message
-      );
+      table.innerHTML = `
+        <tr>
+          <td
+            colspan="6"
+            style="text-align:center; padding:30px;"
+          >
+            Failed to load Sales.
+          </td>
+        </tr>
+      `;
 
       return;
 
@@ -3166,9 +3174,7 @@ async function loadSalesUsers() {
       data || [];
 
 
-    renderSalesUsers(
-      salesUsersData
-    );
+    renderSalesTable();
 
 
     populateSalesDropdowns();
@@ -3177,6 +3183,7 @@ async function loadSalesUsers() {
   } catch (error) {
 
     console.error(
+      "Unexpected sales table error:",
       error
     );
 
@@ -3185,13 +3192,11 @@ async function loadSalesUsers() {
 }
 
 
-// ================================
-// RENDER SALES
-// ================================
+/* =========================================================
+   RENDER SALES TABLE
+   ========================================================= */
 
-function renderSalesUsers(
-  data
-) {
+function renderSalesTable() {
 
   const table =
     document.getElementById(
@@ -3199,25 +3204,23 @@ function renderSalesUsers(
     );
 
 
-  if (!table)
+  if (!table) {
     return;
+  }
 
 
-  table.innerHTML =
-    "";
+  table.innerHTML = "";
 
 
-  if (
-    !data ||
-    data.length === 0
-  ) {
+  if (!salesUsersData.length) {
 
     table.innerHTML = `
       <tr>
         <td
           colspan="6"
-          style="text-align:center;">
-          No sales found
+          style="text-align:center; padding:30px;"
+        >
+          No Sales accounts found.
         </td>
       </tr>
     `;
@@ -3227,88 +3230,77 @@ function renderSalesUsers(
   }
 
 
-  data.forEach(
+  salesUsersData.forEach(
     sales => {
 
-      const tr =
-        document.createElement(
-          "tr"
-        );
+      const row =
+        document.createElement("tr");
 
 
-      tr.innerHTML = `
+      const status =
+        String(
+          sales.status ||
+          "active"
+        ).toLowerCase();
 
-        <td>
-          ${escapeHTML(
-            getValue(
-              sales.name
-            )
-          )}
-        </td>
 
-        <td>
-          ${escapeHTML(
-            getValue(
-              sales.username
-            )
-          )}
-        </td>
+      const statusText =
+        status === "active"
+          ? "Active"
+          : "Inactive";
+
+
+      row.innerHTML = `
 
         <td>
-          ${escapeHTML(
-            getValue(
-              sales.role
-            )
-          )}
-        </td>
-
-        <td>
-
-          <span
-            class="status-badge ${
-              sales.status ===
-              "Active"
-                ? "status-active"
-                : "status-inactive"
-            }">
-
-            ${escapeHTML(
-              getValue(
-                sales.status
-              )
+          <strong>
+            ${escapeHtml(
+              sales.name || "-"
             )}
+          </strong>
+        </td>
 
+        <td>
+          ${escapeHtml(
+            sales.username || "-"
+          )}
+        </td>
+
+        <td>
+          ${escapeHtml(
+            sales.role || "-"
+          )}
+        </td>
+
+        <td>
+          <span class="status-badge">
+            ${statusText}
           </span>
-
         </td>
 
         <td>
-          ${
+          ${formatDateTime(
             sales.created_at
-              ? formatDateTime(
-                  sales.created_at
-                )
-              : "-"
-          }
+          )}
         </td>
 
         <td>
 
-          <button
-            class="secondary-btn small-btn"
-            onclick="toggleSalesStatus(
-              '${sales.id}',
-              '${sales.status}'
-            )">
+          <div class="table-actions">
 
-            ${
-              sales.status ===
-              "Active"
-                ? "Deactivate"
-                : "Activate"
-            }
+            <button
+              type="button"
+              class="secondary-btn small-btn"
+              onclick="toggleSalesStatus('${sales.id}', '${escapeAttribute(status)}')"
+            >
+              ${
+                status === "active"
+                  ? "Deactivate"
+                  : "Activate"
+              }
+            </button>
 
-          </button>
+          </div>
 
         </td>
 
@@ -3316,7 +3308,7 @@ function renderSalesUsers(
 
 
       table.appendChild(
-        tr
+        row
       );
 
     }
@@ -3325,11 +3317,16 @@ function renderSalesUsers(
 }
 
 
-// ================================
-// SALES MODAL
-// ================================
+/* =========================================================
+   SALES MODAL
+   ========================================================= */
 
 function openSalesModal() {
+
+  if (!isAdmin()) {
+    return;
+  }
+
 
   const modal =
     document.getElementById(
@@ -3338,28 +3335,48 @@ function openSalesModal() {
 
 
   if (!modal) {
-
-    alert(
-      "Sales modal not found."
-    );
-
     return;
-
   }
 
 
-  clearSalesForm();
+  const name =
+    document.getElementById(
+      "salesName"
+    );
+
+  const username =
+    document.getElementById(
+      "salesUsername"
+    );
+
+  const password =
+    document.getElementById(
+      "salesPassword"
+    );
 
 
-  modal.classList.add(
-    "show"
-  );
+  if (name) {
+    name.value = "";
+  }
+
+  if (username) {
+    username.value = "";
+  }
+
+  if (password) {
+    password.value = "";
+  }
+
 
   modal.style.display =
     "flex";
 
 }
 
+
+/* =========================================================
+   CLOSE SALES MODAL
+   ========================================================= */
 
 function closeSalesModal() {
 
@@ -3369,70 +3386,49 @@ function closeSalesModal() {
     );
 
 
-  if (!modal)
-    return;
+  if (modal) {
 
+    modal.style.display =
+      "none";
 
-  modal.classList.remove(
-    "show"
-  );
-
-  modal.style.display =
-    "none";
+  }
 
 }
 
 
-function clearSalesForm() {
-
-  setValue(
-    "salesName",
-    ""
-  );
-
-  setValue(
-    "salesUsername",
-    ""
-  );
-
-  setValue(
-    "salesPassword",
-    ""
-  );
-
-}
-
-
-// ================================
-// CREATE SALES
-// ================================
+/* =========================================================
+   CREATE SALES
+   ========================================================= */
 
 async function createSales() {
 
+  if (!isAdmin()) {
+
+    alert(
+      "Hanya Admin yang dapat membuat Sales."
+    );
+
+    return;
+
+  }
+
+
   const name =
-    document
-      .getElementById(
-        "salesName"
-      )
-      .value
-      .trim();
+    getValue(
+      "salesName"
+    ).trim();
 
 
   const username =
-    document
-      .getElementById(
-        "salesUsername"
-      )
-      .value
-      .trim();
+    getValue(
+      "salesUsername"
+    ).trim();
 
 
   const password =
-    document
-      .getElementById(
-        "salesPassword"
-      )
-      .value;
+    getValue(
+      "salesPassword"
+    );
 
 
   if (
@@ -3442,101 +3438,41 @@ async function createSales() {
   ) {
 
     alert(
-      "Name, username and password are required."
+      "Semua field wajib diisi."
     );
 
     return;
 
   }
-
-
-  if (
-    password.length < 6
-  ) {
-
-    alert(
-      "Password must be at least 6 characters."
-    );
-
-    return;
-
-  }
-
-
-  if (
-    !currentProfile ||
-    currentProfile.role !==
-      "Admin"
-  ) {
-
-    alert(
-      "Only Admin can create Sales accounts."
-    );
-
-    return;
-
-  }
-
-
-  const confirmCreate =
-    confirm(
-      `Create Sales account "${name}" with username "${username}"?`
-    );
-
-
-  if (!confirmCreate)
-    return;
-
-
-  const createButton =
-    document.querySelector(
-      "#salesModal .primary-btn"
-    );
 
 
   try {
 
-    if (createButton) {
-
-      createButton.disabled =
-        true;
-
-      createButton.textContent =
-        "CREATING...";
-
-    }
-
-
     const {
       data,
       error
-    } =
-      await supabaseClient.functions.invoke(
-        "create-sales",
-        {
-          body: {
-            name:
-              name,
-            username:
-              username,
-            password:
-              password
-          }
+    } = await supabaseClient.functions.invoke(
+      "create-sales",
+      {
+        body: {
+          name,
+          username,
+          password
         }
-      );
+      }
+    );
 
 
     if (error) {
 
       console.error(
-        "Create Sales Function Error:",
+        "create-sales error:",
         error
       );
 
-
       alert(
-        "Failed to create Sales:\n\n" +
-        error.message
+        error.message ||
+        "Sales gagal dibuat."
       );
 
       return;
@@ -3549,20 +3485,8 @@ async function createSales() {
       data.error
     ) {
 
-      console.error(
-        "Create Sales Server Error:",
-        data
-      );
-
-
       alert(
-        data.error +
-        (
-          data.detail
-            ? "\n\n" +
-              data.detail
-            : ""
-        )
+        data.error
       );
 
       return;
@@ -3570,113 +3494,97 @@ async function createSales() {
     }
 
 
-    alert(
-      "Sales created successfully!\n\n" +
-      "Name: " +
-      name +
-      "\n" +
-      "Username: " +
-      username
-    );
-
-
-    clearSalesForm();
-
     closeSalesModal();
 
-    await loadSalesUsers();
 
     await loadSalesLookup();
 
-    await loadLeads(
-      currentPage
-    );
+    populateSalesDropdowns();
 
-    await updateDashboard();
+    await loadSalesTable();
+
+
+    alert(
+      "Sales berhasil dibuat."
+    );
 
 
   } catch (error) {
 
     console.error(
-      "createSales error:",
+      "Unexpected createSales error:",
       error
     );
 
-
     alert(
-      "An error occurred while creating Sales:\n\n" +
-      error.message
+      error.message ||
+      "Sales gagal dibuat."
     );
-
-
-  } finally {
-
-    if (createButton) {
-
-      createButton.disabled =
-        false;
-
-      createButton.textContent =
-        "CREATE SALES";
-
-    }
 
   }
 
 }
 
 
-// ================================
-// TOGGLE SALES STATUS
-// ================================
+/* =========================================================
+   TOGGLE SALES STATUS
+   ========================================================= */
 
 async function toggleSalesStatus(
   id,
   currentStatus
 ) {
 
+  if (!isAdmin()) {
+    return;
+  }
+
+
   const newStatus =
-    currentStatus ===
-    "Active"
-      ? "Inactive"
-      : "Active";
+    String(
+      currentStatus
+    ).toLowerCase() === "active"
+      ? "inactive"
+      : "active";
 
 
-  const confirmChange =
+  const confirmed =
     confirm(
-      `Change Sales status to ${newStatus}?`
+      `Ubah status Sales menjadi ${newStatus}?`
     );
 
 
-  if (!confirmChange)
+  if (!confirmed) {
     return;
+  }
 
 
   try {
 
     const {
       error
-    } =
-      await supabaseClient
-        .from("sales_users")
-        .update({
-          status:
-            newStatus
-        })
-        .eq(
-          "id",
-          id
-        );
+    } = await supabaseClient
+      .from("sales_users")
+      .update({
+        status:
+          newStatus
+      })
+      .eq(
+        "id",
+        id
+      );
 
 
     if (error) {
 
       console.error(
+        "toggleSalesStatus error:",
         error
       );
 
       alert(
-        error.message
+        error.message ||
+        "Status Sales gagal diubah."
       );
 
       return;
@@ -3684,110 +3592,248 @@ async function toggleSalesStatus(
     }
 
 
-    await loadSalesUsers();
-
     await loadSalesLookup();
 
-    await loadLeads(
-      currentPage
-    );
+    populateSalesDropdowns();
 
-    await updateDashboard();
+    await loadSalesTable();
 
 
   } catch (error) {
 
     console.error(
+      "Unexpected toggleSalesStatus error:",
       error
     );
 
-    alert(
-      error.message
-    );
-
   }
 
 }
 
 
-// ================================
-// WHATSAPP
-// ================================
+/* =========================================================
+   WHATSAPP
+   ========================================================= */
 
-function whatsappLink(
+function getWhatsAppLink(
   phone
 ) {
 
-  const number =
-    normalizePhone(
-      phone
+  let clean =
+    String(
+      phone || ""
+    )
+    .replace(
+      /[^\d+]/g,
+      ""
     );
 
 
-  if (!number) {
+  if (
+    clean.startsWith("+62")
+  ) {
 
-    return "#";
+    clean =
+      clean.substring(1);
+
+  } else if (
+    clean.startsWith("62")
+  ) {
+
+    /*
+      already correct
+    */
+
+  } else if (
+    clean.startsWith("0")
+  ) {
+
+    clean =
+      "62" +
+      clean.substring(1);
 
   }
 
 
-  return `https://wa.me/${number}`;
+  return (
+    "https://wa.me/" +
+    clean
+  );
 
 }
 
 
-function normalizePhone(
-  phone
+/* =========================================================
+   SALES NAME
+   ========================================================= */
+
+function getSalesName(
+  salesId
 ) {
 
-  if (!phone)
+  if (!salesId) {
     return "";
-
-
-  let number =
-    String(phone)
-      .replace(
-        /\D/g,
-        ""
-      );
-
-
-  if (
-    number.startsWith(
-      "0"
-    )
-  ) {
-
-    number =
-      "62" +
-      number.substring(
-        1
-      );
-
   }
 
 
-  if (
-    number.startsWith(
-      "8"
-    )
-  ) {
+  const sales =
+    salesUsersData.find(
+      user =>
+        String(user.id) ===
+        String(salesId)
+    );
 
-    number =
-      "62" +
-      number;
 
+  if (!sales) {
+    return "";
   }
 
 
-  return number;
+  return (
+    sales.name ||
+    sales.username ||
+    ""
+  );
 
 }
 
 
-// ================================
-// MODAL EVENTS
-// ================================
+/* =========================================================
+   NEXT STEP
+   ========================================================= */
+
+function getNextStep(
+  lead
+) {
+
+  if (lead.closing) {
+    return "Closing";
+  }
+
+  if (lead.spk) {
+    return "SPK";
+  }
+
+  if (lead.quotation) {
+    return "Quotation";
+  }
+
+  if (lead.site_survey) {
+    return "Site Survey";
+  }
+
+  if (lead.appointment) {
+    return "Appointment";
+  }
+
+  if (lead.follow_up_date) {
+    return "Follow Up";
+  }
+
+
+  return "-";
+
+}
+
+
+/* =========================================================
+   FORM HELPERS
+   ========================================================= */
+
+function getValue(
+  id
+) {
+
+  const element =
+    document.getElementById(
+      id
+    );
+
+
+  return element
+    ? element.value
+    : "";
+
+}
+
+
+function setValue(
+  id,
+  value
+) {
+
+  const element =
+    document.getElementById(
+      id
+    );
+
+
+  if (element) {
+
+    element.value =
+      value ??
+      "";
+
+  }
+
+}
+
+
+function setStatusValue(
+  id,
+  value
+) {
+
+  const element =
+    document.getElementById(
+      id
+    );
+
+
+  if (!element) {
+    return;
+  }
+
+
+  const normalized =
+    normalizeLeadStatus(
+      value
+    );
+
+
+  const options =
+    Array.from(
+      element.options
+    );
+
+
+  const matching =
+    options.find(
+      option =>
+        normalizeLeadStatus(
+          option.value
+        ) === normalized
+    );
+
+
+  if (matching) {
+
+    element.value =
+      matching.value;
+
+  } else {
+
+    element.value =
+      normalized;
+
+  }
+
+}
+
+
+/* =========================================================
+   MODAL EVENTS
+   ========================================================= */
 
 function setupModalEvents() {
 
@@ -3795,6 +3841,7 @@ function setupModalEvents() {
     document.getElementById(
       "leadModal"
     );
+
 
   const salesModal =
     document.getElementById(
@@ -3806,7 +3853,7 @@ function setupModalEvents() {
 
     leadModal.addEventListener(
       "click",
-      function(event) {
+      function (event) {
 
         if (
           event.target ===
@@ -3827,7 +3874,7 @@ function setupModalEvents() {
 
     salesModal.addEventListener(
       "click",
-      function(event) {
+      function (event) {
 
         if (
           event.target ===
@@ -3846,9 +3893,9 @@ function setupModalEvents() {
 }
 
 
-// ================================
-// LOGOUT
-// ================================
+/* =========================================================
+   LOGOUT
+   ========================================================= */
 
 async function logout() {
 
@@ -3859,335 +3906,61 @@ async function logout() {
   } catch (error) {
 
     console.error(
+      "Logout error:",
       error
     );
 
   }
 
 
-  currentUser =
-    null;
+  currentUser = null;
 
-  currentProfile =
-    null;
+  currentProfile = null;
 
-  leadsData =
-    [];
+  leadsData = [];
 
-  salesUsersData =
-    [];
+  salesUsersData = [];
 
+  currentPage = 1;
 
-  currentPage =
-    1;
-
-  totalLeadsCount =
-    0;
+  totalLeadsCount = 0;
 
 
   showLogin();
 
-}
 
-
-// ================================
-// HELPER FUNCTIONS
-// ================================
-
-function formatDate(
-  date
-) {
-
-  if (!date)
-    return "-";
-
-
-  try {
-
-    const d =
-      new Date(
-        date +
-        "T00:00:00"
-      );
-
-
-    if (
-      isNaN(
-        d.getTime()
-      )
-    ) {
-
-      return date;
-
-    }
-
-
-    return d.toLocaleDateString(
-      "en-US",
-      {
-        day:
-          "2-digit",
-        month:
-          "2-digit",
-        year:
-          "numeric"
-      }
-    );
-
-
-  } catch {
-
-    return date;
-
-  }
-
-}
-
-
-function formatDateTime(
-  date
-) {
-
-  if (!date)
-    return "-";
-
-
-  try {
-
-    const d =
-      new Date(
-        date
-      );
-
-
-    if (
-      isNaN(
-        d.getTime()
-      )
-    ) {
-
-      return date;
-
-    }
-
-
-    return d.toLocaleDateString(
-      "en-US",
-      {
-        day:
-          "2-digit",
-        month:
-          "2-digit",
-        year:
-          "numeric"
-      }
-    );
-
-
-  } catch {
-
-    return date;
-
-  }
-
-}
-
-
-function statusClass(
-  status
-) {
-
-  if (!status)
-    return "";
-
-
-  return (
-    "status-" +
-    String(status)
-      .toLowerCase()
-      .replace(
-        /\s+/g,
-        "-"
-      )
-  );
-
-}
-
-
-function escapeHTML(
-  value
-) {
-
-  if (
-    value === null ||
-    value === undefined
-  ) {
-
-    return "";
-
-  }
-
-
-  return String(value)
-    .replace(
-      /&/g,
-      "&amp;"
-    )
-    .replace(
-      /</g,
-      "&lt;"
-    )
-    .replace(
-      />/g,
-      "&gt;"
-    )
-    .replace(
-      /"/g,
-      "&quot;"
-    )
-    .replace(
-      /'/g,
-      "&#039;"
-    );
-
-}
-
-
-function getValue(
-  value
-) {
-
-  if (
-    value === null ||
-    value === undefined ||
-    value === ""
-  ) {
-
-    return "";
-
-  }
-
-
-  return String(value);
-
-}
-
-
-function setValue(
-  id,
-  value
-) {
-
-  const element =
+  const password =
     document.getElementById(
-      id
+      "loginPassword"
     );
 
 
-  if (!element)
-    return;
-
-
-  element.value =
-    value === null ||
-    value === undefined
-      ? ""
-      : value;
-
-}
-
-
-function setText(
-  id,
-  value
-) {
-
-  const element =
+  const message =
     document.getElementById(
-      id
+      "loginMessage"
     );
 
 
-  if (!element)
-    return;
-
-
-  element.textContent =
-    value;
-
-}
-
-
-// ================================
-// TOP NAV SALES FILTER
-// ================================
-
-function applyTopSalesFilter(
-  salesId
-) {
-
-  const salesFilter =
-    document.getElementById(
-      "salesFilter"
-    );
-
-
-  if (salesFilter) {
-
-    salesFilter.value =
-      salesId || "";
-
+  if (password) {
+    password.value = "";
   }
 
-
-  showLeads();
-
-}
-
-
-// ================================
-// UPDATE TOP NAV SALES BUTTON
-// ================================
-
-function updateSalesDropdownButton(
-  salesName
-) {
-
-  const button =
-    document.getElementById(
-      "salesDropdownBtn"
-    );
-
-
-  if (!button)
-    return;
-
-
-  const text =
-    button.querySelector(
-      "span"
-    );
-
-
-  if (text) {
-
-    text.textContent =
-      salesName || "Sales";
-
+  if (message) {
+    message.textContent = "";
   }
 
 }
 
 
-// ================================
-// SUPABASE AUTH STATE
-// ================================
+/* =========================================================
+   AUTH STATE CHANGE
+   ========================================================= */
 
 supabaseClient.auth.onAuthStateChange(
-  async (
+  async function (
     event,
     session
-  ) => {
+  ) {
 
     console.log(
       "Auth event:",
@@ -4204,25 +3977,16 @@ supabaseClient.auth.onAuthStateChange(
         session.user;
 
 
-      setTimeout(
-        async () => {
-
-          await loadProfile();
-
-        },
-        100
-      );
+      await loadProfile();
 
     }
 
 
     if (!session) {
 
-      currentUser =
-        null;
+      currentUser = null;
 
-      currentProfile =
-        null;
+      currentProfile = null;
 
       showLogin();
 
@@ -4230,3 +3994,301 @@ supabaseClient.auth.onAuthStateChange(
 
   }
 );
+
+
+/* =========================================================
+   TOP SALES FILTER
+   ========================================================= */
+
+function applyTopSalesFilter(
+  salesId
+) {
+
+  const filter =
+    document.getElementById(
+      "salesFilter"
+    );
+
+
+  if (filter) {
+
+    filter.value =
+      salesId || "";
+
+  }
+
+
+  loadLeads(1);
+
+}
+
+
+function updateSalesDropdownButton(
+  salesName
+) {
+
+  const button =
+    document.getElementById(
+      "salesDropdownBtn"
+    );
+
+
+  if (!button) {
+    return;
+  }
+
+
+  const span =
+    button.querySelector(
+      "span"
+    );
+
+
+  if (span) {
+
+    span.textContent =
+      salesName ||
+      "Sales";
+
+  }
+
+}
+
+
+/* =========================================================
+   ESCAPE HTML
+   ========================================================= */
+
+function escapeHtml(
+  value
+) {
+
+  return String(
+    value ?? ""
+  )
+  .replace(
+    /&/g,
+    "&amp;"
+  )
+  .replace(
+    /</g,
+    "&lt;"
+  )
+  .replace(
+    />/g,
+    "&gt;"
+  )
+  .replace(
+    /"/g,
+    "&quot;"
+  )
+  .replace(
+    /'/g,
+    "&#039;"
+  );
+
+}
+
+
+function escapeAttribute(
+  value
+) {
+
+  return escapeHtml(
+    value
+  );
+
+}
+
+
+/* =========================================================
+   DATE FORMAT
+   ========================================================= */
+
+function formatDate(
+  value
+) {
+
+  if (!value) {
+    return "-";
+  }
+
+
+  try {
+
+    const date =
+      new Date(
+        value
+      );
+
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+
+      return String(
+        value
+      );
+
+    }
+
+
+    return date.toLocaleDateString(
+      "id-ID",
+      {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+      }
+    );
+
+  } catch {
+
+    return String(
+      value
+    );
+
+  }
+
+}
+
+
+function formatDateTime(
+  value
+) {
+
+  if (!value) {
+    return "-";
+  }
+
+
+  try {
+
+    const date =
+      new Date(
+        value
+      );
+
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+
+      return String(
+        value
+      );
+
+    }
+
+
+    return date.toLocaleString(
+      "id-ID",
+      {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      }
+    );
+
+  } catch {
+
+    return String(
+      value
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   WINDOW DEBUG HELPER
+   ========================================================= */
+
+/*
+  Bisa dipanggil dari browser console:
+
+  refreshDashboard()
+
+*/
+
+window.refreshDashboard =
+  async function () {
+
+    console.log(
+      "Manual Dashboard refresh..."
+    );
+
+    await updateDashboard();
+
+  };
+
+
+/*
+  Bisa dipanggil dari browser console:
+
+  checkDashboardData()
+
+  untuk melihat berapa data yang langsung
+  dikembalikan Supabase.
+*/
+
+window.checkDashboardData =
+  async function () {
+
+    try {
+
+      let query =
+        supabaseClient
+          .from("leads")
+          .select(
+            "id, status, appointment, site_survey, quotation, closing, sales_id"
+          );
+
+
+      if (isSales()) {
+
+        query =
+          query.eq(
+            "sales_id",
+            currentProfile?.id
+          );
+
+      }
+
+
+      const {
+        data,
+        error
+      } = await query;
+
+
+      console.log(
+        "CHECK DASHBOARD DATA:",
+        {
+          error,
+          total:
+            data?.length || 0,
+          data
+        }
+      );
+
+
+      return data;
+
+    } catch (error) {
+
+      console.error(
+        "checkDashboardData error:",
+        error
+      );
+
+    }
+
+  };
