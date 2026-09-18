@@ -709,7 +709,7 @@ function getSalesName(id) {
 // ================================
 // LOAD LEADS
 // ================================
-// SEKARANG MENGGUNAKAN PAGINATION
+// PAGINATION
 // 20 LEAD PER HALAMAN
 // ================================
 
@@ -724,7 +724,6 @@ async function loadLeads(page = 1) {
       );
 
 
-    // Pastikan daftar Sales tersedia
     if (
       !salesUsersData ||
       salesUsersData.length === 0
@@ -965,7 +964,7 @@ function renderLeads(data) {
     table.innerHTML = `
       <tr>
         <td
-          colspan="12"
+          colspan="10"
           style="text-align:center;">
           No leads found
         </td>
@@ -991,14 +990,9 @@ function renderLeads(data) {
         );
 
 
-      const createdByName =
-        getSalesName(
-          lead.created_by
-        );
-
-
       tr.innerHTML = `
 
+        <!-- CUSTOMER -->
         <td>
           ${escapeHTML(
             getValue(
@@ -1007,6 +1001,7 @@ function renderLeads(data) {
           )}
         </td>
 
+        <!-- PHONE / WHATSAPP -->
         <td>
           ${
             lead.phone
@@ -1026,6 +1021,25 @@ function renderLeads(data) {
           }
         </td>
 
+        <!-- EMAIL -->
+        <td>
+          ${
+            lead.email
+              ? `
+                <a
+                  href="mailto:${escapeHTML(
+                    lead.email
+                  )}">
+                  ${escapeHTML(
+                    lead.email
+                  )}
+                </a>
+              `
+              : "-"
+          }
+        </td>
+
+        <!-- BUSINESS -->
         <td>
           ${escapeHTML(
             getValue(
@@ -1034,6 +1048,7 @@ function renderLeads(data) {
           )}
         </td>
 
+        <!-- LOCATION -->
         <td>
           ${escapeHTML(
             getValue(
@@ -1053,17 +1068,7 @@ function renderLeads(data) {
           }
         </td>
 
-        <!-- CREATED BY -->
-        <td>
-          ${
-            createdByName !== "-"
-              ? escapeHTML(
-                  createdByName
-                )
-              : "-"
-          }
-        </td>
-
+        <!-- STATUS -->
         <td>
           <span
             class="status-badge ${statusClass(
@@ -1077,30 +1082,21 @@ function renderLeads(data) {
           </span>
         </td>
 
+        <!-- FOLLOW UP -->
         <td>
           ${formatDate(
             lead.follow_up_date
           )}
         </td>
 
+        <!-- NEXT STEP -->
         <td>
           ${formatDate(
             lead.appointment
           )}
         </td>
 
-        <td>
-          ${formatDate(
-            lead.quotation
-          )}
-        </td>
-
-        <td>
-          ${formatDate(
-            lead.closing
-          )}
-        </td>
-
+        <!-- ACTION -->
         <td>
 
           <button
@@ -1310,6 +1306,12 @@ function clearLeadForm() {
     ""
   );
 
+  // EMAIL
+  setValue(
+    "leadEmail",
+    ""
+  );
+
   setValue(
     "leadBusiness",
     ""
@@ -1418,6 +1420,15 @@ async function saveLead() {
       document
         .getElementById(
           "leadPhone"
+        )
+        .value
+        .trim(),
+
+    // EMAIL
+    email:
+      document
+        .getElementById(
+          "leadEmail"
         )
         .value
         .trim(),
@@ -1682,6 +1693,12 @@ async function editLead(id) {
   setValue(
     "leadPhone",
     lead.phone
+  );
+
+  // EMAIL
+  setValue(
+    "leadEmail",
+    lead.email
   );
 
   setValue(
