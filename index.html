@@ -1,401 +1,1524 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CRM FSI</title>
+  <title>FSI - Sales CRM Dashboard</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
 
-  <link rel="stylesheet" href="style.css">
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <!-- Supabase -->
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Supabase JS Client library -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+      color: #1e293b;
+    }
+
+    /* Modal Overlay */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background-color: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(4px);
+      z-index: 50;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    /* Buttons */
+    .primary-btn {
+      background-color: #2563eb;
+      color: #ffffff;
+      font-weight: 600;
+      padding: 0.625rem 1.25rem;
+      border-radius: 0.75rem;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    }
+    .primary-btn:hover {
+      background-color: #1d4ed8;
+    }
+
+    .secondary-btn {
+      background-color: #f1f5f9;
+      color: #334155;
+      font-weight: 500;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      border: 1px solid #e2e8f0;
+      transition: all 0.2s ease;
+    }
+    .secondary-btn:hover {
+      background-color: #e2e8f0;
+      color: #0f172a;
+    }
+
+    .small-btn {
+      padding: 0.25rem 0.625rem;
+      font-size: 0.75rem;
+      border-radius: 0.375rem;
+    }
+
+    /* Status Badges */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      line-height: 1;
+    }
+    .status-badge::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .status-new {
+      background-color: #f1f5f9;
+      color: #475569;
+    }
+    .status-new::before { background-color: #64748b; }
+
+    .status-interested, .status-applied {
+      background-color: #eff6ff;
+      color: #1d4ed8;
+    }
+    .status-interested::before, .status-applied::before { background-color: #3b82f6; }
+
+    .status-follow-up, .status-fu {
+      background-color: #fff7ed;
+      color: #c2410c;
+    }
+    .status-follow-up::before, .status-fu::before { background-color: #f97316; }
+
+    .status-invited {
+      background-color: #f0fdf4;
+      color: #15803d;
+    }
+    .status-invited::before { background-color: #22c55e; }
+
+    .status-appointment {
+      background-color: #fef3c7;
+      color: #b45309;
+    }
+    .status-appointment::before { background-color: #eab308; }
+
+    .status-site-survey {
+      background-color: #ecfdf5;
+      color: #047857;
+    }
+    .status-site-survey::before { background-color: #10b981; }
+
+    .status-quotation {
+      background-color: #faf5ff;
+      color: #7e22ce;
+    }
+    .status-quotation::before { background-color: #a855f7; }
+
+    .status-closing, .status-closed, .status-spk {
+      background-color: #dcfce7;
+      color: #166534;
+    }
+    .status-closing::before, .status-closed::before, .status-spk::before { background-color: #16a34a; }
+
+    .status-active {
+      background-color: #dcfce7;
+      color: #166534;
+    }
+    .status-active::before { background-color: #16a34a; }
+
+    .status-inactive {
+      background-color: #fee2e2;
+      color: #991b1b;
+    }
+    .status-inactive::before { background-color: #ef4444; }
+
+    /* Custom WhatsApp Link */
+    .wa-link {
+      color: #2563eb;
+      font-weight: 500;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .wa-link:hover {
+      text-decoration: underline;
+    }
+
+    /* Dynamic User Info Bar */
+    #userInfo {
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+    }
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #e2e8f0;
+    }
+
+    /* Table styling */
+    th {
+      font-weight: 600;
+      color: #64748b;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    td {
+      font-size: 0.875rem;
+      color: #334155;
+    }
+  </style>
 </head>
+<body class="min-h-screen flex flex-col">
 
-<body>
+  <!-- ================================ -->
+  <!-- LOGIN PAGE VIEW -->
+  <!-- ================================ -->
+  <div id="loginPage" class="min-h-screen w-full flex items-center justify-center bg-slate-50 p-4">
+    <div class="bg-white p-8 sm:p-10 rounded-3xl shadow-xl w-full max-w-md border border-slate-100">
+      
+      <!-- FSI Logo Header -->
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center gap-3 mb-2">
+          <img src="logo-fsi.png" alt="FSI Logo" class="h-12 w-auto object-contain" onerror="this.style.display='none'; document.getElementById('loginFallbackIcon').style.display='flex';">
+          <div id="loginFallbackIcon" class="w-10 h-10 rounded-xl bg-blue-600 items-center justify-center text-white font-bold text-xl shadow-md shadow-blue-500/30" style="display: none;">
+            ☀️
+          </div>
+          <span class="text-3xl font-extrabold text-blue-900 tracking-tight">FSI</span>
+        </div>
+        <p class="text-xs font-bold text-slate-400 tracking-widest uppercase">French Solar Industry</p>
+        <h2 class="text-xl font-bold text-slate-800 mt-6">CRM Portal Login</h2>
+        <p class="text-xs text-slate-500 mt-1">Silakan masuk menggunakan akun CRM anda</p>
+      </div>
 
-  <!-- LOGIN -->
-  <div id="loginPage" class="page">
-    <div class="login-box">
+      <!-- Login Form Fields -->
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-slate-700 mb-1">Username</label>
+          <input type="text" id="loginUsername" placeholder="Masukkan username" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm">
+        </div>
 
-      <div class="logo">FSI</div>
+        <div>
+          <label class="block text-xs font-medium text-slate-700 mb-1">Password</label>
+          <input type="password" id="loginPassword" placeholder="Masukkan password" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm">
+        </div>
 
-      <h1>CRM FSI</h1>
+        <!-- Feedback Message -->
+        <div id="loginMessage" class="text-xs text-red-500 font-medium min-h-[1.25rem]"></div>
 
-      <p class="subtitle">
-        French Solar Industry
-      </p>
-
-      <input
-        id="loginUsername"
-        type="text"
-        placeholder="Username"
-      >
-
-      <input
-        id="loginPassword"
-        type="password"
-        placeholder="Password"
-      >
-
-      <button
-        onclick="login()"
-        class="primary-btn">
-        LOGIN
-      </button>
-
-      <div id="loginMessage" class="message"></div>
-
+        <button onclick="login()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-blue-500/25 text-sm">
+          Log In
+        </button>
+      </div>
     </div>
   </div>
 
 
-  <!-- APP -->
-  <div id="app" style="display:none">
+  <!-- ================================ -->
+  <!-- MAIN APPLICATION WRAPPER -->
+  <!-- ================================ -->
+  <div id="app" class="flex-col min-h-screen" style="display: none;">
+    
+    <!-- TOP NAVBAR -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-40">
+      <div class="max-w-[1440px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+        
+        <!-- Brand Logo -->
+        <div class="flex items-center gap-3 shrink-0">
+          <img src="logo-fsi.png" alt="FSI Logo" class="h-9 w-auto object-contain" onerror="this.style.display='none'; document.getElementById('navFallbackIcon').style.display='flex';">
+          <div id="navFallbackIcon" class="w-9 h-9 rounded-xl bg-blue-600 items-center justify-center text-white font-black text-lg shadow-sm" style="display: none;">
+            ☀️
+          </div>
+          <div>
+            <span class="text-xl font-black text-blue-900 tracking-tight leading-none block">FSI</span>
+            <span class="text-[9px] font-bold text-slate-400 tracking-widest uppercase block">French Solar Industry</span>
+          </div>
+        </div>
 
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
+        <!-- Center Navigation Tabs -->
+        <nav class="hidden md:flex items-center gap-1 bg-slate-100/80 p-1 rounded-2xl border border-slate-200/60">
+          <button onclick="showDashboard()" class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-blue-600 bg-white shadow-sm transition">
+            <i data-lucide="layout-grid" class="w-4 h-4"></i>
+            Dashboard
+          </button>
+          
+          <button onclick="showLeads()" class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:text-slate-900 transition">
+            <i data-lucide="users" class="w-4 h-4"></i>
+            My Leads
+          </button>
 
-      <div class="brand">
-        <strong>FSI CRM</strong>
+          <button id="manageSalesBtn" onclick="showSales()" class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:text-slate-900 transition" style="display: none;">
+            <i data-lucide="user-check" class="w-4 h-4"></i>
+            Manage Sales
+            <span class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full">Admin</span>
+          </button>
+        </nav>
+
+        <!-- Right Side User Menu -->
+        <div class="flex items-center gap-3">
+          <button class="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 relative transition">
+            <i data-lucide="bell" class="w-4 h-4"></i>
+            <span class="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-blue-600"></span>
+          </button>
+
+          <!-- User Profile Dropdown Widget -->
+          <div class="flex items-center gap-3 pl-2 border-l border-slate-200">
+            <div id="userInfo">
+              <img src="https://placehold.co/100x100/2563eb/ffffff?text=U" alt="User" class="user-avatar">
+              <div class="hidden sm:block text-left">
+                <strong class="block text-xs font-bold text-slate-800 leading-tight">Sales User</strong>
+                <small class="text-[10px] font-medium text-slate-500">Sales</small>
+              </div>
+            </div>
+
+            <button onclick="logout()" title="Logout" class="text-slate-400 hover:text-red-600 transition p-1">
+              <i data-lucide="log-out" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+
+    <!-- MAIN CONTAINER -->
+    <main class="flex-1 max-w-[1440px] w-full mx-auto px-4 sm:px-6 py-8">
+      
+      <!-- PAGE HEADER BAR -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 id="pageTitle" class="text-3xl font-extrabold text-slate-900 tracking-tight">Dashboard</h1>
+          <p class="text-sm text-slate-500 mt-1">Welcome back, <span id="currentUser">User</span>! Here's your sales overview.</p>
+        </div>
+
+        <div class="inline-flex items-center gap-2 bg-white px-4 py-2.5 rounded-2xl border border-slate-200 shadow-sm text-xs font-semibold text-slate-700 self-start sm:self-auto cursor-pointer hover:bg-slate-50 transition">
+          <i data-lucide="calendar" class="w-4 h-4 text-blue-600"></i>
+          <span id="currentDateRange">Mar 1, 2025 – Mar 31, 2025</span>
+        </div>
       </div>
 
-      <div id="userInfo" class="user-info"></div>
 
-      <nav>
-
-        <button onclick="showDashboard()">
-          Dashboard
-        </button>
-
-        <button onclick="showLeads()">
-          My Leads
-        </button>
-
-        <button
-          id="manageSalesBtn"
-          onclick="showSales()"
-          style="display:none">
-          Manage Sales
-        </button>
-
-      </nav>
-
-      <button
-        onclick="logout()"
-        class="logout-btn">
-        Logout
-      </button>
-
-    </aside>
-
-
-    <!-- MAIN -->
-    <main class="main">
-
-      <!-- TOPBAR -->
-      <header class="topbar">
-
-        <h2 id="pageTitle">
-          Dashboard
-        </h2>
-
-        <span id="currentUser"></span>
-
-      </header>
-
-
-      <!-- DASHBOARD -->
-      <section
-        id="dashboardPage"
-        class="content">
-
-        <div class="stats-grid">
-
-          <div class="stat-card">
-            <span>Total Leads</span>
-            <strong id="statTotal">0</strong>
+      <!-- ================================ -->
+      <!-- VIEW 1: DASHBOARD PAGE -->
+      <!-- ================================ -->
+      <div id="dashboardPage" class="space-y-8">
+        
+        <!-- 8 METRICS CARDS GRID (Match exact reference style) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          
+          <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex items-center gap-4 transition hover:shadow-md">
+            <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+              <i data-lucide="users" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-slate-500">Total Leads</p>
+              <h3 id="statTotal" class="text-2xl font-bold text-slate-800 my-0.5">0</h3>
+              <p class="text-[10px] text-emerald-600 font-semibold flex items-center gap-0.5">
+                <span>↑ 12%</span> <span class="text-slate-400 font-normal">vs last month</span>
+              </p>
+            </div>
           </div>
 
-          <div class="stat-card">
-            <span>New</span>
-            <strong id="statNew">0</strong>
+          <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex items-center gap-4 transition hover:shadow-md">
+            <div class="w-12 h-12 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center shrink-0">
+              <i data-lucide="user-plus" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-slate-500">New Leads</p>
+              <h3 id="statNew" class="text-2xl font-bold text-slate-800 my-0.5">0</h3>
+              <p class="text-[10px] text-emerald-600 font-semibold flex items-center gap-0.5">
+                <span>↑ 8%</span> <span class="text-slate-400 font-normal">vs last month</span>
+              </p>
+            </div>
           </div>
 
-          <div class="stat-card">
-            <span>Interested</span>
-            <strong id="statInterested">0</strong>
+          <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex items-center gap-4 transition hover:shadow-md">
+            <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+              <i data-lucide="heart" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-slate-500">Interested</p>
+              <h3 id="statInterested" class="text-2xl font-bold text-slate-800 my-0.5">0</h3>
+              <p class="text-[10px] text-emerald-600 font-semibold flex items-center gap-0.5">
+                <span>↑ 5%</span> <span class="text-slate-400 font-normal">vs last month</span>
+              </p>
+            </div>
           </div>
 
-          <div class="stat-card">
-            <span>Follow-up</span>
-            <strong id="statFollowUp">0</strong>
+          <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex items-center gap-4 transition hover:shadow-md">
+            <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+              <i data-lucide="rotate-cw" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-slate-500">Follow Up</p>
+              <h3 id="statFollowUp" class="text-2xl font-bold text-slate-800 my-0.5">0</h3>
+              <p class="text-[10px] text-emerald-600 font-semibold flex items-center gap-0.5">
+                <span>↑ 14%</span> <span class="text-slate-400 font-normal">vs last month</span>
+              </p>
+            </div>
           </div>
 
-          <div class="stat-card">
-            <span>Appointment</span>
-            <strong id="statAppointment">0</strong>
+          <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex items-center gap-4 transition hover:shadow-md">
+            <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+              <i data-lucide="calendar" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-slate-500">Appointment</p>
+              <h3 id="statAppointment" class="text-2xl font-bold text-slate-800 my-0.5">0</h3>
+              <p class="text-[10px] text-emerald-600 font-semibold flex items-center gap-0.5">
+                <span>↑ 20%</span> <span class="text-slate-400 font-normal">vs last month</span>
+              </p>
+            </div>
           </div>
 
-          <div class="stat-card">
-            <span>Site Survey</span>
-            <strong id="statSiteSurvey">0</strong>
+          <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex items-center gap-4 transition hover:shadow-md">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+              <i data-lucide="map-pin" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-slate-500">Site Survey</p>
+              <h3 id="statSiteSurvey" class="text-2xl font-bold text-slate-800 my-0.5">0</h3>
+              <p class="text-[10px] text-emerald-600 font-semibold flex items-center gap-0.5">
+                <span>↑ 13%</span> <span class="text-slate-400 font-normal">vs last month</span>
+              </p>
+            </div>
           </div>
 
-          <div class="stat-card">
-            <span>Quotation</span>
-            <strong id="statQuotation">0</strong>
+          <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex items-center gap-4 transition hover:shadow-md">
+            <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+              <i data-lucide="file-text" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-slate-500">Quotation</p>
+              <h3 id="statQuotation" class="text-2xl font-bold text-slate-800 my-0.5">0</h3>
+              <p class="text-[10px] text-emerald-600 font-semibold flex items-center gap-0.5">
+                <span>↑ 9%</span> <span class="text-slate-400 font-normal">vs last month</span>
+              </p>
+            </div>
           </div>
 
-          <div class="stat-card">
-            <span>Closing</span>
-            <strong id="statClosing">0</strong>
+          <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex items-center gap-4 transition hover:shadow-md">
+            <div class="w-12 h-12 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
+              <i data-lucide="file-check" class="w-6 h-6"></i>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-slate-500">SPK / Closing</p>
+              <h3 id="statClosing" class="text-2xl font-bold text-slate-800 my-0.5">0</h3>
+              <p class="text-[10px] text-emerald-600 font-semibold flex items-center gap-0.5">
+                <span>↑ 50%</span> <span class="text-slate-400 font-normal">vs last month</span>
+              </p>
+            </div>
           </div>
 
         </div>
-      </section>
 
 
-      <!-- LEADS -->
-      <section
-        id="leadsPage"
-        class="content"
-        style="display:none">
+        <!-- FILTER BAR & SEARCH TOOLS (Exact replica of reference screenshot) -->
+        <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 pt-2">
+          
+          <div class="flex flex-wrap items-center gap-2">
+            <!-- Status Filter -->
+            <select id="statusFilter" onchange="loadLeads(1)" class="bg-white px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm">
+              <option value="">All Status</option>
+              <option value="New">New</option>
+              <option value="Interested">Interested</option>
+              <option value="Follow-up">Follow-up</option>
+              <option value="Appointment">Appointment</option>
+              <option value="Site Survey">Site Survey</option>
+              <option value="Quotation">Quotation</option>
+              <option value="Closing">Closing</option>
+            </select>
 
-        <div class="toolbar">
+            <!-- Business Filter -->
+            <select id="businessFilter" onchange="loadLeads(1)" class="bg-white px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm">
+              <option value="">All Business</option>
+              <option value="Hotel">Hotel</option>
+              <option value="Villa">Villa</option>
+              <option value="Restaurant">Restaurant</option>
+              <option value="Office">Office</option>
+              <option value="Factory">Factory</option>
+              <option value="Residential">Residential</option>
+            </select>
 
-          <input
-            id="leadSearch"
-            placeholder="Search customer / phone..."
-            oninput="filterLeads()"
-          >
+            <!-- Location Filter -->
+            <select id="locationFilter" onchange="loadLeads(1)" class="bg-white px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm">
+              <option value="">All Location</option>
+              <option value="Seminyak">Seminyak</option>
+              <option value="Canggu">Canggu</option>
+              <option value="Kuta">Kuta</option>
+              <option value="Denpasar">Denpasar</option>
+              <option value="Tabanan">Tabanan</option>
+              <option value="Uluwatu">Uluwatu</option>
+              <option value="Sanur">Sanur</option>
+            </select>
 
-          <select
-            id="statusFilter"
-            onchange="filterLeads()">
+            <!-- Sales Person Dropdown Filter (ADMIN SPECIFIC FEATURE) -->
+            <select id="salesFilter" onchange="loadLeads(1)" class="bg-white px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm">
+              <option value="">All Sales</option>
+              <!-- Dynamically populated with active sales users -->
+            </select>
+          </div>
 
-            <option value="">All Status</option>
-            <option>New</option>
-            <option>Contacted</option>
-            <option>Interested</option>
-            <option>Follow-up</option>
-            <option>Appointment</option>
-            <option>Site Survey</option>
-            <option>Quotation</option>
-            <option>SPK</option>
-            <option>Closing</option>
-            <option>Not Interested</option>
+          <div class="flex items-center gap-2">
+            <!-- Debounced Server Search Input -->
+            <div class="relative flex-1 sm:w-72">
+              <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+              <input type="text" id="leadSearch" oninput="onSearchInput()" placeholder="Search name, phone, business, location..." class="w-full pl-10 pr-4 py-2 bg-white rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm">
+            </div>
 
-          </select>
+            <!-- Add Lead Button -->
+            <button onclick="openLeadModal()" class="w-9 h-9 rounded-xl bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/20 transition" title="Add Lead">
+              <i data-lucide="plus" class="w-5 h-5"></i>
+            </button>
 
-          <button
-            class="primary-btn"
-            onclick="openLeadModal()">
-            + Add Lead
+            <!-- Export Button -->
+            <button onclick="exportToCSV()" class="px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 rounded-xl border border-slate-200 text-xs font-semibold flex items-center gap-1.5 shadow-sm transition">
+              <i data-lucide="download" class="w-3.5 h-3.5 text-slate-500"></i>
+              Export
+            </button>
+          </div>
+        </div>
+
+
+        <!-- LEADS TABLE CONTAINER -->
+        <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-50/60 border-b border-slate-100">
+                  <th class="p-4 pl-6 w-10">
+                    <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this)" class="rounded text-blue-600 border-slate-300 focus:ring-blue-500">
+                  </th>
+                  <th class="p-4">Customer</th>
+                  <th class="p-4">Phone</th>
+                  <th class="p-4">Business</th>
+                  <th class="p-4">Location</th>
+                  <th class="p-4">Sales</th>
+                  <th class="p-4">Status</th>
+                  <th class="p-4">Follow-up</th>
+                  <th class="p-4">Next Step</th>
+                  <th class="p-4 pr-6 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="leadsTable" class="divide-y divide-slate-100">
+                <!-- Dynamically Populated Rows -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- SERVER-SIDE PAGINATION CONTROLS -->
+          <div class="px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50">
+            <div class="text-xs text-slate-500 font-medium" id="paginationInfo">
+              Showing 0 to 0 of 0 leads
+            </div>
+            
+            <div class="flex items-center gap-2" id="paginationButtons">
+              <button id="prevBtn" onclick="changePage(-1)" disabled class="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                Previous
+              </button>
+              <span id="pageIndicator" class="text-xs font-semibold text-slate-700 px-2">Page 1</span>
+              <button id="nextBtn" onclick="changePage(1)" disabled class="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                Next
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+
+      <!-- ================================ -->
+      <!-- VIEW 2: MY LEADS PAGE -->
+      <!-- ================================ -->
+      <div id="leadsPage" class="space-y-6" style="display: none;">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xl font-bold text-slate-800">Daftar Leads Saya</h2>
+          <button onclick="openLeadModal()" class="primary-btn text-xs flex items-center gap-2">
+            <i data-lucide="plus" class="w-4 h-4"></i> Tambah Lead Baru
           </button>
-
         </div>
+      </div>
 
 
-        <div class="table-wrapper">
+      <!-- ================================ -->
+      <!-- VIEW 3: MANAGE SALES PAGE -->
+      <!-- ================================ -->
+      <div id="salesPage" class="space-y-6" style="display: none;">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-xl font-bold text-slate-800">Manage Sales Team</h2>
+            <p class="text-xs text-slate-500 mt-0.5">Kelola akun dan status tim sales (Aktif / Nonaktif)</p>
+          </div>
 
-          <table>
-
-            <thead>
-              <tr>
-                <th>Customer</th>
-                <th>Phone</th>
-                <th>Business</th>
-                <th>Location</th>
-
-                <!-- TAMBAHAN -->
-                <th>Sales</th>
-                <th>Created By</th>
-
-                <th>Status</th>
-                <th>Follow-up</th>
-                <th>Appointment</th>
-                <th>Quotation</th>
-                <th>Closing</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-
-            <tbody id="leadsTable"></tbody>
-
-          </table>
-
-        </div>
-      </section>
-
-
-      <!-- MANAGE SALES -->
-      <section
-        id="salesPage"
-        class="content"
-        style="display:none">
-
-        <div class="toolbar">
-
-          <button
-            class="primary-btn"
-            onclick="openSalesModal()">
-            + Add Sales
+          <button onclick="openSalesModal()" class="primary-btn text-xs flex items-center gap-2">
+            <i data-lucide="user-plus" class="w-4 h-4"></i> Tambah Sales Baru
           </button>
-
         </div>
 
-        <div class="table-wrapper">
-
-          <table>
-
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Username</th>
-                <th>Role</th>
-                <th>Status</th>
-                <th>Database</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-
-            <tbody id="salesTable"></tbody>
-
-          </table>
-
+        <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-50/60 border-b border-slate-100">
+                  <th class="p-4 pl-6">Name</th>
+                  <th class="p-4">Username</th>
+                  <th class="p-4">Role</th>
+                  <th class="p-4">Status</th>
+                  <th class="p-4">Created</th>
+                  <th class="p-4 pr-6 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody id="salesTable" class="divide-y divide-slate-100">
+                <!-- Dynamically Populated Sales Rows -->
+              </tbody>
+            </table>
+          </div>
         </div>
-      </section>
+      </div>
 
     </main>
   </div>
 
 
-  <!-- LEAD MODAL -->
-  <div id="leadModal" class="modal">
-
-    <div class="modal-box">
-
-      <h2 id="leadModalTitle">
-        Add Lead
-      </h2>
-
-      <input type="hidden" id="leadId">
-
-      <label>Customer</label>
-      <input id="leadCustomer">
-
-      <label>Phone</label>
-      <input id="leadPhone">
-
-      <label>Business</label>
-      <input id="leadBusiness">
-
-      <label>Location</label>
-      <input id="leadLocation">
-
-      <label>Status</label>
-
-      <select id="leadStatus">
-        <option>New</option>
-        <option>Contacted</option>
-        <option>Interested</option>
-        <option>Follow-up</option>
-        <option>Appointment</option>
-        <option>Site Survey</option>
-        <option>Quotation</option>
-        <option>SPK</option>
-        <option>Closing</option>
-        <option>Not Interested</option>
-      </select>
-
-      <label>Follow-up</label>
-      <input type="date" id="leadFollowUp">
-
-      <label>Appointment</label>
-      <input type="date" id="leadAppointment">
-
-      <label>Site Survey</label>
-      <input type="date" id="leadSiteSurvey">
-
-      <label>Quotation</label>
-      <input type="date" id="leadQuotation">
-
-      <label>SPK</label>
-      <input type="date" id="leadSPK">
-
-      <label>Closing</label>
-      <input type="date" id="leadClosing">
-
-      <label>Notes</label>
-      <textarea id="leadNotes"></textarea>
-
-      <div class="modal-actions">
-
-        <button
-          onclick="closeLeadModal()"
-          class="secondary-btn">
-          Cancel
+  <!-- ================================ -->
+  <!-- MODAL: ADD / EDIT LEAD -->
+  <!-- ================================ -->
+  <div id="leadModal" class="modal-overlay p-4">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-100 overflow-y-auto max-h-[90vh]">
+      
+      <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+        <h3 id="leadModalTitle" class="text-xl font-bold text-slate-800">Add Lead</h3>
+        <button onclick="closeLeadModal()" class="text-slate-400 hover:text-slate-600 transition p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
         </button>
-
-        <button
-          onclick="saveLead()"
-          class="primary-btn">
-          Save
-        </button>
-
       </div>
 
+      <form onsubmit="event.preventDefault(); saveLead();" class="space-y-4">
+        <input type="hidden" id="leadId">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Customer Name *</label>
+            <input type="text" id="leadCustomer" required placeholder="Nama Customer" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Phone Number</label>
+            <input type="text" id="leadPhone" placeholder="+62 812..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Business Type</label>
+            <input type="text" id="leadBusiness" placeholder="e.g. Hotel / Villa / Office" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Location</label>
+            <input type="text" id="leadLocation" placeholder="e.g. Seminyak, Bali" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Status</label>
+            <select id="leadStatus" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+              <option value="New">New</option>
+              <option value="Interested">Interested</option>
+              <option value="Follow-up">Follow-up</option>
+              <option value="Appointment">Appointment</option>
+              <option value="Site Survey">Site Survey</option>
+              <option value="Quotation">Quotation</option>
+              <option value="Closing">Closing</option>
+            </select>
+          </div>
+
+          <!-- Sales Assignment (Visible to Admin) -->
+          <div id="leadSalesAssignContainer">
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Assigned Sales</label>
+            <select id="leadSalesAssign" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+              <!-- Dynamically populated -->
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Follow Up Date</label>
+            <input type="date" id="leadFollowUp" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Appointment Date</label>
+            <input type="date" id="leadAppointment" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Site Survey Date</label>
+            <input type="date" id="leadSiteSurvey" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Quotation Date</label>
+            <input type="date" id="leadQuotation" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Closing / SPK Date</label>
+            <input type="date" id="leadClosing" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Notes</label>
+          <textarea id="leadNotes" rows="3" placeholder="Catatan tambahan..." class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20"></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+          <button type="button" onclick="closeLeadModal()" class="secondary-btn text-xs">Batal</button>
+          <button type="submit" class="primary-btn text-xs">Simpan Lead</button>
+        </div>
+      </form>
     </div>
   </div>
 
 
-  <!-- SALES MODAL -->
-  <div id="salesModal" class="modal">
-
-    <div class="modal-box">
-
-      <h2>Add New Sales</h2>
-
-      <label>Name</label>
-      <input
-        id="salesName"
-        placeholder="Example: Budi"
-      >
-
-      <label>Username</label>
-      <input
-        id="salesUsername"
-        placeholder="Example: budi"
-      >
-
-      <label>Password</label>
-      <input
-        id="salesPassword"
-        type="password"
-        placeholder="Minimum 6 characters"
-      >
-
-      <div class="modal-actions">
-
-        <button
-          onclick="closeSalesModal()"
-          class="secondary-btn">
-          Cancel
+  <!-- ================================ -->
+  <!-- MODAL: ADD SALES USER -->
+  <!-- ================================ -->
+  <div id="salesModal" class="modal-overlay p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-100">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+        <h3 class="text-xl font-bold text-slate-800">Tambah Sales Baru</h3>
+        <button onclick="closeSalesModal()" class="text-slate-400 hover:text-slate-600 transition p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
         </button>
-
-        <button
-          onclick="createSales()"
-          class="primary-btn">
-          CREATE SALES
-        </button>
-
       </div>
 
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap *</label>
+          <input type="text" id="salesName" placeholder="e.g. Budi Santoso" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Username *</label>
+          <input type="text" id="salesUsername" placeholder="e.g. budis" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Password * (min. 6 karakter)</label>
+          <input type="password" id="salesPassword" placeholder="******" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+          <button type="button" onclick="closeSalesModal()" class="secondary-btn text-xs">Batal</button>
+          <button type="button" onclick="createSales()" class="primary-btn text-xs">CREATE SALES</button>
+        </div>
+      </div>
     </div>
   </div>
 
 
-  <script src="script.js"></script>
+  <!-- ================================ -->
+  <!-- SUPABASE & CRM LOGIC SCRIPT -->
+  <!-- ================================ -->
+  <script>
+    lucide.createIcons();
 
+    // SUPABASE CONFIG
+    const SUPABASE_URL = "https://yoyszukutqwoxxdolzcg.supabase.co";
+    const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_QcPULwc5-Axry0HRzfmq1A_CeXgiAHL";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+    // GLOBAL VARIABLES & PAGINATION STATE
+    let currentUser = null;
+    let currentProfile = null;
+    let leadsData = [];
+    let salesUsersData = [];
+
+    let currentPage = 1;
+    const pageSize = 25;
+    let totalLeadsCount = 0;
+    let searchDebounceTimer = null;
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      console.log("CRM FSI started");  
+      setupModalEvents();  
+      await checkSession();
+    });
+
+    async function checkSession() {
+      try {
+        const { data: { session }, error } = await supabaseClient.auth.getSession();  
+        if (error || !session) { showLogin(); return; }  
+        currentUser = session.user;  
+        await loadProfile();
+      } catch (error) {
+        console.error("checkSession error:", error);  
+        showLogin();
+      }
+    }
+
+    async function login() {
+      const username = document.getElementById("loginUsername").value.trim();
+      const password = document.getElementById("loginPassword").value;
+      const message = document.getElementById("loginMessage");
+
+      if (!username || !password) {
+        message.textContent = "Username dan password wajib diisi.";  
+        return;
+      }
+
+      message.textContent = "Logging in...";
+
+      try {
+        const { data: email, error: emailError } = await supabaseClient.rpc("get_login_email", { p_username: username });  
+
+        if (emailError || !email) {  
+          message.textContent = emailError ? emailError.message : "Username tidak ditemukan atau tidak aktif.";  
+          return;  
+        }  
+
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email: email, password: password });  
+
+        if (error) {  
+          message.textContent = error.message;  
+          return;  
+        }  
+
+        currentUser = data.user;  
+        await loadProfile();
+      } catch (error) {
+        message.textContent = "Terjadi kesalahan saat login.";
+      }
+    }
+
+    // LOAD PROFILE (Fixed auth_user_id column name)
+    async function loadProfile() {
+      if (!currentUser) { showLogin(); return; }
+
+      try {
+        const { data, error } = await supabaseClient  
+          .from("sales_users")  
+          .select("*")  
+          .eq("auth_user_id", currentUser.id)  
+          .single();  
+
+        if (error) {  
+          console.error("Profile error:", error);  
+          alert("Profile user tidak ditemukan.");  
+          await logout();  
+          return;  
+        }  
+
+        currentProfile = data;  
+        updateUserInfo();  
+        setupRoleAccess();  
+        showApp();  
+        
+        await loadSalesLookup();  
+        await loadLeads(1);  
+      } catch (error) {
+        console.error("loadProfile error:", error);
+      }
+    }
+
+    function showLogin() {
+      const loginPage = document.getElementById("loginPage");
+      const app = document.getElementById("app");
+      if (loginPage) loginPage.style.display = "flex";
+      if (app) app.style.display = "none";
+    }
+
+    function showApp() {
+      const loginPage = document.getElementById("loginPage");
+      const app = document.getElementById("app");
+      if (loginPage) loginPage.style.display = "none";
+      if (app) app.style.display = "flex";
+      showDashboard();
+    }
+
+    function updateUserInfo() {
+      if (!currentProfile) return;
+      const userInfo = document.getElementById("userInfo");
+      const currentUserElement = document.getElementById("currentUser");
+
+      if (userInfo) {
+        const avatarUrl = currentProfile.avatar_url || "";  
+        userInfo.innerHTML = `  
+          ${avatarUrl ? `<img src="${escapeHTML(avatarUrl)}" alt="${escapeHTML(currentProfile.name)}" class="user-avatar">` 
+                      : `<img src="https://placehold.co/100x100/2563eb/ffffff?text=${escapeHTML(currentProfile.name ? currentProfile.name.charAt(0) : 'U')}" class="user-avatar">`}  
+          <div class="hidden sm:block text-left">
+            <strong class="block text-xs font-bold text-slate-800 leading-tight">${escapeHTML(currentProfile.name)}</strong>  
+            <small class="text-[10px] font-medium text-slate-500">${escapeHTML(currentProfile.role)}</small>  
+          </div>
+        `;
+      }
+
+      if (currentUserElement) {
+        currentUserElement.textContent = `${currentProfile.name} (${currentProfile.role})`;
+      }
+    }
+
+    function setupRoleAccess() {
+      const manageSalesBtn = document.getElementById("manageSalesBtn");
+      const salesFilterSelect = document.getElementById("salesFilter");
+      
+      if (!currentProfile) return;
+
+      const isAdmin = (currentProfile.role === "Admin");
+
+      // Show/Hide Manage Sales Tab
+      if (manageSalesBtn) manageSalesBtn.style.display = isAdmin ? "inline-flex" : "none";
+
+      // If Sales (Non-Admin), default/restrict filter view to self
+      if (salesFilterSelect) {
+        if (!isAdmin) {
+          salesFilterSelect.style.display = "none"; // Sales doesn't need salesperson picker
+        } else {
+          salesFilterSelect.style.display = "inline-block";
+        }
+      }
+    }
+
+    function hideAllPages() {
+      ["dashboardPage", "leadsPage", "salesPage"].forEach(id => {
+        const element = document.getElementById(id);  
+        if (element) element.style.display = "none";  
+      });
+    }
+
+    function setPageTitle(title) {
+      const titleElement = document.getElementById("pageTitle");
+      if (titleElement) titleElement.textContent = title;
+    }
+
+    async function showDashboard() {
+      hideAllPages();
+      const page = document.getElementById("dashboardPage");
+      if (page) page.style.display = "block";
+      setPageTitle("Dashboard");
+      await updateDashboard();
+    }
+
+    async function showLeads() {
+      hideAllPages();
+      const page = document.getElementById("leadsPage");
+      if (page) page.style.display = "block";
+      setPageTitle("My Leads");
+      await loadLeads(1);
+    }
+
+    async function showSales() {
+      if (!currentProfile || currentProfile.role !== "Admin") {
+        alert("Akses ditolak. Hanya Admin yang dapat mengelola tim Sales.");  
+        return;
+      }
+      hideAllPages();
+      const page = document.getElementById("salesPage");
+      if (page) page.style.display = "block";
+      setPageTitle("Manage Sales");
+      await loadSalesUsers();
+    }
+
+    async function loadSalesLookup() {
+      try {
+        const { data, error } = await supabaseClient  
+          .from("sales_users")  
+          .select("id, name, username, role, status")  
+          .order("name", { ascending: true });  
+
+        if (!error) {
+          salesUsersData = data || [];  
+          populateSalesDropdowns();
+        }
+      } catch (error) {
+        console.error("loadSalesLookup error:", error);
+      }
+    }
+
+    function populateSalesDropdowns() {
+      const salesFilterSelect = document.getElementById("salesFilter");
+      const leadSalesAssign = document.getElementById("leadSalesAssign");
+
+      if (salesFilterSelect) {
+        const currentVal = salesFilterSelect.value;
+        salesFilterSelect.innerHTML = `<option value="">All Sales</option>`;
+        salesUsersData.forEach(user => {
+          salesFilterSelect.innerHTML += `<option value="${user.id}">${escapeHTML(user.name || user.username)}</option>`;
+        });
+        salesFilterSelect.value = currentVal;
+      }
+
+      if (leadSalesAssign) {
+        leadSalesAssign.innerHTML = `<option value="">-- Pilih Sales --</option>`;
+        salesUsersData.forEach(user => {
+          if (user.status === "Active") {
+            leadSalesAssign.innerHTML += `<option value="${user.id}">${escapeHTML(user.name || user.username)}</option>`;
+          }
+        });
+      }
+    }
+
+    function getSalesName(id) {
+      if (!id) return "-";
+      const sales = salesUsersData.find(user => String(user.id) === String(id));
+      return sales ? (sales.name || sales.username || "-") : "-";
+    }
+
+    // ================================
+    // OPTIMIZED SERVER-SIDE LOAD LEADS WITH SALES FILTER
+    // ================================
+    async function loadLeads(page = 1) {
+      currentPage = page;
+      const search = document.getElementById("leadSearch")?.value.trim() || "";
+      const status = document.getElementById("statusFilter")?.value || "";
+      const business = document.getElementById("businessFilter")?.value || "";
+      const location = document.getElementById("locationFilter")?.value || "";
+      const salesFilterId = document.getElementById("salesFilter")?.value || "";
+
+      try {
+        if (!salesUsersData || salesUsersData.length === 0) {
+          await loadSalesLookup();
+        }
+
+        let query = supabaseClient
+          .from("leads")
+          .select("*", { count: "exact" });
+
+        // ROLE ISOLATION:
+        // If logged in user is Sales (Non-Admin), strictly restrict to their own leads
+        if (currentProfile && currentProfile.role !== "Admin") {
+          query = query.eq("sales_id", currentProfile.id);
+        } else if (salesFilterId) {
+          // If Admin selected a specific sales person A, B, C from dropdown
+          query = query.eq("sales_id", salesFilterId);
+        }
+
+        // Apply Status Filter
+        if (status) query = query.eq("status", status);
+
+        // Apply Business Filter
+        if (business) query = query.eq("business", business);
+
+        // Apply Location Filter
+        if (location) query = query.ilike("location", `%${location}%`);
+
+        // Apply Case-Insensitive Search Keyword
+        if (search) {
+          query = query.or(`customer_name.ilike.%${search}%,phone.ilike.%${search}%,business.ilike.%${search}%,location.ilike.%${search}%`);
+        }
+
+        // Apply Range Pagination
+        const from = (page - 1) * pageSize;
+        const to = from + pageSize - 1;
+
+        const { data, count, error } = await query
+          .order("created_at", { ascending: false })
+          .range(from, to);
+
+        if (error) {
+          console.error("Load leads error:", error);
+          alert(error.message);
+          return;
+        }
+
+        leadsData = data || [];
+        totalLeadsCount = count || 0;
+
+        renderLeads(leadsData);
+        renderPaginationControls();
+      } catch (error) {
+        console.error("loadLeads error:", error);
+      }
+    }
+
+    // SEARCH DEBOUNCE (Tunggu 400ms setelah user berhenti mengetik)
+    function onSearchInput() {
+      clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = setTimeout(() => {
+        loadLeads(1);
+      }, 400);
+    }
+
+    function renderLeads(data) {
+      const table = document.getElementById("leadsTable");
+      if (!table) return;
+
+      table.innerHTML = "";
+
+      if (!data || data.length === 0) {
+        table.innerHTML = `  
+          <tr>  
+            <td colspan="10" class="text-center p-8 text-slate-400 text-sm">  
+              Tidak ada data lead ditemukan.  
+            </td>  
+          </tr>  
+        `;  
+        return;
+      }
+
+      data.forEach(lead => {
+        const tr = document.createElement("tr");  
+        tr.className = "hover:bg-slate-50/80 transition-colors";
+
+        const salesName = getSalesName(lead.sales_id);  
+        const nextStepText = getNextStep(lead);
+
+        tr.innerHTML = `  
+          <td class="p-4 pl-6">
+            <input type="checkbox" value="${lead.id}" class="lead-checkbox rounded text-blue-600 border-slate-300 focus:ring-blue-500">
+          </td>
+          <td class="p-4 font-semibold text-slate-800">  
+            <div class="flex items-center gap-3">
+              <img src="https://placehold.co/80x80/2563eb/ffffff?text=${escapeHTML(lead.customer_name ? lead.customer_name.charAt(0) : 'C')}" class="w-8 h-8 rounded-full border border-slate-200">
+              <span>${escapeHTML(getValue(lead.customer_name))}</span>
+            </div>
+          </td>  
+          <td class="p-4">  
+            ${lead.phone ? `<a href="${whatsappLink(lead.phone)}" target="_blank" class="wa-link">${escapeHTML(lead.phone)}</a>` : "-"}  
+          </td>  
+          <td class="p-4">${escapeHTML(getValue(lead.business))}</td>  
+          <td class="p-4">${escapeHTML(getValue(lead.location))}</td>  
+          <td class="p-4 font-medium">${salesName !== "-" ? escapeHTML(salesName) : "-"}</td>  
+          <td class="p-4">  
+            <span class="status-badge ${statusClass(lead.status)}">${escapeHTML(getValue(lead.status))}</span>  
+          </td>  
+          <td class="p-4 text-slate-600">${formatDate(lead.follow_up_date)}</td>  
+          <td class="p-4 font-medium text-slate-700">${escapeHTML(nextStepText)}</td>  
+          <td class="p-4 pr-6 text-right">  
+            <div class="inline-flex items-center gap-1">
+              <button class="secondary-btn small-btn" title="Edit Customer" onclick="editLead('${lead.id}')">Edit</button>  
+              <button class="secondary-btn small-btn hover:text-red-600 hover:border-red-200" title="Delete Customer" onclick="deleteLead('${lead.id}')">Delete</button>  
+            </div>
+          </td>  
+        `;  
+        table.appendChild(tr);  
+      });
+
+      lucide.createIcons();
+    }
+
+    function getNextStep(lead) {
+      if (lead.closing) return "Completed";
+      if (lead.spk) return "Closing / Contract";
+      if (lead.quotation) return "Quotation Sent";
+      if (lead.site_survey) return "Site Survey";
+      if (lead.appointment) return "Appointment Scheduled";
+      if (lead.follow_up_date) return "Follow Up";
+      return "Initial Contact";
+    }
+
+    // RENDER PAGINATION UI
+    function renderPaginationControls() {
+      const from = totalLeadsCount === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+      const to = Math.min(currentPage * pageSize, totalLeadsCount);
+      const totalPages = Math.ceil(totalLeadsCount / pageSize) || 1;
+
+      const infoElement = document.getElementById("paginationInfo");
+      if (infoElement) {
+        infoElement.textContent = `Showing ${from} to ${to} of ${totalLeadsCount} leads`;
+      }
+
+      const pageIndicator = document.getElementById("pageIndicator");
+      if (pageIndicator) {
+        pageIndicator.textContent = `Page ${currentPage} of ${totalPages}`;
+      }
+
+      const prevBtn = document.getElementById("prevBtn");
+      if (prevBtn) {
+        prevBtn.disabled = currentPage <= 1;
+      }
+
+      const nextBtn = document.getElementById("nextBtn");
+      if (nextBtn) {
+        nextBtn.disabled = currentPage >= totalPages;
+      }
+    }
+
+    function changePage(direction) {
+      const totalPages = Math.ceil(totalLeadsCount / pageSize) || 1;
+      const newPage = currentPage + direction;
+      if (newPage >= 1 && newPage <= totalPages) {
+        loadLeads(newPage);
+      }
+    }
+
+    function toggleSelectAll(checkbox) {
+      const checkboxes = document.querySelectorAll('.lead-checkbox');
+      checkboxes.forEach(cb => cb.checked = checkbox.checked);
+    }
+
+    // MODAL HANDLERS
+    function openLeadModal() {
+      const modal = document.getElementById("leadModal");
+      if (!modal) return;
+      clearLeadForm();
+
+      // If logged in as sales, preselect own ID
+      const leadSalesAssign = document.getElementById("leadSalesAssign");
+      if (leadSalesAssign && currentProfile) {
+        leadSalesAssign.value = currentProfile.id;
+      }
+
+      const title = document.getElementById("leadModalTitle");
+      if (title) title.textContent = "Add Lead";
+      modal.classList.add("show");
+      modal.style.display = "flex";
+    }
+
+    function closeLeadModal() {
+      const modal = document.getElementById("leadModal");
+      if (!modal) return;
+      modal.classList.remove("show");
+      modal.style.display = "none";
+    }
+
+    function clearLeadForm() {
+      ["leadId", "leadCustomer", "leadPhone", "leadBusiness", "leadLocation", 
+       "leadFollowUp", "leadAppointment", "leadSiteSurvey", "leadQuotation", 
+       "leadClosing", "leadNotes"].forEach(id => setValue(id, ""));
+      setValue("leadStatus", "New");
+    }
+
+    async function saveLead() {
+      if (!currentProfile) { alert("User profile belum siap."); return; }
+
+      const customer = document.getElementById("leadCustomer").value.trim();
+      if (!customer) { alert("Nama Customer wajib diisi."); return; }
+
+      const leadId = document.getElementById("leadId").value;
+      const assignedSalesId = document.getElementById("leadSalesAssign")?.value || currentProfile.id;
+
+      const payload = {
+        customer_name: customer,
+        phone: document.getElementById("leadPhone").value.trim(),
+        business: document.getElementById("leadBusiness").value.trim(),
+        location: document.getElementById("leadLocation").value.trim(),
+        status: document.getElementById("leadStatus").value,
+        sales_id: assignedSalesId,
+        follow_up_date: document.getElementById("leadFollowUp").value || null,
+        appointment: document.getElementById("leadAppointment").value || null,
+        site_survey: document.getElementById("leadSiteSurvey").value || null,
+        quotation: document.getElementById("leadQuotation").value || null,
+        closing: document.getElementById("leadClosing").value || null,
+        notes: document.getElementById("leadNotes").value.trim()
+      };
+
+      try {
+        if (leadId) {  
+          payload.updated_by = currentProfile.id;  
+          const { error } = await supabaseClient.from("leads").update(payload).eq("id", leadId);  
+          if (error) { alert("Gagal update lead:\n" + error.message); return; }  
+        } else {  
+          payload.created_by = currentProfile.id;  
+          payload.updated_by = currentProfile.id;  
+          const { error } = await supabaseClient.from("leads").insert([payload]);  
+          if (error) { alert("Gagal menambahkan lead:\n" + error.message); return; }  
+        }  
+
+        closeLeadModal();  
+        await loadLeads(currentPage);  
+        await updateDashboard();
+      } catch (error) {
+        alert("Terjadi kesalahan:\n" + error.message);
+      }
+    }
+
+    async function editLead(id) {
+      let lead = leadsData.find(item => String(item.id) === String(id));
+
+      if (!lead) {
+        const { data, error } = await supabaseClient.from("leads").select("*").eq("id", id).maybeSingle();  
+        if (error || !data) { alert("Lead tidak ditemukan."); return; }  
+        lead = data;
+      }
+
+      setValue("leadId", lead.id);
+      setValue("leadCustomer", lead.customer_name);
+      setValue("leadPhone", lead.phone);
+      setValue("leadBusiness", lead.business);
+      setValue("leadLocation", lead.location);
+      setValue("leadStatus", lead.status || "New");
+      setValue("leadSalesAssign", lead.sales_id || "");
+      setValue("leadFollowUp", lead.follow_up_date);
+      setValue("leadAppointment", lead.appointment);
+      setValue("leadSiteSurvey", lead.site_survey);
+      setValue("leadQuotation", lead.quotation);
+      setValue("leadClosing", lead.closing);
+      setValue("leadNotes", lead.notes);
+
+      const title = document.getElementById("leadModalTitle");
+      if (title) title.textContent = "Edit Lead Customer";
+
+      const modal = document.getElementById("leadModal");
+      if (modal) { modal.classList.add("show"); modal.style.display = "flex"; }
+    }
+
+    async function deleteLead(id) {
+      if (!confirm("Apakah Anda yakin ingin menghapus data customer ini?")) return;
+      try {
+        const { error } = await supabaseClient.from("leads").delete().eq("id", id);  
+        if (error) { alert("Gagal menghapus lead:\n" + error.message); return; }  
+        await loadLeads(currentPage);  
+        await updateDashboard();
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    // OPTIMIZED DASHBOARD COUNTS
+    async function updateDashboard() {
+      if (!currentProfile) return;
+      try {
+        let query = supabaseClient.from("leads").select("status");  
+
+        // If Sales, only count own leads for metrics
+        if (currentProfile.role !== "Admin") {
+          query = query.eq("sales_id", currentProfile.id);
+        }
+
+        const { data, error } = await query;
+        if (error) return;  
+
+        const dataList = data || [];  
+        setText("statTotal", dataList.length);  
+        setText("statNew", countStatus(dataList, "New"));  
+        setText("statInterested", countStatus(dataList, "Interested"));  
+        setText("statFollowUp", countStatus(dataList, "Follow-up"));  
+        setText("statAppointment", countStatus(dataList, "Appointment"));  
+        setText("statSiteSurvey", countStatus(dataList, "Site Survey"));  
+        setText("statQuotation", countStatus(dataList, "Quotation"));  
+        setText("statClosing", countStatus(dataList, "Closing"));
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    function countStatus(data, status) {
+      return data.filter(item => item.status === status).length;
+    }
+
+    async function loadSalesUsers() {
+      if (!currentProfile || currentProfile.role !== "Admin") return;
+      try {
+        const { data, error } = await supabaseClient.from("sales_users").select("*").order("created_at", { ascending: true });  
+        if (!error) renderSalesUsers(data || []);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    function renderSalesUsers(data) {
+      const table = document.getElementById("salesTable");
+      if (!table) return;
+      table.innerHTML = "";
+
+      if (!data || data.length === 0) {
+        table.innerHTML = `<tr><td colspan="6" class="text-center p-8">Belum ada tim sales registered.</td></tr>`;  
+        return;
+      }
+
+      data.forEach(sales => {
+        const tr = document.createElement("tr");  
+        tr.className = "hover:bg-slate-50/80 transition-colors";
+        tr.innerHTML = `  
+          <td class="p-4 pl-6 font-semibold text-slate-800">${escapeHTML(getValue(sales.name))}</td>  
+          <td class="p-4">${escapeHTML(getValue(sales.username))}</td>  
+          <td class="p-4"><span class="bg-slate-100 text-slate-700 font-semibold px-2.5 py-1 rounded-md text-xs">${escapeHTML(getValue(sales.role))}</span></td>  
+          <td class="p-4"><span class="status-badge ${sales.status === "Active" ? "status-active" : "status-inactive"}">${escapeHTML(getValue(sales.status))}</span></td>  
+          <td class="p-4 text-slate-400">-</td>  
+          <td class="p-4 pr-6 text-right">  
+            <button class="secondary-btn small-btn ${sales.status === 'Active' ? 'hover:text-red-600 hover:border-red-200' : 'hover:text-emerald-600 hover:border-emerald-200'}" onclick="toggleSalesStatus('${sales.id}', '${sales.status}')">  
+              ${sales.status === "Active" ? "Deactivate" : "Activate"}  
+            </button>  
+          </td>  
+        `;  
+        table.appendChild(tr);  
+      });
+    }
+
+    function openSalesModal() {
+      const modal = document.getElementById("salesModal");
+      if (!modal) return;
+      clearSalesForm();
+      modal.classList.add("show");
+      modal.style.display = "flex";
+    }
+
+    function closeSalesModal() {
+      const modal = document.getElementById("salesModal");
+      if (!modal) return;
+      modal.classList.remove("show");
+      modal.style.display = "none";
+    }
+
+    function clearSalesForm() {
+      setValue("salesName", "");
+      setValue("salesUsername", "");
+      setValue("salesPassword", "");
+    }
+
+    async function createSales() {
+      const name = document.getElementById("salesName").value.trim();
+      const username = document.getElementById("salesUsername").value.trim();
+      const password = document.getElementById("salesPassword").value;
+
+      if (!name || !username || !password) { alert("Nama, Username, dan Password wajib diisi."); return; }
+      if (password.length < 6) { alert("Password minimal 6 karakter."); return; }
+
+      const createButton = document.querySelector("#salesModal .primary-btn");
+      try {
+        if (createButton) { createButton.disabled = true; createButton.textContent = "CREATING..."; }  
+
+        const { data, error } = await supabaseClient.functions.invoke("create-sales", {
+          body: { name: name, username: username, password: password }
+        });  
+
+        if (error || (data && data.error)) {  
+          alert(error ? error.message : data.error);  
+          return;  
+        }  
+
+        alert(`Sales "${name}" berhasil dibuat!`);  
+        clearSalesForm();  
+        closeSalesModal();  
+        await loadSalesUsers();  
+        await loadSalesLookup();
+      } catch (error) {
+        alert("Terjadi kesalahan:\n" + error.message);
+      } finally {
+        if (createButton) { createButton.disabled = false; createButton.textContent = "CREATE SALES"; }
+      }
+    }
+
+    async function toggleSalesStatus(id, currentStatus) {
+      const newStatus = currentStatus === "Active" ? "Inactive" : "Active";
+      if (!confirm(`Ubah status Sales menjadi ${newStatus}?`)) return;
+
+      try {
+        const { error } = await supabaseClient.from("sales_users").update({ status: newStatus }).eq("id", id);  
+        if (!error) {
+          await loadSalesUsers();  
+          await loadSalesLookup();  
+        }
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    // EXPORT TO CSV
+    function exportToCSV() {
+      if (!leadsData || leadsData.length === 0) {
+        alert("Tidak ada data lead untuk diexport.");
+        return;
+      }
+
+      const headers = ["Customer Name", "Phone", "Business", "Location", "Sales", "Status", "Follow Up Date", "Appointment", "Quotation", "Closing"];
+      const rows = leadsData.map(lead => [
+        `"${(lead.customer_name || '').replace(/"/g, '""')}"`,
+        `"${(lead.phone || '').replace(/"/g, '""')}"`,
+        `"${(lead.business || '').replace(/"/g, '""')}"`,
+        `"${(lead.location || '').replace(/"/g, '""')}"`,
+        `"${(getSalesName(lead.sales_id)).replace(/"/g, '""')}"`,
+        `"${(lead.status || '').replace(/"/g, '""')}"`,
+        `"${formatDate(lead.follow_up_date)}"`,
+        `"${formatDate(lead.appointment)}"`,
+        `"${formatDate(lead.quotation)}"`,
+        `"${formatDate(lead.closing)}"`
+      ]);
+
+      const csvContent = "data:text/csv;charset=utf-8," 
+        + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `fsi_leads_export_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function whatsappLink(phone) {
+      const number = normalizePhone(phone);
+      return number ? `https://wa.me/${number}` : "#";
+    }
+
+    function normalizePhone(phone) {
+      if (!phone) return "";
+      let number = String(phone).replace(/\D/g, "");
+      if (number.startsWith("0")) number = "62" + number.substring(1);
+      if (number.startsWith("8")) number = "62" + number;
+      return number;
+    }
+
+    function setupModalEvents() {
+      const leadModal = document.getElementById("leadModal");
+      const salesModal = document.getElementById("salesModal");
+
+      if (leadModal) leadModal.addEventListener("click", e => { if (e.target === leadModal) closeLeadModal(); });
+      if (salesModal) salesModal.addEventListener("click", e => { if (e.target === salesModal) closeSalesModal(); });
+    }
+
+    async function logout() {
+      try { await supabaseClient.auth.signOut(); } catch (error) {}
+      currentUser = null; currentProfile = null; leadsData = []; salesUsersData = [];
+      showLogin();
+    }
+
+    function formatDate(date) {
+      if (!date) return "-";
+      try {
+        const d = new Date(date + "T00:00:00");  
+        if (isNaN(d.getTime())) return date;  
+        return d.toLocaleDateString("id-ID", { day: "2-digit", month: "2-digit", year: "numeric" });
+      } catch { return date; }
+    }
+
+    function statusClass(status) {
+      if (!status) return "";
+      return "status-" + String(status).toLowerCase().replace(/\s+/g, "-");
+    }
+
+    function escapeHTML(value) {
+      if (value === null || value === undefined) return "";
+      return String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+
+    function getValue(value) { return (value === null || value === undefined || value === "") ? "" : String(value); }
+    function setValue(id, value) { const el = document.getElementById(id); if (el) el.value = (value === null || value === undefined) ? "" : value; }
+    function setText(id, value) { const el = document.getElementById(id); if (el) el.textContent = value; }
+
+    supabaseClient.auth.onAuthStateChange(async (event, session) => {
+      if (session && !currentProfile) {  
+        currentUser = session.user;  
+        setTimeout(async () => { await loadProfile(); }, 100);  
+      }  
+      if (!session) { currentUser = null; currentProfile = null; showLogin(); }
+    });
+  </script>
 </body>
 </html>
+```
