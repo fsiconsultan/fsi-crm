@@ -130,7 +130,6 @@ async function login() {
 
   try {
 
-    // Cari email berdasarkan username
     const {
       data: email,
       error: emailError
@@ -165,7 +164,6 @@ async function login() {
     }
 
 
-    // Login Supabase Auth
     const {
       data,
       error
@@ -374,7 +372,23 @@ function updateUserInfo() {
 
   if (userInfo) {
 
+    const avatarUrl =
+      currentProfile.avatar_url || "";
+
+
     userInfo.innerHTML = `
+      ${
+        avatarUrl
+          ? `
+            <img
+              src="${escapeHTML(avatarUrl)}"
+              alt="${escapeHTML(currentProfile.name)}"
+              class="user-avatar"
+            >
+          `
+          : ""
+      }
+
       <strong>
         ${escapeHTML(
           currentProfile.name
@@ -1170,10 +1184,6 @@ async function saveLead() {
 
   try {
 
-    // ============================
-    // EDIT
-    // ============================
-
     if (leadId) {
 
       const {
@@ -1210,11 +1220,6 @@ async function saveLead() {
       );
 
     }
-
-
-    // ============================
-    // ADD
-    // ============================
 
     else {
 
@@ -1299,11 +1304,6 @@ async function editLead(id) {
 
 
   if (!lead) {
-
-    console.log(
-      "Lead tidak ada di leadsData, mengambil dari Supabase..."
-    );
-
 
     const {
       data,
@@ -1563,7 +1563,6 @@ async function updateDashboard() {
       dataList.length
     );
 
-
     setText(
       "statNew",
       countStatus(
@@ -1571,7 +1570,6 @@ async function updateDashboard() {
         "New"
       )
     );
-
 
     setText(
       "statInterested",
@@ -1581,7 +1579,6 @@ async function updateDashboard() {
       )
     );
 
-
     setText(
       "statFollowUp",
       countStatus(
@@ -1589,7 +1586,6 @@ async function updateDashboard() {
         "Follow-up"
       )
     );
-
 
     setText(
       "statAppointment",
@@ -1599,7 +1595,6 @@ async function updateDashboard() {
       )
     );
 
-
     setText(
       "statSiteSurvey",
       countStatus(
@@ -1608,7 +1603,6 @@ async function updateDashboard() {
       )
     );
 
-
     setText(
       "statQuotation",
       countStatus(
@@ -1616,7 +1610,6 @@ async function updateDashboard() {
         "Quotation"
       )
     );
-
 
     setText(
       "statClosing",
