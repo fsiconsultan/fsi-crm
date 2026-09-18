@@ -1,43 +1,111 @@
 /* =========================================================
-   FSI CRM - NEW DASHBOARD
-   Dashboard tambahan.
-   
-   SCRIPT.JS TIDAK DIUBAH.
-   ========================================================= */
+   FSI CRM - DASHBOARD
+   ---------------------------------------------------------
+   Dashboard is separated from index.html.
+   Existing script.js is NOT modified.
+   Existing Supabase client is reused.
+========================================================= */
 
 (function () {
 
+  "use strict";
+
+  let dashboardLoading = false;
   let dashboardRefreshTimer = null;
+  let dashboardBootTimer = null;
 
 
-  /* ========================================================
+  /* =========================================================
      HELPERS
-  ======================================================== */
+  ========================================================= */
 
-  function setText(id, value) {
+  function getProfile() {
 
-    const element =
-      document.getElementById(id);
+    try {
 
-    if (element) {
-      element.textContent =
-        value ?? 0;
+      if (typeof currentProfile !== "undefined") {
+        return currentProfile;
+      }
+
+    } catch (error) {
+
+      console.error(
+        "Unable to access currentProfile:",
+        error
+      );
+
     }
 
-  }
-
-
-  function formatNumber(value) {
-
-    return Number(value || 0)
-      .toLocaleString("id-ID");
+    return null;
 
   }
 
 
-  function escapeHTML(value) {
+  function getSupabase() {
 
-    return String(value ?? "")
+    try {
+
+      if (
+        typeof supabaseClient !== "undefined" &&
+        supabaseClient
+      ) {
+
+        return supabaseClient;
+
+      }
+
+    } catch (error) {
+
+      console.error(
+        "Unable to access Supabase client:",
+        error
+      );
+
+    }
+
+    return null;
+
+  }
+
+
+  function getDashboardElement() {
+
+    return document.getElementById(
+      "dashboardPage"
+    );
+
+  }
+
+
+  function isDashboardVisible() {
+
+    const dashboard =
+      getDashboardElement();
+
+    if (!dashboard) {
+      return false;
+    }
+
+    const style =
+      window.getComputedStyle(dashboard);
+
+    return style.display !== "none";
+
+  }
+
+
+  function escapeHtml(value) {
+
+    if (
+      value === null ||
+      value === undefined
+    ) {
+
+      return "";
+
+    }
+
+    return String(value)
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
@@ -47,133 +115,250 @@
   }
 
 
-  function normalizeStatus(status) {
+  function setText(
+    id,
+    value
+  ) {
 
-    if (!status) return "";
+    const element =
+      document.getElementById(id);
 
-    const value =
-      String(status)
-        .trim()
-        .toLowerCase();
+    if (!element) return;
 
-
-    const map = {
-
-      "new":
-        "New",
-
-      "belum dihubungi":
-        "New",
-
-      "flyer sent":
-        "Flyer Sent",
-
-      "flyer dikirim":
-        "Flyer Sent",
-
-      "interested":
-        "Interested",
-
-      "tertarik":
-        "Interested",
-
-      "follow up":
-        "Follow Up",
-
-      "follow-up":
-        "Follow Up",
-
-      "followup":
-        "Follow Up",
-
-      "closing":
-        "Closing",
-
-      "not interested":
-        "Not Interested",
-
-      "tidak tertarik":
-        "Not Interested"
-
-    };
-
-
-    return map[value] || status;
+    element.textContent =
+      value ?? "0";
 
   }
 
 
-  /* ========================================================
-     USER SCOPE
-  ======================================================== */
+  function formatDate(
+    value
+  ) {
 
-  function getScope() {
+    if (!value) {
+      return "-";
+    }
+
+    try {
+
+      const date =
+        new Date(value);
+
+      if (Number.isNaN(date.getTime())) {
+        return value;
+      }
+
+      return date.toLocaleDateString(
+        "en-GB",
+        {
+          day: "2-digit",
+          month: "short",
+          year: "numeric"
+        }
+      );
+
+    } catch (error) {
+
+      return value;
+
+    }
+
+  }
+
+
+  function formatDateTime(
+    value
+  ) {
+
+    if (!value) {
+      return "-";
+    }
+
+    try {
+
+      const date =
+        new Date(value);
+
+      if (Number.isNaN(date.getTime())) {
+        return value;
+      }
+
+      return date.toLocaleDateString(
+        "en-GB",
+        {
+          day: "2-digit",
+          month: "short",
+          year: "numeric"
+        }
+      );
+
+    } catch (error) {
+
+      return value;
+
+    }
+
+  }
+
+
+  function isSalesUser(
+    profile
+  ) {
+
+    if (!profile) {
+      return false;
+    }
+
+    return String(
+      profile.role || ""
+    ).toLowerCase() === "sales";
+
+  }
+
+
+  function isAdminUser(
+    profile
+  ) {
+
+    if (!profile) {
+      return false;
+    }
+
+    return !isSalesUser(profile);
+
+  }
+
+
+  function applyLeadScope(
+    query,
+    profile
+  ) {
 
     if (
-      typeof currentProfile === "undefined" ||
-      !currentProfile
+      profile &&
+      isSalesUser(profile)
     ) {
-
-      return null;
-
-    }
-
-
-    const role =
-      String(
-        currentProfile.role || ""
-      ).toLowerCase();
-
-
-    return {
-
-      isAdmin:
-        role === "admin",
-
-      salesId:
-        currentProfile.id
-
-    };
-
-  }
-
-
-  function applyScope(query, scope) {
-
-    if (!scope) {
-      return query;
-    }
-
-
-    if (!scope.isAdmin) {
 
       return query.eq(
         "sales_id",
-        scope.salesId
+        profile.id
       );
 
     }
-
 
     return query;
 
   }
 
 
-  /* ========================================================
-     EXACT COUNT
-     
-     Menggunakan count: exact + head:true
-     agar tidak terkena batas 1.000 row.
-  ======================================================== */
+  /* =========================================================
+     STATUS NORMALIZATION
+  ========================================================= */
 
-  async function exactCount(
-    scope,
-    callback
+  function normalizeStatus(
+    status
   ) {
 
+    const value =
+      String(status || "")
+        .trim()
+        .toLowerCase();
+
+    if (
+      value === "new" ||
+      value === "belum dihubungi"
+    ) {
+
+      return "New";
+
+    }
+
+    if (
+      value === "flyer sent"
+    ) {
+
+      return "Flyer Sent";
+
+    }
+
+    if (
+      value === "interested" ||
+      value === "tertarik"
+    ) {
+
+      return "Interested";
+
+    }
+
+    if (
+      value === "follow up" ||
+      value === "follow-up" ||
+      value === "followup"
+    ) {
+
+      return "Follow Up";
+
+    }
+
+    if (
+      value === "closing"
+    ) {
+
+      return "Closing";
+
+    }
+
+    if (
+      value === "not interested" ||
+      value === "tidak tertarik"
+    ) {
+
+      return "Not Interested";
+
+    }
+
+    return status || "Unknown";
+
+  }
+
+
+  function getStatusClass(
+    status
+  ) {
+
+    const normalized =
+      normalizeStatus(status);
+
+    return normalized
+      .toLowerCase()
+      .replace(/\s+/g, "-");
+
+  }
+
+
+  /* =========================================================
+     EXACT COUNT
+     ---------------------------------------------------------
+     Uses count:"exact",head:true so dashboard does NOT depend
+     on Supabase's default 1000-row response limit.
+  ========================================================= */
+
+  async function exactCount(
+    builder
+  ) {
+
+    const supabase =
+      getSupabase();
+
+    const profile =
+      getProfile();
+
+    if (!supabase || !profile) {
+      return 0;
+    }
+
     let query =
-      supabaseClient
+      supabase
         .from("leads")
         .select(
           "id",
@@ -183,26 +368,23 @@
           }
         );
 
-
     query =
-      applyScope(
+      applyLeadScope(
         query,
-        scope
+        profile
       );
 
+    if (typeof builder === "function") {
 
-    if (callback) {
       query =
-        callback(query);
-    }
+        builder(query);
 
+    }
 
     const {
       count,
       error
-    } =
-      await query;
-
+    } = await query;
 
     if (error) {
 
@@ -211,23 +393,24 @@
         error
       );
 
-      return 0;
+      throw error;
 
     }
 
-
-    return count || 0;
+    return Number(count || 0);
 
   }
 
 
+  /* =========================================================
+     STATUS COUNT
+  ========================================================= */
+
   async function countStatus(
-    scope,
     statuses
   ) {
 
     return exactCount(
-      scope,
       function (query) {
 
         return query.in(
@@ -241,13 +424,15 @@
   }
 
 
+  /* =========================================================
+     DATE FIELD COUNT
+  ========================================================= */
+
   async function countDateField(
-    scope,
     field
   ) {
 
     return exactCount(
-      scope,
       function (query) {
 
         return query
@@ -267,12 +452,18 @@
   }
 
 
-  async function countClosing(
-    scope
-  ) {
+  /* =========================================================
+     CLOSING COUNT
+     ---------------------------------------------------------
+     Closing is counted when:
+     - status = Closing
+       OR
+     - closing date exists
+  ========================================================= */
+
+  async function countClosing() {
 
     return exactCount(
-      scope,
       function (query) {
 
         return query.or(
@@ -285,674 +476,141 @@
   }
 
 
-  /* ========================================================
-     LOAD STATISTICS
-  ======================================================== */
+  /* =========================================================
+     LOAD MAIN STATISTICS
+  ========================================================= */
 
-  async function loadStatistics(
-    scope
-  ) {
+  async function loadStatistics() {
 
     const results =
       await Promise.all([
 
-        exactCount(
-          scope
-        ),
+        exactCount(),
 
-        countStatus(
-          scope,
-          [
-            "New",
-            "Belum Dihubungi"
-          ]
-        ),
+        countStatus([
+          "New",
+          "Belum Dihubungi"
+        ]),
 
-        countStatus(
-          scope,
-          [
-            "Interested",
-            "Tertarik"
-          ]
-        ),
+        countStatus([
+          "Interested",
+          "Tertarik"
+        ]),
 
-        countStatus(
-          scope,
-          [
-            "Follow Up",
-            "follow-up",
-            "Follow-up"
-          ]
-        ),
+        countStatus([
+          "Follow Up",
+          "follow-up",
+          "Follow-up"
+        ]),
 
         countDateField(
-          scope,
           "appointment"
         ),
 
         countDateField(
-          scope,
           "site_survey"
         ),
 
         countDateField(
-          scope,
           "quotation"
         ),
 
-        countClosing(
-          scope
-        ),
-
-        countStatus(
-          scope,
-          [
-            "Not Interested",
-            "Tidak Tertarik"
-          ]
-        )
+        countClosing()
 
       ]);
 
+    return {
 
-    const [
-      total,
-      newLeads,
-      interested,
-      followUp,
-      appointment,
-      siteSurvey,
-      quotation,
-      closing,
-      notInterested
-    ] = results;
+      total: results[0],
+      newLeads: results[1],
+      interested: results[2],
+      followUp: results[3],
+      appointment: results[4],
+      siteSurvey: results[5],
+      quotation: results[6],
+      closing: results[7]
 
-
-    /* =============================================
-       NEW DASHBOARD
-    ============================================== */
-
-    setText(
-      "dashTotalLeads",
-      formatNumber(total)
-    );
-
-    setText(
-      "dashNewLeads",
-      formatNumber(newLeads)
-    );
-
-    setText(
-      "dashInterested",
-      formatNumber(interested)
-    );
-
-    setText(
-      "dashFollowUp",
-      formatNumber(followUp)
-    );
-
-    setText(
-      "dashAppointment",
-      formatNumber(appointment)
-    );
-
-    setText(
-      "dashSiteSurvey",
-      formatNumber(siteSurvey)
-    );
-
-    setText(
-      "dashQuotation",
-      formatNumber(quotation)
-    );
-
-    setText(
-      "dashClosing",
-      formatNumber(closing)
-    );
-
-
-    /* =============================================
-       PIPELINE
-    ============================================== */
-
-    setText(
-      "pipeNew",
-      newLeads
-    );
-
-    setText(
-      "pipeInterested",
-      interested
-    );
-
-    setText(
-      "pipeFollowUp",
-      followUp
-    );
-
-    setText(
-      "pipeNotInterested",
-      notInterested
-    );
-
-    setText(
-      "pipeClosing",
-      closing
-    );
-
-
-    /* =============================================
-       STATUS
-    ============================================== */
-
-    setText(
-      "dashStatusTotal",
-      formatNumber(total)
-    );
-
-    setText(
-      "legendNew",
-      newLeads
-    );
-
-    setText(
-      "legendInterested",
-      interested
-    );
-
-    setText(
-      "legendFollowUp",
-      followUp
-    );
-
-    setText(
-      "legendClosing",
-      closing
-    );
-
-
-    updatePipelineBars({
-      newLeads,
-      interested,
-      followUp,
-      notInterested,
-      closing
-    });
+    };
 
   }
 
 
-  /* ========================================================
-     PIPELINE BARS
-  ======================================================== */
+  /* =========================================================
+     LOAD PIPELINE COUNTS
+  ========================================================= */
 
-  function updatePipelineBars(
-    data
-  ) {
+  async function loadPipeline() {
 
-    const values = [
+    const results =
+      await Promise.all([
 
-      data.newLeads,
+        countStatus([
+          "New",
+          "Belum Dihubungi"
+        ]),
 
-      data.interested,
+        countStatus([
+          "Flyer Sent"
+        ]),
 
-      data.followUp,
+        countStatus([
+          "Interested",
+          "Tertarik"
+        ]),
 
-      data.notInterested,
+        countStatus([
+          "Follow Up",
+          "follow-up",
+          "Follow-up"
+        ]),
 
-      data.closing
+        countStatus([
+          "Closing"
+        ]),
 
-    ];
+        countStatus([
+          "Not Interested",
+          "Tidak Tertarik"
+        ])
 
+      ]);
 
-    const max =
-      Math.max(
-        ...values,
-        1
-      );
+    return {
 
+      newLeads: results[0],
+      flyerSent: results[1],
+      interested: results[2],
+      followUp: results[3],
+      closing: results[4],
+      notInterested: results[5]
 
-    const bars = [
-
-      [
-        "pipeNewBar",
-        data.newLeads
-      ],
-
-      [
-        "pipeInterestedBar",
-        data.interested
-      ],
-
-      [
-        "pipeFollowUpBar",
-        data.followUp
-      ],
-
-      [
-        "pipeNotInterestedBar",
-        data.notInterested
-      ],
-
-      [
-        "pipeClosingBar",
-        data.closing
-      ]
-
-    ];
-
-
-    bars.forEach(
-      function ([id, value]) {
-
-        const element =
-          document.getElementById(id);
-
-
-        if (!element) {
-          return;
-        }
-
-
-        const percentage =
-          Math.max(
-            4,
-            Math.round(
-              (value / max) * 100
-            )
-          );
-
-
-        element.style.width =
-          percentage + "%";
-
-      }
-    );
+    };
 
   }
 
 
-  /* ========================================================
-     SALES PERFORMANCE
-  ======================================================== */
+  /* =========================================================
+     LOAD RECENT LEADS
+  ========================================================= */
 
-  async function loadSalesPerformance(
-    scope
-  ) {
+  async function loadRecentLeads() {
 
-    const container =
-      document.getElementById(
-        "dashSalesPerformance"
-      );
+    const supabase =
+      getSupabase();
 
+    const profile =
+      getProfile();
 
-    if (!container) {
-      return;
+    if (!supabase || !profile) {
+      return [];
     }
-
-
-    /* =============================================
-       SALES USER
-    ============================================== */
-
-    if (!scope.isAdmin) {
-
-      const total =
-        await exactCount(
-          scope
-        );
-
-
-      const name =
-        currentProfile.full_name ||
-        currentProfile.username ||
-        "My Leads";
-
-
-      const firstLetter =
-        String(name)
-          .charAt(0)
-          .toUpperCase();
-
-
-      container.innerHTML = `
-
-        <div class="new-sales-self">
-
-          <div class="new-sales-avatar">
-            ${escapeHTML(firstLetter)}
-          </div>
-
-          <div class="new-sales-self-info">
-
-            <strong>
-              ${escapeHTML(name)}
-            </strong>
-
-            <span>
-              My Leads
-            </span>
-
-          </div>
-
-          <div class="new-sales-self-count">
-
-            ${formatNumber(total)}
-
-            <small>
-              leads
-            </small>
-
-          </div>
-
-        </div>
-
-      `;
-
-
-      return;
-
-    }
-
-
-    /* =============================================
-       ADMIN - GET LEADS
-    ============================================== */
-
-    const {
-      data,
-      error
-    } =
-      await supabaseClient
-        .from("leads")
-        .select(
-          "id, sales_id"
-        );
-
-
-    if (error) {
-
-      console.error(
-        "Sales performance error:",
-        error
-      );
-
-
-      container.innerHTML = `
-
-        <div class="new-dashboard-empty">
-          Tidak dapat memuat data Sales.
-        </div>
-
-      `;
-
-
-      return;
-
-    }
-
-
-    const leads =
-      data || [];
-
-
-    if (!leads.length) {
-
-      container.innerHTML = `
-
-        <div class="new-dashboard-empty">
-          Belum ada data Sales.
-        </div>
-
-      `;
-
-
-      return;
-
-    }
-
-
-    /* =============================================
-       GROUP LEADS BY SALES
-    ============================================== */
-
-    const salesMap = {};
-
-
-    leads.forEach(
-      function (lead) {
-
-        const salesId =
-          lead.sales_id ||
-          "unassigned";
-
-
-        if (
-          !salesMap[salesId]
-        ) {
-
-          salesMap[salesId] =
-            0;
-
-        }
-
-
-        salesMap[salesId]++;
-
-      }
-    );
-
-
-    const salesIds =
-      Object.keys(
-        salesMap
-      );
-
-
-    /* =============================================
-       GET PROFILES
-    ============================================== */
-
-    let profiles = [];
-
-
-    try {
-
-      const {
-        data: profileData
-      } =
-        await supabaseClient
-          .from("profiles")
-          .select("*");
-
-
-      profiles =
-        profileData || [];
-
-    } catch (error) {
-
-      console.error(
-        "Profile error:",
-        error
-      );
-
-    }
-
-
-    const profileMap = {};
-
-
-    profiles.forEach(
-      function (profile) {
-
-        profileMap[profile.id] =
-
-          profile.full_name ||
-
-          profile.username ||
-
-          profile.name ||
-
-          "Sales";
-
-      }
-    );
-
-
-    /* =============================================
-       CREATE ROWS
-    ============================================== */
-
-    const rows =
-      salesIds
-        .map(
-          function (salesId) {
-
-            return {
-
-              id:
-                salesId,
-
-              name:
-                salesId === "unassigned"
-
-                  ? "Belum Assign"
-
-                  : (
-                      profileMap[salesId] ||
-                      "Sales"
-                    ),
-
-              count:
-                salesMap[salesId]
-
-            };
-
-          }
-        )
-        .sort(
-          function (a, b) {
-
-            return b.count -
-              a.count;
-
-          }
-        )
-        .slice(
-          0,
-          8
-        );
-
-
-    const max =
-      Math.max(
-        ...rows.map(
-          function (row) {
-            return row.count;
-          }
-        ),
-        1
-      );
-
-
-    /* =============================================
-       RENDER
-    ============================================== */
-
-    container.innerHTML =
-      rows
-        .map(
-          function (sales, index) {
-
-            const width =
-              Math.max(
-                5,
-                Math.round(
-                  (sales.count /
-                    max) *
-                  100
-                )
-              );
-
-
-            return `
-
-              <div class="new-sales-row">
-
-                <div class="new-sales-rank">
-                  ${index + 1}
-                </div>
-
-                <div class="new-sales-performance">
-
-                  <div class="new-sales-name-line">
-
-                    <strong>
-                      ${escapeHTML(
-                        sales.name
-                      )}
-                    </strong>
-
-                    <span>
-                      ${formatNumber(
-                        sales.count
-                      )}
-                    </span>
-
-                  </div>
-
-                  <div class="new-sales-progress">
-
-                    <div
-                      style="width:${width}%"
-                    ></div>
-
-                  </div>
-
-                </div>
-
-              </div>
-
-            `;
-
-          }
-        )
-        .join("");
-
-
-  }
-
-
-  /* ========================================================
-     RECENT ACTIVITY
-  ======================================================== */
-
-  async function loadRecentActivity(
-    scope
-  ) {
-
-    const container =
-      document.getElementById(
-        "dashRecentActivity"
-      );
-
-
-    if (!container) {
-      return;
-    }
-
 
     let query =
-      supabaseClient
+      supabase
         .from("leads")
-        .select(`
-          id,
-          customer_name,
-          status,
-          created_at
-        `)
+        .select(
+          "id, customer_name, business, location, status, created_at, sales_id"
+        )
         .order(
           "created_at",
           {
@@ -961,57 +619,1031 @@
         )
         .limit(6);
 
-
     query =
-      applyScope(
+      applyLeadScope(
         query,
-        scope
+        profile
       );
-
 
     const {
       data,
       error
-    } =
-      await query;
-
+    } = await query;
 
     if (error) {
 
       console.error(
-        "Recent activity error:",
+        "Recent leads error:",
         error
       );
 
+      return [];
 
-      container.innerHTML = `
+    }
 
-        <div class="new-dashboard-empty">
-          Tidak dapat memuat aktivitas.
+    return data || [];
+
+  }
+
+
+  /* =========================================================
+     LOAD UPCOMING FOLLOW UPS
+  ========================================================= */
+
+  async function loadUpcomingFollowUps() {
+
+    const supabase =
+      getSupabase();
+
+    const profile =
+      getProfile();
+
+    if (!supabase || !profile) {
+      return [];
+    }
+
+    const today =
+      new Date()
+        .toISOString()
+        .split("T")[0];
+
+    let query =
+      supabase
+        .from("leads")
+        .select(
+          "id, customer_name, phone, status, follow_up_date, business"
+        )
+        .not(
+          "follow_up_date",
+          "is",
+          null
+        )
+        .gte(
+          "follow_up_date",
+          today
+        )
+        .order(
+          "follow_up_date",
+          {
+            ascending: true
+          }
+        )
+        .limit(6);
+
+    query =
+      applyLeadScope(
+        query,
+        profile
+      );
+
+    const {
+      data,
+      error
+    } = await query;
+
+    if (error) {
+
+      console.error(
+        "Upcoming follow-up error:",
+        error
+      );
+
+      return [];
+
+    }
+
+    return data || [];
+
+  }
+
+
+  /* =========================================================
+     RENDER DASHBOARD SHELL
+  ========================================================= */
+
+  function renderDashboardShell(
+    profile
+  ) {
+
+    const dashboard =
+      getDashboardElement();
+
+    if (!dashboard) {
+      return;
+    }
+
+    const roleLabel =
+      isAdminUser(profile)
+        ? "Admin Overview"
+        : "My Sales Overview";
+
+    const displayName =
+      profile.name ||
+      profile.sales_name ||
+      profile.full_name ||
+      profile.username ||
+      "User";
+
+    dashboard.innerHTML = `
+
+      <div class="dashboard-shell">
+
+        <!-- =========================================
+             DASHBOARD HEADER
+        ========================================== -->
+
+        <div class="dashboard-toolbar">
+
+          <div class="dashboard-heading">
+
+            <div class="dashboard-heading-icon">
+              <i data-lucide="layout-dashboard"></i>
+            </div>
+
+            <div>
+
+              <div class="dashboard-kicker">
+                FSI CONSULTANT
+              </div>
+
+              <h1>
+                Sales Dashboard
+              </h1>
+
+              <p>
+                Welcome back, ${escapeHtml(displayName)}.
+                Here's your latest CRM overview.
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div class="dashboard-toolbar-actions">
+
+            <span
+              class="dashboard-role-badge"
+              id="dashRole"
+            >
+              ${escapeHtml(roleLabel)}
+            </span>
+
+            <button
+              type="button"
+              class="dashboard-refresh-btn"
+              onclick="refreshDashboard()"
+              id="dashboardRefreshBtn"
+            >
+
+              <i data-lucide="refresh-cw"></i>
+
+              <span>
+                Refresh
+              </span>
+
+            </button>
+
+          </div>
+
         </div>
 
-      `;
+
+        <!-- =========================================
+             STAT CARDS
+        ========================================== -->
+
+        <div class="dashboard-stats-grid">
 
 
+          <!-- TOTAL -->
+
+          <article class="dashboard-stat-card total">
+
+            <div class="dashboard-stat-top">
+
+              <div class="dashboard-stat-icon">
+                <i data-lucide="layers"></i>
+              </div>
+
+              <span class="dashboard-stat-label">
+                Total Leads
+              </span>
+
+            </div>
+
+            <strong
+              id="dashTotal"
+              class="dashboard-stat-value"
+            >
+              0
+            </strong>
+
+            <div class="dashboard-stat-footer">
+              All accessible leads
+            </div>
+
+          </article>
+
+
+          <!-- NEW -->
+
+          <article class="dashboard-stat-card new">
+
+            <div class="dashboard-stat-top">
+
+              <div class="dashboard-stat-icon">
+                <i data-lucide="user-plus"></i>
+              </div>
+
+              <span class="dashboard-stat-label">
+                New Leads
+              </span>
+
+            </div>
+
+            <strong
+              id="dashNew"
+              class="dashboard-stat-value"
+            >
+              0
+            </strong>
+
+            <div class="dashboard-stat-footer">
+              New / not contacted
+            </div>
+
+          </article>
+
+
+          <!-- INTERESTED -->
+
+          <article class="dashboard-stat-card interested">
+
+            <div class="dashboard-stat-top">
+
+              <div class="dashboard-stat-icon">
+                <i data-lucide="heart"></i>
+              </div>
+
+              <span class="dashboard-stat-label">
+                Interested
+              </span>
+
+            </div>
+
+            <strong
+              id="dashInterested"
+              class="dashboard-stat-value"
+            >
+              0
+            </strong>
+
+            <div class="dashboard-stat-footer">
+              Interested customers
+            </div>
+
+          </article>
+
+
+          <!-- FOLLOW UP -->
+
+          <article class="dashboard-stat-card followup">
+
+            <div class="dashboard-stat-top">
+
+              <div class="dashboard-stat-icon">
+                <i data-lucide="phone-forwarded"></i>
+              </div>
+
+              <span class="dashboard-stat-label">
+                Follow Up
+              </span>
+
+            </div>
+
+            <strong
+              id="dashFollowUp"
+              class="dashboard-stat-value"
+            >
+              0
+            </strong>
+
+            <div class="dashboard-stat-footer">
+              Leads requiring follow-up
+            </div>
+
+          </article>
+
+
+          <!-- APPOINTMENT -->
+
+          <article class="dashboard-stat-card appointment">
+
+            <div class="dashboard-stat-top">
+
+              <div class="dashboard-stat-icon">
+                <i data-lucide="calendar-check"></i>
+              </div>
+
+              <span class="dashboard-stat-label">
+                Appointment
+              </span>
+
+            </div>
+
+            <strong
+              id="dashAppointment"
+              class="dashboard-stat-value"
+            >
+              0
+            </strong>
+
+            <div class="dashboard-stat-footer">
+              Scheduled appointments
+            </div>
+
+          </article>
+
+
+          <!-- SITE SURVEY -->
+
+          <article class="dashboard-stat-card survey">
+
+            <div class="dashboard-stat-top">
+
+              <div class="dashboard-stat-icon">
+                <i data-lucide="map-pin"></i>
+              </div>
+
+              <span class="dashboard-stat-label">
+                Site Survey
+              </span>
+
+            </div>
+
+            <strong
+              id="dashSiteSurvey"
+              class="dashboard-stat-value"
+            >
+              0
+            </strong>
+
+            <div class="dashboard-stat-footer">
+              Survey records
+            </div>
+
+          </article>
+
+
+          <!-- QUOTATION -->
+
+          <article class="dashboard-stat-card quotation">
+
+            <div class="dashboard-stat-top">
+
+              <div class="dashboard-stat-icon">
+                <i data-lucide="file-text"></i>
+              </div>
+
+              <span class="dashboard-stat-label">
+                Quotation
+              </span>
+
+            </div>
+
+            <strong
+              id="dashQuotation"
+              class="dashboard-stat-value"
+            >
+              0
+            </strong>
+
+            <div class="dashboard-stat-footer">
+              Quotation records
+            </div>
+
+          </article>
+
+
+          <!-- CLOSING -->
+
+          <article class="dashboard-stat-card closing">
+
+            <div class="dashboard-stat-top">
+
+              <div class="dashboard-stat-icon">
+                <i data-lucide="badge-check"></i>
+              </div>
+
+              <span class="dashboard-stat-label">
+                Closing
+              </span>
+
+            </div>
+
+            <strong
+              id="dashClosing"
+              class="dashboard-stat-value"
+            >
+              0
+            </strong>
+
+            <div class="dashboard-stat-footer">
+              Closed customers
+            </div>
+
+          </article>
+
+
+        </div>
+
+
+        <!-- =========================================
+             MAIN DASHBOARD GRID
+        ========================================== -->
+
+        <div class="dashboard-main-grid">
+
+
+          <!-- =======================================
+               PIPELINE
+          ======================================== -->
+
+          <section class="dashboard-panel dashboard-pipeline-panel">
+
+            <div class="dashboard-panel-header">
+
+              <div>
+
+                <span class="dashboard-panel-kicker">
+                  SALES FUNNEL
+                </span>
+
+                <h2>
+                  Lead Pipeline
+                </h2>
+
+                <p>
+                  Current distribution of leads by status.
+                </p>
+
+              </div>
+
+              <div
+                class="dashboard-panel-total"
+                id="dashPipelineTotal"
+              >
+                0 Leads
+              </div>
+
+            </div>
+
+
+            <div
+              id="dashPipeline"
+              class="dashboard-pipeline"
+            >
+
+              <!-- Filled by JavaScript -->
+
+            </div>
+
+          </section>
+
+
+          <!-- =======================================
+               STATUS DISTRIBUTION
+          ======================================== -->
+
+          <section class="dashboard-panel dashboard-status-panel">
+
+            <div class="dashboard-panel-header">
+
+              <div>
+
+                <span class="dashboard-panel-kicker">
+                  STATUS
+                </span>
+
+                <h2>
+                  Lead Status
+                </h2>
+
+                <p>
+                  Quick status breakdown.
+                </p>
+
+              </div>
+
+            </div>
+
+
+            <div
+              id="dashStatusList"
+              class="dashboard-status-list"
+            >
+
+              <!-- Filled by JavaScript -->
+
+            </div>
+
+          </section>
+
+
+        </div>
+
+
+        <!-- =========================================
+             RECENT + FOLLOW UP
+        ========================================== -->
+
+        <div class="dashboard-bottom-grid">
+
+
+          <!-- =======================================
+               RECENT LEADS
+          ======================================== -->
+
+          <section class="dashboard-panel dashboard-recent-panel">
+
+            <div class="dashboard-panel-header">
+
+              <div>
+
+                <span class="dashboard-panel-kicker">
+                  ACTIVITY
+                </span>
+
+                <h2>
+                  Recent Leads
+                </h2>
+
+                <p>
+                  Latest leads added to the CRM.
+                </p>
+
+              </div>
+
+              <button
+                type="button"
+                class="dashboard-view-btn"
+                onclick="showLeads()"
+              >
+                View Leads
+                <i data-lucide="arrow-right"></i>
+              </button>
+
+            </div>
+
+
+            <div
+              id="dashRecentLeads"
+              class="dashboard-recent-list"
+            >
+
+              <!-- Filled by JavaScript -->
+
+            </div>
+
+          </section>
+
+
+          <!-- =======================================
+               UPCOMING FOLLOW UPS
+          ======================================== -->
+
+          <section class="dashboard-panel dashboard-followup-panel">
+
+            <div class="dashboard-panel-header">
+
+              <div>
+
+                <span class="dashboard-panel-kicker">
+                  NEXT ACTION
+                </span>
+
+                <h2>
+                  Upcoming Follow Up
+                </h2>
+
+                <p>
+                  Scheduled customer follow-ups.
+                </p>
+
+              </div>
+
+            </div>
+
+
+            <div
+              id="dashUpcomingFollowups"
+              class="dashboard-followup-list"
+            >
+
+              <!-- Filled by JavaScript -->
+
+            </div>
+
+          </section>
+
+
+        </div>
+
+
+        <!-- =========================================
+             DASHBOARD FOOTER
+        ========================================== -->
+
+        <div class="dashboard-footer">
+
+          <span>
+            FSI CRM
+          </span>
+
+          <span class="dashboard-footer-dot">
+            •
+          </span>
+
+          <span>
+            Dashboard data is loaded directly from Supabase.
+          </span>
+
+        </div>
+
+
+      </div>
+
+    `;
+
+
+    if (
+      window.lucide &&
+      typeof lucide.createIcons === "function"
+    ) {
+
+      lucide.createIcons();
+
+    }
+
+  }
+
+
+  /* =========================================================
+     RENDER STATISTICS
+  ========================================================= */
+
+  function renderStatistics(
+    stats
+  ) {
+
+    setText(
+      "dashTotal",
+      stats.total
+    );
+
+    setText(
+      "dashNew",
+      stats.newLeads
+    );
+
+    setText(
+      "dashInterested",
+      stats.interested
+    );
+
+    setText(
+      "dashFollowUp",
+      stats.followUp
+    );
+
+    setText(
+      "dashAppointment",
+      stats.appointment
+    );
+
+    setText(
+      "dashSiteSurvey",
+      stats.siteSurvey
+    );
+
+    setText(
+      "dashQuotation",
+      stats.quotation
+    );
+
+    setText(
+      "dashClosing",
+      stats.closing
+    );
+
+  }
+
+
+  /* =========================================================
+     PIPELINE
+  ========================================================= */
+
+  function renderPipeline(
+    pipeline,
+    total
+  ) {
+
+    const container =
+      document.getElementById(
+        "dashPipeline"
+      );
+
+    const totalElement =
+      document.getElementById(
+        "dashPipelineTotal"
+      );
+
+    if (!container) {
       return;
+    }
+
+    if (totalElement) {
+
+      totalElement.textContent =
+        `${total} Leads`;
 
     }
 
 
-    const leads =
-      data || [];
+    const items = [
+
+      {
+        label: "New",
+        value: pipeline.newLeads,
+        className: "new",
+        icon: "user-plus"
+      },
+
+      {
+        label: "Flyer Sent",
+        value: pipeline.flyerSent,
+        className: "flyer",
+        icon: "send"
+      },
+
+      {
+        label: "Interested",
+        value: pipeline.interested,
+        className: "interested",
+        icon: "heart"
+      },
+
+      {
+        label: "Follow Up",
+        value: pipeline.followUp,
+        className: "followup",
+        icon: "phone-forwarded"
+      },
+
+      {
+        label: "Closing",
+        value: pipeline.closing,
+        className: "closing",
+        icon: "badge-check"
+      },
+
+      {
+        label: "Not Interested",
+        value: pipeline.notInterested,
+        className: "not-interested",
+        icon: "x-circle"
+      }
+
+    ];
+
+
+    container.innerHTML =
+      items.map(
+        function (item) {
+
+          const percentage =
+            total > 0
+              ? Math.round(
+                  (item.value / total) * 100
+                )
+              : 0;
+
+          return `
+
+            <div class="dashboard-pipeline-row">
+
+              <div class="dashboard-pipeline-label">
+
+                <div
+                  class="dashboard-pipeline-icon ${item.className}"
+                >
+                  <i data-lucide="${item.icon}"></i>
+                </div>
+
+                <span>
+                  ${escapeHtml(item.label)}
+                </span>
+
+              </div>
+
+
+              <div class="dashboard-pipeline-track">
+
+                <div
+                  class="dashboard-pipeline-fill ${item.className}"
+                  style="width:${percentage}%"
+                ></div>
+
+              </div>
+
+
+              <div class="dashboard-pipeline-value">
+
+                <strong>
+                  ${item.value}
+                </strong>
+
+                <span>
+                  ${percentage}%
+                </span>
+
+              </div>
+
+            </div>
+
+          `;
+
+        }
+      )
+      .join("");
+
+
+    if (
+      window.lucide &&
+      typeof lucide.createIcons === "function"
+    ) {
+
+      lucide.createIcons();
+
+    }
+
+  }
+
+
+  /* =========================================================
+     STATUS LIST
+  ========================================================= */
+
+  function renderStatusList(
+    pipeline,
+    total
+  ) {
+
+    const container =
+      document.getElementById(
+        "dashStatusList"
+      );
+
+    if (!container) {
+      return;
+    }
+
+    const items = [
+
+      {
+        label: "New",
+        value: pipeline.newLeads,
+        className: "new"
+      },
+
+      {
+        label: "Flyer Sent",
+        value: pipeline.flyerSent,
+        className: "flyer"
+      },
+
+      {
+        label: "Interested",
+        value: pipeline.interested,
+        className: "interested"
+      },
+
+      {
+        label: "Follow Up",
+        value: pipeline.followUp,
+        className: "followup"
+      },
+
+      {
+        label: "Closing",
+        value: pipeline.closing,
+        className: "closing"
+      },
+
+      {
+        label: "Not Interested",
+        value: pipeline.notInterested,
+        className: "not-interested"
+      }
+
+    ];
+
+
+    container.innerHTML =
+      items.map(
+        function (item) {
+
+          const percentage =
+            total > 0
+              ? Math.round(
+                  (item.value / total) * 100
+                )
+              : 0;
+
+          return `
+
+            <div class="dashboard-status-item">
+
+              <div class="dashboard-status-name">
+
+                <span
+                  class="dashboard-status-dot ${item.className}"
+                ></span>
+
+                <span>
+                  ${escapeHtml(item.label)}
+                </span>
+
+              </div>
+
+              <strong>
+                ${item.value}
+              </strong>
+
+              <span class="dashboard-status-percent">
+                ${percentage}%
+              </span>
+
+            </div>
+
+          `;
+
+        }
+      )
+      .join("");
+
+  }
+
+
+  /* =========================================================
+     RECENT LEADS
+  ========================================================= */
+
+  function renderRecentLeads(
+    leads
+  ) {
+
+    const container =
+      document.getElementById(
+        "dashRecentLeads"
+      );
+
+    if (!container) {
+      return;
+    }
 
 
     if (!leads.length) {
 
       container.innerHTML = `
 
-        <div class="new-dashboard-empty">
-          Belum ada aktivitas.
+        <div class="dashboard-empty-state">
+
+          <div class="dashboard-empty-icon">
+            <i data-lucide="inbox"></i>
+          </div>
+
+          <strong>
+            No recent leads
+          </strong>
+
+          <span>
+            New leads will appear here.
+          </span>
+
         </div>
 
       `;
 
+      if (
+        window.lucide &&
+        typeof lucide.createIcons === "function"
+      ) {
+
+        lucide.createIcons();
+
+      }
 
       return;
 
@@ -1019,216 +1651,534 @@
 
 
     container.innerHTML =
-      leads
-        .map(
-          function (lead) {
+      leads.map(
+        function (lead) {
 
-            const status =
-              normalizeStatus(
-                lead.status
-              );
+          const status =
+            normalizeStatus(
+              lead.status
+            );
 
+          const statusClass =
+            getStatusClass(
+              lead.status
+            );
 
-            let icon =
-              "user-plus";
+          return `
 
-            let iconClass =
-              "blue";
+            <div class="dashboard-recent-item">
 
-            let activityText =
-              "Lead baru ditambahkan";
+              <div class="dashboard-recent-avatar">
 
-
-            if (
-              status === "Interested"
-            ) {
-
-              icon =
-                "heart";
-
-              iconClass =
-                "green";
-
-              activityText =
-                "Lead tertarik";
-
-            }
-
-
-            else if (
-              status === "Follow Up"
-            ) {
-
-              icon =
-                "phone-call";
-
-              iconClass =
-                "orange";
-
-              activityText =
-                "Lead masuk Follow Up";
-
-            }
-
-
-            else if (
-              status === "Closing"
-            ) {
-
-              icon =
-                "badge-check";
-
-              iconClass =
-                "dark-green";
-
-              activityText =
-                "Lead berhasil Closing";
-
-            }
-
-
-            else if (
-              status === "Not Interested"
-            ) {
-
-              icon =
-                "x-circle";
-
-              iconClass =
-                "red";
-
-              activityText =
-                "Lead tidak tertarik";
-
-            }
-
-
-            const date =
-              lead.created_at
-
-                ? new Date(
-                    lead.created_at
-                  ).toLocaleDateString(
-                    "id-ID",
-                    {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric"
-                    }
+                ${
+                  escapeHtml(
+                    String(
+                      lead.customer_name || "?"
+                    )
+                    .charAt(0)
+                    .toUpperCase()
                   )
-
-                : "-";
-
-
-            return `
-
-              <div class="new-activity-item">
-
-                <div
-                  class="
-                    new-activity-icon
-                    ${iconClass}
-                  "
-                >
-
-                  <i
-                    data-lucide="${icon}"
-                  ></i>
-
-                </div>
-
-
-                <div class="new-activity-info">
-
-                  <strong>
-                    ${escapeHTML(
-                      lead.customer_name ||
-                      "Customer"
-                    )}
-                  </strong>
-
-                  <span>
-                    ${activityText}
-                  </span>
-
-                </div>
-
-
-                <time>
-                  ${date}
-                </time>
+                }
 
               </div>
 
-            `;
 
-          }
-        )
-        .join("");
+              <div class="dashboard-recent-info">
+
+                <strong>
+                  ${escapeHtml(
+                    lead.customer_name ||
+                    "Unnamed Customer"
+                  )}
+                </strong>
+
+                <span>
+
+                  ${
+                    escapeHtml(
+                      lead.business ||
+                      lead.location ||
+                      "Lead"
+                    )
+                  }
+
+                </span>
+
+              </div>
 
 
-    if (window.lucide) {
+              <div class="dashboard-recent-meta">
+
+                <span
+                  class="dashboard-status-badge ${statusClass}"
+                >
+                  ${escapeHtml(status)}
+                </span>
+
+                <small>
+                  ${formatDateTime(
+                    lead.created_at
+                  )}
+                </small>
+
+              </div>
+
+            </div>
+
+          `;
+
+        }
+      )
+      .join("");
+
+  }
+
+
+  /* =========================================================
+     UPCOMING FOLLOW UPS
+  ========================================================= */
+
+  function renderUpcomingFollowUps(
+    leads
+  ) {
+
+    const container =
+      document.getElementById(
+        "dashUpcomingFollowups"
+      );
+
+    if (!container) {
+      return;
+    }
+
+
+    if (!leads.length) {
+
+      container.innerHTML = `
+
+        <div class="dashboard-empty-state">
+
+          <div class="dashboard-empty-icon">
+            <i data-lucide="calendar-check"></i>
+          </div>
+
+          <strong>
+            No upcoming follow-ups
+          </strong>
+
+          <span>
+            Your scheduled follow-ups will appear here.
+          </span>
+
+        </div>
+
+      `;
+
+      if (
+        window.lucide &&
+        typeof lucide.createIcons === "function"
+      ) {
+
+        lucide.createIcons();
+
+      }
+
+      return;
+
+    }
+
+
+    container.innerHTML =
+      leads.map(
+        function (lead) {
+
+          const status =
+            normalizeStatus(
+              lead.status
+            );
+
+          return `
+
+            <div class="dashboard-followup-item">
+
+              <div class="dashboard-followup-date">
+
+                <span>
+                  ${formatDate(
+                    lead.follow_up_date
+                  )}
+                </span>
+
+              </div>
+
+
+              <div class="dashboard-followup-info">
+
+                <strong>
+                  ${escapeHtml(
+                    lead.customer_name ||
+                    "Unnamed Customer"
+                  )}
+                </strong>
+
+                <span>
+                  ${
+                    escapeHtml(
+                      lead.business ||
+                      "Customer follow-up"
+                    )
+                  }
+                </span>
+
+              </div>
+
+
+              <span
+                class="dashboard-status-badge ${getStatusClass(
+                  lead.status
+                )}"
+              >
+                ${escapeHtml(status)}
+              </span>
+
+            </div>
+
+          `;
+
+        }
+      )
+      .join("");
+
+  }
+
+
+  /* =========================================================
+     LOADING STATE
+  ========================================================= */
+
+  function showDashboardLoading() {
+
+    const elements = [
+
+      "dashTotal",
+      "dashNew",
+      "dashInterested",
+      "dashFollowUp",
+      "dashAppointment",
+      "dashSiteSurvey",
+      "dashQuotation",
+      "dashClosing"
+
+    ];
+
+
+    elements.forEach(
+      function (id) {
+
+        const element =
+          document.getElementById(id);
+
+        if (element) {
+
+          element.classList.add(
+            "dashboard-loading-number"
+          );
+
+          element.textContent =
+            "—";
+
+        }
+
+      }
+    );
+
+  }
+
+
+  /* =========================================================
+     ERROR STATE
+  ========================================================= */
+
+  function showDashboardError(
+    error
+  ) {
+
+    console.error(
+      "Dashboard loading failed:",
+      error
+    );
+
+
+    const pipeline =
+      document.getElementById(
+        "dashPipeline"
+      );
+
+    if (pipeline) {
+
+      pipeline.innerHTML = `
+
+        <div class="dashboard-error-state">
+
+          <div class="dashboard-error-icon">
+            <i data-lucide="alert-circle"></i>
+          </div>
+
+          <strong>
+            Unable to load dashboard data
+          </strong>
+
+          <span>
+            Please check your connection and try again.
+          </span>
+
+          <button
+            type="button"
+            onclick="refreshDashboard()"
+          >
+            Try Again
+          </button>
+
+        </div>
+
+      `;
+
+    }
+
+
+    if (
+      window.lucide &&
+      typeof lucide.createIcons === "function"
+    ) {
+
       lucide.createIcons();
+
     }
 
   }
 
 
-  /* ========================================================
-     MAIN
-  ======================================================== */
+  /* =========================================================
+     BUTTON STATE
+  ========================================================= */
 
-  async function loadNewDashboard() {
+  function setRefreshButtonState(
+    loading
+  ) {
 
-    const dashboard =
+    const button =
       document.getElementById(
-        "dashboardPage"
+        "dashboardRefreshBtn"
       );
 
-
-    if (!dashboard) {
+    if (!button) {
       return;
     }
 
 
-    const scope =
-      getScope();
+    if (loading) {
+
+      button.classList.add(
+        "is-loading"
+      );
+
+      button.disabled = true;
+
+      button.innerHTML = `
+
+        <i data-lucide="loader-circle"></i>
+
+        <span>
+          Loading...
+        </span>
+
+      `;
+
+    } else {
+
+      button.classList.remove(
+        "is-loading"
+      );
+
+      button.disabled = false;
+
+      button.innerHTML = `
+
+        <i data-lucide="refresh-cw"></i>
+
+        <span>
+          Refresh
+        </span>
+
+      `;
+
+    }
 
 
-    if (!scope) {
+    if (
+      window.lucide &&
+      typeof lucide.createIcons === "function"
+    ) {
+
+      lucide.createIcons();
+
+    }
+
+  }
+
+
+  /* =========================================================
+     MAIN DASHBOARD LOADER
+  ========================================================= */
+
+  async function loadDashboard() {
+
+    if (dashboardLoading) {
       return;
     }
+
+    if (!isDashboardVisible()) {
+      return;
+    }
+
+
+    const profile =
+      getProfile();
+
+    const supabase =
+      getSupabase();
+
+
+    if (!profile || !supabase) {
+      return;
+    }
+
+
+    dashboardLoading = true;
 
 
     try {
 
-      await Promise.all([
+      /*
+        Build dashboard shell if it does not exist yet.
+      */
 
-        loadStatistics(
-          scope
-        ),
+      const dashboard =
+        getDashboardElement();
 
-        loadSalesPerformance(
-          scope
-        ),
-
-        loadRecentActivity(
-          scope
+      if (
+        dashboard &&
+        !dashboard.querySelector(
+          ".dashboard-shell"
         )
+      ) {
+
+        renderDashboardShell(
+          profile
+        );
+
+      }
+
+
+      setRefreshButtonState(
+        true
+      );
+
+      showDashboardLoading();
+
+
+      /*
+        Load all dashboard information.
+      */
+
+      const [
+        statistics,
+        pipeline,
+        recentLeads,
+        upcomingFollowUps
+      ] = await Promise.all([
+
+        loadStatistics(),
+
+        loadPipeline(),
+
+        loadRecentLeads(),
+
+        loadUpcomingFollowUps()
 
       ]);
 
 
-      if (window.lucide) {
-        lucide.createIcons();
-      }
+      /*
+        Render everything.
+      */
+
+      renderStatistics(
+        statistics
+      );
+
+      renderPipeline(
+        pipeline,
+        statistics.total
+      );
+
+      renderStatusList(
+        pipeline,
+        statistics.total
+      );
+
+      renderRecentLeads(
+        recentLeads
+      );
+
+      renderUpcomingFollowUps(
+        upcomingFollowUps
+      );
+
+
+      /*
+        Remove loading class from numbers.
+      */
+
+      [
+        "dashTotal",
+        "dashNew",
+        "dashInterested",
+        "dashFollowUp",
+        "dashAppointment",
+        "dashSiteSurvey",
+        "dashQuotation",
+        "dashClosing"
+      ].forEach(
+        function (id) {
+
+          const element =
+            document.getElementById(id);
+
+          if (element) {
+
+            element.classList.remove(
+              "dashboard-loading-number"
+            );
+
+          }
+
+        }
+      );
 
 
     } catch (error) {
 
-      console.error(
-        "New Dashboard Error:",
+      showDashboardError(
         error
+      );
+
+    } finally {
+
+      dashboardLoading = false;
+
+      setRefreshButtonState(
+        false
       );
 
     }
@@ -1236,85 +2186,54 @@
   }
 
 
-  /* ========================================================
-     GLOBAL BUTTON
-  ======================================================== */
+  /* =========================================================
+     PUBLIC REFRESH FUNCTION
+     ---------------------------------------------------------
+     This allows:
+       onclick="refreshDashboard()"
+  ========================================================= */
 
-  window.loadNewDashboard =
-    loadNewDashboard;
+  window.refreshDashboard =
+    function () {
+
+      loadDashboard();
+
+    };
 
 
-  /* ========================================================
-     START WATCHER
-  ======================================================== */
+  /* =========================================================
+     START DASHBOARD
+  ========================================================= */
 
   function startDashboardWatcher() {
 
-    let attempts = 0;
+    /*
+      Small boot watcher because login may happen
+      after DOMContentLoaded.
+    */
+
+    if (dashboardBootTimer) {
+
+      clearInterval(
+        dashboardBootTimer
+      );
+
+    }
 
 
-    const watcher =
+    dashboardBootTimer =
       setInterval(
         function () {
 
-          attempts++;
-
-
-          if (
-            typeof currentProfile !== "undefined" &&
-            currentProfile
-          ) {
-
-            clearInterval(
-              watcher
-            );
-
-
-            loadNewDashboard();
-
-
-            if (
-              !dashboardRefreshTimer
-            ) {
-
-              dashboardRefreshTimer =
-                setInterval(
-                  function () {
-
-                    const dashboard =
-                      document.getElementById(
-                        "dashboardPage"
-                      );
-
-
-                    if (
-                      dashboard &&
-                      (
-                        dashboard.style.display !==
-                        "none"
-                      )
-                    ) {
-
-                      loadNewDashboard();
-
-                    }
-
-                  },
-                  30000
-                );
-
-            }
-
-          }
-
+          const profile =
+            getProfile();
 
           if (
-            attempts >= 60
+            profile &&
+            isDashboardVisible()
           ) {
 
-            clearInterval(
-              watcher
-            );
+            loadDashboard();
 
           }
 
@@ -1322,28 +2241,56 @@
         1000
       );
 
+
+    /*
+      Automatic refresh every 15 seconds.
+    */
+
+    if (dashboardRefreshTimer) {
+
+      clearInterval(
+        dashboardRefreshTimer
+      );
+
+    }
+
+
+    dashboardRefreshTimer =
+      setInterval(
+        function () {
+
+          const profile =
+            getProfile();
+
+          if (
+            profile &&
+            isDashboardVisible() &&
+            !dashboardLoading
+          ) {
+
+            loadDashboard();
+
+          }
+
+        },
+        15000
+      );
+
   }
 
 
-  /* ========================================================
-     INIT
-  ======================================================== */
+  /* =========================================================
+     DOM READY
+  ========================================================= */
 
-  if (
-    document.readyState ===
-    "loading"
-  ) {
+  document.addEventListener(
+    "DOMContentLoaded",
+    function () {
 
-    document.addEventListener(
-      "DOMContentLoaded",
-      startDashboardWatcher
-    );
+      startDashboardWatcher();
 
-  } else {
-
-    startDashboardWatcher();
-
-  }
+    }
+  );
 
 
 })();
