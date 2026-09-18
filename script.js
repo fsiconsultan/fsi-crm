@@ -31,6 +31,20 @@ let totalLeadsCount = 0;
 
 
 // ================================
+// CRM STATUS
+// ================================
+
+const LEAD_STATUSES = [
+  "New",
+  "Flyer Sent",
+  "Interested",
+  "Follow Up",
+  "Closing",
+  "Not Interested"
+];
+
+
+// ================================
 // START APP
 // ================================
 
@@ -42,10 +56,101 @@ document.addEventListener(
 
     setupModalEvents();
 
+    setupEnglishStatusOptions();
+
     await checkSession();
 
   }
 );
+
+
+// ================================
+// ENGLISH STATUS OPTIONS
+// ================================
+
+function setupEnglishStatusOptions() {
+
+  const statusFilter =
+    document.getElementById(
+      "statusFilter"
+    );
+
+  const leadStatus =
+    document.getElementById(
+      "leadStatus"
+    );
+
+
+  if (statusFilter) {
+
+    statusFilter.innerHTML = "";
+
+    const allOption =
+      document.createElement(
+        "option"
+      );
+
+    allOption.value = "";
+    allOption.textContent =
+      "All Status";
+
+    statusFilter.appendChild(
+      allOption
+    );
+
+
+    LEAD_STATUSES.forEach(
+      status => {
+
+        const option =
+          document.createElement(
+            "option"
+          );
+
+        option.value =
+          status;
+
+        option.textContent =
+          status;
+
+        statusFilter.appendChild(
+          option
+        );
+
+      }
+    );
+
+  }
+
+
+  if (leadStatus) {
+
+    leadStatus.innerHTML = "";
+
+    LEAD_STATUSES.forEach(
+      status => {
+
+        const option =
+          document.createElement(
+            "option"
+          );
+
+        option.value =
+          status;
+
+        option.textContent =
+          status;
+
+        leadStatus.appendChild(
+          option
+        );
+
+      }
+    );
+
+  }
+
+}
 
 
 // ================================
@@ -62,6 +167,7 @@ async function checkSession() {
     } =
       await supabaseClient.auth.getSession();
 
+
     if (error) {
 
       console.error(error);
@@ -69,19 +175,24 @@ async function checkSession() {
       showLogin();
 
       return;
+
     }
+
 
     if (!session) {
 
       showLogin();
 
       return;
+
     }
+
 
     currentUser =
       session.user;
 
     await loadProfile();
+
 
   } catch (error) {
 
@@ -123,9 +234,10 @@ async function login() {
   if (!username || !password) {
 
     message.textContent =
-      "Username dan password wajib diisi.";
+      "Username and password are required.";
 
     return;
+
   }
 
 
@@ -157,15 +269,17 @@ async function login() {
         emailError.message;
 
       return;
+
     }
 
 
     if (!email) {
 
       message.textContent =
-        "Username tidak ditemukan atau tidak aktif.";
+        "Username not found or inactive.";
 
       return;
+
     }
 
 
@@ -189,6 +303,7 @@ async function login() {
         error.message;
 
       return;
+
     }
 
 
@@ -196,6 +311,7 @@ async function login() {
       data.user;
 
     await loadProfile();
+
 
   } catch (error) {
 
@@ -205,7 +321,7 @@ async function login() {
     );
 
     message.textContent =
-      "Terjadi kesalahan saat login.";
+      "An error occurred while logging in.";
 
   }
 
@@ -223,6 +339,7 @@ async function loadProfile() {
     showLogin();
 
     return;
+
   }
 
 
@@ -250,12 +367,13 @@ async function loadProfile() {
       );
 
       alert(
-        "Profile user tidak ditemukan."
+        "User profile not found."
       );
 
       await logout();
 
       return;
+
     }
 
 
@@ -435,15 +553,78 @@ function setupRoleAccess() {
       "manageSalesBtn"
     );
 
+  const mobileManageSalesBtn =
+    document.getElementById(
+      "mobileManageSalesBtn"
+    );
 
-  if (
-    !manageSalesBtn ||
-    !currentProfile
-  ) {
+  const salesFilter =
+    document.getElementById(
+      "salesFilter"
+    );
 
-    return;
+
+  if (!currentProfile) return;
+
+
+  const isAdmin =
+    currentProfile.role ===
+    "Admin";
+
+
+  // DESKTOP MANAGE SALES
+  if (manageSalesBtn) {
+
+    manageSalesBtn.style.display =
+      isAdmin
+        ? "block"
+        : "none";
 
   }
+
+
+  // MOBILE MANAGE SALES
+  if (mobileManageSalesBtn) {
+
+    mobileManageSalesBtn.style.display =
+      isAdmin
+        ? "block"
+        : "none";
+
+  }
+
+
+  // SALES FILTER
+  if (salesFilter) {
+
+    salesFilter.style.display =
+      isAdmin
+        ? "block"
+        : "none";
+
+  }
+
+
+  // SALES ASSIGNMENT FIELD
+  setupSalesAssignmentAccess();
+
+}
+
+
+// ================================
+// SALES ASSIGNMENT ACCESS
+// ================================
+
+function setupSalesAssignmentAccess() {
+
+  const field =
+    document.getElementById(
+      "leadSalesAssign"
+    );
+
+
+  if (!field || !currentProfile)
+    return;
 
 
   if (
@@ -451,13 +632,19 @@ function setupRoleAccess() {
     "Admin"
   ) {
 
-    manageSalesBtn.style.display =
+    field.disabled =
+      false;
+
+    field.style.display =
       "block";
 
   } else {
 
-    manageSalesBtn.style.display =
-      "none";
+    field.disabled =
+      true;
+
+    field.style.display =
+      "block";
 
   }
 
@@ -585,6 +772,7 @@ async function showSales() {
     );
 
     return;
+
   }
 
 
@@ -630,7 +818,7 @@ async function loadSalesLookup() {
       await supabaseClient
         .from("sales_users")
         .select(
-          "id, name, username, role, status"
+          "id, name, username, role, status, created_at"
         )
         .order(
           "name",
@@ -648,11 +836,15 @@ async function loadSalesLookup() {
       );
 
       return;
+
     }
 
 
     salesUsersData =
       data || [];
+
+
+    populateSalesDropdowns();
 
 
     console.log(
@@ -667,6 +859,173 @@ async function loadSalesLookup() {
       "loadSalesLookup error:",
       error
     );
+
+  }
+
+}
+
+
+// ================================
+// POPULATE SALES DROPDOWNS
+// ================================
+
+function populateSalesDropdowns() {
+
+  // ================================
+  // ADMIN SALES FILTER
+  // ================================
+
+  const salesFilter =
+    document.getElementById(
+      "salesFilter"
+    );
+
+
+  if (salesFilter) {
+
+    const currentValue =
+      salesFilter.value;
+
+
+    salesFilter.innerHTML = "";
+
+
+    const allOption =
+      document.createElement(
+        "option"
+      );
+
+    allOption.value =
+      "";
+
+    allOption.textContent =
+      "All Sales";
+
+    salesFilter.appendChild(
+      allOption
+    );
+
+
+    salesUsersData.forEach(
+      sales => {
+
+        const option =
+          document.createElement(
+            "option"
+          );
+
+        option.value =
+          sales.id;
+
+        option.textContent =
+          sales.name ||
+          sales.username ||
+          "Sales";
+
+        salesFilter.appendChild(
+          option
+        );
+
+      }
+    );
+
+
+    if (
+      salesUsersData.some(
+        sales =>
+          String(sales.id) ===
+          String(currentValue)
+      )
+    ) {
+
+      salesFilter.value =
+        currentValue;
+
+    } else {
+
+      salesFilter.value =
+        "";
+
+    }
+
+  }
+
+
+  // ================================
+  // LEAD ASSIGNMENT
+  // ================================
+
+  const leadSalesAssign =
+    document.getElementById(
+      "leadSalesAssign"
+    );
+
+
+  if (leadSalesAssign) {
+
+    const currentValue =
+      leadSalesAssign.value;
+
+
+    leadSalesAssign.innerHTML =
+      "";
+
+
+    const selectOption =
+      document.createElement(
+        "option"
+      );
+
+    selectOption.value =
+      "";
+
+    selectOption.textContent =
+      "Select Sales";
+
+    leadSalesAssign.appendChild(
+      selectOption
+    );
+
+
+    salesUsersData.forEach(
+      sales => {
+
+        const option =
+          document.createElement(
+            "option"
+          );
+
+        option.value =
+          sales.id;
+
+        option.textContent =
+          sales.name ||
+          sales.username ||
+          "Sales";
+
+        leadSalesAssign.appendChild(
+          option
+        );
+
+      }
+    );
+
+
+    if (
+      salesUsersData.some(
+        sales =>
+          String(sales.id) ===
+          String(currentValue)
+      )
+    ) {
+
+      leadSalesAssign.value =
+        currentValue;
+
+    }
+
+
+    setupSalesAssignmentAccess();
 
   }
 
@@ -763,8 +1122,7 @@ async function loadFilterOptions() {
       ].sort(
         (a, b) =>
           a.localeCompare(
-            b,
-            "id"
+            b
           )
       );
 
@@ -787,8 +1145,7 @@ async function loadFilterOptions() {
       ].sort(
         (a, b) =>
           a.localeCompare(
-            b,
-            "id"
+            b
           )
       );
 
@@ -805,6 +1162,10 @@ async function loadFilterOptions() {
       locations,
       "All Location"
     );
+
+
+    // Keep Sales dropdown populated
+    populateSalesDropdowns();
 
 
   } catch (error) {
@@ -911,7 +1272,7 @@ function populateFilter(
 // LOAD LEADS
 // ================================
 // PAGINATION
-// 20 LEAD PER HALAMAN
+// 20 LEADS PER PAGE
 // ================================
 
 async function loadLeads(page = 1) {
@@ -972,6 +1333,15 @@ async function loadLeads(page = 1) {
         ?.value || "";
 
 
+    // ADMIN SALES FILTER
+    const salesFilter =
+      document
+        .getElementById(
+          "salesFilter"
+        )
+        ?.value || "";
+
+
     // ================================
     // SUPABASE QUERY
     // ================================
@@ -989,7 +1359,8 @@ async function loadLeads(page = 1) {
 
     // ================================
     // SEARCH
-    // Customer / Phone / Business / Location
+    // Customer / Phone / Email /
+    // Business / Location
     // ================================
 
     if (search) {
@@ -1011,6 +1382,7 @@ async function loadLeads(page = 1) {
           [
             `customer_name.ilike.%${safeSearch}%`,
             `phone.ilike.%${safeSearch}%`,
+            `email.ilike.%${safeSearch}%`,
             `business.ilike.%${safeSearch}%`,
             `location.ilike.%${safeSearch}%`
           ].join(",")
@@ -1065,6 +1437,27 @@ async function loadLeads(page = 1) {
 
 
     // ================================
+    // SALES FILTER
+    // ADMIN ONLY
+    // ================================
+
+    if (
+      salesFilter &&
+      currentProfile &&
+      currentProfile.role ===
+        "Admin"
+    ) {
+
+      query =
+        query.eq(
+          "sales_id",
+          salesFilter
+        );
+
+    }
+
+
+    // ================================
     // PAGINATION
     // ================================
 
@@ -1112,6 +1505,7 @@ async function loadLeads(page = 1) {
       );
 
       return;
+
     }
 
 
@@ -1200,7 +1594,7 @@ function updatePagination() {
 
 
     paginationInfo.textContent =
-      `${start}-${end} dari ${totalLeadsCount} leads`;
+      `${start}-${end} of ${totalLeadsCount} leads`;
 
   }
 
@@ -1300,6 +1694,7 @@ function renderLeads(data) {
     `;
 
     return;
+
   }
 
 
@@ -1400,10 +1795,12 @@ function renderLeads(data) {
         <td>
           <span
             class="status-badge ${statusClass(
-              lead.status
+              normalizeLeadStatus(
+                lead.status
+              )
             )}">
             ${escapeHTML(
-              getValue(
+              normalizeLeadStatus(
                 lead.status
               )
             )}
@@ -1455,13 +1852,70 @@ function renderLeads(data) {
 
 
 // ================================
+// NORMALIZE OLD STATUS VALUES
+// ================================
+
+function normalizeLeadStatus(status) {
+
+  if (!status)
+    return "New";
+
+
+  const value =
+    String(status)
+      .trim()
+      .toLowerCase();
+
+
+  const map = {
+
+    "new":
+      "New",
+
+    "belum dihubungi":
+      "New",
+
+    "flyer sent":
+      "Flyer Sent",
+
+    "tertarik":
+      "Interested",
+
+    "interested":
+      "Interested",
+
+    "follow up":
+      "Follow Up",
+
+    "follow-up":
+      "Follow Up",
+
+    "closing":
+      "Closing",
+
+    "tidak tertarik":
+      "Not Interested",
+
+    "not interested":
+      "Not Interested"
+
+  };
+
+
+  return (
+    map[value] ||
+    status
+  );
+
+}
+
+
+// ================================
 // FILTER LEADS
 // ================================
 
 function filterLeads() {
 
-  // Setiap filter berubah,
-  // kembali ke halaman pertama.
   loadLeads(1);
 
 }
@@ -1473,9 +1927,6 @@ function filterLeads() {
 
 function onSearchInput() {
 
-  // Saat mengetik search,
-  // query ulang ke Supabase
-  // dan kembali ke halaman pertama.
   loadLeads(1);
 
 }
@@ -1501,10 +1952,11 @@ function openLeadModal() {
   if (!modal) {
 
     alert(
-      "Lead modal tidak ditemukan di index.html."
+      "Lead modal not found."
     );
 
     return;
+
   }
 
 
@@ -1573,7 +2025,6 @@ function clearLeadForm() {
     ""
   );
 
-  // EMAIL
   setValue(
     "leadEmail",
     ""
@@ -1592,6 +2043,15 @@ function clearLeadForm() {
   setValue(
     "leadStatus",
     "New"
+  );
+
+  setValue(
+    "leadSalesAssign",
+    currentProfile &&
+    currentProfile.role ===
+      "Sales"
+      ? currentProfile.id
+      : ""
   );
 
   setValue(
@@ -1629,6 +2089,9 @@ function clearLeadForm() {
     ""
   );
 
+
+  setupSalesAssignmentAccess();
+
 }
 
 
@@ -1641,10 +2104,11 @@ async function saveLead() {
   if (!currentProfile) {
 
     alert(
-      "User profile belum siap."
+      "User profile is not ready."
     );
 
     return;
+
   }
 
 
@@ -1660,10 +2124,11 @@ async function saveLead() {
   if (!customer) {
 
     alert(
-      "Customer wajib diisi."
+      "Customer name is required."
     );
 
     return;
+
   }
 
 
@@ -1691,7 +2156,6 @@ async function saveLead() {
         .value
         .trim(),
 
-    // EMAIL
     email:
       document
         .getElementById(
@@ -1717,9 +2181,11 @@ async function saveLead() {
         .trim(),
 
     status:
-      document.getElementById(
-        "leadStatus"
-      ).value,
+      normalizeLeadStatus(
+        document.getElementById(
+          "leadStatus"
+        ).value
+      ),
 
     follow_up_date:
       document.getElementById(
@@ -1766,6 +2232,38 @@ async function saveLead() {
   };
 
 
+  // ================================
+  // SALES ASSIGNMENT
+  // ================================
+
+  const selectedSales =
+    document.getElementById(
+      "leadSalesAssign"
+    )?.value || "";
+
+
+  if (
+    currentProfile.role ===
+    "Admin"
+  ) {
+
+    if (selectedSales) {
+
+      payload.sales_id =
+        selectedSales;
+
+    }
+
+  } else {
+
+    // Sales can only assign
+    // leads to themselves.
+    payload.sales_id =
+      currentProfile.id;
+
+  }
+
+
   try {
 
     if (leadId) {
@@ -1795,30 +2293,34 @@ async function saveLead() {
         );
 
         alert(
-          "Gagal update lead:\n" +
+          "Failed to update lead:\n" +
           error.message
         );
 
         return;
+
       }
 
 
       alert(
-        "Lead berhasil diupdate."
+        "Lead updated successfully."
       );
 
     }
 
     else {
 
-      payload.sales_id =
-        currentProfile.id;
-
       payload.created_by =
         currentProfile.id;
 
       payload.updated_by =
         currentProfile.id;
+
+
+      // If Admin didn't select a Sales,
+      // leave it unassigned.
+      // If Sales created it, it is
+      // automatically assigned above.
 
 
       const {
@@ -1838,16 +2340,17 @@ async function saveLead() {
         );
 
         alert(
-          "Gagal menambahkan lead:\n" +
+          "Failed to add lead:\n" +
           error.message
         );
 
         return;
+
       }
 
 
       alert(
-        "Lead berhasil ditambahkan."
+        "Lead added successfully."
       );
 
     }
@@ -1872,7 +2375,7 @@ async function saveLead() {
     );
 
     alert(
-      "Terjadi kesalahan:\n" +
+      "An error occurred:\n" +
       error.message
     );
 
@@ -1920,26 +2423,28 @@ async function editLead(id) {
     if (error) {
 
       console.error(
-        "Get lead untuk edit error:",
+        "Get lead for edit error:",
         error
       );
 
       alert(
-        "Gagal mengambil data lead:\n" +
+        "Failed to get lead:\n" +
         error.message
       );
 
       return;
+
     }
 
 
     if (!data) {
 
       alert(
-        "Lead tidak ditemukan."
+        "Lead not found."
       );
 
       return;
+
     }
 
 
@@ -1964,7 +2469,6 @@ async function editLead(id) {
     lead.phone
   );
 
-  // EMAIL
   setValue(
     "leadEmail",
     lead.email
@@ -1982,9 +2486,19 @@ async function editLead(id) {
 
   setValue(
     "leadStatus",
-    lead.status ||
-      "New"
+    normalizeLeadStatus(
+      lead.status
+    )
   );
+
+
+  // IMPORTANT:
+  // Restore assigned Sales
+  setValue(
+    "leadSalesAssign",
+    lead.sales_id || ""
+  );
+
 
   setValue(
     "leadFollowUp",
@@ -2022,6 +2536,9 @@ async function editLead(id) {
   );
 
 
+  setupSalesAssignmentAccess();
+
+
   const title =
     document.getElementById(
       "leadModalTitle"
@@ -2045,10 +2562,11 @@ async function editLead(id) {
   if (!modal) {
 
     alert(
-      "Lead modal tidak ditemukan."
+      "Lead modal not found."
     );
 
     return;
+
   }
 
 
@@ -2070,7 +2588,7 @@ async function deleteLead(id) {
 
   const confirmDelete =
     confirm(
-      "Hapus lead ini?"
+      "Delete this lead?"
     );
 
 
@@ -2099,11 +2617,12 @@ async function deleteLead(id) {
       );
 
       alert(
-        "Gagal menghapus lead:\n" +
+        "Failed to delete lead:\n" +
         error.message
       );
 
       return;
+
     }
 
 
@@ -2149,7 +2668,9 @@ async function updateDashboard() {
     } =
       await supabaseClient
         .from("leads")
-        .select("status");
+        .select(
+          "status, appointment, site_survey, quotation, closing"
+        );
 
 
     if (error) {
@@ -2159,6 +2680,7 @@ async function updateDashboard() {
       );
 
       return;
+
     }
 
 
@@ -2166,64 +2688,78 @@ async function updateDashboard() {
       data || [];
 
 
+    // TOTAL
     setText(
       "statTotal",
       dataList.length
     );
 
+
+    // NEW
     setText(
       "statNew",
-      countStatus(
+      countNormalizedStatus(
         dataList,
         "New"
       )
     );
 
+
+    // INTERESTED
     setText(
       "statInterested",
-      countStatus(
+      countNormalizedStatus(
         dataList,
         "Interested"
       )
     );
 
+
+    // FOLLOW UP
     setText(
       "statFollowUp",
-      countStatus(
+      countNormalizedStatus(
         dataList,
-        "Follow-up"
+        "Follow Up"
       )
     );
 
+
+    // APPOINTMENT
     setText(
       "statAppointment",
-      countStatus(
+      countDateField(
         dataList,
-        "Appointment"
+        "appointment"
       )
     );
 
+
+    // SITE SURVEY
     setText(
       "statSiteSurvey",
-      countStatus(
+      countDateField(
         dataList,
-        "Site Survey"
+        "site_survey"
       )
     );
 
+
+    // QUOTATION
     setText(
       "statQuotation",
-      countStatus(
+      countDateField(
         dataList,
-        "Quotation"
+        "quotation"
       )
     );
 
+
+    // CLOSING
     setText(
       "statClosing",
-      countStatus(
-        dataList,
-        "Closing"
+      countClosing(
+        dataList
       )
     );
 
@@ -2239,6 +2775,71 @@ async function updateDashboard() {
 }
 
 
+// ================================
+// COUNT NORMALIZED STATUS
+// ================================
+
+function countNormalizedStatus(
+  data,
+  status
+) {
+
+  return data.filter(
+    item =>
+      normalizeLeadStatus(
+        item.status
+      ) === status
+  ).length;
+
+}
+
+
+// ================================
+// COUNT DATE FIELD
+// ================================
+
+function countDateField(
+  data,
+  field
+) {
+
+  return data.filter(
+    item =>
+      item[field] !== null &&
+      item[field] !== undefined &&
+      item[field] !== ""
+  ).length;
+
+}
+
+
+// ================================
+// COUNT CLOSING
+// ================================
+
+function countClosing(
+  data
+) {
+
+  return data.filter(
+    item =>
+      normalizeLeadStatus(
+        item.status
+      ) === "Closing" ||
+      (
+        item.closing !== null &&
+        item.closing !== undefined &&
+        item.closing !== ""
+      )
+  ).length;
+
+}
+
+
+// ================================
+// OLD HELPER COMPATIBILITY
+// ================================
+
 function countStatus(
   data,
   status
@@ -2246,8 +2847,12 @@ function countStatus(
 
   return data.filter(
     item =>
-      item.status ===
-      status
+      normalizeLeadStatus(
+        item.status
+      ) ===
+      normalizeLeadStatus(
+        status
+      )
   ).length;
 
 }
@@ -2298,6 +2903,7 @@ async function loadSalesUsers() {
       );
 
       return;
+
     }
 
 
@@ -2308,6 +2914,9 @@ async function loadSalesUsers() {
     renderSalesUsers(
       salesUsersData
     );
+
+
+    populateSalesDropdowns();
 
 
   } catch (error) {
@@ -2359,6 +2968,7 @@ function renderSalesUsers(
     `;
 
     return;
+
   }
 
 
@@ -2418,7 +3028,13 @@ function renderSalesUsers(
         </td>
 
         <td>
-          -
+          ${
+            sales.created_at
+              ? formatDateTime(
+                  sales.created_at
+                )
+              : "-"
+          }
         </td>
 
         <td>
@@ -2469,10 +3085,11 @@ function openSalesModal() {
   if (!modal) {
 
     alert(
-      "Sales modal tidak ditemukan."
+      "Sales modal not found."
     );
 
     return;
+
   }
 
 
@@ -2570,10 +3187,11 @@ async function createSales() {
   ) {
 
     alert(
-      "Name, Username dan Password wajib diisi."
+      "Name, username and password are required."
     );
 
     return;
+
   }
 
 
@@ -2582,10 +3200,11 @@ async function createSales() {
   ) {
 
     alert(
-      "Password minimal 6 karakter."
+      "Password must be at least 6 characters."
     );
 
     return;
+
   }
 
 
@@ -2596,16 +3215,17 @@ async function createSales() {
   ) {
 
     alert(
-      "Hanya Admin yang dapat membuat Sales."
+      "Only Admin can create Sales accounts."
     );
 
     return;
+
   }
 
 
   const confirmCreate =
     confirm(
-      `Buat akun Sales "${name}" dengan username "${username}"?`
+      `Create Sales account "${name}" with username "${username}"?`
     );
 
 
@@ -2672,11 +3292,12 @@ async function createSales() {
 
 
       alert(
-        "Gagal membuat Sales:\n\n" +
+        "Failed to create Sales:\n\n" +
         error.message
       );
 
       return;
+
     }
 
 
@@ -2702,11 +3323,12 @@ async function createSales() {
       );
 
       return;
+
     }
 
 
     alert(
-      "Sales berhasil dibuat!\n\n" +
+      "Sales created successfully!\n\n" +
       "Name: " +
       name +
       "\n" +
@@ -2737,7 +3359,7 @@ async function createSales() {
 
 
     alert(
-      "Terjadi kesalahan saat membuat Sales:\n\n" +
+      "An error occurred while creating Sales:\n\n" +
       error.message
     );
 
@@ -2777,7 +3399,7 @@ async function toggleSalesStatus(
 
   const confirmChange =
     confirm(
-      `Ubah status Sales menjadi ${newStatus}?`
+      `Change Sales status to ${newStatus}?`
     );
 
 
@@ -2813,6 +3435,7 @@ async function toggleSalesStatus(
       );
 
       return;
+
     }
 
 
@@ -3053,7 +3676,56 @@ function formatDate(
 
 
     return d.toLocaleDateString(
-      "id-ID",
+      "en-US",
+      {
+        day:
+          "2-digit",
+        month:
+          "2-digit",
+        year:
+          "numeric"
+      }
+    );
+
+
+  } catch {
+
+    return date;
+
+  }
+
+}
+
+
+function formatDateTime(
+  date
+) {
+
+  if (!date)
+    return "-";
+
+
+  try {
+
+    const d =
+      new Date(
+        date
+      );
+
+
+    if (
+      isNaN(
+        d.getTime()
+      )
+    ) {
+
+      return date;
+
+    }
+
+
+    return d.toLocaleDateString(
+      "en-US",
       {
         day:
           "2-digit",
