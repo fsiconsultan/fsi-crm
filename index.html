@@ -7,6 +7,9 @@
   <title>FSI CRM — Sales Management</title>
 
   <link rel="stylesheet" href="style.css">
+
+  <!-- NEW DASHBOARD CSS -->
+  <link rel="stylesheet" href="dashboard.css">
 </head>
 
 <body>
@@ -412,172 +415,262 @@
         class="page-section"
       >
 
-        <!-- STATISTICS -->
+        <!-- =================================================
+             NEW DASHBOARD HEADER
+        ================================================== -->
 
-        <div class="stats-grid">
+        <div class="new-dashboard-header">
 
-          <article class="stat-card">
+          <div>
 
-            <div class="stat-icon blue">
-              <i data-lucide="layers"></i>
+            <span class="new-dashboard-eyebrow">
+              FSI CONSULTANT
+            </span>
+
+            <h1>
+              Dashboard
+            </h1>
+
+            <p>
+              Overview performa CRM dan aktivitas sales
+            </p>
+
+          </div>
+
+
+          <button
+            type="button"
+            class="new-dashboard-refresh"
+            onclick="loadNewDashboard()"
+          >
+
+            <i data-lucide="refresh-cw"></i>
+
+            <span>
+              Refresh
+            </span>
+
+          </button>
+
+        </div>
+
+
+        <!-- =================================================
+             KPI CARDS
+        ================================================== -->
+
+        <div class="new-dashboard-kpi-grid">
+
+          <!-- TOTAL -->
+
+          <article class="new-kpi-card">
+
+            <div class="new-kpi-icon blue">
+              <i data-lucide="users"></i>
             </div>
 
-            <div>
+            <div class="new-kpi-content">
 
               <span>
                 Total Leads
               </span>
 
-              <strong id="statTotal">
+              <strong id="dashTotalLeads">
                 0
               </strong>
+
+              <small>
+                Semua leads
+              </small>
 
             </div>
 
           </article>
 
 
-          <article class="stat-card">
+          <!-- NEW -->
 
-            <div class="stat-icon slate">
+          <article class="new-kpi-card">
+
+            <div class="new-kpi-icon cyan">
               <i data-lucide="user-plus"></i>
             </div>
 
-            <div>
+            <div class="new-kpi-content">
 
               <span>
                 New Leads
               </span>
 
-              <strong id="statNew">
+              <strong id="dashNewLeads">
                 0
               </strong>
+
+              <small>
+                Lead baru
+              </small>
 
             </div>
 
           </article>
 
 
-          <article class="stat-card">
+          <!-- INTERESTED -->
 
-            <div class="stat-icon green">
+          <article class="new-kpi-card">
+
+            <div class="new-kpi-icon green">
               <i data-lucide="heart"></i>
             </div>
 
-            <div>
+            <div class="new-kpi-content">
 
               <span>
                 Interested
               </span>
 
-              <strong id="statInterested">
+              <strong id="dashInterested">
                 0
               </strong>
+
+              <small>
+                Prospek tertarik
+              </small>
 
             </div>
 
           </article>
 
 
-          <article class="stat-card">
+          <!-- FOLLOW UP -->
 
-            <div class="stat-icon orange">
-              <i data-lucide="phone-forwarded"></i>
+          <article class="new-kpi-card">
+
+            <div class="new-kpi-icon orange">
+              <i data-lucide="phone-call"></i>
             </div>
 
-            <div>
+            <div class="new-kpi-content">
 
               <span>
                 Follow Up
               </span>
 
-              <strong id="statFollowUp">
+              <strong id="dashFollowUp">
                 0
               </strong>
+
+              <small>
+                Perlu ditindaklanjuti
+              </small>
 
             </div>
 
           </article>
 
 
-          <article class="stat-card">
+          <!-- APPOINTMENT -->
 
-            <div class="stat-icon violet">
+          <article class="new-kpi-card">
+
+            <div class="new-kpi-icon purple">
               <i data-lucide="calendar-check"></i>
             </div>
 
-            <div>
+            <div class="new-kpi-content">
 
               <span>
                 Appointment
               </span>
 
-              <strong id="statAppointment">
+              <strong id="dashAppointment">
                 0
               </strong>
+
+              <small>
+                Jadwal appointment
+              </small>
 
             </div>
 
           </article>
 
 
-          <article class="stat-card">
+          <!-- SITE SURVEY -->
 
-            <div class="stat-icon cyan">
+          <article class="new-kpi-card">
+
+            <div class="new-kpi-icon indigo">
               <i data-lucide="map-pin"></i>
             </div>
 
-            <div>
+            <div class="new-kpi-content">
 
               <span>
                 Site Survey
               </span>
 
-              <strong id="statSiteSurvey">
+              <strong id="dashSiteSurvey">
                 0
               </strong>
+
+              <small>
+                Survey lokasi
+              </small>
 
             </div>
 
           </article>
 
 
-          <article class="stat-card">
+          <!-- QUOTATION -->
 
-            <div class="stat-icon amber">
+          <article class="new-kpi-card">
+
+            <div class="new-kpi-icon yellow">
               <i data-lucide="file-text"></i>
             </div>
 
-            <div>
+            <div class="new-kpi-content">
 
               <span>
                 Quotation
               </span>
 
-              <strong id="statQuotation">
+              <strong id="dashQuotation">
                 0
               </strong>
+
+              <small>
+                Penawaran dibuat
+              </small>
 
             </div>
 
           </article>
 
 
-          <article class="stat-card">
+          <!-- CLOSING -->
 
-            <div class="stat-icon emerald">
+          <article class="new-kpi-card">
+
+            <div class="new-kpi-icon dark-green">
               <i data-lucide="badge-check"></i>
             </div>
 
-            <div>
+            <div class="new-kpi-content">
 
               <span>
                 Closing
               </span>
 
-              <strong id="statClosing">
+              <strong id="dashClosing">
                 0
               </strong>
+
+              <small>
+                Deal berhasil
+              </small>
 
             </div>
 
@@ -586,21 +679,433 @@
         </div>
 
 
-        <!-- DASHBOARD OVERVIEW -->
+        <!-- =================================================
+             PIPELINE + STATUS
+        ================================================== -->
 
-        <div class="dashboard-panel">
+        <div class="new-dashboard-main-grid">
 
-          <div class="panel-title">
 
-            <div>
+          <!-- PIPELINE -->
 
-              <h3>
-                CRM Overview
-              </h3>
+          <div class="new-dashboard-panel">
 
-              <p>
-                Lead activity summary based on the currently logged-in account.
-              </p>
+            <div class="new-panel-heading">
+
+              <div>
+
+                <h3>
+                  Lead Pipeline
+                </h3>
+
+                <p>
+                  Distribusi leads berdasarkan status
+                </p>
+
+              </div>
+
+              <i data-lucide="bar-chart-3"></i>
+
+            </div>
+
+
+            <div class="new-pipeline-list">
+
+              <!-- NEW -->
+
+              <div class="new-pipeline-row">
+
+                <div class="new-pipeline-label">
+
+                  <span class="pipeline-dot blue"></span>
+
+                  <span>
+                    New
+                  </span>
+
+                  <strong id="pipeNew">
+                    0
+                  </strong>
+
+                </div>
+
+                <div class="new-pipeline-track">
+
+                  <div
+                    id="pipeNewBar"
+                    class="new-pipeline-bar blue"
+                  ></div>
+
+                </div>
+
+              </div>
+
+
+              <!-- INTERESTED -->
+
+              <div class="new-pipeline-row">
+
+                <div class="new-pipeline-label">
+
+                  <span class="pipeline-dot green"></span>
+
+                  <span>
+                    Interested
+                  </span>
+
+                  <strong id="pipeInterested">
+                    0
+                  </strong>
+
+                </div>
+
+                <div class="new-pipeline-track">
+
+                  <div
+                    id="pipeInterestedBar"
+                    class="new-pipeline-bar green"
+                  ></div>
+
+                </div>
+
+              </div>
+
+
+              <!-- FOLLOW UP -->
+
+              <div class="new-pipeline-row">
+
+                <div class="new-pipeline-label">
+
+                  <span class="pipeline-dot orange"></span>
+
+                  <span>
+                    Follow Up
+                  </span>
+
+                  <strong id="pipeFollowUp">
+                    0
+                  </strong>
+
+                </div>
+
+                <div class="new-pipeline-track">
+
+                  <div
+                    id="pipeFollowUpBar"
+                    class="new-pipeline-bar orange"
+                  ></div>
+
+                </div>
+
+              </div>
+
+
+              <!-- NOT INTERESTED -->
+
+              <div class="new-pipeline-row">
+
+                <div class="new-pipeline-label">
+
+                  <span class="pipeline-dot red"></span>
+
+                  <span>
+                    Not Interested
+                  </span>
+
+                  <strong id="pipeNotInterested">
+                    0
+                  </strong>
+
+                </div>
+
+                <div class="new-pipeline-track">
+
+                  <div
+                    id="pipeNotInterestedBar"
+                    class="new-pipeline-bar red"
+                  ></div>
+
+                </div>
+
+              </div>
+
+
+              <!-- CLOSING -->
+
+              <div class="new-pipeline-row">
+
+                <div class="new-pipeline-label">
+
+                  <span class="pipeline-dot dark-green"></span>
+
+                  <span>
+                    Closing
+                  </span>
+
+                  <strong id="pipeClosing">
+                    0
+                  </strong>
+
+                </div>
+
+                <div class="new-pipeline-track">
+
+                  <div
+                    id="pipeClosingBar"
+                    class="new-pipeline-bar dark-green"
+                  ></div>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <!-- STATUS -->
+
+          <div class="new-dashboard-panel">
+
+            <div class="new-panel-heading">
+
+              <div>
+
+                <h3>
+                  Lead Status
+                </h3>
+
+                <p>
+                  Ringkasan status leads
+                </p>
+
+              </div>
+
+              <i data-lucide="pie-chart"></i>
+
+            </div>
+
+
+            <div class="new-status-visual">
+
+              <div class="new-status-donut">
+
+                <div class="new-status-donut-inner">
+
+                  <strong id="dashStatusTotal">
+                    0
+                  </strong>
+
+                  <span>
+                    Total
+                  </span>
+
+                </div>
+
+              </div>
+
+            </div>
+
+
+            <div class="new-status-legend">
+
+              <div class="new-status-item">
+
+                <span>
+
+                  <i class="legend-dot blue"></i>
+
+                  New
+
+                </span>
+
+                <strong id="legendNew">
+                  0
+                </strong>
+
+              </div>
+
+
+              <div class="new-status-item">
+
+                <span>
+
+                  <i class="legend-dot green"></i>
+
+                  Interested
+
+                </span>
+
+                <strong id="legendInterested">
+                  0
+                </strong>
+
+              </div>
+
+
+              <div class="new-status-item">
+
+                <span>
+
+                  <i class="legend-dot orange"></i>
+
+                  Follow Up
+
+                </span>
+
+                <strong id="legendFollowUp">
+                  0
+                </strong>
+
+              </div>
+
+
+              <div class="new-status-item">
+
+                <span>
+
+                  <i class="legend-dot dark-green"></i>
+
+                  Closing
+
+                </span>
+
+                <strong id="legendClosing">
+                  0
+                </strong>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- =================================================
+             SALES PERFORMANCE + RECENT ACTIVITY
+        ================================================== -->
+
+        <div class="new-dashboard-bottom-grid">
+
+
+          <!-- SALES PERFORMANCE -->
+
+          <div class="new-dashboard-panel">
+
+            <div class="new-panel-heading">
+
+              <div>
+
+                <h3>
+                  Sales Performance
+                </h3>
+
+                <p>
+                  Jumlah leads berdasarkan Sales
+                </p>
+
+              </div>
+
+              <i data-lucide="users-round"></i>
+
+            </div>
+
+
+            <div
+              id="dashSalesPerformance"
+              class="new-sales-performance"
+            >
+
+              <div class="new-dashboard-loading">
+                Loading...
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <!-- RECENT ACTIVITY -->
+
+          <div class="new-dashboard-panel">
+
+            <div class="new-panel-heading">
+
+              <div>
+
+                <h3>
+                  Recent Activity
+                </h3>
+
+                <p>
+                  Aktivitas lead terbaru
+                </p>
+
+              </div>
+
+              <i data-lucide="activity"></i>
+
+            </div>
+
+
+            <div
+              id="dashRecentActivity"
+              class="new-recent-activity"
+            >
+
+              <div class="new-dashboard-loading">
+                Loading...
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- =================================================
+             LEGACY DASHBOARD IDs
+             
+             JANGAN DIHAPUS.
+             script.js lama masih menggunakan ID ini.
+             Dibuat hidden agar fungsi lama tetap aman.
+        ================================================== -->
+
+        <div
+          id="legacyDashboardCompatibility"
+          style="display:none !important;"
+          aria-hidden="true"
+        >
+
+          <span id="statTotal">0</span>
+          <span id="statNew">0</span>
+          <span id="statInterested">0</span>
+          <span id="statFollowUp">0</span>
+          <span id="statAppointment">0</span>
+          <span id="statSiteSurvey">0</span>
+          <span id="statQuotation">0</span>
+          <span id="statClosing">0</span>
+
+          <div class="dashboard-panel">
+
+            <div class="panel-title">
+
+              <div>
+
+                <h3>
+                  CRM Overview
+                </h3>
+
+                <p>
+                  Lead activity summary based on the currently logged-in account.
+                </p>
+
+              </div>
 
             </div>
 
@@ -1434,7 +1939,11 @@
 
   <script src="https://unpkg.com/lucide@latest"></script>
 
+  <!-- MASTER SCRIPT - JANGAN DIUBAH -->
   <script src="script.js"></script>
+
+  <!-- NEW DASHBOARD SCRIPT -->
+  <script src="dashboard.js"></script>
 
 
   <!-- ================================
@@ -1619,4 +2128,3 @@
 
 </body>
 </html>
-```
