@@ -24,6 +24,11 @@ let currentProfile = null;
 let leadsData = [];
 let salesUsersData = [];
 
+// PAGINATION
+let currentPage = 1;
+const pageSize = 20;
+let totalLeadsCount = 0;
+
 
 // ================================
 // START APP
@@ -264,12 +269,9 @@ async function loadProfile() {
 
     showApp();
 
-    // Load daftar Sales terlebih dahulu
-    // agar nama Sales dan Created By
-    // bisa ditampilkan di Leads
     await loadSalesLookup();
 
-    await loadLeads();
+    await loadLeads(1);
 
     await updateDashboard();
 
@@ -561,7 +563,7 @@ async function showLeads() {
   );
 
 
-  await loadLeads();
+  await loadLeads(1);
 
 }
 
@@ -611,12 +613,6 @@ async function showSales() {
 
 // ================================
 // LOAD SALES LOOKUP
-// ================================
-// Dipakai untuk mencari nama Sales
-// berdasarkan sales_users.id
-//
-// sales_id  -> nama Sales
-// created_by -> nama pembuat Lead
 // ================================
 
 async function loadSalesLookup() {
@@ -713,10 +709,20 @@ function getSalesName(id) {
 // ================================
 // LOAD LEADS
 // ================================
+// SEKARANG MENGGUNAKAN PAGINATION
+// 20 LEAD PER HALAMAN
+// ================================
 
-async function loadLeads() {
+async function loadLeads(page = 1) {
 
   try {
+
+    currentPage =
+      Math.max(
+        1,
+        Number(page) || 1
+      );
+
 
     // Pastikan daftar Sales tersedia
     if (
@@ -729,18 +735,38 @@ async function loadLeads() {
     }
 
 
+    const from =
+      (currentPage - 1) *
+      pageSize;
+
+    const to =
+      from +
+      pageSize -
+      1;
+
+
     const {
       data,
-      error
+      error,
+      count
     } =
       await supabaseClient
         .from("leads")
-        .select("*")
+        .select(
+          "*",
+          {
+            count: "exact"
+          }
+        )
         .order(
           "created_at",
           {
             ascending: false
           }
+        )
+        .range(
+          from,
+          to
         );
 
 
@@ -763,9 +789,16 @@ async function loadLeads() {
       data || [];
 
 
+    totalLeadsCount =
+      count || 0;
+
+
     renderLeads(
       leadsData
     );
+
+
+    updatePagination();
 
 
     await updateDashboard();
@@ -779,6 +812,128 @@ async function loadLeads() {
     );
 
   }
+
+}
+
+
+// ================================
+// PAGINATION
+// ================================
+
+function updatePagination() {
+
+  const paginationInfo =
+    document.getElementById(
+      "paginationInfo"
+    );
+
+  const pageIndicator =
+    document.getElementById(
+      "pageIndicator"
+    );
+
+  const prevBtn =
+    document.getElementById(
+      "prevBtn"
+    );
+
+  const nextBtn =
+    document.getElementById(
+      "nextBtn"
+    );
+
+
+  const totalPages =
+    Math.max(
+      1,
+      Math.ceil(
+        totalLeadsCount /
+        pageSize
+      )
+    );
+
+
+  if (paginationInfo) {
+
+    const start =
+      totalLeadsCount === 0
+        ? 0
+        : (
+            (currentPage - 1) *
+            pageSize
+          ) + 1;
+
+
+    const end =
+      Math.min(
+        currentPage *
+          pageSize,
+        totalLeadsCount
+      );
+
+
+    paginationInfo.textContent =
+      `${start}-${end} dari ${totalLeadsCount} leads`;
+
+  }
+
+
+  if (pageIndicator) {
+
+    pageIndicator.textContent =
+      `Page ${currentPage} / ${totalPages}`;
+
+  }
+
+
+  if (prevBtn) {
+
+    prevBtn.disabled =
+      currentPage <= 1;
+
+  }
+
+
+  if (nextBtn) {
+
+    nextBtn.disabled =
+      currentPage >= totalPages;
+
+  }
+
+}
+
+
+function changePage(direction) {
+
+  const totalPages =
+    Math.max(
+      1,
+      Math.ceil(
+        totalLeadsCount /
+        pageSize
+      )
+    );
+
+
+  const newPage =
+    currentPage +
+    Number(direction);
+
+
+  if (
+    newPage < 1 ||
+    newPage > totalPages
+  ) {
+
+    return;
+
+  }
+
+
+  loadLeads(
+    newPage
+  );
 
 }
 
@@ -830,14 +985,12 @@ function renderLeads(data) {
         );
 
 
-      // Cari nama Sales
       const salesName =
         getSalesName(
           lead.sales_id
         );
 
 
-      // Cari nama pembuat Lead
       const createdByName =
         getSalesName(
           lead.created_by
@@ -1424,7 +1577,9 @@ async function saveLead() {
 
     closeLeadModal();
 
-    await loadLeads();
+    await loadLeads(
+      currentPage
+    );
 
     await updateDashboard();
 
@@ -1666,7 +1821,9 @@ async function deleteLead(id) {
     }
 
 
-    await loadLeads();
+    await loadLeads(
+      currentPage
+    );
 
     await updateDashboard();
 
@@ -2276,11 +2433,11 @@ async function createSales() {
 
     await loadSalesUsers();
 
-    // Refresh lookup supaya Sales baru
-    // langsung tersedia untuk Leads
     await loadSalesLookup();
 
-    await loadLeads();
+    await loadLeads(
+      currentPage
+    );
 
 
   } catch (error) {
@@ -2375,7 +2532,9 @@ async function toggleSalesStatus(
 
     await loadSalesLookup();
 
-    await loadLeads();
+    await loadLeads(
+      currentPage
+    );
 
 
   } catch (error) {
@@ -2559,6 +2718,13 @@ async function logout() {
 
   salesUsersData =
     [];
+
+
+  currentPage =
+    1;
+
+  totalLeadsCount =
+    0;
 
 
   showLogin();
