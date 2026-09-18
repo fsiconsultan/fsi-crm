@@ -1,4 +1,3 @@
-```javascript
 // ================================
 // CRM FSI - SUPABASE CONFIG
 // ================================
@@ -865,6 +864,29 @@ async function loadSalesLookup() {
       data || [];
 
 
+    // ================================
+    // SORT SALES NAME A-Z
+    // ================================
+    salesUsersData.sort(
+      (a, b) =>
+        String(
+          a.name ||
+          a.username ||
+          ""
+        ).localeCompare(
+          String(
+            b.name ||
+            b.username ||
+            ""
+          ),
+          undefined,
+          {
+            sensitivity: "base"
+          }
+        )
+    );
+
+
     populateSalesDropdowns();
 
 
@@ -891,6 +913,30 @@ async function loadSalesLookup() {
 // ================================
 
 function populateSalesDropdowns() {
+
+  // ================================
+  // SORT SALES A-Z
+  // ================================
+
+  salesUsersData.sort(
+    (a, b) =>
+      String(
+        a.name ||
+        a.username ||
+        ""
+      ).localeCompare(
+        String(
+          b.name ||
+          b.username ||
+          ""
+        ),
+        undefined,
+        {
+          sensitivity: "base"
+        }
+      )
+  );
+
 
   // ================================
   // ADMIN SALES FILTER
@@ -1644,16 +1690,12 @@ async function loadLeads(page = 1) {
       1;
 
 
-    // ================================
-    // SORT CUSTOMER NAME A-Z
-    // ================================
-
     query =
       query
         .order(
-          "customer_name",
+          "created_at",
           {
-            ascending: true
+            ascending: false
           }
         )
         .range(
@@ -3056,6 +3098,30 @@ async function loadSalesUsers() {
       data || [];
 
 
+    // ================================
+    // SORT SALES NAME A-Z
+    // ================================
+
+    salesUsersData.sort(
+      (a, b) =>
+        String(
+          a.name ||
+          a.username ||
+          ""
+        ).localeCompare(
+          String(
+            b.name ||
+            b.username ||
+            ""
+          ),
+          undefined,
+          {
+            sensitivity: "base"
+          }
+        )
+    );
+
+
     renderSalesUsers(
       salesUsersData
     );
@@ -4128,4 +4194,3 @@ supabaseClient.auth.onAuthStateChange(
 
   }
 );
-```
