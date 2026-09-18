@@ -271,6 +271,8 @@ async function loadProfile() {
 
     await loadSalesLookup();
 
+    await loadFilterOptions();
+
     await loadLeads(1);
 
     await updateDashboard();
@@ -563,6 +565,8 @@ async function showLeads() {
   );
 
 
+  await loadFilterOptions();
+
   await loadLeads(1);
 
 }
@@ -707,6 +711,203 @@ function getSalesName(id) {
 
 
 // ================================
+// LOAD FILTER OPTIONS
+// ================================
+
+async function loadFilterOptions() {
+
+  try {
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient
+        .from("leads")
+        .select(
+          "business, location"
+        );
+
+
+    if (error) {
+
+      console.error(
+        "Load filter options error:",
+        error
+      );
+
+      return;
+
+    }
+
+
+    const leads =
+      data || [];
+
+
+    const businesses =
+      [
+        ...new Set(
+          leads
+            .map(
+              lead =>
+                getValue(
+                  lead.business
+                ).trim()
+            )
+            .filter(
+              value =>
+                value !== ""
+            )
+        )
+      ].sort(
+        (a, b) =>
+          a.localeCompare(
+            b,
+            "id"
+          )
+      );
+
+
+    const locations =
+      [
+        ...new Set(
+          leads
+            .map(
+              lead =>
+                getValue(
+                  lead.location
+                ).trim()
+            )
+            .filter(
+              value =>
+                value !== ""
+            )
+        )
+      ].sort(
+        (a, b) =>
+          a.localeCompare(
+            b,
+            "id"
+          )
+      );
+
+
+    populateFilter(
+      "businessFilter",
+      businesses,
+      "All Business"
+    );
+
+
+    populateFilter(
+      "locationFilter",
+      locations,
+      "All Location"
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "loadFilterOptions error:",
+      error
+    );
+
+  }
+
+}
+
+
+// ================================
+// POPULATE FILTER DROPDOWN
+// ================================
+
+function populateFilter(
+  id,
+  values,
+  defaultText
+) {
+
+  const select =
+    document.getElementById(
+      id
+    );
+
+
+  if (!select)
+    return;
+
+
+  const currentValue =
+    select.value;
+
+
+  select.innerHTML = "";
+
+
+  const defaultOption =
+    document.createElement(
+      "option"
+    );
+
+
+  defaultOption.value =
+    "";
+
+  defaultOption.textContent =
+    defaultText;
+
+
+  select.appendChild(
+    defaultOption
+  );
+
+
+  values.forEach(
+    value => {
+
+      const option =
+        document.createElement(
+          "option"
+        );
+
+
+      option.value =
+        value;
+
+      option.textContent =
+        value;
+
+
+      select.appendChild(
+        option
+      );
+
+    }
+  );
+
+
+  if (
+    values.includes(
+      currentValue
+    )
+  ) {
+
+    select.value =
+      currentValue;
+
+  } else {
+
+    select.value =
+      "";
+
+  }
+
+}
+
+
+// ================================
 // LOAD LEADS
 // ================================
 // PAGINATION
@@ -734,6 +935,139 @@ async function loadLeads(page = 1) {
     }
 
 
+    // ================================
+    // GET FILTER VALUES
+    // ================================
+
+    const search =
+      document
+        .getElementById(
+          "leadSearch"
+        )
+        ?.value
+        .trim() || "";
+
+
+    const status =
+      document
+        .getElementById(
+          "statusFilter"
+        )
+        ?.value || "";
+
+
+    const business =
+      document
+        .getElementById(
+          "businessFilter"
+        )
+        ?.value || "";
+
+
+    const location =
+      document
+        .getElementById(
+          "locationFilter"
+        )
+        ?.value || "";
+
+
+    // ================================
+    // SUPABASE QUERY
+    // ================================
+
+    let query =
+      supabaseClient
+        .from("leads")
+        .select(
+          "*",
+          {
+            count: "exact"
+          }
+        );
+
+
+    // ================================
+    // SEARCH
+    // Customer / Phone / Business / Location
+    // ================================
+
+    if (search) {
+
+      const safeSearch =
+        search
+          .replace(
+            /%/g,
+            ""
+          )
+          .replace(
+            /,/g,
+            " "
+          );
+
+
+      query =
+        query.or(
+          [
+            `customer_name.ilike.%${safeSearch}%`,
+            `phone.ilike.%${safeSearch}%`,
+            `business.ilike.%${safeSearch}%`,
+            `location.ilike.%${safeSearch}%`
+          ].join(",")
+        );
+
+    }
+
+
+    // ================================
+    // STATUS FILTER
+    // ================================
+
+    if (status) {
+
+      query =
+        query.eq(
+          "status",
+          status
+        );
+
+    }
+
+
+    // ================================
+    // BUSINESS FILTER
+    // ================================
+
+    if (business) {
+
+      query =
+        query.eq(
+          "business",
+          business
+        );
+
+    }
+
+
+    // ================================
+    // LOCATION FILTER
+    // ================================
+
+    if (location) {
+
+      query =
+        query.eq(
+          "location",
+          location
+        );
+
+    }
+
+
+    // ================================
+    // PAGINATION
+    // ================================
+
     const from =
       (currentPage - 1) *
       pageSize;
@@ -744,19 +1078,8 @@ async function loadLeads(page = 1) {
       1;
 
 
-    const {
-      data,
-      error,
-      count
-    } =
-      await supabaseClient
-        .from("leads")
-        .select(
-          "*",
-          {
-            count: "exact"
-          }
-        )
+    query =
+      query
         .order(
           "created_at",
           {
@@ -767,6 +1090,14 @@ async function loadLeads(page = 1) {
           from,
           to
         );
+
+
+    const {
+      data,
+      error,
+      count
+    } =
+      await query;
 
 
     if (error) {
@@ -798,9 +1129,6 @@ async function loadLeads(page = 1) {
 
 
     updatePagination();
-
-
-    await updateDashboard();
 
 
   } catch (error) {
@@ -1132,84 +1460,23 @@ function renderLeads(data) {
 
 function filterLeads() {
 
-  const search =
-    document
-      .getElementById(
-        "leadSearch"
-      )
-      ?.value
-      .toLowerCase()
-      .trim() || "";
+  // Setiap filter berubah,
+  // kembali ke halaman pertama.
+  loadLeads(1);
+
+}
 
 
-  const status =
-    document.getElementById(
-      "statusFilter"
-    )?.value || "";
+// ================================
+// SEARCH INPUT
+// ================================
 
+function onSearchInput() {
 
-  const filtered =
-    leadsData.filter(
-      lead => {
-
-        const customer =
-          getValue(
-            lead.customer_name
-          ).toLowerCase();
-
-
-        const phone =
-          getValue(
-            lead.phone
-          ).toLowerCase();
-
-
-        const business =
-          getValue(
-            lead.business
-          ).toLowerCase();
-
-
-        const location =
-          getValue(
-            lead.location
-          ).toLowerCase();
-
-
-        const matchesSearch =
-          !search ||
-          customer.includes(
-            search
-          ) ||
-          phone.includes(
-            search
-          ) ||
-          business.includes(
-            search
-          ) ||
-          location.includes(
-            search
-          );
-
-
-        const matchesStatus =
-          !status ||
-          lead.status ===
-            status;
-
-
-        return (
-          matchesSearch &&
-          matchesStatus
-        );
-
-      }
-    );
-
-
-  renderLeads(
-    filtered
-  );
+  // Saat mengetik search,
+  // query ulang ke Supabase
+  // dan kembali ke halaman pertama.
+  loadLeads(1);
 
 }
 
@@ -1588,6 +1855,8 @@ async function saveLead() {
 
     closeLeadModal();
 
+    await loadFilterOptions();
+
     await loadLeads(
       currentPage
     );
@@ -1837,6 +2106,8 @@ async function deleteLead(id) {
       return;
     }
 
+
+    await loadFilterOptions();
 
     await loadLeads(
       currentPage
