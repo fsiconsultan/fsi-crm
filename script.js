@@ -864,29 +864,6 @@ async function loadSalesLookup() {
       data || [];
 
 
-    // ================================
-    // SORT SALES NAME A-Z
-    // ================================
-    salesUsersData.sort(
-      (a, b) =>
-        String(
-          a.name ||
-          a.username ||
-          ""
-        ).localeCompare(
-          String(
-            b.name ||
-            b.username ||
-            ""
-          ),
-          undefined,
-          {
-            sensitivity: "base"
-          }
-        )
-    );
-
-
     populateSalesDropdowns();
 
 
@@ -913,30 +890,6 @@ async function loadSalesLookup() {
 // ================================
 
 function populateSalesDropdowns() {
-
-  // ================================
-  // SORT SALES A-Z
-  // ================================
-
-  salesUsersData.sort(
-    (a, b) =>
-      String(
-        a.name ||
-        a.username ||
-        ""
-      ).localeCompare(
-        String(
-          b.name ||
-          b.username ||
-          ""
-        ),
-        undefined,
-        {
-          sensitivity: "base"
-        }
-      )
-  );
-
 
   // ================================
   // ADMIN SALES FILTER
@@ -3099,7 +3052,7 @@ async function loadSalesUsers() {
 
 
     // ================================
-    // SORT SALES NAME A-Z
+    // SORT SALES NAMES A-Z
     // ================================
 
     salesUsersData.sort(
