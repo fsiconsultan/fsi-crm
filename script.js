@@ -1,3 +1,4 @@
+```javascript
 // ================================
 // CRM FSI - SUPABASE CONFIG
 // ================================
@@ -1643,12 +1644,16 @@ async function loadLeads(page = 1) {
       1;
 
 
+    // ================================
+    // SORT CUSTOMER NAME A-Z
+    // ================================
+
     query =
       query
         .order(
-          "created_at",
+          "customer_name",
           {
-            ascending: false
+            ascending: true
           }
         )
         .range(
@@ -4123,3 +4128,4 @@ supabaseClient.auth.onAuthStateChange(
 
   }
 );
+```
