@@ -1,401 +1,318 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CRM FSI</title>
-
+  
+  <!-- Google Fonts & Style -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 
-  <!-- Supabase -->
+  <!-- Supabase JS Client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-
 <body>
 
-  <!-- LOGIN -->
-  <div id="loginPage" class="page">
-    <div class="login-box">
+  <!-- ================================
+       LOGIN PAGE
+       ================================ -->
+  <div id="loginPage" class="login-page">
+    <div class="login-card">
+      <div class="login-header">
+        <h2>CRM FSI</h2>
+        <p>Silakan masuk ke akun Anda</p>
+      </div>
 
-      <div class="logo">FSI</div>
+      <div class="login-form">
+        <div class="form-group">
+          <label for="loginUsername">Username</label>
+          <input type="text" id="loginUsername" class="input-text" placeholder="Masukkan username">
+        </div>
 
-      <h1>CRM FSI</h1>
+        <div class="form-group" style="margin-top: 1rem;">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" class="input-text" placeholder="Masukkan password">
+        </div>
 
-      <p class="subtitle">
-        French Solar Industry
-      </p>
-
-      <input
-        id="loginUsername"
-        type="text"
-        placeholder="Username"
-      >
-
-      <input
-        id="loginPassword"
-        type="password"
-        placeholder="Password"
-      >
-
-      <button
-        onclick="login()"
-        class="primary-btn">
-        LOGIN
-      </button>
-
-      <div id="loginMessage" class="message"></div>
-
+        <button type="button" class="primary-btn" style="width: 100%; margin-top: 1.5rem;" onclick="login()">Login</button>
+        <div id="loginMessage" class="login-message"></div>
+      </div>
     </div>
   </div>
 
-
-  <!-- APP -->
-  <div id="app" style="display:none">
-
+  <!-- ================================
+       MAIN APPLICATION
+       ================================ -->
+  <div id="app" class="app-container" style="display: none;">
+    
     <!-- SIDEBAR -->
     <aside class="sidebar">
-
-      <div class="brand">
-        <strong>FSI CRM</strong>
+      <div class="sidebar-header">
+        <h3>CRM FSI</h3>
       </div>
 
-      <div id="userInfo" class="user-info"></div>
+      <div id="userInfo" class="user-info">
+        <!-- User info rendered dynamically -->
+      </div>
 
-      <nav>
-
-        <button onclick="showDashboard()">
-          Dashboard
-        </button>
-
-        <button onclick="showLeads()">
-          My Leads
-        </button>
-
-        <button
-          id="manageSalesBtn"
-          onclick="showSales()"
-          style="display:none">
-          Manage Sales
-        </button>
-
+      <nav class="nav-menu">
+        <button class="nav-item" onclick="showDashboard()">Dashboard</button>
+        <button class="nav-item" onclick="showLeads()">My Leads</button>
+        <button id="manageSalesBtn" class="nav-item" style="display: none;" onclick="showSales()">Manage Sales</button>
+        <button class="nav-item logout-btn" onclick="logout()">Logout</button>
       </nav>
-
-      <button
-        onclick="logout()"
-        class="logout-btn">
-        Logout
-      </button>
-
     </aside>
 
-
-    <!-- MAIN -->
-    <main class="main">
-
-      <!-- TOPBAR -->
-      <header class="topbar">
-
-        <h2 id="pageTitle">
-          Dashboard
-        </h2>
-
-        <span id="currentUser"></span>
-
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+      <header class="top-header">
+        <h1 id="pageTitle">Dashboard</h1>
+        <span id="currentUser" style="font-size: 0.875rem; color: var(--text-muted); font-weight: 500;"></span>
       </header>
 
-
-      <!-- DASHBOARD -->
-      <section
-        id="dashboardPage"
-        class="content">
-
-        <div class="stats-grid">
-
-          <div class="stat-card">
-            <span>Total Leads</span>
-            <strong id="statTotal">0</strong>
+      <div class="content-body">
+        
+        <!-- DASHBOARD PAGE -->
+        <div id="dashboardPage">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <h4>Total Leads</h4>
+              <div id="statTotal" class="value">0</div>
+            </div>
+            <div class="stat-card">
+              <h4>New</h4>
+              <div id="statNew" class="value">0</div>
+            </div>
+            <div class="stat-card">
+              <h4>Interested</h4>
+              <div id="statInterested" class="value">0</div>
+            </div>
+            <div class="stat-card">
+              <h4>Follow-up</h4>
+              <div id="statFollowUp" class="value">0</div>
+            </div>
+            <div class="stat-card">
+              <h4>Appointment</h4>
+              <div id="statAppointment" class="value">0</div>
+            </div>
+            <div class="stat-card">
+              <h4>Site Survey</h4>
+              <div id="statSiteSurvey" class="value">0</div>
+            </div>
+            <div class="stat-card">
+              <h4>Quotation</h4>
+              <div id="statQuotation" class="value">0</div>
+            </div>
+            <div class="stat-card">
+              <h4>Closing</h4>
+              <div id="statClosing" class="value">0</div>
+            </div>
           </div>
-
-          <div class="stat-card">
-            <span>New</span>
-            <strong id="statNew">0</strong>
-          </div>
-
-          <div class="stat-card">
-            <span>Interested</span>
-            <strong id="statInterested">0</strong>
-          </div>
-
-          <div class="stat-card">
-            <span>Follow-up</span>
-            <strong id="statFollowUp">0</strong>
-          </div>
-
-          <div class="stat-card">
-            <span>Appointment</span>
-            <strong id="statAppointment">0</strong>
-          </div>
-
-          <div class="stat-card">
-            <span>Site Survey</span>
-            <strong id="statSiteSurvey">0</strong>
-          </div>
-
-          <div class="stat-card">
-            <span>Quotation</span>
-            <strong id="statQuotation">0</strong>
-          </div>
-
-          <div class="stat-card">
-            <span>Closing</span>
-            <strong id="statClosing">0</strong>
-          </div>
-
-        </div>
-      </section>
-
-
-      <!-- LEADS -->
-      <section
-        id="leadsPage"
-        class="content"
-        style="display:none">
-
-        <div class="toolbar">
-
-          <input
-            id="leadSearch"
-            placeholder="Search customer / phone..."
-            oninput="filterLeads()"
-          >
-
-          <select
-            id="statusFilter"
-            onchange="filterLeads()">
-
-            <option value="">All Status</option>
-            <option>New</option>
-            <option>Contacted</option>
-            <option>Interested</option>
-            <option>Follow-up</option>
-            <option>Appointment</option>
-            <option>Site Survey</option>
-            <option>Quotation</option>
-            <option>SPK</option>
-            <option>Closing</option>
-            <option>Not Interested</option>
-
-          </select>
-
-          <button
-            class="primary-btn"
-            onclick="openLeadModal()">
-            + Add Lead
-          </button>
-
         </div>
 
+        <!-- LEADS PAGE -->
+        <div id="leadsPage" style="display: none;">
+          <div class="toolbar">
+            <div class="filter-group">
+              <input type="text" id="leadSearch" class="input-text" placeholder="Cari nama, telp, bisnis, lokasi..." oninput="filterLeads()">
+              <select id="statusFilter" class="select-input" onchange="filterLeads()">
+                <option value="">Semua Status</option>
+                <option value="New">New</option>
+                <option value="Interested">Interested</option>
+                <option value="Follow-up">Follow-up</option>
+                <option value="Appointment">Appointment</option>
+                <option value="Site Survey">Site Survey</option>
+                <option value="Quotation">Quotation</option>
+                <option value="Closing">Closing</option>
+              </select>
+            </div>
+            <button class="primary-btn" onclick="openLeadModal()">+ Add Lead</button>
+          </div>
 
-        <div class="table-wrapper">
-
-          <table>
-
-            <thead>
-              <tr>
-                <th>Customer</th>
-                <th>Phone</th>
-                <th>Business</th>
-                <th>Location</th>
-
-                <!-- TAMBAHAN -->
-                <th>Sales</th>
-                <th>Created By</th>
-
-                <th>Status</th>
-                <th>Follow-up</th>
-                <th>Appointment</th>
-                <th>Quotation</th>
-                <th>Closing</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-
-            <tbody id="leadsTable"></tbody>
-
-          </table>
-
-        </div>
-      </section>
-
-
-      <!-- MANAGE SALES -->
-      <section
-        id="salesPage"
-        class="content"
-        style="display:none">
-
-        <div class="toolbar">
-
-          <button
-            class="primary-btn"
-            onclick="openSalesModal()">
-            + Add Sales
-          </button>
-
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Customer</th>
+                  <th>Phone</th>
+                  <th>Business</th>
+                  <th>Location</th>
+                  <th>Sales</th>
+                  <th>Created By</th>
+                  <th>Status</th>
+                  <th>Follow Up</th>
+                  <th>Appointment</th>
+                  <th>Quotation</th>
+                  <th>Closing</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="leadsTable">
+                <!-- Leads data rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        <div class="table-wrapper">
+        <!-- SALES PAGE -->
+        <div id="salesPage" style="display: none;">
+          <div class="toolbar">
+            <div></div>
+            <button class="primary-btn" onclick="openSalesModal()">+ Create Sales</button>
+          </div>
 
-          <table>
-
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Username</th>
-                <th>Role</th>
-                <th>Status</th>
-                <th>Database</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-
-            <tbody id="salesTable"></tbody>
-
-          </table>
-
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Username</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Detail</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="salesTable">
+                <!-- Sales data rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
         </div>
-      </section>
 
+      </div>
     </main>
   </div>
 
-
-  <!-- LEAD MODAL -->
-  <div id="leadModal" class="modal">
-
-    <div class="modal-box">
-
-      <h2 id="leadModalTitle">
-        Add Lead
-      </h2>
-
-      <input type="hidden" id="leadId">
-
-      <label>Customer</label>
-      <input id="leadCustomer">
-
-      <label>Phone</label>
-      <input id="leadPhone">
-
-      <label>Business</label>
-      <input id="leadBusiness">
-
-      <label>Location</label>
-      <input id="leadLocation">
-
-      <label>Status</label>
-
-      <select id="leadStatus">
-        <option>New</option>
-        <option>Contacted</option>
-        <option>Interested</option>
-        <option>Follow-up</option>
-        <option>Appointment</option>
-        <option>Site Survey</option>
-        <option>Quotation</option>
-        <option>SPK</option>
-        <option>Closing</option>
-        <option>Not Interested</option>
-      </select>
-
-      <label>Follow-up</label>
-      <input type="date" id="leadFollowUp">
-
-      <label>Appointment</label>
-      <input type="date" id="leadAppointment">
-
-      <label>Site Survey</label>
-      <input type="date" id="leadSiteSurvey">
-
-      <label>Quotation</label>
-      <input type="date" id="leadQuotation">
-
-      <label>SPK</label>
-      <input type="date" id="leadSPK">
-
-      <label>Closing</label>
-      <input type="date" id="leadClosing">
-
-      <label>Notes</label>
-      <textarea id="leadNotes"></textarea>
-
-      <div class="modal-actions">
-
-        <button
-          onclick="closeLeadModal()"
-          class="secondary-btn">
-          Cancel
-        </button>
-
-        <button
-          onclick="saveLead()"
-          class="primary-btn">
-          Save
-        </button>
-
+  <!-- ================================
+       MODAL LEAD
+       ================================ -->
+  <div id="leadModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="leadModalTitle">Add Lead</h3>
+        <button class="close-btn" onclick="closeLeadModal()">&times;</button>
       </div>
 
+      <div class="modal-body">
+        <input type="hidden" id="leadId">
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="leadCustomer">Customer Name *</label>
+            <input type="text" id="leadCustomer" class="input-text">
+          </div>
+
+          <div class="form-group">
+            <label for="leadPhone">Phone</label>
+            <input type="text" id="leadPhone" class="input-text">
+          </div>
+
+          <div class="form-group">
+            <label for="leadBusiness">Business</label>
+            <input type="text" id="leadBusiness" class="input-text">
+          </div>
+
+          <div class="form-group">
+            <label for="leadLocation">Location</label>
+            <input type="text" id="leadLocation" class="input-text">
+          </div>
+
+          <div class="form-group form-grid-full">
+            <label for="leadStatus">Status</label>
+            <select id="leadStatus" class="select-input">
+              <option value="New">New</option>
+              <option value="Interested">Interested</option>
+              <option value="Follow-up">Follow-up</option>
+              <option value="Appointment">Appointment</option>
+              <option value="Site Survey">Site Survey</option>
+              <option value="Quotation">Quotation</option>
+              <option value="Closing">Closing</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="leadFollowUp">Follow-up Date</label>
+            <input type="date" id="leadFollowUp" class="input-text">
+          </div>
+
+          <div class="form-group">
+            <label for="leadAppointment">Appointment Date</label>
+            <input type="date" id="leadAppointment" class="input-text">
+          </div>
+
+          <div class="form-group">
+            <label for="leadSiteSurvey">Site Survey Date</label>
+            <input type="date" id="leadSiteSurvey" class="input-text">
+          </div>
+
+          <div class="form-group">
+            <label for="leadQuotation">Quotation Date</label>
+            <input type="date" id="leadQuotation" class="input-text">
+          </div>
+
+          <div class="form-group">
+            <label for="leadSPK">SPK Date</label>
+            <input type="date" id="leadSPK" class="input-text">
+          </div>
+
+          <div class="form-group">
+            <label for="leadClosing">Closing Date</label>
+            <input type="date" id="leadClosing" class="input-text">
+          </div>
+
+          <div class="form-group form-grid-full">
+            <label for="leadNotes">Notes</label>
+            <textarea id="leadNotes" class="textarea-input" rows="3"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="secondary-btn" onclick="closeLeadModal()">Batal</button>
+        <button class="primary-btn" onclick="saveLead()">Simpan</button>
+      </div>
     </div>
   </div>
 
-
-  <!-- SALES MODAL -->
-  <div id="salesModal" class="modal">
-
-    <div class="modal-box">
-
-      <h2>Add New Sales</h2>
-
-      <label>Name</label>
-      <input
-        id="salesName"
-        placeholder="Example: Budi"
-      >
-
-      <label>Username</label>
-      <input
-        id="salesUsername"
-        placeholder="Example: budi"
-      >
-
-      <label>Password</label>
-      <input
-        id="salesPassword"
-        type="password"
-        placeholder="Minimum 6 characters"
-      >
-
-      <div class="modal-actions">
-
-        <button
-          onclick="closeSalesModal()"
-          class="secondary-btn">
-          Cancel
-        </button>
-
-        <button
-          onclick="createSales()"
-          class="primary-btn">
-          CREATE SALES
-        </button>
-
+  <!-- ================================
+       MODAL SALES
+       ================================ -->
+  <div id="salesModal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 450px;">
+      <div class="modal-header">
+        <h3>Create Sales User</h3>
+        <button class="close-btn" onclick="closeSalesModal()">&times;</button>
       </div>
 
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="salesName">Full Name *</label>
+          <input type="text" id="salesName" class="input-text">
+        </div>
+
+        <div class="form-group">
+          <label for="salesUsername">Username *</label>
+          <input type="text" id="salesUsername" class="input-text">
+        </div>
+
+        <div class="form-group">
+          <label for="salesPassword">Password *</label>
+          <input type="password" id="salesPassword" class="input-text">
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="secondary-btn" onclick="closeSalesModal()">Batal</button>
+        <button class="primary-btn" onclick="createSales()">CREATE SALES</button>
+      </div>
     </div>
   </div>
 
-
-  <script src="script.js"></script>
-
+  <!-- Panggil JS Aplikasi Utama -->
+  <script src="app.js"></script>
 </body>
 </html>
