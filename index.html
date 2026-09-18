@@ -5,26 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CRM FSI System</title>
   <link rel="stylesheet" href="style.css">
-  <!-- Supabase JS Client -->
+  <!-- Font & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Supabase JS CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
   <!-- ==================== LOGIN PAGE ==================== -->
-  <div id="loginPage" class="login-container">
+  <div id="loginPage" class="login-wrapper">
     <div class="login-card">
-      <h2>CRM FSI Login</h2>
-      <div class="form-group">
-        <label>Username</label>
-        <input type="text" id="loginUsername" placeholder="Masukkan username">
+      <div class="login-header">
+        <h2>CRM FSI System</h2>
+        <p>Silakan masuk ke akun Anda</p>
       </div>
       <div class="form-group">
-        <label>Password</label>
-        <input type="password" id="loginPassword" placeholder="Masukkan password">
+        <label for="loginUsername">Username</label>
+        <input type="text" id="loginUsername" placeholder="Masukkan username" required>
       </div>
-      <button class="primary-btn full-width" onclick="login()">LOGIN</button>
-
-      <div id="loginMessage" class="error-msg"></div>
+      <div class="form-group">
+        <label for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" required>
+      </div>
+      <button class="primary-btn full-width" onclick="login()">Log In</button>
+      <div id="loginMessage" class="login-message"></div>
     </div>
   </div>
 
@@ -33,46 +37,86 @@
     
     <!-- SIDEBAR -->
     <aside class="sidebar">
-      <div class="brand">CRM FSI</div>
+      <div class="sidebar-brand">
+        <h2>FSI CRM</h2>
+      </div>
+
+      <div id="userInfo" class="user-profile-box">
+        <!-- Injected by JS -->
+      </div>
+
       <nav class="nav-menu">
-        <button class="nav-btn active" onclick="showDashboard()">Dashboard</button>
-        <button class="nav-btn" onclick="showLeads()">My Leads</button>
-        <button id="manageSalesBtn" class="nav-btn" onclick="showSales()" style="display: none;">Manage Sales</button>
+        <button class="nav-item active" onclick="showDashboard()">
+          <span>📊</span> Dashboard
+        </button>
+        <button class="nav-item" onclick="showLeads()">
+          <span>📇</span> My Leads
+        </button>
+        <button class="nav-item" id="manageSalesBtn" onclick="showSales()" style="display: none;">
+          <span>👥</span> Manage Sales
+        </button>
       </nav>
+
       <div class="sidebar-footer">
-        <div id="userInfo"></div>
+        <button class="logout-btn" onclick="logout()">
+          <span>🚪</span> Logout
+        </button>
       </div>
     </aside>
 
-    <!-- MAIN CONTENT -->
+    <!-- MAIN CONTENT AREA -->
     <main class="main-content">
       
-      <!-- HEADER -->
       <header class="top-header">
         <h1 id="pageTitle">Dashboard</h1>
         <div id="currentUser" class="user-badge"></div>
       </header>
 
-      <!-- ==================== DASHBOARD PAGE ==================== -->
-      <section id="dashboardPage" class="page-section">
+      <div class="content-body">
         
-        <!-- STATS GRID -->
-        <div class="stats-grid">
-          <div class="stat-card"><h3>Total Leads</h3><p id="statTotal">0</p></div>
-          <div class="stat-card"><h3>New</h3><p id="statNew">0</p></div>
-          <div class="stat-card"><h3>Interested</h3><p id="statInterested">0</p></div>
-          <div class="stat-card"><h3>Follow-Up</h3><p id="statFollowUp">0</p></div>
-          <div class="stat-card"><h3>Appointment</h3><p id="statAppointment">0</p></div>
-          <div class="stat-card"><h3>Site Survey</h3><p id="statSiteSurvey">0</p></div>
-          <div class="stat-card"><h3>Quotation</h3><p id="statQuotation">0</p></div>
-          <div class="stat-card"><h3>Closing</h3><p id="statClosing">0</p></div>
-        </div>
+        <!-- DASHBOARD PAGE -->
+        <section id="dashboardPage" class="page-section">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <span class="stat-title">Total Leads</span>
+              <span id="statTotal" class="stat-value">0</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-title">New</span>
+              <span id="statNew" class="stat-value">0</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-title">Interested</span>
+              <span id="statInterested" class="stat-value">0</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-title">Follow-up</span>
+              <span id="statFollowUp" class="stat-value">0</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-title">Appointment</span>
+              <span id="statAppointment" class="stat-value">0</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-title">Site Survey</span>
+              <span id="statSiteSurvey" class="stat-value">0</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-title">Quotation</span>
+              <span id="statQuotation" class="stat-value">0</span>
+            </div>
+            <div class="stat-card highlight">
+              <span class="stat-title">Closing</span>
+              <span id="statClosing" class="stat-value">0</span>
+            </div>
+          </div>
+        </section>
 
-        <!-- TABLE LEADS ON DASHBOARD -->
-        <div class="content-card mt-4">
+        <!-- LEADS PAGE -->
+        <section id="leadsPage" class="page-section" style="display: none;">
           <div class="action-bar">
-            <div class="search-filter">
-              <input type="text" id="leadSearch" placeholder="Cari lead..." onkeyup="filterLeads()">
+            <div class="search-filters">
+              <input type="text" id="leadSearch" placeholder="Cari nama, hp, bisnis..." oninput="filterLeads()">
               <select id="statusFilter" onchange="filterLeads()">
                 <option value="">Semua Status</option>
                 <option value="New">New</option>
@@ -87,8 +131,8 @@
             <button class="primary-btn" onclick="openLeadModal()">+ Add Lead</button>
           </div>
 
-          <div class="table-responsive">
-            <table>
+          <div class="table-container">
+            <table class="data-table">
               <thead>
                 <tr>
                   <th>Customer</th>
@@ -102,167 +146,145 @@
                   <th>Appointment</th>
                   <th>Quotation</th>
                   <th>Closing</th>
-                  <th>Actions</th>
+                  <th>Action</th>
                 </tr>
               </thead>
               <tbody id="leadsTable">
-                <!-- Data leads akan muncul di sini -->
+                <!-- Injected by JS -->
               </tbody>
             </table>
           </div>
-        </div>
+        </section>
 
-      </section>
+        <!-- SALES PAGE -->
+        <section id="salesPage" class="page-section" style="display: none;">
+          <div class="action-bar">
+            <h2>Daftar Tim Sales</h2>
+            <button class="primary-btn" onclick="openSalesModal()">+ Add Sales</button>
+          </div>
 
-      <!-- ==================== MY LEADS PAGE ==================== -->
-      <section id="leadsPage" class="page-section" style="display: none;">
-        <div class="content-card">
-          <div class="table-responsive">
-            <table>
+          <div class="table-container">
+            <table class="data-table">
               <thead>
                 <tr>
-                  <th>Customer</th>
-                  <th>Phone</th>
-                  <th>Business</th>
-                  <th>Location</th>
-                  <th>Sales</th>
-                  <th>Created By</th>
-                  <th>Status</th>
-                  <th>Follow Up</th>
-                  <th>Appointment</th>
-                  <th>Quotation</th>
-                  <th>Closing</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="leadsTableAlone">
-                <!-- Data leads independen -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- ==================== MANAGE SALES PAGE ==================== -->
-      <section id="salesPage" class="page-section" style="display: none;">
-        <div class="content-card">
-          <div class="action-bar flex-end">
-            <button class="primary-btn" onclick="openSalesModal()">+ Create Sales User</button>
-          </div>
-          <div class="table-responsive">
-            <table>
-              <thead>
-                <tr>
-                  <th>Name</th>
+                  <th>Nama</th>
                   <th>Username</th>
                   <th>Role</th>
                   <th>Status</th>
-                  <th>Details</th>
+                  <th>-</th>
                   <th>Action</th>
                 </tr>
               </thead>
               <tbody id="salesTable">
-                <!-- Data sales akan muncul di sini -->
+                <!-- Injected by JS -->
               </tbody>
             </table>
           </div>
-        </div>
-      </section>
+        </section>
 
+      </div>
     </main>
-
   </div>
 
-  <!-- ==================== MODAL ADD/EDIT LEAD ==================== -->
-  <div id="leadModal" class="modal">
-    <div class="modal-content">
-      <h2 id="leadModalTitle">Add Lead</h2>
-      <input type="hidden" id="leadId">
-      
-      <div class="form-grid">
-        <div class="form-group">
-          <label>Customer Name *</label>
-          <input type="text" id="leadCustomer">
+  <!-- ==================== MODAL: LEAD ==================== -->
+  <div id="leadModal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="leadModalTitle">Add Lead</h3>
+        <button class="close-btn" onclick="closeLeadModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="leadId">
+        
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Customer Name *</label>
+            <input type="text" id="leadCustomer" required>
+          </div>
+          <div class="form-group">
+            <label>Phone / WhatsApp</label>
+            <input type="text" id="leadPhone">
+          </div>
+          <div class="form-group">
+            <label>Business</label>
+            <input type="text" id="leadBusiness">
+          </div>
+          <div class="form-group">
+            <label>Location</label>
+            <input type="text" id="leadLocation">
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select id="leadStatus">
+              <option value="New">New</option>
+              <option value="Interested">Interested</option>
+              <option value="Follow-up">Follow-up</option>
+              <option value="Appointment">Appointment</option>
+              <option value="Site Survey">Site Survey</option>
+              <option value="Quotation">Quotation</option>
+              <option value="Closing">Closing</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Follow Up Date</label>
+            <input type="date" id="leadFollowUp">
+          </div>
+          <div class="form-group">
+            <label>Appointment Date</label>
+            <input type="date" id="leadAppointment">
+          </div>
+          <div class="form-group">
+            <label>Site Survey Date</label>
+            <input type="date" id="leadSiteSurvey">
+          </div>
+          <div class="form-group">
+            <label>Quotation Date</label>
+            <input type="date" id="leadQuotation">
+          </div>
+          <div class="form-group">
+            <label>SPK Date</label>
+            <input type="date" id="leadSPK">
+          </div>
+          <div class="form-group">
+            <label>Closing Date</label>
+            <input type="date" id="leadClosing">
+          </div>
         </div>
-        <div class="form-group">
-          <label>Phone / WhatsApp</label>
-          <input type="text" id="leadPhone">
-        </div>
-        <div class="form-group">
-          <label>Business</label>
-          <input type="text" id="leadBusiness">
-        </div>
-        <div class="form-group">
-          <label>Location</label>
-          <input type="text" id="leadLocation">
-        </div>
-        <div class="form-group">
-          <label>Status</label>
-          <select id="leadStatus">
-            <option value="New">New</option>
-            <option value="Interested">Interested</option>
-            <option value="Follow-up">Follow-up</option>
-            <option value="Appointment">Appointment</option>
-            <option value="Site Survey">Site Survey</option>
-            <option value="Quotation">Quotation</option>
-            <option value="Closing">Closing</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Follow-Up Date</label>
-          <input type="date" id="leadFollowUp">
-        </div>
-        <div class="form-group">
-          <label>Appointment</label>
-          <input type="date" id="leadAppointment">
-        </div>
-        <div class="form-group">
-          <label>Site Survey</label>
-          <input type="date" id="leadSiteSurvey">
-        </div>
-        <div class="form-group">
-          <label>Quotation</label>
-          <input type="date" id="leadQuotation">
-        </div>
-        <div class="form-group">
-          <label>SPK</label>
-          <input type="date" id="leadSPK">
-        </div>
-        <div class="form-group">
-          <label>Closing</label>
-          <input type="date" id="leadClosing">
+
+        <div class="form-group" style="margin-top: 10px;">
+          <label>Notes</label>
+          <textarea id="leadNotes" rows="3"></textarea>
         </div>
       </div>
-
-      <div class="form-group">
-        <label>Notes</label>
-        <textarea id="leadNotes" rows="3"></textarea>
-      </div>
-
-      <div class="modal-actions">
+      <div class="modal-footer">
         <button class="secondary-btn" onclick="closeLeadModal()">Batal</button>
-        <button class="primary-btn" onclick="saveLead()">Simpan</button>
+        <button class="primary-btn" onclick="saveLead()">Simpan Lead</button>
       </div>
     </div>
   </div>
 
-  <!-- ==================== MODAL CREATE SALES ==================== -->
-  <div id="salesModal" class="modal">
-    <div class="modal-content">
-      <h2>Create Sales User</h2>
-      <div class="form-group">
-        <label>Nama Lengkap *</label>
-        <input type="text" id="salesName">
+  <!-- ==================== MODAL: SALES ==================== -->
+  <div id="salesModal" class="modal-backdrop">
+    <div class="modal-card small-modal">
+      <div class="modal-header">
+        <h3>Create New Sales</h3>
+        <button class="close-btn" onclick="closeSalesModal()">&times;</button>
       </div>
-      <div class="form-group">
-        <label>Username *</label>
-        <input type="text" id="salesUsername">
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Nama Lengkap</label>
+          <input type="text" id="salesName" required>
+        </div>
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" id="salesUsername" required>
+        </div>
+        <div class="form-group">
+          <label>Password (Min 6 Karakter)</label>
+          <input type="password" id="salesPassword" required>
+        </div>
       </div>
-      <div class="form-group">
-        <label>Password *</label>
-        <input type="password" id="salesPassword">
-      </div>
-      <div class="modal-actions">
+      <div class="modal-footer">
         <button class="secondary-btn" onclick="closeSalesModal()">Batal</button>
         <button class="primary-btn" onclick="createSales()">CREATE SALES</button>
       </div>
