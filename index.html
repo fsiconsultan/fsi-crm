@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
+
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1.0"
@@ -18,11 +20,12 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
+
 <body>
 
-  <!-- =========================================
+  <!-- =====================================================
        LOGIN PAGE
-  ========================================== -->
+  ====================================================== -->
 
   <div
     id="loginPage"
@@ -31,19 +34,29 @@
 
     <div class="login-card">
 
+      <!-- FSI LOGO -->
       <div class="login-logo">
-        FSI
+        <img
+          src="logo-fsi.png"
+          alt="FSI Logo"
+        >
       </div>
 
-      <h1>Welcome Back</h1>
+
+      <h1>
+        Welcome Back
+      </h1>
 
       <p>
         Sign in to your FSI CRM account
       </p>
 
+
+      <!-- USERNAME -->
+
       <div class="form-group">
 
-        <label>
+        <label for="loginUsername">
           Username
         </label>
 
@@ -56,9 +69,12 @@
 
       </div>
 
+
+      <!-- PASSWORD -->
+
       <div class="form-group">
 
-        <label>
+        <label for="loginPassword">
           Password
         </label>
 
@@ -71,12 +87,18 @@
 
       </div>
 
+
+      <!-- LOGIN BUTTON -->
+
       <button
         class="primary-btn login-btn"
         onclick="login()"
       >
         LOGIN
       </button>
+
+
+      <!-- LOGIN MESSAGE -->
 
       <div
         id="loginMessage"
@@ -88,9 +110,10 @@
   </div>
 
 
-  <!-- =========================================
-       MAIN APP
-  ========================================== -->
+
+  <!-- =====================================================
+       MAIN APPLICATION
+  ====================================================== -->
 
   <div
     id="app"
@@ -98,27 +121,50 @@
     style="display:none;"
   >
 
-    <!-- =======================================
+
+    <!-- ===================================================
          SIDEBAR
-    ======================================== -->
+    ==================================================== -->
 
     <aside class="sidebar">
+
+
+      <!-- BRAND -->
 
       <div class="brand">
 
         <div class="brand-logo">
-          FSI
+
+          <img
+            src="logo-fsi.png"
+            alt="FSI Logo"
+          >
+
         </div>
 
-        <div>
-          <strong>French Solar</strong>
-          <span>Industry</span>
+
+        <div class="brand-text">
+
+          <strong>
+            French Solar
+          </strong>
+
+          <span>
+            Industry
+          </span>
+
         </div>
 
       </div>
 
 
+
+      <!-- NAVIGATION -->
+
       <nav class="sidebar-nav">
+
+
+        <!-- DASHBOARD -->
 
         <button
           class="nav-item active"
@@ -136,6 +182,8 @@
         </button>
 
 
+        <!-- MY LEADS -->
+
         <button
           class="nav-item"
           onclick="showLeads()"
@@ -151,6 +199,8 @@
 
         </button>
 
+
+        <!-- MANAGE SALES -->
 
         <button
           id="manageSalesBtn"
@@ -172,6 +222,9 @@
       </nav>
 
 
+
+      <!-- SIDEBAR BOTTOM -->
+
       <div class="sidebar-bottom">
 
         <button
@@ -186,19 +239,29 @@
     </aside>
 
 
-    <!-- =======================================
-         MAIN
-    ======================================== -->
+
+    <!-- ===================================================
+         MAIN CONTENT
+    ==================================================== -->
 
     <main class="main-content">
 
-      <!-- TOP HEADER -->
+
+      <!-- =================================================
+           TOPBAR
+      ================================================== -->
 
       <header class="topbar">
+
+
+        <!-- MOBILE MENU -->
 
         <div class="mobile-menu">
           ☰
         </div>
+
+
+        <!-- PAGE TITLE -->
 
         <div class="topbar-title">
 
@@ -209,20 +272,31 @@
         </div>
 
 
+        <!-- TOPBAR RIGHT -->
+
         <div class="topbar-right">
 
+
+          <!-- NOTIFICATION -->
+
           <button class="notification-btn">
+
             ♢
+
             <span class="notification-dot"></span>
+
           </button>
 
+
+          <!-- USER INFO -->
 
           <div
             id="userInfo"
             class="user-info"
-          >
-          </div>
+          ></div>
 
+
+          <!-- DROPDOWN -->
 
           <button class="user-dropdown">
             ▾
@@ -233,21 +307,25 @@
       </header>
 
 
-      <!-- =====================================
+
+      <!-- =================================================
            PAGE CONTENT
-      ====================================== -->
+      ================================================== -->
 
       <section class="content-area">
 
 
-        <!-- ===================================
+        <!-- =================================================
              DASHBOARD PAGE
-        ==================================== -->
+        ================================================== -->
 
         <div
           id="dashboardPage"
           class="page"
         >
+
+
+          <!-- PAGE HEADING -->
 
           <div class="page-heading">
 
@@ -266,11 +344,15 @@
           </div>
 
 
-          <!-- STATISTICS -->
+
+          <!-- =================================================
+               STATISTICS
+          ================================================== -->
 
           <div class="stats-grid">
 
-            <!-- TOTAL -->
+
+            <!-- TOTAL LEADS -->
 
             <div class="stat-card">
 
@@ -293,7 +375,8 @@
             </div>
 
 
-            <!-- NEW -->
+
+            <!-- NEW LEADS -->
 
             <div class="stat-card">
 
@@ -314,6 +397,7 @@
               </div>
 
             </div>
+
 
 
             <!-- INTERESTED -->
@@ -339,6 +423,7 @@
             </div>
 
 
+
             <!-- FOLLOW UP -->
 
             <div class="stat-card">
@@ -360,6 +445,7 @@
               </div>
 
             </div>
+
 
 
             <!-- APPOINTMENT -->
@@ -385,6 +471,7 @@
             </div>
 
 
+
             <!-- SITE SURVEY -->
 
             <div class="stat-card">
@@ -408,6 +495,7 @@
             </div>
 
 
+
             <!-- QUOTATION -->
 
             <div class="stat-card">
@@ -429,6 +517,7 @@
               </div>
 
             </div>
+
 
 
             <!-- CLOSING -->
@@ -456,7 +545,10 @@
           </div>
 
 
-          <!-- DASHBOARD LEAD TABLE -->
+
+          <!-- =================================================
+               RECENT LEADS
+          ================================================== -->
 
           <div class="dashboard-panel">
 
@@ -474,6 +566,7 @@
 
               </div>
 
+
               <button
                 class="secondary-btn"
                 onclick="showLeads()"
@@ -488,15 +581,19 @@
         </div>
 
 
-        <!-- ===================================
+
+        <!-- =================================================
              LEADS PAGE
-        ==================================== -->
+        ================================================== -->
 
         <div
           id="leadsPage"
           class="page"
           style="display:none;"
         >
+
+
+          <!-- PAGE HEADING -->
 
           <div class="page-heading">
 
@@ -512,6 +609,7 @@
 
             </div>
 
+
             <button
               class="primary-btn"
               onclick="openLeadModal()"
@@ -522,13 +620,20 @@
           </div>
 
 
-          <!-- FILTER BAR -->
+
+          <!-- =================================================
+               FILTER BAR
+          ================================================== -->
 
           <div class="filter-card">
+
+
+            <!-- STATUS -->
 
             <div class="filter-group">
 
               <select id="statusFilter">
+
                 <option value="">
                   All Status
                 </option>
@@ -566,9 +671,13 @@
             </div>
 
 
+
+            <!-- BUSINESS -->
+
             <div class="filter-group">
 
               <select>
+
                 <option>
                   All Business
                 </option>
@@ -602,9 +711,13 @@
             </div>
 
 
+
+            <!-- LOCATION -->
+
             <div class="filter-group">
 
               <select>
+
                 <option>
                   All Location
                 </option>
@@ -634,6 +747,9 @@
             </div>
 
 
+
+            <!-- SEARCH -->
+
             <div class="search-box">
 
               <span>
@@ -652,7 +768,10 @@
           </div>
 
 
-          <!-- TABLE -->
+
+          <!-- =================================================
+               LEADS TABLE
+          ================================================== -->
 
           <div class="table-card">
 
@@ -716,9 +835,8 @@
 
                 </thead>
 
-                <tbody id="leadsTable">
 
-                </tbody>
+                <tbody id="leadsTable"></tbody>
 
               </table>
 
@@ -729,15 +847,19 @@
         </div>
 
 
-        <!-- ===================================
+
+        <!-- =================================================
              SALES PAGE
-        ==================================== -->
+        ================================================== -->
 
         <div
           id="salesPage"
           class="page"
           style="display:none;"
         >
+
+
+          <!-- PAGE HEADING -->
 
           <div class="page-heading">
 
@@ -753,6 +875,7 @@
 
             </div>
 
+
             <button
               class="primary-btn"
               onclick="openSalesModal()"
@@ -762,6 +885,9 @@
 
           </div>
 
+
+
+          <!-- SALES TABLE -->
 
           <div class="table-card">
 
@@ -801,9 +927,8 @@
 
                 </thead>
 
-                <tbody id="salesTable">
 
-                </tbody>
+                <tbody id="salesTable"></tbody>
 
               </table>
 
@@ -820,9 +945,10 @@
   </div>
 
 
-  <!-- =========================================
+
+  <!-- =====================================================
        LEAD MODAL
-  ========================================== -->
+  ====================================================== -->
 
   <div
     id="leadModal"
@@ -830,6 +956,9 @@
   >
 
     <div class="modal">
+
+
+      <!-- MODAL HEADER -->
 
       <div class="modal-header">
 
@@ -845,6 +974,7 @@
 
         </div>
 
+
         <button
           class="modal-close"
           onclick="closeLeadModal()"
@@ -855,7 +985,11 @@
       </div>
 
 
+
+      <!-- MODAL BODY -->
+
       <div class="modal-body">
+
 
         <input
           type="hidden"
@@ -865,9 +999,12 @@
 
         <div class="form-grid">
 
+
+          <!-- CUSTOMER -->
+
           <div class="form-group">
 
-            <label>
+            <label for="leadCustomer">
               Customer Name *
             </label>
 
@@ -880,9 +1017,12 @@
           </div>
 
 
+
+          <!-- PHONE -->
+
           <div class="form-group">
 
-            <label>
+            <label for="leadPhone">
               Phone / WhatsApp
             </label>
 
@@ -895,9 +1035,12 @@
           </div>
 
 
+
+          <!-- BUSINESS -->
+
           <div class="form-group">
 
-            <label>
+            <label for="leadBusiness">
               Business
             </label>
 
@@ -910,9 +1053,12 @@
           </div>
 
 
+
+          <!-- LOCATION -->
+
           <div class="form-group">
 
-            <label>
+            <label for="leadLocation">
               Location
             </label>
 
@@ -925,9 +1071,12 @@
           </div>
 
 
+
+          <!-- STATUS -->
+
           <div class="form-group">
 
-            <label>
+            <label for="leadStatus">
               Status
             </label>
 
@@ -966,9 +1115,12 @@
           </div>
 
 
+
+          <!-- FOLLOW UP -->
+
           <div class="form-group">
 
-            <label>
+            <label for="leadFollowUp">
               Follow Up
             </label>
 
@@ -980,9 +1132,12 @@
           </div>
 
 
+
+          <!-- APPOINTMENT -->
+
           <div class="form-group">
 
-            <label>
+            <label for="leadAppointment">
               Appointment
             </label>
 
@@ -994,9 +1149,12 @@
           </div>
 
 
+
+          <!-- SITE SURVEY -->
+
           <div class="form-group">
 
-            <label>
+            <label for="leadSiteSurvey">
               Site Survey
             </label>
 
@@ -1008,9 +1166,12 @@
           </div>
 
 
+
+          <!-- QUOTATION -->
+
           <div class="form-group">
 
-            <label>
+            <label for="leadQuotation">
               Quotation
             </label>
 
@@ -1022,9 +1183,12 @@
           </div>
 
 
+
+          <!-- SPK -->
+
           <div class="form-group">
 
-            <label>
+            <label for="leadSPK">
               SPK
             </label>
 
@@ -1036,9 +1200,12 @@
           </div>
 
 
+
+          <!-- CLOSING -->
+
           <div class="form-group">
 
-            <label>
+            <label for="leadClosing">
               Closing
             </label>
 
@@ -1050,9 +1217,12 @@
           </div>
 
 
+
+          <!-- NOTES -->
+
           <div class="form-group full">
 
-            <label>
+            <label for="leadNotes">
               Notes
             </label>
 
@@ -1069,6 +1239,9 @@
       </div>
 
 
+
+      <!-- MODAL FOOTER -->
+
       <div class="modal-footer">
 
         <button
@@ -1077,6 +1250,7 @@
         >
           Cancel
         </button>
+
 
         <button
           class="primary-btn"
@@ -1092,9 +1266,10 @@
   </div>
 
 
-  <!-- =========================================
+
+  <!-- =====================================================
        SALES MODAL
-  ========================================== -->
+  ====================================================== -->
 
   <div
     id="salesModal"
@@ -1102,6 +1277,9 @@
   >
 
     <div class="modal small-modal">
+
+
+      <!-- MODAL HEADER -->
 
       <div class="modal-header">
 
@@ -1117,6 +1295,7 @@
 
         </div>
 
+
         <button
           class="modal-close"
           onclick="closeSalesModal()"
@@ -1127,11 +1306,17 @@
       </div>
 
 
+
+      <!-- MODAL BODY -->
+
       <div class="modal-body">
+
+
+        <!-- NAME -->
 
         <div class="form-group">
 
-          <label>
+          <label for="salesName">
             Full Name
           </label>
 
@@ -1144,9 +1329,12 @@
         </div>
 
 
+
+        <!-- USERNAME -->
+
         <div class="form-group">
 
-          <label>
+          <label for="salesUsername">
             Username
           </label>
 
@@ -1159,9 +1347,12 @@
         </div>
 
 
+
+        <!-- PASSWORD -->
+
         <div class="form-group">
 
-          <label>
+          <label for="salesPassword">
             Password
           </label>
 
@@ -1176,6 +1367,9 @@
       </div>
 
 
+
+      <!-- MODAL FOOTER -->
+
       <div class="modal-footer">
 
         <button
@@ -1184,6 +1378,7 @@
         >
           Cancel
         </button>
+
 
         <button
           class="primary-btn"
@@ -1199,9 +1394,24 @@
   </div>
 
 
-  <!-- SCRIPT -->
+
+  <!-- =====================================================
+       JAVASCRIPT
+  ====================================================== -->
 
   <script src="script.js"></script>
 
 </body>
+
 </html>
+
+Pastikan di GitHub file-nya persis:
+
+index.html
+style.css
+script.js
+logo-fsi.png
+
+Kalau nama file logonya "logo.png", tinggal ubah dua "src="logo-fsi.png"" menjadi "src="logo.png"".
+
+Setelah upload/commit, refresh CRM. Logo yang sama akan muncul di login dan di sidebar setelah login.
