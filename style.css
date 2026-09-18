@@ -1,142 +1,90 @@
-/* =================================
-   PAGE CONTENT - COMPACT
-================================= */
+/* ==================================================
+   GLOBAL IMAGE SAFETY (PROTEKSI KODE)
+================================================== */
 
-.page-content {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 22px 24px;
-}
-
-/* Judul halaman */
-.page-header {
-  margin-bottom: 18px;
-}
-
-.page-header h1,
-.page-header h2 {
-  font-size: 24px;
-  margin-bottom: 4px;
-}
-
-.page-header p {
-  font-size: 13px;
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
 }
 
 
-/* =================================
-   DASHBOARD CARDS
-================================= */
+/* ==================================================
+   SALES PHOTO & AVATAR FIX (TERKUNCI PRESISI)
+================================================== */
 
-.stats-grid {
-  gap: 14px;
-  margin-bottom: 22px;
+/* Container Avatar Sales di Tabel */
+.sales-photo-wrapper {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1px solid #e5e7eb;
 }
 
-.stat-card {
-  padding: 16px;
-  min-height: 105px;
+/* Gambar Avatar Sales (Dipaksa 36x36px) */
+.sales-avatar,
+td img {
+  width: 36px !important;
+  height: 36px !important;
+  max-width: 36px !important;
+  max-height: 36px !important;
+  object-fit: cover !important;
+  border-radius: 50% !important;
+  display: block !important;
 }
 
-.stat-card h3 {
-  font-size: 13px;
-  margin-bottom: 8px;
+/* Placeholder Jika Foto Kosong */
+.sales-avatar-placeholder {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e5e7eb;
+  color: #374151;
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
 }
 
-.stat-card .stat-number {
-  font-size: 25px;
+/* User Avatar di Topbar / Header (Kanan Atas) */
+.user-avatar {
+  width: 36px !important;
+  height: 36px !important;
+  max-width: 36px !important;
+  max-height: 36px !important;
+  border-radius: 50% !important;
+  object-fit: cover !important;
+  border: 1px solid #e5e7eb;
+  flex-shrink: 0;
 }
 
 
-/* =================================
-   LEADS FILTER AREA
-================================= */
-
-.filters-container,
-.leads-toolbar {
-  gap: 10px;
-  margin-bottom: 16px;
-}
-
-.filters-container input,
-.filters-container select,
-.leads-toolbar input,
-.leads-toolbar select {
-  height: 38px;
-  font-size: 13px;
-  padding: 0 10px;
-}
-
-
-/* =================================
-   TABLE
-================================= */
-
-.table-wrapper {
-  border-radius: 8px;
-}
-
-table {
-  font-size: 13px;
-}
-
-th {
-  padding: 10px 12px;
-  font-size: 12px;
-}
+/* ==================================================
+   TABLE ADJUSTMENT (MENYESUAIKAN BARIS)
+================================================== */
 
 td {
-  padding: 9px 12px;
-}
-
-
-/* =================================
-   ADD LEAD BUTTON
-================================= */
-
-.add-lead-btn {
-  padding: 9px 15px;
+  padding: 10px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #374151;
   font-size: 13px;
+  vertical-align: middle;
+  white-space: nowrap;
 }
 
-
-/* =================================
-   TABLET
-================================= */
-
-@media (max-width: 850px) {
-
-  .page-content {
-    padding: 18px 16px;
-  }
-
-  .stat-card {
-    padding: 14px;
-    min-height: 95px;
-  }
-
-  .stat-card .stat-number {
-    font-size: 22px;
-  }
-}
-
-
-/* =================================
-   MOBILE
-================================= */
-
-@media (max-width: 650px) {
-
-  .page-content {
-    padding: 15px 12px;
-  }
-
-  .page-header h1,
-  .page-header h2 {
-    font-size: 21px;
-  }
-
-  .stat-card {
-    min-height: 88px;
-  }
+/* Penyesuaian Flex di Kolom Sales/Customer Tabel */
+.sales-column-cell,
+.customer-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
