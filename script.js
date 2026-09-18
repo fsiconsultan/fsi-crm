@@ -91,6 +91,7 @@ function setupEnglishStatusOptions() {
       );
 
     allOption.value = "";
+
     allOption.textContent =
       "All Status";
 
@@ -599,7 +600,7 @@ function setupRoleAccess() {
 
     salesFilter.style.display =
       isAdmin
-        ? "block"
+        ? ""
         : "none";
 
   }
@@ -747,8 +748,13 @@ async function showLeads() {
   }
 
 
+  // Admin sees all leads.
+  // Sales sees their own leads.
   setPageTitle(
-    "My Leads"
+    currentProfile &&
+    currentProfile.role === "Admin"
+      ? "All Leads"
+      : "My Leads"
   );
 
 
@@ -1713,6 +1719,12 @@ function renderLeads(data) {
         );
 
 
+      const displayStatus =
+        normalizeLeadStatus(
+          lead.status
+        );
+
+
       tr.innerHTML = `
 
         <!-- CUSTOMER -->
@@ -1734,6 +1746,7 @@ function renderLeads(data) {
                     lead.phone
                   )}"
                   target="_blank"
+                  rel="noopener noreferrer"
                   class="wa-link">
                   ${escapeHTML(
                     lead.phone
@@ -1795,14 +1808,10 @@ function renderLeads(data) {
         <td>
           <span
             class="status-badge ${statusClass(
-              normalizeLeadStatus(
-                lead.status
-              )
+              displayStatus
             )}">
             ${escapeHTML(
-              normalizeLeadStatus(
-                lead.status
-              )
+              displayStatus
             )}
           </span>
         </td>
@@ -2247,12 +2256,11 @@ async function saveLead() {
     "Admin"
   ) {
 
-    if (selectedSales) {
-
-      payload.sales_id =
-        selectedSales;
-
-    }
+    // Admin can assign or
+    // remove Sales assignment.
+    payload.sales_id =
+      selectedSales ||
+      null;
 
   } else {
 
@@ -2315,12 +2323,6 @@ async function saveLead() {
 
       payload.updated_by =
         currentProfile.id;
-
-
-      // If Admin didn't select a Sales,
-      // leave it unassigned.
-      // If Sales created it, it is
-      // automatically assigned above.
 
 
       const {
@@ -2492,8 +2494,7 @@ async function editLead(id) {
   );
 
 
-  // IMPORTANT:
-  // Restore assigned Sales
+  // RESTORE ASSIGNED SALES
   setValue(
     "leadSalesAssign",
     lead.sales_id || ""
