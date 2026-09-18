@@ -26,20 +26,21 @@
         <p>Silakan masuk ke akun Anda</p>
       </div>
 
-      <div class="login-form">
+      <!-- Diubah menggunakan tag form dengan penanganan submit -->
+      <form class="login-form" onsubmit="event.preventDefault(); login();">
         <div class="form-group">
           <label for="loginUsername">Username</label>
-          <input type="text" id="loginUsername" class="input-text" placeholder="Masukkan username">
+          <input type="text" id="loginUsername" class="input-text" placeholder="Masukkan username" required autocomplete="username">
         </div>
 
         <div class="form-group" style="margin-top: 1rem;">
           <label for="loginPassword">Password</label>
-          <input type="password" id="loginPassword" class="input-text" placeholder="Masukkan password">
+          <input type="password" id="loginPassword" class="input-text" placeholder="Masukkan password" required autocomplete="current-password">
         </div>
 
         <button type="button" class="primary-btn" style="width: 100%; margin-top: 1.5rem;" onclick="login()">Login</button>
         <div id="loginMessage" class="login-message"></div>
-      </div>
+      </form>
     </div>
   </div>
 
@@ -312,7 +313,7 @@
     </div>
   </div>
 
-  <!-- Panggil JS Aplikasi Utama -->
-  <script src="app.js"></script>
+  <!-- Panggil JS Utama (pastikan nama file sesuai di repositori Vercel) -->
+  <script src="script.js"></script>
 </body>
 </html>
