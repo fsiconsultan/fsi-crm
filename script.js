@@ -382,6 +382,12 @@ async function loadProfile() {
       data;
 
 
+    console.log(
+      "Current profile:",
+      currentProfile
+    );
+
+
     updateUserInfo();
 
     setupRoleAccess();
@@ -394,6 +400,7 @@ async function loadProfile() {
 
     await loadLeads(1);
 
+    // FORCE REFRESH DASHBOARD
     await updateDashboard();
 
 
@@ -578,7 +585,6 @@ function setupRoleAccess() {
     "Admin";
 
 
-  // DESKTOP MANAGE SALES
   if (manageSalesBtn) {
 
     manageSalesBtn.style.display =
@@ -589,7 +595,6 @@ function setupRoleAccess() {
   }
 
 
-  // MOBILE MANAGE SALES
   if (mobileManageSalesBtn) {
 
     mobileManageSalesBtn.style.display =
@@ -600,7 +605,6 @@ function setupRoleAccess() {
   }
 
 
-  // TOP NAV SALES DROPDOWN
   if (salesDropdownContainer) {
 
     salesDropdownContainer.style.display =
@@ -611,7 +615,6 @@ function setupRoleAccess() {
   }
 
 
-  // SALES FILTER
   if (salesFilter) {
 
     salesFilter.style.display =
@@ -622,7 +625,6 @@ function setupRoleAccess() {
   }
 
 
-  // SALES ASSIGNMENT FIELD
   setupSalesAssignmentAccess();
 
 }
@@ -716,6 +718,10 @@ function setPageTitle(title) {
 }
 
 
+// ================================
+// SHOW DASHBOARD
+// ================================
+
 async function showDashboard() {
 
   hideAllPages();
@@ -740,13 +746,15 @@ async function showDashboard() {
   );
 
 
-  // ALWAYS LOAD FRESH DATA
-  // FROM SUPABASE WHEN DASHBOARD OPENS
-
+  // ALWAYS GET FRESH DATA
   await updateDashboard();
 
 }
 
+
+// ================================
+// SHOW LEADS
+// ================================
 
 async function showLeads() {
 
@@ -781,6 +789,10 @@ async function showLeads() {
 
 }
 
+
+// ================================
+// SHOW SALES
+// ================================
 
 async function showSales() {
 
@@ -894,10 +906,6 @@ async function loadSalesLookup() {
 
 function populateSalesDropdowns() {
 
-  // ================================
-  // ADMIN SALES FILTER
-  // ================================
-
   const salesFilter =
     document.getElementById(
       "salesFilter"
@@ -986,10 +994,6 @@ function populateSalesDropdowns() {
   }
 
 
-  // ================================
-  // TOP NAV SALES DROPDOWN
-  // ================================
-
   const salesDropdownMenu =
     document.getElementById(
       "salesDropdownMenu"
@@ -1002,7 +1006,6 @@ function populateSalesDropdowns() {
       "";
 
 
-    // ALL SALES
     const allSalesButton =
       document.createElement(
         "button"
@@ -1012,14 +1015,11 @@ function populateSalesDropdowns() {
     allSalesButton.type =
       "button";
 
-
     allSalesButton.className =
       "nav-dropdown-item";
 
-
     allSalesButton.dataset.salesId =
       "";
-
 
     allSalesButton.textContent =
       "All Sales";
@@ -1051,7 +1051,6 @@ function populateSalesDropdowns() {
     );
 
 
-    // SALES NAMES
     salesUsersData
       .filter(
         sales =>
@@ -1069,14 +1068,11 @@ function populateSalesDropdowns() {
           salesButton.type =
             "button";
 
-
           salesButton.className =
             "nav-dropdown-item";
 
-
           salesButton.dataset.salesId =
             sales.id;
-
 
           salesButton.textContent =
             sales.name ||
@@ -1116,10 +1112,6 @@ function populateSalesDropdowns() {
 
   }
 
-
-  // ================================
-  // LEAD ASSIGNMENT
-  // ================================
 
   const leadSalesAssign =
     document.getElementById(
@@ -1449,9 +1441,6 @@ function populateFilter(
 // ================================
 // LOAD LEADS
 // ================================
-// PAGINATION
-// 20 LEADS PER PAGE
-// ================================
 
 async function loadLeads(page = 1) {
 
@@ -1473,10 +1462,6 @@ async function loadLeads(page = 1) {
 
     }
 
-
-    // ================================
-    // GET FILTER VALUES
-    // ================================
 
     const search =
       document
@@ -1519,10 +1504,6 @@ async function loadLeads(page = 1) {
         ?.value || "";
 
 
-    // ================================
-    // SUPABASE QUERY
-    // ================================
-
     let query =
       supabaseClient
         .from("leads")
@@ -1533,10 +1514,6 @@ async function loadLeads(page = 1) {
           }
         );
 
-
-    // ================================
-    // SEARCH
-    // ================================
 
     if (search) {
 
@@ -1566,10 +1543,6 @@ async function loadLeads(page = 1) {
     }
 
 
-    // ================================
-    // STATUS FILTER
-    // ================================
-
     if (status) {
 
       query =
@@ -1580,10 +1553,6 @@ async function loadLeads(page = 1) {
 
     }
 
-
-    // ================================
-    // BUSINESS FILTER
-    // ================================
 
     if (business) {
 
@@ -1596,10 +1565,6 @@ async function loadLeads(page = 1) {
     }
 
 
-    // ================================
-    // LOCATION FILTER
-    // ================================
-
     if (location) {
 
       query =
@@ -1611,11 +1576,7 @@ async function loadLeads(page = 1) {
     }
 
 
-    // ================================
-    // SALES FILTER
-    // ADMIN ONLY
-    // ================================
-
+    // ADMIN CAN FILTER SALES
     if (
       salesFilter &&
       currentProfile &&
@@ -1632,14 +1593,11 @@ async function loadLeads(page = 1) {
     }
 
 
-    // ================================
-    // SALES USER ONLY
-    // ================================
-
+    // SALES ONLY SEES OWN LEADS
     if (
       currentProfile &&
-      currentProfile.role !==
-        "Admin"
+      currentProfile.role ===
+        "Sales"
     ) {
 
       query =
@@ -1650,10 +1608,6 @@ async function loadLeads(page = 1) {
 
     }
 
-
-    // ================================
-    // PAGINATION
-    // ================================
 
     const from =
       (currentPage - 1) *
@@ -2530,13 +2484,13 @@ async function saveLead() {
 
     closeLeadModal();
 
+    // REFRESH ALL RELATED DATA
     await loadFilterOptions();
 
     await loadLeads(
       currentPage
     );
 
-    // REFRESH DASHBOARD
     await updateDashboard();
 
 
@@ -2664,12 +2618,10 @@ async function editLead(id) {
     )
   );
 
-
   setValue(
     "leadSalesAssign",
     lead.sales_id || ""
   );
-
 
   setValue(
     "leadFollowUp",
@@ -2803,7 +2755,7 @@ async function deleteLead(id) {
       currentPage
     );
 
-    // REFRESH DASHBOARD
+    // REFRESH DASHBOARD AFTER DELETE
     await updateDashboard();
 
 
@@ -2825,68 +2777,53 @@ async function deleteLead(id) {
 // ================================
 // DASHBOARD
 // ================================
+// IMPORTANT:
+// Dashboard data is ALWAYS fetched
+// directly from Supabase.
+// ================================
 
 async function updateDashboard() {
 
   if (!currentProfile) {
+
+    console.warn(
+      "Dashboard skipped: no current profile."
+    );
+
     return;
+
   }
 
 
+  console.log(
+    "Refreshing dashboard from Supabase..."
+  );
+
+
   try {
-
-    console.log(
-      "Updating dashboard from Supabase..."
-    );
-
-
-    // ================================
-    // FRESH DATABASE QUERY
-    // ================================
 
     let query =
       supabaseClient
         .from("leads")
         .select(
-          "id, sales_id, status, appointment, site_survey, quotation, closing"
+          "id, sales_id, status, appointment, site_survey, quotation, spk, closing"
         );
 
 
-    // ================================
-    // ADMIN
-    // ALL LEADS
-    // ================================
+    // =====================================
+    // SALES = ONLY THEIR OWN LEADS
+    // =====================================
 
     if (
       currentProfile.role ===
-      "Admin"
+      "Sales"
     ) {
-
-      console.log(
-        "Dashboard mode: ADMIN - ALL LEADS"
-      );
-
-    }
-
-
-    // ================================
-    // SALES
-    // ONLY THEIR OWN LEADS
-    // ================================
-
-    else {
 
       query =
         query.eq(
           "sales_id",
           currentProfile.id
         );
-
-
-      console.log(
-        "Dashboard mode: SALES - OWN LEADS",
-        currentProfile.id
-      );
 
     }
 
@@ -2911,82 +2848,88 @@ async function updateDashboard() {
 
 
     const dataList =
-      data || [];
+      Array.isArray(data)
+        ? data
+        : [];
 
 
     console.log(
-      "Fresh dashboard data:",
+      "Dashboard fresh data:",
       dataList
     );
 
 
-    // ================================
-    // TOTAL
-    // ================================
+    // =====================================
+    // TOTAL LEADS
+    // =====================================
 
     const total =
       dataList.length;
 
 
-    // ================================
+    // =====================================
     // STATUS COUNTS
-    // ================================
+    // =====================================
 
-    const newLeads =
+    const newCount =
       countNormalizedStatus(
         dataList,
         "New"
       );
 
 
-    const interested =
+    const interestedCount =
       countNormalizedStatus(
         dataList,
         "Interested"
       );
 
 
-    const followUp =
+    const followUpCount =
       countNormalizedStatus(
         dataList,
         "Follow Up"
       );
 
 
-    // ================================
-    // PIPELINE
-    // ================================
+    // =====================================
+    // DATE COUNTS
+    // =====================================
 
-    const appointment =
+    const appointmentCount =
       countDateField(
         dataList,
         "appointment"
       );
 
 
-    const siteSurvey =
+    const siteSurveyCount =
       countDateField(
         dataList,
         "site_survey"
       );
 
 
-    const quotation =
+    const quotationCount =
       countDateField(
         dataList,
         "quotation"
       );
 
 
-    const closing =
+    // =====================================
+    // CLOSING
+    // =====================================
+
+    const closingCount =
       countClosing(
         dataList
       );
 
 
-    // ================================
+    // =====================================
     // UPDATE UI
-    // ================================
+    // =====================================
 
     setText(
       "statTotal",
@@ -2996,57 +2939,57 @@ async function updateDashboard() {
 
     setText(
       "statNew",
-      newLeads
+      newCount
     );
 
 
     setText(
       "statInterested",
-      interested
+      interestedCount
     );
 
 
     setText(
       "statFollowUp",
-      followUp
+      followUpCount
     );
 
 
     setText(
       "statAppointment",
-      appointment
+      appointmentCount
     );
 
 
     setText(
       "statSiteSurvey",
-      siteSurvey
+      siteSurveyCount
     );
 
 
     setText(
       "statQuotation",
-      quotation
+      quotationCount
     );
 
 
     setText(
       "statClosing",
-      closing
+      closingCount
     );
 
 
     console.log(
-      "Dashboard updated successfully:",
+      "Dashboard updated:",
       {
         total,
-        newLeads,
-        interested,
-        followUp,
-        appointment,
-        siteSurvey,
-        quotation,
-        closing
+        newCount,
+        interestedCount,
+        followUpCount,
+        appointmentCount,
+        siteSurveyCount,
+        quotationCount,
+        closingCount
       }
     );
 
@@ -3092,10 +3035,19 @@ function countDateField(
 ) {
 
   return data.filter(
-    item =>
-      item[field] !== null &&
-      item[field] !== undefined &&
-      item[field] !== ""
+    item => {
+
+      const value =
+        item[field];
+
+
+      return (
+        value !== null &&
+        value !== undefined &&
+        String(value).trim() !== ""
+      );
+
+    }
   ).length;
 
 }
@@ -3110,15 +3062,30 @@ function countClosing(
 ) {
 
   return data.filter(
-    item =>
-      normalizeLeadStatus(
-        item.status
-      ) === "Closing" ||
-      (
-        item.closing !== null &&
-        item.closing !== undefined &&
-        item.closing !== ""
-      )
+    item => {
+
+      const status =
+        normalizeLeadStatus(
+          item.status
+        );
+
+
+      const closingDate =
+        item.closing;
+
+
+      return (
+        status === "Closing" ||
+        (
+          closingDate !== null &&
+          closingDate !== undefined &&
+          String(
+            closingDate
+          ).trim() !== ""
+        )
+      );
+
+    }
   ).length;
 
 }
@@ -3540,11 +3507,6 @@ async function createSales() {
     }
 
 
-    console.log(
-      "Calling Edge Function create-sales..."
-    );
-
-
     const {
       data,
       error
@@ -3562,13 +3524,6 @@ async function createSales() {
           }
         }
       );
-
-
-    console.log(
-      "Create Sales response:",
-      data,
-      error
-    );
 
 
     if (error) {
@@ -3636,6 +3591,8 @@ async function createSales() {
     await loadLeads(
       currentPage
     );
+
+    await updateDashboard();
 
 
   } catch (error) {
@@ -3734,6 +3691,8 @@ async function toggleSalesStatus(
     await loadLeads(
       currentPage
     );
+
+    await updateDashboard();
 
 
   } catch (error) {
