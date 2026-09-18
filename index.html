@@ -101,14 +101,14 @@
   >
 
     <!-- =======================================================
-         TOP BAR
+         TOP NAVIGATION
     ======================================================== -->
 
     <header class="topbar">
 
-      <div class="topbar-left">
+      <!-- LEFT -->
 
-        <!-- LOGO -->
+      <div class="topbar-left">
 
         <div class="brand">
 
@@ -119,9 +119,6 @@
           >
 
         </div>
-
-
-        <!-- NAVIGATION -->
 
         <nav class="main-nav">
 
@@ -156,11 +153,9 @@
       </div>
 
 
-      <!-- RIGHT SIDE -->
+      <!-- RIGHT -->
 
       <div class="topbar-right">
-
-        <!-- NOTIFICATION -->
 
         <button
           type="button"
@@ -171,7 +166,11 @@
         </button>
 
 
-        <!-- USER -->
+        <!--
+          IMPORTANT:
+          script.js automatically fills this element
+          with avatar, name and role.
+        -->
 
         <div
           id="userInfo"
@@ -179,29 +178,15 @@
         ></div>
 
 
-        <!-- USER MENU -->
+        <!-- LOGOUT -->
 
-        <details class="user-menu">
-
-          <summary class="user-menu-summary">
-            <span class="user-menu-arrow">
-              ▾
-            </span>
-          </summary>
-
-          <div class="logout-dropdown">
-
-            <button
-              type="button"
-              class="logout-btn"
-              onclick="logout()"
-            >
-              Logout
-            </button>
-
-          </div>
-
-        </details>
+        <button
+          type="button"
+          class="logout-btn"
+          onclick="logout()"
+        >
+          Logout
+        </button>
 
       </div>
 
@@ -233,10 +218,7 @@
             </h1>
 
             <p>
-              Welcome back,
-              <span id="dashboardUserName">
-                Sales
-              </span>!
+              Welcome back!
               Here's your sales overview.
             </p>
 
@@ -245,11 +227,13 @@
         </div>
 
 
-        <!-- STATISTICS -->
+        <!-- ===================================================
+             STATISTICS
+        ==================================================== -->
 
         <div class="stats-grid">
 
-          <!-- TOTAL LEADS -->
+          <!-- TOTAL -->
 
           <div class="stat-card">
 
@@ -459,7 +443,7 @@
         </div>
 
 
-        <!-- DASHBOARD QUICK TABLE -->
+        <!-- RECENT LEADS -->
 
         <div class="dashboard-table-card">
 
@@ -493,7 +477,7 @@
 
 
       <!-- =====================================================
-           LEADS PAGE
+           LEADS
       ====================================================== -->
 
       <section
@@ -516,10 +500,14 @@
 
           </div>
 
+          <!-- IMPORTANT:
+               Existing script uses openLeadModal()
+          -->
+
           <button
             type="button"
             class="primary-btn"
-            onclick="openAddLeadModal()"
+            onclick="openLeadModal()"
           >
             + Add Lead
           </button>
@@ -527,7 +515,7 @@
         </div>
 
 
-        <!-- FILTER BAR -->
+        <!-- FILTERS -->
 
         <div class="filter-card">
 
@@ -633,30 +621,6 @@
                 All Location
               </option>
 
-              <option value="Bali">
-                Bali
-              </option>
-
-              <option value="Denpasar">
-                Denpasar
-              </option>
-
-              <option value="Badung">
-                Badung
-              </option>
-
-              <option value="Gianyar">
-                Gianyar
-              </option>
-
-              <option value="Tabanan">
-                Tabanan
-              </option>
-
-              <option value="Ubud">
-                Ubud
-              </option>
-
             </select>
 
           </div>
@@ -708,53 +672,29 @@
 
                 <tr>
 
-                  <th>
-                    Customer
-                  </th>
+                  <th>Customer</th>
 
-                  <th>
-                    Phone
-                  </th>
+                  <th>Phone</th>
 
-                  <th>
-                    Business
-                  </th>
+                  <th>Business</th>
 
-                  <th>
-                    Location
-                  </th>
+                  <th>Location</th>
 
-                  <th>
-                    Sales
-                  </th>
+                  <th>Sales</th>
 
-                  <th>
-                    Created By
-                  </th>
+                  <th>Created By</th>
 
-                  <th>
-                    Status
-                  </th>
+                  <th>Status</th>
 
-                  <th>
-                    Follow Up
-                  </th>
+                  <th>Follow Up</th>
 
-                  <th>
-                    Appointment
-                  </th>
+                  <th>Appointment</th>
 
-                  <th>
-                    Quotation
-                  </th>
+                  <th>Quotation</th>
 
-                  <th>
-                    Closing
-                  </th>
+                  <th>Closing</th>
 
-                  <th>
-                    Action
-                  </th>
+                  <th>Action</th>
 
                 </tr>
 
@@ -786,7 +726,7 @@
 
 
       <!-- =====================================================
-           MANAGE SALES PAGE
+           MANAGE SALES
       ====================================================== -->
 
       <section
@@ -809,10 +749,15 @@
 
           </div>
 
+
+          <!-- IMPORTANT:
+               Existing script uses openSalesModal()
+          -->
+
           <button
             type="button"
             class="primary-btn"
-            onclick="openCreateSalesModal()"
+            onclick="openSalesModal()"
           >
             + Add Sales
           </button>
@@ -936,8 +881,6 @@
 
         <div class="form-grid">
 
-          <!-- CUSTOMER -->
-
           <div class="form-group">
 
             <label for="leadCustomer">
@@ -952,8 +895,6 @@
 
           </div>
 
-
-          <!-- PHONE -->
 
           <div class="form-group">
 
@@ -970,8 +911,6 @@
           </div>
 
 
-          <!-- BUSINESS -->
-
           <div class="form-group">
 
             <label for="leadBusiness">
@@ -987,8 +926,6 @@
           </div>
 
 
-          <!-- LOCATION -->
-
           <div class="form-group">
 
             <label for="leadLocation">
@@ -1003,8 +940,6 @@
 
           </div>
 
-
-          <!-- STATUS -->
 
           <div class="form-group">
 
@@ -1047,8 +982,6 @@
           </div>
 
 
-          <!-- SALES -->
-
           <div class="form-group">
 
             <label for="leadSales">
@@ -1066,8 +999,6 @@
           </div>
 
 
-          <!-- FOLLOW UP -->
-
           <div class="form-group">
 
             <label for="leadFollowUp">
@@ -1081,8 +1012,6 @@
 
           </div>
 
-
-          <!-- APPOINTMENT -->
 
           <div class="form-group">
 
@@ -1098,8 +1027,6 @@
           </div>
 
 
-          <!-- SITE SURVEY -->
-
           <div class="form-group">
 
             <label for="leadSiteSurvey">
@@ -1114,8 +1041,6 @@
           </div>
 
 
-          <!-- QUOTATION -->
-
           <div class="form-group">
 
             <label for="leadQuotation">
@@ -1129,8 +1054,6 @@
 
           </div>
 
-
-          <!-- CLOSING -->
 
           <div class="form-group">
 
@@ -1147,8 +1070,6 @@
 
         </div>
 
-
-        <!-- NOTES -->
 
         <div class="form-group full-width">
 
@@ -1193,7 +1114,7 @@
 
 
   <!-- =========================================================
-       CREATE SALES MODAL
+       SALES MODAL
   ========================================================== -->
 
   <div
@@ -1306,10 +1227,7 @@
 
 
   <!-- =========================================================
-       SCRIPT
-       
-       IMPORTANT:
-       Do not change your existing script.js.
+       SUPABASE + EXISTING SCRIPT
   ========================================================== -->
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
