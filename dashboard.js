@@ -1,96 +1,53 @@
-/* =========================================================
-   FSI CRM - DASHBOARD
-   ---------------------------------------------------------
-   Dashboard is separated from index.html.
-   Existing script.js is NOT modified.
-   Existing Supabase client is reused.
-========================================================= */
-
 (function () {
 
   "use strict";
 
-  let dashboardLoading = false;
-  let dashboardRefreshTimer = null;
-  let dashboardBootTimer = null;
+  let isLoading = false;
+  let lastProfileId = null;
+  let lastDashboardState = false;
+  let autoRefreshTimer = null;
 
 
-  /* =========================================================
-     HELPERS
-  ========================================================= */
+  /* =====================================================
+     BASIC HELPERS
+  ===================================================== */
 
   function getProfile() {
-
     try {
-
-      if (typeof currentProfile !== "undefined") {
-        return currentProfile;
-      }
-
+      return typeof currentProfile !== "undefined"
+        ? currentProfile
+        : null;
     } catch (error) {
-
-      console.error(
-        "Unable to access currentProfile:",
-        error
-      );
-
+      return null;
     }
-
-    return null;
-
   }
 
 
-  function getSupabase() {
-
+  function getClient() {
     try {
-
-      if (
-        typeof supabaseClient !== "undefined" &&
-        supabaseClient
-      ) {
-
-        return supabaseClient;
-
-      }
-
+      return typeof supabaseClient !== "undefined"
+        ? supabaseClient
+        : null;
     } catch (error) {
-
-      console.error(
-        "Unable to access Supabase client:",
-        error
-      );
-
+      return null;
     }
-
-    return null;
-
   }
 
 
-  function getDashboardElement() {
-
-    return document.getElementById(
-      "dashboardPage"
-    );
-
+  function getDashboard() {
+    return document.getElementById("dashboardPage");
   }
 
 
   function isDashboardVisible() {
 
-    const dashboard =
-      getDashboardElement();
+    const el = getDashboard();
 
-    if (!dashboard) {
+    if (!el) {
       return false;
     }
 
-    const style =
-      window.getComputedStyle(dashboard);
-
-    return style.display !== "none";
-
+    return window.getComputedStyle(el).display !== "none";
   }
 
 
@@ -100,9 +57,7 @@
       value === null ||
       value === undefined
     ) {
-
       return "";
-
     }
 
     return String(value)
@@ -111,153 +66,33 @@
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
-
   }
 
 
-  function setText(
-    id,
-    value
-  ) {
-
-    const element =
-      document.getElementById(id);
-
-    if (!element) return;
-
-    element.textContent =
-      value ?? "0";
-
-  }
-
-
-  function formatDate(
-    value
-  ) {
+  function formatDate(value) {
 
     if (!value) {
       return "-";
     }
 
-    try {
+    const date = new Date(value);
 
-      const date =
-        new Date(value);
-
-      if (Number.isNaN(date.getTime())) {
-        return value;
-      }
-
-      return date.toLocaleDateString(
-        "en-GB",
-        {
-          day: "2-digit",
-          month: "short",
-          year: "numeric"
-        }
-      );
-
-    } catch (error) {
-
-      return value;
-
-    }
-
-  }
-
-
-  function formatDateTime(
-    value
-  ) {
-
-    if (!value) {
+    if (Number.isNaN(date.getTime())) {
       return "-";
     }
 
-    try {
-
-      const date =
-        new Date(value);
-
-      if (Number.isNaN(date.getTime())) {
-        return value;
+    return date.toLocaleDateString(
+      "en-GB",
+      {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
       }
-
-      return date.toLocaleDateString(
-        "en-GB",
-        {
-          day: "2-digit",
-          month: "short",
-          year: "numeric"
-        }
-      );
-
-    } catch (error) {
-
-      return value;
-
-    }
-
+    );
   }
 
 
-  function isSalesUser(
-    profile
-  ) {
-
-    if (!profile) {
-      return false;
-    }
-
-    return String(
-      profile.role || ""
-    ).toLowerCase() === "sales";
-
-  }
-
-
-  function isAdminUser(
-    profile
-  ) {
-
-    if (!profile) {
-      return false;
-    }
-
-    return !isSalesUser(profile);
-
-  }
-
-
-  function applyLeadScope(
-    query,
-    profile
-  ) {
-
-    if (
-      profile &&
-      isSalesUser(profile)
-    ) {
-
-      return query.eq(
-        "sales_id",
-        profile.id
-      );
-
-    }
-
-    return query;
-
-  }
-
-
-  /* =========================================================
-     STATUS NORMALIZATION
-  ========================================================= */
-
-  function normalizeStatus(
-    status
-  ) {
+  function normalizeStatus(status) {
 
     const value =
       String(status || "")
@@ -268,26 +103,18 @@
       value === "new" ||
       value === "belum dihubungi"
     ) {
-
       return "New";
-
     }
 
-    if (
-      value === "flyer sent"
-    ) {
-
+    if (value === "flyer sent") {
       return "Flyer Sent";
-
     }
 
     if (
       value === "interested" ||
       value === "tertarik"
     ) {
-
       return "Interested";
-
     }
 
     if (
@@ -295,70 +122,78 @@
       value === "follow-up" ||
       value === "followup"
     ) {
-
       return "Follow Up";
-
     }
 
-    if (
-      value === "closing"
-    ) {
-
+    if (value === "closing") {
       return "Closing";
-
     }
 
     if (
       value === "not interested" ||
       value === "tidak tertarik"
     ) {
-
       return "Not Interested";
-
     }
 
     return status || "Unknown";
-
   }
 
 
-  function getStatusClass(
-    status
-  ) {
+  function statusClass(status) {
 
-    const normalized =
-      normalizeStatus(status);
-
-    return normalized
+    return normalizeStatus(status)
       .toLowerCase()
       .replace(/\s+/g, "-");
-
   }
 
 
-  /* =========================================================
+  function isSales(profile) {
+
+    return String(
+      profile?.role || ""
+    ).toLowerCase() === "sales";
+  }
+
+
+  /* =====================================================
+     APPLY SALES SCOPE
+  ===================================================== */
+
+  function scopeQuery(query, profile) {
+
+    if (
+      profile &&
+      isSales(profile)
+    ) {
+
+      return query.eq(
+        "sales_id",
+        profile.id
+      );
+    }
+
+    return query;
+  }
+
+
+  /* =====================================================
      EXACT COUNT
-     ---------------------------------------------------------
-     Uses count:"exact",head:true so dashboard does NOT depend
-     on Supabase's default 1000-row response limit.
-  ========================================================= */
+  ===================================================== */
 
   async function exactCount(
-    builder
+    callback
   ) {
 
-    const supabase =
-      getSupabase();
+    const client = getClient();
+    const profile = getProfile();
 
-    const profile =
-      getProfile();
-
-    if (!supabase || !profile) {
+    if (!client || !profile) {
       return 0;
     }
 
     let query =
-      supabase
+      client
         .from("leads")
         .select(
           "id",
@@ -369,16 +204,13 @@
         );
 
     query =
-      applyLeadScope(
+      scopeQuery(
         query,
         profile
       );
 
-    if (typeof builder === "function") {
-
-      query =
-        builder(query);
-
+    if (callback) {
+      query = callback(query);
     }
 
     const {
@@ -387,28 +219,18 @@
     } = await query;
 
     if (error) {
-
-      console.error(
-        "Dashboard count error:",
-        error
-      );
-
       throw error;
-
     }
 
-    return Number(count || 0);
-
+    return count || 0;
   }
 
 
-  /* =========================================================
+  /* =====================================================
      STATUS COUNT
-  ========================================================= */
+  ===================================================== */
 
-  async function countStatus(
-    statuses
-  ) {
+  function statusCount(statuses) {
 
     return exactCount(
       function (query) {
@@ -420,48 +242,34 @@
 
       }
     );
-
   }
 
 
-  /* =========================================================
-     DATE FIELD COUNT
-  ========================================================= */
+  /* =====================================================
+     DATE COUNT
+  ===================================================== */
 
-  async function countDateField(
-    field
-  ) {
+  function dateCount(field) {
 
     return exactCount(
       function (query) {
 
-        return query
-          .not(
-            field,
-            "is",
-            null
-          )
-          .neq(
-            field,
-            ""
-          );
+        return query.not(
+          field,
+          "is",
+          null
+        );
 
       }
     );
-
   }
 
 
-  /* =========================================================
+  /* =====================================================
      CLOSING COUNT
-     ---------------------------------------------------------
-     Closing is counted when:
-     - status = Closing
-       OR
-     - closing date exists
-  ========================================================= */
+  ===================================================== */
 
-  async function countClosing() {
+  function closingCount() {
 
     return exactCount(
       function (query) {
@@ -472,285 +280,45 @@
 
       }
     );
-
   }
 
 
-  /* =========================================================
-     LOAD MAIN STATISTICS
-  ========================================================= */
-
-  async function loadStatistics() {
-
-    const results =
-      await Promise.all([
-
-        exactCount(),
-
-        countStatus([
-          "New",
-          "Belum Dihubungi"
-        ]),
-
-        countStatus([
-          "Interested",
-          "Tertarik"
-        ]),
-
-        countStatus([
-          "Follow Up",
-          "follow-up",
-          "Follow-up"
-        ]),
-
-        countDateField(
-          "appointment"
-        ),
-
-        countDateField(
-          "site_survey"
-        ),
-
-        countDateField(
-          "quotation"
-        ),
-
-        countClosing()
-
-      ]);
-
-    return {
-
-      total: results[0],
-      newLeads: results[1],
-      interested: results[2],
-      followUp: results[3],
-      appointment: results[4],
-      siteSurvey: results[5],
-      quotation: results[6],
-      closing: results[7]
-
-    };
-
-  }
-
-
-  /* =========================================================
-     LOAD PIPELINE COUNTS
-  ========================================================= */
-
-  async function loadPipeline() {
-
-    const results =
-      await Promise.all([
-
-        countStatus([
-          "New",
-          "Belum Dihubungi"
-        ]),
-
-        countStatus([
-          "Flyer Sent"
-        ]),
-
-        countStatus([
-          "Interested",
-          "Tertarik"
-        ]),
-
-        countStatus([
-          "Follow Up",
-          "follow-up",
-          "Follow-up"
-        ]),
-
-        countStatus([
-          "Closing"
-        ]),
-
-        countStatus([
-          "Not Interested",
-          "Tidak Tertarik"
-        ])
-
-      ]);
-
-    return {
-
-      newLeads: results[0],
-      flyerSent: results[1],
-      interested: results[2],
-      followUp: results[3],
-      closing: results[4],
-      notInterested: results[5]
-
-    };
-
-  }
-
-
-  /* =========================================================
-     LOAD RECENT LEADS
-  ========================================================= */
-
-  async function loadRecentLeads() {
-
-    const supabase =
-      getSupabase();
-
-    const profile =
-      getProfile();
-
-    if (!supabase || !profile) {
-      return [];
-    }
-
-    let query =
-      supabase
-        .from("leads")
-        .select(
-          "id, customer_name, business, location, status, created_at, sales_id"
-        )
-        .order(
-          "created_at",
-          {
-            ascending: false
-          }
-        )
-        .limit(6);
-
-    query =
-      applyLeadScope(
-        query,
-        profile
-      );
-
-    const {
-      data,
-      error
-    } = await query;
-
-    if (error) {
-
-      console.error(
-        "Recent leads error:",
-        error
-      );
-
-      return [];
-
-    }
-
-    return data || [];
-
-  }
-
-
-  /* =========================================================
-     LOAD UPCOMING FOLLOW UPS
-  ========================================================= */
-
-  async function loadUpcomingFollowUps() {
-
-    const supabase =
-      getSupabase();
-
-    const profile =
-      getProfile();
-
-    if (!supabase || !profile) {
-      return [];
-    }
-
-    const today =
-      new Date()
-        .toISOString()
-        .split("T")[0];
-
-    let query =
-      supabase
-        .from("leads")
-        .select(
-          "id, customer_name, phone, status, follow_up_date, business"
-        )
-        .not(
-          "follow_up_date",
-          "is",
-          null
-        )
-        .gte(
-          "follow_up_date",
-          today
-        )
-        .order(
-          "follow_up_date",
-          {
-            ascending: true
-          }
-        )
-        .limit(6);
-
-    query =
-      applyLeadScope(
-        query,
-        profile
-      );
-
-    const {
-      data,
-      error
-    } = await query;
-
-    if (error) {
-
-      console.error(
-        "Upcoming follow-up error:",
-        error
-      );
-
-      return [];
-
-    }
-
-    return data || [];
-
-  }
-
-
-  /* =========================================================
-     RENDER DASHBOARD SHELL
-  ========================================================= */
-
-  function renderDashboardShell(
-    profile
-  ) {
+  /* =====================================================
+     DASHBOARD HTML
+  ===================================================== */
+
+  function buildDashboard() {
 
     const dashboard =
-      getDashboardElement();
+      getDashboard();
 
     if (!dashboard) {
       return;
     }
 
-    const roleLabel =
-      isAdminUser(profile)
-        ? "Admin Overview"
-        : "My Sales Overview";
 
-    const displayName =
-      profile.name ||
-      profile.sales_name ||
-      profile.full_name ||
-      profile.username ||
+    const profile =
+      getProfile();
+
+    const name =
+      profile?.sales_name ||
+      profile?.name ||
+      profile?.full_name ||
+      profile?.username ||
       "User";
+
+
+    const role =
+      isSales(profile)
+        ? "My Sales Overview"
+        : "Admin Overview";
+
 
     dashboard.innerHTML = `
 
       <div class="dashboard-shell">
 
-        <!-- =========================================
-             DASHBOARD HEADER
-        ========================================== -->
+        <!-- HEADER -->
 
         <div class="dashboard-toolbar">
 
@@ -771,7 +339,7 @@
               </h1>
 
               <p>
-                Welcome back, ${escapeHtml(displayName)}.
+                Welcome back, ${escapeHtml(name)}.
                 Here's your latest CRM overview.
               </p>
 
@@ -784,23 +352,20 @@
 
             <span
               class="dashboard-role-badge"
-              id="dashRole"
             >
-              ${escapeHtml(roleLabel)}
+              ${escapeHtml(role)}
             </span>
 
             <button
               type="button"
               class="dashboard-refresh-btn"
+              id="dashboardRefreshButton"
               onclick="refreshDashboard()"
-              id="dashboardRefreshBtn"
             >
 
               <i data-lucide="refresh-cw"></i>
 
-              <span>
-                Refresh
-              </span>
+              Refresh
 
             </button>
 
@@ -809,14 +374,9 @@
         </div>
 
 
-        <!-- =========================================
-             STAT CARDS
-        ========================================== -->
+        <!-- STAT CARDS -->
 
         <div class="dashboard-stats-grid">
-
-
-          <!-- TOTAL -->
 
           <article class="dashboard-stat-card total">
 
@@ -846,8 +406,6 @@
           </article>
 
 
-          <!-- NEW -->
-
           <article class="dashboard-stat-card new">
 
             <div class="dashboard-stat-top">
@@ -875,8 +433,6 @@
 
           </article>
 
-
-          <!-- INTERESTED -->
 
           <article class="dashboard-stat-card interested">
 
@@ -906,8 +462,6 @@
           </article>
 
 
-          <!-- FOLLOW UP -->
-
           <article class="dashboard-stat-card followup">
 
             <div class="dashboard-stat-top">
@@ -935,8 +489,6 @@
 
           </article>
 
-
-          <!-- APPOINTMENT -->
 
           <article class="dashboard-stat-card appointment">
 
@@ -966,8 +518,6 @@
           </article>
 
 
-          <!-- SITE SURVEY -->
-
           <article class="dashboard-stat-card survey">
 
             <div class="dashboard-stat-top">
@@ -995,8 +545,6 @@
 
           </article>
 
-
-          <!-- QUOTATION -->
 
           <article class="dashboard-stat-card quotation">
 
@@ -1026,8 +574,6 @@
           </article>
 
 
-          <!-- CLOSING -->
-
           <article class="dashboard-stat-card closing">
 
             <div class="dashboard-stat-top">
@@ -1055,22 +601,14 @@
 
           </article>
 
-
         </div>
 
 
-        <!-- =========================================
-             MAIN DASHBOARD GRID
-        ========================================== -->
+        <!-- PIPELINE + STATUS -->
 
         <div class="dashboard-main-grid">
 
-
-          <!-- =======================================
-               PIPELINE
-          ======================================== -->
-
-          <section class="dashboard-panel dashboard-pipeline-panel">
+          <section class="dashboard-panel">
 
             <div class="dashboard-panel-header">
 
@@ -1091,32 +629,23 @@
               </div>
 
               <div
-                class="dashboard-panel-total"
                 id="dashPipelineTotal"
+                class="dashboard-panel-total"
               >
                 0 Leads
               </div>
 
             </div>
 
-
             <div
               id="dashPipeline"
               class="dashboard-pipeline"
-            >
-
-              <!-- Filled by JavaScript -->
-
-            </div>
+            ></div>
 
           </section>
 
 
-          <!-- =======================================
-               STATUS DISTRIBUTION
-          ======================================== -->
-
-          <section class="dashboard-panel dashboard-status-panel">
+          <section class="dashboard-panel">
 
             <div class="dashboard-panel-header">
 
@@ -1138,34 +667,21 @@
 
             </div>
 
-
             <div
               id="dashStatusList"
               class="dashboard-status-list"
-            >
-
-              <!-- Filled by JavaScript -->
-
-            </div>
+            ></div>
 
           </section>
-
 
         </div>
 
 
-        <!-- =========================================
-             RECENT + FOLLOW UP
-        ========================================== -->
+        <!-- RECENT + FOLLOW UP -->
 
         <div class="dashboard-bottom-grid">
 
-
-          <!-- =======================================
-               RECENT LEADS
-          ======================================== -->
-
-          <section class="dashboard-panel dashboard-recent-panel">
+          <section class="dashboard-panel">
 
             <div class="dashboard-panel-header">
 
@@ -1180,7 +696,7 @@
                 </h2>
 
                 <p>
-                  Latest leads added to the CRM.
+                  Latest leads added to CRM.
                 </p>
 
               </div>
@@ -1196,24 +712,15 @@
 
             </div>
 
-
             <div
               id="dashRecentLeads"
               class="dashboard-recent-list"
-            >
-
-              <!-- Filled by JavaScript -->
-
-            </div>
+            ></div>
 
           </section>
 
 
-          <!-- =======================================
-               UPCOMING FOLLOW UPS
-          ======================================== -->
-
-          <section class="dashboard-panel dashboard-followup-panel">
+          <section class="dashboard-panel">
 
             <div class="dashboard-panel-header">
 
@@ -1235,114 +742,330 @@
 
             </div>
 
-
             <div
               id="dashUpcomingFollowups"
               class="dashboard-followup-list"
-            >
-
-              <!-- Filled by JavaScript -->
-
-            </div>
+            ></div>
 
           </section>
 
-
         </div>
-
-
-        <!-- =========================================
-             DASHBOARD FOOTER
-        ========================================== -->
-
-        <div class="dashboard-footer">
-
-          <span>
-            FSI CRM
-          </span>
-
-          <span class="dashboard-footer-dot">
-            •
-          </span>
-
-          <span>
-            Dashboard data is loaded directly from Supabase.
-          </span>
-
-        </div>
-
 
       </div>
-
     `;
 
 
+    createIcons();
+
+  }
+
+
+  /* =====================================================
+     LUCIDE
+  ===================================================== */
+
+  function createIcons() {
+
     if (
       window.lucide &&
-      typeof lucide.createIcons === "function"
+      typeof window.lucide.createIcons === "function"
     ) {
 
-      lucide.createIcons();
+      window.lucide.createIcons();
 
     }
+  }
+
+
+  /* =====================================================
+     LOAD STATISTICS
+  ===================================================== */
+
+  async function loadStats() {
+
+    const [
+      total,
+      newLeads,
+      interested,
+      followUp,
+      appointment,
+      siteSurvey,
+      quotation,
+      closing
+    ] = await Promise.all([
+
+      exactCount(),
+
+      statusCount([
+        "New",
+        "Belum Dihubungi"
+      ]),
+
+      statusCount([
+        "Interested",
+        "Tertarik"
+      ]),
+
+      statusCount([
+        "Follow Up",
+        "follow-up",
+        "Follow-up"
+      ]),
+
+      dateCount(
+        "appointment"
+      ),
+
+      dateCount(
+        "site_survey"
+      ),
+
+      dateCount(
+        "quotation"
+      ),
+
+      closingCount()
+
+    ]);
+
+
+    return {
+
+      total,
+      newLeads,
+      interested,
+      followUp,
+      appointment,
+      siteSurvey,
+      quotation,
+      closing
+
+    };
 
   }
 
 
-  /* =========================================================
-     RENDER STATISTICS
-  ========================================================= */
+  /* =====================================================
+     LOAD PIPELINE
+  ===================================================== */
 
-  function renderStatistics(
-    stats
-  ) {
+  async function loadPipeline() {
 
-    setText(
-      "dashTotal",
-      stats.total
-    );
+    const [
+      newLeads,
+      flyer,
+      interested,
+      followUp,
+      closing,
+      notInterested
+    ] = await Promise.all([
 
-    setText(
-      "dashNew",
-      stats.newLeads
-    );
+      statusCount([
+        "New",
+        "Belum Dihubungi"
+      ]),
 
-    setText(
-      "dashInterested",
-      stats.interested
-    );
+      statusCount([
+        "Flyer Sent"
+      ]),
 
-    setText(
-      "dashFollowUp",
-      stats.followUp
-    );
+      statusCount([
+        "Interested",
+        "Tertarik"
+      ]),
 
-    setText(
-      "dashAppointment",
-      stats.appointment
-    );
+      statusCount([
+        "Follow Up",
+        "follow-up",
+        "Follow-up"
+      ]),
 
-    setText(
-      "dashSiteSurvey",
-      stats.siteSurvey
-    );
+      statusCount([
+        "Closing"
+      ]),
 
-    setText(
-      "dashQuotation",
-      stats.quotation
-    );
+      statusCount([
+        "Not Interested",
+        "Tidak Tertarik"
+      ])
 
-    setText(
-      "dashClosing",
-      stats.closing
-    );
+    ]);
+
+
+    return {
+
+      newLeads,
+      flyer,
+      interested,
+      followUp,
+      closing,
+      notInterested
+
+    };
 
   }
 
 
-  /* =========================================================
-     PIPELINE
-  ========================================================= */
+  /* =====================================================
+     RECENT LEADS
+  ===================================================== */
+
+  async function loadRecentLeads() {
+
+    const client = getClient();
+    const profile = getProfile();
+
+    let query =
+      client
+        .from("leads")
+        .select(
+          "customer_name,business,location,status,created_at"
+        )
+        .order(
+          "created_at",
+          {
+            ascending: false
+          }
+        )
+        .limit(6);
+
+    query =
+      scopeQuery(
+        query,
+        profile
+      );
+
+    const {
+      data,
+      error
+    } = await query;
+
+    if (error) {
+      console.error(
+        "Recent leads:",
+        error
+      );
+      return [];
+    }
+
+    return data || [];
+
+  }
+
+
+  /* =====================================================
+     UPCOMING FOLLOW UPS
+  ===================================================== */
+
+  async function loadFollowUps() {
+
+    const client = getClient();
+    const profile = getProfile();
+
+    const today =
+      new Date()
+        .toISOString()
+        .split("T")[0];
+
+    let query =
+      client
+        .from("leads")
+        .select(
+          "customer_name,business,status,follow_up_date"
+        )
+        .not(
+          "follow_up_date",
+          "is",
+          null
+        )
+        .gte(
+          "follow_up_date",
+          today
+        )
+        .order(
+          "follow_up_date",
+          {
+            ascending: true
+          }
+        )
+        .limit(6);
+
+    query =
+      scopeQuery(
+        query,
+        profile
+      );
+
+    const {
+      data,
+      error
+    } = await query;
+
+    if (error) {
+      console.error(
+        "Follow ups:",
+        error
+      );
+      return [];
+    }
+
+    return data || [];
+
+  }
+
+
+  /* =====================================================
+     RENDER STATS
+  ===================================================== */
+
+  function renderStats(stats) {
+
+    document.getElementById(
+      "dashTotal"
+    ).textContent =
+      stats.total;
+
+    document.getElementById(
+      "dashNew"
+    ).textContent =
+      stats.newLeads;
+
+    document.getElementById(
+      "dashInterested"
+    ).textContent =
+      stats.interested;
+
+    document.getElementById(
+      "dashFollowUp"
+    ).textContent =
+      stats.followUp;
+
+    document.getElementById(
+      "dashAppointment"
+    ).textContent =
+      stats.appointment;
+
+    document.getElementById(
+      "dashSiteSurvey"
+    ).textContent =
+      stats.siteSurvey;
+
+    document.getElementById(
+      "dashQuotation"
+    ).textContent =
+      stats.quotation;
+
+    document.getElementById(
+      "dashClosing"
+    ).textContent =
+      stats.closing;
+
+  }
+
+
+  /* =====================================================
+     RENDER PIPELINE
+  ===================================================== */
 
   function renderPipeline(
     pipeline,
@@ -1354,66 +1077,30 @@
         "dashPipeline"
       );
 
-    const totalElement =
-      document.getElementById(
-        "dashPipelineTotal"
-      );
-
     if (!container) {
       return;
     }
 
-    if (totalElement) {
 
-      totalElement.textContent =
-        `${total} Leads`;
-
-    }
+    document.getElementById(
+      "dashPipelineTotal"
+    ).textContent =
+      `${total} Leads`;
 
 
     const items = [
 
-      {
-        label: "New",
-        value: pipeline.newLeads,
-        className: "new",
-        icon: "user-plus"
-      },
+      ["New", pipeline.newLeads, "new"],
 
-      {
-        label: "Flyer Sent",
-        value: pipeline.flyerSent,
-        className: "flyer",
-        icon: "send"
-      },
+      ["Flyer Sent", pipeline.flyer, "flyer"],
 
-      {
-        label: "Interested",
-        value: pipeline.interested,
-        className: "interested",
-        icon: "heart"
-      },
+      ["Interested", pipeline.interested, "interested"],
 
-      {
-        label: "Follow Up",
-        value: pipeline.followUp,
-        className: "followup",
-        icon: "phone-forwarded"
-      },
+      ["Follow Up", pipeline.followUp, "followup"],
 
-      {
-        label: "Closing",
-        value: pipeline.closing,
-        className: "closing",
-        icon: "badge-check"
-      },
+      ["Closing", pipeline.closing, "closing"],
 
-      {
-        label: "Not Interested",
-        value: pipeline.notInterested,
-        className: "not-interested",
-        icon: "x-circle"
-      }
+      ["Not Interested", pipeline.notInterested, "not-interested"]
 
     ];
 
@@ -1425,7 +1112,7 @@
           const percentage =
             total > 0
               ? Math.round(
-                  (item.value / total) * 100
+                  (item[1] / total) * 100
                 )
               : 0;
 
@@ -1435,33 +1122,27 @@
 
               <div class="dashboard-pipeline-label">
 
-                <div
-                  class="dashboard-pipeline-icon ${item.className}"
-                >
-                  <i data-lucide="${item.icon}"></i>
-                </div>
+                <span
+                  class="dashboard-status-dot ${item[2]}"
+                ></span>
 
-                <span>
-                  ${escapeHtml(item.label)}
-                </span>
+                ${item[0]}
 
               </div>
-
 
               <div class="dashboard-pipeline-track">
 
                 <div
-                  class="dashboard-pipeline-fill ${item.className}"
+                  class="dashboard-pipeline-fill ${item[2]}"
                   style="width:${percentage}%"
                 ></div>
 
               </div>
 
-
               <div class="dashboard-pipeline-value">
 
                 <strong>
-                  ${item.value}
+                  ${item[1]}
                 </strong>
 
                 <span>
@@ -1478,24 +1159,14 @@
       )
       .join("");
 
-
-    if (
-      window.lucide &&
-      typeof lucide.createIcons === "function"
-    ) {
-
-      lucide.createIcons();
-
-    }
-
   }
 
 
-  /* =========================================================
-     STATUS LIST
-  ========================================================= */
+  /* =====================================================
+     RENDER STATUS
+  ===================================================== */
 
-  function renderStatusList(
+  function renderStatus(
     pipeline,
     total
   ) {
@@ -1509,43 +1180,20 @@
       return;
     }
 
+
     const items = [
 
-      {
-        label: "New",
-        value: pipeline.newLeads,
-        className: "new"
-      },
+      ["New", pipeline.newLeads, "new"],
 
-      {
-        label: "Flyer Sent",
-        value: pipeline.flyerSent,
-        className: "flyer"
-      },
+      ["Flyer Sent", pipeline.flyer, "flyer"],
 
-      {
-        label: "Interested",
-        value: pipeline.interested,
-        className: "interested"
-      },
+      ["Interested", pipeline.interested, "interested"],
 
-      {
-        label: "Follow Up",
-        value: pipeline.followUp,
-        className: "followup"
-      },
+      ["Follow Up", pipeline.followUp, "followup"],
 
-      {
-        label: "Closing",
-        value: pipeline.closing,
-        className: "closing"
-      },
+      ["Closing", pipeline.closing, "closing"],
 
-      {
-        label: "Not Interested",
-        value: pipeline.notInterested,
-        className: "not-interested"
-      }
+      ["Not Interested", pipeline.notInterested, "not-interested"]
 
     ];
 
@@ -1557,7 +1205,7 @@
           const percentage =
             total > 0
               ? Math.round(
-                  (item.value / total) * 100
+                  (item[1] / total) * 100
                 )
               : 0;
 
@@ -1568,20 +1216,20 @@
               <div class="dashboard-status-name">
 
                 <span
-                  class="dashboard-status-dot ${item.className}"
+                  class="dashboard-status-dot ${item[2]}"
                 ></span>
 
-                <span>
-                  ${escapeHtml(item.label)}
-                </span>
+                ${item[0]}
 
               </div>
 
               <strong>
-                ${item.value}
+                ${item[1]}
               </strong>
 
-              <span class="dashboard-status-percent">
+              <span
+                class="dashboard-status-percent"
+              >
                 ${percentage}%
               </span>
 
@@ -1596,11 +1244,11 @@
   }
 
 
-  /* =========================================================
-     RECENT LEADS
-  ========================================================= */
+  /* =====================================================
+     RENDER RECENT
+  ===================================================== */
 
-  function renderRecentLeads(
+  function renderRecent(
     leads
   ) {
 
@@ -1620,10 +1268,6 @@
 
         <div class="dashboard-empty-state">
 
-          <div class="dashboard-empty-icon">
-            <i data-lucide="inbox"></i>
-          </div>
-
           <strong>
             No recent leads
           </strong>
@@ -1636,17 +1280,7 @@
 
       `;
 
-      if (
-        window.lucide &&
-        typeof lucide.createIcons === "function"
-      ) {
-
-        lucide.createIcons();
-
-      }
-
       return;
-
     }
 
 
@@ -1654,15 +1288,9 @@
       leads.map(
         function (lead) {
 
-          const status =
-            normalizeStatus(
-              lead.status
-            );
-
-          const statusClass =
-            getStatusClass(
-              lead.status
-            );
+          const name =
+            lead.customer_name ||
+            "Unnamed Customer";
 
           return `
 
@@ -1670,15 +1298,11 @@
 
               <div class="dashboard-recent-avatar">
 
-                ${
-                  escapeHtml(
-                    String(
-                      lead.customer_name || "?"
-                    )
+                ${escapeHtml(
+                  name
                     .charAt(0)
                     .toUpperCase()
-                  )
-                }
+                )}
 
               </div>
 
@@ -1686,22 +1310,15 @@
               <div class="dashboard-recent-info">
 
                 <strong>
-                  ${escapeHtml(
-                    lead.customer_name ||
-                    "Unnamed Customer"
-                  )}
+                  ${escapeHtml(name)}
                 </strong>
 
                 <span>
-
-                  ${
-                    escapeHtml(
-                      lead.business ||
-                      lead.location ||
-                      "Lead"
-                    )
-                  }
-
+                  ${escapeHtml(
+                    lead.business ||
+                    lead.location ||
+                    "Lead"
+                  )}
                 </span>
 
               </div>
@@ -1710,13 +1327,19 @@
               <div class="dashboard-recent-meta">
 
                 <span
-                  class="dashboard-status-badge ${statusClass}"
+                  class="dashboard-status-badge ${statusClass(
+                    lead.status
+                  )}"
                 >
-                  ${escapeHtml(status)}
+                  ${escapeHtml(
+                    normalizeStatus(
+                      lead.status
+                    )
+                  )}
                 </span>
 
                 <small>
-                  ${formatDateTime(
+                  ${formatDate(
                     lead.created_at
                   )}
                 </small>
@@ -1734,11 +1357,11 @@
   }
 
 
-  /* =========================================================
-     UPCOMING FOLLOW UPS
-  ========================================================= */
+  /* =====================================================
+     RENDER FOLLOW UPS
+  ===================================================== */
 
-  function renderUpcomingFollowUps(
+  function renderFollowUps(
     leads
   ) {
 
@@ -1758,33 +1381,19 @@
 
         <div class="dashboard-empty-state">
 
-          <div class="dashboard-empty-icon">
-            <i data-lucide="calendar-check"></i>
-          </div>
-
           <strong>
             No upcoming follow-ups
           </strong>
 
           <span>
-            Your scheduled follow-ups will appear here.
+            Scheduled follow-ups will appear here.
           </span>
 
         </div>
 
       `;
 
-      if (
-        window.lucide &&
-        typeof lucide.createIcons === "function"
-      ) {
-
-        lucide.createIcons();
-
-      }
-
       return;
-
     }
 
 
@@ -1792,22 +1401,15 @@
       leads.map(
         function (lead) {
 
-          const status =
-            normalizeStatus(
-              lead.status
-            );
-
           return `
 
             <div class="dashboard-followup-item">
 
               <div class="dashboard-followup-date">
 
-                <span>
-                  ${formatDate(
-                    lead.follow_up_date
-                  )}
-                </span>
+                ${formatDate(
+                  lead.follow_up_date
+                )}
 
               </div>
 
@@ -1822,23 +1424,25 @@
                 </strong>
 
                 <span>
-                  ${
-                    escapeHtml(
-                      lead.business ||
-                      "Customer follow-up"
-                    )
-                  }
+                  ${escapeHtml(
+                    lead.business ||
+                    "Customer follow-up"
+                  )}
                 </span>
 
               </div>
 
 
               <span
-                class="dashboard-status-badge ${getStatusClass(
+                class="dashboard-status-badge ${statusClass(
                   lead.status
                 )}"
               >
-                ${escapeHtml(status)}
+                ${escapeHtml(
+                  normalizeStatus(
+                    lead.status
+                  )
+                )}
               </span>
 
             </div>
@@ -1852,420 +1456,257 @@
   }
 
 
-  /* =========================================================
-     LOADING STATE
-  ========================================================= */
+  /* =====================================================
+     MAIN LOAD
+  ===================================================== */
 
-  function showDashboardLoading() {
-
-    const elements = [
-
-      "dashTotal",
-      "dashNew",
-      "dashInterested",
-      "dashFollowUp",
-      "dashAppointment",
-      "dashSiteSurvey",
-      "dashQuotation",
-      "dashClosing"
-
-    ];
-
-
-    elements.forEach(
-      function (id) {
-
-        const element =
-          document.getElementById(id);
-
-        if (element) {
-
-          element.classList.add(
-            "dashboard-loading-number"
-          );
-
-          element.textContent =
-            "—";
-
-        }
-
-      }
-    );
-
-  }
-
-
-  /* =========================================================
-     ERROR STATE
-  ========================================================= */
-
-  function showDashboardError(
-    error
+  async function loadDashboard(
+    force = false
   ) {
 
-    console.error(
-      "Dashboard loading failed:",
-      error
-    );
+    const profile =
+      getProfile();
+
+    const client =
+      getClient();
 
 
-    const pipeline =
-      document.getElementById(
-        "dashPipeline"
-      );
-
-    if (pipeline) {
-
-      pipeline.innerHTML = `
-
-        <div class="dashboard-error-state">
-
-          <div class="dashboard-error-icon">
-            <i data-lucide="alert-circle"></i>
-          </div>
-
-          <strong>
-            Unable to load dashboard data
-          </strong>
-
-          <span>
-            Please check your connection and try again.
-          </span>
-
-          <button
-            type="button"
-            onclick="refreshDashboard()"
-          >
-            Try Again
-          </button>
-
-        </div>
-
-      `;
-
-    }
-
-
-    if (
-      window.lucide &&
-      typeof lucide.createIcons === "function"
-    ) {
-
-      lucide.createIcons();
-
-    }
-
-  }
-
-
-  /* =========================================================
-     BUTTON STATE
-  ========================================================= */
-
-  function setRefreshButtonState(
-    loading
-  ) {
-
-    const button =
-      document.getElementById(
-        "dashboardRefreshBtn"
-      );
-
-    if (!button) {
+    if (!profile || !client) {
       return;
     }
 
-
-    if (loading) {
-
-      button.classList.add(
-        "is-loading"
-      );
-
-      button.disabled = true;
-
-      button.innerHTML = `
-
-        <i data-lucide="loader-circle"></i>
-
-        <span>
-          Loading...
-        </span>
-
-      `;
-
-    } else {
-
-      button.classList.remove(
-        "is-loading"
-      );
-
-      button.disabled = false;
-
-      button.innerHTML = `
-
-        <i data-lucide="refresh-cw"></i>
-
-        <span>
-          Refresh
-        </span>
-
-      `;
-
-    }
-
-
-    if (
-      window.lucide &&
-      typeof lucide.createIcons === "function"
-    ) {
-
-      lucide.createIcons();
-
-    }
-
-  }
-
-
-  /* =========================================================
-     MAIN DASHBOARD LOADER
-  ========================================================= */
-
-  async function loadDashboard() {
-
-    if (dashboardLoading) {
-      return;
-    }
 
     if (!isDashboardVisible()) {
       return;
     }
 
 
-    const profile =
-      getProfile();
-
-    const supabase =
-      getSupabase();
-
-
-    if (!profile || !supabase) {
+    if (isLoading) {
       return;
     }
 
 
-    dashboardLoading = true;
+    const profileId =
+      profile.id || "unknown";
+
+
+    /*
+      Only rebuild when:
+      - first opening
+      - user changed
+      - force refresh
+    */
+
+    const needsBuild =
+      !getDashboard()?.querySelector(
+        ".dashboard-shell"
+      ) ||
+      lastProfileId !== profileId;
+
+
+    if (needsBuild) {
+
+      buildDashboard();
+
+      lastProfileId =
+        profileId;
+
+    }
+
+
+    isLoading = true;
+
+
+    const refreshButton =
+      document.getElementById(
+        "dashboardRefreshButton"
+      );
+
+
+    if (refreshButton) {
+
+      refreshButton.disabled =
+        true;
+
+      refreshButton.classList.add(
+        "is-loading"
+      );
+
+    }
 
 
     try {
 
-      /*
-        Build dashboard shell if it does not exist yet.
-      */
-
-      const dashboard =
-        getDashboardElement();
-
-      if (
-        dashboard &&
-        !dashboard.querySelector(
-          ".dashboard-shell"
-        )
-      ) {
-
-        renderDashboardShell(
-          profile
-        );
-
-      }
-
-
-      setRefreshButtonState(
-        true
-      );
-
-      showDashboardLoading();
-
-
-      /*
-        Load all dashboard information.
-      */
-
       const [
-        statistics,
+        stats,
         pipeline,
-        recentLeads,
-        upcomingFollowUps
+        recent,
+        followUps
       ] = await Promise.all([
 
-        loadStatistics(),
+        loadStats(),
 
         loadPipeline(),
 
         loadRecentLeads(),
 
-        loadUpcomingFollowUps()
+        loadFollowUps()
 
       ]);
 
 
       /*
-        Render everything.
+        Only update values.
+        DO NOT rebuild the whole dashboard.
       */
 
-      renderStatistics(
-        statistics
+      renderStats(
+        stats
       );
 
       renderPipeline(
         pipeline,
-        statistics.total
+        stats.total
       );
 
-      renderStatusList(
+      renderStatus(
         pipeline,
-        statistics.total
+        stats.total
       );
 
-      renderRecentLeads(
-        recentLeads
+      renderRecent(
+        recent
       );
 
-      renderUpcomingFollowUps(
-        upcomingFollowUps
+      renderFollowUps(
+        followUps
       );
 
 
-      /*
-        Remove loading class from numbers.
-      */
-
-      [
-        "dashTotal",
-        "dashNew",
-        "dashInterested",
-        "dashFollowUp",
-        "dashAppointment",
-        "dashSiteSurvey",
-        "dashQuotation",
-        "dashClosing"
-      ].forEach(
-        function (id) {
-
-          const element =
-            document.getElementById(id);
-
-          if (element) {
-
-            element.classList.remove(
-              "dashboard-loading-number"
-            );
-
-          }
-
-        }
-      );
+      createIcons();
 
 
     } catch (error) {
 
-      showDashboardError(
+      console.error(
+        "FSI Dashboard Error:",
         error
       );
 
     } finally {
 
-      dashboardLoading = false;
+      isLoading = false;
 
-      setRefreshButtonState(
-        false
-      );
+
+      if (refreshButton) {
+
+        refreshButton.disabled =
+          false;
+
+        refreshButton.classList.remove(
+          "is-loading"
+        );
+
+      }
 
     }
 
   }
 
 
-  /* =========================================================
-     PUBLIC REFRESH FUNCTION
-     ---------------------------------------------------------
-     This allows:
-       onclick="refreshDashboard()"
-  ========================================================= */
+  /* =====================================================
+     PUBLIC REFRESH
+  ===================================================== */
 
   window.refreshDashboard =
     function () {
 
-      loadDashboard();
+      loadDashboard(true);
 
     };
 
 
-  /* =========================================================
-     START DASHBOARD
-  ========================================================= */
+  /* =====================================================
+     WATCH PAGE CHANGE
+     -----------------------------------------------------
+     Does NOT reload every second.
+  ===================================================== */
 
-  function startDashboardWatcher() {
+  function watchDashboard() {
 
-    /*
-      Small boot watcher because login may happen
-      after DOMContentLoaded.
-    */
+    setInterval(
+      function () {
 
-    if (dashboardBootTimer) {
+        const visible =
+          isDashboardVisible();
+
+        const profile =
+          getProfile();
+
+
+        /*
+          Dashboard just became visible.
+        */
+
+        if (
+          visible &&
+          profile &&
+          !lastDashboardState
+        ) {
+
+          loadDashboard(
+            true
+          );
+
+        }
+
+
+        /*
+          Dashboard just became hidden.
+        */
+
+        if (!visible) {
+
+          lastProfileId =
+            null;
+
+        }
+
+
+        lastDashboardState =
+          visible;
+
+      },
+      500
+    );
+
+  }
+
+
+  /* =====================================================
+     AUTO REFRESH
+     -----------------------------------------------------
+     Every 30 seconds only.
+  ===================================================== */
+
+  function startAutoRefresh() {
+
+    if (autoRefreshTimer) {
 
       clearInterval(
-        dashboardBootTimer
+        autoRefreshTimer
       );
 
     }
 
 
-    dashboardBootTimer =
+    autoRefreshTimer =
       setInterval(
         function () {
 
-          const profile =
-            getProfile();
-
           if (
-            profile &&
-            isDashboardVisible()
-          ) {
-
-            loadDashboard();
-
-          }
-
-        },
-        1000
-      );
-
-
-    /*
-      Automatic refresh every 15 seconds.
-    */
-
-    if (dashboardRefreshTimer) {
-
-      clearInterval(
-        dashboardRefreshTimer
-      );
-
-    }
-
-
-    dashboardRefreshTimer =
-      setInterval(
-        function () {
-
-          const profile =
-            getProfile();
-
-          if (
-            profile &&
             isDashboardVisible() &&
-            !dashboardLoading
+            getProfile()
           ) {
 
             loadDashboard();
@@ -2273,21 +1714,23 @@
           }
 
         },
-        15000
+        30000
       );
 
   }
 
 
-  /* =========================================================
+  /* =====================================================
      DOM READY
-  ========================================================= */
+  ===================================================== */
 
   document.addEventListener(
     "DOMContentLoaded",
     function () {
 
-      startDashboardWatcher();
+      watchDashboard();
+
+      startAutoRefresh();
 
     }
   );
