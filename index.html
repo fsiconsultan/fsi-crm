@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -34,7 +35,6 @@
 
       </div>
 
-
       <form
         class="login-form"
         onsubmit="event.preventDefault(); login();"
@@ -55,7 +55,6 @@
 
         </div>
 
-
         <div class="form-group">
 
           <label for="loginPassword">
@@ -71,13 +70,11 @@
 
         </div>
 
-
         <div
           id="loginMessage"
           class="login-message"
           aria-live="polite"
         ></div>
-
 
         <button
           type="submit"
@@ -91,7 +88,6 @@
     </div>
 
   </section>
-
 
 
   <!-- ================================
@@ -111,7 +107,6 @@
     <header class="top-header">
 
       <div class="header-inner">
-
 
         <!-- LOGO -->
 
@@ -133,7 +128,6 @@
           </span>
 
         </a>
-
 
 
         <!-- DESKTOP NAVIGATION -->
@@ -175,6 +169,64 @@
           </button>
 
 
+          <!-- =================================
+               SALES DROPDOWN - ADMIN ONLY
+          ================================== -->
+
+          <div
+            id="salesDropdownContainer"
+            class="nav-dropdown"
+            style="display:none;"
+          >
+
+            <button
+              type="button"
+              class="nav-link nav-dropdown-toggle"
+              id="salesDropdownBtn"
+              onclick="toggleSalesDropdown(event)"
+              aria-haspopup="true"
+              aria-expanded="false"
+            >
+
+              <i data-lucide="users-round"></i>
+
+              <span>
+                Sales
+              </span>
+
+              <i
+                data-lucide="chevron-down"
+                class="nav-dropdown-arrow"
+              ></i>
+
+            </button>
+
+
+            <div
+              id="salesDropdownMenu"
+              class="nav-dropdown-menu"
+              style="display:none;"
+            >
+
+              <button
+                type="button"
+                class="nav-dropdown-item"
+                data-sales-id=""
+                onclick="selectSalesFilter('', 'All Sales')"
+              >
+                All Sales
+              </button>
+
+              <!--
+                Sales names will be loaded dynamically
+                from sales_users by script.js.
+              -->
+
+            </div>
+
+          </div>
+
+
           <!-- ADMIN ONLY -->
 
           <button
@@ -194,7 +246,6 @@
           </button>
 
         </nav>
-
 
 
         <!-- USER MENU -->
@@ -244,7 +295,6 @@
         </div>
 
 
-
         <!-- MOBILE MENU BUTTON -->
 
         <button
@@ -259,7 +309,6 @@
         </button>
 
       </div>
-
 
 
       <!-- MOBILE NAVIGATION -->
@@ -330,13 +379,11 @@
     </header>
 
 
-
     <!-- ================================
          MAIN CONTENT
     ================================= -->
 
     <main class="main-content">
-
 
       <!-- PAGE TITLE -->
 
@@ -357,7 +404,6 @@
       </div>
 
 
-
       <!-- ================================
            DASHBOARD PAGE
       ================================= -->
@@ -367,11 +413,9 @@
         class="page-section"
       >
 
-
         <!-- STATISTICS -->
 
         <div class="stats-grid">
-
 
           <article class="stat-card">
 
@@ -392,7 +436,6 @@
             </div>
 
           </article>
-
 
 
           <article class="stat-card">
@@ -416,7 +459,6 @@
           </article>
 
 
-
           <article class="stat-card">
 
             <div class="stat-icon green">
@@ -436,7 +478,6 @@
             </div>
 
           </article>
-
 
 
           <article class="stat-card">
@@ -460,7 +501,6 @@
           </article>
 
 
-
           <article class="stat-card">
 
             <div class="stat-icon violet">
@@ -480,7 +520,6 @@
             </div>
 
           </article>
-
 
 
           <article class="stat-card">
@@ -504,7 +543,6 @@
           </article>
 
 
-
           <article class="stat-card">
 
             <div class="stat-icon amber">
@@ -524,7 +562,6 @@
             </div>
 
           </article>
-
 
 
           <article class="stat-card">
@@ -548,7 +585,6 @@
           </article>
 
         </div>
-
 
 
         <!-- DASHBOARD OVERVIEW -->
@@ -576,7 +612,6 @@
       </section>
 
 
-
       <!-- ================================
            LEADS PAGE
       ================================= -->
@@ -588,7 +623,6 @@
       >
 
         <div class="panel leads-panel">
-
 
           <!-- LEAD HEADER -->
 
@@ -626,11 +660,9 @@
           </div>
 
 
-
           <!-- FILTERS -->
 
           <div class="filters-bar">
-
 
             <!-- SEARCH -->
 
@@ -646,7 +678,6 @@
               >
 
             </div>
-
 
 
             <!-- STATUS -->
@@ -687,7 +718,6 @@
             </select>
 
 
-
             <!-- BUSINESS -->
 
             <select
@@ -702,7 +732,6 @@
             </select>
 
 
-
             <!-- LOCATION -->
 
             <select
@@ -715,7 +744,6 @@
               </option>
 
             </select>
-
 
 
             <!-- SALES FILTER - ADMIN ONLY -->
@@ -733,7 +761,6 @@
             </select>
 
           </div>
-
 
 
           <!-- LEADS TABLE -->
@@ -790,13 +817,11 @@
 
               </thead>
 
-
               <tbody id="leadsTable"></tbody>
 
             </table>
 
           </div>
-
 
 
           <!-- PAGINATION -->
@@ -806,7 +831,6 @@
             <span id="paginationInfo">
               Showing 0 to 0 of 0 leads
             </span>
-
 
             <div class="pagination-controls">
 
@@ -819,11 +843,9 @@
                 Previous
               </button>
 
-
               <span id="pageIndicator">
                 Page 1 of 1
               </span>
-
 
               <button
                 type="button"
@@ -843,7 +865,6 @@
       </section>
 
 
-
       <!-- ================================
            MANAGE SALES PAGE
       ================================= -->
@@ -855,7 +876,6 @@
       >
 
         <div class="panel">
-
 
           <div class="panel-header">
 
@@ -871,7 +891,6 @@
 
             </div>
 
-
             <button
               type="button"
               class="primary-btn"
@@ -885,7 +904,6 @@
             </button>
 
           </div>
-
 
 
           <!-- SALES TABLE -->
@@ -926,7 +944,6 @@
 
               </thead>
 
-
               <tbody id="salesTable"></tbody>
 
             </table>
@@ -940,7 +957,6 @@
     </main>
 
   </div>
-
 
 
   <!-- ================================
@@ -960,7 +976,6 @@
       aria-labelledby="leadModalTitle"
     >
 
-
       <!-- MODAL HEADER -->
 
       <div class="modal-header">
@@ -977,7 +992,6 @@
 
         </div>
 
-
         <button
           type="button"
           class="modal-close"
@@ -992,7 +1006,6 @@
       </div>
 
 
-
       <!-- LEAD FORM -->
 
       <form
@@ -1004,9 +1017,7 @@
           id="leadId"
         >
 
-
         <div class="form-grid two-col">
-
 
           <!-- CUSTOMER -->
 
@@ -1025,7 +1036,6 @@
           </div>
 
 
-
           <!-- PHONE -->
 
           <div class="form-group">
@@ -1040,7 +1050,6 @@
             >
 
           </div>
-
 
 
           <!-- EMAIL -->
@@ -1059,7 +1068,6 @@
           </div>
 
 
-
           <!-- BUSINESS -->
 
           <div class="form-group">
@@ -1076,7 +1084,6 @@
           </div>
 
 
-
           <!-- LOCATION -->
 
           <div class="form-group">
@@ -1091,7 +1098,6 @@
             >
 
           </div>
-
 
 
           <!-- STATUS -->
@@ -1133,7 +1139,6 @@
           </div>
 
 
-
           <!-- SALES ASSIGNMENT -->
 
           <div class="form-group">
@@ -1153,7 +1158,6 @@
           </div>
 
 
-
           <!-- FOLLOW UP -->
 
           <div class="form-group">
@@ -1168,7 +1172,6 @@
             >
 
           </div>
-
 
 
           <!-- APPOINTMENT -->
@@ -1187,7 +1190,6 @@
           </div>
 
 
-
           <!-- SITE SURVEY -->
 
           <div class="form-group">
@@ -1202,7 +1204,6 @@
             >
 
           </div>
-
 
 
           <!-- QUOTATION -->
@@ -1221,7 +1222,6 @@
           </div>
 
 
-
           <!-- SPK -->
 
           <div class="form-group">
@@ -1238,7 +1238,6 @@
           </div>
 
 
-
           <!-- CLOSING -->
 
           <div class="form-group">
@@ -1253,7 +1252,6 @@
             >
 
           </div>
-
 
 
           <!-- NOTES -->
@@ -1275,7 +1273,6 @@
         </div>
 
 
-
         <!-- MODAL FOOTER -->
 
         <div class="modal-footer">
@@ -1287,7 +1284,6 @@
           >
             Cancel
           </button>
-
 
           <button
             type="submit"
@@ -1303,7 +1299,6 @@
     </div>
 
   </div>
-
 
 
   <!-- ================================
@@ -1323,7 +1318,6 @@
       aria-labelledby="salesModalTitle"
     >
 
-
       <!-- HEADER -->
 
       <div class="modal-header">
@@ -1340,7 +1334,6 @@
 
         </div>
 
-
         <button
           type="button"
           class="modal-close"
@@ -1353,7 +1346,6 @@
         </button>
 
       </div>
-
 
 
       <!-- SALES FORM -->
@@ -1419,7 +1411,6 @@
             Cancel
           </button>
 
-
           <button
             type="submit"
             class="primary-btn"
@@ -1436,7 +1427,6 @@
   </div>
 
 
-
   <!-- ================================
        JAVASCRIPT LIBRARIES
   ================================= -->
@@ -1446,7 +1436,6 @@
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <script src="script.js"></script>
-
 
 
   <!-- ================================
@@ -1497,23 +1486,118 @@
     }
 
 
+    /* =================================
+       SALES DROPDOWN UI
+    ================================= */
+
+    function toggleSalesDropdown(event) {
+
+      if (event) {
+        event.stopPropagation();
+      }
+
+      const menu =
+        document.getElementById("salesDropdownMenu");
+
+      const button =
+        document.getElementById("salesDropdownBtn");
+
+      if (!menu || !button) return;
+
+      const isOpen =
+        menu.style.display === "block";
+
+      menu.style.display =
+        isOpen ? "none" : "block";
+
+      button.setAttribute(
+        "aria-expanded",
+        String(!isOpen)
+      );
+
+    }
+
+
+    function closeSalesDropdown() {
+
+      const menu =
+        document.getElementById("salesDropdownMenu");
+
+      const button =
+        document.getElementById("salesDropdownBtn");
+
+      if (menu) {
+        menu.style.display = "none";
+      }
+
+      if (button) {
+        button.setAttribute(
+          "aria-expanded",
+          "false"
+        );
+      }
+
+    }
+
+
+    function selectSalesFilter(
+      salesId,
+      salesName
+    ) {
+
+      const filter =
+        document.getElementById("salesFilter");
+
+      if (filter) {
+        filter.value = salesId || "";
+      }
+
+      closeSalesDropdown();
+
+      /*
+        The actual lead filtering is handled
+        by script.js through salesFilter.
+      */
+
+      if (typeof loadLeads === "function") {
+        loadLeads(1);
+      }
+
+    }
+
+
     document.addEventListener(
       "click",
       function (e) {
 
-        const area =
+        const userArea =
           document.querySelector(".header-user-area");
 
-        const menu =
+        const userMenu =
           document.getElementById("userDropdown");
 
         if (
-          area &&
-          menu &&
-          !area.contains(e.target)
+          userArea &&
+          userMenu &&
+          !userArea.contains(e.target)
         ) {
 
-          menu.style.display = "none";
+          userMenu.style.display = "none";
+
+        }
+
+
+        const salesArea =
+          document.getElementById(
+            "salesDropdownContainer"
+          );
+
+        if (
+          salesArea &&
+          !salesArea.contains(e.target)
+        ) {
+
+          closeSalesDropdown();
 
         }
 
@@ -1536,3 +1620,4 @@
 
 </body>
 </html>
+```
