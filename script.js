@@ -564,6 +564,11 @@ function setupRoleAccess() {
       "salesFilter"
     );
 
+  const salesDropdownContainer =
+    document.getElementById(
+      "salesDropdownContainer"
+    );
+
 
   if (!currentProfile) return;
 
@@ -588,6 +593,17 @@ function setupRoleAccess() {
   if (mobileManageSalesBtn) {
 
     mobileManageSalesBtn.style.display =
+      isAdmin
+        ? "block"
+        : "none";
+
+  }
+
+
+  // TOP NAV SALES DROPDOWN
+  if (salesDropdownContainer) {
+
+    salesDropdownContainer.style.display =
       isAdmin
         ? "block"
         : "none";
@@ -748,8 +764,6 @@ async function showLeads() {
   }
 
 
-  // Admin sees all leads.
-  // Sales sees their own leads.
   setPageTitle(
     currentProfile &&
     currentProfile.role === "Admin"
@@ -893,7 +907,8 @@ function populateSalesDropdowns() {
       salesFilter.value;
 
 
-    salesFilter.innerHTML = "";
+    salesFilter.innerHTML =
+      "";
 
 
     const allOption =
@@ -901,39 +916,50 @@ function populateSalesDropdowns() {
         "option"
       );
 
+
     allOption.value =
       "";
 
+
     allOption.textContent =
       "All Sales";
+
 
     salesFilter.appendChild(
       allOption
     );
 
 
-    salesUsersData.forEach(
-      sales => {
+    salesUsersData
+      .filter(
+        sales =>
+          sales.role === "Sales"
+      )
+      .forEach(
+        sales => {
 
-        const option =
-          document.createElement(
-            "option"
+          const option =
+            document.createElement(
+              "option"
+            );
+
+
+          option.value =
+            sales.id;
+
+
+          option.textContent =
+            sales.name ||
+            sales.username ||
+            "Sales";
+
+
+          salesFilter.appendChild(
+            option
           );
 
-        option.value =
-          sales.id;
-
-        option.textContent =
-          sales.name ||
-          sales.username ||
-          "Sales";
-
-        salesFilter.appendChild(
-          option
-        );
-
-      }
-    );
+        }
+      );
 
 
     if (
@@ -953,6 +979,137 @@ function populateSalesDropdowns() {
         "";
 
     }
+
+  }
+
+
+  // ================================
+  // TOP NAV SALES DROPDOWN
+  // ================================
+
+  const salesDropdownMenu =
+    document.getElementById(
+      "salesDropdownMenu"
+    );
+
+
+  if (salesDropdownMenu) {
+
+    salesDropdownMenu.innerHTML =
+      "";
+
+
+    // ALL SALES
+    const allSalesButton =
+      document.createElement(
+        "button"
+      );
+
+
+    allSalesButton.type =
+      "button";
+
+
+    allSalesButton.className =
+      "nav-dropdown-item";
+
+
+    allSalesButton.dataset.salesId =
+      "";
+
+
+    allSalesButton.textContent =
+      "All Sales";
+
+
+    allSalesButton.onclick =
+      function(event) {
+
+        event.stopPropagation();
+
+
+        if (
+          typeof selectSalesFilter ===
+          "function"
+        ) {
+
+          selectSalesFilter(
+            "",
+            "All Sales"
+          );
+
+        }
+
+      };
+
+
+    salesDropdownMenu.appendChild(
+      allSalesButton
+    );
+
+
+    // SALES NAMES
+    salesUsersData
+      .filter(
+        sales =>
+          sales.role === "Sales"
+      )
+      .forEach(
+        sales => {
+
+          const salesButton =
+            document.createElement(
+              "button"
+            );
+
+
+          salesButton.type =
+            "button";
+
+
+          salesButton.className =
+            "nav-dropdown-item";
+
+
+          salesButton.dataset.salesId =
+            sales.id;
+
+
+          salesButton.textContent =
+            sales.name ||
+            sales.username ||
+            "Sales";
+
+
+          salesButton.onclick =
+            function(event) {
+
+              event.stopPropagation();
+
+
+              if (
+                typeof selectSalesFilter ===
+                "function"
+              ) {
+
+                selectSalesFilter(
+                  sales.id,
+                  sales.name ||
+                    sales.username ||
+                    "Sales"
+                );
+
+              }
+
+            };
+
+
+          salesDropdownMenu.appendChild(
+            salesButton
+          );
+
+        }
+      );
 
   }
 
@@ -982,39 +1139,50 @@ function populateSalesDropdowns() {
         "option"
       );
 
+
     selectOption.value =
       "";
 
+
     selectOption.textContent =
       "Select Sales";
+
 
     leadSalesAssign.appendChild(
       selectOption
     );
 
 
-    salesUsersData.forEach(
-      sales => {
+    salesUsersData
+      .filter(
+        sales =>
+          sales.role === "Sales"
+      )
+      .forEach(
+        sales => {
 
-        const option =
-          document.createElement(
-            "option"
+          const option =
+            document.createElement(
+              "option"
+            );
+
+
+          option.value =
+            sales.id;
+
+
+          option.textContent =
+            sales.name ||
+            sales.username ||
+            "Sales";
+
+
+          leadSalesAssign.appendChild(
+            option
           );
 
-        option.value =
-          sales.id;
-
-        option.textContent =
-          sales.name ||
-          sales.username ||
-          "Sales";
-
-        leadSalesAssign.appendChild(
-          option
-        );
-
-      }
-    );
+        }
+      );
 
 
     if (
@@ -1170,7 +1338,6 @@ async function loadFilterOptions() {
     );
 
 
-    // Keep Sales dropdown populated
     populateSalesDropdowns();
 
 
@@ -1222,6 +1389,7 @@ function populateFilter(
   defaultOption.value =
     "";
 
+
   defaultOption.textContent =
     defaultText;
 
@@ -1242,6 +1410,7 @@ function populateFilter(
 
       option.value =
         value;
+
 
       option.textContent =
         value;
@@ -1339,7 +1508,6 @@ async function loadLeads(page = 1) {
         ?.value || "";
 
 
-    // ADMIN SALES FILTER
     const salesFilter =
       document
         .getElementById(
@@ -1365,8 +1533,6 @@ async function loadLeads(page = 1) {
 
     // ================================
     // SEARCH
-    // Customer / Phone / Email /
-    // Business / Location
     // ================================
 
     if (search) {
@@ -1727,7 +1893,6 @@ function renderLeads(data) {
 
       tr.innerHTML = `
 
-        <!-- CUSTOMER -->
         <td>
           ${escapeHTML(
             getValue(
@@ -1736,7 +1901,6 @@ function renderLeads(data) {
           )}
         </td>
 
-        <!-- PHONE / WHATSAPP -->
         <td>
           ${
             lead.phone
@@ -1757,7 +1921,6 @@ function renderLeads(data) {
           }
         </td>
 
-        <!-- EMAIL -->
         <td>
           ${
             lead.email
@@ -1775,7 +1938,6 @@ function renderLeads(data) {
           }
         </td>
 
-        <!-- BUSINESS -->
         <td>
           ${escapeHTML(
             getValue(
@@ -1784,7 +1946,6 @@ function renderLeads(data) {
           )}
         </td>
 
-        <!-- LOCATION -->
         <td>
           ${escapeHTML(
             getValue(
@@ -1793,7 +1954,6 @@ function renderLeads(data) {
           )}
         </td>
 
-        <!-- SALES -->
         <td>
           ${
             salesName !== "-"
@@ -1804,7 +1964,6 @@ function renderLeads(data) {
           }
         </td>
 
-        <!-- STATUS -->
         <td>
           <span
             class="status-badge ${statusClass(
@@ -1816,21 +1975,18 @@ function renderLeads(data) {
           </span>
         </td>
 
-        <!-- FOLLOW UP -->
         <td>
           ${formatDate(
             lead.follow_up_date
           )}
         </td>
 
-        <!-- NEXT STEP -->
         <td>
           ${formatDate(
             lead.appointment
           )}
         </td>
 
-        <!-- ACTION -->
         <td>
 
           <button
@@ -2241,10 +2397,6 @@ async function saveLead() {
   };
 
 
-  // ================================
-  // SALES ASSIGNMENT
-  // ================================
-
   const selectedSales =
     document.getElementById(
       "leadSalesAssign"
@@ -2256,16 +2408,12 @@ async function saveLead() {
     "Admin"
   ) {
 
-    // Admin can assign or
-    // remove Sales assignment.
     payload.sales_id =
       selectedSales ||
       null;
 
   } else {
 
-    // Sales can only assign
-    // leads to themselves.
     payload.sales_id =
       currentProfile.id;
 
@@ -2494,7 +2642,6 @@ async function editLead(id) {
   );
 
 
-  // RESTORE ASSIGNED SALES
   setValue(
     "leadSalesAssign",
     lead.sales_id || ""
@@ -2689,14 +2836,12 @@ async function updateDashboard() {
       data || [];
 
 
-    // TOTAL
     setText(
       "statTotal",
       dataList.length
     );
 
 
-    // NEW
     setText(
       "statNew",
       countNormalizedStatus(
@@ -2706,7 +2851,6 @@ async function updateDashboard() {
     );
 
 
-    // INTERESTED
     setText(
       "statInterested",
       countNormalizedStatus(
@@ -2716,7 +2860,6 @@ async function updateDashboard() {
     );
 
 
-    // FOLLOW UP
     setText(
       "statFollowUp",
       countNormalizedStatus(
@@ -2726,7 +2869,6 @@ async function updateDashboard() {
     );
 
 
-    // APPOINTMENT
     setText(
       "statAppointment",
       countDateField(
@@ -2736,7 +2878,6 @@ async function updateDashboard() {
     );
 
 
-    // SITE SURVEY
     setText(
       "statSiteSurvey",
       countDateField(
@@ -2746,7 +2887,6 @@ async function updateDashboard() {
     );
 
 
-    // QUOTATION
     setText(
       "statQuotation",
       countDateField(
@@ -2756,7 +2896,6 @@ async function updateDashboard() {
     );
 
 
-    // CLOSING
     setText(
       "statClosing",
       countClosing(
@@ -3868,6 +4007,67 @@ function setText(
 
   element.textContent =
     value;
+
+}
+
+
+// ================================
+// TOP NAV SALES FILTER
+// ================================
+
+function applyTopSalesFilter(
+  salesId
+) {
+
+  const salesFilter =
+    document.getElementById(
+      "salesFilter"
+    );
+
+
+  if (salesFilter) {
+
+    salesFilter.value =
+      salesId || "";
+
+  }
+
+
+  showLeads();
+
+}
+
+
+// ================================
+// UPDATE TOP NAV SALES BUTTON
+// ================================
+
+function updateSalesDropdownButton(
+  salesName
+) {
+
+  const button =
+    document.getElementById(
+      "salesDropdownBtn"
+    );
+
+
+  if (!button)
+    return;
+
+
+  const text =
+    button.querySelector(
+      "span"
+    );
+
+
+  if (text) {
+
+    text.textContent =
+      salesName || "Sales";
+
+  }
 
 }
 
