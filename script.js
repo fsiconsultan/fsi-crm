@@ -93,7 +93,7 @@ async function checkSession() {
 
 
 // ================================
-// LOGIN & LOGOUT CONFIRMATION
+// LOGIN
 // ================================
 
 async function login() {
@@ -206,44 +206,6 @@ async function login() {
 
 }
 
-function confirmLogout() {
-  if (confirm("Apakah Anda yakin ingin keluar dari sistem?")) {
-    logout();
-  }
-}
-
-async function logout() {
-
-  try {
-
-    await supabaseClient.auth.signOut();
-
-  } catch (error) {
-
-    console.error(
-      error
-    );
-
-  }
-
-
-  currentUser =
-    null;
-
-  currentProfile =
-    null;
-
-  leadsData =
-    [];
-
-  salesUsersData =
-    [];
-
-
-  showLogin();
-
-}
-
 
 // ================================
 // LOAD USER PROFILE
@@ -302,6 +264,9 @@ async function loadProfile() {
 
     showApp();
 
+    // Load daftar Sales terlebih dahulu
+    // agar nama Sales dan Created By
+    // bisa ditampilkan di Leads
     await loadSalesLookup();
 
     await loadLeads();
@@ -391,7 +356,7 @@ function showApp() {
 
 
 // ================================
-// USER INFO (FIX LOGOUT TRIGGER)
+// USER INFO
 // ================================
 
 function updateUserInfo() {
@@ -413,26 +378,33 @@ function updateUserInfo() {
   if (userInfo) {
 
     const avatarUrl =
-      currentProfile.avatar_url || "https://via.placeholder.com/150";
+      currentProfile.avatar_url || "";
 
-    // Menambahkan wrapper & onclick confirmLogout agar tidak langsung mentok logout saat diklik
+
     userInfo.innerHTML = `
-      <div class="profile-wrapper" onclick="confirmLogout()" style="display:flex; align-items:center; gap:0.75rem; cursor:pointer;">
-        <img
-          src="${escapeHTML(avatarUrl)}"
-          alt="${escapeHTML(currentProfile.name)}"
-          class="user-avatar"
-          style="width:36px; height:36px; border-radius:50%; object-fit:cover;"
-        >
-        <div style="display:flex; flex-direction:column;">
-          <strong style="font-size:0.85rem; color:#0F172A;">
-            ${escapeHTML(currentProfile.name)}
-          </strong>
-          <small style="font-size:0.75rem; color:#64748B;">
-            ${escapeHTML(currentProfile.role)}
-          </small>
-        </div>
-      </div>
+      ${
+        avatarUrl
+          ? `
+            <img
+              src="${escapeHTML(avatarUrl)}"
+              alt="${escapeHTML(currentProfile.name)}"
+              class="user-avatar"
+            >
+          `
+          : ""
+      }
+
+      <strong>
+        ${escapeHTML(
+          currentProfile.name
+        )}
+      </strong>
+
+      <small>
+        ${escapeHTML(
+          currentProfile.role
+        )}
+      </small>
     `;
 
   }
@@ -489,7 +461,7 @@ function setupRoleAccess() {
 
 
 // ================================
-// NAVIGATION (FIX LAYOUT & ACTIVE BUTTONS)
+// NAVIGATION
 // ================================
 
 function hideAllPages() {
@@ -535,17 +507,6 @@ function setPageTitle(title) {
 
 }
 
-function updateActiveNav(activeName) {
-  const navBtns = document.querySelectorAll('.nav-btn');
-  navBtns.forEach(btn => {
-    if (btn.innerText.includes(activeName)) {
-      btn.classList.add('active');
-    } else {
-      btn.classList.remove('active');
-    }
-  });
-}
-
 
 async function showDashboard() {
 
@@ -570,10 +531,8 @@ async function showDashboard() {
     "Dashboard"
   );
 
-  updateActiveNav("Dashboard");
 
   await updateDashboard();
-  await loadLeads(); // Memastikan tabel di bawah kartu statistik terisi penuh
 
 }
 
@@ -601,7 +560,6 @@ async function showLeads() {
     "My Leads"
   );
 
-  updateActiveNav("My Leads");
 
   await loadLeads();
 
@@ -645,7 +603,6 @@ async function showSales() {
     "Manage Sales"
   );
 
-  updateActiveNav("Manage Sales");
 
   await loadSalesUsers();
 
@@ -654,6 +611,12 @@ async function showSales() {
 
 // ================================
 // LOAD SALES LOOKUP
+// ================================
+// Dipakai untuk mencari nama Sales
+// berdasarkan sales_users.id
+//
+// sales_id  -> nama Sales
+// created_by -> nama pembuat Lead
 // ================================
 
 async function loadSalesLookup() {
@@ -755,6 +718,7 @@ async function loadLeads() {
 
   try {
 
+    // Pastikan daftar Sales tersedia
     if (
       !salesUsersData ||
       salesUsersData.length === 0
@@ -799,11 +763,9 @@ async function loadLeads() {
       data || [];
 
 
-    // Render ke tabel Dashboard
-    renderLeads(leadsData, "leadsTable");
-
-    // Render ke tabel My Leads (jika ada elemen terpisah)
-    renderLeads(leadsData, "leadsTableAlone");
+    renderLeads(
+      leadsData
+    );
 
 
     await updateDashboard();
@@ -822,14 +784,14 @@ async function loadLeads() {
 
 
 // ================================
-// RENDER LEADS (DUAL TABLE SUPPORT)
+// RENDER LEADS
 // ================================
 
-function renderLeads(data, targetTableId = "leadsTable") {
+function renderLeads(data) {
 
   const table =
     document.getElementById(
-      targetTableId
+      "leadsTable"
     );
 
 
@@ -868,12 +830,14 @@ function renderLeads(data, targetTableId = "leadsTable") {
         );
 
 
+      // Cari nama Sales
       const salesName =
         getSalesName(
           lead.sales_id
         );
 
 
+      // Cari nama pembuat Lead
       const createdByName =
         getSalesName(
           lead.created_by
@@ -925,6 +889,7 @@ function renderLeads(data, targetTableId = "leadsTable") {
           )}
         </td>
 
+        <!-- SALES -->
         <td>
           ${
             salesName !== "-"
@@ -935,6 +900,7 @@ function renderLeads(data, targetTableId = "leadsTable") {
           }
         </td>
 
+        <!-- CREATED BY -->
         <td>
           ${
             createdByName !== "-"
@@ -1092,8 +1058,9 @@ function filterLeads() {
     );
 
 
-  renderLeads(filtered, "leadsTable");
-  renderLeads(filtered, "leadsTableAlone");
+  renderLeads(
+    filtered
+  );
 
 }
 
@@ -2309,6 +2276,8 @@ async function createSales() {
 
     await loadSalesUsers();
 
+    // Refresh lookup supaya Sales baru
+    // langsung tersedia untuk Leads
     await loadSalesLookup();
 
     await loadLeads();
@@ -2556,6 +2525,43 @@ function setupModalEvents() {
     );
 
   }
+
+}
+
+
+// ================================
+// LOGOUT
+// ================================
+
+async function logout() {
+
+  try {
+
+    await supabaseClient.auth.signOut();
+
+  } catch (error) {
+
+    console.error(
+      error
+    );
+
+  }
+
+
+  currentUser =
+    null;
+
+  currentProfile =
+    null;
+
+  leadsData =
+    [];
+
+  salesUsersData =
+    [];
+
+
+  showLogin();
 
 }
 
