@@ -740,6 +740,9 @@ async function showDashboard() {
   );
 
 
+  // ALWAYS LOAD FRESH DATA
+  // FROM SUPABASE WHEN DASHBOARD OPENS
+
   await updateDashboard();
 
 }
@@ -1630,6 +1633,25 @@ async function loadLeads(page = 1) {
 
 
     // ================================
+    // SALES USER ONLY
+    // ================================
+
+    if (
+      currentProfile &&
+      currentProfile.role !==
+        "Admin"
+    ) {
+
+      query =
+        query.eq(
+          "sales_id",
+          currentProfile.id
+        );
+
+    }
+
+
+    // ================================
     // PAGINATION
     // ================================
 
@@ -2514,6 +2536,7 @@ async function saveLead() {
       currentPage
     );
 
+    // REFRESH DASHBOARD
     await updateDashboard();
 
 
@@ -2780,6 +2803,7 @@ async function deleteLead(id) {
       currentPage
     );
 
+    // REFRESH DASHBOARD
     await updateDashboard();
 
 
@@ -2804,26 +2828,80 @@ async function deleteLead(id) {
 
 async function updateDashboard() {
 
-  if (!currentProfile)
+  if (!currentProfile) {
     return;
+  }
 
 
   try {
+
+    console.log(
+      "Updating dashboard from Supabase..."
+    );
+
+
+    // ================================
+    // FRESH DATABASE QUERY
+    // ================================
+
+    let query =
+      supabaseClient
+        .from("leads")
+        .select(
+          "id, sales_id, status, appointment, site_survey, quotation, closing"
+        );
+
+
+    // ================================
+    // ADMIN
+    // ALL LEADS
+    // ================================
+
+    if (
+      currentProfile.role ===
+      "Admin"
+    ) {
+
+      console.log(
+        "Dashboard mode: ADMIN - ALL LEADS"
+      );
+
+    }
+
+
+    // ================================
+    // SALES
+    // ONLY THEIR OWN LEADS
+    // ================================
+
+    else {
+
+      query =
+        query.eq(
+          "sales_id",
+          currentProfile.id
+        );
+
+
+      console.log(
+        "Dashboard mode: SALES - OWN LEADS",
+        currentProfile.id
+      );
+
+    }
+
 
     const {
       data,
       error
     } =
-      await supabaseClient
-        .from("leads")
-        .select(
-          "status, appointment, site_survey, quotation, closing"
-        );
+      await query;
 
 
     if (error) {
 
       console.error(
+        "Dashboard query error:",
         error
       );
 
@@ -2836,77 +2914,147 @@ async function updateDashboard() {
       data || [];
 
 
+    console.log(
+      "Fresh dashboard data:",
+      dataList
+    );
+
+
+    // ================================
+    // TOTAL
+    // ================================
+
+    const total =
+      dataList.length;
+
+
+    // ================================
+    // STATUS COUNTS
+    // ================================
+
+    const newLeads =
+      countNormalizedStatus(
+        dataList,
+        "New"
+      );
+
+
+    const interested =
+      countNormalizedStatus(
+        dataList,
+        "Interested"
+      );
+
+
+    const followUp =
+      countNormalizedStatus(
+        dataList,
+        "Follow Up"
+      );
+
+
+    // ================================
+    // PIPELINE
+    // ================================
+
+    const appointment =
+      countDateField(
+        dataList,
+        "appointment"
+      );
+
+
+    const siteSurvey =
+      countDateField(
+        dataList,
+        "site_survey"
+      );
+
+
+    const quotation =
+      countDateField(
+        dataList,
+        "quotation"
+      );
+
+
+    const closing =
+      countClosing(
+        dataList
+      );
+
+
+    // ================================
+    // UPDATE UI
+    // ================================
+
     setText(
       "statTotal",
-      dataList.length
+      total
     );
 
 
     setText(
       "statNew",
-      countNormalizedStatus(
-        dataList,
-        "New"
-      )
+      newLeads
     );
 
 
     setText(
       "statInterested",
-      countNormalizedStatus(
-        dataList,
-        "Interested"
-      )
+      interested
     );
 
 
     setText(
       "statFollowUp",
-      countNormalizedStatus(
-        dataList,
-        "Follow Up"
-      )
+      followUp
     );
 
 
     setText(
       "statAppointment",
-      countDateField(
-        dataList,
-        "appointment"
-      )
+      appointment
     );
 
 
     setText(
       "statSiteSurvey",
-      countDateField(
-        dataList,
-        "site_survey"
-      )
+      siteSurvey
     );
 
 
     setText(
       "statQuotation",
-      countDateField(
-        dataList,
-        "quotation"
-      )
+      quotation
     );
 
 
     setText(
       "statClosing",
-      countClosing(
-        dataList
-      )
+      closing
+    );
+
+
+    console.log(
+      "Dashboard updated successfully:",
+      {
+        total,
+        newLeads,
+        interested,
+        followUp,
+        appointment,
+        siteSurvey,
+        quotation,
+        closing
+      }
     );
 
 
   } catch (error) {
 
     console.error(
+      "updateDashboard error:",
       error
     );
 
