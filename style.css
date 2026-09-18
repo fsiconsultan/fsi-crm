@@ -1,3 +1,4 @@
+/* ==================== RESET & GLOBAL ==================== */
 :root {
   --bg-main: #f4f7fc;
   --bg-card: #ffffff;
@@ -5,56 +6,99 @@
   --text-muted: #64748b;
   --border-color: #e2e8f0;
   --primary-blue: #2563eb;
+  --primary-hover: #1d4ed8;
   --primary-light: #eff6ff;
   --badge-green: #dcfce7;
-  --text-green: #15803d;
+  --text-green: #166534;
+  --danger: #ef4444;
 }
 
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-body {
+html, body {
+  width: 100%;
+  height: 100%;
   background-color: var(--bg-main);
   color: var(--text-primary);
+  overflow-x: hidden; /* Biar gak ada scroll menyamping */
 }
 
-/* LOGIN SCREEN */
+/* ==================== LOGIN PAGE (ISOLATED) ==================== */
 .login-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
-  background: #0f172a;
+  /* Masukkan gambar background HANYA di login container ini */
+  background: linear-gradient(rgba(15, 23, 42, 0.75), rgba(15, 23, 42, 0.85)), 
+              url('https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=1000&auto=format&fit=crop') no-repeat center center/cover;
+}
+
+/* Paksa hilang total kalau display: none dipanggil JS */
+#loginPage[style*="display: none"] {
+  display: none !important;
 }
 
 .login-card {
-  background: white;
+  background: var(--bg-card);
   padding: 2.5rem;
   border-radius: 16px;
-  width: 100%;
+  width: 90%;
   max-width: 400px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
+.login-header h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.login-header p {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem;
 }
 
 .login-message {
   margin-top: 1rem;
-  color: #ef4444;
+  color: var(--danger);
   font-size: 0.85rem;
   text-align: center;
 }
 
-/* NAVBAR */
+/* ==================== MAIN APP LAYOUT ==================== */
+.app-container {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-main);
+}
+
+/* TOP NAVBAR */
 .navbar {
-  background: white;
+  width: 100%;
   height: 70px;
+  background: var(--bg-card);
   padding: 0 2rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 .nav-left {
@@ -63,22 +107,30 @@ body {
   gap: 2rem;
 }
 
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .brand-name {
   font-weight: 800;
   color: #1e3a8a;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
+  line-height: 1;
 }
 
 .brand-name small {
   display: block;
   font-size: 0.55rem;
   letter-spacing: 1px;
-  color: #3b82f6;
+  color: var(--primary-blue);
+  margin-top: 2px;
 }
 
 .nav-pills {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.35rem;
   background: #f1f5f9;
   padding: 4px;
   border-radius: 99px;
@@ -89,13 +141,18 @@ body {
   background: transparent;
   padding: 8px 16px;
   border-radius: 99px;
-  font-size: 0.875rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-muted);
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 6px;
+  transition: all 0.2s;
+}
+
+.pill-btn:hover {
+  color: var(--text-primary);
 }
 
 .pill-btn.active {
@@ -122,11 +179,21 @@ body {
   align-items: center;
   gap: 8px;
   font-size: 0.875rem;
+  font-weight: 600;
 }
 
-/* MAIN BODY & DASHBOARD */
+.logout-link {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 4px;
+}
+
+/* MAIN CONTENT */
 .main-body {
   padding: 2rem;
+  width: 100%;
   max-width: 1400px;
   margin: 0 auto;
 }
@@ -145,11 +212,12 @@ body {
 
 .welcome-text {
   color: var(--text-muted);
-  font-size: 0.9rem;
+  font-size: 0.875rem;
+  margin-top: 2px;
 }
 
 .date-picker-mock {
-  background: white;
+  background: var(--bg-card);
   padding: 8px 14px;
   border-radius: 8px;
   border: 1px solid var(--border-color);
@@ -157,7 +225,7 @@ body {
   color: var(--text-muted);
 }
 
-/* STATS CARDS GRID (4 Column x 2 Rows) */
+/* ==================== STATS CARDS (4 COLUMNS) ==================== */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -166,29 +234,27 @@ body {
 }
 
 .stat-card {
-  background: white;
+  background: var(--bg-card);
   border-radius: 16px;
   padding: 1.25rem;
   display: flex;
   align-items: center;
   gap: 1rem;
-  border: 1px solid #f1f5f9;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
 }
 
 .stat-icon {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
-}
-
-.icon-blue {
-  background: #eff6ff;
-  color: #2563eb;
+  font-size: 1.1rem;
+  background: var(--primary-light);
+  color: var(--primary-blue);
+  flex-shrink: 0;
 }
 
 .stat-label {
@@ -198,17 +264,19 @@ body {
 }
 
 .stat-value {
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   font-weight: 700;
   color: var(--text-primary);
+  margin-top: 2px;
 }
 
-/* TOOLBAR & FILTERS */
+/* ==================== TOOLBAR & FILTERS ==================== */
 .toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
+  gap: 1rem;
 }
 
 .filters-group {
@@ -218,17 +286,18 @@ body {
 }
 
 .filter-select {
-  background: white;
+  background: var(--bg-card);
   border: 1px solid var(--border-color);
-  padding: 8px 12px;
+  padding: 8px 14px;
   border-radius: 99px;
   font-size: 0.85rem;
   width: auto;
+  outline: none;
 }
 
 .search-input-wrapper {
   position: relative;
-  width: 350px;
+  width: 320px;
 }
 
 .search-icon {
@@ -237,14 +306,17 @@ body {
   top: 50%;
   transform: translateY(-50%);
   font-size: 0.85rem;
+  color: var(--text-muted);
 }
 
 .search-input-wrapper input {
-  padding-left: 32px;
+  width: 100%;
+  padding: 8px 12px 8px 34px;
   border-radius: 99px;
-  background: white;
+  background: var(--bg-card);
   border: 1px solid var(--border-color);
   font-size: 0.85rem;
+  outline: none;
 }
 
 .action-buttons {
@@ -261,20 +333,24 @@ body {
   border: none;
   font-size: 1.2rem;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-outline {
-  background: white;
+  background: var(--bg-card);
   border: 1px solid var(--border-color);
   padding: 6px 14px;
   border-radius: 99px;
   font-size: 0.85rem;
   cursor: pointer;
+  font-weight: 500;
 }
 
-/* TABLE CARD */
+/* ==================== TABLES ==================== */
 .table-card {
-  background: white;
+  background: var(--bg-card);
   border-radius: 16px;
   border: 1px solid var(--border-color);
   overflow-x: auto;
@@ -292,6 +368,7 @@ body {
   color: var(--text-muted);
   font-weight: 600;
   border-bottom: 1px solid var(--border-color);
+  background: #f8fafc;
 }
 
 .custom-table td {
@@ -299,42 +376,22 @@ body {
   border-bottom: 1px solid var(--border-color);
 }
 
-/* STATUS BADGES FROM SCRIPT */
 .status-badge {
   padding: 4px 10px;
   border-radius: 99px;
   font-size: 0.75rem;
   font-weight: 600;
+  display: inline-block;
 }
+
 .status-new { background: #f1f5f9; color: #475569; }
 .status-closing { background: #dcfce7; color: #166534; }
 .status-active { background: #dcfce7; color: #166534; }
 .status-inactive { background: #fee2e2; color: #991b1b; }
 
-/* MODALS */
-.modal-backdrop {
-  position: fixed;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(15, 23, 42, 0.4);
-  backdrop-filter: blur(2px);
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 100;
-}
-
-.modal-card {
-  background: white;
-  border-radius: 16px;
-  padding: 1.5rem;
-  width: 100%;
-  max-width: 600px;
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+/* ==================== FORMS & MODAL ==================== */
+.form-group {
+  margin-bottom: 1rem;
 }
 
 .form-group label {
@@ -344,11 +401,46 @@ body {
   margin-bottom: 4px;
 }
 
-.form-group input, .form-group select, .form-group textarea {
+input, select, textarea {
   width: 100%;
   padding: 8px 12px;
   border-radius: 8px;
   border: 1px solid var(--border-color);
+  outline: none;
+  font-size: 0.875rem;
+}
+
+.modal-backdrop {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(2px);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 200;
+}
+
+.modal-card {
+  background: var(--bg-card);
+  border-radius: 16px;
+  padding: 1.5rem;
+  width: 90%;
+  max-width: 600px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
 }
 
 .primary-btn {
@@ -361,8 +453,10 @@ body {
   font-weight: 600;
 }
 
+.primary-btn:hover { background: var(--primary-hover); }
+
 .secondary-btn {
-  background: white;
+  background: var(--bg-card);
   border: 1px solid var(--border-color);
   padding: 8px 16px;
   border-radius: 8px;
@@ -371,3 +465,11 @@ body {
 
 .close-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; }
 .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 1rem; }
+.full-width { width: 100%; }
+
+/* Responsive Grid untuk layar laptop standar */
+@media (max-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
