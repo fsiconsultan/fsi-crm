@@ -2340,10 +2340,12 @@ async function saveLead() {
       null,
 
     notes:
-      document.getElementById(
-        "leadNotes"
-      ).value
-      .trim()
+      document
+        .getElementById(
+          "leadNotes"
+        )
+        .value
+        .trim()
 
   };
 
@@ -2511,6 +2513,29 @@ async function editLead(id) {
   }
 
 
+  /*
+   * Profile adalah halaman edit customer.
+   * Jadi editLead diarahkan ke fungsi Profile yang sama.
+   */
+
+  if (
+    typeof window.crmOpenCustomerProfile ===
+    "function"
+  ) {
+
+    await window.crmOpenCustomerProfile(
+      id
+    );
+
+    return;
+
+  }
+
+
+  /*
+   * Fallback jika fungsi Profile belum tersedia.
+   */
+
   let lead =
     leadsData.find(
       item =>
@@ -2581,51 +2606,7 @@ async function editLead(id) {
   );
 
 
-  // ==========================================
-  // DIRECTLY OPEN CUSTOMER PAGE
-  // ==========================================
-
-  const allPages = [
-
-    "dashboardPage",
-    "leadsPage",
-    "salesPage",
-    "customerProfilePage",
-    "appointmentPage",
-    "dailyReportPage",
-    "pltsCalculatorPage",
-    "pltsSimulatorPage",
-    "settingsPage"
-
-  ];
-
-
-  allPages.forEach(
-    pageId => {
-
-      const page =
-        document.getElementById(
-          pageId
-        );
-
-
-      if (page) {
-
-        page.style.display =
-          pageId ===
-          "customerProfilePage"
-            ? "block"
-            : "none";
-
-      }
-
-    }
-  );
-
-
-  setPageTitle(
-    "Customer Profile"
-  );
+  crmShowProfilePageFallback();
 
 
   window.scrollTo(
@@ -2871,8 +2852,7 @@ window.crmSaveCustomerEdit =
 
 
       // ==================================================
-      // TETAP DI HALAMAN CUSTOMER
-      // DAN LANGSUNG TAMPILKAN DATA TERBARU
+      // RENDER DATA CUSTOMER TERBARU
       // ==================================================
 
       crmRenderCustomerEditPage(
@@ -2880,55 +2860,25 @@ window.crmSaveCustomerEdit =
       );
 
 
-      const customerPage =
-        document.getElementById(
-          "customerProfilePage"
+      // ==================================================
+      // TETAP DI CUSTOMER PROFILE
+      // GUNAKAN NAVIGASI CRM YANG SAMA
+      // ==================================================
+
+      if (
+        typeof window.crmNavigate ===
+        "function"
+      ) {
+
+        window.crmNavigate(
+          "customerProfile"
         );
 
+      } else {
 
-      if (customerPage) {
-
-        customerPage.style.display =
-          "block";
+        crmShowProfilePageFallback();
 
       }
-
-
-      // Sembunyikan halaman CRM lain
-      // tanpa menggunakan crmNavigate()
-
-      const otherPages = [
-
-        "dashboardPage",
-        "leadsPage",
-        "salesPage",
-        "appointmentPage",
-        "dailyReportPage",
-        "pltsCalculatorPage",
-        "pltsSimulatorPage",
-        "settingsPage"
-
-      ];
-
-
-      otherPages.forEach(
-        pageId => {
-
-          const page =
-            document.getElementById(
-              pageId
-            );
-
-
-          if (page) {
-
-            page.style.display =
-              "none";
-
-          }
-
-        }
-      );
 
 
       setPageTitle(
@@ -3606,62 +3556,85 @@ function crmPopulateEditSales(
 window.crmCancelCustomerEdit =
   function () {
 
-    const customerPage =
-      document.getElementById(
-        "customerProfilePage"
+    /*
+     * Gunakan sistem navigasi CRM utama.
+     * Ini mencegah bentrok antara script.js
+     * dengan crmNavigate() di index.html.
+     */
+
+    if (
+      typeof window.crmNavigate ===
+      "function"
+    ) {
+
+      window.crmNavigate(
+        "leads"
+      );
+
+    } else {
+
+      /*
+       * Fallback jika crmNavigate belum tersedia.
+       */
+
+      const customerPage =
+        document.getElementById(
+          "customerProfilePage"
+        );
+
+
+      if (customerPage) {
+
+        customerPage.style.display =
+          "none";
+
+      }
+
+
+      const allPages = [
+
+        "dashboardPage",
+        "leadsPage",
+        "salesPage",
+        "appointmentPage",
+        "dailyReportPage",
+        "pltsCalculatorPage",
+        "pltsSimulatorPage",
+        "settingsPage"
+
+      ];
+
+
+      allPages.forEach(
+        pageId => {
+
+          const page =
+            document.getElementById(
+              pageId
+            );
+
+
+          if (page) {
+
+            page.style.display =
+              pageId === "leadsPage"
+                ? "block"
+                : "none";
+
+          }
+
+        }
       );
 
 
-    if (customerPage) {
-
-      customerPage.style.display =
-        "none";
+      setPageTitle(
+        currentProfile &&
+        currentProfile.role === "Admin"
+          ? "All Leads"
+          : "My Leads"
+      );
 
     }
-
-
-    const allPages = [
-
-      "dashboardPage",
-      "leadsPage",
-      "salesPage",
-      "appointmentPage",
-      "dailyReportPage",
-      "pltsCalculatorPage",
-      "pltsSimulatorPage",
-      "settingsPage"
-
-    ];
-
-
-    allPages.forEach(
-      pageId => {
-
-        const page =
-          document.getElementById(
-            pageId
-          );
-
-
-        if (page) {
-
-          page.style.display =
-            pageId === "leadsPage"
-              ? "block"
-              : "none";
-
-        }
-
-      }
-    );
-
-
-    setPageTitle(
-      currentProfile &&
-      currentProfile.role === "Admin"
-        ? "All Leads"
-        : "My Leads"
-    );
 
 
     window.scrollTo(
@@ -4686,7 +4659,6 @@ function normalizePhone(
   // OPEN CUSTOMER PROFILE
   // ==========================================================
   // Profile sekarang langsung menjadi halaman edit customer.
-  // Tidak ada lagi halaman read-only terpisah.
   // ==========================================================
 
   window.crmOpenCustomerProfile =
@@ -4774,48 +4746,29 @@ function normalizePhone(
 
 
         // ==========================================
-        // LANGSUNG BUKA CUSTOMER PROFILE PAGE
-        // ==========================================
-        // Tidak bergantung pada crmNavigate()
-        // agar halaman pasti terbuka.
+        // BUKA HALAMAN CUSTOMER PROFILE
+        // MENGGUNAKAN NAVIGASI CRM UTAMA
         // ==========================================
 
-        const allPages = [
+        if (
+          typeof window.crmNavigate ===
+          "function"
+        ) {
 
-          "dashboardPage",
-          "leadsPage",
-          "salesPage",
-          "customerProfilePage",
-          "appointmentPage",
-          "dailyReportPage",
-          "pltsCalculatorPage",
-          "pltsSimulatorPage",
-          "settingsPage"
+          window.crmNavigate(
+            "customerProfile"
+          );
 
-        ];
+        } else {
 
+          /*
+           * Fallback hanya jika crmNavigate
+           * belum tersedia.
+           */
 
-        allPages.forEach(
-          pageId => {
+          crmShowProfilePageFallback();
 
-            const page =
-              document.getElementById(
-                pageId
-              );
-
-
-            if (page) {
-
-              page.style.display =
-                pageId ===
-                "customerProfilePage"
-                  ? "block"
-                  : "none";
-
-            }
-
-          }
-        );
+        }
 
 
         // ==========================================
@@ -4923,9 +4876,6 @@ function normalizePhone(
 
   // ==========================================================
   // LEGACY PROFILE RENDER
-  // ==========================================================
-  // Dipertahankan untuk kompatibilitas fungsi lama.
-  // Database sekarang menggunakan full-page editor.
   // ==========================================================
 
   function crmRenderCustomerProfile(
