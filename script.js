@@ -578,7 +578,6 @@ function setupRoleAccess() {
     "Admin";
 
 
-  // DESKTOP MANAGE SALES
   if (manageSalesBtn) {
 
     manageSalesBtn.style.display =
@@ -589,7 +588,6 @@ function setupRoleAccess() {
   }
 
 
-  // MOBILE MANAGE SALES
   if (mobileManageSalesBtn) {
 
     mobileManageSalesBtn.style.display =
@@ -600,7 +598,6 @@ function setupRoleAccess() {
   }
 
 
-  // TOP NAV SALES DROPDOWN
   if (salesDropdownContainer) {
 
     salesDropdownContainer.style.display =
@@ -611,7 +608,6 @@ function setupRoleAccess() {
   }
 
 
-  // SALES FILTER
   if (salesFilter) {
 
     salesFilter.style.display =
@@ -622,7 +618,6 @@ function setupRoleAccess() {
   }
 
 
-  // SALES ASSIGNMENT FIELD
   setupSalesAssignmentAccess();
 
 }
@@ -891,10 +886,6 @@ async function loadSalesLookup() {
 
 function populateSalesDropdowns() {
 
-  // ================================
-  // ADMIN SALES FILTER
-  // ================================
-
   const salesFilter =
     document.getElementById(
       "salesFilter"
@@ -983,10 +974,6 @@ function populateSalesDropdowns() {
   }
 
 
-  // ================================
-  // TOP NAV SALES DROPDOWN
-  // ================================
-
   const salesDropdownMenu =
     document.getElementById(
       "salesDropdownMenu"
@@ -999,7 +986,6 @@ function populateSalesDropdowns() {
       "";
 
 
-    // ALL SALES
     const allSalesButton =
       document.createElement(
         "button"
@@ -1048,7 +1034,6 @@ function populateSalesDropdowns() {
     );
 
 
-    // SALES NAMES
     salesUsersData
       .filter(
         sales =>
@@ -1113,10 +1098,6 @@ function populateSalesDropdowns() {
 
   }
 
-
-  // ================================
-  // LEAD ASSIGNMENT
-  // ================================
 
   const leadSalesAssign =
     document.getElementById(
@@ -1446,9 +1427,6 @@ function populateFilter(
 // ================================
 // LOAD LEADS
 // ================================
-// PAGINATION
-// 20 LEADS PER PAGE
-// ================================
 
 async function loadLeads(page = 1) {
 
@@ -1470,10 +1448,6 @@ async function loadLeads(page = 1) {
 
     }
 
-
-    // ================================
-    // GET FILTER VALUES
-    // ================================
 
     const search =
       document
@@ -1516,10 +1490,6 @@ async function loadLeads(page = 1) {
         ?.value || "";
 
 
-    // ================================
-    // SUPABASE QUERY
-    // ================================
-
     let query =
       supabaseClient
         .from("leads")
@@ -1530,10 +1500,6 @@ async function loadLeads(page = 1) {
           }
         );
 
-
-    // ================================
-    // SEARCH
-    // ================================
 
     if (search) {
 
@@ -1563,10 +1529,6 @@ async function loadLeads(page = 1) {
     }
 
 
-    // ================================
-    // STATUS FILTER
-    // ================================
-
     if (status) {
 
       query =
@@ -1577,10 +1539,6 @@ async function loadLeads(page = 1) {
 
     }
 
-
-    // ================================
-    // BUSINESS FILTER
-    // ================================
 
     if (business) {
 
@@ -1593,10 +1551,6 @@ async function loadLeads(page = 1) {
     }
 
 
-    // ================================
-    // LOCATION FILTER
-    // ================================
-
     if (location) {
 
       query =
@@ -1607,11 +1561,6 @@ async function loadLeads(page = 1) {
 
     }
 
-
-    // ================================
-    // SALES FILTER
-    // ADMIN ONLY
-    // ================================
 
     if (
       salesFilter &&
@@ -1628,10 +1577,6 @@ async function loadLeads(page = 1) {
 
     }
 
-
-    // ================================
-    // PAGINATION
-    // ================================
 
     const from =
       (currentPage - 1) *
@@ -1996,13 +1941,6 @@ function renderLeads(data) {
               class="primary-btn small-btn"
               onclick="crmOpenCustomerProfile('${lead.id}')">
               Profile
-            </button>
-
-            <button
-              type="button"
-              class="secondary-btn small-btn"
-              onclick="editLead('${lead.id}')">
-              Edit
             </button>
 
             <button
@@ -2550,8 +2488,9 @@ async function saveLead() {
 // ============================================================
 // EDIT CUSTOMER
 // ============================================================
-// EDIT SEKARANG FULL PAGE
-// Tidak lagi membuka leadModal.
+// Tetap dipertahankan untuk kompatibilitas.
+// Customer dari Database sekarang menggunakan Profile,
+// bukan tombol Edit.
 // ============================================================
 
 async function editLead(id) {
@@ -2631,7 +2570,6 @@ async function editLead(id) {
   }
 
 
-  // Simpan customer aktif
   window.crmCurrentCustomerId =
     lead.id;
 
@@ -2843,17 +2781,17 @@ window.crmSaveCustomerEdit =
         data,
         error
       } =
-        await supabaseClient
-          .from("leads")
-          .update(
-            payload
-          )
-          .eq(
-            "id",
-            id
-          )
-          .select("*")
-          .single();
+      await supabaseClient
+        .from("leads")
+        .update(
+          payload
+        )
+        .eq(
+          "id",
+          id
+        )
+        .select("*")
+        .single();
 
 
       if (error) {
@@ -2894,7 +2832,12 @@ window.crmSaveCustomerEdit =
       await updateDashboard();
 
 
-      crmRenderCustomerProfile(
+      // ==================================================
+      // TETAP DI HALAMAN CUSTOMER
+      // DAN LANGSUNG TAMPILKAN DATA TERBARU
+      // ==================================================
+
+      crmRenderCustomerEditPage(
         data
       );
 
@@ -3024,21 +2967,25 @@ function crmRenderCustomerEditPage(
           type="button"
           class="crm-back-btn"
           onclick="crmCancelCustomerEdit()">
-          ← Back to Profile
+          ← Back to Customers
         </button>
+
 
         <div class="crm-edit-toolbar-title">
 
           <span class="eyebrow">
-            CUSTOMER
+            CUSTOMER PROFILE
           </span>
 
           <h2>
-            Edit Customer
+            ${escapeHTML(
+              customerName ||
+              "Customer"
+            )}
           </h2>
 
           <p>
-            Update customer information and sales progress.
+            View and update customer information and sales progress.
           </p>
 
         </div>
@@ -3046,298 +2993,44 @@ function crmRenderCustomerEditPage(
       </div>
 
 
-      <div class="crm-edit-layout">
+      <!-- =========================
+           BASIC INFORMATION
+      ========================== -->
 
+      <div class="panel crm-edit-card">
 
-        <!-- =========================
-             BASIC INFORMATION
-        ========================== -->
+        <div class="panel-header">
 
-        <div class="panel crm-edit-card">
+          <div>
 
-          <div class="panel-header">
-
-            <div>
-
-              <div class="eyebrow">
-                CUSTOMER INFORMATION
-              </div>
-
-              <h3 class="panel-title">
-                Basic Information
-              </h3>
-
+            <div class="eyebrow">
+              CUSTOMER INFORMATION
             </div>
 
-          </div>
-
-
-          <div class="crm-edit-grid">
-
-
-            <div class="crm-edit-field">
-
-              <label>
-                Customer Name
-              </label>
-
-              <input
-                id="crmEditCustomerName"
-                type="text"
-                value="${escapeHTML(customerName)}"
-                placeholder="Customer name"
-              >
-
-            </div>
-
-
-            <div class="crm-edit-field">
-
-              <label>
-                Phone / WhatsApp
-              </label>
-
-              <input
-                id="crmEditPhone"
-                type="text"
-                value="${escapeHTML(phone)}"
-                placeholder="Phone / WhatsApp"
-              >
-
-            </div>
-
-
-            <div class="crm-edit-field">
-
-              <label>
-                Email
-              </label>
-
-              <input
-                id="crmEditEmail"
-                type="email"
-                value="${escapeHTML(email)}"
-                placeholder="Email"
-              >
-
-            </div>
-
-
-            <div class="crm-edit-field">
-
-              <label>
-                Business
-              </label>
-
-              <input
-                id="crmEditBusiness"
-                type="text"
-                value="${escapeHTML(business)}"
-                placeholder="Business"
-              >
-
-            </div>
-
-
-            <div class="crm-edit-field">
-
-              <label>
-                Location
-              </label>
-
-              <input
-                id="crmEditLocation"
-                type="text"
-                value="${escapeHTML(location)}"
-                placeholder="Location"
-              >
-
-            </div>
-
-
-            <div class="crm-edit-field">
-
-              <label>
-                Status
-              </label>
-
-              <select
-                id="crmEditStatus">
-              </select>
-
-            </div>
-
-
-            <div class="crm-edit-field">
-
-              <label>
-                Sales
-              </label>
-
-              <select
-                id="crmEditSales">
-              </select>
-
-            </div>
-
+            <h3 class="panel-title">
+              Basic Information
+            </h3>
 
           </div>
 
         </div>
 
 
-        <!-- =========================
-             SALES PIPELINE
-        ========================== -->
-
-        <div class="panel crm-edit-card">
-
-          <div class="panel-header">
-
-            <div>
-
-              <div class="eyebrow">
-                SALES PIPELINE
-              </div>
-
-              <h3 class="panel-title">
-                Customer Progress
-              </h3>
-
-            </div>
-
-          </div>
+        <div class="crm-edit-grid">
 
 
-          <div class="crm-edit-grid">
+          <div class="crm-edit-field">
 
+            <label>
+              Customer Name
+            </label>
 
-            <div class="crm-edit-field">
-
-              <label>
-                Follow Up
-              </label>
-
-              <input
-                id="crmEditFollowUp"
-                type="date"
-                value="${escapeHTML(
-                  customer.follow_up_date || ""
-                )}"
-              >
-
-            </div>
-
-
-            <div class="crm-edit-field">
-
-              <label>
-                Appointment
-              </label>
-
-              <input
-                id="crmEditAppointment"
-                type="date"
-                value="${escapeHTML(
-                  customer.appointment || ""
-                )}"
-              >
-
-            </div>
-
-
-            <div class="crm-edit-field">
-
-              <label>
-                Site Survey
-              </label>
-
-              <input
-                id="crmEditSiteSurvey"
-                type="date"
-                value="${escapeHTML(
-                  customer.site_survey || ""
-                )}"
-              >
-
-            </div>
-
-
-            <div class="crm-edit-field">
-
-              <label>
-                Quotation
-              </label>
-
-              <input
-                id="crmEditQuotation"
-                type="date"
-                value="${escapeHTML(
-                  customer.quotation || ""
-                )}"
-              >
-
-            </div>
-
-
-            <div class="crm-edit-field">
-
-              <label>
-                SPK
-              </label>
-
-              <input
-                id="crmEditSPK"
-                type="date"
-                value="${escapeHTML(
-                  customer.spk || ""
-                )}"
-              >
-
-            </div>
-
-
-            <div class="crm-edit-field">
-
-              <label>
-                Closing
-              </label>
-
-              <input
-                id="crmEditClosing"
-                type="date"
-                value="${escapeHTML(
-                  customer.closing || ""
-                )}"
-              >
-
-            </div>
-
-
-          </div>
-
-        </div>
-
-
-        <!-- =========================
-             NOTES
-        ========================== -->
-
-        <div class="panel crm-edit-card">
-
-          <div class="panel-header">
-
-            <div>
-
-              <div class="eyebrow">
-                NOTES
-              </div>
-
-              <h3 class="panel-title">
-                Customer Notes
-              </h3>
-
-            </div>
+            <input
+              id="crmEditCustomerName"
+              type="text"
+              value="${escapeHTML(customerName)}"
+              placeholder="Customer name"
+            >
 
           </div>
 
@@ -3345,47 +3038,296 @@ function crmRenderCustomerEditPage(
           <div class="crm-edit-field">
 
             <label>
-              Notes
+              Phone / WhatsApp
             </label>
 
-            <textarea
-              id="crmEditNotes"
-              rows="7"
-              placeholder="Customer notes..."
-            >${escapeHTML(
-              customer.notes || ""
-            )}</textarea>
+            <input
+              id="crmEditPhone"
+              type="text"
+              value="${escapeHTML(phone)}"
+              placeholder="Phone / WhatsApp"
+            >
+
+          </div>
+
+
+          <div class="crm-edit-field">
+
+            <label>
+              Email
+            </label>
+
+            <input
+              id="crmEditEmail"
+              type="email"
+              value="${escapeHTML(email)}"
+              placeholder="Email"
+            >
+
+          </div>
+
+
+          <div class="crm-edit-field">
+
+            <label>
+              Business
+            </label>
+
+            <input
+              id="crmEditBusiness"
+              type="text"
+              value="${escapeHTML(business)}"
+              placeholder="Business"
+            >
+
+          </div>
+
+
+          <div class="crm-edit-field">
+
+            <label>
+              Location
+            </label>
+
+            <input
+              id="crmEditLocation"
+              type="text"
+              value="${escapeHTML(location)}"
+              placeholder="Location"
+            >
+
+          </div>
+
+
+          <div class="crm-edit-field">
+
+            <label>
+              Status
+            </label>
+
+            <select
+              id="crmEditStatus">
+            </select>
+
+          </div>
+
+
+          <div class="crm-edit-field">
+
+            <label>
+              Sales
+            </label>
+
+            <select
+              id="crmEditSales">
+            </select>
+
+          </div>
+
+
+        </div>
+
+      </div>
+
+
+      <!-- =========================
+           SALES PIPELINE
+      ========================== -->
+
+      <div class="panel crm-edit-card">
+
+        <div class="panel-header">
+
+          <div>
+
+            <div class="eyebrow">
+              SALES PIPELINE
+            </div>
+
+            <h3 class="panel-title">
+              Customer Progress
+            </h3>
 
           </div>
 
         </div>
 
 
-        <!-- =========================
-             ACTIONS
-        ========================== -->
+        <div class="crm-edit-grid">
 
-        <div class="crm-edit-actions">
 
-          <button
-            type="button"
-            class="secondary-btn"
-            onclick="crmCancelCustomerEdit()">
-            CANCEL
-          </button>
+          <div class="crm-edit-field">
 
-          <button
-            type="button"
-            id="crmEditSaveButton"
-            class="primary-btn"
-            onclick="crmSaveCustomerEdit()">
-            SAVE CHANGES
-          </button>
+            <label>
+              Follow Up
+            </label>
+
+            <input
+              id="crmEditFollowUp"
+              type="date"
+              value="${escapeHTML(
+                customer.follow_up_date || ""
+              )}"
+            >
+
+          </div>
+
+
+          <div class="crm-edit-field">
+
+            <label>
+              Appointment
+            </label>
+
+            <input
+              id="crmEditAppointment"
+              type="date"
+              value="${escapeHTML(
+                customer.appointment || ""
+              )}"
+            >
+
+          </div>
+
+
+          <div class="crm-edit-field">
+
+            <label>
+              Site Survey
+            </label>
+
+            <input
+              id="crmEditSiteSurvey"
+              type="date"
+              value="${escapeHTML(
+                customer.site_survey || ""
+              )}"
+            >
+
+          </div>
+
+
+          <div class="crm-edit-field">
+
+            <label>
+              Quotation
+            </label>
+
+            <input
+              id="crmEditQuotation"
+              type="date"
+              value="${escapeHTML(
+                customer.quotation || ""
+              )}"
+            >
+
+          </div>
+
+
+          <div class="crm-edit-field">
+
+            <label>
+              SPK
+            </label>
+
+            <input
+              id="crmEditSPK"
+              type="date"
+              value="${escapeHTML(
+                customer.spk || ""
+              )}"
+            >
+
+          </div>
+
+
+          <div class="crm-edit-field">
+
+            <label>
+              Closing
+            </label>
+
+            <input
+              id="crmEditClosing"
+              type="date"
+              value="${escapeHTML(
+                customer.closing || ""
+              )}"
+            >
+
+          </div>
+
+
+        </div>
+
+      </div>
+
+
+      <!-- =========================
+           NOTES
+      ========================== -->
+
+      <div class="panel crm-edit-card">
+
+        <div class="panel-header">
+
+          <div>
+
+            <div class="eyebrow">
+              NOTES
+            </div>
+
+            <h3 class="panel-title">
+              Customer Notes
+            </h3>
+
+          </div>
 
         </div>
 
 
+        <div class="crm-edit-field">
+
+          <label>
+            Notes
+          </label>
+
+          <textarea
+            id="crmEditNotes"
+            rows="7"
+            placeholder="Customer notes..."
+          >${escapeHTML(
+            customer.notes || ""
+          )}</textarea>
+
+        </div>
+
       </div>
+
+
+      <!-- =========================
+           ACTIONS
+      ========================== -->
+
+      <div class="crm-edit-actions">
+
+        <button
+          type="button"
+          class="secondary-btn"
+          onclick="crmCancelCustomerEdit()">
+          CANCEL
+        </button>
+
+        <button
+          type="button"
+          id="crmEditSaveButton"
+          class="primary-btn"
+          onclick="crmSaveCustomerEdit()">
+          SAVE CHANGES
+        </button>
+
+      </div>
+
 
     </div>
 
@@ -3570,44 +3512,14 @@ function crmPopulateEditSales(
 
 
 // ============================================================
-// CANCEL EDIT
+// CANCEL CUSTOMER PAGE
+// ============================================================
+// Tidak kembali ke read-only Profile.
+// Langsung kembali ke Database Customer.
 // ============================================================
 
 window.crmCancelCustomerEdit =
   function () {
-
-    const customer =
-      window.crmCurrentCustomer;
-
-
-    if (
-      customer &&
-      customer.id
-    ) {
-
-      crmRenderCustomerProfile(
-        customer
-      );
-
-      if (
-        typeof window.crmNavigate ===
-        "function"
-      ) {
-
-        window.crmNavigate(
-          "customerProfile"
-        );
-
-      } else {
-
-        crmShowProfilePageFallback();
-
-      }
-
-      return;
-
-    }
-
 
     if (
       typeof window.crmNavigate ===
@@ -3618,7 +3530,34 @@ window.crmCancelCustomerEdit =
         "leads"
       );
 
+      return;
+
     }
+
+
+    hideAllPages();
+
+
+    const leadsPage =
+      document.getElementById(
+        "leadsPage"
+      );
+
+
+    if (leadsPage) {
+
+      leadsPage.style.display =
+        "block";
+
+    }
+
+
+    setPageTitle(
+      currentProfile &&
+      currentProfile.role === "Admin"
+        ? "All Leads"
+        : "My Leads"
+    );
 
   };
 
@@ -3669,8 +3608,6 @@ async function deleteLead(id) {
     }
 
 
-    // Jika customer yang dihapus
-    // sedang terbuka di profile
     if (
       String(
         window.crmCurrentCustomerId
@@ -3963,10 +3900,6 @@ async function loadSalesUsers() {
     salesUsersData =
       data || [];
 
-
-    // ================================
-    // SORT SALES NAMES A-Z
-    // ================================
 
     salesUsersData.sort(
       (a, b) =>
@@ -4616,7 +4549,7 @@ function normalizePhone(
 
 
 // ============================================================
-// CUSTOMER PROFILE MODULE
+// CUSTOMER PROFILE / CUSTOMER EDIT MODULE
 // ============================================================
 
 (function () {
@@ -4625,7 +4558,7 @@ function normalizePhone(
 
 
   // ==========================================================
-  // CUSTOMER PROFILE STATE
+  // CUSTOMER STATE
   // ==========================================================
 
   window.crmCurrentCustomerId = null;
@@ -4634,6 +4567,9 @@ function normalizePhone(
 
   // ==========================================================
   // OPEN CUSTOMER PROFILE
+  // ==========================================================
+  // Profile sekarang langsung menjadi halaman edit customer.
+  // Tidak ada lagi halaman read-only terpisah.
   // ==========================================================
 
   window.crmOpenCustomerProfile =
@@ -4701,7 +4637,11 @@ function normalizePhone(
           data;
 
 
-        crmRenderCustomerProfile(
+        // ==================================================
+        // LANGSUNG RENDER CUSTOMER EDIT PAGE
+        // ==================================================
+
+        crmRenderCustomerEditPage(
           data
         );
 
@@ -4799,598 +4739,29 @@ function normalizePhone(
 
 
   // ==========================================================
-  // RENDER CUSTOMER PROFILE
+  // LEGACY PROFILE RENDER
+  // ==========================================================
+  // Dipertahankan untuk kompatibilitas fungsi lama.
+  // Database sekarang tidak memakai fungsi ini.
   // ==========================================================
 
   function crmRenderCustomerProfile(
     customer
   ) {
 
-    const page =
-      document.getElementById(
-        "customerProfilePage"
-      );
-
-
-    if (!page) {
-
-      console.error(
-        "customerProfilePage not found."
-      );
-
-      return;
-
-    }
-
-
-    const customerName =
-      getValue(
-        customer.customer_name
-      ) ||
-      "Unnamed Customer";
-
-
-    const phone =
-      getValue(
-        customer.phone
-      );
-
-
-    const email =
-      getValue(
-        customer.email
-      );
-
-
-    const business =
-      getValue(
-        customer.business
-      );
-
-
-    const location =
-      getValue(
-        customer.location
-      );
-
-
-    const salesName =
-      getSalesName(
-        customer.sales_id
-      );
-
-
-    const status =
-      normalizeLeadStatus(
-        customer.status
-      );
-
-
-    const statusCSS =
-      statusClass(
-        status
-      );
-
-
-    page.innerHTML = `
-
-      <div class="crm-page-toolbar">
-
-        <div>
-
-          <button
-            type="button"
-            class="crm-back-btn"
-            onclick="crmGoBack()">
-
-            ← Back
-
-          </button>
-
-        </div>
-
-
-        <div>
-
-          <button
-            type="button"
-            class="secondary-btn"
-            onclick="crmProfileEdit()">
-
-            ✏️ Edit Customer
-
-          </button>
-
-        </div>
-
-      </div>
-
-
-      <!-- =====================================================
-           CUSTOMER HEADER
-      ====================================================== -->
-
-      <div class="crm-profile-header">
-
-        <div class="crm-profile-avatar">
-
-          ${escapeHTML(
-            customerName
-              .charAt(0)
-              .toUpperCase()
-          )}
-
-        </div>
-
-
-        <div class="crm-profile-heading">
-
-          <div class="crm-profile-name-row">
-
-            <h2>
-              ${escapeHTML(
-                customerName
-              )}
-            </h2>
-
-
-            <span
-              class="status-badge ${statusCSS}">
-
-              ${escapeHTML(
-                status
-              )}
-
-            </span>
-
-          </div>
-
-
-          <p>
-
-            ${
-              business
-                ? escapeHTML(
-                    business
-                  )
-                : "Customer"
-            }
-
-          </p>
-
-        </div>
-
-
-        <div class="crm-profile-actions">
-
-          ${
-            phone
-              ? `
-
-                <button
-                  type="button"
-                  class="primary-btn"
-                  onclick="crmProfileWhatsApp()">
-
-                  💬 WhatsApp
-
-                </button>
-
-              `
-              : ""
-          }
-
-
-          ${
-            email
-              ? `
-
-                <button
-                  type="button"
-                  class="secondary-btn"
-                  onclick="crmProfileEmail()">
-
-                  ✉️ Email
-
-                </button>
-
-              `
-              : ""
-          }
-
-
-          <button
-            type="button"
-            class="secondary-btn"
-            onclick="crmProfileAppointment()">
-
-            📅 Appointment
-
-          </button>
-
-        </div>
-
-      </div>
-
-
-      <!-- =====================================================
-           CUSTOMER INFORMATION
-      ====================================================== -->
-
-      <div class="crm-profile-grid">
-
-
-        <div class="panel crm-profile-card">
-
-          <div class="panel-header">
-
-            <div>
-
-              <div class="eyebrow">
-                CUSTOMER
-              </div>
-
-              <h3 class="panel-title">
-                Customer Information
-              </h3>
-
-            </div>
-
-          </div>
-
-
-          <div class="crm-info-grid">
-
-
-            <div class="crm-info-item">
-
-              <span>
-                Customer Name
-              </span>
-
-              <strong>
-                ${escapeHTML(
-                  customerName
-                )}
-              </strong>
-
-            </div>
-
-
-            <div class="crm-info-item">
-
-              <span>
-                WhatsApp / Phone
-              </span>
-
-              <strong>
-
-                ${
-                  phone
-                    ? escapeHTML(
-                        phone
-                      )
-                    : "-"
-                }
-
-              </strong>
-
-            </div>
-
-
-            <div class="crm-info-item">
-
-              <span>
-                Email
-              </span>
-
-              <strong>
-
-                ${
-                  email
-                    ? escapeHTML(
-                        email
-                      )
-                    : "-"
-                }
-
-              </strong>
-
-            </div>
-
-
-            <div class="crm-info-item">
-
-              <span>
-                Business
-              </span>
-
-              <strong>
-
-                ${
-                  business
-                    ? escapeHTML(
-                        business
-                      )
-                    : "-"
-                }
-
-              </strong>
-
-            </div>
-
-
-            <div class="crm-info-item">
-
-              <span>
-                Location
-              </span>
-
-              <strong>
-
-                ${
-                  location
-                    ? escapeHTML(
-                        location
-                      )
-                    : "-"
-                }
-
-              </strong>
-
-            </div>
-
-
-            <div class="crm-info-item">
-
-              <span>
-                Sales
-              </span>
-
-              <strong>
-
-                ${
-                  salesName &&
-                  salesName !== "-"
-                    ? escapeHTML(
-                        salesName
-                      )
-                    : "-"
-                }
-
-              </strong>
-
-            </div>
-
-
-          </div>
-
-        </div>
-
-
-        <!-- =================================================
-             NOTES
-        ================================================== -->
-
-        <div class="panel crm-profile-card">
-
-          <div class="panel-header">
-
-            <div>
-
-              <div class="eyebrow">
-                NOTES
-              </div>
-
-              <h3 class="panel-title">
-                Customer Notes
-              </h3>
-
-            </div>
-
-          </div>
-
-
-          <div class="crm-profile-notes">
-
-            ${
-              customer.notes
-                ? escapeHTML(
-                    customer.notes
-                  )
-                : "No notes available."
-            }
-
-          </div>
-
-        </div>
-
-
-      </div>
-
-
-      <!-- =====================================================
-           SALES PIPELINE
-      ====================================================== -->
-
-      <div class="panel crm-profile-card">
-
-        <div class="panel-header">
-
-          <div>
-
-            <div class="eyebrow">
-              SALES PIPELINE
-            </div>
-
-            <h3 class="panel-title">
-              Customer Progress
-            </h3>
-
-          </div>
-
-        </div>
-
-
-        <div class="crm-profile-pipeline">
-
-
-          ${crmPipelineStep(
-            "Lead",
-            customer.created_at,
-            true
-          )}
-
-
-          ${crmPipelineLine()}
-
-
-          ${crmPipelineStep(
-            "Follow Up",
-            customer.follow_up_date,
-            !!customer.follow_up_date
-          )}
-
-
-          ${crmPipelineLine()}
-
-
-          ${crmPipelineStep(
-            "Appointment",
-            customer.appointment,
-            !!customer.appointment
-          )}
-
-
-          ${crmPipelineLine()}
-
-
-          ${crmPipelineStep(
-            "Site Survey",
-            customer.site_survey,
-            !!customer.site_survey
-          )}
-
-
-          ${crmPipelineLine()}
-
-
-          ${crmPipelineStep(
-            "Quotation",
-            customer.quotation,
-            !!customer.quotation
-          )}
-
-
-          ${crmPipelineLine()}
-
-
-          ${crmPipelineStep(
-            "SPK",
-            customer.spk,
-            !!customer.spk
-          )}
-
-
-          ${crmPipelineLine()}
-
-
-          ${crmPipelineStep(
-            "Closing",
-            customer.closing,
-            !!customer.closing ||
-            status === "Closing"
-          )}
-
-
-        </div>
-
-      </div>
-
-
-      <!-- =====================================================
-           CUSTOMER JOURNEY
-      ====================================================== -->
-
-      <div class="panel crm-profile-card">
-
-        <div class="panel-header">
-
-          <div>
-
-            <div class="eyebrow">
-              CUSTOMER JOURNEY
-            </div>
-
-            <h3 class="panel-title">
-              Activity Summary
-            </h3>
-
-          </div>
-
-        </div>
-
-
-        <div class="crm-profile-timeline">
-
-
-          ${crmTimelineItem(
-            "Lead Created",
-            customer.created_at,
-            true
-          )}
-
-
-          ${crmTimelineItem(
-            "Follow Up",
-            customer.follow_up_date,
-            !!customer.follow_up_date
-          )}
-
-
-          ${crmTimelineItem(
-            "Appointment",
-            customer.appointment,
-            !!customer.appointment
-          )}
-
-
-          ${crmTimelineItem(
-            "Site Survey",
-            customer.site_survey,
-            !!customer.site_survey
-          )}
-
-
-          ${crmTimelineItem(
-            "Quotation",
-            customer.quotation,
-            !!customer.quotation
-          )}
-
-
-          ${crmTimelineItem(
-            "SPK",
-            customer.spk,
-            !!customer.spk
-          )}
-
-
-          ${crmTimelineItem(
-            "Closing",
-            customer.closing,
-            !!customer.closing
-          )}
-
-
-        </div>
-
-      </div>
-
-    `;
-
-
-    crmAddProfileStyles();
+    // Profile utama sekarang adalah full-page editor.
+    // Fungsi lama diarahkan ke editor agar tidak ada
+    // halaman read-only yang terpisah.
+
+    window.crmCurrentCustomerId =
+      customer.id;
+
+    window.crmCurrentCustomer =
+      customer;
+
+    crmRenderCustomerEditPage(
+      customer
+    );
 
   }
 
@@ -5414,7 +4785,6 @@ function normalizePhone(
             : ""
         }">
 
-
         <div class="crm-pipeline-dot">
 
           ${
@@ -5425,17 +4795,13 @@ function normalizePhone(
 
         </div>
 
-
         <div class="crm-pipeline-label">
 
           <strong>
-
             ${escapeHTML(
               label
             )}
-
           </strong>
-
 
           <span>
 
@@ -5450,7 +4816,6 @@ function normalizePhone(
           </span>
 
         </div>
-
 
       </div>
 
@@ -5497,35 +4862,25 @@ function normalizePhone(
 
       <div class="crm-timeline-item">
 
-
         <div class="crm-timeline-dot">
-
           ✓
-
         </div>
-
 
         <div class="crm-timeline-content">
 
           <strong>
-
             ${escapeHTML(
               label
             )}
-
           </strong>
 
-
           <span>
-
             ${crmFormatProfileDate(
               date
             )}
-
           </span>
 
         </div>
-
 
       </div>
 
@@ -5594,7 +4949,7 @@ function normalizePhone(
 
 
   // ==========================================================
-  // PROFILE EDIT
+  // PROFILE EDIT COMPATIBILITY
   // ==========================================================
 
   window.crmProfileEdit =
@@ -5807,7 +5162,7 @@ function normalizePhone(
 
 
   // ==========================================================
-  // PROFILE CSS
+  // PROFILE / CUSTOMER CSS
   // ==========================================================
 
   function crmAddProfileStyles() {
@@ -5834,7 +5189,6 @@ function normalizePhone(
 
 
     style.textContent = `
-
 
       .crm-lead-actions {
 
@@ -6346,11 +5700,6 @@ function normalizePhone(
       }
 
 
-      /* ======================================================
-         FULL PAGE EDIT CUSTOMER
-      ====================================================== */
-
-
       .crm-full-edit-page {
 
         width:
@@ -6837,7 +6186,7 @@ function normalizePhone(
 
 
   // ==========================================================
-  // MAKE GLOBAL PROFILE FUNCTIONS AVAILABLE
+  // GLOBAL PROFILE FUNCTIONS
   // ==========================================================
 
   window.crmRenderCustomerProfile =
@@ -7311,9 +6660,6 @@ supabaseClient.auth.onAuthStateChange(
 
 // ============================================================
 // GLOBAL COMPATIBILITY
-// ============================================================
-// Supaya tombol dari index.html tetap bisa memanggil
-// fungsi Customer Profile dari script.js.
 // ============================================================
 
 window.openCustomerProfile =
