@@ -4147,3 +4147,1837 @@ supabaseClient.auth.onAuthStateChange(
 
   }
 );
+// ============================================================
+// CRM FSI - CUSTOMER PROFILE MODULE
+// ============================================================
+// ADD THIS ENTIRE BLOCK AT THE VERY BOTTOM OF script.js
+// DO NOT DELETE OR CHANGE EXISTING CODE ABOVE
+// ============================================================
+
+(function () {
+
+  "use strict";
+
+
+  // ==========================================================
+  // CUSTOMER PROFILE STATE
+  // ==========================================================
+
+  window.crmCurrentCustomerId = null;
+  window.crmCurrentCustomer = null;
+
+
+  // ==========================================================
+  // OPEN CUSTOMER PROFILE
+  // ==========================================================
+
+  window.crmOpenCustomerProfile = async function (id) {
+
+    if (!id) {
+
+      alert("Customer ID not found.");
+
+      return;
+
+    }
+
+
+    try {
+
+      const {
+        data,
+        error
+      } = await supabaseClient
+        .from("leads")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+
+      if (error) {
+
+        console.error(
+          "Customer Profile Error:",
+          error
+        );
+
+        alert(
+          "Failed to load customer:\n" +
+          error.message
+        );
+
+        return;
+
+      }
+
+
+      if (!data) {
+
+        alert(
+          "Customer not found."
+        );
+
+        return;
+
+      }
+
+
+      // Save selected customer
+
+      window.crmCurrentCustomerId =
+        data.id;
+
+      window.crmCurrentCustomer =
+        data;
+
+
+      // Render customer profile
+
+      crmRenderCustomerProfile(
+        data
+      );
+
+
+      // Open profile page
+
+      if (
+        typeof window.crmNavigate ===
+        "function"
+      ) {
+
+        window.crmNavigate(
+          "customerProfile"
+        );
+
+      } else {
+
+        crmShowProfilePage();
+
+      }
+
+
+    } catch (error) {
+
+      console.error(
+        "crmOpenCustomerProfile error:",
+        error
+      );
+
+      alert(
+        "An error occurred:\n" +
+        error.message
+      );
+
+    }
+
+  };
+
+
+  // ==========================================================
+  // SHOW PROFILE PAGE
+  // ==========================================================
+
+  function crmShowProfilePage() {
+
+    const pages = [
+
+      "dashboardPage",
+
+      "leadsPage",
+
+      "salesPage",
+
+      "customerProfilePage",
+
+      "appointmentPage",
+
+      "dailyReportPage",
+
+      "pltsCalculatorPage",
+
+      "pltsSimulatorPage",
+
+      "settingsPage"
+
+    ];
+
+
+    pages.forEach(
+      function (id) {
+
+        const page =
+          document.getElementById(
+            id
+          );
+
+
+        if (page) {
+
+          page.style.display =
+            "none";
+
+        }
+
+      }
+    );
+
+
+    const profilePage =
+      document.getElementById(
+        "customerProfilePage"
+      );
+
+
+    if (profilePage) {
+
+      profilePage.style.display =
+        "block";
+
+    }
+
+
+    const title =
+      document.getElementById(
+        "pageTitle"
+      );
+
+
+    if (title) {
+
+      title.textContent =
+        "Customer Profile";
+
+    }
+
+  }
+
+
+  // ==========================================================
+  // RENDER CUSTOMER PROFILE
+  // ==========================================================
+
+  function crmRenderCustomerProfile(
+    customer
+  ) {
+
+    const page =
+      document.getElementById(
+        "customerProfilePage"
+      );
+
+
+    if (!page) {
+
+      console.error(
+        "customerProfilePage not found."
+      );
+
+      return;
+
+    }
+
+
+    const customerName =
+      getValue(
+        customer.customer_name
+      ) ||
+      "Unnamed Customer";
+
+
+    const phone =
+      getValue(
+        customer.phone
+      );
+
+
+    const email =
+      getValue(
+        customer.email
+      );
+
+
+    const business =
+      getValue(
+        customer.business
+      );
+
+
+    const location =
+      getValue(
+        customer.location
+      );
+
+
+    const salesName =
+      getSalesName(
+        customer.sales_id
+      );
+
+
+    const status =
+      normalizeLeadStatus(
+        customer.status
+      );
+
+
+    const statusCSS =
+      statusClass(
+        status
+      );
+
+
+    page.innerHTML = `
+
+      <!-- =====================================================
+           PROFILE TOOLBAR
+      ====================================================== -->
+
+      <div class="crm-page-toolbar">
+
+        <div>
+
+          <button
+            type="button"
+            class="crm-back-btn"
+            onclick="crmGoBack()">
+
+            ← Back
+
+          </button>
+
+        </div>
+
+
+        <div>
+
+          <button
+            type="button"
+            class="secondary-btn"
+            onclick="crmProfileEdit()">
+
+            ✏️ Edit Customer
+
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <!-- =====================================================
+           CUSTOMER HEADER
+      ====================================================== -->
+
+      <div class="crm-profile-header">
+
+        <div class="crm-profile-avatar">
+
+          ${escapeHTML(
+            customerName
+              .charAt(0)
+              .toUpperCase()
+          )}
+
+        </div>
+
+
+        <div class="crm-profile-heading">
+
+          <div class="crm-profile-name-row">
+
+            <h2>
+              ${escapeHTML(
+                customerName
+              )}
+            </h2>
+
+
+            <span
+              class="status-badge ${statusCSS}">
+
+              ${escapeHTML(
+                status
+              )}
+
+            </span>
+
+          </div>
+
+
+          <p>
+
+            ${
+              business
+                ? escapeHTML(
+                    business
+                  )
+                : "Customer"
+            }
+
+          </p>
+
+        </div>
+
+
+        <div class="crm-profile-actions">
+
+          ${
+            phone
+              ? `
+
+                <button
+                  type="button"
+                  class="primary-btn"
+                  onclick="crmProfileWhatsApp()">
+
+                  💬 WhatsApp
+
+                </button>
+
+              `
+              : ""
+          }
+
+
+          ${
+            email
+              ? `
+
+                <button
+                  type="button"
+                  class="secondary-btn"
+                  onclick="crmProfileEmail()">
+
+                  ✉️ Email
+
+                </button>
+
+              `
+              : ""
+          }
+
+
+          <button
+            type="button"
+            class="secondary-btn"
+            onclick="crmProfileAppointment()">
+
+            📅 Appointment
+
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <!-- =====================================================
+           CUSTOMER INFORMATION
+      ====================================================== -->
+
+      <div class="crm-profile-grid">
+
+
+        <div class="panel crm-profile-card">
+
+          <div class="panel-header">
+
+            <div>
+
+              <div class="eyebrow">
+                CUSTOMER
+              </div>
+
+              <h3 class="panel-title">
+                Customer Information
+              </h3>
+
+            </div>
+
+          </div>
+
+
+          <div class="crm-info-grid">
+
+
+            <div class="crm-info-item">
+
+              <span>
+                Customer Name
+              </span>
+
+              <strong>
+                ${escapeHTML(
+                  customerName
+                )}
+              </strong>
+
+            </div>
+
+
+            <div class="crm-info-item">
+
+              <span>
+                WhatsApp / Phone
+              </span>
+
+              <strong>
+
+                ${
+                  phone
+                    ? escapeHTML(
+                        phone
+                      )
+                    : "-"
+                }
+
+              </strong>
+
+            </div>
+
+
+            <div class="crm-info-item">
+
+              <span>
+                Email
+              </span>
+
+              <strong>
+
+                ${
+                  email
+                    ? escapeHTML(
+                        email
+                      )
+                    : "-"
+                }
+
+              </strong>
+
+            </div>
+
+
+            <div class="crm-info-item">
+
+              <span>
+                Business
+              </span>
+
+              <strong>
+
+                ${
+                  business
+                    ? escapeHTML(
+                        business
+                      )
+                    : "-"
+                }
+
+              </strong>
+
+            </div>
+
+
+            <div class="crm-info-item">
+
+              <span>
+                Location
+              </span>
+
+              <strong>
+
+                ${
+                  location
+                    ? escapeHTML(
+                        location
+                      )
+                    : "-"
+                }
+
+              </strong>
+
+            </div>
+
+
+            <div class="crm-info-item">
+
+              <span>
+                Sales
+              </span>
+
+              <strong>
+
+                ${
+                  salesName &&
+                  salesName !== "-"
+                    ? escapeHTML(
+                        salesName
+                      )
+                    : "-"
+                }
+
+              </strong>
+
+            </div>
+
+
+          </div>
+
+        </div>
+
+
+        <!-- =================================================
+             NOTES
+        ================================================== -->
+
+        <div class="panel crm-profile-card">
+
+          <div class="panel-header">
+
+            <div>
+
+              <div class="eyebrow">
+                NOTES
+              </div>
+
+              <h3 class="panel-title">
+                Customer Notes
+              </h3>
+
+            </div>
+
+          </div>
+
+
+          <div class="crm-profile-notes">
+
+            ${
+              customer.notes
+                ? escapeHTML(
+                    customer.notes
+                  )
+                : "No notes available."
+            }
+
+          </div>
+
+        </div>
+
+
+      </div>
+
+
+      <!-- =====================================================
+           SALES PIPELINE
+      ====================================================== -->
+
+      <div class="panel crm-profile-card">
+
+        <div class="panel-header">
+
+          <div>
+
+            <div class="eyebrow">
+              SALES PIPELINE
+            </div>
+
+            <h3 class="panel-title">
+              Customer Progress
+            </h3>
+
+          </div>
+
+        </div>
+
+
+        <div class="crm-profile-pipeline">
+
+
+          ${crmPipelineStep(
+            "Lead",
+            customer.created_at,
+            true
+          )}
+
+
+          ${crmPipelineLine()}
+
+
+          ${crmPipelineStep(
+            "Follow Up",
+            customer.follow_up_date,
+            !!customer.follow_up_date
+          )}
+
+
+          ${crmPipelineLine()}
+
+
+          ${crmPipelineStep(
+            "Appointment",
+            customer.appointment,
+            !!customer.appointment
+          )}
+
+
+          ${crmPipelineLine()}
+
+
+          ${crmPipelineStep(
+            "Site Survey",
+            customer.site_survey,
+            !!customer.site_survey
+          )}
+
+
+          ${crmPipelineLine()}
+
+
+          ${crmPipelineStep(
+            "Quotation",
+            customer.quotation,
+            !!customer.quotation
+          )}
+
+
+          ${crmPipelineLine()}
+
+
+          ${crmPipelineStep(
+            "SPK",
+            customer.spk,
+            !!customer.spk
+          )}
+
+
+          ${crmPipelineLine()}
+
+
+          ${crmPipelineStep(
+            "Closing",
+            customer.closing,
+            !!customer.closing ||
+            status === "Closing"
+          )}
+
+
+        </div>
+
+      </div>
+
+
+      <!-- =====================================================
+           CUSTOMER JOURNEY
+      ====================================================== -->
+
+      <div class="panel crm-profile-card">
+
+        <div class="panel-header">
+
+          <div>
+
+            <div class="eyebrow">
+              CUSTOMER JOURNEY
+            </div>
+
+            <h3 class="panel-title">
+              Activity Summary
+            </h3>
+
+          </div>
+
+        </div>
+
+
+        <div class="crm-profile-timeline">
+
+
+          ${crmTimelineItem(
+            "Lead Created",
+            customer.created_at,
+            true
+          )}
+
+
+          ${crmTimelineItem(
+            "Follow Up",
+            customer.follow_up_date,
+            !!customer.follow_up_date
+          )}
+
+
+          ${crmTimelineItem(
+            "Appointment",
+            customer.appointment,
+            !!customer.appointment
+          )}
+
+
+          ${crmTimelineItem(
+            "Site Survey",
+            customer.site_survey,
+            !!customer.site_survey
+          )}
+
+
+          ${crmTimelineItem(
+            "Quotation",
+            customer.quotation,
+            !!customer.quotation
+          )}
+
+
+          ${crmTimelineItem(
+            "SPK",
+            customer.spk,
+            !!customer.spk
+          )}
+
+
+          ${crmTimelineItem(
+            "Closing",
+            customer.closing,
+            !!customer.closing
+          )}
+
+
+        </div>
+
+      </div>
+
+    `;
+
+
+    crmAddProfileStyles();
+
+  }
+
+
+  // ==========================================================
+  // PIPELINE STEP
+  // ==========================================================
+
+  function crmPipelineStep(
+    label,
+    date,
+    completed
+  ) {
+
+    return `
+
+      <div
+        class="crm-pipeline-step ${
+          completed
+            ? "completed"
+            : ""
+        }">
+
+
+        <div class="crm-pipeline-dot">
+
+          ${
+            completed
+              ? "✓"
+              : ""
+          }
+
+        </div>
+
+
+        <div class="crm-pipeline-label">
+
+          <strong>
+
+            ${escapeHTML(
+              label
+            )}
+
+          </strong>
+
+
+          <span>
+
+            ${
+              date
+                ? crmFormatProfileDate(
+                    date
+                  )
+                : "Not yet"
+            }
+
+          </span>
+
+        </div>
+
+
+      </div>
+
+    `;
+
+  }
+
+
+  // ==========================================================
+  // PIPELINE CONNECTOR
+  // ==========================================================
+
+  function crmPipelineLine() {
+
+    return `
+
+      <div
+        class="crm-pipeline-connector">
+      </div>
+
+    `;
+
+  }
+
+
+  // ==========================================================
+  // TIMELINE ITEM
+  // ==========================================================
+
+  function crmTimelineItem(
+    label,
+    date,
+    completed
+  ) {
+
+    if (!completed) {
+
+      return "";
+
+    }
+
+
+    return `
+
+      <div class="crm-timeline-item">
+
+
+        <div class="crm-timeline-dot">
+
+          ✓
+
+        </div>
+
+
+        <div class="crm-timeline-content">
+
+          <strong>
+
+            ${escapeHTML(
+              label
+            )}
+
+          </strong>
+
+
+          <span>
+
+            ${crmFormatProfileDate(
+              date
+            )}
+
+          </span>
+
+        </div>
+
+
+      </div>
+
+    `;
+
+  }
+
+
+  // ==========================================================
+  // DATE FORMAT
+  // ==========================================================
+
+  function crmFormatProfileDate(
+    date
+  ) {
+
+    if (!date)
+      return "-";
+
+
+    try {
+
+      const d =
+        new Date(
+          date
+        );
+
+
+      if (
+        isNaN(
+          d.getTime()
+        )
+      ) {
+
+        return String(
+          date
+        );
+
+      }
+
+
+      return d.toLocaleDateString(
+        "id-ID",
+        {
+          day:
+            "2-digit",
+
+          month:
+            "short",
+
+          year:
+            "numeric"
+        }
+      );
+
+
+    } catch {
+
+      return String(
+        date
+      );
+
+    }
+
+  }
+
+
+  // ==========================================================
+  // EDIT CUSTOMER
+  // ==========================================================
+
+  window.crmProfileEdit =
+    function () {
+
+      const id =
+        window.crmCurrentCustomerId;
+
+
+      if (!id) {
+
+        alert(
+          "Customer not selected."
+        );
+
+        return;
+
+      }
+
+
+      if (
+        typeof window.editLead ===
+        "function"
+      ) {
+
+        window.editLead(
+          id
+        );
+
+      } else {
+
+        alert(
+          "Edit function is not available."
+        );
+
+      }
+
+    };
+
+
+  // ==========================================================
+  // WHATSAPP
+  // ==========================================================
+
+  window.crmProfileWhatsApp =
+    function () {
+
+      const customer =
+        window.crmCurrentCustomer;
+
+
+      if (
+        !customer ||
+        !customer.phone
+      ) {
+
+        alert(
+          "Customer phone number not available."
+        );
+
+        return;
+
+      }
+
+
+      const link =
+        whatsappLink(
+          customer.phone
+        );
+
+
+      if (
+        link &&
+        link !== "#"
+      ) {
+
+        window.open(
+          link,
+          "_blank",
+          "noopener,noreferrer"
+        );
+
+      }
+
+    };
+
+
+  // ==========================================================
+  // EMAIL
+  // ==========================================================
+
+  window.crmProfileEmail =
+    function () {
+
+      const customer =
+        window.crmCurrentCustomer;
+
+
+      if (
+        !customer ||
+        !customer.email
+      ) {
+
+        alert(
+          "Customer email not available."
+        );
+
+        return;
+
+      }
+
+
+      window.location.href =
+        "mailto:" +
+        customer.email;
+
+    };
+
+
+  // ==========================================================
+  // APPOINTMENT
+  // ==========================================================
+
+  window.crmProfileAppointment =
+    function () {
+
+      const customer =
+        window.crmCurrentCustomer;
+
+
+      if (!customer) {
+
+        alert(
+          "Customer not selected."
+        );
+
+        return;
+
+      }
+
+
+      window.crmAppointmentCustomerId =
+        customer.id;
+
+
+      window.crmAppointmentCustomer =
+        customer;
+
+
+      if (
+        typeof window.crmNavigate ===
+        "function"
+      ) {
+
+        window.crmNavigate(
+          "appointment"
+        );
+
+      } else {
+
+        crmShowPage(
+          "appointmentPage"
+        );
+
+      }
+
+    };
+
+
+  // ==========================================================
+  // SIMPLE PAGE NAVIGATION FALLBACK
+  // ==========================================================
+
+  function crmShowPage(
+    pageId
+  ) {
+
+    const pages = [
+
+      "dashboardPage",
+
+      "leadsPage",
+
+      "salesPage",
+
+      "customerProfilePage",
+
+      "appointmentPage",
+
+      "dailyReportPage",
+
+      "pltsCalculatorPage",
+
+      "pltsSimulatorPage",
+
+      "settingsPage"
+
+    ];
+
+
+    pages.forEach(
+      function (id) {
+
+        const page =
+          document.getElementById(
+            id
+          );
+
+
+        if (page) {
+
+          page.style.display =
+            id === pageId
+              ? "block"
+              : "none";
+
+        }
+
+      }
+    );
+
+  }
+
+
+  // ==========================================================
+  // PROFILE CSS
+  // ==========================================================
+
+  function crmAddProfileStyles() {
+
+    if (
+      document.getElementById(
+        "crmProfileDynamicStyles"
+      )
+    ) {
+
+      return;
+
+    }
+
+
+    const style =
+      document.createElement(
+        "style"
+      );
+
+
+    style.id =
+      "crmProfileDynamicStyles";
+
+
+    style.textContent = `
+
+
+      .crm-profile-header {
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 18px;
+
+        padding: 24px;
+
+        margin-bottom: 20px;
+
+        border-radius: 20px;
+
+        background:
+          linear-gradient(
+            135deg,
+            rgba(255,255,255,.94),
+            rgba(245,247,250,.86)
+          );
+
+        border:
+          1px solid
+          rgba(255,255,255,.75);
+
+        box-shadow:
+          0 14px 40px
+          rgba(15,23,42,.08);
+
+      }
+
+
+      .crm-profile-avatar {
+
+        width: 64px;
+
+        height: 64px;
+
+        min-width: 64px;
+
+        border-radius: 18px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        font-size: 25px;
+
+        font-weight: 800;
+
+        background:
+          linear-gradient(
+            135deg,
+            #111827,
+            #374151
+          );
+
+        color: white;
+
+      }
+
+
+      .crm-profile-heading {
+
+        flex: 1;
+
+        min-width: 0;
+
+      }
+
+
+      .crm-profile-name-row {
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 12px;
+
+        flex-wrap: wrap;
+
+      }
+
+
+      .crm-profile-name-row h2 {
+
+        margin: 0;
+
+        font-size: 25px;
+
+        font-weight: 800;
+
+        color: #0f172a;
+
+      }
+
+
+      .crm-profile-heading p {
+
+        margin:
+          5px 0 0;
+
+        color:
+          #64748b;
+
+      }
+
+
+      .crm-profile-actions {
+
+        display: flex;
+
+        gap: 8px;
+
+        flex-wrap: wrap;
+
+        justify-content: flex-end;
+
+      }
+
+
+      .crm-profile-grid {
+
+        display: grid;
+
+        grid-template-columns:
+          minmax(0, 1.5fr)
+          minmax(280px, 1fr);
+
+        gap: 20px;
+
+        margin-bottom: 20px;
+
+      }
+
+
+      .crm-profile-card {
+
+        margin-bottom: 20px;
+
+      }
+
+
+      .crm-info-grid {
+
+        display: grid;
+
+        grid-template-columns:
+          repeat(
+            2,
+            minmax(0, 1fr)
+          );
+
+        gap: 16px;
+
+      }
+
+
+      .crm-info-item {
+
+        padding:
+          14px 16px;
+
+        border-radius:
+          14px;
+
+        background:
+          rgba(
+            248,
+            250,
+            252,
+            .9
+          );
+
+        border:
+          1px solid
+          #e2e8f0;
+
+      }
+
+
+      .crm-info-item span {
+
+        display: block;
+
+        margin-bottom: 6px;
+
+        font-size: 12px;
+
+        color:
+          #64748b;
+
+        font-weight: 600;
+
+      }
+
+
+      .crm-info-item strong {
+
+        display: block;
+
+        color:
+          #0f172a;
+
+        word-break:
+          break-word;
+
+      }
+
+
+      .crm-profile-notes {
+
+        min-height: 120px;
+
+        padding: 16px;
+
+        border-radius:
+          14px;
+
+        background:
+          #f8fafc;
+
+        border:
+          1px solid
+          #e2e8f0;
+
+        white-space:
+          pre-wrap;
+
+        color:
+          #334155;
+
+        line-height:
+          1.6;
+
+      }
+
+
+      .crm-profile-pipeline {
+
+        display: flex;
+
+        align-items:
+          flex-start;
+
+        width: 100%;
+
+        overflow-x:
+          auto;
+
+        padding:
+          10px 4px 16px;
+
+      }
+
+
+      .crm-pipeline-step {
+
+        min-width:
+          105px;
+
+        text-align:
+          center;
+
+        flex-shrink:
+          0;
+
+      }
+
+
+      .crm-pipeline-dot {
+
+        width: 34px;
+
+        height: 34px;
+
+        margin:
+          0 auto 9px;
+
+        border-radius:
+          50%;
+
+        display: flex;
+
+        align-items:
+          center;
+
+        justify-content:
+          center;
+
+        background:
+          #e2e8f0;
+
+        color:
+          #64748b;
+
+        font-weight:
+          800;
+
+        border:
+          3px solid white;
+
+        box-shadow:
+          0 0 0 1px
+          #cbd5e1;
+
+      }
+
+
+      .crm-pipeline-step.completed
+      .crm-pipeline-dot {
+
+        background:
+          #16a34a;
+
+        color:
+          white;
+
+        box-shadow:
+          0 0 0 1px
+          #16a34a;
+
+      }
+
+
+      .crm-pipeline-label strong {
+
+        display: block;
+
+        font-size:
+          12px;
+
+        color:
+          #0f172a;
+
+      }
+
+
+      .crm-pipeline-label span {
+
+        display: block;
+
+        margin-top:
+          4px;
+
+        font-size:
+          10px;
+
+        color:
+          #64748b;
+
+      }
+
+
+      .crm-pipeline-connector {
+
+        height:
+          2px;
+
+        flex:
+          1;
+
+        min-width:
+          20px;
+
+        margin-top:
+          16px;
+
+        background:
+          #e2e8f0;
+
+      }
+
+
+      .crm-profile-timeline {
+
+        display: flex;
+
+        flex-direction:
+          column;
+
+      }
+
+
+      .crm-timeline-item {
+
+        display: flex;
+
+        align-items:
+          center;
+
+        gap:
+          13px;
+
+        padding:
+          13px 0;
+
+        border-bottom:
+          1px solid
+          #e2e8f0;
+
+      }
+
+
+      .crm-timeline-item:last-child {
+
+        border-bottom:
+          0;
+
+      }
+
+
+      .crm-timeline-dot {
+
+        width:
+          30px;
+
+        height:
+          30px;
+
+        min-width:
+          30px;
+
+        border-radius:
+          50%;
+
+        display: flex;
+
+        align-items:
+          center;
+
+        justify-content:
+          center;
+
+        background:
+          #16a34a;
+
+        color:
+          white;
+
+        font-size:
+          13px;
+
+        font-weight:
+          800;
+
+      }
+
+
+      .crm-timeline-content {
+
+        display: flex;
+
+        flex-direction:
+          column;
+
+        gap:
+          3px;
+
+      }
+
+
+      .crm-timeline-content strong {
+
+        font-size:
+          14px;
+
+        color:
+          #0f172a;
+
+      }
+
+
+      .crm-timeline-content span {
+
+        font-size:
+          12px;
+
+        color:
+          #64748b;
+
+      }
+
+
+      @media (max-width: 800px) {
+
+        .crm-profile-header {
+
+          align-items:
+            flex-start;
+
+          flex-wrap:
+            wrap;
+
+        }
+
+
+        .crm-profile-actions {
+
+          width:
+            100%;
+
+          justify-content:
+            flex-start;
+
+        }
+
+
+        .crm-profile-grid {
+
+          grid-template-columns:
+            1fr;
+
+        }
+
+
+        .crm-info-grid {
+
+          grid-template-columns:
+            1fr;
+
+        }
+
+      }
+
+
+      @media (max-width: 480px) {
+
+        .crm-profile-header {
+
+          padding:
+            18px;
+
+        }
+
+
+        .crm-profile-name-row h2 {
+
+          font-size:
+            21px;
+
+        }
+
+
+        .crm-profile-actions {
+
+          flex-direction:
+            column;
+
+        }
+
+
+        .crm-profile-actions button {
+
+          width:
+            100%;
+
+        }
+
+      }
+
+    `;
+
+
+    document.head.appendChild(
+      style
+    );
+
+  }
+
+
+})();
