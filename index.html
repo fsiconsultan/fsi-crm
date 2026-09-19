@@ -14,9 +14,6 @@
 
   <!-- =====================================================
        FSI CRM ADDITIONAL PAGE STYLES
-       -----------------------------------------------------
-       Tambahan saja.
-       Tidak mengganti style.css / dashboard.css.
   ====================================================== -->
 
   <style>
@@ -43,29 +40,16 @@
       top: 0;
       left: 0;
       bottom: 0;
-
       width: 270px;
-
       z-index: 2000;
-
       display: flex;
       flex-direction: column;
-
-      background:
-        rgba(255, 255, 255, 0.96);
-
-      border-right:
-        1px solid rgba(226, 232, 240, 0.9);
-
-      box-shadow:
-        20px 0 50px rgba(15, 23, 42, 0.12);
-
+      background: rgba(255, 255, 255, 0.96);
+      border-right: 1px solid rgba(226, 232, 240, 0.9);
+      box-shadow: 20px 0 50px rgba(15, 23, 42, 0.12);
       backdrop-filter: blur(20px);
-
       transform: translateX(-100%);
-
-      transition:
-        transform 220ms ease;
+      transition: transform 220ms ease;
     }
 
     .crm-sidebar.open {
@@ -74,15 +58,11 @@
 
     .crm-sidebar-header {
       min-height: 76px;
-
       display: flex;
       align-items: center;
       justify-content: space-between;
-
       padding: 0 18px;
-
-      border-bottom:
-        1px solid var(--slate-100);
+      border-bottom: 1px solid var(--slate-100);
     }
 
     .crm-sidebar-brand {
@@ -106,16 +86,14 @@
     .crm-sidebar-close {
       width: 36px;
       height: 36px;
-
       display: flex;
       align-items: center;
       justify-content: center;
-
       border: 0;
       border-radius: 9px;
-
       background: var(--slate-100);
       color: var(--slate-600);
+      cursor: pointer;
     }
 
     .crm-sidebar-close:hover {
@@ -125,50 +103,35 @@
 
     .crm-sidebar-nav {
       flex: 1;
-
       padding: 18px 12px;
-
       overflow-y: auto;
     }
 
     .crm-sidebar-section {
-      margin:
-        14px 10px 7px;
-
+      margin: 14px 10px 7px;
       color: var(--slate-400);
-
       font-size: 10px;
       font-weight: 800;
-
       letter-spacing: 1px;
       text-transform: uppercase;
     }
 
     .crm-sidebar-btn {
       width: 100%;
-
       min-height: 45px;
-
       display: flex;
       align-items: center;
       gap: 11px;
-
       padding: 0 12px;
-
       margin-bottom: 4px;
-
       border: 0;
       border-radius: 10px;
-
       background: transparent;
-
       color: var(--slate-600);
-
       font-size: 13px;
       font-weight: 700;
-
       text-align: left;
-
+      cursor: pointer;
       transition:
         background 180ms ease,
         color 180ms ease,
@@ -178,7 +141,6 @@
     .crm-sidebar-btn svg {
       width: 18px;
       height: 18px;
-
       flex-shrink: 0;
     }
 
@@ -195,25 +157,20 @@
 
     .crm-sidebar-footer {
       padding: 14px;
-
-      border-top:
-        1px solid var(--slate-100);
+      border-top: 1px solid var(--slate-100);
     }
 
     .crm-menu-trigger {
       width: 42px;
       height: 42px;
-
       display: inline-flex;
       align-items: center;
       justify-content: center;
-
       border: 1px solid var(--slate-200);
       border-radius: 10px;
-
       background: white;
       color: var(--slate-700);
-
+      cursor: pointer;
       transition: 180ms ease;
     }
 
@@ -236,9 +193,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-
       gap: 15px;
-
       margin-bottom: 20px;
     }
 
@@ -250,21 +205,17 @@
 
     .crm-back-btn {
       min-height: 40px;
-
       display: inline-flex;
       align-items: center;
       gap: 7px;
-
       padding: 0 12px;
-
       border: 1px solid var(--slate-200);
       border-radius: 10px;
-
       background: white;
       color: var(--slate-600);
-
       font-size: 12px;
       font-weight: 700;
+      cursor: pointer;
     }
 
     .crm-back-btn:hover {
@@ -279,26 +230,20 @@
 
 
     /* =====================================================
-       CUSTOMER PROFILE
+       CUSTOMER PROFILE WORKSPACE
     ====================================================== */
 
     .customer-profile-header {
       padding: 24px;
-
-      border:
-        1px solid var(--slate-200);
-
+      border: 1px solid var(--slate-200);
       border-radius: var(--radius-lg);
-
       background:
         linear-gradient(
           135deg,
-          rgba(255,255,255,0.98),
-          rgba(248,250,252,0.95)
+          rgba(255,255,255,0.99),
+          rgba(248,250,252,0.96)
         );
-
       box-shadow: var(--shadow-sm);
-
       margin-bottom: 18px;
     }
 
@@ -306,7 +251,6 @@
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
-
       gap: 20px;
     }
 
@@ -314,42 +258,65 @@
       display: flex;
       align-items: center;
       gap: 14px;
+      min-width: 0;
     }
 
     .customer-profile-avatar {
-      width: 58px;
-      height: 58px;
-
+      width: 62px;
+      height: 62px;
       display: flex;
       align-items: center;
       justify-content: center;
-
       flex-shrink: 0;
-
-      border-radius: 16px;
-
-      background: var(--primary-soft);
+      border-radius: 18px;
+      background:
+        linear-gradient(
+          135deg,
+          rgba(37,99,235,.14),
+          rgba(59,130,246,.06)
+        );
       color: var(--primary);
-
-      font-size: 21px;
+      font-size: 23px;
       font-weight: 800;
+      border: 1px solid rgba(37,99,235,.14);
     }
 
     .customer-profile-name {
       color: var(--slate-900);
-
       font-size: 24px;
       font-weight: 800;
-
       letter-spacing: -0.5px;
+      word-break: break-word;
     }
 
     .customer-profile-contact {
       margin-top: 4px;
-
       color: var(--slate-500);
-
       font-size: 12px;
+    }
+
+    .customer-profile-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 10px;
+    }
+
+    .crm-profile-badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 27px;
+      padding: 0 9px;
+      border-radius: 999px;
+      background: var(--slate-100);
+      color: var(--slate-600);
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .crm-profile-badge.primary {
+      background: var(--primary-soft);
+      color: var(--primary);
     }
 
     .customer-profile-actions {
@@ -358,26 +325,123 @@
       gap: 8px;
     }
 
+    .customer-profile-actions button {
+      white-space: nowrap;
+    }
+
+
+    /* =====================================================
+       EDITABLE PROFILE FIELDS
+    ====================================================== */
+
+    .crm-profile-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .crm-profile-field label {
+      color: var(--slate-400);
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .55px;
+    }
+
+    .crm-profile-field input,
+    .crm-profile-field select,
+    .crm-profile-field textarea {
+      width: 100%;
+      min-height: 43px;
+      padding: 10px 12px;
+      border: 1px solid var(--slate-200);
+      border-radius: 10px;
+      background: #fff;
+      color: var(--slate-800);
+      font-size: 13px;
+      font-weight: 600;
+      outline: none;
+      transition:
+        border-color 160ms ease,
+        box-shadow 160ms ease,
+        background 160ms ease;
+      box-sizing: border-box;
+    }
+
+    .crm-profile-field textarea {
+      min-height: 120px;
+      resize: vertical;
+      line-height: 1.55;
+    }
+
+    .crm-profile-field input:focus,
+    .crm-profile-field select:focus,
+    .crm-profile-field textarea:focus {
+      border-color: rgba(37,99,235,.45);
+      box-shadow: 0 0 0 3px rgba(37,99,235,.08);
+      background: #fff;
+    }
+
+    .crm-profile-field input:disabled,
+    .crm-profile-field select:disabled {
+      background: var(--slate-50);
+      color: var(--slate-500);
+      cursor: not-allowed;
+    }
+
+    .crm-profile-form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 16px;
+    }
+
+    .crm-profile-form-grid .full {
+      grid-column: 1 / -1;
+    }
+
+    .crm-profile-save-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 18px;
+      padding-top: 17px;
+      border-top: 1px solid var(--slate-100);
+    }
+
+    .crm-profile-save-status {
+      color: var(--slate-500);
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .crm-profile-save-status.success {
+      color: #15803d;
+    }
+
+    .crm-profile-save-status.error {
+      color: #dc2626;
+    }
+
+
+    /* =====================================================
+       CUSTOMER PROFILE GRID
+    ====================================================== */
+
     .customer-profile-grid {
       display: grid;
-
       grid-template-columns:
         repeat(2, minmax(0, 1fr));
-
       gap: 18px;
     }
 
     .customer-profile-card {
       padding: 22px;
-
-      border:
-        1px solid var(--slate-200);
-
+      border: 1px solid var(--slate-200);
       border-radius: var(--radius-lg);
-
       background: white;
-
       box-shadow: var(--shadow-sm);
+      min-width: 0;
     }
 
     .customer-profile-card.full {
@@ -388,11 +452,8 @@
       display: flex;
       align-items: center;
       gap: 8px;
-
       margin-bottom: 17px;
-
       color: var(--slate-900);
-
       font-size: 15px;
       font-weight: 800;
     }
@@ -400,40 +461,7 @@
     .customer-profile-card-title svg {
       width: 17px;
       height: 17px;
-
       color: var(--primary);
-    }
-
-    .customer-info-grid {
-      display: grid;
-
-      grid-template-columns:
-        repeat(2, minmax(0, 1fr));
-
-      gap: 15px;
-    }
-
-    .customer-info-item span {
-      display: block;
-
-      margin-bottom: 4px;
-
-      color: var(--slate-400);
-
-      font-size: 10px;
-      font-weight: 800;
-
-      text-transform: uppercase;
-      letter-spacing: .5px;
-    }
-
-    .customer-info-item strong {
-      color: var(--slate-700);
-
-      font-size: 13px;
-      font-weight: 700;
-
-      word-break: break-word;
     }
 
 
@@ -443,32 +471,24 @@
 
     .crm-pipeline {
       display: grid;
-
       grid-template-columns:
         repeat(7, minmax(90px, 1fr));
-
       gap: 7px;
     }
 
     .crm-pipeline-step {
       position: relative;
-
       padding: 13px 8px;
-
-      border:
-        1px solid var(--slate-200);
-
+      border: 1px solid var(--slate-200);
       border-radius: 10px;
-
       background: var(--slate-50);
-
       text-align: center;
+      transition: 160ms ease;
     }
 
     .crm-pipeline-step.active {
       border-color:
         rgba(37, 99, 235, 0.25);
-
       background:
         var(--primary-soft);
     }
@@ -476,9 +496,7 @@
     .crm-pipeline-step svg {
       width: 17px;
       height: 17px;
-
       margin-bottom: 5px;
-
       color: var(--slate-400);
     }
 
@@ -488,15 +506,47 @@
 
     .crm-pipeline-step span {
       display: block;
-
       color: var(--slate-500);
-
       font-size: 10px;
       font-weight: 700;
     }
 
     .crm-pipeline-step.active span {
       color: var(--primary);
+    }
+
+
+    /* =====================================================
+       DATE TIMELINE
+    ====================================================== */
+
+    .crm-date-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap: 12px;
+    }
+
+    .crm-date-card {
+      padding: 13px;
+      border: 1px solid var(--slate-200);
+      border-radius: 11px;
+      background: var(--slate-50);
+    }
+
+    .crm-date-card span {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--slate-400);
+      font-size: 9px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    .crm-date-card strong {
+      color: var(--slate-700);
+      font-size: 12px;
+      font-weight: 750;
     }
 
 
@@ -513,32 +563,22 @@
     .appointment-item {
       display: flex;
       align-items: center;
-
       gap: 13px;
-
       padding: 15px;
-
-      border:
-        1px solid var(--slate-200);
-
+      border: 1px solid var(--slate-200);
       border-radius: 12px;
-
       background: white;
     }
 
     .appointment-date-box {
       width: 48px;
       min-height: 48px;
-
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-
       flex-shrink: 0;
-
       border-radius: 10px;
-
       background: var(--violet-soft);
       color: var(--violet);
     }
@@ -550,10 +590,8 @@
 
     .appointment-date-box span {
       margin-top: 3px;
-
       font-size: 9px;
       font-weight: 800;
-
       text-transform: uppercase;
     }
 
@@ -564,20 +602,67 @@
 
     .appointment-info strong {
       display: block;
-
       color: var(--slate-800);
-
       font-size: 13px;
     }
 
     .appointment-info span {
       display: block;
-
       margin-top: 3px;
-
       color: var(--slate-500);
-
       font-size: 11px;
+    }
+
+
+    /* =====================================================
+       INFO CONTENT
+    ====================================================== */
+
+    .crm-info-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .crm-info-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 15px;
+      padding: 11px 0;
+      border-bottom: 1px solid var(--slate-100);
+    }
+
+    .crm-info-row:last-child {
+      border-bottom: 0;
+    }
+
+    .crm-info-row span {
+      color: var(--slate-400);
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .45px;
+    }
+
+    .crm-info-row strong {
+      color: var(--slate-700);
+      font-size: 12px;
+      font-weight: 700;
+      text-align: right;
+      word-break: break-word;
+    }
+
+    .crm-note-box {
+      padding: 14px;
+      border-radius: 11px;
+      background: var(--slate-50);
+      border: 1px solid var(--slate-100);
+      color: var(--slate-600);
+      font-size: 12px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
     }
 
 
@@ -586,38 +671,26 @@
     ====================================================== */
 
     .crm-empty-module {
-      min-height: 320px;
-
+      min-height: 180px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-
       padding: 30px;
-
-      border:
-        1px dashed var(--slate-300);
-
+      border: 1px dashed var(--slate-300);
       border-radius: var(--radius-lg);
-
-      background:
-        rgba(255,255,255,.75);
-
+      background: rgba(255,255,255,.75);
       text-align: center;
     }
 
     .crm-empty-module-icon {
       width: 60px;
       height: 60px;
-
       display: flex;
       align-items: center;
       justify-content: center;
-
       margin-bottom: 14px;
-
       border-radius: 17px;
-
       background: var(--primary-soft);
       color: var(--primary);
     }
@@ -629,18 +702,14 @@
 
     .crm-empty-module h3 {
       color: var(--slate-900);
-
       font-size: 18px;
       font-weight: 800;
     }
 
     .crm-empty-module p {
       max-width: 520px;
-
       margin-top: 6px;
-
       color: var(--slate-500);
-
       font-size: 12px;
     }
 
@@ -649,18 +718,34 @@
        RESPONSIVE
     ====================================================== */
 
-    @media (max-width: 900px) {
+    @media (max-width: 1000px) {
+
+      .crm-date-grid {
+        grid-template-columns: repeat(2, minmax(0,1fr));
+      }
 
       .crm-pipeline {
         grid-template-columns:
           repeat(4, minmax(0, 1fr));
       }
 
+    }
+
+    @media (max-width: 900px) {
+
       .customer-profile-grid {
         grid-template-columns: 1fr;
       }
 
       .customer-profile-card.full {
+        grid-column: auto;
+      }
+
+      .crm-profile-form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .crm-profile-form-grid .full {
         grid-column: auto;
       }
 
@@ -684,18 +769,27 @@
         flex: 1;
       }
 
-      .customer-info-grid {
-        grid-template-columns: 1fr;
-      }
-
       .crm-pipeline {
         grid-template-columns:
           repeat(2, minmax(0, 1fr));
       }
 
+      .crm-date-grid {
+        grid-template-columns: 1fr;
+      }
+
       .crm-page-toolbar {
         align-items: flex-start;
         flex-direction: column;
+      }
+
+      .crm-profile-save-bar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .crm-profile-save-bar button {
+        width: 100%;
       }
 
     }
@@ -795,9 +889,7 @@
     style="display:none;"
   >
 
-    <!-- ===================================================
-         SIDEBAR OVERLAY
-    ==================================================== -->
+    <!-- SIDEBAR OVERLAY -->
 
     <div
       id="crmSidebarOverlay"
@@ -806,9 +898,7 @@
     ></div>
 
 
-    <!-- ===================================================
-         SIDEBAR
-    ==================================================== -->
+    <!-- SIDEBAR -->
 
     <aside
       id="crmSidebar"
@@ -849,20 +939,14 @@
           Main
         </div>
 
-
         <button
           type="button"
           class="crm-sidebar-btn active"
           data-crm-page="dashboardPage"
           onclick="crmNavigate('dashboard')"
         >
-
           <i data-lucide="layout-dashboard"></i>
-
-          <span>
-            Home / Dashboard
-          </span>
-
+          <span>Home / Dashboard</span>
         </button>
 
 
@@ -872,13 +956,8 @@
           data-crm-page="leadsPage"
           onclick="crmNavigate('leads')"
         >
-
           <i data-lucide="users"></i>
-
-          <span>
-            Database Customer
-          </span>
-
+          <span>Database Customer</span>
         </button>
 
 
@@ -888,13 +967,8 @@
           data-crm-page="appointmentPage"
           onclick="crmNavigate('appointment')"
         >
-
           <i data-lucide="calendar-days"></i>
-
-          <span>
-            Appointment
-          </span>
-
+          <span>Appointment</span>
         </button>
 
 
@@ -904,13 +978,8 @@
           data-crm-page="dailyReportPage"
           onclick="crmNavigate('dailyReport')"
         >
-
           <i data-lucide="clipboard-list"></i>
-
-          <span>
-            Daily Report
-          </span>
-
+          <span>Daily Report</span>
         </button>
 
 
@@ -925,13 +994,8 @@
           data-crm-page="pltsCalculatorPage"
           onclick="crmNavigate('pltsCalculator')"
         >
-
           <i data-lucide="sun"></i>
-
-          <span>
-            PLTS Calculator
-          </span>
-
+          <span>PLTS Calculator</span>
         </button>
 
 
@@ -941,13 +1005,8 @@
           data-crm-page="pltsSimulatorPage"
           onclick="crmNavigate('pltsSimulator')"
         >
-
           <i data-lucide="house"></i>
-
-          <span>
-            PLTS Interactive Simulator
-          </span>
-
+          <span>PLTS Interactive Simulator</span>
         </button>
 
 
@@ -962,17 +1021,10 @@
           data-crm-page="settingsPage"
           onclick="crmNavigate('settings')"
         >
-
           <i data-lucide="settings"></i>
-
-          <span>
-            Settings
-          </span>
-
+          <span>Settings</span>
         </button>
 
-
-        <!-- EXISTING MANAGE SALES -->
 
         <button
           type="button"
@@ -982,13 +1034,8 @@
           id="crmSidebarManageSales"
           style="display:none;"
         >
-
           <i data-lucide="user-cog"></i>
-
-          <span>
-            Manage Sales
-          </span>
-
+          <span>Manage Sales</span>
         </button>
 
       </nav>
@@ -1001,13 +1048,8 @@
           class="crm-sidebar-btn"
           onclick="logout()"
         >
-
           <i data-lucide="log-out"></i>
-
-          <span>
-            Logout
-          </span>
-
+          <span>Logout</span>
         </button>
 
       </div>
@@ -1015,16 +1057,11 @@
     </aside>
 
 
-    <!-- ===================================================
-         HEADER
-         EXISTING — FUNGSI LAMA TETAP
-    ==================================================== -->
+    <!-- HEADER -->
 
     <header class="top-header">
 
       <div class="header-inner">
-
-        <!-- CRM MENU BUTTON -->
 
         <button
           type="button"
@@ -1033,13 +1070,9 @@
           aria-label="Open CRM menu"
           aria-expanded="false"
         >
-
           <i data-lucide="menu"></i>
-
         </button>
 
-
-        <!-- LOGO -->
 
         <a
           href="#"
@@ -1061,9 +1094,6 @@
         </a>
 
 
-        <!-- DESKTOP NAVIGATION
-             EXISTING NAVIGATION TETAP ADA -->
-
         <nav
           class="main-nav"
           aria-label="Main navigation"
@@ -1075,13 +1105,8 @@
             id="dashboardNav"
             onclick="showDashboard()"
           >
-
             <i data-lucide="layout-dashboard"></i>
-
-            <span>
-              Dashboard
-            </span>
-
+            <span>Dashboard</span>
           </button>
 
 
@@ -1091,17 +1116,10 @@
             id="leadsNav"
             onclick="showLeads()"
           >
-
             <i data-lucide="users"></i>
-
-            <span>
-              My Leads
-            </span>
-
+            <span>My Leads</span>
           </button>
 
-
-          <!-- SALES DROPDOWN — EXISTING -->
 
           <div
             id="salesDropdownContainer"
@@ -1117,18 +1135,12 @@
               aria-haspopup="true"
               aria-expanded="false"
             >
-
               <i data-lucide="users-round"></i>
-
-              <span>
-                Sales
-              </span>
-
+              <span>Sales</span>
               <i
                 data-lucide="chevron-down"
                 class="nav-dropdown-arrow"
               ></i>
-
             </button>
 
 
@@ -1152,8 +1164,6 @@
           </div>
 
 
-          <!-- MANAGE SALES — EXISTING -->
-
           <button
             type="button"
             class="nav-link"
@@ -1161,19 +1171,12 @@
             onclick="showSales()"
             style="display:none;"
           >
-
             <i data-lucide="user-cog"></i>
-
-            <span>
-              Manage Sales
-            </span>
-
+            <span>Manage Sales</span>
           </button>
 
         </nav>
 
-
-        <!-- USER MENU -->
 
         <div class="header-user-area">
 
@@ -1183,11 +1186,8 @@
             onclick="toggleUserMenu()"
             aria-label="User menu"
           >
-
             <span id="userInfo"></span>
-
             <i data-lucide="chevron-down"></i>
-
           </button>
 
 
@@ -1208,11 +1208,8 @@
               onclick="logout()"
               class="dropdown-action"
             >
-
               <i data-lucide="log-out"></i>
-
               Logout
-
             </button>
 
           </div>
@@ -1220,23 +1217,17 @@
         </div>
 
 
-        <!-- MOBILE MENU — EXISTING -->
-
         <button
           type="button"
           class="mobile-menu-btn"
           onclick="toggleMobileMenu()"
           aria-label="Open menu"
         >
-
           <i data-lucide="menu"></i>
-
         </button>
 
       </div>
 
-
-      <!-- MOBILE NAVIGATION — EXISTING -->
 
       <div
         id="mobileNav"
@@ -1249,11 +1240,8 @@
           class="mobile-nav-link"
           onclick="showDashboard(); closeMobileMenu()"
         >
-
           <i data-lucide="layout-dashboard"></i>
-
           Dashboard
-
         </button>
 
 
@@ -1262,11 +1250,8 @@
           class="mobile-nav-link"
           onclick="showLeads(); closeMobileMenu()"
         >
-
           <i data-lucide="users"></i>
-
           My Leads
-
         </button>
 
 
@@ -1277,11 +1262,8 @@
           onclick="showSales(); closeMobileMenu()"
           style="display:none;"
         >
-
           <i data-lucide="user-cog"></i>
-
           Manage Sales
-
         </button>
 
 
@@ -1290,11 +1272,8 @@
           class="mobile-nav-link danger"
           onclick="logout()"
         >
-
           <i data-lucide="log-out"></i>
-
           Logout
-
         </button>
 
       </div>
@@ -1302,14 +1281,9 @@
     </header>
 
 
-    <!-- ===================================================
-         MAIN CONTENT
-    ==================================================== -->
+    <!-- MAIN CONTENT -->
 
     <main class="main-content">
-
-
-      <!-- PAGE TITLE -->
 
       <div class="page-heading">
 
@@ -1328,10 +1302,7 @@
       </div>
 
 
-      <!-- =================================================
-           DASHBOARD
-           EXISTING
-      ================================================== -->
+      <!-- DASHBOARD -->
 
       <section
         id="dashboardPage"
@@ -1340,10 +1311,7 @@
       </section>
 
 
-      <!-- =================================================
-           DATABASE CUSTOMER / LEADS
-           EXISTING
-      ================================================== -->
+      <!-- DATABASE CUSTOMER -->
 
       <section
         id="leadsPage"
@@ -1375,11 +1343,8 @@
                 class="primary-btn"
                 onclick="openLeadModal()"
               >
-
                 <i data-lucide="plus"></i>
-
                 Add Lead
-
               </button>
 
             </div>
@@ -1443,11 +1408,9 @@
               id="businessFilter"
               onchange="loadLeads(1)"
             >
-
               <option value="">
                 All Business
               </option>
-
             </select>
 
 
@@ -1455,11 +1418,9 @@
               id="locationFilter"
               onchange="loadLeads(1)"
             >
-
               <option value="">
                 All Location
               </option>
-
             </select>
 
 
@@ -1468,11 +1429,9 @@
               onchange="loadLeads(1)"
               style="display:none;"
             >
-
               <option value="">
                 All Sales
               </option>
-
             </select>
 
           </div>
@@ -1549,11 +1508,7 @@
 
       <!-- =================================================
            CUSTOMER PROFILE
-           NEW PAGE
-           -------------------------------------------------
-           Halaman ini tetap dipertahankan.
-           Akan digunakan sebagai halaman customer
-           untuk melihat sekaligus mengedit data.
+           ONE PAGE = VIEW + EDIT
       ================================================== -->
 
       <section
@@ -1571,29 +1526,26 @@
               class="crm-back-btn"
               onclick="crmGoBack()"
             >
-
               <i data-lucide="arrow-left"></i>
-
               Back
-
             </button>
+
 
             <button
               type="button"
               class="crm-back-btn"
               onclick="crmNavigate('dashboard')"
             >
-
               <i data-lucide="house"></i>
-
               Home
-
             </button>
 
           </div>
 
         </div>
 
+
+        <!-- CUSTOMER HEADER -->
 
         <div class="customer-profile-header">
 
@@ -1608,6 +1560,7 @@
                 C
               </div>
 
+
               <div>
 
                 <div
@@ -1617,11 +1570,38 @@
                   Customer
                 </div>
 
+
                 <div
                   id="profileCustomerContact"
                   class="customer-profile-contact"
                 >
                   Customer Profile
+                </div>
+
+
+                <div class="customer-profile-meta">
+
+                  <span
+                    id="profileStatusBadge"
+                    class="crm-profile-badge primary"
+                  >
+                    Status
+                  </span>
+
+                  <span
+                    id="profileSalesBadge"
+                    class="crm-profile-badge"
+                  >
+                    Sales
+                  </span>
+
+                  <span
+                    id="profileLeadAge"
+                    class="crm-profile-badge"
+                  >
+                    Lead age: -
+                  </span>
+
                 </div>
 
               </div>
@@ -1636,11 +1616,8 @@
                 class="secondary-btn"
                 onclick="profileWhatsApp()"
               >
-
                 <i data-lucide="message-circle"></i>
-
                 WhatsApp
-
               </button>
 
 
@@ -1649,24 +1626,29 @@
                 class="secondary-btn"
                 onclick="profileEmail()"
               >
-
                 <i data-lucide="mail"></i>
-
                 Email
-
               </button>
 
 
               <button
                 type="button"
-                class="primary-btn"
+                class="secondary-btn"
                 onclick="profileAppointment()"
               >
-
                 <i data-lucide="calendar-plus"></i>
-
                 Appointment
+              </button>
 
+
+              <button
+                type="button"
+                id="crmProfileSaveTop"
+                class="primary-btn"
+                onclick="crmSaveCustomerEdit()"
+              >
+                <i data-lucide="save"></i>
+                Save Changes
               </button>
 
             </div>
@@ -1692,79 +1674,142 @@
             </div>
 
 
-            <div class="customer-info-grid">
-
-              <div class="customer-info-item">
-
-                <span>Name</span>
-
-                <strong id="profileNameValue">
-                  -
-                </strong>
-
-              </div>
+            <div class="crm-profile-form-grid">
 
 
-              <div class="customer-info-item">
+              <div class="crm-profile-field">
 
-                <span>Phone / WhatsApp</span>
+                <label for="crmEditCustomerName">
+                  Customer Name
+                </label>
 
-                <strong id="profilePhoneValue">
-                  -
-                </strong>
+                <input
+                  id="crmEditCustomerName"
+                  type="text"
+                  autocomplete="off"
+                >
 
               </div>
 
 
-              <div class="customer-info-item">
+              <div class="crm-profile-field">
 
-                <span>Email</span>
+                <label for="crmEditPhone">
+                  Phone / WhatsApp
+                </label>
 
-                <strong id="profileEmailValue">
-                  -
-                </strong>
-
-              </div>
-
-
-              <div class="customer-info-item">
-
-                <span>Business</span>
-
-                <strong id="profileBusinessValue">
-                  -
-                </strong>
+                <input
+                  id="crmEditPhone"
+                  type="tel"
+                  autocomplete="tel"
+                >
 
               </div>
 
 
-              <div class="customer-info-item">
+              <div class="crm-profile-field">
 
-                <span>Location</span>
+                <label for="crmEditEmail">
+                  Email
+                </label>
 
-                <strong id="profileLocationValue">
-                  -
-                </strong>
+                <input
+                  id="crmEditEmail"
+                  type="email"
+                  autocomplete="email"
+                >
+
+              </div>
+
+
+              <div class="crm-profile-field">
+
+                <label for="crmEditBusiness">
+                  Business
+                </label>
+
+                <input
+                  id="crmEditBusiness"
+                  type="text"
+                >
 
               </div>
 
 
-              <div class="customer-info-item">
+              <div class="crm-profile-field">
 
-                <span>Sales</span>
+                <label for="crmEditLocation">
+                  Location
+                </label>
 
-                <strong id="profileSalesValue">
-                  -
-                </strong>
+                <input
+                  id="crmEditLocation"
+                  type="text"
+                >
 
               </div>
+
+
+              <div class="crm-profile-field">
+
+                <label for="crmEditStatus">
+                  Status
+                </label>
+
+                <select id="crmEditStatus">
+
+                  <option value="Belum Dihubungi">
+                    Not Contacted
+                  </option>
+
+                  <option value="Flyer Sent">
+                    Flyer Sent
+                  </option>
+
+                  <option value="Tertarik">
+                    Interested
+                  </option>
+
+                  <option value="Follow Up">
+                    Follow Up
+                  </option>
+
+                  <option value="Closing">
+                    Closing
+                  </option>
+
+                  <option value="Tidak Tertarik">
+                    Not Interested
+                  </option>
+
+                </select>
+
+              </div>
+
+
+              <div class="crm-profile-field">
+
+                <label for="crmEditSales">
+                  Sales
+                </label>
+
+                <select id="crmEditSales">
+
+                  <option value="">
+                    Select Sales
+                  </option>
+
+                </select>
+
+              </div>
+
 
             </div>
 
           </div>
 
 
-          <!-- PIPELINE -->
+          <!-- SALES PIPELINE -->
 
           <div class="customer-profile-card full">
 
@@ -1772,7 +1817,7 @@
 
               <i data-lucide="route"></i>
 
-              Sales Pipeline
+              Customer Journey
 
             </div>
 
@@ -1822,7 +1867,7 @@
 
                 <i data-lucide="map-pin"></i>
 
-                <span>Survey</span>
+                <span>Site Survey</span>
 
               </div>
 
@@ -1861,6 +1906,127 @@
                 <span>Closing</span>
 
               </div>
+
+            </div>
+
+          </div>
+
+
+          <!-- ACTIVITY / DATES -->
+
+          <div class="customer-profile-card full">
+
+            <div class="customer-profile-card-title">
+
+              <i data-lucide="calendar-clock"></i>
+
+              Activity & Dates
+
+            </div>
+
+
+            <div class="crm-profile-form-grid">
+
+
+              <div class="crm-profile-field">
+
+                <label for="crmEditFollowUp">
+                  Follow Up Date
+                </label>
+
+                <input
+                  id="crmEditFollowUp"
+                  type="date"
+                >
+
+              </div>
+
+
+              <div class="crm-profile-field">
+
+                <label for="crmEditAppointment">
+                  Appointment
+                </label>
+
+                <input
+                  id="crmEditAppointment"
+                  type="date"
+                >
+
+              </div>
+
+
+              <div class="crm-profile-field">
+
+                <label for="crmEditSiteSurvey">
+                  Site Survey
+                </label>
+
+                <input
+                  id="crmEditSiteSurvey"
+                  type="date"
+                >
+
+              </div>
+
+
+              <div class="crm-profile-field">
+
+                <label for="crmEditQuotation">
+                  Quotation
+                </label>
+
+                <input
+                  id="crmEditQuotation"
+                  type="date"
+                >
+
+              </div>
+
+
+              <div class="crm-profile-field">
+
+                <label for="crmEditSPK">
+                  SPK
+                </label>
+
+                <input
+                  id="crmEditSPK"
+                  type="date"
+                >
+
+              </div>
+
+
+              <div class="crm-profile-field">
+
+                <label for="crmEditClosing">
+                  Closing
+                </label>
+
+                <input
+                  id="crmEditClosing"
+                  type="date"
+                >
+
+              </div>
+
+            </div>
+
+
+            <div
+              id="profileCreatedDate"
+              class="crm-date-card"
+              style="margin-top:16px;"
+            >
+
+              <span>
+                Lead Created
+              </span>
+
+              <strong>
+                -
+              </strong>
 
             </div>
 
@@ -1942,13 +2108,23 @@
             </div>
 
 
-            <div
-              id="profileSurveyContent"
-            >
+            <div id="profileSurveyContent">
 
-              <p style="color:var(--slate-500);font-size:12px;">
-                Site survey information will appear here.
-              </p>
+              <div class="crm-info-list">
+
+                <div class="crm-info-row">
+
+                  <span>
+                    Survey Date
+                  </span>
+
+                  <strong id="profileSurveyDate">
+                    -
+                  </strong>
+
+                </div>
+
+              </div>
 
             </div>
 
@@ -1968,13 +2144,23 @@
             </div>
 
 
-            <div
-              id="profileQuotationContent"
-            >
+            <div id="profileQuotationContent">
 
-              <p style="color:var(--slate-500);font-size:12px;">
-                Quotation history will appear here.
-              </p>
+              <div class="crm-info-list">
+
+                <div class="crm-info-row">
+
+                  <span>
+                    Quotation Date
+                  </span>
+
+                  <strong id="profileQuotationDate">
+                    -
+                  </strong>
+
+                </div>
+
+              </div>
 
             </div>
 
@@ -1994,13 +2180,36 @@
             </div>
 
 
-            <div
-              id="profileSPKClosingContent"
-            >
+            <div id="profileSPKClosingContent">
 
-              <p style="color:var(--slate-500);font-size:12px;">
-                SPK and closing information will appear here.
-              </p>
+              <div class="crm-info-list">
+
+                <div class="crm-info-row">
+
+                  <span>
+                    SPK Date
+                  </span>
+
+                  <strong id="profileSPKDate">
+                    -
+                  </strong>
+
+                </div>
+
+
+                <div class="crm-info-row">
+
+                  <span>
+                    Closing Date
+                  </span>
+
+                  <strong id="profileClosingDate">
+                    -
+                  </strong>
+
+                </div>
+
+              </div>
 
             </div>
 
@@ -2020,20 +2229,23 @@
             </div>
 
 
-            <div
-              id="profilePLTSContent"
-            >
+            <div id="profilePLTSContent">
 
-              <p style="color:var(--slate-500);font-size:12px;">
-                PLTS calculation and system information will appear here.
-              </p>
+              <div class="crm-empty-module">
+
+                <p>
+                  PLTS calculation and system information
+                  can be connected to this customer later.
+                </p>
+
+              </div>
 
             </div>
 
           </div>
 
 
-          <!-- NOTES -->
+          <!-- PROJECT / NOTES -->
 
           <div class="customer-profile-card full">
 
@@ -2041,18 +2253,146 @@
 
               <i data-lucide="notebook-pen"></i>
 
-              Notes
+              Project / Notes
 
             </div>
 
 
-            <div
-              id="profileNotesContent"
-            >
+            <div class="crm-profile-form-grid">
 
-              <p style="color:var(--slate-500);font-size:12px;">
-                No notes.
-              </p>
+
+              <div class="crm-profile-field">
+
+                <label for="crmEditBusinessProject">
+                  Business
+                </label>
+
+                <input
+                  id="crmEditBusinessProject"
+                  type="text"
+                >
+
+              </div>
+
+
+              <div class="crm-profile-field">
+
+                <label for="crmEditLocationProject">
+                  Location
+                </label>
+
+                <input
+                  id="crmEditLocationProject"
+                  type="text"
+                >
+
+              </div>
+
+
+              <div class="crm-profile-field full">
+
+                <label for="crmEditNotes">
+                  Notes
+                </label>
+
+                <textarea
+                  id="crmEditNotes"
+                  rows="5"
+                  placeholder="Customer notes..."
+                ></textarea>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <!-- SALES INFORMATION -->
+
+          <div class="customer-profile-card full">
+
+            <div class="customer-profile-card-title">
+
+              <i data-lucide="user-cog"></i>
+
+              Sales Information
+
+            </div>
+
+
+            <div class="crm-info-list">
+
+              <div class="crm-info-row">
+
+                <span>
+                  Sales
+                </span>
+
+                <strong id="profileSalesInfo">
+                  -
+                </strong>
+
+              </div>
+
+
+              <div class="crm-info-row">
+
+                <span>
+                  Created By
+                </span>
+
+                <strong id="profileCreatedBy">
+                  -
+                </strong>
+
+              </div>
+
+
+              <div class="crm-info-row">
+
+                <span>
+                  Updated By
+                </span>
+
+                <strong id="profileUpdatedBy">
+                  -
+                </strong>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <!-- SAVE -->
+
+          <div class="customer-profile-card full">
+
+            <div class="crm-profile-save-bar">
+
+              <div
+                id="crmProfileSaveStatus"
+                class="crm-profile-save-status"
+                aria-live="polite"
+              >
+                Changes are saved to this customer record.
+              </div>
+
+
+              <button
+                type="button"
+                id="crmEditSaveButton"
+                class="primary-btn"
+                onclick="crmSaveCustomerEdit()"
+              >
+
+                <i data-lucide="save"></i>
+
+                Save Changes
+
+              </button>
 
             </div>
 
@@ -2082,11 +2422,8 @@
               class="crm-back-btn"
               onclick="crmGoBack()"
             >
-
               <i data-lucide="arrow-left"></i>
-
               Back
-
             </button>
 
           </div>
@@ -2097,11 +2434,8 @@
             class="primary-btn"
             onclick="openAppointmentForm()"
           >
-
             <i data-lucide="plus"></i>
-
             New Appointment
-
           </button>
 
         </div>
@@ -2176,11 +2510,8 @@
               class="crm-back-btn"
               onclick="crmGoBack()"
             >
-
               <i data-lucide="arrow-left"></i>
-
               Back
-
             </button>
 
           </div>
@@ -2191,11 +2522,8 @@
             class="primary-btn"
             onclick="openDailyReportForm()"
           >
-
             <i data-lucide="plus"></i>
-
             Add Activity
-
           </button>
 
         </div>
@@ -2270,11 +2598,8 @@
               class="crm-back-btn"
               onclick="crmGoBack()"
             >
-
               <i data-lucide="arrow-left"></i>
-
               Back
-
             </button>
 
           </div>
@@ -2352,11 +2677,8 @@
               class="crm-back-btn"
               onclick="crmGoBack()"
             >
-
               <i data-lucide="arrow-left"></i>
-
               Back
-
             </button>
 
           </div>
@@ -2434,11 +2756,8 @@
               class="crm-back-btn"
               onclick="crmGoBack()"
             >
-
               <i data-lucide="arrow-left"></i>
-
               Back
-
             </button>
 
           </div>
@@ -2498,7 +2817,6 @@
 
       <!-- =================================================
            MANAGE SALES
-           EXISTING
       ================================================== -->
 
       <section
@@ -2523,16 +2841,14 @@
 
             </div>
 
+
             <button
               type="button"
               class="primary-btn"
               onclick="openSalesModal()"
             >
-
               <i data-lucide="user-plus"></i>
-
               Add Sales
-
             </button>
 
           </div>
@@ -2574,7 +2890,6 @@
 
   <!-- =====================================================
        ADD / EDIT LEAD MODAL
-       EXISTING
   ====================================================== -->
 
   <div
@@ -2604,15 +2919,14 @@
 
         </div>
 
+
         <button
           type="button"
           class="modal-close"
           onclick="closeLeadModal()"
           aria-label="Close"
         >
-
           <i data-lucide="x"></i>
-
         </button>
 
       </div>
@@ -2626,6 +2940,7 @@
           type="hidden"
           id="leadId"
         >
+
 
         <div class="form-grid two-col">
 
@@ -2866,6 +3181,7 @@
             Cancel
           </button>
 
+
           <button
             type="submit"
             class="primary-btn"
@@ -2884,7 +3200,6 @@
 
   <!-- =====================================================
        ADD SALES MODAL
-       EXISTING
   ====================================================== -->
 
   <div
@@ -2914,15 +3229,14 @@
 
         </div>
 
+
         <button
           type="button"
           class="modal-close"
           onclick="closeSalesModal()"
           aria-label="Close"
         >
-
           <i data-lucide="x"></i>
-
         </button>
 
       </div>
@@ -2989,6 +3303,7 @@
             Cancel
           </button>
 
+
           <button
             type="submit"
             class="primary-btn"
@@ -3007,7 +3322,6 @@
 
   <!-- =====================================================
        JAVASCRIPT LIBRARIES
-       EXISTING
   ====================================================== -->
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -3017,7 +3331,6 @@
 
   <!-- =====================================================
        EXISTING MAIN SCRIPT
-       JANGAN DIHAPUS
   ====================================================== -->
 
   <script src="script.js"></script>
@@ -3025,7 +3338,6 @@
 
   <!-- =====================================================
        EXISTING DASHBOARD SCRIPT
-       JANGAN DIHAPUS
   ====================================================== -->
 
   <script src="dashboard.js"></script>
@@ -3033,9 +3345,6 @@
 
   <!-- =====================================================
        ADDITIONAL CRM NAVIGATION
-       -----------------------------------------------------
-       Tidak mengganti script.js.
-       Hanya menambahkan navigasi untuk halaman baru.
   ====================================================== -->
 
   <script>
@@ -3122,10 +3431,6 @@
       "settingsPage"
     ];
 
-
-    /* =====================================================
-       HIDE CRM NEW PAGES
-    ====================================================== */
 
     function hideCrmPages() {
 
@@ -3227,15 +3532,8 @@
 
       if (page === "dashboard") {
 
-        /*
-          Gunakan fungsi dashboard lama.
-          Tidak menggantinya.
-        */
-
-        if (typeof showDashboard === "function") {
-
-          showDashboard();
-
+        if (typeof window.showDashboard === "function") {
+          window.showDashboard();
         }
 
         crmCurrentPage =
@@ -3246,10 +3544,8 @@
 
       else if (page === "leads") {
 
-        if (typeof showLeads === "function") {
-
-          showLeads();
-
+        if (typeof window.showLeads === "function") {
+          window.showLeads();
         }
 
         crmCurrentPage =
@@ -3260,10 +3556,8 @@
 
       else if (page === "sales") {
 
-        if (typeof showSales === "function") {
-
-          showSales();
-
+        if (typeof window.showSales === "function") {
+          window.showSales();
         }
 
         crmCurrentPage =
@@ -3418,6 +3712,18 @@
           previous
         );
 
+        if (previous === "dashboardPage") {
+          updateCrmPageTitle("dashboard");
+        }
+
+        else if (previous === "leadsPage") {
+          updateCrmPageTitle("leads");
+        }
+
+        else if (previous === "salesPage") {
+          updateCrmPageTitle("sales");
+        }
+
         return;
 
       }
@@ -3429,9 +3735,7 @@
 
     /* =====================================================
        OPEN CUSTOMER PROFILE
-       -----------------------------------------------------
-       Bisa dipanggil dari customer row nanti:
-       openCustomerProfile(id)
+       ONE PAGE = VIEW + EDIT
     ====================================================== */
 
     async function openCustomerProfile(id) {
@@ -3488,9 +3792,34 @@
         crmPreviousPage =
           crmCurrentPage;
 
-        crmNavigate(
+
+        hideCrmPages();
+
+        const profile =
+          document.getElementById(
+            "customerProfilePage"
+          );
+
+        if (profile) {
+          profile.style.display = "block";
+        }
+
+        crmCurrentPage =
+          "customerProfilePage";
+
+
+        updateCrmSidebarActive(
+          "customerProfilePage"
+        );
+
+        updateCrmPageTitle(
           "customerProfile"
         );
+
+
+        if (window.lucide) {
+          lucide.createIcons();
+        }
 
       }
 
@@ -3502,6 +3831,378 @@
         );
 
       }
+
+    }
+
+
+    /* =====================================================
+       SALES NAME HELPER
+    ====================================================== */
+
+    function crmGetSalesNameById(salesId) {
+
+      if (!salesId) {
+        return "-";
+      }
+
+
+      if (
+        Array.isArray(window.salesUsersData)
+      ) {
+
+        const found =
+          window.salesUsersData.find(function(sales) {
+
+            return (
+              String(
+                sales.id ||
+                sales.user_id ||
+                sales.auth_user_id ||
+                ""
+              ) === String(salesId)
+            );
+
+          });
+
+
+        if (found) {
+
+          return (
+            found.name ||
+            found.sales_name ||
+            found.full_name ||
+            found.username ||
+            "-"
+          );
+
+        }
+
+      }
+
+
+      if (
+        typeof salesUsersData !== "undefined" &&
+        Array.isArray(salesUsersData)
+      ) {
+
+        const found =
+          salesUsersData.find(function(sales) {
+
+            return (
+              String(
+                sales.id ||
+                sales.user_id ||
+                sales.auth_user_id ||
+                ""
+              ) === String(salesId)
+            );
+
+          });
+
+
+        if (found) {
+
+          return (
+            found.name ||
+            found.sales_name ||
+            found.full_name ||
+            found.username ||
+            "-"
+          );
+
+        }
+
+      }
+
+
+      return String(salesId);
+
+    }
+
+
+    /* =====================================================
+       POPULATE PROFILE SALES
+    ====================================================== */
+
+    function crmPopulateProfileSales(selectedId) {
+
+      const select =
+        document.getElementById(
+          "crmEditSales"
+        );
+
+      if (!select) return;
+
+
+      const existing =
+        select.value;
+
+
+      select.innerHTML =
+        "";
+
+
+      const placeholder =
+        document.createElement("option");
+
+      placeholder.value =
+        "";
+
+      placeholder.textContent =
+        "Select Sales";
+
+      select.appendChild(
+        placeholder
+      );
+
+
+      let source =
+        null;
+
+
+      if (
+        Array.isArray(window.salesUsersData)
+      ) {
+
+        source =
+          window.salesUsersData;
+
+      }
+
+      else if (
+        typeof salesUsersData !== "undefined" &&
+        Array.isArray(salesUsersData)
+      ) {
+
+        source =
+          salesUsersData;
+
+      }
+
+
+      if (Array.isArray(source)) {
+
+        source.forEach(function(sales) {
+
+          const salesId =
+            sales.id ||
+            sales.user_id ||
+            sales.auth_user_id;
+
+          if (!salesId) return;
+
+
+          const role =
+            String(
+              sales.role || "sales"
+            ).toLowerCase();
+
+
+          if (role !== "sales") {
+            return;
+          }
+
+
+          if (
+            sales.is_active === false ||
+            sales.active === false
+          ) {
+            return;
+          }
+
+
+          const option =
+            document.createElement("option");
+
+          option.value =
+            salesId;
+
+          option.textContent =
+            sales.name ||
+            sales.sales_name ||
+            sales.full_name ||
+            sales.username ||
+            "Sales";
+
+
+          select.appendChild(
+            option
+          );
+
+        });
+
+      }
+
+
+      if (selectedId != null) {
+
+        select.value =
+          String(selectedId);
+
+      }
+
+      else if (existing) {
+
+        select.value =
+          existing;
+
+      }
+
+
+      /*
+        Sales user tidak boleh mengubah
+        assignment customer ke Sales lain.
+      */
+
+      const role =
+        String(
+          currentProfile?.role || ""
+        ).toLowerCase();
+
+
+      if (
+        role === "sales" &&
+        currentProfile
+      ) {
+
+        const currentSalesId =
+          currentProfile.id;
+
+
+        if (currentSalesId) {
+
+          select.value =
+            String(currentSalesId);
+
+          select.disabled =
+            true;
+
+        }
+
+      }
+
+      else {
+
+        select.disabled =
+          false;
+
+      }
+
+    }
+
+
+    /* =====================================================
+       DATE FORMATTER
+    ====================================================== */
+
+    function crmFormatDate(value) {
+
+      if (!value) {
+        return "-";
+      }
+
+
+      const raw =
+        String(value);
+
+
+      const date =
+        new Date(
+          raw.length === 10
+            ? raw + "T00:00:00"
+            : raw
+        );
+
+
+      if (Number.isNaN(date.getTime())) {
+        return raw;
+      }
+
+
+      return date.toLocaleDateString(
+        "en-GB",
+        {
+          day: "2-digit",
+          month: "short",
+          year: "numeric"
+        }
+      );
+
+    }
+
+
+    /* =====================================================
+       LEAD AGE
+    ====================================================== */
+
+    function crmCalculateLeadAge(createdAt) {
+
+      if (!createdAt) {
+        return "-";
+      }
+
+
+      const created =
+        new Date(createdAt);
+
+
+      if (Number.isNaN(created.getTime())) {
+        return "-";
+      }
+
+
+      const now =
+        new Date();
+
+
+      const diff =
+        Math.max(
+          0,
+          now.getTime() -
+          created.getTime()
+        );
+
+
+      const days =
+        Math.floor(
+          diff /
+          86400000
+        );
+
+
+      if (days === 0) {
+        return "Today";
+      }
+
+
+      if (days === 1) {
+        return "1 day";
+      }
+
+
+      return days + " days";
+
+    }
+
+
+    /* =====================================================
+       SET INPUT VALUE
+    ====================================================== */
+
+    function crmSetInputValue(
+      id,
+      value
+    ) {
+
+      const element =
+        document.getElementById(id);
+
+      if (!element) return;
+
+      element.value =
+        value == null
+          ? ""
+          : String(value);
 
     }
 
@@ -3520,71 +4221,36 @@
 
 
       const phone =
-        customer.phone || "-";
+        customer.phone || "";
 
 
       const email =
-        customer.email || "-";
+        customer.email || "";
 
 
       const business =
-        customer.business || "-";
+        customer.business || "";
 
 
       const location =
-        customer.location || "-";
+        customer.location || "";
 
 
       const status =
-        customer.status || "-";
+        customer.status || "Belum Dihubungi";
 
+
+      /* Header */
 
       setCrmText(
         "profileCustomerName",
         name
       );
 
+
       setCrmText(
         "profileCustomerContact",
-        phone
-      );
-
-
-      setCrmText(
-        "profileNameValue",
-        name
-      );
-
-      setCrmText(
-        "profilePhoneValue",
-        phone
-      );
-
-      setCrmText(
-        "profileEmailValue",
-        email
-      );
-
-      setCrmText(
-        "profileBusinessValue",
-        business
-      );
-
-      setCrmText(
-        "profileLocationValue",
-        location
-      );
-
-
-      /*
-        sales_id merupakan UUID.
-        Nama Sales nanti bisa diambil
-        dari sales_users pada tahap berikutnya.
-      */
-
-      setCrmText(
-        "profileSalesValue",
-        customer.sales_id || "-"
+        phone || "No phone number"
       );
 
 
@@ -3592,6 +4258,7 @@
         document.getElementById(
           "profileAvatar"
         );
+
 
       if (avatar) {
 
@@ -3604,15 +4271,268 @@
       }
 
 
+      /* Header status */
+
       setCrmText(
-        "profileNotesContent",
-        customer.notes || "No notes."
+        "profileStatusBadge",
+        status
       );
 
+
+      setCrmText(
+        "profileSalesBadge",
+        crmGetSalesNameById(
+          customer.sales_id
+        )
+      );
+
+
+      setCrmText(
+        "profileLeadAge",
+        "Lead age: " +
+        crmCalculateLeadAge(
+          customer.created_at
+        )
+      );
+
+
+      /* Customer information */
+
+      crmSetInputValue(
+        "crmEditCustomerName",
+        customer.customer_name
+      );
+
+
+      crmSetInputValue(
+        "crmEditPhone",
+        customer.phone
+      );
+
+
+      crmSetInputValue(
+        "crmEditEmail",
+        customer.email
+      );
+
+
+      crmSetInputValue(
+        "crmEditBusiness",
+        customer.business
+      );
+
+
+      crmSetInputValue(
+        "crmEditLocation",
+        customer.location
+      );
+
+
+      crmSetInputValue(
+        "crmEditStatus",
+        customer.status ||
+        "Belum Dihubungi"
+      );
+
+
+      /* Sales */
+
+      crmPopulateProfileSales(
+        customer.sales_id
+      );
+
+
+      /* Dates */
+
+      crmSetInputValue(
+        "crmEditFollowUp",
+        customer.follow_up_date
+      );
+
+
+      crmSetInputValue(
+        "crmEditAppointment",
+        customer.appointment
+      );
+
+
+      crmSetInputValue(
+        "crmEditSiteSurvey",
+        customer.site_survey
+      );
+
+
+      crmSetInputValue(
+        "crmEditQuotation",
+        customer.quotation
+      );
+
+
+      crmSetInputValue(
+        "crmEditSPK",
+        customer.spk
+      );
+
+
+      crmSetInputValue(
+        "crmEditClosing",
+        customer.closing
+      );
+
+
+      /* Project */
+
+      crmSetInputValue(
+        "crmEditBusinessProject",
+        customer.business
+      );
+
+
+      crmSetInputValue(
+        "crmEditLocationProject",
+        customer.location
+      );
+
+
+      crmSetInputValue(
+        "crmEditNotes",
+        customer.notes
+      );
+
+
+      /* Created date */
+
+      const createdDate =
+        document.getElementById(
+          "profileCreatedDate"
+        );
+
+
+      if (createdDate) {
+
+        createdDate.innerHTML =
+          "<span>Lead Created</span>" +
+          "<strong>" +
+          crmEscapeHtml(
+            crmFormatDate(
+              customer.created_at
+            )
+          ) +
+          "</strong>";
+
+      }
+
+
+      /* Sales information */
+
+      setCrmText(
+        "profileSalesInfo",
+        crmGetSalesNameById(
+          customer.sales_id
+        )
+      );
+
+
+      setCrmText(
+        "profileCreatedBy",
+        customer.created_by || "-"
+      );
+
+
+      setCrmText(
+        "profileUpdatedBy",
+        customer.updated_by || "-"
+      );
+
+
+      /* Activity display */
+
+      crmRenderCustomerActivity(
+        customer
+      );
+
+
+      /* Pipeline */
 
       updateCustomerPipeline(
         customer
       );
+
+
+      /* Secondary information */
+
+      setCrmText(
+        "profileSurveyDate",
+        crmFormatDate(
+          customer.site_survey
+        )
+      );
+
+
+      setCrmText(
+        "profileQuotationDate",
+        crmFormatDate(
+          customer.quotation
+        )
+      );
+
+
+      setCrmText(
+        "profileSPKDate",
+        crmFormatDate(
+          customer.spk
+        )
+      );
+
+
+      setCrmText(
+        "profileClosingDate",
+        crmFormatDate(
+          customer.closing
+        )
+      );
+
+
+      crmRenderAppointment(
+        customer
+      );
+
+
+      const saveStatus =
+        document.getElementById(
+          "crmProfileSaveStatus"
+        );
+
+
+      if (saveStatus) {
+
+        saveStatus.textContent =
+          "Changes are saved to this customer record.";
+
+        saveStatus.className =
+          "crm-profile-save-status";
+
+      }
+
+    }
+
+
+    /* =====================================================
+       ESCAPE HTML
+    ====================================================== */
+
+    function crmEscapeHtml(value) {
+
+      return String(
+        value == null
+          ? ""
+          : value
+      )
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
 
     }
 
@@ -3669,20 +4589,578 @@
 
 
     /* =====================================================
+       RENDER ACTIVITY
+    ====================================================== */
+
+    function crmRenderCustomerActivity(customer) {
+
+      const container =
+        document.getElementById(
+          "profileActivityList"
+        );
+
+      if (!container) return;
+
+
+      const activities = [
+
+        {
+          label: "Lead Created",
+          date: customer.created_at
+        },
+
+        {
+          label: "Follow Up",
+          date: customer.follow_up_date
+        },
+
+        {
+          label: "Appointment",
+          date: customer.appointment
+        },
+
+        {
+          label: "Site Survey",
+          date: customer.site_survey
+        },
+
+        {
+          label: "Quotation",
+          date: customer.quotation
+        },
+
+        {
+          label: "SPK",
+          date: customer.spk
+        },
+
+        {
+          label: "Closing",
+          date: customer.closing
+        }
+
+      ].filter(function(item) {
+
+        return !!item.date;
+
+      });
+
+
+      if (!activities.length) {
+
+        container.innerHTML =
+          '<div class="crm-empty-module">' +
+          '<p>No activity yet.</p>' +
+          '</div>';
+
+        return;
+
+      }
+
+
+      container.innerHTML =
+        activities
+          .map(function(item) {
+
+            return (
+              '<div class="appointment-item">' +
+
+                '<div class="appointment-date-box">' +
+
+                  '<strong>' +
+                    crmEscapeHtml(
+                      crmFormatDate(item.date)
+                        .split(" ")[0]
+                    ) +
+                  '</strong>' +
+
+                  '<span>' +
+                    crmEscapeHtml(
+                      crmFormatDate(item.date)
+                        .split(" ").slice(1,2).join("")
+                    ) +
+                  '</span>' +
+
+                '</div>' +
+
+                '<div class="appointment-info">' +
+
+                  '<strong>' +
+                    crmEscapeHtml(item.label) +
+                  '</strong>' +
+
+                  '<span>' +
+                    crmEscapeHtml(
+                      crmFormatDate(item.date)
+                    ) +
+                  '</span>' +
+
+                '</div>' +
+
+              '</div>'
+            );
+
+          })
+          .join("");
+
+    }
+
+
+    /* =====================================================
+       RENDER APPOINTMENT
+    ====================================================== */
+
+    function crmRenderAppointment(customer) {
+
+      const container =
+        document.getElementById(
+          "profileAppointmentList"
+        );
+
+      if (!container) return;
+
+
+      if (!customer.appointment) {
+
+        container.innerHTML =
+          '<div class="crm-empty-module">' +
+          '<p>No appointment yet.</p>' +
+          '</div>';
+
+        return;
+
+      }
+
+
+      container.innerHTML =
+        '<div class="appointment-item">' +
+
+          '<div class="appointment-date-box">' +
+
+            '<strong>' +
+              crmEscapeHtml(
+                crmFormatDate(
+                  customer.appointment
+                ).split(" ")[0]
+              ) +
+            '</strong>' +
+
+            '<span>' +
+              crmEscapeHtml(
+                crmFormatDate(
+                  customer.appointment
+                ).split(" ").slice(1,2).join("")
+              ) +
+            '</span>' +
+
+          '</div>' +
+
+          '<div class="appointment-info">' +
+
+            '<strong>Customer Appointment</strong>' +
+
+            '<span>' +
+              crmEscapeHtml(
+                crmFormatDate(
+                  customer.appointment
+                )
+              ) +
+            '</span>' +
+
+          '</div>' +
+
+        '</div>';
+
+    }
+
+
+    /* =====================================================
+       SAVE CUSTOMER PROFILE
+       UPDATE EXISTING LEADS ROW
+    ====================================================== */
+
+    async function crmSaveCustomerEdit() {
+
+      if (!crmCurrentCustomerId) {
+
+        return;
+
+      }
+
+
+      if (
+        typeof supabaseClient === "undefined"
+      ) {
+
+        alert(
+          "Supabase client tidak tersedia."
+        );
+
+        return;
+
+      }
+
+
+      const customerName =
+        document.getElementById(
+          "crmEditCustomerName"
+        )?.value.trim() || "";
+
+
+      if (!customerName) {
+
+        alert(
+          "Customer Name wajib diisi."
+        );
+
+        return;
+
+      }
+
+
+      const saveButton =
+        document.getElementById(
+          "crmEditSaveButton"
+        );
+
+
+      const topButton =
+        document.getElementById(
+          "crmProfileSaveTop"
+        );
+
+
+      const saveStatus =
+        document.getElementById(
+          "crmProfileSaveStatus"
+        );
+
+
+      if (saveButton) {
+        saveButton.disabled = true;
+        saveButton.dataset.originalText =
+          saveButton.innerText;
+        saveButton.innerText =
+          "Saving...";
+      }
+
+
+      if (topButton) {
+        topButton.disabled = true;
+      }
+
+
+      if (saveStatus) {
+
+        saveStatus.textContent =
+          "Saving changes...";
+
+        saveStatus.className =
+          "crm-profile-save-status";
+
+      }
+
+
+      try {
+
+        const salesSelect =
+          document.getElementById(
+            "crmEditSales"
+          );
+
+
+        let salesId =
+          salesSelect
+            ? salesSelect.value || null
+            : null;
+
+
+        /*
+          Sales role:
+          assignment selalu tetap milik dirinya sendiri.
+        */
+
+        const role =
+          String(
+            currentProfile?.role || ""
+          ).toLowerCase();
+
+
+        if (
+          role === "sales" &&
+          currentProfile?.id
+        ) {
+
+          salesId =
+            currentProfile.id;
+
+        }
+
+
+        const payload = {
+
+          customer_name:
+            customerName,
+
+          phone:
+            document.getElementById(
+              "crmEditPhone"
+            )?.value.trim() || null,
+
+          email:
+            document.getElementById(
+              "crmEditEmail"
+            )?.value.trim() || null,
+
+          business:
+            document.getElementById(
+              "crmEditBusiness"
+            )?.value.trim() || null,
+
+          location:
+            document.getElementById(
+              "crmEditLocation"
+            )?.value.trim() || null,
+
+          status:
+            document.getElementById(
+              "crmEditStatus"
+            )?.value || null,
+
+          sales_id:
+            salesId,
+
+          follow_up_date:
+            document.getElementById(
+              "crmEditFollowUp"
+            )?.value || null,
+
+          appointment:
+            document.getElementById(
+              "crmEditAppointment"
+            )?.value || null,
+
+          site_survey:
+            document.getElementById(
+              "crmEditSiteSurvey"
+            )?.value || null,
+
+          quotation:
+            document.getElementById(
+              "crmEditQuotation"
+            )?.value || null,
+
+          spk:
+            document.getElementById(
+              "crmEditSPK"
+            )?.value || null,
+
+          closing:
+            document.getElementById(
+              "crmEditClosing"
+            )?.value || null,
+
+          notes:
+            document.getElementById(
+              "crmEditNotes"
+            )?.value.trim() || null
+
+        };
+
+
+        /*
+          updated_by hanya diisi jika
+          currentProfile tersedia.
+        */
+
+        if (
+          currentProfile &&
+          currentProfile.id
+        ) {
+
+          payload.updated_by =
+            currentProfile.id;
+
+        }
+
+
+        const result =
+          await supabaseClient
+            .from("leads")
+            .update(payload)
+            .eq(
+              "id",
+              crmCurrentCustomerId
+            );
+
+
+        if (result.error) {
+
+          throw result.error;
+
+        }
+
+
+        /*
+          Ambil ulang data dari Supabase
+          agar profile benar-benar menampilkan
+          data terbaru.
+        */
+
+        const refreshed =
+          await supabaseClient
+            .from("leads")
+            .select("*")
+            .eq(
+              "id",
+              crmCurrentCustomerId
+            )
+            .single();
+
+
+        if (refreshed.error) {
+
+          throw refreshed.error;
+
+        }
+
+
+        crmCurrentCustomer =
+          refreshed.data;
+
+
+        renderCustomerProfile(
+          crmCurrentCustomer
+        );
+
+
+        /*
+          Refresh database customer
+          jika fungsi loadLeads tersedia.
+        */
+
+        if (
+          typeof loadLeads === "function"
+        ) {
+
+          const page =
+            typeof currentPage !== "undefined"
+              ? currentPage
+              : 1;
+
+          await loadLeads(page);
+
+        }
+
+
+        /*
+          Refresh dashboard jika fungsi tersedia.
+        */
+
+        if (
+          typeof loadDashboard === "function"
+        ) {
+
+          try {
+            await loadDashboard();
+          }
+
+          catch (dashboardError) {
+            console.warn(
+              "Dashboard refresh:",
+              dashboardError
+            );
+          }
+
+        }
+
+
+        if (saveStatus) {
+
+          saveStatus.textContent =
+            "✓ Customer data saved successfully.";
+
+          saveStatus.className =
+            "crm-profile-save-status success";
+
+        }
+
+      }
+
+      catch (error) {
+
+        console.error(
+          "Save customer error:",
+          error
+        );
+
+
+        if (saveStatus) {
+
+          saveStatus.textContent =
+            "Failed to save customer data.";
+
+          saveStatus.className =
+            "crm-profile-save-status error";
+
+        }
+
+
+        alert(
+          "Gagal menyimpan customer:\n" +
+          (
+            error?.message ||
+            "Unknown error"
+          )
+        );
+
+      }
+
+
+      finally {
+
+        if (saveButton) {
+
+          saveButton.disabled =
+            false;
+
+          saveButton.innerText =
+            saveButton.dataset.originalText ||
+            "Save Changes";
+
+        }
+
+
+        if (topButton) {
+
+          topButton.disabled =
+            false;
+
+        }
+
+      }
+
+    }
+
+
+    /* =====================================================
        CUSTOMER PROFILE ACTIONS
     ====================================================== */
 
     function profileEdit() {
 
-      if (
-        crmCurrentCustomerId &&
-        typeof editLead === "function"
-      ) {
+      /*
+        Tidak lagi membuka modal edit.
+        Customer Profile sekarang langsung editable.
+      */
 
-        editLead(
-          crmCurrentCustomerId
+      const firstField =
+        document.getElementById(
+          "crmEditCustomerName"
         );
 
+      if (firstField) {
+        firstField.focus();
       }
 
     }
@@ -3692,13 +5170,16 @@
 
       if (!crmCurrentCustomer) return;
 
+
       const phone =
         crmCurrentCustomer.phone;
+
 
       if (
         !phone ||
         typeof whatsappLink !== "function"
       ) return;
+
 
       window.open(
         whatsappLink(phone),
@@ -3712,10 +5193,13 @@
 
       if (!crmCurrentCustomer) return;
 
+
       const email =
         crmCurrentCustomer.email;
 
+
       if (!email) return;
+
 
       window.location.href =
         "mailto:" + email;
@@ -3771,8 +5255,10 @@
 
       if (!element) return;
 
+
       element.textContent =
-        value == null
+        value == null ||
+        value === ""
           ? "-"
           : String(value);
 
@@ -3780,20 +5266,12 @@
 
 
     /* =====================================================
-       OVERRIDE NAVIGATION SAFELY
-       -----------------------------------------------------
-       Fungsi lama tetap dipanggil.
-       Kita hanya memastikan halaman baru
-       ikut disembunyikan.
+       SAFE NAVIGATION OVERRIDE
     ====================================================== */
 
     document.addEventListener(
       "DOMContentLoaded",
       function() {
-
-        /*
-          Simpan fungsi asli.
-        */
 
         const originalShowDashboard =
           typeof window.showDashboard === "function"
@@ -3812,10 +5290,6 @@
             ? window.showSales
             : null;
 
-
-        /*
-          Dashboard lama.
-        */
 
         if (originalShowDashboard) {
 
@@ -3845,10 +5319,6 @@
         }
 
 
-        /*
-          Leads lama.
-        */
-
         if (originalShowLeads) {
 
           window.showLeads =
@@ -3877,10 +5347,6 @@
         }
 
 
-        /*
-          Sales lama.
-        */
-
         if (originalShowSales) {
 
           window.showSales =
@@ -3908,10 +5374,6 @@
 
         }
 
-
-        /*
-          Initial icon render.
-        */
 
         if (window.lucide) {
           lucide.createIcons();
@@ -3942,8 +5404,7 @@
 
 
     /* =====================================================
-       EXISTING USER MENU
-       TETAP
+       USER MENU
     ====================================================== */
 
     function toggleUserMenu() {
@@ -3955,6 +5416,7 @@
 
       if (!menu) return;
 
+
       menu.style.display =
         menu.style.display === "none"
           ? "block"
@@ -3964,8 +5426,7 @@
 
 
     /* =====================================================
-       EXISTING MOBILE MENU
-       TETAP
+       MOBILE MENU
     ====================================================== */
 
     function toggleMobileMenu() {
@@ -3976,6 +5437,7 @@
         );
 
       if (!menu) return;
+
 
       menu.style.display =
         menu.style.display === "none"
@@ -3993,16 +5455,17 @@
         );
 
       if (menu) {
+
         menu.style.display =
           "none";
+
       }
 
     }
 
 
     /* =====================================================
-       EXISTING SALES DROPDOWN
-       TETAP
+       SALES DROPDOWN
     ====================================================== */
 
     function toggleSalesDropdown(event) {
@@ -4011,25 +5474,31 @@
         event.stopPropagation();
       }
 
+
       const menu =
         document.getElementById(
           "salesDropdownMenu"
         );
+
 
       const button =
         document.getElementById(
           "salesDropdownBtn"
         );
 
+
       if (!menu || !button) return;
+
 
       const isOpen =
         menu.style.display === "block";
+
 
       menu.style.display =
         isOpen
           ? "none"
           : "block";
+
 
       button.setAttribute(
         "aria-expanded",
@@ -4046,15 +5515,20 @@
           "salesDropdownMenu"
         );
 
+
       const button =
         document.getElementById(
           "salesDropdownBtn"
         );
 
+
       if (menu) {
+
         menu.style.display =
           "none";
+
       }
+
 
       if (button) {
 
@@ -4078,6 +5552,7 @@
           "salesFilter"
         );
 
+
       if (filter) {
 
         filter.value =
@@ -4085,7 +5560,9 @@
 
       }
 
+
       closeSalesDropdown();
+
 
       if (
         typeof loadLeads === "function"
@@ -4099,7 +5576,7 @@
 
 
     /* =====================================================
-       EXISTING CLICK OUTSIDE
+       CLICK OUTSIDE
     ====================================================== */
 
     document.addEventListener(
@@ -4111,10 +5588,12 @@
             ".header-user-area"
           );
 
+
         const userMenu =
           document.getElementById(
             "userDropdown"
           );
+
 
         if (
           userArea &&
@@ -4135,6 +5614,7 @@
             "salesDropdownContainer"
           );
 
+
         if (
           salesArea &&
           !salesArea.contains(
@@ -4148,6 +5628,39 @@
 
       }
     );
+
+
+    /* =====================================================
+       COMPATIBILITY
+    ====================================================== */
+
+    window.openCustomerProfile =
+      openCustomerProfile;
+
+
+    window.crmOpenCustomerProfile =
+      openCustomerProfile;
+
+
+    window.crmRenderCustomerProfile =
+      renderCustomerProfile;
+
+
+    window.crmSaveCustomerEdit =
+      crmSaveCustomerEdit;
+
+
+    window.crmProfileWhatsApp =
+      profileWhatsApp;
+
+
+    window.crmProfileEmail =
+      profileEmail;
+
+
+    window.crmProfileAppointment =
+      profileAppointment;
+
 
   </script>
 
