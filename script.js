@@ -2490,9 +2490,6 @@ async function saveLead() {
 // ============================================================
 // EDIT CUSTOMER
 // ============================================================
-// Tetap dipertahankan untuk kompatibilitas.
-// Customer dari Database menggunakan Profile.
-// ============================================================
 
 async function editLead(id) {
 
@@ -2513,11 +2510,6 @@ async function editLead(id) {
   }
 
 
-  /*
-   * Profile adalah halaman edit customer.
-   * Jadi editLead diarahkan ke fungsi Profile yang sama.
-   */
-
   if (
     typeof window.crmOpenCustomerProfile ===
     "function"
@@ -2531,10 +2523,6 @@ async function editLead(id) {
 
   }
 
-
-  /*
-   * Fallback jika fungsi Profile belum tersedia.
-   */
 
   let lead =
     leadsData.find(
@@ -2800,17 +2788,17 @@ window.crmSaveCustomerEdit =
         data,
         error
       } =
-        await supabaseClient
-          .from("leads")
-          .update(
-            payload
-          )
-          .eq(
-            "id",
-            id
-          )
-          .select("*")
-          .single();
+      await supabaseClient
+        .from("leads")
+        .update(
+          payload
+        )
+        .eq(
+          "id",
+          id
+        )
+        .select("*")
+        .single();
 
 
       if (error) {
@@ -2851,19 +2839,10 @@ window.crmSaveCustomerEdit =
       await updateDashboard();
 
 
-      // ==================================================
-      // RENDER DATA CUSTOMER TERBARU
-      // ==================================================
-
       crmRenderCustomerEditPage(
         data
       );
 
-
-      // ==================================================
-      // TETAP DI CUSTOMER PROFILE
-      // GUNAKAN NAVIGASI CRM YANG SAMA
-      // ==================================================
 
       if (
         typeof window.crmNavigate ===
@@ -3029,10 +3008,6 @@ function crmRenderCustomerEditPage(
       </div>
 
 
-      <!-- =========================
-           BASIC INFORMATION
-      ========================== -->
-
       <div class="panel crm-edit-card">
 
         <div class="panel-header">
@@ -3166,10 +3141,6 @@ function crmRenderCustomerEditPage(
       </div>
 
 
-      <!-- =========================
-           SALES PIPELINE
-      ========================== -->
-
       <div class="panel crm-edit-card">
 
         <div class="panel-header">
@@ -3299,10 +3270,6 @@ function crmRenderCustomerEditPage(
       </div>
 
 
-      <!-- =========================
-           NOTES
-      ========================== -->
-
       <div class="panel crm-edit-card">
 
         <div class="panel-header">
@@ -3341,10 +3308,6 @@ function crmRenderCustomerEditPage(
       </div>
 
 
-      <!-- =========================
-           ACTIONS
-      ========================== -->
-
       <div class="crm-edit-actions">
 
         <button
@@ -3380,7 +3343,10 @@ function crmRenderCustomerEditPage(
   );
 
 
-  crmAddEditPageStyles();
+  // FIX:
+  // Fungsi berada di dalam IIFE,
+  // sehingga dipanggil melalui window.
+  window.crmAddEditPageStyles();
 
 }
 
@@ -3550,17 +3516,9 @@ function crmPopulateEditSales(
 // ============================================================
 // CANCEL CUSTOMER PAGE
 // ============================================================
-// Kembali langsung ke Database Customer.
-// ============================================================
 
 window.crmCancelCustomerEdit =
   function () {
-
-    /*
-     * Gunakan sistem navigasi CRM utama.
-     * Ini mencegah bentrok antara script.js
-     * dengan crmNavigate() di index.html.
-     */
 
     if (
       typeof window.crmNavigate ===
@@ -3572,10 +3530,6 @@ window.crmCancelCustomerEdit =
       );
 
     } else {
-
-      /*
-       * Fallback jika crmNavigate belum tersedia.
-       */
 
       const customerPage =
         document.getElementById(
@@ -4658,8 +4612,6 @@ function normalizePhone(
   // ==========================================================
   // OPEN CUSTOMER PROFILE
   // ==========================================================
-  // Profile sekarang langsung menjadi halaman edit customer.
-  // ==========================================================
 
   window.crmOpenCustomerProfile =
     async function (id) {
@@ -4725,10 +4677,6 @@ function normalizePhone(
         }
 
 
-        // ==========================================
-        // SIMPAN CUSTOMER YANG SEDANG DIBUKA
-        // ==========================================
-
         window.crmCurrentCustomerId =
           data.id;
 
@@ -4736,19 +4684,10 @@ function normalizePhone(
           data;
 
 
-        // ==========================================
-        // RENDER CUSTOMER EDIT PAGE
-        // ==========================================
-
         crmRenderCustomerEditPage(
           data
         );
 
-
-        // ==========================================
-        // BUKA HALAMAN CUSTOMER PROFILE
-        // MENGGUNAKAN NAVIGASI CRM UTAMA
-        // ==========================================
 
         if (
           typeof window.crmNavigate ===
@@ -4761,28 +4700,15 @@ function normalizePhone(
 
         } else {
 
-          /*
-           * Fallback hanya jika crmNavigate
-           * belum tersedia.
-           */
-
           crmShowProfilePageFallback();
 
         }
 
 
-        // ==========================================
-        // UPDATE PAGE TITLE
-        // ==========================================
-
         setPageTitle(
           "Customer Profile"
         );
 
-
-        // ==========================================
-        // SCROLL KE ATAS
-        // ==========================================
 
         window.scrollTo(
           {
@@ -6323,6 +6249,12 @@ function normalizePhone(
 
   window.crmShowProfilePageFallback =
     crmShowProfilePageFallback;
+
+  // FIX:
+  // Jadikan fungsi CSS tersedia untuk
+  // crmRenderCustomerEditPage() di luar IIFE.
+  window.crmAddEditPageStyles =
+    crmAddEditPageStyles;
 
 })();
 
