@@ -1,234 +1,144 @@
 // ================================
-// CRM FSI - NAVIGATION
-// ================================
-
-
-// ================================
-// HIDE ALL PAGES
+// NAVIGATION
 // ================================
 
 function hideAllPages() {
+
   const pages = [
     "dashboardPage",
     "leadsPage",
+    "salesPage",
     "customerProfilePage",
     "appointmentPage",
     "dailyReportPage",
     "pltsCalculatorPage",
     "pltsSimulatorPage",
-    "settingsPage",
-    "salesPage"
+    "settingsPage"
   ];
 
-  pages.forEach(function (pageId) {
-    const page = document.getElementById(pageId);
+  pages.forEach(id => {
 
-    if (page) {
-      page.style.display = "none";
+    const element =
+      document.getElementById(id);
+
+    if (element) {
+
+      element.style.display =
+        "none";
+
     }
+
   });
+
 }
 
-
-// ================================
-// SET PAGE TITLE
-// ================================
 
 function setPageTitle(title) {
-  const pageTitle = document.getElementById("pageTitle");
 
-  if (pageTitle) {
-    pageTitle.textContent = title;
+  const titleElement =
+    document.getElementById(
+      "pageTitle"
+    );
+
+  if (titleElement) {
+
+    titleElement.textContent =
+      title;
+
   }
+
 }
 
 
-// ================================
-// SHOW DASHBOARD
-// ================================
+async function showDashboard() {
 
-function showDashboard() {
   hideAllPages();
 
-  const page = document.getElementById("dashboardPage");
+  const page =
+    document.getElementById(
+      "dashboardPage"
+    );
 
   if (page) {
-    page.style.display = "block";
+
+    page.style.display =
+      "block";
+
   }
 
-  setPageTitle("Dashboard");
+  setPageTitle(
+    "Dashboard"
+  );
 
-  if (typeof updateDashboard === "function") {
-    updateDashboard();
-  }
+  await updateDashboard();
+
 }
 
 
-// ================================
-// SHOW LEADS
-// ================================
+async function showLeads() {
 
-function showLeads() {
   hideAllPages();
 
-  const page = document.getElementById("leadsPage");
+  const page =
+    document.getElementById(
+      "leadsPage"
+    );
 
   if (page) {
-    page.style.display = "block";
+
+    page.style.display =
+      "block";
+
   }
 
-  setPageTitle("Customers");
+  setPageTitle(
+    currentProfile &&
+    currentProfile.role === "Admin"
+      ? "All Leads"
+      : "My Leads"
+  );
 
-  currentPage = 1;
+  await loadFilterOptions();
 
-  if (typeof loadFilterOptions === "function") {
-    loadFilterOptions();
-  }
+  await loadLeads(1);
 
-  if (typeof loadLeads === "function") {
-    loadLeads();
-  }
 }
 
 
-// ================================
-// SHOW SALES
-// ================================
+async function showSales() {
 
-function showSales() {
-  hideAllPages();
+  if (
+    !currentProfile ||
+    currentProfile.role !==
+      "Admin"
+  ) {
 
-  const page = document.getElementById("salesPage");
+    alert(
+      "Access denied."
+    );
 
-  if (page) {
-    page.style.display = "block";
-  }
-
-  setPageTitle("Manage Sales");
-
-  if (typeof loadSalesUsers === "function") {
-    loadSalesUsers();
-  }
-}
-
-
-// ================================
-// SHOW CUSTOMER PROFILE PAGE
-// ================================
-
-function crmShowProfilePage() {
-  hideAllPages();
-
-  const page = document.getElementById("customerProfilePage");
-
-  if (page) {
-    page.style.display = "block";
-  }
-}
-
-
-// ================================
-// SHOW SIMPLE PAGE
-// ================================
-
-function crmShowSimplePage(pageId, title) {
-  hideAllPages();
-
-  const page = document.getElementById(pageId);
-
-  if (page) {
-    page.style.display = "block";
-  }
-
-  setPageTitle(title || "");
-}
-
-
-// ================================
-// TOP SALES FILTER
-// ================================
-
-function applyTopSalesFilter() {
-  const dropdown = document.getElementById("topSalesFilter");
-
-  if (!dropdown) {
     return;
+
   }
 
-  const salesId = dropdown.value || "";
+  hideAllPages();
 
-  const salesFilter = document.getElementById("salesFilter");
+  const page =
+    document.getElementById(
+      "salesPage"
+    );
 
-  if (salesFilter) {
-    salesFilter.value = salesId;
+  if (page) {
+
+    page.style.display =
+      "block";
+
   }
 
-  currentPage = 1;
+  setPageTitle(
+    "Manage Sales"
+  );
 
-  if (typeof loadLeads === "function") {
-    loadLeads();
-  }
+  await loadSalesUsers();
 
-  updateSalesDropdownButton();
-}
-
-
-// ================================
-// UPDATE SALES DROPDOWN BUTTON
-// ================================
-
-function updateSalesDropdownButton() {
-  const dropdown = document.getElementById("topSalesFilter");
-
-  if (!dropdown) {
-    return;
-  }
-
-  const buttonText = document.getElementById("salesDropdownButtonText");
-
-  if (!buttonText) {
-    return;
-  }
-
-  const selectedOption =
-    dropdown.options[dropdown.selectedIndex];
-
-  if (!selectedOption || !selectedOption.value) {
-    buttonText.textContent = "All Sales";
-    return;
-  }
-
-  buttonText.textContent =
-    selectedOption.textContent || "All Sales";
-}
-
-
-// ================================
-// SETUP MODAL EVENTS
-// ================================
-
-function setupModalEvents() {
-  const leadModal = document.getElementById("leadModal");
-
-  if (leadModal) {
-    leadModal.addEventListener("click", function (event) {
-      if (event.target === leadModal) {
-        if (typeof closeLeadModal === "function") {
-          closeLeadModal();
-        }
-      }
-    });
-  }
-
-  const salesModal = document.getElementById("salesModal");
-
-  if (salesModal) {
-    salesModal.addEventListener("click", function (event) {
-      if (event.target === salesModal) {
-        if (typeof closeSalesModal === "function") {
-          closeSalesModal();
-        }
-      }
-    });
-  }
 }
