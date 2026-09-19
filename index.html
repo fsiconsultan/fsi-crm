@@ -11,13 +11,705 @@
 
   <!-- DASHBOARD CSS -->
   <link rel="stylesheet" href="dashboard.css">
+
+  <!-- =====================================================
+       FSI CRM ADDITIONAL PAGE STYLES
+       -----------------------------------------------------
+       Tambahan saja.
+       Tidak mengganti style.css / dashboard.css.
+  ====================================================== -->
+
+  <style>
+
+    /* =====================================================
+       CRM SIDEBAR
+    ====================================================== */
+
+    .crm-sidebar-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1900;
+      background: rgba(15, 23, 42, 0.35);
+      backdrop-filter: blur(3px);
+      display: none;
+    }
+
+    .crm-sidebar-overlay.show {
+      display: block;
+    }
+
+    .crm-sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+
+      width: 270px;
+
+      z-index: 2000;
+
+      display: flex;
+      flex-direction: column;
+
+      background:
+        rgba(255, 255, 255, 0.96);
+
+      border-right:
+        1px solid rgba(226, 232, 240, 0.9);
+
+      box-shadow:
+        20px 0 50px rgba(15, 23, 42, 0.12);
+
+      backdrop-filter: blur(20px);
+
+      transform: translateX(-100%);
+
+      transition:
+        transform 220ms ease;
+    }
+
+    .crm-sidebar.open {
+      transform: translateX(0);
+    }
+
+    .crm-sidebar-header {
+      min-height: 76px;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      padding: 0 18px;
+
+      border-bottom:
+        1px solid var(--slate-100);
+    }
+
+    .crm-sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .crm-sidebar-brand img {
+      width: 38px;
+      height: 38px;
+      object-fit: contain;
+    }
+
+    .crm-sidebar-brand strong {
+      color: var(--slate-900);
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .crm-sidebar-close {
+      width: 36px;
+      height: 36px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border: 0;
+      border-radius: 9px;
+
+      background: var(--slate-100);
+      color: var(--slate-600);
+    }
+
+    .crm-sidebar-close:hover {
+      background: var(--danger-soft);
+      color: var(--danger);
+    }
+
+    .crm-sidebar-nav {
+      flex: 1;
+
+      padding: 18px 12px;
+
+      overflow-y: auto;
+    }
+
+    .crm-sidebar-section {
+      margin:
+        14px 10px 7px;
+
+      color: var(--slate-400);
+
+      font-size: 10px;
+      font-weight: 800;
+
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .crm-sidebar-btn {
+      width: 100%;
+
+      min-height: 45px;
+
+      display: flex;
+      align-items: center;
+      gap: 11px;
+
+      padding: 0 12px;
+
+      margin-bottom: 4px;
+
+      border: 0;
+      border-radius: 10px;
+
+      background: transparent;
+
+      color: var(--slate-600);
+
+      font-size: 13px;
+      font-weight: 700;
+
+      text-align: left;
+
+      transition:
+        background 180ms ease,
+        color 180ms ease,
+        transform 180ms ease;
+    }
+
+    .crm-sidebar-btn svg {
+      width: 18px;
+      height: 18px;
+
+      flex-shrink: 0;
+    }
+
+    .crm-sidebar-btn:hover {
+      color: var(--primary);
+      background: var(--primary-soft);
+      transform: translateX(2px);
+    }
+
+    .crm-sidebar-btn.active {
+      color: var(--primary);
+      background: var(--primary-soft);
+    }
+
+    .crm-sidebar-footer {
+      padding: 14px;
+
+      border-top:
+        1px solid var(--slate-100);
+    }
+
+    .crm-menu-trigger {
+      width: 42px;
+      height: 42px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      border: 1px solid var(--slate-200);
+      border-radius: 10px;
+
+      background: white;
+      color: var(--slate-700);
+
+      transition: 180ms ease;
+    }
+
+    .crm-menu-trigger:hover {
+      color: var(--primary);
+      background: var(--primary-soft);
+      border-color: rgba(37, 99, 235, 0.2);
+    }
+
+
+    /* =====================================================
+       PAGE COMMON
+    ====================================================== */
+
+    .crm-module-page {
+      width: 100%;
+    }
+
+    .crm-page-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 15px;
+
+      margin-bottom: 20px;
+    }
+
+    .crm-page-toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .crm-back-btn {
+      min-height: 40px;
+
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+
+      padding: 0 12px;
+
+      border: 1px solid var(--slate-200);
+      border-radius: 10px;
+
+      background: white;
+      color: var(--slate-600);
+
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .crm-back-btn:hover {
+      background: var(--slate-50);
+      color: var(--primary);
+    }
+
+    .crm-back-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+
+    /* =====================================================
+       CUSTOMER PROFILE
+    ====================================================== */
+
+    .customer-profile-header {
+      padding: 24px;
+
+      border:
+        1px solid var(--slate-200);
+
+      border-radius: var(--radius-lg);
+
+      background:
+        linear-gradient(
+          135deg,
+          rgba(255,255,255,0.98),
+          rgba(248,250,252,0.95)
+        );
+
+      box-shadow: var(--shadow-sm);
+
+      margin-bottom: 18px;
+    }
+
+    .customer-profile-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+
+      gap: 20px;
+    }
+
+    .customer-profile-identity {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .customer-profile-avatar {
+      width: 58px;
+      height: 58px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      flex-shrink: 0;
+
+      border-radius: 16px;
+
+      background: var(--primary-soft);
+      color: var(--primary);
+
+      font-size: 21px;
+      font-weight: 800;
+    }
+
+    .customer-profile-name {
+      color: var(--slate-900);
+
+      font-size: 24px;
+      font-weight: 800;
+
+      letter-spacing: -0.5px;
+    }
+
+    .customer-profile-contact {
+      margin-top: 4px;
+
+      color: var(--slate-500);
+
+      font-size: 12px;
+    }
+
+    .customer-profile-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .customer-profile-grid {
+      display: grid;
+
+      grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+      gap: 18px;
+    }
+
+    .customer-profile-card {
+      padding: 22px;
+
+      border:
+        1px solid var(--slate-200);
+
+      border-radius: var(--radius-lg);
+
+      background: white;
+
+      box-shadow: var(--shadow-sm);
+    }
+
+    .customer-profile-card.full {
+      grid-column: 1 / -1;
+    }
+
+    .customer-profile-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      margin-bottom: 17px;
+
+      color: var(--slate-900);
+
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .customer-profile-card-title svg {
+      width: 17px;
+      height: 17px;
+
+      color: var(--primary);
+    }
+
+    .customer-info-grid {
+      display: grid;
+
+      grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+      gap: 15px;
+    }
+
+    .customer-info-item span {
+      display: block;
+
+      margin-bottom: 4px;
+
+      color: var(--slate-400);
+
+      font-size: 10px;
+      font-weight: 800;
+
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    .customer-info-item strong {
+      color: var(--slate-700);
+
+      font-size: 13px;
+      font-weight: 700;
+
+      word-break: break-word;
+    }
+
+
+    /* =====================================================
+       PIPELINE
+    ====================================================== */
+
+    .crm-pipeline {
+      display: grid;
+
+      grid-template-columns:
+        repeat(7, minmax(90px, 1fr));
+
+      gap: 7px;
+    }
+
+    .crm-pipeline-step {
+      position: relative;
+
+      padding: 13px 8px;
+
+      border:
+        1px solid var(--slate-200);
+
+      border-radius: 10px;
+
+      background: var(--slate-50);
+
+      text-align: center;
+    }
+
+    .crm-pipeline-step.active {
+      border-color:
+        rgba(37, 99, 235, 0.25);
+
+      background:
+        var(--primary-soft);
+    }
+
+    .crm-pipeline-step svg {
+      width: 17px;
+      height: 17px;
+
+      margin-bottom: 5px;
+
+      color: var(--slate-400);
+    }
+
+    .crm-pipeline-step.active svg {
+      color: var(--primary);
+    }
+
+    .crm-pipeline-step span {
+      display: block;
+
+      color: var(--slate-500);
+
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .crm-pipeline-step.active span {
+      color: var(--primary);
+    }
+
+
+    /* =====================================================
+       APPOINTMENT
+    ====================================================== */
+
+    .appointment-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .appointment-item {
+      display: flex;
+      align-items: center;
+
+      gap: 13px;
+
+      padding: 15px;
+
+      border:
+        1px solid var(--slate-200);
+
+      border-radius: 12px;
+
+      background: white;
+    }
+
+    .appointment-date-box {
+      width: 48px;
+      min-height: 48px;
+
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+
+      flex-shrink: 0;
+
+      border-radius: 10px;
+
+      background: var(--violet-soft);
+      color: var(--violet);
+    }
+
+    .appointment-date-box strong {
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    .appointment-date-box span {
+      margin-top: 3px;
+
+      font-size: 9px;
+      font-weight: 800;
+
+      text-transform: uppercase;
+    }
+
+    .appointment-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .appointment-info strong {
+      display: block;
+
+      color: var(--slate-800);
+
+      font-size: 13px;
+    }
+
+    .appointment-info span {
+      display: block;
+
+      margin-top: 3px;
+
+      color: var(--slate-500);
+
+      font-size: 11px;
+    }
+
+
+    /* =====================================================
+       MODULE PLACEHOLDER
+    ====================================================== */
+
+    .crm-empty-module {
+      min-height: 320px;
+
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+
+      padding: 30px;
+
+      border:
+        1px dashed var(--slate-300);
+
+      border-radius: var(--radius-lg);
+
+      background:
+        rgba(255,255,255,.75);
+
+      text-align: center;
+    }
+
+    .crm-empty-module-icon {
+      width: 60px;
+      height: 60px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      margin-bottom: 14px;
+
+      border-radius: 17px;
+
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+
+    .crm-empty-module-icon svg {
+      width: 28px;
+      height: 28px;
+    }
+
+    .crm-empty-module h3 {
+      color: var(--slate-900);
+
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .crm-empty-module p {
+      max-width: 520px;
+
+      margin-top: 6px;
+
+      color: var(--slate-500);
+
+      font-size: 12px;
+    }
+
+
+    /* =====================================================
+       RESPONSIVE
+    ====================================================== */
+
+    @media (max-width: 900px) {
+
+      .crm-pipeline {
+        grid-template-columns:
+          repeat(4, minmax(0, 1fr));
+      }
+
+      .customer-profile-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .customer-profile-card.full {
+        grid-column: auto;
+      }
+
+    }
+
+    @media (max-width: 700px) {
+
+      .crm-sidebar {
+        width: min(290px, 86vw);
+      }
+
+      .customer-profile-top {
+        flex-direction: column;
+      }
+
+      .customer-profile-actions {
+        width: 100%;
+      }
+
+      .customer-profile-actions button {
+        flex: 1;
+      }
+
+      .customer-info-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .crm-pipeline {
+        grid-template-columns:
+          repeat(2, minmax(0, 1fr));
+      }
+
+      .crm-page-toolbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+    }
+
+  </style>
+
 </head>
 
 <body>
 
-  <!-- ================================
+  <!-- =====================================================
        LOGIN PAGE
-  ================================= -->
+       EXISTING — JANGAN DIUBAH
+  ====================================================== -->
 
   <section id="loginPage" class="login-page" style="display:flex;">
 
@@ -93,9 +785,9 @@
   </section>
 
 
-  <!-- ================================
+  <!-- =====================================================
        MAIN APPLICATION
-  ================================= -->
+  ====================================================== -->
 
   <div
     id="app"
@@ -103,13 +795,265 @@
     style="display:none;"
   >
 
-    <!-- ================================
+    <!-- ===================================================
+         SIDEBAR OVERLAY
+    ==================================================== -->
+
+    <div
+      id="crmSidebarOverlay"
+      class="crm-sidebar-overlay"
+      onclick="closeCrmSidebar()"
+    ></div>
+
+
+    <!-- ===================================================
+         SIDEBAR
+    ==================================================== -->
+
+    <aside
+      id="crmSidebar"
+      class="crm-sidebar"
+      aria-label="CRM navigation"
+    >
+
+      <div class="crm-sidebar-header">
+
+        <div class="crm-sidebar-brand">
+
+          <img
+            src="logo-fsi.png"
+            alt="FSI Logo"
+          >
+
+          <strong>
+            FSI CRM
+          </strong>
+
+        </div>
+
+        <button
+          type="button"
+          class="crm-sidebar-close"
+          onclick="closeCrmSidebar()"
+          aria-label="Close menu"
+        >
+          <i data-lucide="x"></i>
+        </button>
+
+      </div>
+
+
+      <nav class="crm-sidebar-nav">
+
+        <div class="crm-sidebar-section">
+          Main
+        </div>
+
+
+        <button
+          type="button"
+          class="crm-sidebar-btn active"
+          data-crm-page="dashboardPage"
+          onclick="crmNavigate('dashboard')"
+        >
+
+          <i data-lucide="layout-dashboard"></i>
+
+          <span>
+            Home / Dashboard
+          </span>
+
+        </button>
+
+
+        <button
+          type="button"
+          class="crm-sidebar-btn"
+          data-crm-page="leadsPage"
+          onclick="crmNavigate('leads')"
+        >
+
+          <i data-lucide="users"></i>
+
+          <span>
+            Database Customer
+          </span>
+
+        </button>
+
+
+        <button
+          type="button"
+          class="crm-sidebar-btn"
+          data-crm-page="customerProfilePage"
+          onclick="crmNavigate('customerProfile')"
+        >
+
+          <i data-lucide="user-round"></i>
+
+          <span>
+            Customer Profile
+          </span>
+
+        </button>
+
+
+        <button
+          type="button"
+          class="crm-sidebar-btn"
+          data-crm-page="appointmentPage"
+          onclick="crmNavigate('appointment')"
+        >
+
+          <i data-lucide="calendar-days"></i>
+
+          <span>
+            Appointment
+          </span>
+
+        </button>
+
+
+        <button
+          type="button"
+          class="crm-sidebar-btn"
+          data-crm-page="dailyReportPage"
+          onclick="crmNavigate('dailyReport')"
+        >
+
+          <i data-lucide="clipboard-list"></i>
+
+          <span>
+            Daily Report
+          </span>
+
+        </button>
+
+
+        <div class="crm-sidebar-section">
+          PLTS Tools
+        </div>
+
+
+        <button
+          type="button"
+          class="crm-sidebar-btn"
+          data-crm-page="pltsCalculatorPage"
+          onclick="crmNavigate('pltsCalculator')"
+        >
+
+          <i data-lucide="sun"></i>
+
+          <span>
+            PLTS Calculator
+          </span>
+
+        </button>
+
+
+        <button
+          type="button"
+          class="crm-sidebar-btn"
+          data-crm-page="pltsSimulatorPage"
+          onclick="crmNavigate('pltsSimulator')"
+        >
+
+          <i data-lucide="house"></i>
+
+          <span>
+            PLTS Interactive Simulator
+          </span>
+
+        </button>
+
+
+        <div class="crm-sidebar-section">
+          Administration
+        </div>
+
+
+        <button
+          type="button"
+          class="crm-sidebar-btn"
+          data-crm-page="settingsPage"
+          onclick="crmNavigate('settings')"
+        >
+
+          <i data-lucide="settings"></i>
+
+          <span>
+            Settings
+          </span>
+
+        </button>
+
+
+        <!-- EXISTING MANAGE SALES -->
+
+        <button
+          type="button"
+          class="crm-sidebar-btn"
+          data-crm-page="salesPage"
+          onclick="crmNavigate('sales')"
+          id="crmSidebarManageSales"
+          style="display:none;"
+        >
+
+          <i data-lucide="user-cog"></i>
+
+          <span>
+            Manage Sales
+          </span>
+
+        </button>
+
+      </nav>
+
+
+      <div class="crm-sidebar-footer">
+
+        <button
+          type="button"
+          class="crm-sidebar-btn"
+          onclick="logout()"
+        >
+
+          <i data-lucide="log-out"></i>
+
+          <span>
+            Logout
+          </span>
+
+        </button>
+
+      </div>
+
+    </aside>
+
+
+    <!-- ===================================================
          HEADER
-    ================================= -->
+         EXISTING — FUNGSI LAMA TETAP
+    ==================================================== -->
 
     <header class="top-header">
 
       <div class="header-inner">
+
+        <!-- CRM MENU BUTTON -->
+
+        <button
+          type="button"
+          class="crm-menu-trigger"
+          onclick="toggleCrmSidebar()"
+          aria-label="Open CRM menu"
+          aria-expanded="false"
+        >
+
+          <i data-lucide="menu"></i>
+
+        </button>
+
 
         <!-- LOGO -->
 
@@ -133,14 +1077,13 @@
         </a>
 
 
-        <!-- DESKTOP NAVIGATION -->
+        <!-- DESKTOP NAVIGATION
+             EXISTING NAVIGATION TETAP ADA -->
 
         <nav
           class="main-nav"
           aria-label="Main navigation"
         >
-
-          <!-- DASHBOARD -->
 
           <button
             type="button"
@@ -158,8 +1101,6 @@
           </button>
 
 
-          <!-- MY LEADS -->
-
           <button
             type="button"
             class="nav-link"
@@ -176,9 +1117,7 @@
           </button>
 
 
-          <!-- =================================
-               SALES DROPDOWN - ADMIN ONLY
-          ================================== -->
+          <!-- SALES DROPDOWN — EXISTING -->
 
           <div
             id="salesDropdownContainer"
@@ -224,19 +1163,12 @@
                 All Sales
               </button>
 
-              <!--
-                Sales names will be loaded dynamically
-                from sales_users by script.js.
-              -->
-
             </div>
 
           </div>
 
 
-          <!-- =================================
-               MANAGE SALES - ADMIN ONLY
-          ================================== -->
+          <!-- MANAGE SALES — EXISTING -->
 
           <button
             type="button"
@@ -304,7 +1236,7 @@
         </div>
 
 
-        <!-- MOBILE MENU BUTTON -->
+        <!-- MOBILE MENU — EXISTING -->
 
         <button
           type="button"
@@ -320,7 +1252,7 @@
       </div>
 
 
-      <!-- MOBILE NAVIGATION -->
+      <!-- MOBILE NAVIGATION — EXISTING -->
 
       <div
         id="mobileNav"
@@ -354,8 +1286,6 @@
         </button>
 
 
-        <!-- ADMIN ONLY -->
-
         <button
           type="button"
           id="mobileManageSalesBtn"
@@ -388,11 +1318,12 @@
     </header>
 
 
-    <!-- ================================
+    <!-- ===================================================
          MAIN CONTENT
-    ================================= -->
+    ==================================================== -->
 
     <main class="main-content">
+
 
       <!-- PAGE TITLE -->
 
@@ -413,32 +1344,22 @@
       </div>
 
 
-      <!-- ================================
-           DASHBOARD PAGE
-           
-           IMPORTANT:
-           Dashboard UI is NOT written here.
-           dashboard.js will build/load it.
-           
-           DO NOT REMOVE THIS ID.
-           script.js uses #dashboardPage.
-      ================================= -->
+      <!-- =================================================
+           DASHBOARD
+           EXISTING
+      ================================================== -->
 
       <section
         id="dashboardPage"
         class="page-section"
       >
-
-        <!--
-          Dashboard content is loaded by dashboard.js
-        -->
-
       </section>
 
 
-      <!-- ================================
-           LEADS PAGE
-      ================================= -->
+      <!-- =================================================
+           DATABASE CUSTOMER / LEADS
+           EXISTING
+      ================================================== -->
 
       <section
         id="leadsPage"
@@ -447,8 +1368,6 @@
       >
 
         <div class="panel leads-panel">
-
-          <!-- LEAD HEADER -->
 
           <div class="panel-header">
 
@@ -484,11 +1403,7 @@
           </div>
 
 
-          <!-- FILTERS -->
-
           <div class="filters-bar">
-
-            <!-- SEARCH -->
 
             <div class="search-box">
 
@@ -503,8 +1418,6 @@
 
             </div>
 
-
-            <!-- STATUS -->
 
             <select
               id="statusFilter"
@@ -542,8 +1455,6 @@
             </select>
 
 
-            <!-- BUSINESS -->
-
             <select
               id="businessFilter"
               onchange="loadLeads(1)"
@@ -556,8 +1467,6 @@
             </select>
 
 
-            <!-- LOCATION -->
-
             <select
               id="locationFilter"
               onchange="loadLeads(1)"
@@ -569,8 +1478,6 @@
 
             </select>
 
-
-            <!-- SALES FILTER - ADMIN ONLY -->
 
             <select
               id="salesFilter"
@@ -587,8 +1494,6 @@
           </div>
 
 
-          <!-- LEADS TABLE -->
-
           <div class="table-wrap">
 
             <table class="crm-table">
@@ -597,45 +1502,16 @@
 
                 <tr>
 
-                  <th>
-                    Customer
-                  </th>
-
-                  <th>
-                    Phone / WhatsApp
-                  </th>
-
-                  <th>
-                    Email
-                  </th>
-
-                  <th>
-                    Business
-                  </th>
-
-                  <th>
-                    Location
-                  </th>
-
-                  <th>
-                    Sales
-                  </th>
-
-                  <th>
-                    Status
-                  </th>
-
-                  <th>
-                    Follow Up
-                  </th>
-
-                  <th>
-                    Next Step
-                  </th>
-
-                  <th>
-                    Action
-                  </th>
+                  <th>Customer</th>
+                  <th>Phone / WhatsApp</th>
+                  <th>Email</th>
+                  <th>Business</th>
+                  <th>Location</th>
+                  <th>Sales</th>
+                  <th>Status</th>
+                  <th>Follow Up</th>
+                  <th>Next Step</th>
+                  <th>Action</th>
 
                 </tr>
 
@@ -647,8 +1523,6 @@
 
           </div>
 
-
-          <!-- PAGINATION -->
 
           <div class="pagination-bar">
 
@@ -689,9 +1563,968 @@
       </section>
 
 
-      <!-- ================================
-           MANAGE SALES PAGE
-      ================================= -->
+      <!-- =================================================
+           CUSTOMER PROFILE
+           NEW PAGE
+      ================================================== -->
+
+      <section
+        id="customerProfilePage"
+        class="page-section crm-module-page"
+        style="display:none;"
+      >
+
+        <div class="crm-page-toolbar">
+
+          <div class="crm-page-toolbar-left">
+
+            <button
+              type="button"
+              class="crm-back-btn"
+              onclick="crmGoBack()"
+            >
+
+              <i data-lucide="arrow-left"></i>
+
+              Back
+
+            </button>
+
+            <button
+              type="button"
+              class="crm-back-btn"
+              onclick="crmNavigate('dashboard')"
+            >
+
+              <i data-lucide="house"></i>
+
+              Home
+
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <div class="customer-profile-header">
+
+          <div class="customer-profile-top">
+
+            <div class="customer-profile-identity">
+
+              <div
+                id="profileAvatar"
+                class="customer-profile-avatar"
+              >
+                C
+              </div>
+
+              <div>
+
+                <div
+                  id="profileCustomerName"
+                  class="customer-profile-name"
+                >
+                  Customer
+                </div>
+
+                <div
+                  id="profileCustomerContact"
+                  class="customer-profile-contact"
+                >
+                  Customer Profile
+                </div>
+
+              </div>
+
+            </div>
+
+
+            <div class="customer-profile-actions">
+
+              <button
+                type="button"
+                class="secondary-btn"
+                onclick="profileWhatsApp()"
+              >
+
+                <i data-lucide="message-circle"></i>
+
+                WhatsApp
+
+              </button>
+
+
+              <button
+                type="button"
+                class="secondary-btn"
+                onclick="profileEmail()"
+              >
+
+                <i data-lucide="mail"></i>
+
+                Email
+
+              </button>
+
+
+              <button
+                type="button"
+                class="secondary-btn"
+                onclick="profileEdit()"
+              >
+
+                <i data-lucide="pencil"></i>
+
+                Edit Customer
+
+              </button>
+
+
+              <button
+                type="button"
+                class="primary-btn"
+                onclick="profileAppointment()"
+              >
+
+                <i data-lucide="calendar-plus"></i>
+
+                Appointment
+
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="customer-profile-grid">
+
+
+          <!-- CUSTOMER INFORMATION -->
+
+          <div class="customer-profile-card full">
+
+            <div class="customer-profile-card-title">
+
+              <i data-lucide="user"></i>
+
+              Customer Information
+
+            </div>
+
+
+            <div class="customer-info-grid">
+
+              <div class="customer-info-item">
+
+                <span>Name</span>
+
+                <strong id="profileNameValue">
+                  -
+                </strong>
+
+              </div>
+
+
+              <div class="customer-info-item">
+
+                <span>Phone / WhatsApp</span>
+
+                <strong id="profilePhoneValue">
+                  -
+                </strong>
+
+              </div>
+
+
+              <div class="customer-info-item">
+
+                <span>Email</span>
+
+                <strong id="profileEmailValue">
+                  -
+                </strong>
+
+              </div>
+
+
+              <div class="customer-info-item">
+
+                <span>Business</span>
+
+                <strong id="profileBusinessValue">
+                  -
+                </strong>
+
+              </div>
+
+
+              <div class="customer-info-item">
+
+                <span>Location</span>
+
+                <strong id="profileLocationValue">
+                  -
+                </strong>
+
+              </div>
+
+
+              <div class="customer-info-item">
+
+                <span>Sales</span>
+
+                <strong id="profileSalesValue">
+                  -
+                </strong>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <!-- PIPELINE -->
+
+          <div class="customer-profile-card full">
+
+            <div class="customer-profile-card-title">
+
+              <i data-lucide="route"></i>
+
+              Sales Pipeline
+
+            </div>
+
+
+            <div class="crm-pipeline">
+
+              <div
+                class="crm-pipeline-step active"
+                id="pipelineLead"
+              >
+
+                <i data-lucide="user-plus"></i>
+
+                <span>Lead</span>
+
+              </div>
+
+
+              <div
+                class="crm-pipeline-step"
+                id="pipelineFollowUp"
+              >
+
+                <i data-lucide="phone-forwarded"></i>
+
+                <span>Follow Up</span>
+
+              </div>
+
+
+              <div
+                class="crm-pipeline-step"
+                id="pipelineAppointment"
+              >
+
+                <i data-lucide="calendar"></i>
+
+                <span>Appointment</span>
+
+              </div>
+
+
+              <div
+                class="crm-pipeline-step"
+                id="pipelineSurvey"
+              >
+
+                <i data-lucide="map-pin"></i>
+
+                <span>Survey</span>
+
+              </div>
+
+
+              <div
+                class="crm-pipeline-step"
+                id="pipelineQuotation"
+              >
+
+                <i data-lucide="file-text"></i>
+
+                <span>Quotation</span>
+
+              </div>
+
+
+              <div
+                class="crm-pipeline-step"
+                id="pipelineSPK"
+              >
+
+                <i data-lucide="file-signature"></i>
+
+                <span>SPK</span>
+
+              </div>
+
+
+              <div
+                class="crm-pipeline-step"
+                id="pipelineClosing"
+              >
+
+                <i data-lucide="trophy"></i>
+
+                <span>Closing</span>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <!-- APPOINTMENT -->
+
+          <div class="customer-profile-card">
+
+            <div class="customer-profile-card-title">
+
+              <i data-lucide="calendar-days"></i>
+
+              Appointment
+
+            </div>
+
+
+            <div
+              id="profileAppointmentList"
+              class="appointment-list"
+            >
+
+              <div class="crm-empty-module">
+
+                <p>
+                  No appointment yet.
+                </p>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <!-- ACTIVITY -->
+
+          <div class="customer-profile-card">
+
+            <div class="customer-profile-card-title">
+
+              <i data-lucide="activity"></i>
+
+              Activity History
+
+            </div>
+
+
+            <div
+              id="profileActivityList"
+              class="appointment-list"
+            >
+
+              <div class="crm-empty-module">
+
+                <p>
+                  No activity yet.
+                </p>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <!-- SITE SURVEY -->
+
+          <div class="customer-profile-card">
+
+            <div class="customer-profile-card-title">
+
+              <i data-lucide="map"></i>
+
+              Site Survey
+
+            </div>
+
+
+            <div
+              id="profileSurveyContent"
+            >
+
+              <p style="color:var(--slate-500);font-size:12px;">
+                Site survey information will appear here.
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <!-- QUOTATION -->
+
+          <div class="customer-profile-card">
+
+            <div class="customer-profile-card-title">
+
+              <i data-lucide="file-text"></i>
+
+              Quotation
+
+            </div>
+
+
+            <div
+              id="profileQuotationContent"
+            >
+
+              <p style="color:var(--slate-500);font-size:12px;">
+                Quotation history will appear here.
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <!-- SPK / CLOSING -->
+
+          <div class="customer-profile-card">
+
+            <div class="customer-profile-card-title">
+
+              <i data-lucide="file-signature"></i>
+
+              SPK & Closing
+
+            </div>
+
+
+            <div
+              id="profileSPKClosingContent"
+            >
+
+              <p style="color:var(--slate-500);font-size:12px;">
+                SPK and closing information will appear here.
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <!-- PLTS -->
+
+          <div class="customer-profile-card">
+
+            <div class="customer-profile-card-title">
+
+              <i data-lucide="sun"></i>
+
+              PLTS
+
+            </div>
+
+
+            <div
+              id="profilePLTSContent"
+            >
+
+              <p style="color:var(--slate-500);font-size:12px;">
+                PLTS calculation and system information will appear here.
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <!-- NOTES -->
+
+          <div class="customer-profile-card full">
+
+            <div class="customer-profile-card-title">
+
+              <i data-lucide="notebook-pen"></i>
+
+              Notes
+
+            </div>
+
+
+            <div
+              id="profileNotesContent"
+            >
+
+              <p style="color:var(--slate-500);font-size:12px;">
+                No notes.
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- =================================================
+           APPOINTMENT
+      ================================================== -->
+
+      <section
+        id="appointmentPage"
+        class="page-section crm-module-page"
+        style="display:none;"
+      >
+
+        <div class="crm-page-toolbar">
+
+          <div class="crm-page-toolbar-left">
+
+            <button
+              type="button"
+              class="crm-back-btn"
+              onclick="crmGoBack()"
+            >
+
+              <i data-lucide="arrow-left"></i>
+
+              Back
+
+            </button>
+
+          </div>
+
+
+          <button
+            type="button"
+            class="primary-btn"
+            onclick="openAppointmentForm()"
+          >
+
+            <i data-lucide="plus"></i>
+
+            New Appointment
+
+          </button>
+
+        </div>
+
+
+        <div class="panel">
+
+          <div class="panel-header">
+
+            <div>
+
+              <h3>
+                Appointment / Jadwal Pertemuan
+              </h3>
+
+              <p>
+                Manage customer meetings, visits and site surveys.
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div
+            id="appointmentList"
+            class="appointment-list"
+            style="padding:20px;"
+          >
+
+            <div class="crm-empty-module">
+
+              <div class="crm-empty-module-icon">
+
+                <i data-lucide="calendar-days"></i>
+
+              </div>
+
+              <h3>
+                Appointment
+              </h3>
+
+              <p>
+                Jadwal pertemuan customer akan tampil di halaman ini.
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- =================================================
+           DAILY REPORT
+      ================================================== -->
+
+      <section
+        id="dailyReportPage"
+        class="page-section crm-module-page"
+        style="display:none;"
+      >
+
+        <div class="crm-page-toolbar">
+
+          <div class="crm-page-toolbar-left">
+
+            <button
+              type="button"
+              class="crm-back-btn"
+              onclick="crmGoBack()"
+            >
+
+              <i data-lucide="arrow-left"></i>
+
+              Back
+
+            </button>
+
+          </div>
+
+
+          <button
+            type="button"
+            class="primary-btn"
+            onclick="openDailyReportForm()"
+          >
+
+            <i data-lucide="plus"></i>
+
+            Add Activity
+
+          </button>
+
+        </div>
+
+
+        <div class="panel">
+
+          <div class="panel-header">
+
+            <div>
+
+              <h3>
+                Daily Report
+              </h3>
+
+              <p>
+                Sales activity and customer follow-up history.
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div
+            id="dailyReportContent"
+            style="padding:20px;"
+          >
+
+            <div class="crm-empty-module">
+
+              <div class="crm-empty-module-icon">
+
+                <i data-lucide="clipboard-list"></i>
+
+              </div>
+
+              <h3>
+                Daily Sales Activity
+              </h3>
+
+              <p>
+                WhatsApp, Telepon, Follow Up, Visit, Survey,
+                Meeting, Quotation, SPK dan Closing akan dicatat di sini.
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- =================================================
+           PLTS CALCULATOR
+      ================================================== -->
+
+      <section
+        id="pltsCalculatorPage"
+        class="page-section crm-module-page"
+        style="display:none;"
+      >
+
+        <div class="crm-page-toolbar">
+
+          <div class="crm-page-toolbar-left">
+
+            <button
+              type="button"
+              class="crm-back-btn"
+              onclick="crmGoBack()"
+            >
+
+              <i data-lucide="arrow-left"></i>
+
+              Back
+
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <div class="panel">
+
+          <div class="panel-header">
+
+            <div>
+
+              <h3>
+                PLTS Calculator
+              </h3>
+
+              <p>
+                Hitung kebutuhan sistem PLTS berdasarkan penggunaan listrik customer.
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div
+            id="pltsCalculatorContent"
+            style="padding:20px;"
+          >
+
+            <div class="crm-empty-module">
+
+              <div class="crm-empty-module-icon">
+
+                <i data-lucide="sun"></i>
+
+              </div>
+
+              <h3>
+                PLTS Calculator
+              </h3>
+
+              <p>
+                Monthly PLN bill, PLN power, penggunaan siang/malam,
+                battery backup, estimasi kapasitas PLTS,
+                panel, produksi, saving dan payback akan ditempatkan di sini.
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- =================================================
+           PLTS INTERACTIVE SIMULATOR
+      ================================================== -->
+
+      <section
+        id="pltsSimulatorPage"
+        class="page-section crm-module-page"
+        style="display:none;"
+      >
+
+        <div class="crm-page-toolbar">
+
+          <div class="crm-page-toolbar-left">
+
+            <button
+              type="button"
+              class="crm-back-btn"
+              onclick="crmGoBack()"
+            >
+
+              <i data-lucide="arrow-left"></i>
+
+              Back
+
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <div class="panel">
+
+          <div class="panel-header">
+
+            <div>
+
+              <h3>
+                PLTS Interactive Simulator
+              </h3>
+
+              <p>
+                Simulasi visual sistem rumah, panel surya, baterai dan PLN.
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div
+            id="pltsSimulatorContent"
+            style="padding:20px;"
+          >
+
+            <div class="crm-empty-module">
+
+              <div class="crm-empty-module-icon">
+
+                <i data-lucide="house"></i>
+
+              </div>
+
+              <h3>
+                Interactive PLTS Simulator
+              </h3>
+
+              <p>
+                Visual rumah, panel surya, baterai,
+                tiang PLN, aliran energi dan slider
+                tagihan listrik akan dibangun di modul ini.
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- =================================================
+           SETTINGS
+      ================================================== -->
+
+      <section
+        id="settingsPage"
+        class="page-section crm-module-page"
+        style="display:none;"
+      >
+
+        <div class="crm-page-toolbar">
+
+          <div class="crm-page-toolbar-left">
+
+            <button
+              type="button"
+              class="crm-back-btn"
+              onclick="crmGoBack()"
+            >
+
+              <i data-lucide="arrow-left"></i>
+
+              Back
+
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <div class="panel">
+
+          <div class="panel-header">
+
+            <div>
+
+              <h3>
+                Settings
+              </h3>
+
+              <p>
+                Pengaturan akun, user, pipeline dan parameter CRM.
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div
+            id="settingsContent"
+            style="padding:20px;"
+          >
+
+            <div class="crm-empty-module">
+
+              <div class="crm-empty-module-icon">
+
+                <i data-lucide="settings"></i>
+
+              </div>
+
+              <h3>
+                CRM Settings
+              </h3>
+
+              <p>
+                Profil akun, Sales/Admin, status pipeline,
+                parameter PLTS dan pengaturan sistem akan berada di sini.
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- =================================================
+           MANAGE SALES
+           EXISTING
+      ================================================== -->
 
       <section
         id="salesPage"
@@ -730,8 +2563,6 @@
           </div>
 
 
-          <!-- SALES TABLE -->
-
           <div class="table-wrap">
 
             <table class="crm-table sales-table">
@@ -740,29 +2571,12 @@
 
                 <tr>
 
-                  <th>
-                    Sales Name
-                  </th>
-
-                  <th>
-                    Username
-                  </th>
-
-                  <th>
-                    Role
-                  </th>
-
-                  <th>
-                    Status
-                  </th>
-
-                  <th>
-                    Created
-                  </th>
-
-                  <th>
-                    Action
-                  </th>
+                  <th>Sales Name</th>
+                  <th>Username</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                  <th>Action</th>
 
                 </tr>
 
@@ -783,9 +2597,10 @@
   </div>
 
 
-  <!-- ================================
+  <!-- =====================================================
        ADD / EDIT LEAD MODAL
-  ================================= -->
+       EXISTING
+  ====================================================== -->
 
   <div
     id="leadModal"
@@ -799,8 +2614,6 @@
       aria-modal="true"
       aria-labelledby="leadModalTitle"
     >
-
-      <!-- MODAL HEADER -->
 
       <div class="modal-header">
 
@@ -830,8 +2643,6 @@
       </div>
 
 
-      <!-- LEAD FORM -->
-
       <form
         onsubmit="event.preventDefault(); saveLead();"
       >
@@ -843,7 +2654,6 @@
 
         <div class="form-grid two-col">
 
-          <!-- CUSTOMER -->
 
           <div class="form-group full">
 
@@ -860,8 +2670,6 @@
           </div>
 
 
-          <!-- PHONE -->
-
           <div class="form-group">
 
             <label for="leadPhone">
@@ -875,8 +2683,6 @@
 
           </div>
 
-
-          <!-- EMAIL -->
 
           <div class="form-group">
 
@@ -892,8 +2698,6 @@
           </div>
 
 
-          <!-- BUSINESS -->
-
           <div class="form-group">
 
             <label for="leadBusiness">
@@ -908,8 +2712,6 @@
           </div>
 
 
-          <!-- LOCATION -->
-
           <div class="form-group">
 
             <label for="leadLocation">
@@ -923,8 +2725,6 @@
 
           </div>
 
-
-          <!-- STATUS -->
 
           <div class="form-group">
 
@@ -963,8 +2763,6 @@
           </div>
 
 
-          <!-- SALES ASSIGNMENT -->
-
           <div class="form-group">
 
             <label for="leadSalesAssign">
@@ -982,8 +2780,6 @@
           </div>
 
 
-          <!-- FOLLOW UP -->
-
           <div class="form-group">
 
             <label for="leadFollowUp">
@@ -997,8 +2793,6 @@
 
           </div>
 
-
-          <!-- APPOINTMENT -->
 
           <div class="form-group">
 
@@ -1014,8 +2808,6 @@
           </div>
 
 
-          <!-- SITE SURVEY -->
-
           <div class="form-group">
 
             <label for="leadSiteSurvey">
@@ -1029,8 +2821,6 @@
 
           </div>
 
-
-          <!-- QUOTATION -->
 
           <div class="form-group">
 
@@ -1046,8 +2836,6 @@
           </div>
 
 
-          <!-- SPK -->
-
           <div class="form-group">
 
             <label for="leadSPK">
@@ -1062,8 +2850,6 @@
           </div>
 
 
-          <!-- CLOSING -->
-
           <div class="form-group">
 
             <label for="leadClosing">
@@ -1077,8 +2863,6 @@
 
           </div>
 
-
-          <!-- NOTES -->
 
           <div class="form-group full">
 
@@ -1096,8 +2880,6 @@
 
         </div>
 
-
-        <!-- MODAL FOOTER -->
 
         <div class="modal-footer">
 
@@ -1125,9 +2907,10 @@
   </div>
 
 
-  <!-- ================================
+  <!-- =====================================================
        ADD SALES MODAL
-  ================================= -->
+       EXISTING
+  ====================================================== -->
 
   <div
     id="salesModal"
@@ -1141,8 +2924,6 @@
       aria-modal="true"
       aria-labelledby="salesModalTitle"
     >
-
-      <!-- HEADER -->
 
       <div class="modal-header">
 
@@ -1171,8 +2952,6 @@
 
       </div>
 
-
-      <!-- SALES FORM -->
 
       <form
         onsubmit="event.preventDefault(); createSales();"
@@ -1251,43 +3030,953 @@
   </div>
 
 
-  <!-- ================================
+  <!-- =====================================================
        JAVASCRIPT LIBRARIES
-  ================================= -->
+       EXISTING
+  ====================================================== -->
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script src="https://unpkg.com/lucide@latest"></script>
 
 
-  <!-- =================================
+  <!-- =====================================================
        EXISTING MAIN SCRIPT
-       
-       DO NOT REMOVE
-  ================================== -->
+       JANGAN DIHAPUS
+  ====================================================== -->
 
   <script src="script.js"></script>
 
 
-  <!-- =================================
-       NEW DASHBOARD SCRIPT
-       
-       Dashboard UI is controlled here.
-  ================================== -->
+  <!-- =====================================================
+       EXISTING DASHBOARD SCRIPT
+       JANGAN DIHAPUS
+  ====================================================== -->
 
   <script src="dashboard.js"></script>
 
 
-  <!-- ================================
-       UI HELPERS
-  ================================= -->
+  <!-- =====================================================
+       ADDITIONAL CRM NAVIGATION
+       -----------------------------------------------------
+       Tidak mengganti script.js.
+       Hanya menambahkan navigasi untuk halaman baru.
+  ====================================================== -->
 
   <script>
+
+    /* =====================================================
+       STATE
+    ====================================================== */
+
+    let crmCurrentPage = "dashboardPage";
+
+    let crmPreviousPage = "dashboardPage";
+
+    let crmCurrentCustomerId = null;
+
+    let crmCurrentCustomer = null;
+
+
+    /* =====================================================
+       SIDEBAR
+    ====================================================== */
+
+    function toggleCrmSidebar() {
+
+      const sidebar =
+        document.getElementById("crmSidebar");
+
+      const overlay =
+        document.getElementById("crmSidebarOverlay");
+
+      if (!sidebar) return;
+
+      const isOpen =
+        sidebar.classList.contains("open");
+
+      if (isOpen) {
+
+        closeCrmSidebar();
+
+      } else {
+
+        sidebar.classList.add("open");
+
+        if (overlay) {
+          overlay.classList.add("show");
+        }
+
+      }
+
+    }
+
+
+    function closeCrmSidebar() {
+
+      const sidebar =
+        document.getElementById("crmSidebar");
+
+      const overlay =
+        document.getElementById("crmSidebarOverlay");
+
+      if (sidebar) {
+        sidebar.classList.remove("open");
+      }
+
+      if (overlay) {
+        overlay.classList.remove("show");
+      }
+
+    }
+
+
+    /* =====================================================
+       PAGE LIST
+    ====================================================== */
+
+    const crmPages = [
+      "dashboardPage",
+      "leadsPage",
+      "salesPage",
+      "customerProfilePage",
+      "appointmentPage",
+      "dailyReportPage",
+      "pltsCalculatorPage",
+      "pltsSimulatorPage",
+      "settingsPage"
+    ];
+
+
+    /* =====================================================
+       HIDE CRM NEW PAGES
+    ====================================================== */
+
+    function hideCrmPages() {
+
+      crmPages.forEach(function(id) {
+
+        const page =
+          document.getElementById(id);
+
+        if (page) {
+          page.style.display = "none";
+        }
+
+      });
+
+    }
+
+
+    /* =====================================================
+       SIDEBAR ACTIVE STATE
+    ====================================================== */
+
+    function updateCrmSidebarActive(pageId) {
+
+      document
+        .querySelectorAll(".crm-sidebar-btn[data-crm-page]")
+        .forEach(function(button) {
+
+          button.classList.toggle(
+            "active",
+            button.dataset.crmPage === pageId
+          );
+
+        });
+
+    }
+
+
+    /* =====================================================
+       PAGE TITLE
+    ====================================================== */
+
+    function updateCrmPageTitle(page) {
+
+      const title =
+        document.getElementById("pageTitle");
+
+      if (!title) return;
+
+      const titles = {
+
+        dashboard:
+          "Dashboard",
+
+        leads:
+          "Database Customer",
+
+        sales:
+          "Manage Sales",
+
+        customerProfile:
+          "Customer Profile",
+
+        appointment:
+          "Appointment / Jadwal Pertemuan",
+
+        dailyReport:
+          "Daily Report",
+
+        pltsCalculator:
+          "PLTS Calculator",
+
+        pltsSimulator:
+          "PLTS Interactive Simulator",
+
+        settings:
+          "Settings"
+
+      };
+
+      title.textContent =
+        titles[page] || "FSI CRM";
+
+    }
+
+
+    /* =====================================================
+       CRM NAVIGATION
+    ====================================================== */
+
+    function crmNavigate(page) {
+
+      closeCrmSidebar();
+
+      crmPreviousPage =
+        crmCurrentPage;
+
+      hideCrmPages();
+
+
+      if (page === "dashboard") {
+
+        /*
+          Gunakan fungsi dashboard lama.
+          Tidak menggantinya.
+        */
+
+        if (typeof showDashboard === "function") {
+
+          showDashboard();
+
+        }
+
+        crmCurrentPage =
+          "dashboardPage";
+
+      }
+
+
+      else if (page === "leads") {
+
+        if (typeof showLeads === "function") {
+
+          showLeads();
+
+        }
+
+        crmCurrentPage =
+          "leadsPage";
+
+      }
+
+
+      else if (page === "sales") {
+
+        if (typeof showSales === "function") {
+
+          showSales();
+
+        }
+
+        crmCurrentPage =
+          "salesPage";
+
+      }
+
+
+      else if (page === "customerProfile") {
+
+        const profile =
+          document.getElementById(
+            "customerProfilePage"
+          );
+
+        if (profile) {
+          profile.style.display = "block";
+        }
+
+        crmCurrentPage =
+          "customerProfilePage";
+
+      }
+
+
+      else if (page === "appointment") {
+
+        const appointment =
+          document.getElementById(
+            "appointmentPage"
+          );
+
+        if (appointment) {
+          appointment.style.display = "block";
+        }
+
+        crmCurrentPage =
+          "appointmentPage";
+
+      }
+
+
+      else if (page === "dailyReport") {
+
+        const daily =
+          document.getElementById(
+            "dailyReportPage"
+          );
+
+        if (daily) {
+          daily.style.display = "block";
+        }
+
+        crmCurrentPage =
+          "dailyReportPage";
+
+      }
+
+
+      else if (page === "pltsCalculator") {
+
+        const calculator =
+          document.getElementById(
+            "pltsCalculatorPage"
+          );
+
+        if (calculator) {
+          calculator.style.display = "block";
+        }
+
+        crmCurrentPage =
+          "pltsCalculatorPage";
+
+      }
+
+
+      else if (page === "pltsSimulator") {
+
+        const simulator =
+          document.getElementById(
+            "pltsSimulatorPage"
+          );
+
+        if (simulator) {
+          simulator.style.display = "block";
+        }
+
+        crmCurrentPage =
+          "pltsSimulatorPage";
+
+      }
+
+
+      else if (page === "settings") {
+
+        const settings =
+          document.getElementById(
+            "settingsPage"
+          );
+
+        if (settings) {
+          settings.style.display = "block";
+        }
+
+        crmCurrentPage =
+          "settingsPage";
+
+      }
+
+
+      updateCrmSidebarActive(
+        crmCurrentPage
+      );
+
+      updateCrmPageTitle(page);
+
+
+      if (window.lucide) {
+        lucide.createIcons();
+      }
+
+    }
+
+
+    /* =====================================================
+       BACK
+    ====================================================== */
+
+    function crmGoBack() {
+
+      const previous =
+        crmPreviousPage;
+
+      if (
+        previous &&
+        previous !== crmCurrentPage
+      ) {
+
+        hideCrmPages();
+
+        const page =
+          document.getElementById(previous);
+
+        if (page) {
+          page.style.display = "block";
+        }
+
+        crmCurrentPage =
+          previous;
+
+        updateCrmSidebarActive(
+          previous
+        );
+
+        return;
+
+      }
+
+      crmNavigate("dashboard");
+
+    }
+
+
+    /* =====================================================
+       OPEN CUSTOMER PROFILE
+       -----------------------------------------------------
+       Bisa dipanggil dari customer row nanti:
+       openCustomerProfile(id)
+    ====================================================== */
+
+    async function openCustomerProfile(id) {
+
+      if (!id) return;
+
+      crmCurrentCustomerId =
+        id;
+
+      try {
+
+        if (
+          typeof supabaseClient === "undefined"
+        ) {
+
+          console.error(
+            "Supabase client tidak tersedia."
+          );
+
+          return;
+
+        }
+
+
+        const result =
+          await supabaseClient
+            .from("leads")
+            .select("*")
+            .eq("id", id)
+            .single();
+
+
+        if (result.error) {
+
+          console.error(
+            "Gagal mengambil customer:",
+            result.error
+          );
+
+          return;
+
+        }
+
+
+        crmCurrentCustomer =
+          result.data;
+
+
+        renderCustomerProfile(
+          crmCurrentCustomer
+        );
+
+
+        crmPreviousPage =
+          crmCurrentPage;
+
+        crmNavigate(
+          "customerProfile"
+        );
+
+      }
+
+      catch (error) {
+
+        console.error(
+          "Customer profile error:",
+          error
+        );
+
+      }
+
+    }
+
+
+    /* =====================================================
+       RENDER CUSTOMER PROFILE
+    ====================================================== */
+
+    function renderCustomerProfile(customer) {
+
+      if (!customer) return;
+
+
+      const name =
+        customer.customer_name || "Customer";
+
+
+      const phone =
+        customer.phone || "-";
+
+
+      const email =
+        customer.email || "-";
+
+
+      const business =
+        customer.business || "-";
+
+
+      const location =
+        customer.location || "-";
+
+
+      const status =
+        customer.status || "-";
+
+
+      setCrmText(
+        "profileCustomerName",
+        name
+      );
+
+      setCrmText(
+        "profileCustomerContact",
+        phone
+      );
+
+
+      setCrmText(
+        "profileNameValue",
+        name
+      );
+
+      setCrmText(
+        "profilePhoneValue",
+        phone
+      );
+
+      setCrmText(
+        "profileEmailValue",
+        email
+      );
+
+      setCrmText(
+        "profileBusinessValue",
+        business
+      );
+
+      setCrmText(
+        "profileLocationValue",
+        location
+      );
+
+
+      /*
+        sales_id merupakan UUID.
+        Nama Sales nanti bisa diambil
+        dari sales_users pada tahap berikutnya.
+      */
+
+      setCrmText(
+        "profileSalesValue",
+        customer.sales_id || "-"
+      );
+
+
+      const avatar =
+        document.getElementById(
+          "profileAvatar"
+        );
+
+      if (avatar) {
+
+        avatar.textContent =
+          name
+            .trim()
+            .charAt(0)
+            .toUpperCase() || "C";
+
+      }
+
+
+      setCrmText(
+        "profileNotesContent",
+        customer.notes || "No notes."
+      );
+
+
+      updateCustomerPipeline(
+        customer
+      );
+
+    }
+
+
+    /* =====================================================
+       CUSTOMER PIPELINE
+    ====================================================== */
+
+    function updateCustomerPipeline(customer) {
+
+      const fields = {
+
+        pipelineLead:
+          true,
+
+        pipelineFollowUp:
+          !!customer.follow_up_date,
+
+        pipelineAppointment:
+          !!customer.appointment,
+
+        pipelineSurvey:
+          !!customer.site_survey,
+
+        pipelineQuotation:
+          !!customer.quotation,
+
+        pipelineSPK:
+          !!customer.spk,
+
+        pipelineClosing:
+          !!customer.closing
+
+      };
+
+
+      Object.keys(fields).forEach(
+        function(id) {
+
+          const element =
+            document.getElementById(id);
+
+          if (!element) return;
+
+          element.classList.toggle(
+            "active",
+            fields[id]
+          );
+
+        }
+      );
+
+    }
+
+
+    /* =====================================================
+       CUSTOMER PROFILE ACTIONS
+    ====================================================== */
+
+    function profileEdit() {
+
+      if (
+        crmCurrentCustomerId &&
+        typeof editLead === "function"
+      ) {
+
+        editLead(
+          crmCurrentCustomerId
+        );
+
+      }
+
+    }
+
+
+    function profileWhatsApp() {
+
+      if (!crmCurrentCustomer) return;
+
+      const phone =
+        crmCurrentCustomer.phone;
+
+      if (
+        !phone ||
+        typeof whatsappLink !== "function"
+      ) return;
+
+      window.open(
+        whatsappLink(phone),
+        "_blank"
+      );
+
+    }
+
+
+    function profileEmail() {
+
+      if (!crmCurrentCustomer) return;
+
+      const email =
+        crmCurrentCustomer.email;
+
+      if (!email) return;
+
+      window.location.href =
+        "mailto:" + email;
+
+    }
+
+
+    function profileAppointment() {
+
+      crmPreviousPage =
+        "customerProfilePage";
+
+      crmNavigate(
+        "appointment"
+      );
+
+    }
+
+
+    /* =====================================================
+       PLACEHOLDER MODULE ACTIONS
+    ====================================================== */
+
+    function openAppointmentForm() {
+
+      alert(
+        "Form Appointment akan kita sambungkan ke database pada tahap berikutnya."
+      );
+
+    }
+
+
+    function openDailyReportForm() {
+
+      alert(
+        "Form Daily Report akan kita sambungkan ke database pada tahap berikutnya."
+      );
+
+    }
+
+
+    /* =====================================================
+       TEXT HELPER
+    ====================================================== */
+
+    function setCrmText(
+      id,
+      value
+    ) {
+
+      const element =
+        document.getElementById(id);
+
+      if (!element) return;
+
+      element.textContent =
+        value == null
+          ? "-"
+          : String(value);
+
+    }
+
+
+    /* =====================================================
+       OVERRIDE NAVIGATION SAFELY
+       -----------------------------------------------------
+       Fungsi lama tetap dipanggil.
+       Kita hanya memastikan halaman baru
+       ikut disembunyikan.
+    ====================================================== */
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      function() {
+
+        /*
+          Simpan fungsi asli.
+        */
+
+        const originalShowDashboard =
+          typeof window.showDashboard === "function"
+            ? window.showDashboard
+            : null;
+
+
+        const originalShowLeads =
+          typeof window.showLeads === "function"
+            ? window.showLeads
+            : null;
+
+
+        const originalShowSales =
+          typeof window.showSales === "function"
+            ? window.showSales
+            : null;
+
+
+        /*
+          Dashboard lama.
+        */
+
+        if (originalShowDashboard) {
+
+          window.showDashboard =
+            function() {
+
+              hideCrmPages();
+
+              originalShowDashboard();
+
+              crmCurrentPage =
+                "dashboardPage";
+
+              crmPreviousPage =
+                "dashboardPage";
+
+              updateCrmSidebarActive(
+                "dashboardPage"
+              );
+
+              updateCrmPageTitle(
+                "dashboard"
+              );
+
+            };
+
+        }
+
+
+        /*
+          Leads lama.
+        */
+
+        if (originalShowLeads) {
+
+          window.showLeads =
+            function() {
+
+              hideCrmPages();
+
+              originalShowLeads();
+
+              crmCurrentPage =
+                "leadsPage";
+
+              crmPreviousPage =
+                "leadsPage";
+
+              updateCrmSidebarActive(
+                "leadsPage"
+              );
+
+              updateCrmPageTitle(
+                "leads"
+              );
+
+            };
+
+        }
+
+
+        /*
+          Sales lama.
+        */
+
+        if (originalShowSales) {
+
+          window.showSales =
+            function() {
+
+              hideCrmPages();
+
+              originalShowSales();
+
+              crmCurrentPage =
+                "salesPage";
+
+              crmPreviousPage =
+                "salesPage";
+
+              updateCrmSidebarActive(
+                "salesPage"
+              );
+
+              updateCrmPageTitle(
+                "sales"
+              );
+
+            };
+
+        }
+
+
+        /*
+          Initial icon render.
+        */
+
+        if (window.lucide) {
+          lucide.createIcons();
+        }
+
+      }
+    );
+
+
+    /* =====================================================
+       KEYBOARD ESC
+    ====================================================== */
+
+    document.addEventListener(
+      "keydown",
+      function(event) {
+
+        if (
+          event.key === "Escape"
+        ) {
+
+          closeCrmSidebar();
+
+        }
+
+      }
+    );
+
+
+    /* =====================================================
+       EXISTING USER MENU
+       TETAP
+    ====================================================== */
 
     function toggleUserMenu() {
 
       const menu =
-        document.getElementById("userDropdown");
+        document.getElementById(
+          "userDropdown"
+        );
 
       if (!menu) return;
 
@@ -1299,10 +3988,17 @@
     }
 
 
+    /* =====================================================
+       EXISTING MOBILE MENU
+       TETAP
+    ====================================================== */
+
     function toggleMobileMenu() {
 
       const menu =
-        document.getElementById("mobileNav");
+        document.getElementById(
+          "mobileNav"
+        );
 
       if (!menu) return;
 
@@ -1317,18 +4013,22 @@
     function closeMobileMenu() {
 
       const menu =
-        document.getElementById("mobileNav");
+        document.getElementById(
+          "mobileNav"
+        );
 
       if (menu) {
-        menu.style.display = "none";
+        menu.style.display =
+          "none";
       }
 
     }
 
 
-    /* =================================
-       SALES DROPDOWN UI
-    ================================= */
+    /* =====================================================
+       EXISTING SALES DROPDOWN
+       TETAP
+    ====================================================== */
 
     function toggleSalesDropdown(event) {
 
@@ -1337,10 +4037,14 @@
       }
 
       const menu =
-        document.getElementById("salesDropdownMenu");
+        document.getElementById(
+          "salesDropdownMenu"
+        );
 
       const button =
-        document.getElementById("salesDropdownBtn");
+        document.getElementById(
+          "salesDropdownBtn"
+        );
 
       if (!menu || !button) return;
 
@@ -1348,7 +4052,9 @@
         menu.style.display === "block";
 
       menu.style.display =
-        isOpen ? "none" : "block";
+        isOpen
+          ? "none"
+          : "block";
 
       button.setAttribute(
         "aria-expanded",
@@ -1361,20 +4067,27 @@
     function closeSalesDropdown() {
 
       const menu =
-        document.getElementById("salesDropdownMenu");
+        document.getElementById(
+          "salesDropdownMenu"
+        );
 
       const button =
-        document.getElementById("salesDropdownBtn");
+        document.getElementById(
+          "salesDropdownBtn"
+        );
 
       if (menu) {
-        menu.style.display = "none";
+        menu.style.display =
+          "none";
       }
 
       if (button) {
+
         button.setAttribute(
           "aria-expanded",
           "false"
         );
+
       }
 
     }
@@ -1386,43 +4099,58 @@
     ) {
 
       const filter =
-        document.getElementById("salesFilter");
+        document.getElementById(
+          "salesFilter"
+        );
 
       if (filter) {
-        filter.value = salesId || "";
+
+        filter.value =
+          salesId || "";
+
       }
 
       closeSalesDropdown();
 
-      /*
-        The actual lead filtering is handled
-        by script.js through salesFilter.
-      */
+      if (
+        typeof loadLeads === "function"
+      ) {
 
-      if (typeof loadLeads === "function") {
         loadLeads(1);
+
       }
 
     }
 
 
+    /* =====================================================
+       EXISTING CLICK OUTSIDE
+    ====================================================== */
+
     document.addEventListener(
       "click",
-      function (e) {
+      function(e) {
 
         const userArea =
-          document.querySelector(".header-user-area");
+          document.querySelector(
+            ".header-user-area"
+          );
 
         const userMenu =
-          document.getElementById("userDropdown");
+          document.getElementById(
+            "userDropdown"
+          );
 
         if (
           userArea &&
           userMenu &&
-          !userArea.contains(e.target)
+          !userArea.contains(
+            e.target
+          )
         ) {
 
-          userMenu.style.display = "none";
+          userMenu.style.display =
+            "none";
 
         }
 
@@ -1434,23 +4162,13 @@
 
         if (
           salesArea &&
-          !salesArea.contains(e.target)
+          !salesArea.contains(
+            e.target
+          )
         ) {
 
           closeSalesDropdown();
 
-        }
-
-      }
-    );
-
-
-    document.addEventListener(
-      "DOMContentLoaded",
-      function () {
-
-        if (window.lucide) {
-          lucide.createIcons();
         }
 
       }
