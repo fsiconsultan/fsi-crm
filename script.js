@@ -578,7 +578,6 @@ function setupRoleAccess() {
     "Admin";
 
 
-  // DESKTOP MANAGE SALES
   if (manageSalesBtn) {
 
     manageSalesBtn.style.display =
@@ -589,7 +588,6 @@ function setupRoleAccess() {
   }
 
 
-  // MOBILE MANAGE SALES
   if (mobileManageSalesBtn) {
 
     mobileManageSalesBtn.style.display =
@@ -600,7 +598,6 @@ function setupRoleAccess() {
   }
 
 
-  // TOP NAV SALES DROPDOWN
   if (salesDropdownContainer) {
 
     salesDropdownContainer.style.display =
@@ -611,7 +608,6 @@ function setupRoleAccess() {
   }
 
 
-  // SALES FILTER
   if (salesFilter) {
 
     salesFilter.style.display =
@@ -622,7 +618,6 @@ function setupRoleAccess() {
   }
 
 
-  // SALES ASSIGNMENT FIELD
   setupSalesAssignmentAccess();
 
 }
@@ -891,10 +886,6 @@ async function loadSalesLookup() {
 
 function populateSalesDropdowns() {
 
-  // ================================
-  // ADMIN SALES FILTER
-  // ================================
-
   const salesFilter =
     document.getElementById(
       "salesFilter"
@@ -983,10 +974,6 @@ function populateSalesDropdowns() {
   }
 
 
-  // ================================
-  // TOP NAV SALES DROPDOWN
-  // ================================
-
   const salesDropdownMenu =
     document.getElementById(
       "salesDropdownMenu"
@@ -999,7 +986,6 @@ function populateSalesDropdowns() {
       "";
 
 
-    // ALL SALES
     const allSalesButton =
       document.createElement(
         "button"
@@ -1048,7 +1034,6 @@ function populateSalesDropdowns() {
     );
 
 
-    // SALES NAMES
     salesUsersData
       .filter(
         sales =>
@@ -1113,10 +1098,6 @@ function populateSalesDropdowns() {
 
   }
 
-
-  // ================================
-  // LEAD ASSIGNMENT
-  // ================================
 
   const leadSalesAssign =
     document.getElementById(
@@ -1446,9 +1427,6 @@ function populateFilter(
 // ================================
 // LOAD LEADS
 // ================================
-// PAGINATION
-// 20 LEADS PER PAGE
-// ================================
 
 async function loadLeads(page = 1) {
 
@@ -1470,10 +1448,6 @@ async function loadLeads(page = 1) {
 
     }
 
-
-    // ================================
-    // GET FILTER VALUES
-    // ================================
 
     const search =
       document
@@ -1516,10 +1490,6 @@ async function loadLeads(page = 1) {
         ?.value || "";
 
 
-    // ================================
-    // SUPABASE QUERY
-    // ================================
-
     let query =
       supabaseClient
         .from("leads")
@@ -1530,10 +1500,6 @@ async function loadLeads(page = 1) {
           }
         );
 
-
-    // ================================
-    // SEARCH
-    // ================================
 
     if (search) {
 
@@ -1563,10 +1529,6 @@ async function loadLeads(page = 1) {
     }
 
 
-    // ================================
-    // STATUS FILTER
-    // ================================
-
     if (status) {
 
       query =
@@ -1577,10 +1539,6 @@ async function loadLeads(page = 1) {
 
     }
 
-
-    // ================================
-    // BUSINESS FILTER
-    // ================================
 
     if (business) {
 
@@ -1593,10 +1551,6 @@ async function loadLeads(page = 1) {
     }
 
 
-    // ================================
-    // LOCATION FILTER
-    // ================================
-
     if (location) {
 
       query =
@@ -1607,11 +1561,6 @@ async function loadLeads(page = 1) {
 
     }
 
-
-    // ================================
-    // SALES FILTER
-    // ADMIN ONLY
-    // ================================
 
     if (
       salesFilter &&
@@ -1628,10 +1577,6 @@ async function loadLeads(page = 1) {
 
     }
 
-
-    // ================================
-    // PAGINATION
-    // ================================
 
     const from =
       (currentPage - 1) *
@@ -1989,17 +1934,23 @@ function renderLeads(data) {
 
         <td>
 
-          <button
-            class="secondary-btn small-btn"
-            onclick="editLead('${lead.id}')">
-            Edit
-          </button>
+          <div class="crm-lead-actions">
 
-          <button
-            class="secondary-btn small-btn"
-            onclick="deleteLead('${lead.id}')">
-            Delete
-          </button>
+            <button
+              type="button"
+              class="primary-btn small-btn"
+              onclick="crmOpenCustomerProfile('${lead.id}')">
+              Profile
+            </button>
+
+            <button
+              type="button"
+              class="secondary-btn small-btn"
+              onclick="deleteLead('${lead.id}')">
+              Delete
+            </button>
+
+          </div>
 
         </td>
 
@@ -2389,10 +2340,12 @@ async function saveLead() {
       null,
 
     notes:
-      document.getElementById(
-        "leadNotes"
-      ).value
-      .trim()
+      document
+        .getElementById(
+          "leadNotes"
+        )
+        .value
+        .trim()
 
   };
 
@@ -2534,16 +2487,41 @@ async function saveLead() {
 }
 
 
-// ================================
-// EDIT LEAD
-// ================================
+// ============================================================
+// EDIT CUSTOMER
+// ============================================================
 
 async function editLead(id) {
 
   console.log(
-    "Edit Lead ID:",
+    "Edit Customer ID:",
     id
   );
+
+
+  if (!id) {
+
+    alert(
+      "Customer ID not found."
+    );
+
+    return;
+
+  }
+
+
+  if (
+    typeof window.crmOpenCustomerProfile ===
+    "function"
+  ) {
+
+    await window.crmOpenCustomerProfile(
+      id
+    );
+
+    return;
+
+  }
 
 
   let lead =
@@ -2573,12 +2551,12 @@ async function editLead(id) {
     if (error) {
 
       console.error(
-        "Get lead for edit error:",
+        "Get customer for edit error:",
         error
       );
 
       alert(
-        "Failed to get lead:\n" +
+        "Failed to get customer:\n" +
         error.message
       );
 
@@ -2590,7 +2568,7 @@ async function editLead(id) {
     if (!data) {
 
       alert(
-        "Lead not found."
+        "Customer not found."
       );
 
       return;
@@ -2604,113 +2582,348 @@ async function editLead(id) {
   }
 
 
-  setValue(
-    "leadId",
-    lead.id
-  );
+  window.crmCurrentCustomerId =
+    lead.id;
 
-  setValue(
-    "leadCustomer",
-    lead.customer_name
-  );
+  window.crmCurrentCustomer =
+    lead;
 
-  setValue(
-    "leadPhone",
-    lead.phone
-  );
 
-  setValue(
-    "leadEmail",
-    lead.email
-  );
-
-  setValue(
-    "leadBusiness",
-    lead.business
-  );
-
-  setValue(
-    "leadLocation",
-    lead.location
-  );
-
-  setValue(
-    "leadStatus",
-    normalizeLeadStatus(
-      lead.status
-    )
+  crmRenderCustomerEditPage(
+    lead
   );
 
 
-  setValue(
-    "leadSalesAssign",
-    lead.sales_id || ""
+  crmShowProfilePageFallback();
+
+
+  window.scrollTo(
+    {
+      top: 0,
+      behavior: "smooth"
+    }
   );
 
-
-  setValue(
-    "leadFollowUp",
-    lead.follow_up_date
-  );
-
-  setValue(
-    "leadAppointment",
-    lead.appointment
-  );
-
-  setValue(
-    "leadSiteSurvey",
-    lead.site_survey
-  );
-
-  setValue(
-    "leadQuotation",
-    lead.quotation
-  );
-
-  setValue(
-    "leadSPK",
-    lead.spk
-  );
-
-  setValue(
-    "leadClosing",
-    lead.closing
-  );
-
-  setValue(
-    "leadNotes",
-    lead.notes
-  );
+}
 
 
-  setupSalesAssignmentAccess();
+// ============================================================
+// SAVE CUSTOMER FROM FULL PAGE EDIT
+// ============================================================
+
+window.crmSaveCustomerEdit =
+  async function () {
+
+    if (!currentProfile) {
+
+      alert(
+        "User profile is not ready."
+      );
+
+      return;
+
+    }
 
 
-  const title =
+    const id =
+      window.crmCurrentCustomerId;
+
+
+    if (!id) {
+
+      alert(
+        "Customer ID not found."
+      );
+
+      return;
+
+    }
+
+
+    const customerName =
+      document.getElementById(
+        "crmEditCustomerName"
+      )?.value
+      .trim() || "";
+
+
+    if (!customerName) {
+
+      alert(
+        "Customer name is required."
+      );
+
+      return;
+
+    }
+
+
+    const payload = {
+
+      customer_name:
+        customerName,
+
+      phone:
+        document.getElementById(
+          "crmEditPhone"
+        )?.value
+        .trim() || "",
+
+      email:
+        document.getElementById(
+          "crmEditEmail"
+        )?.value
+        .trim() || "",
+
+      business:
+        document.getElementById(
+          "crmEditBusiness"
+        )?.value
+        .trim() || "",
+
+      location:
+        document.getElementById(
+          "crmEditLocation"
+        )?.value
+        .trim() || "",
+
+      status:
+        normalizeLeadStatus(
+          document.getElementById(
+            "crmEditStatus"
+          )?.value || "New"
+        ),
+
+      follow_up_date:
+        document.getElementById(
+          "crmEditFollowUp"
+        )?.value ||
+        null,
+
+      appointment:
+        document.getElementById(
+          "crmEditAppointment"
+        )?.value ||
+        null,
+
+      site_survey:
+        document.getElementById(
+          "crmEditSiteSurvey"
+        )?.value ||
+        null,
+
+      quotation:
+        document.getElementById(
+          "crmEditQuotation"
+        )?.value ||
+        null,
+
+      spk:
+        document.getElementById(
+          "crmEditSPK"
+        )?.value ||
+        null,
+
+      closing:
+        document.getElementById(
+          "crmEditClosing"
+        )?.value ||
+        null,
+
+      notes:
+        document.getElementById(
+          "crmEditNotes"
+        )?.value
+        .trim() || "",
+
+      updated_by:
+        currentProfile.id
+
+    };
+
+
+    const selectedSales =
+      document.getElementById(
+        "crmEditSales"
+      )?.value || "";
+
+
+    if (
+      currentProfile.role ===
+      "Admin"
+    ) {
+
+      payload.sales_id =
+        selectedSales ||
+        null;
+
+    } else {
+
+      payload.sales_id =
+        currentProfile.id;
+
+    }
+
+
+    const saveButton =
+      document.getElementById(
+        "crmEditSaveButton"
+      );
+
+
+    try {
+
+      if (saveButton) {
+
+        saveButton.disabled =
+          true;
+
+        saveButton.textContent =
+          "Saving...";
+
+      }
+
+
+      const {
+        data,
+        error
+      } =
+      await supabaseClient
+        .from("leads")
+        .update(
+          payload
+        )
+        .eq(
+          "id",
+          id
+        )
+        .select("*")
+        .single();
+
+
+      if (error) {
+
+        console.error(
+          "Save customer edit error:",
+          error
+        );
+
+        alert(
+          "Failed to update customer:\n" +
+          error.message
+        );
+
+        return;
+
+      }
+
+
+      window.crmCurrentCustomerId =
+        data.id;
+
+      window.crmCurrentCustomer =
+        data;
+
+
+      alert(
+        "Customer updated successfully."
+      );
+
+
+      await loadFilterOptions();
+
+      await loadLeads(
+        currentPage
+      );
+
+      await updateDashboard();
+
+
+      crmRenderCustomerEditPage(
+        data
+      );
+
+
+      if (
+        typeof window.crmNavigate ===
+        "function"
+      ) {
+
+        window.crmNavigate(
+          "customerProfile"
+        );
+
+      } else {
+
+        crmShowProfilePageFallback();
+
+      }
+
+
+      setPageTitle(
+        "Customer Profile"
+      );
+
+
+      window.scrollTo(
+        {
+          top: 0,
+          behavior: "smooth"
+        }
+      );
+
+
+    } catch (error) {
+
+      console.error(
+        "crmSaveCustomerEdit error:",
+        error
+      );
+
+      alert(
+        "An error occurred:\n" +
+        error.message
+      );
+
+    } finally {
+
+      if (saveButton) {
+
+        saveButton.disabled =
+          false;
+
+        saveButton.textContent =
+          "SAVE CHANGES";
+
+      }
+
+    }
+
+  };
+
+
+// ============================================================
+// RENDER FULL PAGE CUSTOMER EDIT
+// ============================================================
+
+function crmRenderCustomerEditPage(
+  customer
+) {
+
+  const page =
     document.getElementById(
-      "leadModalTitle"
+      "customerProfilePage"
     );
 
 
-  if (title) {
+  if (!page) {
 
-    title.textContent =
-      "Edit Lead";
-
-  }
-
-
-  const modal =
-    document.getElementById(
-      "leadModal"
+    console.error(
+      "customerProfilePage not found."
     );
-
-
-  if (!modal) {
 
     alert(
-      "Lead modal not found."
+      "Customer page not found."
     );
 
     return;
@@ -2718,14 +2931,679 @@ async function editLead(id) {
   }
 
 
-  modal.classList.add(
-    "show"
+  const customerName =
+    getValue(
+      customer.customer_name
+    );
+
+
+  const phone =
+    getValue(
+      customer.phone
+    );
+
+
+  const email =
+    getValue(
+      customer.email
+    );
+
+
+  const business =
+    getValue(
+      customer.business
+    );
+
+
+  const location =
+    getValue(
+      customer.location
+    );
+
+
+  const status =
+    normalizeLeadStatus(
+      customer.status
+    );
+
+
+  const salesId =
+    customer.sales_id ||
+    "";
+
+
+  page.innerHTML = `
+
+    <div class="crm-full-edit-page">
+
+      <div class="crm-edit-toolbar">
+
+        <button
+          type="button"
+          class="crm-back-btn"
+          onclick="crmCancelCustomerEdit()">
+          ← Back to Customers
+        </button>
+
+
+        <div class="crm-edit-toolbar-title">
+
+          <span class="eyebrow">
+            CUSTOMER PROFILE
+          </span>
+
+          <h2>
+            ${escapeHTML(
+              customerName ||
+              "Customer"
+            )}
+          </h2>
+
+          <p>
+            View and update customer information and sales progress.
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <div class="panel crm-edit-card">
+
+        <div class="panel-header">
+
+          <div>
+
+            <div class="eyebrow">
+              CUSTOMER INFORMATION
+            </div>
+
+            <h3 class="panel-title">
+              Basic Information
+            </h3>
+
+          </div>
+
+        </div>
+
+
+        <div class="crm-edit-grid">
+
+
+          <div class="crm-edit-field">
+
+            <label>
+              Customer Name
+            </label>
+
+            <input
+              id="crmEditCustomerName"
+              type="text"
+              value="${escapeHTML(customerName)}"
+              placeholder="Customer name"
+            >
+
+          </div>
+
+
+          <div class="crm-edit-field">
+
+            <label>
+              Phone / WhatsApp
+            </label>
+
+            <input
+              id="crmEditPhone"
+              type="text"
+              value="${escapeHTML(phone)}"
+              placeholder="Phone / WhatsApp"
+            >
+
+          </div>
+
+
+          <div class="crm-edit-field">
+
+            <label>
+              Email
+            </label>
+
+            <input
+              id="crmEditEmail"
+              type="email"
+              value="${escapeHTML(email)}"
+              placeholder="Email"
+            >
+
+          </div>
+
+
+          <div class="crm-edit-field">
+
+            <label>
+              Business
+            </label>
+
+            <input
+              id="crmEditBusiness"
+              type="text"
+              value="${escapeHTML(business)}"
+              placeholder="Business"
+            >
+
+          </div>
+
+
+          <div class="crm-edit-field">
+
+            <label>
+              Location
+            </label>
+
+            <input
+              id="crmEditLocation"
+              type="text"
+              value="${escapeHTML(location)}"
+              placeholder="Location"
+            >
+
+          </div>
+
+
+          <div class="crm-edit-field">
+
+            <label>
+              Status
+            </label>
+
+            <select
+              id="crmEditStatus">
+            </select>
+
+          </div>
+
+
+          <div class="crm-edit-field">
+
+            <label>
+              Sales
+            </label>
+
+            <select
+              id="crmEditSales">
+            </select>
+
+          </div>
+
+
+        </div>
+
+      </div>
+
+
+      <div class="panel crm-edit-card">
+
+        <div class="panel-header">
+
+          <div>
+
+            <div class="eyebrow">
+              SALES PIPELINE
+            </div>
+
+            <h3 class="panel-title">
+              Customer Progress
+            </h3>
+
+          </div>
+
+        </div>
+
+
+        <div class="crm-edit-grid">
+
+
+          <div class="crm-edit-field">
+
+            <label>
+              Follow Up
+            </label>
+
+            <input
+              id="crmEditFollowUp"
+              type="date"
+              value="${escapeHTML(
+                customer.follow_up_date || ""
+              )}"
+            >
+
+          </div>
+
+
+          <div class="crm-edit-field">
+
+            <label>
+              Appointment
+            </label>
+
+            <input
+              id="crmEditAppointment"
+              type="date"
+              value="${escapeHTML(
+                customer.appointment || ""
+              )}"
+            >
+
+          </div>
+
+
+          <div class="crm-edit-field">
+
+            <label>
+              Site Survey
+            </label>
+
+            <input
+              id="crmEditSiteSurvey"
+              type="date"
+              value="${escapeHTML(
+                customer.site_survey || ""
+              )}"
+            >
+
+          </div>
+
+
+          <div class="crm-edit-field">
+
+            <label>
+              Quotation
+            </label>
+
+            <input
+              id="crmEditQuotation"
+              type="date"
+              value="${escapeHTML(
+                customer.quotation || ""
+              )}"
+            >
+
+          </div>
+
+
+          <div class="crm-edit-field">
+
+            <label>
+              SPK
+            </label>
+
+            <input
+              id="crmEditSPK"
+              type="date"
+              value="${escapeHTML(
+                customer.spk || ""
+              )}"
+            >
+
+          </div>
+
+
+          <div class="crm-edit-field">
+
+            <label>
+              Closing
+            </label>
+
+            <input
+              id="crmEditClosing"
+              type="date"
+              value="${escapeHTML(
+                customer.closing || ""
+              )}"
+            >
+
+          </div>
+
+
+        </div>
+
+      </div>
+
+
+      <div class="panel crm-edit-card">
+
+        <div class="panel-header">
+
+          <div>
+
+            <div class="eyebrow">
+              NOTES
+            </div>
+
+            <h3 class="panel-title">
+              Customer Notes
+            </h3>
+
+          </div>
+
+        </div>
+
+
+        <div class="crm-edit-field">
+
+          <label>
+            Notes
+          </label>
+
+          <textarea
+            id="crmEditNotes"
+            rows="7"
+            placeholder="Customer notes..."
+          >${escapeHTML(
+            customer.notes || ""
+          )}</textarea>
+
+        </div>
+
+      </div>
+
+
+      <div class="crm-edit-actions">
+
+        <button
+          type="button"
+          class="secondary-btn"
+          onclick="crmCancelCustomerEdit()">
+          CANCEL
+        </button>
+
+        <button
+          type="button"
+          id="crmEditSaveButton"
+          class="primary-btn"
+          onclick="crmSaveCustomerEdit()">
+          SAVE CHANGES
+        </button>
+
+      </div>
+
+
+    </div>
+
+  `;
+
+
+  crmPopulateEditStatus(
+    status
   );
 
-  modal.style.display =
-    "flex";
+
+  crmPopulateEditSales(
+    salesId
+  );
+
+
+  // FIX:
+  // Fungsi berada di dalam IIFE,
+  // sehingga dipanggil melalui window.
+  window.crmAddEditPageStyles();
 
 }
+
+
+// ============================================================
+// EDIT STATUS DROPDOWN
+// ============================================================
+
+function crmPopulateEditStatus(
+  selectedStatus
+) {
+
+  const select =
+    document.getElementById(
+      "crmEditStatus"
+    );
+
+
+  if (!select)
+    return;
+
+
+  select.innerHTML =
+    "";
+
+
+  LEAD_STATUSES.forEach(
+    status => {
+
+      const option =
+        document.createElement(
+          "option"
+        );
+
+
+      option.value =
+        status;
+
+
+      option.textContent =
+        status;
+
+
+      if (
+        status ===
+        selectedStatus
+      ) {
+
+        option.selected =
+          true;
+
+      }
+
+
+      select.appendChild(
+        option
+      );
+
+    }
+  );
+
+}
+
+
+// ============================================================
+// EDIT SALES DROPDOWN
+// ============================================================
+
+function crmPopulateEditSales(
+  selectedSalesId
+) {
+
+  const select =
+    document.getElementById(
+      "crmEditSales"
+    );
+
+
+  if (!select)
+    return;
+
+
+  select.innerHTML =
+    "";
+
+
+  const selectOption =
+    document.createElement(
+      "option"
+    );
+
+
+  selectOption.value =
+    "";
+
+
+  selectOption.textContent =
+    "Select Sales";
+
+
+  select.appendChild(
+    selectOption
+  );
+
+
+  salesUsersData
+    .filter(
+      sales =>
+        sales.role ===
+        "Sales"
+    )
+    .forEach(
+      sales => {
+
+        const option =
+          document.createElement(
+            "option"
+          );
+
+
+        option.value =
+          sales.id;
+
+
+        option.textContent =
+          sales.name ||
+          sales.username ||
+          "Sales";
+
+
+        if (
+          String(sales.id) ===
+          String(selectedSalesId)
+        ) {
+
+          option.selected =
+            true;
+
+        }
+
+
+        select.appendChild(
+          option
+        );
+
+      }
+    );
+
+
+  if (
+    currentProfile &&
+    currentProfile.role !==
+      "Admin"
+  ) {
+
+    select.value =
+      currentProfile.id;
+
+    select.disabled =
+      true;
+
+  }
+
+}
+
+
+// ============================================================
+// CANCEL CUSTOMER PAGE
+// ============================================================
+
+window.crmCancelCustomerEdit =
+  function () {
+
+    if (
+      typeof window.crmNavigate ===
+      "function"
+    ) {
+
+      window.crmNavigate(
+        "leads"
+      );
+
+    } else {
+
+      const customerPage =
+        document.getElementById(
+          "customerProfilePage"
+        );
+
+
+      if (customerPage) {
+
+        customerPage.style.display =
+          "none";
+
+      }
+
+
+      const allPages = [
+
+        "dashboardPage",
+        "leadsPage",
+        "salesPage",
+        "appointmentPage",
+        "dailyReportPage",
+        "pltsCalculatorPage",
+        "pltsSimulatorPage",
+        "settingsPage"
+
+      ];
+
+
+      allPages.forEach(
+        pageId => {
+
+          const page =
+            document.getElementById(
+              pageId
+            );
+
+
+          if (page) {
+
+            page.style.display =
+              pageId === "leadsPage"
+                ? "block"
+                : "none";
+
+          }
+
+        }
+      );
+
+
+      setPageTitle(
+        currentProfile &&
+        currentProfile.role === "Admin"
+          ? "All Leads"
+          : "My Leads"
+      );
+
+    }
+
+
+    window.scrollTo(
+      {
+        top: 0,
+        behavior: "smooth"
+      }
+    );
+
+
+    loadLeads(
+      currentPage
+    );
+
+  };
 
 
 // ================================
@@ -2770,6 +3648,22 @@ async function deleteLead(id) {
       );
 
       return;
+
+    }
+
+
+    if (
+      String(
+        window.crmCurrentCustomerId
+      ) ===
+      String(id)
+    ) {
+
+      window.crmCurrentCustomerId =
+        null;
+
+      window.crmCurrentCustomer =
+        null;
 
     }
 
@@ -3049,6 +3943,26 @@ async function loadSalesUsers() {
 
     salesUsersData =
       data || [];
+
+
+    salesUsersData.sort(
+      (a, b) =>
+        String(
+          a.name ||
+          a.username ||
+          ""
+        ).localeCompare(
+          String(
+            b.name ||
+            b.username ||
+            ""
+          ),
+          undefined,
+          {
+            sensitivity: "base"
+          }
+        )
+    );
 
 
     renderSalesUsers(
@@ -3678,9 +4592,1676 @@ function normalizePhone(
 }
 
 
-// ================================
+// ============================================================
+// CUSTOMER PROFILE / CUSTOMER EDIT MODULE
+// ============================================================
+
+(function () {
+
+  "use strict";
+
+
+  // ==========================================================
+  // CUSTOMER STATE
+  // ==========================================================
+
+  window.crmCurrentCustomerId = null;
+  window.crmCurrentCustomer = null;
+
+
+  // ==========================================================
+  // OPEN CUSTOMER PROFILE
+  // ==========================================================
+
+  window.crmOpenCustomerProfile =
+    async function (id) {
+
+      console.log(
+        "Opening Customer Profile:",
+        id
+      );
+
+
+      if (!id) {
+
+        alert(
+          "Customer ID not found."
+        );
+
+        return;
+
+      }
+
+
+      try {
+
+        const {
+          data,
+          error
+        } =
+          await supabaseClient
+            .from("leads")
+            .select("*")
+            .eq(
+              "id",
+              id
+            )
+            .single();
+
+
+        if (error) {
+
+          console.error(
+            "Customer Profile Error:",
+            error
+          );
+
+          alert(
+            "Failed to load customer:\n" +
+            error.message
+          );
+
+          return;
+
+        }
+
+
+        if (!data) {
+
+          alert(
+            "Customer not found."
+          );
+
+          return;
+
+        }
+
+
+        window.crmCurrentCustomerId =
+          data.id;
+
+        window.crmCurrentCustomer =
+          data;
+
+
+        crmRenderCustomerEditPage(
+          data
+        );
+
+
+        if (
+          typeof window.crmNavigate ===
+          "function"
+        ) {
+
+          window.crmNavigate(
+            "customerProfile"
+          );
+
+        } else {
+
+          crmShowProfilePageFallback();
+
+        }
+
+
+        setPageTitle(
+          "Customer Profile"
+        );
+
+
+        window.scrollTo(
+          {
+            top: 0,
+            behavior: "smooth"
+          }
+        );
+
+
+        console.log(
+          "Customer Profile opened:",
+          data
+        );
+
+
+      } catch (error) {
+
+        console.error(
+          "crmOpenCustomerProfile error:",
+          error
+        );
+
+        alert(
+          "An error occurred:\n" +
+          error.message
+        );
+
+      }
+
+    };
+
+
+  // ==========================================================
+  // SHOW PROFILE PAGE FALLBACK
+  // ==========================================================
+
+  function crmShowProfilePageFallback() {
+
+    const pages = [
+
+      "dashboardPage",
+
+      "leadsPage",
+
+      "salesPage",
+
+      "customerProfilePage",
+
+      "appointmentPage",
+
+      "dailyReportPage",
+
+      "pltsCalculatorPage",
+
+      "pltsSimulatorPage",
+
+      "settingsPage"
+
+    ];
+
+
+    pages.forEach(
+      function (id) {
+
+        const page =
+          document.getElementById(
+            id
+          );
+
+
+        if (page) {
+
+          page.style.display =
+            id ===
+            "customerProfilePage"
+              ? "block"
+              : "none";
+
+        }
+
+      }
+    );
+
+
+    setPageTitle(
+      "Customer Profile"
+    );
+
+  }
+
+
+  // ==========================================================
+  // LEGACY PROFILE RENDER
+  // ==========================================================
+
+  function crmRenderCustomerProfile(
+    customer
+  ) {
+
+    window.crmCurrentCustomerId =
+      customer.id;
+
+    window.crmCurrentCustomer =
+      customer;
+
+    crmRenderCustomerEditPage(
+      customer
+    );
+
+  }
+
+
+  // ==========================================================
+  // PIPELINE STEP
+  // ==========================================================
+
+  function crmPipelineStep(
+    label,
+    date,
+    completed
+  ) {
+
+    return `
+
+      <div
+        class="crm-pipeline-step ${
+          completed
+            ? "completed"
+            : ""
+        }">
+
+        <div class="crm-pipeline-dot">
+
+          ${
+            completed
+              ? "✓"
+              : ""
+          }
+
+        </div>
+
+        <div class="crm-pipeline-label">
+
+          <strong>
+            ${escapeHTML(
+              label
+            )}
+          </strong>
+
+          <span>
+
+            ${
+              date
+                ? crmFormatProfileDate(
+                    date
+                  )
+                : "Not yet"
+            }
+
+          </span>
+
+        </div>
+
+      </div>
+
+    `;
+
+  }
+
+
+  // ==========================================================
+  // PIPELINE CONNECTOR
+  // ==========================================================
+
+  function crmPipelineLine() {
+
+    return `
+
+      <div
+        class="crm-pipeline-connector">
+      </div>
+
+    `;
+
+  }
+
+
+  // ==========================================================
+  // TIMELINE ITEM
+  // ==========================================================
+
+  function crmTimelineItem(
+    label,
+    date,
+    completed
+  ) {
+
+    if (!completed) {
+
+      return "";
+
+    }
+
+
+    return `
+
+      <div class="crm-timeline-item">
+
+        <div class="crm-timeline-dot">
+          ✓
+        </div>
+
+        <div class="crm-timeline-content">
+
+          <strong>
+            ${escapeHTML(
+              label
+            )}
+          </strong>
+
+          <span>
+            ${crmFormatProfileDate(
+              date
+            )}
+          </span>
+
+        </div>
+
+      </div>
+
+    `;
+
+  }
+
+
+  // ==========================================================
+  // DATE FORMAT
+  // ==========================================================
+
+  function crmFormatProfileDate(
+    date
+  ) {
+
+    if (!date)
+      return "-";
+
+
+    try {
+
+      const d =
+        new Date(
+          date
+        );
+
+
+      if (
+        isNaN(
+          d.getTime()
+        )
+      ) {
+
+        return String(
+          date
+        );
+
+      }
+
+
+      return d.toLocaleDateString(
+        "id-ID",
+        {
+          day:
+            "2-digit",
+
+          month:
+            "short",
+
+          year:
+            "numeric"
+        }
+      );
+
+
+    } catch {
+
+      return String(
+        date
+      );
+
+    }
+
+  }
+
+
+  // ==========================================================
+  // PROFILE EDIT COMPATIBILITY
+  // ==========================================================
+
+  window.crmProfileEdit =
+    function () {
+
+      const id =
+        window.crmCurrentCustomerId;
+
+
+      if (!id) {
+
+        alert(
+          "Customer not selected."
+        );
+
+        return;
+
+      }
+
+
+      editLead(
+        id
+      );
+
+    };
+
+
+  // ==========================================================
+  // WHATSAPP
+  // ==========================================================
+
+  window.crmProfileWhatsApp =
+    function () {
+
+      const customer =
+        window.crmCurrentCustomer;
+
+
+      if (
+        !customer ||
+        !customer.phone
+      ) {
+
+        alert(
+          "Customer phone number not available."
+        );
+
+        return;
+
+      }
+
+
+      const link =
+        whatsappLink(
+          customer.phone
+        );
+
+
+      if (
+        link &&
+        link !== "#"
+      ) {
+
+        window.open(
+          link,
+          "_blank",
+          "noopener,noreferrer"
+        );
+
+      }
+
+    };
+
+
+  // ==========================================================
+  // EMAIL
+  // ==========================================================
+
+  window.crmProfileEmail =
+    function () {
+
+      const customer =
+        window.crmCurrentCustomer;
+
+
+      if (
+        !customer ||
+        !customer.email
+      ) {
+
+        alert(
+          "Customer email not available."
+        );
+
+        return;
+
+      }
+
+
+      window.location.href =
+        "mailto:" +
+        customer.email;
+
+    };
+
+
+  // ==========================================================
+  // APPOINTMENT
+  // ==========================================================
+
+  window.crmProfileAppointment =
+    function () {
+
+      const customer =
+        window.crmCurrentCustomer;
+
+
+      if (!customer) {
+
+        alert(
+          "Customer not selected."
+        );
+
+        return;
+
+      }
+
+
+      window.crmAppointmentCustomerId =
+        customer.id;
+
+
+      window.crmAppointmentCustomer =
+        customer;
+
+
+      if (
+        typeof window.crmNavigate ===
+        "function"
+      ) {
+
+        window.crmNavigate(
+          "appointment"
+        );
+
+      } else {
+
+        crmShowSimplePage(
+          "appointmentPage"
+        );
+
+      }
+
+    };
+
+
+  // ==========================================================
+  // SIMPLE PAGE FALLBACK
+  // ==========================================================
+
+  function crmShowSimplePage(
+    pageId
+  ) {
+
+    const pages = [
+
+      "dashboardPage",
+
+      "leadsPage",
+
+      "salesPage",
+
+      "customerProfilePage",
+
+      "appointmentPage",
+
+      "dailyReportPage",
+
+      "pltsCalculatorPage",
+
+      "pltsSimulatorPage",
+
+      "settingsPage"
+
+    ];
+
+
+    pages.forEach(
+      function (id) {
+
+        const page =
+          document.getElementById(
+            id
+          );
+
+
+        if (page) {
+
+          page.style.display =
+            id === pageId
+              ? "block"
+              : "none";
+
+        }
+
+      }
+    );
+
+  }
+
+
+  // ==========================================================
+  // PROFILE / CUSTOMER CSS
+  // ==========================================================
+
+  function crmAddProfileStyles() {
+
+    if (
+      document.getElementById(
+        "crmProfileDynamicStyles"
+      )
+    ) {
+
+      return;
+
+    }
+
+
+    const style =
+      document.createElement(
+        "style"
+      );
+
+
+    style.id =
+      "crmProfileDynamicStyles";
+
+
+    style.textContent = `
+
+      .crm-lead-actions {
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        gap: 6px;
+
+        flex-wrap: wrap;
+
+      }
+
+
+      .crm-lead-actions .small-btn {
+
+        margin: 0;
+
+        white-space: nowrap;
+
+      }
+
+
+      .crm-profile-header {
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 18px;
+
+        padding: 24px;
+
+        margin-bottom: 20px;
+
+        border-radius: 20px;
+
+        background:
+          linear-gradient(
+            135deg,
+            rgba(255,255,255,.94),
+            rgba(245,247,250,.86)
+          );
+
+        border:
+          1px solid
+          rgba(255,255,255,.75);
+
+        box-shadow:
+          0 14px 40px
+          rgba(15,23,42,.08);
+
+      }
+
+
+      .crm-profile-avatar {
+
+        width: 64px;
+
+        height: 64px;
+
+        min-width: 64px;
+
+        border-radius: 18px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        font-size: 25px;
+
+        font-weight: 800;
+
+        background:
+          linear-gradient(
+            135deg,
+            #111827,
+            #374151
+          );
+
+        color: white;
+
+      }
+
+
+      .crm-profile-heading {
+
+        flex: 1;
+
+        min-width: 0;
+
+      }
+
+
+      .crm-profile-name-row {
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 12px;
+
+        flex-wrap: wrap;
+
+      }
+
+
+      .crm-profile-name-row h2 {
+
+        margin: 0;
+
+        font-size: 25px;
+
+        font-weight: 800;
+
+        color: #0f172a;
+
+      }
+
+
+      .crm-profile-heading p {
+
+        margin:
+          5px 0 0;
+
+        color:
+          #64748b;
+
+      }
+
+
+      .crm-profile-actions {
+
+        display: flex;
+
+        gap: 8px;
+
+        flex-wrap: wrap;
+
+        justify-content: flex-end;
+
+      }
+
+
+      .crm-profile-grid {
+
+        display: grid;
+
+        grid-template-columns:
+          minmax(0, 1.5fr)
+          minmax(280px, 1fr);
+
+        gap: 20px;
+
+        margin-bottom: 20px;
+
+      }
+
+
+      .crm-profile-card {
+
+        margin-bottom: 20px;
+
+      }
+
+
+      .crm-info-grid {
+
+        display: grid;
+
+        grid-template-columns:
+          repeat(
+            2,
+            minmax(0, 1fr)
+          );
+
+        gap: 16px;
+
+      }
+
+
+      .crm-info-item {
+
+        padding:
+          14px 16px;
+
+        border-radius:
+          14px;
+
+        background:
+          rgba(
+            248,
+            250,
+            252,
+            .9
+          );
+
+        border:
+          1px solid
+          #e2e8f0;
+
+      }
+
+
+      .crm-info-item span {
+
+        display: block;
+
+        margin-bottom: 6px;
+
+        font-size: 12px;
+
+        color:
+          #64748b;
+
+        font-weight: 600;
+
+      }
+
+
+      .crm-info-item strong {
+
+        display: block;
+
+        color:
+          #0f172a;
+
+        word-break:
+          break-word;
+
+      }
+
+
+      .crm-profile-notes {
+
+        min-height: 120px;
+
+        padding: 16px;
+
+        border-radius:
+          14px;
+
+        background:
+          #f8fafc;
+
+        border:
+          1px solid
+          #e2e8f0;
+
+        white-space:
+          pre-wrap;
+
+        color:
+          #334155;
+
+        line-height:
+          1.6;
+
+      }
+
+
+      .crm-profile-pipeline {
+
+        display: flex;
+
+        align-items:
+          flex-start;
+
+        width: 100%;
+
+        overflow-x:
+          auto;
+
+        padding:
+          10px 4px 16px;
+
+      }
+
+
+      .crm-pipeline-step {
+
+        min-width:
+          105px;
+
+        text-align:
+          center;
+
+        flex-shrink:
+          0;
+
+      }
+
+
+      .crm-pipeline-dot {
+
+        width: 34px;
+
+        height: 34px;
+
+        margin:
+          0 auto 9px;
+
+        border-radius:
+          50%;
+
+        display: flex;
+
+        align-items:
+          center;
+
+        justify-content:
+          center;
+
+        background:
+          #e2e8f0;
+
+        color:
+          #64748b;
+
+        font-weight:
+          800;
+
+        border:
+          3px solid white;
+
+        box-shadow:
+          0 0 0 1px
+          #cbd5e1;
+
+      }
+
+
+      .crm-pipeline-step.completed
+      .crm-pipeline-dot {
+
+        background:
+          #16a34a;
+
+        color:
+          white;
+
+        box-shadow:
+          0 0 0 1px
+          #16a34a;
+
+      }
+
+
+      .crm-pipeline-label strong {
+
+        display: block;
+
+        font-size:
+          12px;
+
+        color:
+          #0f172a;
+
+      }
+
+
+      .crm-pipeline-label span {
+
+        display: block;
+
+        margin-top:
+          4px;
+
+        font-size:
+          10px;
+
+        color:
+          #64748b;
+
+      }
+
+
+      .crm-pipeline-connector {
+
+        height:
+          2px;
+
+        flex:
+          1;
+
+        min-width:
+          20px;
+
+        margin-top:
+          16px;
+
+        background:
+          #e2e8f0;
+
+      }
+
+
+      .crm-profile-timeline {
+
+        display: flex;
+
+        flex-direction:
+          column;
+
+      }
+
+
+      .crm-timeline-item {
+
+        display: flex;
+
+        align-items:
+          center;
+
+        gap:
+          13px;
+
+        padding:
+          13px 0;
+
+        border-bottom:
+          1px solid
+          #e2e8f0;
+
+      }
+
+
+      .crm-timeline-item:last-child {
+
+        border-bottom:
+          0;
+
+      }
+
+
+      .crm-timeline-dot {
+
+        width:
+          30px;
+
+        height:
+          30px;
+
+        min-width:
+          30px;
+
+        border-radius:
+          50%;
+
+        display: flex;
+
+        align-items:
+          center;
+
+        justify-content:
+          center;
+
+        background:
+          #16a34a;
+
+        color:
+          white;
+
+        font-size:
+          13px;
+
+        font-weight:
+          800;
+
+      }
+
+
+      .crm-timeline-content {
+
+        display: flex;
+
+        flex-direction:
+          column;
+
+        gap:
+          3px;
+
+      }
+
+
+      .crm-timeline-content strong {
+
+        font-size:
+          14px;
+
+        color:
+          #0f172a;
+
+      }
+
+
+      .crm-timeline-content span {
+
+        font-size:
+          12px;
+
+        color:
+          #64748b;
+
+      }
+
+
+      .crm-full-edit-page {
+
+        width:
+          100%;
+
+        max-width:
+          1200px;
+
+        margin:
+          0 auto;
+
+      }
+
+
+      .crm-edit-toolbar {
+
+        display:
+          flex;
+
+        align-items:
+          flex-start;
+
+        justify-content:
+          space-between;
+
+        gap:
+          20px;
+
+        margin-bottom:
+          22px;
+
+        padding:
+          4px 0;
+
+      }
+
+
+      .crm-edit-toolbar-title {
+
+        flex:
+          1;
+
+        text-align:
+          right;
+
+      }
+
+
+      .crm-edit-toolbar-title h2 {
+
+        margin:
+          2px 0 4px;
+
+        font-size:
+          26px;
+
+        font-weight:
+          800;
+
+        color:
+          #0f172a;
+
+      }
+
+
+      .crm-edit-toolbar-title p {
+
+        margin:
+          0;
+
+        color:
+          #64748b;
+
+        font-size:
+          13px;
+
+      }
+
+
+      .crm-edit-layout {
+
+        display:
+          flex;
+
+        flex-direction:
+          column;
+
+        gap:
+          20px;
+
+      }
+
+
+      .crm-edit-card {
+
+        margin:
+          0 !important;
+
+      }
+
+
+      .crm-edit-grid {
+
+        display:
+          grid;
+
+        grid-template-columns:
+          repeat(
+            2,
+            minmax(
+              0,
+              1fr
+            )
+          );
+
+        gap:
+          18px;
+
+      }
+
+
+      .crm-edit-field {
+
+        display:
+          flex;
+
+        flex-direction:
+          column;
+
+        gap:
+          7px;
+
+      }
+
+
+      .crm-edit-field label {
+
+        font-size:
+          12px;
+
+        font-weight:
+          700;
+
+        color:
+          #475569;
+
+      }
+
+
+      .crm-edit-field input,
+
+      .crm-edit-field select,
+
+      .crm-edit-field textarea {
+
+        width:
+          100%;
+
+        box-sizing:
+          border-box;
+
+        border:
+          1px solid
+          #dbe2ea;
+
+        border-radius:
+          12px;
+
+        background:
+          #ffffff;
+
+        color:
+          #0f172a;
+
+        padding:
+          12px 13px;
+
+        font:
+          inherit;
+
+        outline:
+          none;
+
+        transition:
+          .2s ease;
+
+      }
+
+
+      .crm-edit-field input:focus,
+
+      .crm-edit-field select:focus,
+
+      .crm-edit-field textarea:focus {
+
+        border-color:
+          #94a3b8;
+
+        box-shadow:
+          0 0 0 3px
+          rgba(
+            148,
+            163,
+            184,
+            .15
+          );
+
+      }
+
+
+      .crm-edit-field textarea {
+
+        resize:
+          vertical;
+
+        min-height:
+          150px;
+
+        line-height:
+          1.6;
+
+      }
+
+
+      .crm-edit-actions {
+
+        display:
+          flex;
+
+        justify-content:
+          flex-end;
+
+        align-items:
+          center;
+
+        gap:
+          10px;
+
+        padding:
+          4px 0 30px;
+
+      }
+
+
+      @media (max-width: 800px) {
+
+        .crm-profile-header {
+
+          align-items:
+            flex-start;
+
+          flex-wrap:
+            wrap;
+
+        }
+
+
+        .crm-profile-actions {
+
+          width:
+            100%;
+
+          justify-content:
+            flex-start;
+
+        }
+
+
+        .crm-profile-grid {
+
+          grid-template-columns:
+            1fr;
+
+        }
+
+
+        .crm-info-grid {
+
+          grid-template-columns:
+            1fr;
+
+        }
+
+
+        .crm-edit-grid {
+
+          grid-template-columns:
+            1fr;
+
+        }
+
+
+        .crm-edit-toolbar {
+
+          flex-direction:
+            column;
+
+        }
+
+
+        .crm-edit-toolbar-title {
+
+          text-align:
+            left;
+
+          width:
+            100%;
+
+        }
+
+      }
+
+
+      @media (max-width: 600px) {
+
+        .crm-lead-actions {
+
+          flex-direction:
+            column;
+
+          align-items:
+            stretch;
+
+        }
+
+
+        .crm-lead-actions .small-btn {
+
+          width:
+            100%;
+
+        }
+
+
+        .crm-edit-actions {
+
+          flex-direction:
+            column-reverse;
+
+          align-items:
+            stretch;
+
+        }
+
+
+        .crm-edit-actions button {
+
+          width:
+            100%;
+
+        }
+
+      }
+
+
+      @media (max-width: 480px) {
+
+        .crm-profile-header {
+
+          padding:
+            18px;
+
+        }
+
+
+        .crm-profile-name-row h2 {
+
+          font-size:
+            21px;
+
+        }
+
+
+        .crm-profile-actions {
+
+          flex-direction:
+            column;
+
+        }
+
+
+        .crm-profile-actions button {
+
+          width:
+            100%;
+
+        }
+
+
+        .crm-edit-toolbar-title h2 {
+
+          font-size:
+            22px;
+
+        }
+
+      }
+
+    `;
+
+
+    document.head.appendChild(
+      style
+    );
+
+  }
+
+
+  // ==========================================================
+  // EDIT PAGE CSS
+  // ==========================================================
+
+  function crmAddEditPageStyles() {
+
+    if (
+      document.getElementById(
+        "crmEditPageStyles"
+      )
+    ) {
+
+      return;
+
+    }
+
+
+    const style =
+      document.createElement(
+        "style"
+      );
+
+
+    style.id =
+      "crmEditPageStyles";
+
+
+    style.textContent = `
+
+      .crm-full-edit-page {
+
+        animation:
+          crmEditPageIn
+          .18s
+          ease-out;
+
+      }
+
+
+      @keyframes crmEditPageIn {
+
+        from {
+
+          opacity:
+            0;
+
+          transform:
+            translateY(
+              6px
+            );
+
+        }
+
+        to {
+
+          opacity:
+            1;
+
+          transform:
+            translateY(
+              0
+            );
+
+        }
+
+      }
+
+    `;
+
+
+    document.head.appendChild(
+      style
+    );
+
+  }
+
+
+  // ==========================================================
+  // GLOBAL PROFILE FUNCTIONS
+  // ==========================================================
+
+  window.crmRenderCustomerProfile =
+    crmRenderCustomerProfile;
+
+  window.crmShowProfilePageFallback =
+    crmShowProfilePageFallback;
+
+  // FIX:
+  // Jadikan fungsi CSS tersedia untuk
+  // crmRenderCustomerEditPage() di luar IIFE.
+  window.crmAddEditPageStyles =
+    crmAddEditPageStyles;
+
+})();
+
+
+// ============================================================
 // MODAL EVENTS
-// ================================
+// ============================================================
 
 function setupModalEvents() {
 
@@ -3776,6 +6357,13 @@ async function logout() {
 
   totalLeadsCount =
     0;
+
+
+  window.crmCurrentCustomerId =
+    null;
+
+  window.crmCurrentCustomer =
+    null;
 
 
   showLogin();
@@ -4117,9 +6705,41 @@ supabaseClient.auth.onAuthStateChange(
       currentProfile =
         null;
 
+      window.crmCurrentCustomerId =
+        null;
+
+      window.crmCurrentCustomer =
+        null;
+
       showLogin();
 
     }
 
   }
 );
+
+
+// ============================================================
+// GLOBAL COMPATIBILITY
+// ============================================================
+
+window.openCustomerProfile =
+  window.crmOpenCustomerProfile;
+
+window.crmProfileEdit =
+  window.crmProfileEdit;
+
+window.crmProfileWhatsApp =
+  window.crmProfileWhatsApp;
+
+window.crmProfileEmail =
+  window.crmProfileEmail;
+
+window.crmProfileAppointment =
+  window.crmProfileAppointment;
+
+window.crmSaveCustomerEdit =
+  window.crmSaveCustomerEdit;
+
+window.crmCancelCustomerEdit =
+  window.crmCancelCustomerEdit;
