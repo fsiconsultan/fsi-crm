@@ -1989,17 +1989,30 @@ function renderLeads(data) {
 
         <td>
 
-          <button
-            class="secondary-btn small-btn"
-            onclick="editLead('${lead.id}')">
-            Edit
-          </button>
+          <div class="crm-lead-actions">
 
-          <button
-            class="secondary-btn small-btn"
-            onclick="deleteLead('${lead.id}')">
-            Delete
-          </button>
+            <button
+              type="button"
+              class="primary-btn small-btn"
+              onclick="crmOpenCustomerProfile('${lead.id}')">
+              Profile
+            </button>
+
+            <button
+              type="button"
+              class="secondary-btn small-btn"
+              onclick="editLead('${lead.id}')">
+              Edit
+            </button>
+
+            <button
+              type="button"
+              class="secondary-btn small-btn"
+              onclick="deleteLead('${lead.id}')">
+              Delete
+            </button>
+
+          </div>
 
         </td>
 
@@ -2534,16 +2547,30 @@ async function saveLead() {
 }
 
 
-// ================================
-// EDIT LEAD
-// ================================
+// ============================================================
+// EDIT CUSTOMER
+// ============================================================
+// EDIT SEKARANG FULL PAGE
+// Tidak lagi membuka leadModal.
+// ============================================================
 
 async function editLead(id) {
 
   console.log(
-    "Edit Lead ID:",
+    "Edit Customer ID:",
     id
   );
+
+
+  if (!id) {
+
+    alert(
+      "Customer ID not found."
+    );
+
+    return;
+
+  }
 
 
   let lead =
@@ -2573,12 +2600,12 @@ async function editLead(id) {
     if (error) {
 
       console.error(
-        "Get lead for edit error:",
+        "Get customer for edit error:",
         error
       );
 
       alert(
-        "Failed to get lead:\n" +
+        "Failed to get customer:\n" +
         error.message
       );
 
@@ -2590,7 +2617,7 @@ async function editLead(id) {
     if (!data) {
 
       alert(
-        "Lead not found."
+        "Customer not found."
       );
 
       return;
@@ -2604,113 +2631,341 @@ async function editLead(id) {
   }
 
 
-  setValue(
-    "leadId",
-    lead.id
-  );
+  // Simpan customer aktif
+  window.crmCurrentCustomerId =
+    lead.id;
 
-  setValue(
-    "leadCustomer",
-    lead.customer_name
-  );
+  window.crmCurrentCustomer =
+    lead;
 
-  setValue(
-    "leadPhone",
-    lead.phone
-  );
 
-  setValue(
-    "leadEmail",
-    lead.email
-  );
-
-  setValue(
-    "leadBusiness",
-    lead.business
-  );
-
-  setValue(
-    "leadLocation",
-    lead.location
-  );
-
-  setValue(
-    "leadStatus",
-    normalizeLeadStatus(
-      lead.status
-    )
+  crmRenderCustomerEditPage(
+    lead
   );
 
 
-  setValue(
-    "leadSalesAssign",
-    lead.sales_id || ""
-  );
+  if (
+    typeof window.crmNavigate ===
+    "function"
+  ) {
 
-
-  setValue(
-    "leadFollowUp",
-    lead.follow_up_date
-  );
-
-  setValue(
-    "leadAppointment",
-    lead.appointment
-  );
-
-  setValue(
-    "leadSiteSurvey",
-    lead.site_survey
-  );
-
-  setValue(
-    "leadQuotation",
-    lead.quotation
-  );
-
-  setValue(
-    "leadSPK",
-    lead.spk
-  );
-
-  setValue(
-    "leadClosing",
-    lead.closing
-  );
-
-  setValue(
-    "leadNotes",
-    lead.notes
-  );
-
-
-  setupSalesAssignmentAccess();
-
-
-  const title =
-    document.getElementById(
-      "leadModalTitle"
+    window.crmNavigate(
+      "customerProfile"
     );
 
+  } else {
 
-  if (title) {
-
-    title.textContent =
-      "Edit Lead";
+    crmShowProfilePageFallback();
 
   }
 
+}
 
-  const modal =
+
+// ============================================================
+// SAVE CUSTOMER FROM FULL PAGE EDIT
+// ============================================================
+
+window.crmSaveCustomerEdit =
+  async function () {
+
+    if (!currentProfile) {
+
+      alert(
+        "User profile is not ready."
+      );
+
+      return;
+
+    }
+
+
+    const id =
+      window.crmCurrentCustomerId;
+
+
+    if (!id) {
+
+      alert(
+        "Customer ID not found."
+      );
+
+      return;
+
+    }
+
+
+    const customerName =
+      document.getElementById(
+        "crmEditCustomerName"
+      )?.value
+      .trim() || "";
+
+
+    if (!customerName) {
+
+      alert(
+        "Customer name is required."
+      );
+
+      return;
+
+    }
+
+
+    const payload = {
+
+      customer_name:
+        customerName,
+
+      phone:
+        document.getElementById(
+          "crmEditPhone"
+        )?.value
+        .trim() || "",
+
+      email:
+        document.getElementById(
+          "crmEditEmail"
+        )?.value
+        .trim() || "",
+
+      business:
+        document.getElementById(
+          "crmEditBusiness"
+        )?.value
+        .trim() || "",
+
+      location:
+        document.getElementById(
+          "crmEditLocation"
+        )?.value
+        .trim() || "",
+
+      status:
+        normalizeLeadStatus(
+          document.getElementById(
+            "crmEditStatus"
+          )?.value || "New"
+        ),
+
+      follow_up_date:
+        document.getElementById(
+          "crmEditFollowUp"
+        )?.value ||
+        null,
+
+      appointment:
+        document.getElementById(
+          "crmEditAppointment"
+        )?.value ||
+        null,
+
+      site_survey:
+        document.getElementById(
+          "crmEditSiteSurvey"
+        )?.value ||
+        null,
+
+      quotation:
+        document.getElementById(
+          "crmEditQuotation"
+        )?.value ||
+        null,
+
+      spk:
+        document.getElementById(
+          "crmEditSPK"
+        )?.value ||
+        null,
+
+      closing:
+        document.getElementById(
+          "crmEditClosing"
+        )?.value ||
+        null,
+
+      notes:
+        document.getElementById(
+          "crmEditNotes"
+        )?.value
+        .trim() || "",
+
+      updated_by:
+        currentProfile.id
+
+    };
+
+
+    const selectedSales =
+      document.getElementById(
+        "crmEditSales"
+      )?.value || "";
+
+
+    if (
+      currentProfile.role ===
+      "Admin"
+    ) {
+
+      payload.sales_id =
+        selectedSales ||
+        null;
+
+    } else {
+
+      payload.sales_id =
+        currentProfile.id;
+
+    }
+
+
+    const saveButton =
+      document.getElementById(
+        "crmEditSaveButton"
+      );
+
+
+    try {
+
+      if (saveButton) {
+
+        saveButton.disabled =
+          true;
+
+        saveButton.textContent =
+          "Saving...";
+
+      }
+
+
+      const {
+        data,
+        error
+      } =
+        await supabaseClient
+          .from("leads")
+          .update(
+            payload
+          )
+          .eq(
+            "id",
+            id
+          )
+          .select("*")
+          .single();
+
+
+      if (error) {
+
+        console.error(
+          "Save customer edit error:",
+          error
+        );
+
+        alert(
+          "Failed to update customer:\n" +
+          error.message
+        );
+
+        return;
+
+      }
+
+
+      window.crmCurrentCustomerId =
+        data.id;
+
+      window.crmCurrentCustomer =
+        data;
+
+
+      alert(
+        "Customer updated successfully."
+      );
+
+
+      await loadFilterOptions();
+
+      await loadLeads(
+        currentPage
+      );
+
+      await updateDashboard();
+
+
+      crmRenderCustomerProfile(
+        data
+      );
+
+
+      if (
+        typeof window.crmNavigate ===
+        "function"
+      ) {
+
+        window.crmNavigate(
+          "customerProfile"
+        );
+
+      } else {
+
+        crmShowProfilePageFallback();
+
+      }
+
+
+    } catch (error) {
+
+      console.error(
+        "crmSaveCustomerEdit error:",
+        error
+      );
+
+      alert(
+        "An error occurred:\n" +
+        error.message
+      );
+
+    } finally {
+
+      if (saveButton) {
+
+        saveButton.disabled =
+          false;
+
+        saveButton.textContent =
+          "SAVE CHANGES";
+
+      }
+
+    }
+
+  };
+
+
+// ============================================================
+// RENDER FULL PAGE CUSTOMER EDIT
+// ============================================================
+
+function crmRenderCustomerEditPage(
+  customer
+) {
+
+  const page =
     document.getElementById(
-      "leadModal"
+      "customerProfilePage"
     );
 
 
-  if (!modal) {
+  if (!page) {
+
+    console.error(
+      "customerProfilePage not found."
+    );
 
     alert(
-      "Lead modal not found."
+      "Customer page not found."
     );
 
     return;
@@ -2718,14 +2973,654 @@ async function editLead(id) {
   }
 
 
-  modal.classList.add(
-    "show"
+  const customerName =
+    getValue(
+      customer.customer_name
+    );
+
+
+  const phone =
+    getValue(
+      customer.phone
+    );
+
+
+  const email =
+    getValue(
+      customer.email
+    );
+
+
+  const business =
+    getValue(
+      customer.business
+    );
+
+
+  const location =
+    getValue(
+      customer.location
+    );
+
+
+  const status =
+    normalizeLeadStatus(
+      customer.status
+    );
+
+
+  const salesId =
+    customer.sales_id ||
+    "";
+
+
+  page.innerHTML = `
+
+    <div class="crm-full-edit-page">
+
+      <div class="crm-edit-toolbar">
+
+        <button
+          type="button"
+          class="crm-back-btn"
+          onclick="crmCancelCustomerEdit()">
+          ← Back to Profile
+        </button>
+
+        <div class="crm-edit-toolbar-title">
+
+          <span class="eyebrow">
+            CUSTOMER
+          </span>
+
+          <h2>
+            Edit Customer
+          </h2>
+
+          <p>
+            Update customer information and sales progress.
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <div class="crm-edit-layout">
+
+
+        <!-- =========================
+             BASIC INFORMATION
+        ========================== -->
+
+        <div class="panel crm-edit-card">
+
+          <div class="panel-header">
+
+            <div>
+
+              <div class="eyebrow">
+                CUSTOMER INFORMATION
+              </div>
+
+              <h3 class="panel-title">
+                Basic Information
+              </h3>
+
+            </div>
+
+          </div>
+
+
+          <div class="crm-edit-grid">
+
+
+            <div class="crm-edit-field">
+
+              <label>
+                Customer Name
+              </label>
+
+              <input
+                id="crmEditCustomerName"
+                type="text"
+                value="${escapeHTML(customerName)}"
+                placeholder="Customer name"
+              >
+
+            </div>
+
+
+            <div class="crm-edit-field">
+
+              <label>
+                Phone / WhatsApp
+              </label>
+
+              <input
+                id="crmEditPhone"
+                type="text"
+                value="${escapeHTML(phone)}"
+                placeholder="Phone / WhatsApp"
+              >
+
+            </div>
+
+
+            <div class="crm-edit-field">
+
+              <label>
+                Email
+              </label>
+
+              <input
+                id="crmEditEmail"
+                type="email"
+                value="${escapeHTML(email)}"
+                placeholder="Email"
+              >
+
+            </div>
+
+
+            <div class="crm-edit-field">
+
+              <label>
+                Business
+              </label>
+
+              <input
+                id="crmEditBusiness"
+                type="text"
+                value="${escapeHTML(business)}"
+                placeholder="Business"
+              >
+
+            </div>
+
+
+            <div class="crm-edit-field">
+
+              <label>
+                Location
+              </label>
+
+              <input
+                id="crmEditLocation"
+                type="text"
+                value="${escapeHTML(location)}"
+                placeholder="Location"
+              >
+
+            </div>
+
+
+            <div class="crm-edit-field">
+
+              <label>
+                Status
+              </label>
+
+              <select
+                id="crmEditStatus">
+              </select>
+
+            </div>
+
+
+            <div class="crm-edit-field">
+
+              <label>
+                Sales
+              </label>
+
+              <select
+                id="crmEditSales">
+              </select>
+
+            </div>
+
+
+          </div>
+
+        </div>
+
+
+        <!-- =========================
+             SALES PIPELINE
+        ========================== -->
+
+        <div class="panel crm-edit-card">
+
+          <div class="panel-header">
+
+            <div>
+
+              <div class="eyebrow">
+                SALES PIPELINE
+              </div>
+
+              <h3 class="panel-title">
+                Customer Progress
+              </h3>
+
+            </div>
+
+          </div>
+
+
+          <div class="crm-edit-grid">
+
+
+            <div class="crm-edit-field">
+
+              <label>
+                Follow Up
+              </label>
+
+              <input
+                id="crmEditFollowUp"
+                type="date"
+                value="${escapeHTML(
+                  customer.follow_up_date || ""
+                )}"
+              >
+
+            </div>
+
+
+            <div class="crm-edit-field">
+
+              <label>
+                Appointment
+              </label>
+
+              <input
+                id="crmEditAppointment"
+                type="date"
+                value="${escapeHTML(
+                  customer.appointment || ""
+                )}"
+              >
+
+            </div>
+
+
+            <div class="crm-edit-field">
+
+              <label>
+                Site Survey
+              </label>
+
+              <input
+                id="crmEditSiteSurvey"
+                type="date"
+                value="${escapeHTML(
+                  customer.site_survey || ""
+                )}"
+              >
+
+            </div>
+
+
+            <div class="crm-edit-field">
+
+              <label>
+                Quotation
+              </label>
+
+              <input
+                id="crmEditQuotation"
+                type="date"
+                value="${escapeHTML(
+                  customer.quotation || ""
+                )}"
+              >
+
+            </div>
+
+
+            <div class="crm-edit-field">
+
+              <label>
+                SPK
+              </label>
+
+              <input
+                id="crmEditSPK"
+                type="date"
+                value="${escapeHTML(
+                  customer.spk || ""
+                )}"
+              >
+
+            </div>
+
+
+            <div class="crm-edit-field">
+
+              <label>
+                Closing
+              </label>
+
+              <input
+                id="crmEditClosing"
+                type="date"
+                value="${escapeHTML(
+                  customer.closing || ""
+                )}"
+              >
+
+            </div>
+
+
+          </div>
+
+        </div>
+
+
+        <!-- =========================
+             NOTES
+        ========================== -->
+
+        <div class="panel crm-edit-card">
+
+          <div class="panel-header">
+
+            <div>
+
+              <div class="eyebrow">
+                NOTES
+              </div>
+
+              <h3 class="panel-title">
+                Customer Notes
+              </h3>
+
+            </div>
+
+          </div>
+
+
+          <div class="crm-edit-field">
+
+            <label>
+              Notes
+            </label>
+
+            <textarea
+              id="crmEditNotes"
+              rows="7"
+              placeholder="Customer notes..."
+            >${escapeHTML(
+              customer.notes || ""
+            )}</textarea>
+
+          </div>
+
+        </div>
+
+
+        <!-- =========================
+             ACTIONS
+        ========================== -->
+
+        <div class="crm-edit-actions">
+
+          <button
+            type="button"
+            class="secondary-btn"
+            onclick="crmCancelCustomerEdit()">
+            CANCEL
+          </button>
+
+          <button
+            type="button"
+            id="crmEditSaveButton"
+            class="primary-btn"
+            onclick="crmSaveCustomerEdit()">
+            SAVE CHANGES
+          </button>
+
+        </div>
+
+
+      </div>
+
+    </div>
+
+  `;
+
+
+  crmPopulateEditStatus(
+    status
   );
 
-  modal.style.display =
-    "flex";
+
+  crmPopulateEditSales(
+    salesId
+  );
+
+
+  crmAddEditPageStyles();
 
 }
+
+
+// ============================================================
+// EDIT STATUS DROPDOWN
+// ============================================================
+
+function crmPopulateEditStatus(
+  selectedStatus
+) {
+
+  const select =
+    document.getElementById(
+      "crmEditStatus"
+    );
+
+
+  if (!select)
+    return;
+
+
+  select.innerHTML =
+    "";
+
+
+  LEAD_STATUSES.forEach(
+    status => {
+
+      const option =
+        document.createElement(
+          "option"
+        );
+
+
+      option.value =
+        status;
+
+
+      option.textContent =
+        status;
+
+
+      if (
+        status ===
+        selectedStatus
+      ) {
+
+        option.selected =
+          true;
+
+      }
+
+
+      select.appendChild(
+        option
+      );
+
+    }
+  );
+
+}
+
+
+// ============================================================
+// EDIT SALES DROPDOWN
+// ============================================================
+
+function crmPopulateEditSales(
+  selectedSalesId
+) {
+
+  const select =
+    document.getElementById(
+      "crmEditSales"
+    );
+
+
+  if (!select)
+    return;
+
+
+  select.innerHTML =
+    "";
+
+
+  const selectOption =
+    document.createElement(
+      "option"
+    );
+
+
+  selectOption.value =
+    "";
+
+
+  selectOption.textContent =
+    "Select Sales";
+
+
+  select.appendChild(
+    selectOption
+  );
+
+
+  salesUsersData
+    .filter(
+      sales =>
+        sales.role ===
+        "Sales"
+    )
+    .forEach(
+      sales => {
+
+        const option =
+          document.createElement(
+            "option"
+          );
+
+
+        option.value =
+          sales.id;
+
+
+        option.textContent =
+          sales.name ||
+          sales.username ||
+          "Sales";
+
+
+        if (
+          String(sales.id) ===
+          String(selectedSalesId)
+        ) {
+
+          option.selected =
+            true;
+
+        }
+
+
+        select.appendChild(
+          option
+        );
+
+      }
+    );
+
+
+  if (
+    currentProfile &&
+    currentProfile.role !==
+      "Admin"
+  ) {
+
+    select.value =
+      currentProfile.id;
+
+    select.disabled =
+      true;
+
+  }
+
+}
+
+
+// ============================================================
+// CANCEL EDIT
+// ============================================================
+
+window.crmCancelCustomerEdit =
+  function () {
+
+    const customer =
+      window.crmCurrentCustomer;
+
+
+    if (
+      customer &&
+      customer.id
+    ) {
+
+      crmRenderCustomerProfile(
+        customer
+      );
+
+      if (
+        typeof window.crmNavigate ===
+        "function"
+      ) {
+
+        window.crmNavigate(
+          "customerProfile"
+        );
+
+      } else {
+
+        crmShowProfilePageFallback();
+
+      }
+
+      return;
+
+    }
+
+
+    if (
+      typeof window.crmNavigate ===
+      "function"
+    ) {
+
+      window.crmNavigate(
+        "leads"
+      );
+
+    }
+
+  };
 
 
 // ================================
@@ -2770,6 +3665,24 @@ async function deleteLead(id) {
       );
 
       return;
+
+    }
+
+
+    // Jika customer yang dihapus
+    // sedang terbuka di profile
+    if (
+      String(
+        window.crmCurrentCustomerId
+      ) ===
+      String(id)
+    ) {
+
+      window.crmCurrentCustomerId =
+        null;
+
+      window.crmCurrentCustomer =
+        null;
 
     }
 
@@ -3702,456 +4615,8 @@ function normalizePhone(
 }
 
 
-// ================================
-// MODAL EVENTS
-// ================================
-
-function setupModalEvents() {
-
-  const leadModal =
-    document.getElementById(
-      "leadModal"
-    );
-
-  const salesModal =
-    document.getElementById(
-      "salesModal"
-    );
-
-
-  if (leadModal) {
-
-    leadModal.addEventListener(
-      "click",
-      function(event) {
-
-        if (
-          event.target ===
-          leadModal
-        ) {
-
-          closeLeadModal();
-
-        }
-
-      }
-    );
-
-  }
-
-
-  if (salesModal) {
-
-    salesModal.addEventListener(
-      "click",
-      function(event) {
-
-        if (
-          event.target ===
-          salesModal
-        ) {
-
-          closeSalesModal();
-
-        }
-
-      }
-    );
-
-  }
-
-}
-
-
-// ================================
-// LOGOUT
-// ================================
-
-async function logout() {
-
-  try {
-
-    await supabaseClient.auth.signOut();
-
-  } catch (error) {
-
-    console.error(
-      error
-    );
-
-  }
-
-
-  currentUser =
-    null;
-
-  currentProfile =
-    null;
-
-  leadsData =
-    [];
-
-  salesUsersData =
-    [];
-
-
-  currentPage =
-    1;
-
-  totalLeadsCount =
-    0;
-
-
-  showLogin();
-
-}
-
-
-// ================================
-// HELPER FUNCTIONS
-// ================================
-
-function formatDate(
-  date
-) {
-
-  if (!date)
-    return "-";
-
-
-  try {
-
-    const d =
-      new Date(
-        date +
-        "T00:00:00"
-      );
-
-
-    if (
-      isNaN(
-        d.getTime()
-      )
-    ) {
-
-      return date;
-
-    }
-
-
-    return d.toLocaleDateString(
-      "en-US",
-      {
-        day:
-          "2-digit",
-        month:
-          "2-digit",
-        year:
-          "numeric"
-      }
-    );
-
-
-  } catch {
-
-    return date;
-
-  }
-
-}
-
-
-function formatDateTime(
-  date
-) {
-
-  if (!date)
-    return "-";
-
-
-  try {
-
-    const d =
-      new Date(
-        date
-      );
-
-
-    if (
-      isNaN(
-        d.getTime()
-      )
-    ) {
-
-      return date;
-
-    }
-
-
-    return d.toLocaleDateString(
-      "en-US",
-      {
-        day:
-          "2-digit",
-        month:
-          "2-digit",
-        year:
-          "numeric"
-      }
-    );
-
-
-  } catch {
-
-    return date;
-
-  }
-
-}
-
-
-function statusClass(
-  status
-) {
-
-  if (!status)
-    return "";
-
-
-  return (
-    "status-" +
-    String(status)
-      .toLowerCase()
-      .replace(
-        /\s+/g,
-        "-"
-      )
-  );
-
-}
-
-
-function escapeHTML(
-  value
-) {
-
-  if (
-    value === null ||
-    value === undefined
-  ) {
-
-    return "";
-
-  }
-
-
-  return String(value)
-    .replace(
-      /&/g,
-      "&amp;"
-    )
-    .replace(
-      /</g,
-      "&lt;"
-    )
-    .replace(
-      />/g,
-      "&gt;"
-    )
-    .replace(
-      /"/g,
-      "&quot;"
-    )
-    .replace(
-      /'/g,
-      "&#039;"
-    );
-
-}
-
-
-function getValue(
-  value
-) {
-
-  if (
-    value === null ||
-    value === undefined ||
-    value === ""
-  ) {
-
-    return "";
-
-  }
-
-
-  return String(value);
-
-}
-
-
-function setValue(
-  id,
-  value
-) {
-
-  const element =
-    document.getElementById(
-      id
-    );
-
-
-  if (!element)
-    return;
-
-
-  element.value =
-    value === null ||
-    value === undefined
-      ? ""
-      : value;
-
-}
-
-
-function setText(
-  id,
-  value
-) {
-
-  const element =
-    document.getElementById(
-      id
-    );
-
-
-  if (!element)
-    return;
-
-
-  element.textContent =
-    value;
-
-}
-
-
-// ================================
-// TOP NAV SALES FILTER
-// ================================
-
-function applyTopSalesFilter(
-  salesId
-) {
-
-  const salesFilter =
-    document.getElementById(
-      "salesFilter"
-    );
-
-
-  if (salesFilter) {
-
-    salesFilter.value =
-      salesId || "";
-
-  }
-
-
-  showLeads();
-
-}
-
-
-// ================================
-// UPDATE TOP NAV SALES BUTTON
-// ================================
-
-function updateSalesDropdownButton(
-  salesName
-) {
-
-  const button =
-    document.getElementById(
-      "salesDropdownBtn"
-    );
-
-
-  if (!button)
-    return;
-
-
-  const text =
-    button.querySelector(
-      "span"
-    );
-
-
-  if (text) {
-
-    text.textContent =
-      salesName || "Sales";
-
-  }
-
-}
-
-
-// ================================
-// SUPABASE AUTH STATE
-// ================================
-
-supabaseClient.auth.onAuthStateChange(
-  async (
-    event,
-    session
-  ) => {
-
-    console.log(
-      "Auth event:",
-      event
-    );
-
-
-    if (
-      session &&
-      !currentProfile
-    ) {
-
-      currentUser =
-        session.user;
-
-
-      setTimeout(
-        async () => {
-
-          await loadProfile();
-
-        },
-        100
-      );
-
-    }
-
-
-    if (!session) {
-
-      currentUser =
-        null;
-
-      currentProfile =
-        null;
-
-      showLogin();
-
-    }
-
-  }
-);
 // ============================================================
-// CRM FSI - CUSTOMER PROFILE MODULE
-// ============================================================
-// ADD THIS ENTIRE BLOCK AT THE VERY BOTTOM OF script.js
-// DO NOT DELETE OR CHANGE EXISTING CODE ABOVE
+// CUSTOMER PROFILE MODULE
 // ============================================================
 
 (function () {
@@ -4171,113 +4636,114 @@ supabaseClient.auth.onAuthStateChange(
   // OPEN CUSTOMER PROFILE
   // ==========================================================
 
-  window.crmOpenCustomerProfile = async function (id) {
+  window.crmOpenCustomerProfile =
+    async function (id) {
 
-    if (!id) {
+      if (!id) {
 
-      alert("Customer ID not found.");
+        alert(
+          "Customer ID not found."
+        );
 
-      return;
+        return;
 
-    }
-
-
-    try {
-
-      const {
-        data,
-        error
-      } = await supabaseClient
-        .from("leads")
-        .select("*")
-        .eq("id", id)
-        .single();
+      }
 
 
-      if (error) {
+      try {
+
+        const {
+          data,
+          error
+        } =
+          await supabaseClient
+            .from("leads")
+            .select("*")
+            .eq(
+              "id",
+              id
+            )
+            .single();
+
+
+        if (error) {
+
+          console.error(
+            "Customer Profile Error:",
+            error
+          );
+
+          alert(
+            "Failed to load customer:\n" +
+            error.message
+          );
+
+          return;
+
+        }
+
+
+        if (!data) {
+
+          alert(
+            "Customer not found."
+          );
+
+          return;
+
+        }
+
+
+        window.crmCurrentCustomerId =
+          data.id;
+
+        window.crmCurrentCustomer =
+          data;
+
+
+        crmRenderCustomerProfile(
+          data
+        );
+
+
+        if (
+          typeof window.crmNavigate ===
+          "function"
+        ) {
+
+          window.crmNavigate(
+            "customerProfile"
+          );
+
+        } else {
+
+          crmShowProfilePageFallback();
+
+        }
+
+
+      } catch (error) {
 
         console.error(
-          "Customer Profile Error:",
+          "crmOpenCustomerProfile error:",
           error
         );
 
         alert(
-          "Failed to load customer:\n" +
+          "An error occurred:\n" +
           error.message
         );
 
-        return;
-
       }
 
-
-      if (!data) {
-
-        alert(
-          "Customer not found."
-        );
-
-        return;
-
-      }
-
-
-      // Save selected customer
-
-      window.crmCurrentCustomerId =
-        data.id;
-
-      window.crmCurrentCustomer =
-        data;
-
-
-      // Render customer profile
-
-      crmRenderCustomerProfile(
-        data
-      );
-
-
-      // Open profile page
-
-      if (
-        typeof window.crmNavigate ===
-        "function"
-      ) {
-
-        window.crmNavigate(
-          "customerProfile"
-        );
-
-      } else {
-
-        crmShowProfilePage();
-
-      }
-
-
-    } catch (error) {
-
-      console.error(
-        "crmOpenCustomerProfile error:",
-        error
-      );
-
-      alert(
-        "An error occurred:\n" +
-        error.message
-      );
-
-    }
-
-  };
+    };
 
 
   // ==========================================================
-  // SHOW PROFILE PAGE
+  // SHOW PROFILE PAGE FALLBACK
   // ==========================================================
 
-  function crmShowProfilePage() {
+  function crmShowProfilePageFallback() {
 
     const pages = [
 
@@ -4314,7 +4780,10 @@ supabaseClient.auth.onAuthStateChange(
         if (page) {
 
           page.style.display =
-            "none";
+            id ===
+            "customerProfilePage"
+              ? "block"
+              : "none";
 
         }
 
@@ -4322,32 +4791,9 @@ supabaseClient.auth.onAuthStateChange(
     );
 
 
-    const profilePage =
-      document.getElementById(
-        "customerProfilePage"
-      );
-
-
-    if (profilePage) {
-
-      profilePage.style.display =
-        "block";
-
-    }
-
-
-    const title =
-      document.getElementById(
-        "pageTitle"
-      );
-
-
-    if (title) {
-
-      title.textContent =
-        "Customer Profile";
-
-    }
+    setPageTitle(
+      "Customer Profile"
+    );
 
   }
 
@@ -4427,10 +4873,6 @@ supabaseClient.auth.onAuthStateChange(
 
 
     page.innerHTML = `
-
-      <!-- =====================================================
-           PROFILE TOOLBAR
-      ====================================================== -->
 
       <div class="crm-page-toolbar">
 
@@ -5152,7 +5594,7 @@ supabaseClient.auth.onAuthStateChange(
 
 
   // ==========================================================
-  // EDIT CUSTOMER
+  // PROFILE EDIT
   // ==========================================================
 
   window.crmProfileEdit =
@@ -5173,22 +5615,9 @@ supabaseClient.auth.onAuthStateChange(
       }
 
 
-      if (
-        typeof window.editLead ===
-        "function"
-      ) {
-
-        window.editLead(
-          id
-        );
-
-      } else {
-
-        alert(
-          "Edit function is not available."
-        );
-
-      }
+      editLead(
+        id
+      );
 
     };
 
@@ -5313,7 +5742,7 @@ supabaseClient.auth.onAuthStateChange(
 
       } else {
 
-        crmShowPage(
+        crmShowSimplePage(
           "appointmentPage"
         );
 
@@ -5323,10 +5752,10 @@ supabaseClient.auth.onAuthStateChange(
 
 
   // ==========================================================
-  // SIMPLE PAGE NAVIGATION FALLBACK
+  // SIMPLE PAGE FALLBACK
   // ==========================================================
 
-  function crmShowPage(
+  function crmShowSimplePage(
     pageId
   ) {
 
@@ -5405,6 +5834,30 @@ supabaseClient.auth.onAuthStateChange(
 
 
     style.textContent = `
+
+
+      .crm-lead-actions {
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        gap: 6px;
+
+        flex-wrap: wrap;
+
+      }
+
+
+      .crm-lead-actions .small-btn {
+
+        margin: 0;
+
+        white-space: nowrap;
+
+      }
 
 
       .crm-profile-header {
@@ -5893,6 +6346,255 @@ supabaseClient.auth.onAuthStateChange(
       }
 
 
+      /* ======================================================
+         FULL PAGE EDIT CUSTOMER
+      ====================================================== */
+
+
+      .crm-full-edit-page {
+
+        width:
+          100%;
+
+        max-width:
+          1200px;
+
+        margin:
+          0 auto;
+
+      }
+
+
+      .crm-edit-toolbar {
+
+        display:
+          flex;
+
+        align-items:
+          flex-start;
+
+        justify-content:
+          space-between;
+
+        gap:
+          20px;
+
+        margin-bottom:
+          22px;
+
+        padding:
+          4px 0;
+
+      }
+
+
+      .crm-edit-toolbar-title {
+
+        flex:
+          1;
+
+        text-align:
+          right;
+
+      }
+
+
+      .crm-edit-toolbar-title h2 {
+
+        margin:
+          2px 0 4px;
+
+        font-size:
+          26px;
+
+        font-weight:
+          800;
+
+        color:
+          #0f172a;
+
+      }
+
+
+      .crm-edit-toolbar-title p {
+
+        margin:
+          0;
+
+        color:
+          #64748b;
+
+        font-size:
+          13px;
+
+      }
+
+
+      .crm-edit-layout {
+
+        display:
+          flex;
+
+        flex-direction:
+          column;
+
+        gap:
+          20px;
+
+      }
+
+
+      .crm-edit-card {
+
+        margin:
+          0 !important;
+
+      }
+
+
+      .crm-edit-grid {
+
+        display:
+          grid;
+
+        grid-template-columns:
+          repeat(
+            2,
+            minmax(
+              0,
+              1fr
+            )
+          );
+
+        gap:
+          18px;
+
+      }
+
+
+      .crm-edit-field {
+
+        display:
+          flex;
+
+        flex-direction:
+          column;
+
+        gap:
+          7px;
+
+      }
+
+
+      .crm-edit-field label {
+
+        font-size:
+          12px;
+
+        font-weight:
+          700;
+
+        color:
+          #475569;
+
+      }
+
+
+      .crm-edit-field input,
+
+      .crm-edit-field select,
+
+      .crm-edit-field textarea {
+
+        width:
+          100%;
+
+        box-sizing:
+          border-box;
+
+        border:
+          1px solid
+          #dbe2ea;
+
+        border-radius:
+          12px;
+
+        background:
+          #ffffff;
+
+        color:
+          #0f172a;
+
+        padding:
+          12px 13px;
+
+        font:
+          inherit;
+
+        outline:
+          none;
+
+        transition:
+          .2s ease;
+
+      }
+
+
+      .crm-edit-field input:focus,
+
+      .crm-edit-field select:focus,
+
+      .crm-edit-field textarea:focus {
+
+        border-color:
+          #94a3b8;
+
+        box-shadow:
+          0 0 0 3px
+          rgba(
+            148,
+            163,
+            184,
+            .15
+          );
+
+      }
+
+
+      .crm-edit-field textarea {
+
+        resize:
+          vertical;
+
+        min-height:
+          150px;
+
+        line-height:
+          1.6;
+
+      }
+
+
+      .crm-edit-actions {
+
+        display:
+          flex;
+
+        justify-content:
+          flex-end;
+
+        align-items:
+          center;
+
+        gap:
+          10px;
+
+        padding:
+          4px 0 30px;
+
+      }
+
+
       @media (max-width: 800px) {
 
         .crm-profile-header {
@@ -5932,6 +6634,75 @@ supabaseClient.auth.onAuthStateChange(
 
         }
 
+
+        .crm-edit-grid {
+
+          grid-template-columns:
+            1fr;
+
+        }
+
+
+        .crm-edit-toolbar {
+
+          flex-direction:
+            column;
+
+        }
+
+
+        .crm-edit-toolbar-title {
+
+          text-align:
+            left;
+
+          width:
+            100%;
+
+        }
+
+      }
+
+
+      @media (max-width: 600px) {
+
+        .crm-lead-actions {
+
+          flex-direction:
+            column;
+
+          align-items:
+            stretch;
+
+        }
+
+
+        .crm-lead-actions .small-btn {
+
+          width:
+            100%;
+
+        }
+
+
+        .crm-edit-actions {
+
+          flex-direction:
+            column-reverse;
+
+          align-items:
+            stretch;
+
+        }
+
+
+        .crm-edit-actions button {
+
+          width:
+            100%;
+
+        }
+
       }
 
 
@@ -5968,6 +6739,14 @@ supabaseClient.auth.onAuthStateChange(
 
         }
 
+
+        .crm-edit-toolbar-title h2 {
+
+          font-size:
+            22px;
+
+        }
+
       }
 
     `;
@@ -5980,4 +6759,580 @@ supabaseClient.auth.onAuthStateChange(
   }
 
 
+  // ==========================================================
+  // EDIT PAGE CSS
+  // ==========================================================
+
+  function crmAddEditPageStyles() {
+
+    if (
+      document.getElementById(
+        "crmEditPageStyles"
+      )
+    ) {
+
+      return;
+
+    }
+
+
+    const style =
+      document.createElement(
+        "style"
+      );
+
+
+    style.id =
+      "crmEditPageStyles";
+
+
+    style.textContent = `
+
+      .crm-full-edit-page {
+
+        animation:
+          crmEditPageIn
+          .18s
+          ease-out;
+
+      }
+
+
+      @keyframes crmEditPageIn {
+
+        from {
+
+          opacity:
+            0;
+
+          transform:
+            translateY(
+              6px
+            );
+
+        }
+
+        to {
+
+          opacity:
+            1;
+
+          transform:
+            translateY(
+              0
+            );
+
+        }
+
+      }
+
+    `;
+
+
+    document.head.appendChild(
+      style
+    );
+
+  }
+
+
+  // ==========================================================
+  // MAKE GLOBAL PROFILE FUNCTIONS AVAILABLE
+  // ==========================================================
+
+  window.crmRenderCustomerProfile =
+    crmRenderCustomerProfile;
+
+  window.crmShowProfilePageFallback =
+    crmShowProfilePageFallback;
+
 })();
+
+
+// ============================================================
+// MODAL EVENTS
+// ============================================================
+
+function setupModalEvents() {
+
+  const leadModal =
+    document.getElementById(
+      "leadModal"
+    );
+
+  const salesModal =
+    document.getElementById(
+      "salesModal"
+    );
+
+
+  if (leadModal) {
+
+    leadModal.addEventListener(
+      "click",
+      function(event) {
+
+        if (
+          event.target ===
+          leadModal
+        ) {
+
+          closeLeadModal();
+
+        }
+
+      }
+    );
+
+  }
+
+
+  if (salesModal) {
+
+    salesModal.addEventListener(
+      "click",
+      function(event) {
+
+        if (
+          event.target ===
+          salesModal
+        ) {
+
+          closeSalesModal();
+
+        }
+
+      }
+    );
+
+  }
+
+}
+
+
+// ================================
+// LOGOUT
+// ================================
+
+async function logout() {
+
+  try {
+
+    await supabaseClient.auth.signOut();
+
+  } catch (error) {
+
+    console.error(
+      error
+    );
+
+  }
+
+
+  currentUser =
+    null;
+
+  currentProfile =
+    null;
+
+  leadsData =
+    [];
+
+  salesUsersData =
+    [];
+
+
+  currentPage =
+    1;
+
+  totalLeadsCount =
+    0;
+
+
+  window.crmCurrentCustomerId =
+    null;
+
+  window.crmCurrentCustomer =
+    null;
+
+
+  showLogin();
+
+}
+
+
+// ================================
+// HELPER FUNCTIONS
+// ================================
+
+function formatDate(
+  date
+) {
+
+  if (!date)
+    return "-";
+
+
+  try {
+
+    const d =
+      new Date(
+        date +
+        "T00:00:00"
+      );
+
+
+    if (
+      isNaN(
+        d.getTime()
+      )
+    ) {
+
+      return date;
+
+    }
+
+
+    return d.toLocaleDateString(
+      "en-US",
+      {
+        day:
+          "2-digit",
+        month:
+          "2-digit",
+        year:
+          "numeric"
+      }
+    );
+
+
+  } catch {
+
+    return date;
+
+  }
+
+}
+
+
+function formatDateTime(
+  date
+) {
+
+  if (!date)
+    return "-";
+
+
+  try {
+
+    const d =
+      new Date(
+        date
+      );
+
+
+    if (
+      isNaN(
+        d.getTime()
+      )
+    ) {
+
+      return date;
+
+    }
+
+
+    return d.toLocaleDateString(
+      "en-US",
+      {
+        day:
+          "2-digit",
+        month:
+          "2-digit",
+        year:
+          "numeric"
+      }
+    );
+
+
+  } catch {
+
+    return date;
+
+  }
+
+}
+
+
+function statusClass(
+  status
+) {
+
+  if (!status)
+    return "";
+
+
+  return (
+    "status-" +
+    String(status)
+      .toLowerCase()
+      .replace(
+        /\s+/g,
+        "-"
+      )
+  );
+
+}
+
+
+function escapeHTML(
+  value
+) {
+
+  if (
+    value === null ||
+    value === undefined
+  ) {
+
+    return "";
+
+  }
+
+
+  return String(value)
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+    .replace(
+      /</g,
+      "&lt;"
+    )
+    .replace(
+      />/g,
+      "&gt;"
+    )
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+    .replace(
+      /'/g,
+      "&#039;"
+    );
+
+}
+
+
+function getValue(
+  value
+) {
+
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+
+    return "";
+
+  }
+
+
+  return String(value);
+
+}
+
+
+function setValue(
+  id,
+  value
+) {
+
+  const element =
+    document.getElementById(
+      id
+    );
+
+
+  if (!element)
+    return;
+
+
+  element.value =
+    value === null ||
+    value === undefined
+      ? ""
+      : value;
+
+}
+
+
+function setText(
+  id,
+  value
+) {
+
+  const element =
+    document.getElementById(
+      id
+    );
+
+
+  if (!element)
+    return;
+
+
+  element.textContent =
+    value;
+
+}
+
+
+// ================================
+// TOP NAV SALES FILTER
+// ================================
+
+function applyTopSalesFilter(
+  salesId
+) {
+
+  const salesFilter =
+    document.getElementById(
+      "salesFilter"
+    );
+
+
+  if (salesFilter) {
+
+    salesFilter.value =
+      salesId || "";
+
+  }
+
+
+  showLeads();
+
+}
+
+
+// ================================
+// UPDATE TOP NAV SALES BUTTON
+// ================================
+
+function updateSalesDropdownButton(
+  salesName
+) {
+
+  const button =
+    document.getElementById(
+      "salesDropdownBtn"
+    );
+
+
+  if (!button)
+    return;
+
+
+  const text =
+    button.querySelector(
+      "span"
+    );
+
+
+  if (text) {
+
+    text.textContent =
+      salesName || "Sales";
+
+  }
+
+}
+
+
+// ================================
+// SUPABASE AUTH STATE
+// ================================
+
+supabaseClient.auth.onAuthStateChange(
+  async (
+    event,
+    session
+  ) => {
+
+    console.log(
+      "Auth event:",
+      event
+    );
+
+
+    if (
+      session &&
+      !currentProfile
+    ) {
+
+      currentUser =
+        session.user;
+
+
+      setTimeout(
+        async () => {
+
+          await loadProfile();
+
+        },
+        100
+      );
+
+    }
+
+
+    if (!session) {
+
+      currentUser =
+        null;
+
+      currentProfile =
+        null;
+
+      window.crmCurrentCustomerId =
+        null;
+
+      window.crmCurrentCustomer =
+        null;
+
+      showLogin();
+
+    }
+
+  }
+);
+
+
+// ============================================================
+// GLOBAL COMPATIBILITY
+// ============================================================
+// Supaya tombol dari index.html tetap bisa memanggil
+// fungsi Customer Profile dari script.js.
+// ============================================================
+
+window.openCustomerProfile =
+  window.crmOpenCustomerProfile;
+
+window.crmProfileEdit =
+  window.crmProfileEdit;
+
+window.crmProfileWhatsApp =
+  window.crmProfileWhatsApp;
+
+window.crmProfileEmail =
+  window.crmProfileEmail;
+
+window.crmProfileAppointment =
+  window.crmProfileAppointment;
+
+window.crmSaveCustomerEdit =
+  window.crmSaveCustomerEdit;
+
+window.crmCancelCustomerEdit =
+  window.crmCancelCustomerEdit;
