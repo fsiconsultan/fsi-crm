@@ -1,760 +1,807 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <meta
-    name="description"
-    content="FSI CRM - French Solar Industry"
-  >
+/* =========================================================
+   CRM FSI - DASHBOARD MODULE
+========================================================= */
 
-  <meta
-    name="theme-color"
-    content="#0b63ce"
-  >
+let dashboardInitialized = false;
 
-  <title>Dashboard | FSI CRM</title>
 
-  <!-- Google Font -->
-  <link
-    rel="preconnect"
-    href="https://fonts.googleapis.com"
-  >
+/* =========================================================
+   INITIALIZE
+========================================================= */
 
-  <link
-    rel="preconnect"
-    href="https://fonts.gstatic.com"
-    crossorigin
-  >
+async function initializeDashboard(){
 
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-    rel="stylesheet"
-  >
+    if(dashboardInitialized){
+        return;
+    }
 
-  <!-- Font Awesome -->
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-  >
+    dashboardInitialized = true;
 
-  <!-- CRM CSS -->
-  <link
-    rel="stylesheet"
-    href="../css/style.css"
-  >
+    bindDashboardEvents();
 
-  <link
-    rel="stylesheet"
-    href="../css/dashboard.css"
-  >
+    await loadDashboardData();
 
-  <link
-    rel="stylesheet"
-    href="../css/profile.css"
-  >
+}
 
-</head>
 
-<body>
+/* =========================================================
+   EVENTS
+========================================================= */
 
-<div id="app" class="app">
+function bindDashboardEvents(){
 
-  <!-- =====================================
-       MAIN CONTENT
-  ====================================== -->
+    /* =====================================================
+       ADD CUSTOMER
+    ===================================================== */
 
-  <main class="main-content">
+    const addCustomerBtn =
+        document.getElementById(
+            "addCustomerBtn"
+        );
 
-    <!-- =====================================
-         TOP HEADER
-    ====================================== -->
+    if(addCustomerBtn){
 
-    <header class="top-header">
+        addCustomerBtn.addEventListener(
+            "click",
+            function(){
 
-      <!-- LEFT -->
-      <div class="header-left">
+                window.location.href =
+                    "customer-form.html?new=1";
 
-        <div class="brand-area">
+            }
+        );
 
-          <a
-            href="dashboard.html"
-            class="brand-logo"
-          >
-            <img
-              src="../assets/logo-fsi.png"
-              alt="FSI CRM"
-            >
-          </a>
+    }
 
-          <div class="brand-text">
 
-            <strong>
-              FSI CRM
-            </strong>
+    /* =====================================================
+       REFRESH DASHBOARD
+    ===================================================== */
 
-            <span>
-              French Solar Industry
-            </span>
+    const refreshDashboardBtn =
+        document.getElementById(
+            "refreshDashboardBtn"
+        );
 
-          </div>
+    if(refreshDashboardBtn){
 
-        </div>
+        refreshDashboardBtn.addEventListener(
+            "click",
+            async function(){
 
-        <div class="page-heading">
+                await loadDashboardData();
 
-          <h1 id="pageTitle">
-            Dashboard
-          </h1>
+            }
+        );
 
-          <p id="pageSubtitle">
-            CRM French Solar Industry
-          </p>
+    }
 
-        </div>
+}
 
-      </div>
 
+/* =========================================================
+   LOAD DASHBOARD DATA
+========================================================= */
 
-      <!-- RIGHT -->
-      <div class="header-right">
+async function loadDashboardData(){
 
-        <!-- TOP NAVIGATION -->
+    try{
 
-        <nav class="top-navigation">
+        const {
+            data,
+            error
+        } =
+            await supabaseClient
+                .from(
+                    CRM_CONFIG.leadTable
+                )
+                .select(
+                    `
+                    id,
+                    customer_name,
+                    phone,
+                    business,
+                    location,
+                    status,
+                    follow_up_date,
+                    appointment,
+                    site_survey,
+                    quotation,
+                    spk,
+                    closing,
+                    notes,
+                    created_at,
+                    sales_id,
+                    created_by,
+                    updated_by
+                    `
+                );
 
-          <a
-            class="top-nav-item active"
-            href="dashboard.html"
-          >
-            <i class="fa-solid fa-chart-pie"></i>
-            <span>Dashboard</span>
-          </a>
 
-          <a
-            class="top-nav-item"
-            href="leads.html"
-          >
-            <i class="fa-solid fa-users"></i>
-            <span>Leads</span>
-          </a>
+        if(error){
 
-          <a
-            class="top-nav-item admin-only"
-            href="sales.html"
-          >
-            <i class="fa-solid fa-user-tie"></i>
-            <span>Manage Sales</span>
-          </a>
+            console.error(
+                "Dashboard data error:",
+                error
+            );
 
-        </nav>
+            throw error;
 
+        }
 
-        <!-- GLOBAL SEARCH -->
 
-        <div class="global-search">
+        const leads =
+            Array.isArray(data)
+                ? data
+                : [];
 
-          <i class="fa-solid fa-magnifying-glass"></i>
 
-          <input
-            id="globalSearch"
-            type="search"
-            placeholder="Cari leads, pelanggan, atau nama..."
-            autocomplete="off"
-          >
+        renderDashboardStatistics(
+            leads
+        );
 
-        </div>
 
+        renderDashboardNextStep(
+            leads
+        );
 
-        <!-- NOTIFICATION -->
+    }
+    catch(error){
 
-        <button
-          class="header-icon-btn"
-          type="button"
-          title="Notifications"
-        >
+        console.error(
+            "Load dashboard error:",
+            error
+        );
 
-          <i class="fa-regular fa-bell"></i>
+    }
 
-        </button>
+}
 
 
-        <!-- USER MENU -->
+/* =========================================================
+   DASHBOARD STATISTICS
+========================================================= */
 
-        <div class="user-menu-wrapper">
+function renderDashboardStatistics(
+    leads
+){
 
-          <button
-            id="userMenu"
-            class="user-menu"
-            type="button"
-          >
+    const total =
+        leads.length;
 
-            <span
-              id="userAvatarInitial"
-              class="user-avatar"
-            >
-              F
-            </span>
 
-            <span
-              id="userInfo"
-              class="user-info"
-            >
+    const newCount =
+        countDashboardStatus(
+            leads,
+            "New"
+        );
 
-              <strong>
-                User
-              </strong>
 
-              <small>
-                Sales
-              </small>
+    const interestedCount =
+        countDashboardStatus(
+            leads,
+            "Interested"
+        );
+
+
+    const followUpCount =
+        countDashboardStatus(
+            leads,
+            "Follow Up"
+        );
 
-            </span>
 
-            <i class="fa-solid fa-chevron-down"></i>
+    const closingCount =
+        countDashboardStatus(
+            leads,
+            "Closing"
+        );
+
+
+    const appointmentCount =
+        leads.filter(
+            lead =>
+                Boolean(
+                    lead.appointment
+                )
+        ).length;
+
+
+    const siteSurveyCount =
+        leads.filter(
+            lead =>
+                Boolean(
+                    lead.site_survey
+                )
+        ).length;
+
+
+    const quotationCount =
+        leads.filter(
+            lead =>
+                Boolean(
+                    lead.quotation
+                )
+        ).length;
+
+
+    /* =====================================================
+       TOTAL
+    ===================================================== */
+
+    setDashboardValue(
+        [
+            "totalLeads",
+            "totalCustomers",
+            "totalCustomer",
+            "dashboardTotal",
+            "kpiTotalLeads"
+        ],
+        total
+    );
+
+
+    /* =====================================================
+       NEW
+    ===================================================== */
+
+    setDashboardValue(
+        [
+            "newLeads",
+            "newCount",
+            "dashboardNew"
+        ],
+        newCount
+    );
+
+
+    /* =====================================================
+       INTERESTED
+    ===================================================== */
+
+    setDashboardValue(
+        [
+            "interestedLeads",
+            "interestedCount",
+            "dashboardInterested"
+        ],
+        interestedCount
+    );
+
+
+    /* =====================================================
+       FOLLOW UP
+    ===================================================== */
+
+    setDashboardValue(
+        [
+            "followUpLeads",
+            "followUpCount",
+            "dashboardFollowUp",
+            "kpiFollowUp"
+        ],
+        followUpCount
+    );
 
-          </button>
 
+    /* =====================================================
+       APPOINTMENT
+    ===================================================== */
 
-          <!-- USER DROPDOWN -->
+    setDashboardValue(
+        [
+            "appointmentLeads",
+            "appointmentCount",
+            "dashboardAppointment",
+            "kpiAppointment"
+        ],
+        appointmentCount
+    );
 
-          <div
-            id="userDropdown"
-            class="user-dropdown"
-            style="display:none"
-          >
 
-            <button
-              type="button"
-              onclick="openProfileModal()"
-            >
+    /* =====================================================
+       SITE SURVEY
+    ===================================================== */
 
-              <i class="fa-solid fa-user"></i>
+    setDashboardValue(
+        [
+            "siteSurveyLeads",
+            "siteSurveyCount",
+            "dashboardSiteSurvey"
+        ],
+        siteSurveyCount
+    );
+
+
+    /* =====================================================
+       QUOTATION
+    ===================================================== */
 
-              <span>
-                Profile
-              </span>
+    setDashboardValue(
+        [
+            "quotationLeads",
+            "quotationCount",
+            "dashboardQuotation"
+        ],
+        quotationCount
+    );
 
-            </button>
 
+    /* =====================================================
+       CLOSING
+    ===================================================== */
 
-            <div class="dropdown-divider"></div>
+    setDashboardValue(
+        [
+            "closingLeads",
+            "closingCount",
+            "dashboardClosing",
+            "kpiClosing"
+        ],
+        closingCount
+    );
 
+}
 
-            <button
-              id="dropdownLogout"
-              class="danger"
-              type="button"
-            >
 
-              <i class="fa-solid fa-right-from-bracket"></i>
+/* =========================================================
+   SET DASHBOARD VALUE
+========================================================= */
 
-              <span>
-                Logout
-              </span>
+function setDashboardValue(
+    ids,
+    value
+){
 
-            </button>
+    if(!Array.isArray(ids)){
+        return;
+    }
 
-          </div>
 
-        </div>
+    ids.forEach(
+        id => {
 
-      </div>
+            const element =
+                document.getElementById(
+                    id
+                );
 
-    </header>
 
+            if(element){
 
-    <!-- =====================================
-         PAGE CONTENT
-    ====================================== -->
+                element.textContent =
+                    Number(
+                        value || 0
+                    ).toLocaleString(
+                        "id-ID"
+                    );
 
-    <section class="page-content">
+            }
 
-      <section
-        id="dashboardPage"
-        class="page"
-      >
+        }
+    );
 
-        <!-- PAGE HEADER -->
+}
 
-        <div class="section-header">
 
-          <div>
+/* =========================================================
+   COUNT STATUS
+========================================================= */
 
-            <h2>
-              Dashboard Overview
-            </h2>
+function countDashboardStatus(
+    leads,
+    targetStatus
+){
 
-            <p>
-              Selamat datang kembali. Berikut ringkasan aktivitas CRM Anda.
-            </p>
+    if(!Array.isArray(leads)){
+        return 0;
+    }
 
-          </div>
 
+    return leads.filter(
+        lead => {
 
-          <button
-            id="dashboardAddLead"
-            class="btn btn-primary"
-            type="button"
-          >
+            const status =
+                typeof normalizeLeadStatus ===
+                "function"
+                    ?
+                    normalizeLeadStatus(
+                        lead.status
+                    )
+                    :
+                    String(
+                        lead.status ||
+                        ""
+                    ).trim();
 
-            <i class="fa-solid fa-plus"></i>
 
-            Add Lead
+            return (
+                status.toLowerCase() ===
+                targetStatus.toLowerCase()
+            );
 
-          </button>
+        }
+    ).length;
 
-        </div>
+}
 
 
-        <!-- =====================================
-             STATISTICS
-        ====================================== -->
+/* =========================================================
+   NEXT STEP
+========================================================= */
 
-        <div
-          id="dashboardStats"
-          class="dashboard-stats"
-        >
+function renderDashboardNextStep(
+    leads
+){
 
-          <!-- TOTAL -->
+    const container =
+        document.getElementById(
+            "dashboardNextStep"
+        );
 
-          <div class="stat-card">
 
-            <div>
+    if(!container){
+        return;
+    }
 
-              <span>
-                Total Leads
-              </span>
 
-              <strong id="statTotal">
-                0
-              </strong>
+    if(
+        !Array.isArray(leads) ||
+        leads.length === 0
+    ){
 
-            </div>
+        container.innerHTML = `
+            <div class="empty-state">
 
-            <i class="fa-solid fa-users"></i>
-
-          </div>
-
-
-          <!-- NEW -->
-
-          <div class="stat-card">
-
-            <div>
-
-              <span>
-                New
-              </span>
-
-              <strong id="statNew">
-                0
-              </strong>
-
-            </div>
-
-            <i class="fa-solid fa-user-plus"></i>
-
-          </div>
-
-
-          <!-- INTERESTED -->
-
-          <div class="stat-card">
-
-            <div>
-
-              <span>
-                Interested
-              </span>
-
-              <strong id="statInterested">
-                0
-              </strong>
-
-            </div>
-
-            <i class="fa-solid fa-fire"></i>
-
-          </div>
-
-
-          <!-- FOLLOW UP -->
-
-          <div class="stat-card">
-
-            <div>
-
-              <span>
-                Follow Up
-              </span>
-
-              <strong id="statFollowUp">
-                0
-              </strong>
-
-            </div>
-
-            <i class="fa-solid fa-phone"></i>
-
-          </div>
-
-
-          <!-- APPOINTMENT -->
-
-          <div class="stat-card">
-
-            <div>
-
-              <span>
-                Appointment
-              </span>
-
-              <strong id="statAppointment">
-                0
-              </strong>
-
-            </div>
-
-            <i class="fa-solid fa-calendar-check"></i>
-
-          </div>
-
-
-          <!-- SITE SURVEY -->
-
-          <div class="stat-card">
-
-            <div>
-
-              <span>
-                Site Survey
-              </span>
-
-              <strong id="statSiteSurvey">
-                0
-              </strong>
-
-            </div>
-
-            <i class="fa-solid fa-location-dot"></i>
-
-          </div>
-
-
-          <!-- QUOTATION -->
-
-          <div class="stat-card">
-
-            <div>
-
-              <span>
-                Quotation
-              </span>
-
-              <strong id="statQuotation">
-                0
-              </strong>
-
-            </div>
-
-            <i class="fa-solid fa-file-invoice-dollar"></i>
-
-          </div>
-
-
-          <!-- CLOSING -->
-
-          <div class="stat-card">
-
-            <div>
-
-              <span>
-                Closing
-              </span>
-
-              <strong id="statClosing">
-                0
-              </strong>
-
-            </div>
-
-            <i class="fa-solid fa-circle-check"></i>
-
-          </div>
-
-        </div>
-
-
-        <!-- =====================================
-             DASHBOARD GRID
-        ====================================== -->
-
-        <div class="dashboard-grid">
-
-
-          <!-- SALES OVERVIEW -->
-
-          <div class="dashboard-card">
-
-            <div class="card-header">
-
-              <div>
-
-                <h3>
-                  Sales Overview
-                </h3>
+                <i class="fa-solid fa-users"></i>
 
                 <p>
-                  Distribusi status lead
+                    Belum ada customer.
                 </p>
 
-              </div>
-
             </div>
+        `;
 
-            <div
-              id="salesOverviewChart"
-              class="bar-chart"
-            ></div>
+        return;
 
-          </div>
+    }
 
 
-          <!-- RECENT LEADS -->
+    const sortedLeads =
+        [...leads].sort(
+            (
+                a,
+                b
+            ) => {
 
-          <div class="dashboard-card">
+                const dateA =
+                    new Date(
+                        a.created_at || 0
+                    ).getTime();
 
-            <div class="card-header">
 
-              <div>
+                const dateB =
+                    new Date(
+                        b.created_at || 0
+                    ).getTime();
 
-                <h3>
-                  Recent Leads
-                </h3>
 
-                <p>
-                  Prospek terbaru
-                </p>
+                return dateB - dateA;
 
-              </div>
+            }
+        );
 
 
-              <a
-                href="leads.html"
-                class="text-btn"
-              >
-                View All
-              </a>
+    const latest =
+        sortedLeads.slice(
+            0,
+            5
+        );
 
-            </div>
 
+    container.innerHTML =
+        latest.map(
+            lead => {
 
-            <div
-              id="recentLeads"
-              class="recent-leads"
-            ></div>
+                const status =
+                    typeof normalizeLeadStatus ===
+                    "function"
+                        ?
+                        normalizeLeadStatus(
+                            lead.status
+                        )
+                        :
+                        (
+                            lead.status ||
+                            "New"
+                        );
 
-          </div>
 
-        </div>
+                const nextStep =
+                    getDashboardNextStep(
+                        lead
+                    );
 
 
-        <!-- =====================================
-             SALES PIPELINE
-        ====================================== -->
+                return `
+                    <div class="dashboard-next-item">
 
-        <div class="dashboard-card">
+                        <div class="dashboard-next-avatar">
 
-          <div class="card-header">
+                            ${escapeDashboardText(
+                                getDashboardInitials(
+                                    lead.customer_name
+                                )
+                            )}
 
-            <div>
+                        </div>
 
-              <h3>
-                Sales Pipeline
-              </h3>
 
-              <p>
-                Perjalanan prospek dari lead sampai closing
-              </p>
+                        <div class="dashboard-next-info">
 
-            </div>
+                            <strong>
+                                ${escapeDashboardText(
+                                    lead.customer_name ||
+                                    "Unnamed Customer"
+                                )}
+                            </strong>
 
-          </div>
+                            <span>
+                                ${escapeDashboardText(
+                                    lead.business ||
+                                    lead.location ||
+                                    "-"
+                                )}
+                            </span>
 
+                        </div>
 
-          <div
-            id="dashboardPipeline"
-            class="pipeline-overview"
-          ></div>
 
-        </div>
+                        <div class="dashboard-next-status">
 
-      </section>
+                            <span class="status-pill">
 
-    </section>
+                                ${escapeDashboardText(
+                                    status
+                                )}
 
-  </main>
+                            </span>
 
-</div>
+                            <small>
 
+                                ${escapeDashboardText(
+                                    nextStep
+                                )}
 
-<!-- =====================================
-     CONFIRM MODAL
-====================================== -->
+                            </small>
 
-<div
-  id="confirmModal"
-  class="modal-overlay"
-  style="display:none"
->
+                        </div>
 
-  <div class="modal modal-small">
+                    </div>
+                `;
 
-    <div class="confirm-icon">
+            }
+        ).join("");
 
-      <i class="fa-solid fa-triangle-exclamation"></i>
+}
 
-    </div>
 
-    <h2 id="confirmTitle">
-      Confirm
-    </h2>
+/* =========================================================
+   NEXT STEP TEXT
+========================================================= */
 
-    <p id="confirmMessage"></p>
+function getDashboardNextStep(
+    lead
+){
 
-    <div class="modal-footer">
+    if(!lead){
 
-      <button
-        class="btn btn-secondary"
-        type="button"
-        data-close="confirmModal"
-      >
-        Cancel
-      </button>
+        return "Belum ada next step";
 
-      <button
-        id="confirmActionBtn"
-        class="btn btn-danger"
-        type="button"
-      >
-        Confirm
-      </button>
+    }
 
-    </div>
 
-  </div>
+    if(lead.closing){
 
-</div>
+        return "Closing selesai";
 
+    }
 
-<!-- =====================================
-     PROFILE MODAL
-====================================== -->
 
-<div
-  id="profileModal"
-  class="modal-overlay"
-  style="display:none"
->
+    if(lead.spk){
 
-  <div class="modal">
+        return "Follow up SPK";
 
-    <div class="modal-header">
+    }
 
-      <div>
 
-        <h2>
-          My Profile
-        </h2>
+    if(lead.quotation){
 
-        <p>
-          Informasi akun pengguna CRM.
-        </p>
+        return "Follow up quotation";
 
-      </div>
+    }
 
-      <button
-        class="modal-close"
-        type="button"
-        data-close="profileModal"
-        aria-label="Close"
-      >
 
-        <i class="fa-solid fa-xmark"></i>
+    if(lead.site_survey){
 
-      </button>
+        return "Follow up site survey";
 
-    </div>
+    }
 
 
-    <div
-      id="userProfileContent"
-      class="profile-card"
-    ></div>
+    if(lead.appointment){
 
-  </div>
+        return "Follow up appointment";
 
-</div>
+    }
 
 
-<!-- =====================================
-     TOAST
-====================================== -->
+    if(lead.follow_up_date){
 
-<div
-  id="toastContainer"
-  class="toast-container"
-></div>
+        return (
+            "Follow up " +
+            formatDashboardDate(
+                lead.follow_up_date
+            )
+        );
 
+    }
 
-<!-- =====================================
-     GLOBAL LOADING
-====================================== -->
 
-<div
-  id="globalLoading"
-  class="global-loading"
-  style="display:none"
->
+    return "Belum ada jadwal follow up";
 
-  <div>
+}
 
-    <i class="fa-solid fa-spinner fa-spin"></i>
 
-    <span id="globalLoadingText">
-      Loading...
-    </span>
+/* =========================================================
+   INITIALS
+========================================================= */
 
-  </div>
+function getDashboardInitials(
+    name
+){
 
-</div>
+    if(!name){
 
+        return "NA";
 
-<!-- =====================================
-     JAVASCRIPT
-====================================== -->
+    }
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<script src="../js/config.js"></script>
+    const parts =
+        String(name)
+            .trim()
+            .split(/\s+/)
+            .filter(Boolean);
 
-<script src="../js/helpers.js"></script>
 
-<script src="../js/modal.js"></script>
+    if(parts.length === 1){
 
-<script src="../js/auth.js"></script>
+        return parts[0]
+            .substring(
+                0,
+                2
+            )
+            .toUpperCase();
 
-<script src="../js/navigation.js"></script>
+    }
 
-<script src="../js/dashboard.js"></script>
 
-<script src="../js/leads.js"></script>
+    return (
+        parts[0][0] +
+        parts[parts.length - 1][0]
+    ).toUpperCase();
 
-<script src="../js/customer-profile.js"></script>
+}
 
-<script src="../js/sales.js"></script>
 
-</body>
-</html>
+/* =========================================================
+   DATE
+========================================================= */
+
+function formatDashboardDate(
+    value
+){
+
+    if(!value){
+
+        return "-";
+
+    }
+
+
+    try{
+
+        return new Intl.DateTimeFormat(
+            "id-ID",
+            {
+                day:"2-digit",
+                month:"short"
+            }
+        ).format(
+            new Date(value)
+        );
+
+    }
+    catch{
+
+        return String(value);
+
+    }
+
+}
+
+
+/* =========================================================
+   ESCAPE HTML
+========================================================= */
+
+function escapeDashboardText(
+    value
+){
+
+    if(
+        value === null ||
+        value === undefined
+    ){
+
+        return "";
+
+    }
+
+
+    return String(value)
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+
+}
+
+
+/* =========================================================
+   AUTO INITIALIZE
+========================================================= */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function(){
+
+        setTimeout(
+            function(){
+
+                if(
+                    document.getElementById(
+                        "addCustomerBtn"
+                    ) ||
+                    document.getElementById(
+                        "dashboardNextStep"
+                    )
+                ){
+
+                    initializeDashboard();
+
+                }
+
+            },
+            250
+        );
+
+    }
+);
