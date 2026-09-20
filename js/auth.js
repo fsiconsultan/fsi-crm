@@ -1,720 +1,451 @@
-// ========================================
+// ============================================================
 // CRM FSI - AUTHENTICATION
-// ========================================
+// ============================================================
 
-document.addEventListener("DOMContentLoaded", () => {
-  const isLoginPage =
-    window.location.pathname.toLowerCase().endsWith("login.html") ||
-    window.location.pathname === "/" ||
-    window.location.pathname.endsWith("/");
+let authInitialized = false;
 
-  if (isLoginPage) {
-    setupLoginPage();
-    checkSession();
-  } else {
-    requireSession();
-  }
-});
+// ============================================================
+// SALES AVATAR
+// ============================================================
 
+const SALES_AVATAR_MAP = {
+    // Rist
+    "df7a9ddb-23e3-40ce-a53e-8befeaba71c5":
+        "https://yoyszukutqwoxxdolzcg.supabase.co/storage/v1/object/public/sales-avatar/rist.jpeg"
+};
 
-// ========================================
-// LOGIN PAGE
-// ========================================
+// ============================================================
+// DOM HELPER
+// ============================================================
 
-function setupLoginPage() {
-  const loginForm = $("loginForm");
-
-  if (loginForm) {
-    loginForm.addEventListener(
-      "submit",
-      handleLogin
-    );
-  }
-
-  $("togglePassword")?.addEventListener(
-    "click",
-    () => {
-      const passwordInput = $("loginPassword");
-
-      if (!passwordInput) return;
-
-      const isPassword =
-        passwordInput.type === "password";
-
-      passwordInput.type =
-        isPassword
-          ? "text"
-          : "password";
-
-      const icon =
-        $("togglePassword")?.querySelector("i");
-
-      if (icon) {
-        icon.className =
-          isPassword
-            ? "fa-solid fa-eye-slash"
-            : "fa-solid fa-eye";
-      }
-    }
-  );
-
-  $("forgotPasswordBtn")?.addEventListener(
-    "click",
-    () => {
-      showToast(
-        "Silakan hubungi Admin untuk reset password.",
-        "info"
-      );
-    }
-  );
+function authGet(id) {
+    return document.getElementById(id);
 }
 
+// ============================================================
+// GET AVATAR
+// ============================================================
 
-// ========================================
-// HANDLE LOGIN
-// ========================================
+function getSalesAvatar(profile) {
+    if (!profile) return "";
 
-async function handleLogin(event) {
-  event.preventDefault();
-
-  const username =
-    $("loginUsername")?.value.trim() || "";
-
-  const password =
-    $("loginPassword")?.value || "";
-
-  const button =
-    $("loginButton");
-
-  if (!username || !password) {
-    showLoginMessage(
-      "Username dan password wajib diisi."
-    );
-    return;
-  }
-
-  clearLoginMessage();
-
-  if (button) {
-    setButtonLoading(
-      button,
-      true,
-      "Login"
-    );
-  }
-
-  try {
-
-    // ------------------------------------
-    // 1. CARI EMAIL BERDASARKAN USERNAME
-    // ------------------------------------
-
-    const {
-      data: emailData,
-      error: emailError
-    } = await supabaseClient.rpc(
-      "get_login_email",
-      {
-        p_username: username
-      }
-    );
-
-    console.log(
-      "get_login_email:",
-      emailData,
-      emailError
-    );
-
-    if (emailError) {
-      throw new Error(
-        emailError.message ||
-        "Gagal mencari akun."
-      );
+    // Jika suatu saat tabel sales_users mempunyai avatar_url
+    if (profile.avatar_url) {
+        return profile.avatar_url;
     }
 
-    let email = null;
-
-    // RPC bisa mengembalikan string
-    if (typeof emailData === "string") {
-      email = emailData;
+    // Jika menggunakan photo_url
+    if (profile.photo_url) {
+        return profile.photo_url;
     }
 
-    // RPC bisa mengembalikan object
-    if (
-      emailData &&
-      typeof emailData === "object"
-    ) {
-      email =
-        emailData.email ||
-        emailData.login_email ||
-        emailData.get_login_email ||
-        null;
-    }
+    // Mapping berdasarkan auth_user-id
+    const authId =
+        profile["auth_user-id"] ||
+        profile.auth_user_id ||
+        profile.id;
 
-    // RPC bisa mengembalikan array
-    if (
-      Array.isArray(emailData) &&
-      emailData.length
-    ) {
-      const first =
-        emailData[0];
-
-      if (typeof first === "string") {
-        email = first;
-      } else if (first) {
-        email =
-          first.email ||
-          first.login_email ||
-          first.get_login_email ||
-          null;
-      }
-    }
-
-    if (!email) {
-      throw new Error(
-        "Akun tidak ditemukan."
-      );
-    }
-
-    email =
-      String(email).trim();
-
-    console.log(
-      "Login email:",
-      email
-    );
-
-
-    // ------------------------------------
-    // 2. LOGIN SUPABASE AUTH
-    // ------------------------------------
-
-    const {
-      data,
-      error
-    } =
-      await supabaseClient.auth.signInWithPassword({
-        email: email,
-        password: password
-      });
-
-    if (error) {
-      console.error(
-        "Supabase login error:",
-        error
-      );
-
-      throw new Error(
-        "Username atau password salah."
-      );
-    }
-
-    if (!data?.user) {
-      throw new Error(
-        "Login gagal. User tidak ditemukan."
-      );
-    }
-
-    currentUser =
-      data.user;
-
-
-    // ------------------------------------
-    // 3. LOAD PROFILE
-    // ------------------------------------
-
-    await loadProfile(
-      true
-    );
-
-  } catch (error) {
-
-    console.error(
-      "handleLogin:",
-      error
-    );
-
-    showLoginMessage(
-      error.message ||
-      "Login gagal."
-    );
-
-  } finally {
-
-    if (button) {
-      setButtonLoading(
-        button,
-        false,
-        "Login"
-      );
-    }
-  }
+    return SALES_AVATAR_MAP[authId] || "";
 }
 
+// ============================================================
+// GET DISPLAY NAME
+// ============================================================
 
-// ========================================
+function getProfileName(profile) {
+    if (!profile) return "User";
+
+    return (
+        profile.name ||
+        profile.full_name ||
+        profile.sales_name ||
+        profile.username ||
+        profile.display_name ||
+        profile.email ||
+        "User"
+    );
+}
+
+// ============================================================
+// GET ROLE
+// ============================================================
+
+function getProfileRole(profile) {
+    if (!profile) return "User";
+
+    const role = profile.role || "";
+
+    if (String(role).toLowerCase() === "admin") {
+        return "Admin";
+    }
+
+    if (String(role).toLowerCase() === "sales") {
+        return "Sales";
+    }
+
+    return role || "User";
+}
+
+// ============================================================
+// GET INITIAL
+// ============================================================
+
+function getUserInitial(name) {
+    if (!name) return "F";
+
+    const cleanName = String(name).trim();
+
+    if (!cleanName) return "F";
+
+    const words = cleanName.split(/\s+/);
+
+    if (words.length >= 2) {
+        return (
+            words[0].charAt(0) +
+            words[1].charAt(0)
+        ).toUpperCase();
+    }
+
+    return cleanName.charAt(0).toUpperCase();
+}
+
+// ============================================================
+// UPDATE HEADER USER
+// ============================================================
+
+function updateUserHeader(profile) {
+    const name = getProfileName(profile);
+    const role = getProfileRole(profile);
+    const avatar = getSalesAvatar(profile);
+    const initial = getUserInitial(name);
+
+    const userInfo = authGet("userInfo");
+    const userAvatarInitial = authGet("userAvatarInitial");
+
+    // --------------------------------------------------------
+    // USER INFO
+    // --------------------------------------------------------
+
+    if (userInfo) {
+        userInfo.innerHTML = `
+            <strong>${escapeAuthHtml(name)}</strong>
+            <small>${escapeAuthHtml(role)}</small>
+        `;
+    }
+
+    // --------------------------------------------------------
+    // AVATAR
+    // --------------------------------------------------------
+
+    if (userAvatarInitial) {
+        if (avatar) {
+            userAvatarInitial.innerHTML = `
+                <img
+                    src="${avatar}"
+                    alt="${escapeAuthHtml(name)}"
+                    class="user-avatar-image"
+                    onerror="this.style.display='none'; this.parentElement.classList.add('avatar-fallback');"
+                >
+            `;
+
+            userAvatarInitial.classList.add("has-photo");
+            userAvatarInitial.setAttribute("title", name);
+        } else {
+            userAvatarInitial.textContent = initial;
+            userAvatarInitial.classList.remove("has-photo");
+        }
+    }
+
+    // --------------------------------------------------------
+    // PROFILE MODAL DATA
+    // --------------------------------------------------------
+
+    const profileName = authGet("profileName");
+    const profileRole = authGet("profileRole");
+    const profileEmail = authGet("profileEmail");
+    const profileAvatar = authGet("profileAvatar");
+
+    if (profileName) {
+        profileName.textContent = name;
+    }
+
+    if (profileRole) {
+        profileRole.textContent = role;
+    }
+
+    if (profileEmail) {
+        profileEmail.textContent =
+            profile.email || currentUser?.email || "-";
+    }
+
+    if (profileAvatar) {
+        if (avatar) {
+            profileAvatar.src = avatar;
+            profileAvatar.style.display = "block";
+        } else {
+            profileAvatar.style.display = "none";
+        }
+    }
+}
+
+// ============================================================
+// HTML ESCAPE
+// ============================================================
+
+function escapeAuthHtml(value) {
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+// ============================================================
+// GET CURRENT USER
+// ============================================================
+
+async function getCurrentAuthUser() {
+    try {
+        const {
+            data,
+            error
+        } = await supabaseClient.auth.getUser();
+
+        if (error) {
+            console.error("getUser error:", error);
+            return null;
+        }
+
+        return data?.user || null;
+
+    } catch (error) {
+        console.error("getCurrentAuthUser error:", error);
+        return null;
+    }
+}
+
+// ============================================================
 // LOAD PROFILE
-// ========================================
+// ============================================================
 
-async function loadProfile(
-  redirectAfterLoad = false
-) {
-
-  if (!currentUser) {
-    return;
-  }
-
-  try {
-
-    const {
-      data,
-      error
-    } =
-      await supabaseClient
-        .from(
-          CRM_CONFIG.salesTable
-        )
-        .select("*")
-        .eq(
-          "auth_user-id",
-          currentUser.id
-        )
-        .maybeSingle();
-
-    if (error) {
-      throw error;
+async function loadCurrentProfile(user) {
+    if (!user) {
+        currentProfile = null;
+        return null;
     }
 
-    if (!data) {
-      await supabaseClient.auth.signOut();
+    try {
+        const { data, error } = await supabaseClient
+            .from("sales_users")
+            .select("*")
+            .eq("auth_user-id", user.id)
+            .maybeSingle();
 
-      throw new Error(
-        "Akun berhasil login, tetapi profile CRM tidak ditemukan."
-      );
+        if (error) {
+            console.error("Profile load error:", error);
+
+            // Fallback minimal profile
+            currentProfile = {
+                "auth_user-id": user.id,
+                email: user.email || "",
+                role: "Sales",
+                name: user.email || "User"
+            };
+
+            return currentProfile;
+        }
+
+        if (!data) {
+            console.warn("Profile tidak ditemukan di sales_users.");
+
+            currentProfile = {
+                "auth_user-id": user.id,
+                email: user.email || "",
+                role: "Sales",
+                name: user.email || "User"
+            };
+
+            return currentProfile;
+        }
+
+        currentProfile = {
+            ...data,
+            email: data.email || user.email || ""
+        };
+
+        return currentProfile;
+
+    } catch (error) {
+        console.error("loadCurrentProfile error:", error);
+
+        currentProfile = {
+            "auth_user-id": user.id,
+            email: user.email || "",
+            role: "Sales",
+            name: user.email || "User"
+        };
+
+        return currentProfile;
     }
-
-    currentProfile =
-      data;
-
-    console.log(
-      "Current profile:",
-      currentProfile
-    );
-
-    updateUserInfo();
-
-    setupRoleAccess();
-
-    if (redirectAfterLoad) {
-
-      const role =
-        String(
-          currentProfile.role || ""
-        ).toLowerCase();
-
-      if (role === "admin") {
-
-        window.location.href =
-          "dashboard.html";
-
-      } else {
-
-        window.location.href =
-          "dashboard.html";
-      }
-    }
-
-  } catch (error) {
-
-    console.error(
-      "loadProfile:",
-      error
-    );
-
-    await supabaseClient.auth.signOut();
-
-    currentUser = null;
-    currentProfile = null;
-
-    if (
-      window.location.pathname
-        .toLowerCase()
-        .endsWith("login.html")
-    ) {
-      showLoginMessage(
-        error.message ||
-        "Profile pengguna tidak ditemukan."
-      );
-    } else {
-      window.location.href =
-        "login.html";
-    }
-  }
 }
 
+// ============================================================
+// INITIALIZE AUTH
+// ============================================================
 
-// ========================================
-// CHECK SESSION
-// ========================================
-
-async function checkSession() {
-
-  try {
-
-    const {
-      data,
-      error
-    } =
-      await supabaseClient.auth.getSession();
-
-    if (error) {
-      console.error(
-        "checkSession:",
-        error
-      );
-      return;
+async function initializeAuth() {
+    if (authInitialized) {
+        return {
+            user: currentUser,
+            profile: currentProfile
+        };
     }
 
-    if (
-      data?.session?.user
-    ) {
+    try {
+        const user = await getCurrentAuthUser();
 
-      currentUser =
-        data.session.user;
+        if (!user) {
+            currentUser = null;
+            currentProfile = null;
 
-      await loadProfile(
-        true
-      );
+            // Jangan redirect jika sudah di login
+            const currentPath =
+                window.location.pathname.toLowerCase();
+
+            if (!currentPath.endsWith("/login.html") &&
+                !currentPath.endsWith("login.html")) {
+
+                window.location.href = "login.html";
+            }
+
+            return null;
+        }
+
+        currentUser = user;
+
+        const profile = await loadCurrentProfile(user);
+
+        currentProfile = profile;
+
+        updateUserHeader(profile);
+
+        authInitialized = true;
+
+        return {
+            user: currentUser,
+            profile: currentProfile
+        };
+
+    } catch (error) {
+        console.error("initializeAuth error:", error);
+        return null;
     }
-
-  } catch (error) {
-
-    console.error(
-      "checkSession:",
-      error
-    );
-  }
 }
 
-
-// ========================================
-// REQUIRE SESSION
-// ========================================
-
-async function requireSession() {
-
-  try {
-
-    const {
-      data,
-      error
-    } =
-      await supabaseClient.auth.getSession();
-
-    if (error) {
-      throw error;
-    }
-
-    if (
-      !data?.session?.user
-    ) {
-
-      window.location.href =
-        "login.html";
-
-      return;
-    }
-
-    currentUser =
-      data.session.user;
-
-    await loadProfile(
-      false
-    );
-
-    initializeCurrentPage();
-
-  } catch (error) {
-
-    console.error(
-      "requireSession:",
-      error
-    );
-
-    window.location.href =
-      "login.html";
-  }
-}
-
-
-// ========================================
-// UPDATE USER INFO
-// ========================================
-
-function updateUserInfo() {
-
-  if (!currentProfile) {
-    return;
-  }
-
-  const name =
-    currentProfile.name ||
-    currentProfile.username ||
-    "User";
-
-  const role =
-    currentProfile.role ||
-    "Sales";
-
-  const initial =
-    name
-      .charAt(0)
-      .toUpperCase();
-
-  const avatar =
-    $("userAvatarInitial");
-
-  if (avatar) {
-    avatar.textContent =
-      initial;
-  }
-
-  const info =
-    $("userInfo");
-
-  if (info) {
-
-    info.innerHTML = `
-      <strong>
-        ${escapeHTML(name)}
-      </strong>
-
-      <small>
-        ${escapeHTML(role)}
-      </small>
-    `;
-  }
-}
-
-
-// ========================================
-// ROLE ACCESS
-// ========================================
-
-function setupRoleAccess() {
-
-  const isAdmin =
-    String(
-      currentProfile?.role || ""
-    ).toLowerCase() ===
-    "admin";
-
-  document
-    .querySelectorAll(".admin-only")
-    .forEach(
-      (element) => {
-        element.style.display =
-          isAdmin
-            ? ""
-            : "none";
-      }
-    );
-
-  const salesAssign =
-    $("leadSalesAssign");
-
-  if (salesAssign) {
-
-    salesAssign.disabled =
-      !isAdmin;
-
-    if (!isAdmin) {
-      salesAssign.value =
-        currentProfile?.id || "";
-    }
-  }
-}
-
-
-// ========================================
-// CURRENT PAGE
-// ========================================
-
-function initializeCurrentPage() {
-
-  const path =
-    window.location.pathname
-      .toLowerCase();
-
-  if (
-    path.endsWith(
-      "dashboard.html"
-    )
-  ) {
-
-    if (
-      typeof updateDashboard ===
-      "function"
-    ) {
-      updateDashboard();
-    }
-
-    return;
-  }
-
-  if (
-    path.endsWith(
-      "leads.html"
-    )
-  ) {
-
-    if (
-      typeof loadSalesLookup ===
-      "function"
-    ) {
-      loadSalesLookup();
-    }
-
-    if (
-      typeof loadFilterOptions ===
-      "function"
-    ) {
-      loadFilterOptions();
-    }
-
-    if (
-      typeof loadLeads ===
-      "function"
-    ) {
-      loadLeads();
-    }
-
-    return;
-  }
-
-  if (
-    path.endsWith(
-      "sales.html"
-    )
-  ) {
-
-    const isAdmin =
-      String(
-        currentProfile?.role || ""
-      ).toLowerCase() ===
-      "admin";
-
-    if (!isAdmin) {
-
-      window.location.href =
-        "dashboard.html";
-
-      return;
-    }
-
-    if (
-      typeof loadSalesUsers ===
-      "function"
-    ) {
-      loadSalesUsers();
-    }
-
-    return;
-  }
-
-  if (
-    path.endsWith(
-      "customer-profile.html"
-    )
-  ) {
-
-    const params =
-      new URLSearchParams(
-        window.location.search
-      );
-
-    const id =
-      params.get("id");
-
-    if (
-      id &&
-      typeof loadCustomerProfilePage ===
-      "function"
-    ) {
-      loadCustomerProfilePage(id);
-    }
-
-    return;
-  }
-}
-
-
-// ========================================
-// LOGIN MESSAGE
-// ========================================
-
-function showLoginMessage(
-  message
-) {
-
-  const element =
-    $("loginMessage");
-
-  if (!element) {
-    return;
-  }
-
-  element.textContent =
-    message;
-
-  element.className =
-    "login-message error";
-
-  element.style.display =
-    "block";
-}
-
-
-function clearLoginMessage() {
-
-  const element =
-    $("loginMessage");
-
-  if (!element) {
-    return;
-  }
-
-  element.textContent =
-    "";
-
-  element.style.display =
-    "none";
-}
-
-
-// ========================================
+// ============================================================
 // LOGOUT
-// ========================================
+// ============================================================
 
-async function logout() {
+async function logoutUser() {
+    try {
+        if (typeof showGlobalLoading === "function") {
+            showGlobalLoading(true, "Logging out...");
+        }
 
-  try {
+        const {
+            error
+        } = await supabaseClient.auth.signOut();
 
-    await supabaseClient.auth.signOut();
+        if (error) {
+            console.error("Logout error:", error);
 
-  } catch (error) {
+            if (typeof showToast === "function") {
+                showToast(
+                    "Logout gagal",
+                    error.message || "Tidak dapat logout.",
+                    "error"
+                );
+            }
 
-    console.error(
-      "logout:",
-      error
-    );
+            return;
+        }
 
-  } finally {
+        currentUser = null;
+        currentProfile = null;
+        authInitialized = false;
 
-    currentUser = null;
-    currentProfile = null;
+        window.location.href = "login.html";
 
-    window.location.href =
-      "login.html";
-  }
+    } catch (error) {
+        console.error("logoutUser error:", error);
+
+        window.location.href = "login.html";
+    }
 }
+
+// ============================================================
+// ALIAS
+// ============================================================
+
+window.logoutUser = logoutUser;
+window.handleLogout = logoutUser;
+window.signOutUser = logoutUser;
+
+// ============================================================
+// AUTH STATE CHANGE
+// ============================================================
+
+function listenAuthState() {
+    if (!supabaseClient?.auth) return;
+
+    supabaseClient.auth.onAuthStateChange(
+        async (event, session) => {
+
+            if (event === "SIGNED_OUT") {
+                currentUser = null;
+                currentProfile = null;
+
+                const currentPath =
+                    window.location.pathname.toLowerCase();
+
+                if (!currentPath.includes("login.html")) {
+                    window.location.href = "login.html";
+                }
+            }
+
+            if (
+                event === "SIGNED_IN" &&
+                session?.user
+            ) {
+                currentUser = session.user;
+
+                const profile =
+                    await loadCurrentProfile(session.user);
+
+                currentProfile = profile;
+
+                updateUserHeader(profile);
+            }
+        }
+    );
+}
+
+// ============================================================
+// AUTO INIT
+// ============================================================
+
+document.addEventListener("DOMContentLoaded", async () => {
+
+    const currentPath =
+        window.location.pathname.toLowerCase();
+
+    // Halaman login tidak perlu profile header
+    if (currentPath.includes("login.html")) {
+        return;
+    }
+
+    await initializeAuth();
+
+    listenAuthState();
+});
