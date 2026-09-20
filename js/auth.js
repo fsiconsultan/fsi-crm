@@ -1,138 +1,71 @@
 // ============================================================
 // CRM FSI - AUTHENTICATION
-// Username -> get_login_email -> Supabase Auth
-// Admin & Sales
+// Supabase Auth + Username Login
 // ============================================================
 
-/* ============================================================
-   AVATAR SALES
-============================================================ */
-
-const SALES_AVATAR_MAP = {
-  "df7a9ddb-23e3-40ce-a53e-8befeaba71c5":
-    "https://yoyszukutqwoxxdolzcg.supabase.co/storage/v1/object/public/sales-avatar/rist.jpeg"
-};
+let currentUser = null;
+let currentProfile = null;
 
 
-/* ============================================================
-   HELPER
-============================================================ */
-
-function getSalesAvatar(profile) {
-  if (!profile) return "";
-
-  const authId =
-    profile["auth_user-id"] ||
-    profile.auth_user_id ||
-    profile.auth_userId ||
-    "";
-
-  return SALES_AVATAR_MAP[String(authId)] || "";
-}
-
-
-function getProfileName(profile) {
-  if (!profile) return "User";
-
-  return (
-    profile.name ||
-    profile.full_name ||
-    profile.sales_name ||
-    profile.username ||
-    profile.nama ||
-    "User"
-  );
-}
-
-
-function getProfileRole(profile) {
-  if (!profile) return "";
-
-  return String(
-    profile.role ||
-    profile.user_role ||
-    ""
-  ).trim();
-}
-
-
-function getUserInitial(name) {
-  const text = String(name || "User").trim();
-
-  if (!text) return "U";
-
-  return text
-    .charAt(0)
-    .toUpperCase();
-}
-
-
-/* ============================================================
-   LOGIN MESSAGE
-============================================================ */
+// ============================================================
+// HELPER: LOGIN MESSAGE
+// ============================================================
 
 function showLoginMessage(message, type = "error") {
   const el = document.getElementById("loginMessage");
 
-  if (!el) return;
+  if (!el) {
+    console.log(message);
+    return;
+  }
 
-  el.textContent = message || "";
+  el.textContent = message;
   el.className = "login-message " + type;
 }
 
 
-function clearLoginMessage() {
-  const el = document.getElementById("loginMessage");
+// ============================================================
+// HELPER: LOGIN BUTTON
+// ============================================================
 
-  if (!el) return;
-
-  el.textContent = "";
-  el.className = "login-message";
-}
-
-
-/* ============================================================
-   LOGIN BUTTON LOADING
-============================================================ */
-
-function setLoginLoading(isLoading) {
-  const button =
-    document.querySelector(".login-btn") ||
-    document.querySelector('button[type="submit"]');
+function setLoginLoading(loading) {
+  const button = document.querySelector(".login-btn");
 
   if (!button) return;
 
-  if (!button.dataset.originalText) {
+  if (loading) {
+    button.disabled = true;
     button.dataset.originalText =
-      button.textContent.trim() || "LOGIN";
-  }
-
-  button.disabled = isLoading;
-
-  if (isLoading) {
+      button.textContent || "LOGIN";
     button.textContent = "LOGIN...";
   } else {
+    button.disabled = false;
     button.textContent =
       button.dataset.originalText || "LOGIN";
   }
 }
 
 
-/* ============================================================
-   AMBIL EMAIL DARI USERNAME
-============================================================ */
+// ============================================================
+// AMBIL EMAIL DARI USERNAME
+// ============================================================
 
 async function getLoginEmail(username) {
-  const cleanUsername =
-    String(username || "").trim();
+
+  const cleanUsername = String(username || "").trim();
 
   if (!cleanUsername) {
     throw new Error("Username wajib diisi.");
   }
 
   /*
-   * RPC utama
+   * RPC utama.
+   *
+   * Kita gunakan parameter p_username terlebih dahulu.
+   * Jika database Anda menggunakan username, kita coba
+   * fallback kedua.
    */
+
   let result = await supabaseClient.rpc(
     "get_login_email",
     {
@@ -141,82 +74,82 @@ async function getLoginEmail(username) {
   );
 
   /*
-   * Jika RPC mengembalikan error karena parameter
-   * berbeda, coba parameter username.
+   * Jika parameter pertama tidak cocok,
+   * coba parameter username.
    */
+
   if (result.error) {
-    const firstError = result.error;
 
-    const retry = await supabaseClient.rpc(
-      "get_login_email",
-      {
-        username: cleanUsername
-      }
-    );
+    const secondResult =
+      await supabaseClient.rpc(
+        "get_login_email",
+        {
+          username: cleanUsername
+        }
+      );
 
-    if (!retry.error) {
-      result = retry;
-    } else {
-      throw firstError;
+    if (!secondResult.error) {
+      result = secondResult;
     }
   }
 
   if (result.error) {
-    throw result.error;
+    console.error(
+      "get_login_email error:",
+      result.error
+    );
+
+    throw new Error(
+      "Username tidak ditemukan atau fungsi login belum dapat digunakan."
+    );
   }
 
-  let data = result.data;
+  let email = result.data;
 
   /*
-   * Supabase bisa mengembalikan:
-   *
-   * "email@example.com"
-   *
-   * atau
-   *
-   * { email: "email@example.com" }
-   *
-   * atau array hasil RPC.
+   * RPC bisa mengembalikan:
+   * - string
+   * - object
+   * - array
    */
 
-  if (Array.isArray(data)) {
-    data = data[0];
-  }
+  if (Array.isArray(email)) {
 
-  if (typeof data === "string") {
-    return data.trim();
-  }
-
-  if (data && typeof data === "object") {
-    const email =
-      data.email ||
-      data.login_email ||
-      data.get_login_email ||
-      data.result ||
-      data.value;
-
-    if (email) {
-      return String(email).trim();
+    if (email.length === 0) {
+      throw new Error("Username tidak ditemukan.");
     }
+
+    email = email[0];
   }
 
-  if (!data) {
-    throw new Error(
-      "Username tidak ditemukan."
-    );
+  if (
+    email &&
+    typeof email === "object"
+  ) {
+
+    email =
+      email.email ||
+      email.login_email ||
+      email.get_login_email ||
+      email.result;
   }
 
-  throw new Error(
-    "Email login tidak berhasil ditemukan."
-  );
+  email = String(email || "").trim();
+
+  if (!email) {
+    throw new Error("Email login tidak ditemukan.");
+  }
+
+  return email;
 }
 
 
-/* ============================================================
-   LOGIN UTAMA
-============================================================ */
+// ============================================================
+// LOGIN
+// ============================================================
 
 async function login() {
+
   const usernameInput =
     document.getElementById("loginUsername");
 
@@ -227,63 +160,58 @@ async function login() {
     console.error(
       "Input login tidak ditemukan."
     );
-
     return;
   }
 
   const username =
-    String(usernameInput.value || "").trim();
+    usernameInput.value.trim();
 
   const password =
-    String(passwordInput.value || "");
-
-  clearLoginMessage();
+    passwordInput.value;
 
   if (!username) {
     showLoginMessage(
-      "Username wajib diisi.",
-      "error"
+      "Username wajib diisi."
     );
-
     usernameInput.focus();
     return;
   }
 
   if (!password) {
     showLoginMessage(
-      "Password wajib diisi.",
-      "error"
+      "Password wajib diisi."
     );
-
     passwordInput.focus();
     return;
   }
 
+  setLoginLoading(true);
+  showLoginMessage("", "");
+
   try {
-    setLoginLoading(true);
 
-    showLoginMessage(
-      "Memproses login...",
-      "loading"
-    );
+    // --------------------------------------------------------
+    // 1. CARI EMAIL BERDASARKAN USERNAME
+    // --------------------------------------------------------
 
-    /*
-     * STEP 1
-     * Username -> Email
-     */
     const email =
       await getLoginEmail(username);
 
-    if (!email) {
-      throw new Error(
-        "Email akun tidak ditemukan."
-      );
-    }
+    console.log(
+      "Login username:",
+      username
+    );
 
-    /*
-     * STEP 2
-     * Email + Password -> Supabase Auth
-     */
+    console.log(
+      "Login email ditemukan:",
+      email
+    );
+
+
+    // --------------------------------------------------------
+    // 2. LOGIN SUPABASE AUTH
+    // --------------------------------------------------------
+
     const {
       data,
       error
@@ -293,8 +221,9 @@ async function login() {
     });
 
     if (error) {
+
       console.error(
-        "Supabase Auth error:",
+        "Supabase login error:",
         error
       );
 
@@ -305,494 +234,474 @@ async function login() {
 
     if (!data || !data.user) {
       throw new Error(
-        "Login gagal. User Auth tidak ditemukan."
+        "Login gagal. User tidak ditemukan."
       );
     }
 
     currentUser = data.user;
 
-    /*
-     * STEP 3
-     * Ambil profile dari sales_users
-     */
-    const profile =
-      await loadCurrentProfile(
-        data.user
-      );
 
-    if (!profile) {
+    // --------------------------------------------------------
+    // 3. AMBIL PROFILE SALES / ADMIN
+    // --------------------------------------------------------
+
+    await loadCurrentProfile(
+      currentUser.id
+    );
+
+
+    // --------------------------------------------------------
+    // 4. VALIDASI PROFILE
+    // --------------------------------------------------------
+
+    if (!currentProfile) {
+
       await supabaseClient.auth.signOut();
 
       throw new Error(
-        "Akun berhasil login, tetapi profile Admin/Sales tidak ditemukan."
+        "Akun berhasil login, tetapi profile CRM tidak ditemukan."
       );
     }
 
-    currentProfile = profile;
 
-    /*
-     * STEP 4
-     * Cek status akun jika kolom tersedia
-     */
-    const accountStatus =
+    // --------------------------------------------------------
+    // 5. CEK STATUS AKUN
+    // --------------------------------------------------------
+
+    const status =
       String(
-        profile.status ||
-        profile.account_status ||
-        ""
-      )
-        .trim()
-        .toLowerCase();
+        currentProfile.status || "active"
+      ).toLowerCase();
 
     if (
-      accountStatus &&
-      [
-        "inactive",
-        "disabled",
-        "nonaktif",
-        "false"
-      ].includes(accountStatus)
+      status === "inactive" ||
+      status === "disabled" ||
+      status === "false"
     ) {
+
       await supabaseClient.auth.signOut();
 
+      currentUser = null;
+      currentProfile = null;
+
       throw new Error(
-        "Akun ini sedang tidak aktif."
+        "Akun Anda sedang tidak aktif."
       );
     }
 
-    /*
-     * STEP 5
-     * Update global user
-     */
-    window.currentUser = currentUser;
-    window.currentProfile = currentProfile;
 
-    /*
-     * STEP 6
-     * Berhasil
-     */
+    // --------------------------------------------------------
+    // 6. SIMPAN DATA KE WINDOW
+    // --------------------------------------------------------
+
+    window.currentUser =
+      currentUser;
+
+    window.currentProfile =
+      currentProfile;
+
+
+    // --------------------------------------------------------
+    // 7. LOGIN BERHASIL
+    // --------------------------------------------------------
+
     showLoginMessage(
       "Login berhasil. Membuka CRM...",
       "success"
     );
 
-    /*
-     * Jika login page menggunakan struktur
-     * terpisah seperti project sekarang,
-     * langsung masuk dashboard.
-     */
-    setTimeout(() => {
+
+    // --------------------------------------------------------
+    // 8. MASUK DASHBOARD
+    // --------------------------------------------------------
+
+    setTimeout(function () {
+
       window.location.href =
         "dashboard.html";
+
     }, 250);
 
   } catch (error) {
+
     console.error(
       "LOGIN ERROR:",
       error
     );
 
-    let message =
-      error?.message ||
-      "Login gagal.";
-
-    /*
-     * Pesan yang lebih mudah dipahami
-     */
-    if (
-      message.includes(
-        "Invalid login credentials"
-      )
-    ) {
-      message =
-        "Username atau password salah.";
-    }
-
-    if (
-      message.includes(
-        "Email not confirmed"
-      )
-    ) {
-      message =
-        "Email akun belum dikonfirmasi.";
-    }
-
     showLoginMessage(
-      message,
+      error.message ||
+      "Login gagal.",
       "error"
     );
 
   } finally {
+
     setLoginLoading(false);
   }
 }
 
 
-/* ============================================================
-   LOAD CURRENT PROFILE
-============================================================ */
+// ============================================================
+// LOAD CURRENT PROFILE
+// ============================================================
 
-async function loadCurrentProfile(user = null) {
-  try {
-    let authUser = user;
+async function loadCurrentProfile(
+  authUserId
+) {
 
-    if (!authUser) {
-      const result =
-        await supabaseClient.auth.getUser();
+  if (!authUserId) {
+    throw new Error(
+      "User ID tidak ditemukan."
+    );
+  }
 
-      if (result.error) {
-        throw result.error;
-      }
+  /*
+   * PENTING:
+   *
+   * Nama kolom database memang:
+   *
+   * auth_user-id
+   *
+   * menggunakan tanda MINUS.
+   *
+   * Jadi jangan diganti menjadi:
+   * auth_user_id
+   */
 
-      authUser = result.data.user;
-    }
+  const {
+    data,
+    error
+  } = await supabaseClient
+    .from("sales_users")
+    .select("*")
+    .eq(
+      "auth_user-id",
+      authUserId
+    )
+    .maybeSingle();
 
-    if (!authUser) {
-      currentProfile = null;
-      window.currentProfile = null;
-      return null;
-    }
+  if (error) {
 
-    /*
-     * PENTING:
-     *
-     * Nama kolom database adalah:
-     * "auth_user-id"
-     *
-     * BUKAN:
-     * auth_user_id
-     */
-    const {
-      data,
-      error
-    } = await supabaseClient
-      .from(CRM_CONFIG.salesTable)
-      .select("*")
-      .eq(
-        "auth_user-id",
-        authUser.id
-      )
-      .maybeSingle();
-
-    if (error) {
-      console.error(
-        "PROFILE QUERY ERROR:",
-        error
-      );
-
-      throw error;
-    }
-
-    currentProfile = data || null;
-    window.currentProfile =
-      currentProfile;
-
-    return currentProfile;
-
-  } catch (error) {
     console.error(
-      "loadCurrentProfile error:",
+      "Profile error:",
       error
+    );
+
+    throw new Error(
+      "Profile user tidak dapat dibaca."
+    );
+  }
+
+  if (!data) {
+
+    console.error(
+      "Profile tidak ditemukan untuk:",
+      authUserId
     );
 
     currentProfile = null;
-    window.currentProfile = null;
 
     return null;
   }
+
+  currentProfile = data;
+
+  window.currentProfile =
+    currentProfile;
+
+  return currentProfile;
 }
 
 
-/* ============================================================
-   GET CURRENT AUTH USER
-============================================================ */
+// ============================================================
+// GET PROFILE NAME
+// ============================================================
 
-async function getCurrentAuthUser() {
-  try {
-    const {
-      data,
-      error
-    } = await supabaseClient.auth.getUser();
+function getProfileName() {
 
-    if (error) {
-      console.error(
-        "getCurrentAuthUser error:",
-        error
-      );
-
-      return null;
-    }
-
-    return data?.user || null;
-
-  } catch (error) {
-    console.error(
-      error
-    );
-
-    return null;
+  if (!currentProfile) {
+    return "User";
   }
+
+  return (
+    currentProfile.name ||
+    currentProfile.full_name ||
+    currentProfile.sales_name ||
+    currentProfile.username ||
+    currentProfile.nama ||
+    "User"
+  );
 }
 
 
-/* ============================================================
-   UPDATE HEADER USER
-============================================================ */
+// ============================================================
+// GET PROFILE ROLE
+// ============================================================
 
-function updateUserHeader() {
-  const profile =
-    currentProfile ||
-    window.currentProfile;
+function getProfileRole() {
 
-  const user =
-    currentUser ||
-    window.currentUser;
+  if (!currentProfile) {
+    return "";
+  }
+
+  return String(
+    currentProfile.role || ""
+  ).trim();
+}
+
+
+// ============================================================
+// GET USER INITIAL
+// ============================================================
+
+function getUserInitial() {
 
   const name =
-    getProfileName(profile);
+    getProfileName();
+
+  if (!name) {
+    return "F";
+  }
+
+  return name
+    .trim()
+    .charAt(0)
+    .toUpperCase();
+}
+
+
+// ============================================================
+// SALES PHOTO
+// ============================================================
+
+function getSalesAvatar() {
+
+  /*
+   * Foto Rist
+   *
+   * Kita tidak mengubah database.
+   */
+
+  const salesAvatarMap = {
+
+    "df7a9ddb-23e3-40ce-a53e-8befeaba71c5":
+      "https://yoyszukutqwoxxdolzcg.supabase.co/storage/v1/object/public/sales-avatar/rist.jpeg"
+
+  };
+
+  if (!currentUser) {
+    return "";
+  }
+
+  return (
+    salesAvatarMap[currentUser.id] ||
+    ""
+  );
+}
+
+
+// ============================================================
+// UPDATE HEADER USER
+// ============================================================
+
+function updateUserHeader() {
+
+  const name =
+    getProfileName();
 
   const role =
-    getProfileRole(profile) ||
-    "User";
+    getProfileRole();
 
-  const avatarInitial =
+  const initial =
+    getUserInitial();
+
+  const avatar =
+    getSalesAvatar();
+
+
+  // ----------------------------------------------------------
+  // USER INFO
+  // ----------------------------------------------------------
+
+  const userInfo =
+    document.getElementById("userInfo");
+
+  if (userInfo) {
+
+    userInfo.innerHTML = `
+      <strong>${escapeHtml(name)}</strong>
+      <small>${escapeHtml(role || "User")}</small>
+    `;
+  }
+
+
+  // ----------------------------------------------------------
+  // AVATAR
+  // ----------------------------------------------------------
+
+  const avatarEl =
     document.getElementById(
       "userAvatarInitial"
     );
 
-  const userInfo =
-    document.getElementById(
-      "userInfo"
-    );
+  if (avatarEl) {
 
-  /*
-   * Avatar
-   */
-  if (avatarInitial) {
-    const avatarUrl =
-      getSalesAvatar(profile);
+    if (avatar) {
 
-    if (avatarUrl) {
-      avatarInitial.innerHTML =
-        `<img
-          src="${avatarUrl}"
-          alt="${name}"
+      avatarEl.classList.add(
+        "has-photo"
+      );
+
+      avatarEl.innerHTML = `
+        <img
+          src="${avatar}"
+          alt="${escapeHtml(name)}"
           class="user-avatar-image"
-        >`;
+          onerror="this.parentElement.classList.remove('has-photo'); this.parentElement.innerHTML='${escapeHtml(initial)}';"
+        >
+      `;
 
-      avatarInitial.classList.add(
-        "has-photo"
-      );
     } else {
-      avatarInitial.textContent =
-        getUserInitial(name);
 
-      avatarInitial.classList.remove(
+      avatarEl.classList.remove(
         "has-photo"
       );
-    }
-  }
 
-  /*
-   * User info
-   */
-  if (userInfo) {
-    userInfo.innerHTML = `
-      <strong>${escapeHtml(name)}</strong>
-      <small>${escapeHtml(role)}</small>
-    `;
-  }
-
-  /*
-   * Dropdown profile
-   */
-  const dropdownUser =
-    document.getElementById(
-      "currentUser"
-    );
-
-  if (dropdownUser) {
-    dropdownUser.innerHTML = `
-      <strong>${escapeHtml(name)}</strong>
-      <small>${escapeHtml(role)}</small>
-    `;
-  }
-
-  /*
-   * Fallback untuk halaman yang belum memakai
-   * avatar element baru.
-   */
-  if (!avatarInitial && user) {
-    const oldUserInfo =
-      document.getElementById(
-        "userInfo"
-      );
-
-    if (oldUserInfo) {
-      oldUserInfo.textContent =
-        name;
+      avatarEl.textContent =
+        initial;
     }
   }
 }
 
 
-/* ============================================================
-   ESCAPE HTML
-============================================================ */
-
-function escapeHtml(value) {
-  return String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-
-/* ============================================================
-   INITIALIZE AUTH
-============================================================ */
-
-async function initializeAuth() {
-  try {
-    const user =
-      await getCurrentAuthUser();
-
-    /*
-     * BELUM LOGIN
-     */
-    if (!user) {
-      currentUser = null;
-      currentProfile = null;
-
-      window.currentUser = null;
-      window.currentProfile = null;
-
-      return null;
-    }
-
-    /*
-     * SUDAH LOGIN
-     */
-    currentUser = user;
-    window.currentUser = user;
-
-    const profile =
-      await loadCurrentProfile(user);
-
-    /*
-     * Jika user Auth ada tetapi profile tidak ada,
-     * jangan biarkan masuk ke CRM.
-     */
-    if (!profile) {
-      console.warn(
-        "Auth user ada tetapi profile sales_users tidak ditemukan."
-      );
-
-      await supabaseClient.auth.signOut();
-
-      currentUser = null;
-      currentProfile = null;
-
-      window.currentUser = null;
-      window.currentProfile = null;
-
-      return null;
-    }
-
-    currentProfile = profile;
-    window.currentProfile = profile;
-
-    updateUserHeader();
-
-    return profile;
-
-  } catch (error) {
-    console.error(
-      "initializeAuth error:",
-      error
-    );
-
-    return null;
-  }
-}
-
-
-/* ============================================================
-   LOGOUT
-============================================================ */
+// ============================================================
+// LOGOUT
+// ============================================================
 
 async function logoutUser() {
+
   try {
+
     await supabaseClient.auth.signOut();
+
   } catch (error) {
+
     console.error(
       "Logout error:",
       error
     );
-  }
 
-  currentUser = null;
-  currentProfile = null;
+  } finally {
 
-  window.currentUser = null;
-  window.currentProfile = null;
+    currentUser = null;
+    currentProfile = null;
 
-  /*
-   * Selalu kembali ke login.
-   */
-  const currentPath =
-    window.location.pathname;
+    window.currentUser = null;
+    window.currentProfile = null;
 
-  if (
-    currentPath.includes(
-      "/pages/"
-    )
-  ) {
     window.location.href =
       "login.html";
-  } else {
-    window.location.href =
-      "pages/login.html";
   }
 }
 
 
-/* Alias agar tombol lama tetap bekerja */
+// Compatibility
 window.logoutUser =
   logoutUser;
 
-window.logout =
-  logoutUser;
 
-window.signOutUser =
-  logoutUser;
+// ============================================================
+// INITIALIZE AUTH
+// ============================================================
+
+async function initializeAuth() {
+
+  try {
+
+    const {
+      data,
+      error
+    } = await supabaseClient.auth.getSession();
+
+    if (error) {
+      console.error(
+        "Session error:",
+        error
+      );
+      return;
+    }
+
+    const session =
+      data && data.session;
+
+    // --------------------------------------------------------
+    // TIDAK ADA SESSION
+    // --------------------------------------------------------
+
+    if (!session || !session.user) {
+
+      currentUser = null;
+      currentProfile = null;
+
+      return;
+    }
 
 
-/* ============================================================
-   AUTH STATE LISTENER
-============================================================ */
+    // --------------------------------------------------------
+    // ADA SESSION
+    // --------------------------------------------------------
+
+    currentUser =
+      session.user;
+
+    await loadCurrentProfile(
+      currentUser.id
+    );
+
+
+    if (currentProfile) {
+
+      window.currentUser =
+        currentUser;
+
+      window.currentProfile =
+        currentProfile;
+
+      updateUserHeader();
+    }
+
+  } catch (error) {
+
+    console.error(
+      "initializeAuth error:",
+      error
+    );
+  }
+}
+
+
+// ============================================================
+// AUTH STATE LISTENER
+// ============================================================
 
 function listenAuthState() {
-  if (
-    !supabaseClient ||
-    !supabaseClient.auth
-  ) {
-    return;
-  }
 
   supabaseClient.auth.onAuthStateChange(
-    async (event, session) => {
+    async function (
+      event,
+      session
+    ) {
 
       console.log(
         "AUTH EVENT:",
         event
       );
 
-      /*
-       * SIGNED OUT
-       */
-      if (event === "SIGNED_OUT") {
+      if (
+        event === "SIGNED_OUT"
+      ) {
+
         currentUser = null;
         currentProfile = null;
 
@@ -802,94 +711,101 @@ function listenAuthState() {
         return;
       }
 
-      /*
-       * SIGNED IN / INITIAL SESSION
-       *
-       * Jangan melakukan redirect di sini.
-       * login() sendiri yang mengarahkan ke dashboard.
-       */
       if (
-        event === "SIGNED_IN" ||
-        event === "INITIAL_SESSION"
+        session &&
+        session.user
       ) {
-        if (!session?.user) {
-          return;
-        }
 
         currentUser =
           session.user;
 
-        window.currentUser =
-          session.user;
-
         /*
-         * Jangan await terlalu banyak pekerjaan
-         * langsung di callback auth.
+         * Jangan melakukan redirect
+         * dari listener.
+         *
+         * Redirect login dilakukan
+         * oleh fungsi login().
          */
-        setTimeout(async () => {
-          const profile =
-            await loadCurrentProfile(
-              session.user
-            );
 
-          if (profile) {
-            currentProfile =
-              profile;
+        try {
 
-            window.currentProfile =
-              profile;
+          await loadCurrentProfile(
+            currentUser.id
+          );
 
+          if (currentProfile) {
             updateUserHeader();
           }
-        }, 0);
+
+        } catch (error) {
+
+          console.error(
+            "Auth state profile error:",
+            error
+          );
+        }
       }
     }
   );
 }
 
 
-/* ============================================================
-   AUTO INITIALIZE
-============================================================ */
+// ============================================================
+// ESCAPE HTML
+// ============================================================
+
+function escapeHtml(value) {
+
+  return String(
+    value == null ? "" : value
+  )
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+
+// ============================================================
+// AUTO INIT
+// ============================================================
 
 document.addEventListener(
   "DOMContentLoaded",
-  async function () {
+  function () {
 
-    /*
-     * Pastikan tombol login menggunakan
-     * fungsi login() global.
-     */
-    window.login = login;
-
-    /*
-     * Jangan jalankan initializeAuth
-     * sebelum Supabase tersedia.
-     */
-    if (
-      typeof supabaseClient ===
-      "undefined"
-    ) {
-      console.error(
-        "supabaseClient belum tersedia. Periksa config.js."
-      );
-
-      return;
-    }
-
-    /*
-     * Dengarkan perubahan session.
-     */
+    initializeAuth();
     listenAuthState();
 
-    /*
-     * Cek session yang sudah ada.
-     */
-    await initializeAuth();
-
-    /*
-     * Update header jika sudah login.
-     */
-    updateUserHeader();
   }
 );
+
+
+// ============================================================
+// GLOBAL
+// ============================================================
+
+window.login =
+  login;
+
+window.getLoginEmail =
+  getLoginEmail;
+
+window.loadCurrentProfile =
+  loadCurrentProfile;
+
+window.getProfileName =
+  getProfileName;
+
+window.getProfileRole =
+  getProfileRole;
+
+window.getUserInitial =
+  getUserInitial;
+
+window.getSalesAvatar =
+  getSalesAvatar;
+
+window.updateUserHeader =
+  updateUserHeader;
