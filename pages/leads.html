@@ -1,42 +1,118 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta
         name="viewport"
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>Leads | FSI CRM</title>
+    <meta
+        name="description"
+        content="FSI CRM - Customer Leads"
+    >
 
-    <link rel="icon" href="../assets/logo-fsi.png">
+    <meta
+        name="theme-color"
+        content="#0b63ce"
+    >
 
-    <!-- Font -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <title>
+        Leads | FSI CRM
+    </title>
+
+
+    <!-- ========================================
+         FAVICON
+    ========================================= -->
+
+    <link
+        rel="icon"
+        href="../assets/logo-fsi.png"
+    >
+
+
+    <!-- ========================================
+         GOOGLE FONT
+    ========================================= -->
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
 
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
         rel="stylesheet"
     >
 
-    <!-- Icons -->
+
+    <!-- ========================================
+         FONT AWESOME
+    ========================================= -->
+
     <link
         rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
     >
 
-    <!-- Global -->
-    <link rel="stylesheet" href="../css/style.css">
 
-    <!-- Leads -->
-    <link rel="stylesheet" href="../css/leads.css">
+    <!-- ========================================
+         GLOBAL CSS
+    ========================================= -->
+
+    <link
+        rel="stylesheet"
+        href="../css/style.css"
+    >
+
+
+    <!-- ========================================
+         LEADS CSS
+    ========================================= -->
+
+    <link
+        rel="stylesheet"
+        href="../css/leads.css"
+    >
+
 </head>
+
 
 <body>
 
-<div id="globalLoading" class="global-loading">
-    <div class="loading-spinner"></div>
+
+<!-- ========================================
+     GLOBAL LOADING
+========================================= -->
+
+<div
+    id="globalLoading"
+    class="global-loading"
+    style="display:none;"
+>
+
+    <div>
+
+        <i
+            class="fa-solid fa-spinner fa-spin"
+        ></i>
+
+        <span>
+            Loading...
+        </span>
+
+    </div>
+
 </div>
 
 
@@ -46,171 +122,206 @@
 
 <header class="top-header">
 
+
+    <!-- ======================================
+         HEADER LEFT
+    ======================================= -->
+
     <div class="header-left">
 
-        <a href="dashboard.html" class="brand">
 
-            <div class="brand-logo">
-                <img
-                    src="../assets/logo-fsi.png"
-                    alt="FSI Logo"
-                >
-            </div>
+        <!-- FSI BRAND -->
+
+        <a
+            href="dashboard.html"
+            class="brand-area"
+            aria-label="FSI CRM Dashboard"
+        >
+
+            <img
+                src="../assets/logo-fsi.png"
+                alt="FSI Logo"
+                class="brand-logo"
+            >
+
 
             <div class="brand-text">
-                <strong>FSI CRM</strong>
-                <span>French Solar Industry</span>
+
+                <strong>
+                    FSI CRM
+                </strong>
+
+                <span>
+                    French Solar Industry
+                </span>
+
             </div>
 
         </a>
 
-    </div>
 
+        <!-- PAGE TITLE -->
 
-    <div class="header-center">
+        <div class="page-heading">
 
-        <nav class="top-navigation">
+            <h1 id="pageTitle">
+                Leads
+            </h1>
 
-            <a
-                href="dashboard.html"
-                class="nav-item"
-            >
-                <i class="fa-solid fa-chart-pie"></i>
-                <span>Dashboard</span>
-            </a>
-
-            <a
-                href="leads.html"
-                class="nav-item active"
-            >
-                <i class="fa-solid fa-users"></i>
-                <span>Leads</span>
-            </a>
-
-            <a
-                href="sales.html"
-                class="nav-item admin-only"
-            >
-                <i class="fa-solid fa-user-group"></i>
-                <span>Manage Sales</span>
-            </a>
-
-        </nav>
-
-    </div>
-
-
-    <div class="header-right">
-
-        <div class="global-search">
-
-            <i class="fa-solid fa-magnifying-glass"></i>
-
-            <input
-                type="text"
-                id="globalSearch"
-                placeholder="Search..."
-                autocomplete="off"
-            >
-
-            <kbd>⌘ K</kbd>
+            <p id="pageSubtitle">
+                Customer Lead Management
+            </p>
 
         </div>
 
-
-        <button
-            class="header-icon-btn"
-            id="notificationBtn"
-            type="button"
-            title="Notifications"
-        >
-            <i class="fa-regular fa-bell"></i>
-            <span class="notification-dot"></span>
-        </button>
+    </div>
 
 
-        <div class="user-menu">
+    <!-- ======================================
+         HEADER RIGHT
+    ======================================= -->
 
-            <button
-                class="user-menu-trigger"
-                id="userMenuTrigger"
-                type="button"
+    <div class="header-right">
+
+
+        <!-- ==================================
+             MAIN NAVIGATION
+        =================================== -->
+
+        <nav class="top-navigation">
+
+
+            <!-- Dashboard -->
+
+            <a
+                href="dashboard.html"
+                class="top-nav-item"
             >
 
-                <div
+                <i
+                    class="fa-solid fa-chart-pie"
+                ></i>
+
+                <span>
+                    Dashboard
+                </span>
+
+            </a>
+
+
+            <!-- Leads -->
+
+            <a
+                href="leads.html"
+                class="top-nav-item active"
+            >
+
+                <i
+                    class="fa-solid fa-users"
+                ></i>
+
+                <span>
+                    Leads
+                </span>
+
+            </a>
+
+
+        </nav>
+
+
+        <!-- ==================================
+             USER MENU
+        =================================== -->
+
+        <div class="user-menu-wrapper">
+
+            <button
+                id="userMenu"
+                class="user-menu"
+                type="button"
+                aria-haspopup="true"
+                aria-expanded="false"
+            >
+
+                <span
+                    id="userAvatarInitial"
                     class="user-avatar"
-                    id="headerUserAvatar"
                 >
-                    U
-                </div>
+                    F
+                </span>
 
-                <div class="user-menu-info">
 
-                    <strong id="headerUserName">
+                <span
+                    id="userInfo"
+                    class="user-info"
+                >
+
+                    <strong>
                         User
                     </strong>
 
-                    <span id="headerUserRole">
+                    <small>
                         Sales
-                    </span>
+                    </small>
 
-                </div>
+                </span>
 
-                <i class="fa-solid fa-chevron-down"></i>
+
+                <i
+                    class="fa-solid fa-chevron-down"
+                ></i>
 
             </button>
 
 
+            <!-- ==================================
+                 USER DROPDOWN
+            =================================== -->
+
             <div
-                class="user-dropdown"
                 id="userDropdown"
+                class="user-dropdown"
+                style="display:none;"
             >
 
-                <div class="dropdown-user-info">
 
-                    <div
-                        class="dropdown-avatar"
-                        id="dropdownAvatar"
-                    >
-                        U
-                    </div>
+                <button
+                    id="profileBtn"
+                    type="button"
+                    onclick="openProfileModal()"
+                >
 
-                    <div>
+                    <i
+                        class="fa-solid fa-user"
+                    ></i>
 
-                        <strong id="dropdownUserName">
-                            User
-                        </strong>
+                    <span>
+                        Profile
+                    </span>
 
-                        <span id="dropdownUserEmail">
-                            -
-                        </span>
-
-                    </div>
-
-                </div>
+                </button>
 
 
                 <div class="dropdown-divider"></div>
 
 
                 <button
-                    type="button"
-                    class="dropdown-item"
-                    id="profileBtn"
-                >
-                    <i class="fa-regular fa-user"></i>
-                    <span>My Profile</span>
-                </button>
-
-
-                <button
-                    type="button"
-                    class="dropdown-item danger"
                     id="dropdownLogout"
+                    class="danger"
+                    type="button"
                 >
-                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                    <span>Logout</span>
+
+                    <i
+                        class="fa-solid fa-right-from-bracket"
+                    ></i>
+
+                    <span>
+                        Logout
+                    </span>
+
                 </button>
+
 
             </div>
 
@@ -238,11 +349,17 @@
 
             <div class="breadcrumb">
 
-                <span>CRM</span>
+                <span>
+                    CRM
+                </span>
 
-                <i class="fa-solid fa-chevron-right"></i>
+                <i
+                    class="fa-solid fa-chevron-right"
+                ></i>
 
-                <strong>Leads</strong>
+                <strong>
+                    Leads
+                </strong>
 
             </div>
 
@@ -274,17 +391,28 @@
                 class="btn btn-light"
                 id="exportLeadsBtn"
             >
-                <i class="fa-solid fa-arrow-up-from-bracket"></i>
+
+                <i
+                    class="fa-solid fa-arrow-up-from-bracket"
+                ></i>
+
                 Export
+
             </button>
+
 
             <button
                 type="button"
                 class="btn btn-primary btn-add-lead"
                 id="addLeadBtn"
             >
-                <i class="fa-solid fa-plus"></i>
+
+                <i
+                    class="fa-solid fa-plus"
+                ></i>
+
                 Add New Lead
+
             </button>
 
         </div>
@@ -298,15 +426,25 @@
 
     <section class="lead-kpis">
 
+
+        <!-- Total Leads -->
+
         <div class="lead-kpi-card">
 
             <div class="lead-kpi-icon blue">
-                <i class="fa-solid fa-users"></i>
+
+                <i
+                    class="fa-solid fa-users"
+                ></i>
+
             </div>
+
 
             <div class="lead-kpi-content">
 
-                <span>Total Leads</span>
+                <span>
+                    Total Leads
+                </span>
 
                 <strong id="kpiTotalLeads">
                     0
@@ -321,15 +459,24 @@
         </div>
 
 
+        <!-- Follow Up -->
+
         <div class="lead-kpi-card">
 
             <div class="lead-kpi-icon orange">
-                <i class="fa-solid fa-clock"></i>
+
+                <i
+                    class="fa-solid fa-clock"
+                ></i>
+
             </div>
+
 
             <div class="lead-kpi-content">
 
-                <span>Follow Up</span>
+                <span>
+                    Follow Up
+                </span>
 
                 <strong id="kpiFollowUp">
                     0
@@ -344,15 +491,24 @@
         </div>
 
 
+        <!-- Appointment -->
+
         <div class="lead-kpi-card">
 
             <div class="lead-kpi-icon purple">
-                <i class="fa-solid fa-calendar-check"></i>
+
+                <i
+                    class="fa-solid fa-calendar-check"
+                ></i>
+
             </div>
+
 
             <div class="lead-kpi-content">
 
-                <span>Appointment</span>
+                <span>
+                    Appointment
+                </span>
 
                 <strong id="kpiAppointment">
                     0
@@ -367,15 +523,24 @@
         </div>
 
 
+        <!-- Closing -->
+
         <div class="lead-kpi-card">
 
             <div class="lead-kpi-icon green">
-                <i class="fa-solid fa-circle-check"></i>
+
+                <i
+                    class="fa-solid fa-circle-check"
+                ></i>
+
             </div>
+
 
             <div class="lead-kpi-content">
 
-                <span>Closing</span>
+                <span>
+                    Closing
+                </span>
 
                 <strong id="kpiClosing">
                     0
@@ -398,13 +563,21 @@
 
     <section class="lead-filter-card">
 
+
+        <!-- Filter Header -->
+
         <div class="filter-top">
 
             <div class="filter-heading">
 
                 <div class="filter-heading-icon">
-                    <i class="fa-solid fa-sliders"></i>
+
+                    <i
+                        class="fa-solid fa-sliders"
+                    ></i>
+
                 </div>
+
 
                 <div>
 
@@ -426,14 +599,24 @@
                 class="filter-reset"
                 id="resetFiltersBtn"
             >
-                <i class="fa-solid fa-rotate-left"></i>
+
+                <i
+                    class="fa-solid fa-rotate-left"
+                ></i>
+
                 Reset Filter
+
             </button>
 
         </div>
 
 
+        <!-- ==============================================
+             FILTERS
+        =============================================== -->
+
         <div class="lead-filters">
+
 
             <!-- Search -->
 
@@ -445,7 +628,9 @@
 
                 <div class="input-with-icon">
 
-                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <i
+                        class="fa-solid fa-magnifying-glass"
+                    ></i>
 
                     <input
                         type="search"
@@ -515,7 +700,9 @@
 
                 <div class="input-with-icon">
 
-                    <i class="fa-solid fa-location-dot"></i>
+                    <i
+                        class="fa-solid fa-location-dot"
+                    ></i>
 
                     <input
                         type="text"
@@ -528,7 +715,9 @@
             </div>
 
 
-            <!-- Sales -->
+            <!-- ==========================================
+                 SALES FILTER - ADMIN ONLY
+            =========================================== -->
 
             <div
                 class="filter-field admin-only"
@@ -572,8 +761,13 @@
             <div class="table-title-area">
 
                 <div class="table-title-icon">
-                    <i class="fa-solid fa-database"></i>
+
+                    <i
+                        class="fa-solid fa-database"
+                    ></i>
+
                 </div>
+
 
                 <div>
 
@@ -605,7 +799,9 @@
         </div>
 
 
-        <!-- Table -->
+        <!-- =================================================
+             TABLE
+        ================================================== -->
 
         <div class="table-scroll">
 
@@ -661,13 +857,13 @@
 
 
                 <tbody id="leadsTableBody">
-                    <!-- JS -->
+                    <!-- JavaScript -->
                 </tbody>
 
             </table>
 
 
-            <!-- Empty -->
+            <!-- Empty State -->
 
             <div
                 class="leads-empty"
@@ -676,25 +872,37 @@
             >
 
                 <div class="empty-icon">
-                    <i class="fa-solid fa-user-group"></i>
+
+                    <i
+                        class="fa-solid fa-user-group"
+                    ></i>
+
                 </div>
+
 
                 <h3>
                     No Leads Found
                 </h3>
+
 
                 <p>
                     Belum ada customer yang sesuai
                     dengan filter Anda.
                 </p>
 
+
                 <button
                     type="button"
                     class="btn btn-primary"
                     id="emptyAddLeadBtn"
                 >
-                    <i class="fa-solid fa-plus"></i>
+
+                    <i
+                        class="fa-solid fa-plus"
+                    ></i>
+
                     Add New Lead
+
                 </button>
 
             </div>
@@ -702,17 +910,25 @@
         </div>
 
 
-        <!-- Pagination -->
+        <!-- =================================================
+             PAGINATION
+        ================================================== -->
 
-        <div class="leads-pagination" id="leadsPagination">
+        <div
+            class="leads-pagination"
+            id="leadsPagination"
+        >
 
             <div class="pagination-info">
 
                 Showing
+
                 <strong id="paginationStart">
                     0
                 </strong>
+
                 –
+
                 <strong id="paginationEnd">
                     0
                 </strong>
@@ -734,15 +950,18 @@
                     class="page-btn"
                     disabled
                 >
-                    <i class="fa-solid fa-chevron-left"></i>
+
+                    <i
+                        class="fa-solid fa-chevron-left"
+                    ></i>
+
                 </button>
 
 
                 <div
                     id="paginationNumbers"
                     class="pagination-numbers"
-                >
-                </div>
+                ></div>
 
 
                 <button
@@ -750,7 +969,11 @@
                     id="nextPageBtn"
                     class="page-btn"
                 >
-                    <i class="fa-solid fa-chevron-right"></i>
+
+                    <i
+                        class="fa-solid fa-chevron-right"
+                    ></i>
+
                 </button>
 
             </div>
@@ -774,13 +997,21 @@
 
     <div class="lead-modal">
 
+
+        <!-- Modal Header -->
+
         <div class="modal-header">
 
             <div class="modal-title">
 
                 <div class="modal-title-icon">
-                    <i class="fa-solid fa-user-plus"></i>
+
+                    <i
+                        class="fa-solid fa-user-plus"
+                    ></i>
+
                 </div>
+
 
                 <div>
 
@@ -802,11 +1033,17 @@
                 class="modal-close"
                 data-close-modal="leadModal"
             >
-                <i class="fa-solid fa-xmark"></i>
+
+                <i
+                    class="fa-solid fa-xmark"
+                ></i>
+
             </button>
 
         </div>
 
+
+        <!-- Form -->
 
         <form id="leadForm">
 
@@ -818,13 +1055,16 @@
 
             <div class="modal-body">
 
-                <!-- Customer -->
+
+                <!-- Customer Information -->
 
                 <div class="form-section">
 
                     <div class="form-section-title">
 
-                        <i class="fa-solid fa-user"></i>
+                        <i
+                            class="fa-solid fa-user"
+                        ></i>
 
                         Customer Information
 
@@ -832,6 +1072,9 @@
 
 
                     <div class="form-grid">
+
+
+                        <!-- Customer Name -->
 
                         <div class="form-group full">
 
@@ -850,6 +1093,8 @@
                         </div>
 
 
+                        <!-- Phone -->
+
                         <div class="form-group">
 
                             <label>
@@ -865,6 +1110,8 @@
                         </div>
 
 
+                        <!-- Business -->
+
                         <div class="form-group">
 
                             <label>
@@ -879,6 +1126,8 @@
 
                         </div>
 
+
+                        <!-- Location -->
 
                         <div class="form-group">
 
@@ -899,13 +1148,15 @@
                 </div>
 
 
-                <!-- Pipeline -->
+                <!-- Sales Pipeline -->
 
                 <div class="form-section">
 
                     <div class="form-section-title">
 
-                        <i class="fa-solid fa-chart-line"></i>
+                        <i
+                            class="fa-solid fa-chart-line"
+                        ></i>
 
                         Sales Pipeline
 
@@ -914,18 +1165,21 @@
 
                     <div class="form-grid">
 
+
+                        <!-- Status -->
+
                         <div class="form-group">
 
                             <label>
                                 Status
                             </label>
 
-                            <select id="leadStatus">
-
-                            </select>
+                            <select id="leadStatus"></select>
 
                         </div>
 
+
+                        <!-- Assign Sales -->
 
                         <div
                             class="form-group admin-only"
@@ -936,12 +1190,12 @@
                                 Assign Sales
                             </label>
 
-                            <select id="leadSalesAssign">
-
-                            </select>
+                            <select id="leadSalesAssign"></select>
 
                         </div>
 
+
+                        <!-- Follow Up -->
 
                         <div class="form-group">
 
@@ -957,6 +1211,8 @@
                         </div>
 
 
+                        <!-- Appointment -->
+
                         <div class="form-group">
 
                             <label>
@@ -970,6 +1226,8 @@
 
                         </div>
 
+
+                        <!-- Site Survey -->
 
                         <div class="form-group">
 
@@ -985,6 +1243,8 @@
                         </div>
 
 
+                        <!-- Quotation -->
+
                         <div class="form-group">
 
                             <label>
@@ -999,6 +1259,8 @@
                         </div>
 
 
+                        <!-- SPK -->
+
                         <div class="form-group">
 
                             <label>
@@ -1012,6 +1274,8 @@
 
                         </div>
 
+
+                        <!-- Closing -->
 
                         <div class="form-group">
 
@@ -1037,7 +1301,9 @@
 
                     <div class="form-section-title">
 
-                        <i class="fa-regular fa-note-sticky"></i>
+                        <i
+                            class="fa-regular fa-note-sticky"
+                        ></i>
 
                         Notes
 
@@ -1065,6 +1331,8 @@
             </div>
 
 
+            <!-- Modal Footer -->
+
             <div class="modal-footer">
 
                 <button
@@ -1075,13 +1343,19 @@
                     Cancel
                 </button>
 
+
                 <button
                     type="submit"
                     class="btn btn-primary"
                     id="saveLeadBtn"
                 >
-                    <i class="fa-solid fa-floppy-disk"></i>
+
+                    <i
+                        class="fa-solid fa-floppy-disk"
+                    ></i>
+
                     Save Lead
+
                 </button>
 
             </div>
@@ -1105,17 +1379,25 @@
 
     <div class="confirm-modal">
 
+
         <div class="confirm-icon">
-            <i class="fa-solid fa-triangle-exclamation"></i>
+
+            <i
+                class="fa-solid fa-triangle-exclamation"
+            ></i>
+
         </div>
+
 
         <h3 id="confirmTitle">
             Confirm Action
         </h3>
 
+
         <p id="confirmMessage">
             Are you sure?
         </p>
+
 
         <div class="confirm-actions">
 
@@ -1126,6 +1408,7 @@
             >
                 Cancel
             </button>
+
 
             <button
                 type="button"
@@ -1154,13 +1437,19 @@
 
     <div class="profile-modal">
 
+
         <button
             type="button"
             class="modal-close"
             data-close-modal="profileModal"
         >
-            <i class="fa-solid fa-xmark"></i>
+
+            <i
+                class="fa-solid fa-xmark"
+            ></i>
+
         </button>
+
 
         <div id="userProfileContent"></div>
 
@@ -1176,25 +1465,43 @@
 <div
     id="toastContainer"
     class="toast-container"
->
-</div>
+    aria-live="polite"
+    aria-atomic="true"
+></div>
 
 
 <!-- =========================================================
-     SCRIPTS
+     SUPABASE
 ========================================================= -->
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+></script>
+
+
+<!-- =========================================================
+     FSI CRM JAVASCRIPT
+========================================================= -->
 
 <script src="../js/config.js"></script>
+
 <script src="../js/helpers.js"></script>
+
 <script src="../js/modal.js"></script>
-<script src="../js/navigation.js"></script>
+
 <script src="../js/auth.js"></script>
+
+<script src="../js/navigation.js"></script>
+
 <script src="../js/dashboard.js"></script>
+
 <script src="../js/leads.js"></script>
+
 <script src="../js/customer-profile.js"></script>
+
 <script src="../js/sales.js"></script>
 
+
 </body>
+
 </html>
