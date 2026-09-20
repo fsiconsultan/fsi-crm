@@ -1,1776 +1,878 @@
 // ============================================================
-// CRM FSI - DASHBOARD.JS
-// ============================================================
-// KHUSUS DASHBOARD
-//
-// Membutuhkan dari script.js:
-//   - supabaseClient
-//   - currentProfile
-//
-// Membutuhkan HTML:
-//   - <div id="dashboardPage"></div>
-//
+// CRM FSI - FAST / OPTIMIZED DASHBOARD
 // ============================================================
 
 (function () {
-  "use strict";
+    "use strict";
 
-  // ==========================================================
-  // STATE
-  // ==========================================================
+    // ========================================================
+    // CONFIG
+    // ========================================================
 
-  let dashboardLoading = false;
-  let dashboardBuilt = false;
-  let dashboardProfileId = null;
+    var DASHBOARD_REFRESH_MS = 60000;
+    var dashboardTimer = null;
+    var dashboardLoading = false;
+    var lastDashboardLoad = 0;
 
+    // ========================================================
+    // HELPERS
+    // ========================================================
 
-  // ==========================================================
-  // GET SUPABASE CLIENT
-  // ==========================================================
+    function getClient() {
+        try {
+            if (typeof supabaseClient !== "undefined") {
+                return supabaseClient;
+            }
+        } catch (e) {}
 
-  function getClient() {
-    try {
-      if (typeof supabaseClient !== "undefined") {
-        return supabaseClient;
-      }
-    } catch (error) {
-      console.error(
-        "CRM FSI Dashboard: supabaseClient tidak tersedia.",
-        error
-      );
+        return null;
     }
 
-    return null;
-  }
+    function getProfile() {
+        try {
+            if (typeof currentProfile !== "undefined") {
+                return currentProfile;
+            }
+        } catch (e) {}
 
-
-  // ==========================================================
-  // GET CURRENT PROFILE
-  // ==========================================================
-
-  function getProfile() {
-    try {
-      if (typeof currentProfile !== "undefined") {
-        return currentProfile;
-      }
-    } catch (error) {
-      console.error(
-        "CRM FSI Dashboard: currentProfile tidak tersedia.",
-        error
-      );
+        return null;
     }
 
-    return null;
-  }
-
-
-  // ==========================================================
-  // DOM HELPER
-  // ==========================================================
-
-  function getElement(id) {
-    return document.getElementById(id);
-  }
-
-
-  function setText(id, value) {
-    const element = getElement(id);
-
-    if (element) {
-      element.textContent =
-        value === null ||
-        value === undefined
-          ? "0"
-          : String(value);
-    }
-  }
-
-
-  // ==========================================================
-  // ESCAPE HTML
-  // ==========================================================
-
-  function escapeHtml(value) {
-    return String(value || "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-  }
-
-
-  // ==========================================================
-  // DATE FORMAT
-  // ==========================================================
-
-  function formatDate(value) {
-    if (!value) {
-      return "-";
+    function el(id) {
+        return document.getElementById(id);
     }
 
-    const date = new Date(value);
+    function setText(id, value) {
+        var element = el(id);
 
-    if (Number.isNaN(date.getTime())) {
-      return String(value);
+        if (element) {
+            element.textContent = value == null ? "0" : String(value);
+        }
     }
 
-    return date.toLocaleDateString(
-      "id-ID",
-      {
-        day: "2-digit",
-        month: "short",
-        year: "numeric"
-      }
-    );
-  }
+    function escapeHtml(value) {
+        if (value === null || value === undefined) {
+            return "";
+        }
 
-
-  // ==========================================================
-  // TODAY
-  // ==========================================================
-
-  function getLocalToday() {
-    const date = new Date();
-
-    const year =
-      date.getFullYear();
-
-    const month =
-      String(
-        date.getMonth() + 1
-      ).padStart(2, "0");
-
-    const day =
-      String(
-        date.getDate()
-      ).padStart(2, "0");
-
-    return (
-      year +
-      "-" +
-      month +
-      "-" +
-      day
-    );
-  }
-
-
-  // ==========================================================
-  // NORMALIZE STATUS
-  // ==========================================================
-
-  function normalizeStatus(status) {
-    const value =
-      String(status || "")
-        .trim()
-        .toLowerCase();
-
-    if (
-      value === "new" ||
-      value === "belum dihubungi" ||
-      value === "belum_dihubungi"
-    ) {
-      return "New";
+        return String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
     }
 
-    if (
-      value === "flyer sent" ||
-      value === "flyer_sent" ||
-      value === "flyer"
-    ) {
-      return "Flyer Sent";
+    function normalizeStatus(value) {
+        return String(value || "")
+            .trim()
+            .toLowerCase()
+            .replace(/_/g, " ")
+            .replace(/-/g, " ")
+            .replace(/\s+/g, " ");
     }
 
-    if (
-      value === "interested" ||
-      value === "tertarik"
-    ) {
-      return "Interested";
+    function formatDate(value) {
+        if (!value) {
+            return "-";
+        }
+
+        var date = new Date(value);
+
+        if (isNaN(date.getTime())) {
+            return String(value);
+        }
+
+        var day = String(date.getDate()).padStart(2, "0");
+        var month = String(date.getMonth() + 1).padStart(2, "0");
+        var year = date.getFullYear();
+
+        return day + "/" + month + "/" + year;
     }
 
-    if (
-      value === "follow up" ||
-      value === "follow-up" ||
-      value === "follow_up"
-    ) {
-      return "Follow Up";
+    function formatDateTime(value) {
+        if (!value) {
+            return "-";
+        }
+
+        var date = new Date(value);
+
+        if (isNaN(date.getTime())) {
+            return String(value);
+        }
+
+        var day = String(date.getDate()).padStart(2, "0");
+        var month = String(date.getMonth() + 1).padStart(2, "0");
+        var year = date.getFullYear();
+
+        var hours = String(date.getHours()).padStart(2, "0");
+        var minutes = String(date.getMinutes()).padStart(2, "0");
+
+        return (
+            day +
+            "/" +
+            month +
+            "/" +
+            year +
+            " " +
+            hours +
+            ":" +
+            minutes
+        );
     }
 
-    if (
-      value === "closing" ||
-      value === "closed"
-    ) {
-      return "Closing";
+    function isDashboardVisible() {
+        var page = el("dashboardPage");
+
+        if (!page) {
+            return false;
+        }
+
+        var style = window.getComputedStyle(page);
+
+        return (
+            style.display !== "none" &&
+            page.offsetParent !== null
+        );
     }
 
-    if (
-      value === "not interested" ||
-      value === "tidak tertarik" ||
-      value === "tidak_tertarik"
-    ) {
-      return "Not Interested";
+    // ========================================================
+    // FAST LOADING STATE
+    // ========================================================
+
+    function showDashboardLoading() {
+        var ids = [
+            "dashTotal",
+            "dashNew",
+            "dashInterested",
+            "dashFollowUp",
+            "dashAppointment",
+            "dashSiteSurvey",
+            "dashQuotation",
+            "dashClosing"
+        ];
+
+        for (var i = 0; i < ids.length; i++) {
+            var element = el(ids[i]);
+
+            if (element && !element.textContent.trim()) {
+                element.textContent = "...";
+            }
+        }
     }
 
-    return status || "New";
-  }
-
-
-  // ==========================================================
-  // STATUS CLASS
-  // ==========================================================
-
-  function statusClass(status) {
-    return normalizeStatus(status)
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^a-z0-9-]/g, "");
-  }
-
-
-  // ==========================================================
-  // ROLE
-  // ==========================================================
-
-  function isSales(profile) {
-    if (!profile) {
-      return false;
+    function hideDashboardLoading() {
+        // Sengaja kosong.
+        // Angka langsung diganti ketika data selesai.
     }
 
-    const role =
-      String(profile.role || "")
-        .trim()
-        .toLowerCase();
+    // ========================================================
+    // STATUS MATCHING
+    // ========================================================
 
-    return (
-      role === "sales" ||
-      role === "salesman" ||
-      role === "sales person"
-    );
-  }
-
-
-  function isAdmin(profile) {
-    if (!profile) {
-      return false;
+    function isNewStatus(status) {
+        return (
+            status === "new" ||
+            status === "belum dihubungi"
+        );
     }
 
-    const role =
-      String(profile.role || "")
-        .trim()
-        .toLowerCase();
-
-    return (
-      role === "admin" ||
-      role === "owner" ||
-      role === "administrator"
-    );
-  }
-
-
-  // ==========================================================
-  // APPLY ROLE SCOPE
-  // ==========================================================
-
-  function applyScope(query, profile) {
-
-    if (
-      isSales(profile) &&
-      profile.id
-    ) {
-      return query.eq(
-        "sales_id",
-        profile.id
-      );
+    function isInterestedStatus(status) {
+        return (
+            status === "interested" ||
+            status === "tertarik"
+        );
     }
 
-    return query;
-  }
-
-
-  // ==========================================================
-  // BUILD DASHBOARD
-  // ==========================================================
-
-  function buildDashboard() {
-
-    const page =
-      getElement("dashboardPage");
-
-    if (!page) {
-
-      console.error(
-        "CRM FSI Dashboard: #dashboardPage tidak ditemukan."
-      );
-
-      return false;
+    function isFollowUpStatus(status) {
+        return (
+            status === "follow up" ||
+            status === "followup"
+        );
     }
 
-
-    const profile =
-      getProfile();
-
-    const salesMode =
-      isSales(profile);
-
+    function isClosingStatus(status) {
+        return status === "closing";
+    }
 
     // ========================================================
     // DASHBOARD HTML
     // ========================================================
 
-    page.innerHTML =
-      '<div class="dashboard-shell">' +
+    function ensureDashboardStructure() {
+        var page = el("dashboardPage");
 
-        '<div class="dashboard-toolbar">' +
-
-          '<div class="dashboard-heading">' +
-
-            '<div class="dashboard-heading-icon">' +
-              '📊' +
-            '</div>' +
-
-            '<div>' +
-
-              '<div class="dashboard-kicker">' +
-                'CRM FSI' +
-              '</div>' +
-
-              '<h1>Sales Dashboard</h1>' +
-
-              '<span class="dashboard-role-badge">' +
-                (
-                  salesMode
-                    ? 'My Sales Overview'
-                    : 'Admin Overview'
-                ) +
-              '</span>' +
-
-            '</div>' +
-
-          '</div>' +
-
-          '<button ' +
-            'type="button" ' +
-            'class="dashboard-refresh-btn" ' +
-            'id="dashboardRefreshButton">' +
-            '↻ Refresh' +
-          '</button>' +
-
-        '</div>' +
-
-
-        // ====================================================
-        // STAT CARDS
-        // ====================================================
-
-        '<div class="dashboard-stats-grid">' +
-
-          '<div class="dashboard-stat-card total">' +
-            '<div class="dashboard-stat-icon">👥</div>' +
-            '<div>' +
-              '<span>Total Leads</span>' +
-              '<strong id="dashTotal">0</strong>' +
-            '</div>' +
-          '</div>' +
-
-
-          '<div class="dashboard-stat-card new">' +
-            '<div class="dashboard-stat-icon">🆕</div>' +
-            '<div>' +
-              '<span>New</span>' +
-              '<strong id="dashNew">0</strong>' +
-            '</div>' +
-          '</div>' +
-
-
-          '<div class="dashboard-stat-card interested">' +
-            '<div class="dashboard-stat-icon">❤️</div>' +
-            '<div>' +
-              '<span>Interested</span>' +
-              '<strong id="dashInterested">0</strong>' +
-            '</div>' +
-          '</div>' +
-
-
-          '<div class="dashboard-stat-card followup">' +
-            '<div class="dashboard-stat-icon">🔔</div>' +
-            '<div>' +
-              '<span>Follow Up</span>' +
-              '<strong id="dashFollowUp">0</strong>' +
-            '</div>' +
-          '</div>' +
-
-
-          '<div class="dashboard-stat-card appointment">' +
-            '<div class="dashboard-stat-icon">📅</div>' +
-            '<div>' +
-              '<span>Appointment</span>' +
-              '<strong id="dashAppointment">0</strong>' +
-            '</div>' +
-          '</div>' +
-
-
-          '<div class="dashboard-stat-card survey">' +
-            '<div class="dashboard-stat-icon">📍</div>' +
-            '<div>' +
-              '<span>Site Survey</span>' +
-              '<strong id="dashSiteSurvey">0</strong>' +
-            '</div>' +
-          '</div>' +
-
-
-          '<div class="dashboard-stat-card quotation">' +
-            '<div class="dashboard-stat-icon">📄</div>' +
-            '<div>' +
-              '<span>Quotation</span>' +
-              '<strong id="dashQuotation">0</strong>' +
-            '</div>' +
-          '</div>' +
-
-
-          '<div class="dashboard-stat-card closing">' +
-            '<div class="dashboard-stat-icon">✓</div>' +
-            '<div>' +
-              '<span>Closing</span>' +
-              '<strong id="dashClosing">0</strong>' +
-            '</div>' +
-          '</div>' +
-
-        '</div>' +
-
-
-        // ====================================================
-        // PIPELINE + STATUS
-        // ====================================================
-
-        '<div class="dashboard-main-grid">' +
-
-          '<section class="dashboard-panel">' +
-
-            '<div class="dashboard-panel-header">' +
-
-              '<div>' +
-                '<h2>Sales Pipeline</h2>' +
-                '<p>Lead progression</p>' +
-              '</div>' +
-
-              '<strong id="dashPipelineTotal">0</strong>' +
-
-            '</div>' +
-
-            '<div ' +
-              'class="dashboard-pipeline" ' +
-              'id="dashPipeline">' +
-              '<div class="dashboard-empty">' +
-                'Loading...' +
-              '</div>' +
-            '</div>' +
-
-          '</section>' +
-
-
-          '<section class="dashboard-panel">' +
-
-            '<div class="dashboard-panel-header">' +
-
-              '<div>' +
-                '<h2>Lead Status</h2>' +
-                '<p>Current distribution</p>' +
-              '</div>' +
-
-            '</div>' +
-
-            '<div ' +
-              'class="dashboard-status-list" ' +
-              'id="dashStatusList">' +
-              '<div class="dashboard-empty">' +
-                'Loading...' +
-              '</div>' +
-            '</div>' +
-
-          '</section>' +
-
-        '</div>' +
-
-
-        // ====================================================
-        // RECENT + FOLLOW UP
-        // ====================================================
-
-        '<div class="dashboard-bottom-grid">' +
-
-          '<section class="dashboard-panel">' +
-
-            '<div class="dashboard-panel-header">' +
-
-              '<div>' +
-                '<h2>Recent Leads</h2>' +
-                '<p>Latest customer activity</p>' +
-              '</div>' +
-
-              '<button ' +
-                'type="button" ' +
-                'class="dashboard-view-btn" ' +
-                'id="dashboardViewLeadsButton">' +
-                'View Leads' +
-              '</button>' +
-
-            '</div>' +
-
-            '<div ' +
-              'class="dashboard-recent-leads" ' +
-              'id="dashRecentLeads">' +
-              '<div class="dashboard-empty">' +
-                'Loading...' +
-              '</div>' +
-            '</div>' +
-
-          '</section>' +
-
-
-          '<section class="dashboard-panel">' +
-
-            '<div class="dashboard-panel-header">' +
-
-              '<div>' +
-                '<h2>Upcoming Follow Up</h2>' +
-                '<p>Next customer actions</p>' +
-              '</div>' +
-
-            '</div>' +
-
-            '<div ' +
-              'class="dashboard-upcoming" ' +
-              'id="dashUpcomingFollowups">' +
-              '<div class="dashboard-empty">' +
-                'Loading...' +
-              '</div>' +
-            '</div>' +
-
-          '</section>' +
-
-        '</div>' +
-
-      '</div>';
-
-
-    // ========================================================
-    // REFRESH BUTTON
-    // ========================================================
-
-    const refreshButton =
-      getElement(
-        "dashboardRefreshButton"
-      );
-
-    if (refreshButton) {
-
-      refreshButton.addEventListener(
-        "click",
-        function () {
-          loadDashboard(true);
-        }
-      );
-
-    }
-
-
-    // ========================================================
-    // VIEW LEADS BUTTON
-    // ========================================================
-
-    const viewLeadsButton =
-      getElement(
-        "dashboardViewLeadsButton"
-      );
-
-    if (viewLeadsButton) {
-
-      viewLeadsButton.addEventListener(
-        "click",
-        function () {
-
-          if (
-            typeof showLeads ===
-            "function"
-          ) {
-            showLeads();
+        if (!page) {
             return;
-          }
-
-          if (
-            typeof window.showLeads ===
-            "function"
-          ) {
-            window.showLeads();
-          }
-
         }
-      );
 
-    }
+        /*
+         * Jangan menghapus HTML dashboard yang sudah dibuat
+         * di index.html.
+         *
+         * Fungsi ini hanya membuat container jika belum ada.
+         */
 
+        var content = el("dashboardDynamicContent");
 
-    dashboardBuilt = true;
+        if (!content) {
+            content = document.createElement("div");
+            content.id = "dashboardDynamicContent";
 
-    return true;
-  }
-
-
-  // ==========================================================
-  // TOTAL
-  // ==========================================================
-
-  async function loadTotal(profile) {
-
-    const client =
-      getClient();
-
-    if (!client) {
-      return 0;
-    }
-
-
-    let query =
-      client
-        .from("leads")
-        .select(
-          "id",
-          {
-            count: "exact",
-            head: true
-          }
-        );
-
-
-    query =
-      applyScope(
-        query,
-        profile
-      );
-
-
-    const result =
-      await query;
-
-
-    if (result.error) {
-
-      console.error(
-        "Dashboard total error:",
-        result.error
-      );
-
-      return 0;
-    }
-
-
-    return result.count || 0;
-  }
-
-
-  // ==========================================================
-  // STATUS COUNT
-  // ==========================================================
-
-  async function loadStatusCount(
-    statuses,
-    profile
-  ) {
-
-    const client =
-      getClient();
-
-    if (!client) {
-      return 0;
-    }
-
-
-    let query =
-      client
-        .from("leads")
-        .select("status");
-
-
-    query =
-      applyScope(
-        query,
-        profile
-      );
-
-
-    const result =
-      await query;
-
-
-    if (result.error) {
-
-      console.error(
-        "Dashboard status count error:",
-        result.error
-      );
-
-      return 0;
-    }
-
-
-    const targets =
-      statuses.map(
-        normalizeStatus
-      );
-
-
-    return (
-      result.data || []
-    ).filter(function (row) {
-
-      return targets.includes(
-        normalizeStatus(
-          row.status
-        )
-      );
-
-    }).length;
-  }
-
-
-  // ==========================================================
-  // DATE COUNT
-  // ==========================================================
-
-  async function loadDateCount(
-    field,
-    profile
-  ) {
-
-    const client =
-      getClient();
-
-    if (!client) {
-      return 0;
-    }
-
-
-    let query =
-      client
-        .from("leads")
-        .select(
-          "id," +
-          field
-        )
-        .not(
-          field,
-          "is",
-          null
-        );
-
-
-    query =
-      applyScope(
-        query,
-        profile
-      );
-
-
-    const result =
-      await query;
-
-
-    if (result.error) {
-
-      console.error(
-        "Dashboard " +
-        field +
-        " error:",
-        result.error
-      );
-
-      return 0;
-    }
-
-
-    return (
-      result.data || []
-    ).filter(function (row) {
-
-      return (
-        row[field] !== null &&
-        row[field] !== ""
-      );
-
-    }).length;
-  }
-
-
-  // ==========================================================
-  // CLOSING COUNT
-  // ==========================================================
-
-  async function loadClosingCount(
-    profile
-  ) {
-
-    const client =
-      getClient();
-
-    if (!client) {
-      return 0;
-    }
-
-
-    let query =
-      client
-        .from("leads")
-        .select(
-          "status, closing"
-        );
-
-
-    query =
-      applyScope(
-        query,
-        profile
-      );
-
-
-    const result =
-      await query;
-
-
-    if (result.error) {
-
-      console.error(
-        "Dashboard closing error:",
-        result.error
-      );
-
-      return 0;
-    }
-
-
-    return (
-      result.data || []
-    ).filter(function (row) {
-
-      const status =
-        normalizeStatus(
-          row.status
-        );
-
-
-      return (
-        status === "Closing" ||
-        (
-          row.closing !== null &&
-          row.closing !== ""
-        )
-      );
-
-    }).length;
-  }
-
-
-  // ==========================================================
-  // LOAD STATS
-  // ==========================================================
-
-  async function loadStats(profile) {
-
-    const results =
-      await Promise.all([
-
-        loadTotal(profile),
-
-        loadStatusCount(
-          ["New"],
-          profile
-        ),
-
-        loadStatusCount(
-          ["Interested"],
-          profile
-        ),
-
-        loadStatusCount(
-          ["Follow Up"],
-          profile
-        ),
-
-        loadDateCount(
-          "appointment",
-          profile
-        ),
-
-        loadDateCount(
-          "site_survey",
-          profile
-        ),
-
-        loadDateCount(
-          "quotation",
-          profile
-        ),
-
-        loadClosingCount(
-          profile
-        )
-
-      ]);
-
-
-    setText(
-      "dashTotal",
-      results[0]
-    );
-
-    setText(
-      "dashNew",
-      results[1]
-    );
-
-    setText(
-      "dashInterested",
-      results[2]
-    );
-
-    setText(
-      "dashFollowUp",
-      results[3]
-    );
-
-    setText(
-      "dashAppointment",
-      results[4]
-    );
-
-    setText(
-      "dashSiteSurvey",
-      results[5]
-    );
-
-    setText(
-      "dashQuotation",
-      results[6]
-    );
-
-    setText(
-      "dashClosing",
-      results[7]
-    );
-  }
-
-
-  // ==========================================================
-  // PIPELINE
-  // ==========================================================
-
-  async function loadPipeline(profile) {
-
-    const client =
-      getClient();
-
-    if (!client) {
-      return;
-    }
-
-
-    let query =
-      client
-        .from("leads")
-        .select("status");
-
-
-    query =
-      applyScope(
-        query,
-        profile
-      );
-
-
-    const result =
-      await query;
-
-
-    if (result.error) {
-
-      console.error(
-        "Dashboard pipeline error:",
-        result.error
-      );
-
-      return;
-    }
-
-
-    const rows =
-      result.data || [];
-
-
-    const statuses = [
-      "New",
-      "Flyer Sent",
-      "Interested",
-      "Follow Up",
-      "Closing",
-      "Not Interested"
-    ];
-
-
-    const total =
-      rows.length;
-
-
-    const container =
-      getElement(
-        "dashPipeline"
-      );
-
-
-    if (!container) {
-      return;
-    }
-
-
-    setText(
-      "dashPipelineTotal",
-      total
-    );
-
-
-    container.innerHTML =
-      statuses.map(
-        function (status) {
-
-          const count =
-            rows.filter(
-              function (row) {
-
-                return (
-                  normalizeStatus(
-                    row.status
-                  ) === status
-                );
-
-              }
-            ).length;
-
-
-          const percentage =
-            total > 0
-              ? Math.round(
-                  (
-                    count /
-                    total
-                  ) *
-                  100
-                )
-              : 0;
-
-
-          return (
-            '<div class="dashboard-pipeline-row">' +
-
-              '<div class="dashboard-pipeline-label">' +
-
-                '<span>' +
-                  escapeHtml(status) +
-                '</span>' +
-
-                '<strong>' +
-                  count +
-                '</strong>' +
-
-              '</div>' +
-
-              '<div class="dashboard-pipeline-track">' +
-
-                '<div ' +
-                  'class="dashboard-pipeline-fill ' +
-                  statusClass(status) +
-                  '" ' +
-                  'style="width:' +
-                  percentage +
-                  '%">' +
-                '</div>' +
-
-              '</div>' +
-
-              '<small>' +
-                percentage +
-                '%' +
-              '</small>' +
-
-            '</div>'
-          );
-
+            page.appendChild(content);
         }
-      ).join("");
-  }
-
-
-  // ==========================================================
-  // STATUS DISTRIBUTION
-  // ==========================================================
-
-  async function loadStatusDistribution(
-    profile
-  ) {
-
-    const client =
-      getClient();
-
-    if (!client) {
-      return;
     }
 
+    // ========================================================
+    // STATS
+    // ========================================================
 
-    let query =
-      client
-        .from("leads")
-        .select("status");
+    function calculateStats(leads) {
+        var stats = {
+            total: leads.length,
+            newCount: 0,
+            interested: 0,
+            followUp: 0,
+            appointment: 0,
+            siteSurvey: 0,
+            quotation: 0,
+            closing: 0
+        };
 
+        for (var i = 0; i < leads.length; i++) {
+            var lead = leads[i] || {};
+            var status = normalizeStatus(lead.status);
 
-    query =
-      applyScope(
-        query,
-        profile
-      );
+            if (isNewStatus(status)) {
+                stats.newCount++;
+            }
 
+            if (isInterestedStatus(status)) {
+                stats.interested++;
+            }
 
-    const result =
-      await query;
+            if (isFollowUpStatus(status)) {
+                stats.followUp++;
+            }
 
+            if (isClosingStatus(status)) {
+                stats.closing++;
+            }
 
-    if (result.error) {
+            if (lead.appointment) {
+                stats.appointment++;
+            }
 
-      console.error(
-        "Dashboard status list error:",
-        result.error
-      );
+            if (lead.site_survey) {
+                stats.siteSurvey++;
+            }
 
-      return;
-    }
-
-
-    const rows =
-      result.data || [];
-
-
-    const statuses = [
-      "New",
-      "Flyer Sent",
-      "Interested",
-      "Follow Up",
-      "Closing",
-      "Not Interested"
-    ];
-
-
-    const total =
-      rows.length;
-
-
-    const container =
-      getElement(
-        "dashStatusList"
-      );
-
-
-    if (!container) {
-      return;
-    }
-
-
-    container.innerHTML =
-      statuses.map(
-        function (status) {
-
-          const count =
-            rows.filter(
-              function (row) {
-
-                return (
-                  normalizeStatus(
-                    row.status
-                  ) === status
-                );
-
-              }
-            ).length;
-
-
-          const percentage =
-            total > 0
-              ? Math.round(
-                  (
-                    count /
-                    total
-                  ) *
-                  100
-                )
-              : 0;
-
-
-          return (
-            '<div class="dashboard-status-row">' +
-
-              '<div class="dashboard-status-name">' +
-
-                '<span ' +
-                  'class="dashboard-status-dot ' +
-                  statusClass(status) +
-                  '">' +
-                '</span>' +
-
-                '<span>' +
-                  escapeHtml(status) +
-                '</span>' +
-
-              '</div>' +
-
-              '<strong>' +
-                count +
-              '</strong>' +
-
-              '<small>' +
-                percentage +
-                '%' +
-              '</small>' +
-
-            '</div>'
-          );
-
+            if (lead.quotation) {
+                stats.quotation++;
+            }
         }
-      ).join("");
-  }
 
-
-  // ==========================================================
-  // RECENT LEADS
-  // ==========================================================
-
-  async function loadRecentLeads(
-    profile
-  ) {
-
-    const client =
-      getClient();
-
-    if (!client) {
-      return;
+        return stats;
     }
 
+    function renderStats(stats) {
+        setText("dashTotal", stats.total);
+        setText("dashNew", stats.newCount);
+        setText("dashInterested", stats.interested);
+        setText("dashFollowUp", stats.followUp);
+        setText("dashAppointment", stats.appointment);
+        setText("dashSiteSurvey", stats.siteSurvey);
+        setText("dashQuotation", stats.quotation);
+        setText("dashClosing", stats.closing);
 
-    let query =
-      client
-        .from("leads")
-        .select(
-          "customer_name, business, location, status, created_at"
-        )
-        .order(
-          "created_at",
-          {
-            ascending: false
-          }
-        )
-        .limit(6);
-
-
-    query =
-      applyScope(
-        query,
-        profile
-      );
-
-
-    const result =
-      await query;
-
-
-    const container =
-      getElement(
-        "dashRecentLeads"
-      );
-
-
-    if (!container) {
-      return;
+        // Support ID dashboard lama jika masih ada.
+        setText("statTotal", stats.total);
+        setText("statNew", stats.newCount);
+        setText("statInterested", stats.interested);
+        setText("statFollowUp", stats.followUp);
+        setText("statAppointment", stats.appointment);
+        setText("statSiteSurvey", stats.siteSurvey);
+        setText("statQuotation", stats.quotation);
+        setText("statClosing", stats.closing);
     }
 
+    // ========================================================
+    // PIPELINE
+    // ========================================================
 
-    if (result.error) {
+    function renderPipeline(stats) {
+        var container = el("dashPipeline");
 
-      console.error(
-        "Dashboard recent leads error:",
-        result.error
-      );
+        if (!container) {
+            return;
+        }
 
-      container.innerHTML =
-        '<div class="dashboard-empty">' +
-          'Failed to load leads.' +
-        '</div>';
+        var items = [
+            {
+                label: "New",
+                value: stats.newCount
+            },
+            {
+                label: "Interested",
+                value: stats.interested
+            },
+            {
+                label: "Follow Up",
+                value: stats.followUp
+            },
+            {
+                label: "Appointment",
+                value: stats.appointment
+            },
+            {
+                label: "Site Survey",
+                value: stats.siteSurvey
+            },
+            {
+                label: "Quotation",
+                value: stats.quotation
+            },
+            {
+                label: "Closing",
+                value: stats.closing
+            }
+        ];
 
-      return;
-    }
+        var max = 1;
 
+        for (var i = 0; i < items.length; i++) {
+            if (items[i].value > max) {
+                max = items[i].value;
+            }
+        }
 
-    const data =
-      result.data || [];
+        var html = "";
 
+        for (var j = 0; j < items.length; j++) {
+            var item = items[j];
 
-    if (data.length === 0) {
-
-      container.innerHTML =
-        '<div class="dashboard-empty">' +
-          'No leads yet.' +
-        '</div>';
-
-      return;
-    }
-
-
-    container.innerHTML =
-      data.map(
-        function (lead) {
-
-          const status =
-            normalizeStatus(
-              lead.status
+            var percent = Math.round(
+                (item.value / max) * 100
             );
 
+            html +=
+                '<div class="dashboard-pipeline-row">' +
+                    '<div class="dashboard-pipeline-label">' +
+                        '<span>' +
+                            escapeHtml(item.label) +
+                        "</span>" +
+                        "<strong>" +
+                            item.value +
+                        "</strong>" +
+                    "</div>" +
 
-          const initial =
-            String(
-              lead.customer_name ||
-              "?"
-            )
-              .charAt(0)
-              .toUpperCase();
-
-
-          let locationText = "";
-
-
-          if (lead.location) {
-
-            locationText =
-              " · " +
-              escapeHtml(
-                lead.location
-              );
-
-          }
-
-
-          return (
-            '<div class="dashboard-recent-lead">' +
-
-              '<div class="dashboard-recent-avatar">' +
-                escapeHtml(initial) +
-              '</div>' +
-
-              '<div class="dashboard-recent-info">' +
-
-                '<strong>' +
-                  escapeHtml(
-                    lead.customer_name ||
-                    "No Name"
-                  ) +
-                '</strong>' +
-
-                '<span>' +
-                  escapeHtml(
-                    lead.business ||
-                    "-"
-                  ) +
-                  locationText +
-                '</span>' +
-
-              '</div>' +
-
-              '<div class="dashboard-recent-meta">' +
-
-                '<span ' +
-                  'class="dashboard-status-badge ' +
-                  statusClass(status) +
-                  '">' +
-                  escapeHtml(status) +
-                '</span>' +
-
-                '<small>' +
-                  formatDate(
-                    lead.created_at
-                  ) +
-                '</small>' +
-
-              '</div>' +
-
-            '</div>'
-          );
-
+                    '<div class="dashboard-pipeline-bar">' +
+                        '<span style="width:' +
+                            percent +
+                            '%"></span>' +
+                    "</div>" +
+                "</div>";
         }
-      ).join("");
-  }
 
+        container.innerHTML = html;
 
-  // ==========================================================
-  // UPCOMING FOLLOW UPS
-  // ==========================================================
-
-  async function loadUpcomingFollowUps(
-    profile
-  ) {
-
-    const client =
-      getClient();
-
-    if (!client) {
-      return;
+        setText(
+            "dashPipelineTotal",
+            stats.total
+        );
     }
 
+    // ========================================================
+    // STATUS
+    // ========================================================
 
-    const today =
-      getLocalToday();
+    function renderStatus(leads) {
+        var container = el("dashStatusList");
 
+        if (!container) {
+            return;
+        }
 
-    let query =
-      client
-        .from("leads")
-        .select(
-          "customer_name, business, location, status, follow_up_date"
-        )
-        .not(
-          "follow_up_date",
-          "is",
-          null
-        )
-        .gte(
-          "follow_up_date",
-          today
-        )
-        .order(
-          "follow_up_date",
-          {
-            ascending: true
-          }
-        )
-        .limit(6);
+        var statusMap = {};
 
+        for (var i = 0; i < leads.length; i++) {
+            var status = leads[i] && leads[i].status
+                ? String(leads[i].status).trim()
+                : "No Status";
 
-    query =
-      applyScope(
-        query,
-        profile
-      );
+            if (!statusMap[status]) {
+                statusMap[status] = 0;
+            }
 
+            statusMap[status]++;
+        }
 
-    const result =
-      await query;
+        var entries = Object.keys(statusMap);
 
+        entries.sort(function (a, b) {
+            return statusMap[b] - statusMap[a];
+        });
 
-    const container =
-      getElement(
-        "dashUpcomingFollowups"
-      );
+        if (!entries.length) {
+            container.innerHTML =
+                '<div class="dashboard-empty">' +
+                    "Belum ada data status." +
+                "</div>";
 
+            return;
+        }
 
-    if (!container) {
-      return;
+        var html = "";
+
+        for (var j = 0; j < entries.length; j++) {
+            var key = entries[j];
+
+            html +=
+                '<div class="dashboard-status-row">' +
+                    '<span class="dashboard-status-name">' +
+                        escapeHtml(key) +
+                    "</span>" +
+                    '<strong class="dashboard-status-count">' +
+                        statusMap[key] +
+                    "</strong>" +
+                "</div>";
+        }
+
+        container.innerHTML = html;
     }
 
+    // ========================================================
+    // RECENT LEADS
+    // ========================================================
 
-    if (result.error) {
+    function renderRecentLeads(leads) {
+        var container = el("dashRecentLeads");
 
-      console.error(
-        "Dashboard follow-up error:",
-        result.error
-      );
+        if (!container) {
+            return;
+        }
 
-      container.innerHTML =
-        '<div class="dashboard-empty">' +
-          'Failed to load follow-ups.' +
-        '</div>';
+        var sorted = leads.slice();
 
-      return;
+        sorted.sort(function (a, b) {
+            var da = new Date(a.created_at || 0).getTime();
+            var db = new Date(b.created_at || 0).getTime();
+
+            return db - da;
+        });
+
+        var recent = sorted.slice(0, 6);
+
+        if (!recent.length) {
+            container.innerHTML =
+                '<div class="dashboard-empty">' +
+                    "Belum ada lead." +
+                "</div>";
+
+            return;
+        }
+
+        var html = "";
+
+        for (var i = 0; i < recent.length; i++) {
+            var lead = recent[i];
+
+            html +=
+                '<div class="dashboard-lead-row">' +
+
+                    '<div class="dashboard-lead-main">' +
+                        '<strong>' +
+                            escapeHtml(
+                                lead.customer_name ||
+                                "Tanpa Nama"
+                            ) +
+                        "</strong>" +
+
+                        '<span>' +
+                            escapeHtml(
+                                lead.business ||
+                                lead.location ||
+                                "-"
+                            ) +
+                        "</span>" +
+                    "</div>" +
+
+                    '<div class="dashboard-lead-side">' +
+                        '<span class="dashboard-lead-status">' +
+                            escapeHtml(
+                                lead.status ||
+                                "No Status"
+                            ) +
+                        "</span>" +
+
+                        '<small>' +
+                            formatDateTime(
+                                lead.created_at
+                            ) +
+                        "</small>" +
+                    "</div>" +
+
+                "</div>";
+        }
+
+        container.innerHTML = html;
     }
 
+    // ========================================================
+    // UPCOMING FOLLOW UPS
+    // ========================================================
 
-    const data =
-      result.data || [];
+    function renderUpcomingFollowups(leads) {
+        var container = el("dashUpcomingFollowups");
 
+        if (!container) {
+            return;
+        }
 
-    if (data.length === 0) {
+        var today = new Date();
 
-      container.innerHTML =
-        '<div class="dashboard-empty">' +
-          'No upcoming follow-ups.' +
-        '</div>';
+        today.setHours(0, 0, 0, 0);
 
-      return;
-    }
+        var upcoming = [];
 
+        for (var i = 0; i < leads.length; i++) {
+            var lead = leads[i];
 
-    container.innerHTML =
-      data.map(
-        function (lead) {
+            if (!lead.follow_up_date) {
+                continue;
+            }
 
-          const formattedDate =
-            formatDate(
-              lead.follow_up_date
+            var date = new Date(
+                lead.follow_up_date + "T00:00:00"
             );
 
+            if (isNaN(date.getTime())) {
+                continue;
+            }
 
-          const normalized =
-            normalizeStatus(
-              lead.status
+            if (date >= today) {
+                upcoming.push(lead);
+            }
+        }
+
+        upcoming.sort(function (a, b) {
+            return (
+                new Date(
+                    a.follow_up_date + "T00:00:00"
+                ).getTime() -
+                new Date(
+                    b.follow_up_date + "T00:00:00"
+                ).getTime()
+            );
+        });
+
+        upcoming = upcoming.slice(0, 6);
+
+        if (!upcoming.length) {
+            container.innerHTML =
+                '<div class="dashboard-empty">' +
+                    "Tidak ada follow-up mendatang." +
+                "</div>";
+
+            return;
+        }
+
+        var html = "";
+
+        for (var j = 0; j < upcoming.length; j++) {
+            var lead = upcoming[j];
+
+            html +=
+                '<div class="dashboard-followup-row">' +
+
+                    '<div class="dashboard-followup-date">' +
+                        formatDate(
+                            lead.follow_up_date
+                        ) +
+                    "</div>" +
+
+                    '<div class="dashboard-followup-main">' +
+                        '<strong>' +
+                            escapeHtml(
+                                lead.customer_name ||
+                                "Tanpa Nama"
+                            ) +
+                        "</strong>" +
+
+                        '<span>' +
+                            escapeHtml(
+                                lead.phone ||
+                                lead.location ||
+                                "-"
+                            ) +
+                        "</span>" +
+                    "</div>" +
+
+                    '<div class="dashboard-followup-status">' +
+                        escapeHtml(
+                            lead.status ||
+                            "Follow Up"
+                        ) +
+                    "</div>" +
+
+                "</div>";
+        }
+
+        container.innerHTML = html;
+    }
+
+    // ========================================================
+    // ROLE
+    // ========================================================
+
+    function getSalesFilter(profile) {
+        if (!profile) {
+            return null;
+        }
+
+        var role = String(
+            profile.role || ""
+        ).toLowerCase();
+
+        if (
+            role === "admin" ||
+            role === "owner"
+        ) {
+            return null;
+        }
+
+        /*
+         * Untuk Sales, gunakan profile.id terlebih dahulu.
+         * Jika tidak tersedia, fallback ke auth_user_id.
+         */
+        return (
+            profile.id ||
+            profile.auth_user_id ||
+            null
+        );
+    }
+
+    // ========================================================
+    // DATABASE QUERY
+    // ========================================================
+
+    async function fetchDashboardData() {
+        var client = getClient();
+        var profile = getProfile();
+
+        if (!client) {
+            throw new Error(
+                "Supabase client belum tersedia."
+            );
+        }
+
+        if (!profile) {
+            throw new Error(
+                "Profile user belum tersedia."
+            );
+        }
+
+        /*
+         * HANYA SATU QUERY.
+         *
+         * Kita ambil field yang benar-benar dibutuhkan
+         * dashboard. Tidak menggunakan select("*").
+         */
+        var query = client
+            .from("leads")
+            .select(
+                "id,customer_name,phone,business,location,status," +
+                "follow_up_date,appointment,site_survey,quotation," +
+                "closing,created_at,sales_id"
             );
 
+        var salesFilter = getSalesFilter(profile);
 
-          return (
-            '<div class="dashboard-followup-item">' +
-
-              '<div class="dashboard-followup-date">' +
-
-                '<strong>' +
-                  escapeHtml(
-                    formattedDate
-                  ) +
-                '</strong>' +
-
-              '</div>' +
-
-              '<div class="dashboard-followup-info">' +
-
-                '<strong>' +
-                  escapeHtml(
-                    lead.customer_name ||
-                    "No Name"
-                  ) +
-                '</strong>' +
-
-                '<span>' +
-                  escapeHtml(
-                    lead.business ||
-                    "-"
-                  ) +
-                '</span>' +
-
-              '</div>' +
-
-              '<span ' +
-                'class="dashboard-status-badge ' +
-                statusClass(normalized) +
-                '">' +
-                escapeHtml(normalized) +
-              '</span>' +
-
-            '</div>'
-          );
-
+        if (salesFilter) {
+            query = query.eq(
+                "sales_id",
+                salesFilter
+            );
         }
-      ).join("");
-  }
 
-
-  // ==========================================================
-  // LOAD DASHBOARD
-  // ==========================================================
-
-  async function loadDashboard(force) {
-
-    if (
-      dashboardLoading &&
-      !force
-    ) {
-      return;
-    }
-
-
-    const page =
-      getElement(
-        "dashboardPage"
-      );
-
-
-    if (!page) {
-
-      console.error(
-        "CRM FSI Dashboard: #dashboardPage tidak ditemukan."
-      );
-
-      return;
-    }
-
-
-    const profile =
-      getProfile();
-
-
-    if (!profile) {
-
-      console.log(
-        "CRM FSI Dashboard: menunggu currentProfile..."
-      );
-
-      return;
-    }
-
-
-    const profileId =
-      profile.id ||
-      profile.auth_user_id ||
-      null;
-
-
-    if (
-      !dashboardBuilt ||
-      dashboardProfileId !== profileId
-    ) {
-
-      buildDashboard();
-
-      dashboardProfileId =
-        profileId;
-    }
-
-
-    dashboardLoading = true;
-
-
-    try {
-
-      await Promise.all([
-
-        loadStats(profile),
-
-        loadPipeline(profile),
-
-        loadStatusDistribution(profile),
-
-        loadRecentLeads(profile),
-
-        loadUpcomingFollowUps(profile)
-
-      ]);
-
-    } catch (error) {
-
-      console.error(
-        "CRM FSI Dashboard error:",
-        error
-      );
-
-    } finally {
-
-      dashboardLoading = false;
-
-    }
-  }
-
-
-  // ==========================================================
-  // PUBLIC FUNCTIONS
-  // ==========================================================
-
-  window.loadFSIDashboard =
-    function (force) {
-      return loadDashboard(
-        force === true
-      );
-    };
-
-
-  window.refreshDashboard =
-    function () {
-      return loadDashboard(true);
-    };
-
-
-  // ==========================================================
-  // AUTO REFRESH
-  // ==========================================================
-
-  setInterval(
-    function () {
-
-      const page =
-        getElement(
-          "dashboardPage"
+        /*
+         * Ambil data terbaru terlebih dahulu.
+         */
+        query = query.order(
+            "created_at",
+            {
+                ascending: false
+            }
         );
 
+        var result = await query;
 
-      if (!page) {
-        return;
-      }
+        if (result.error) {
+            throw result.error;
+        }
 
-
-      const style =
-        window.getComputedStyle(
-          page
-        );
-
-
-      const visible =
-        style.display !== "none" &&
-        page.offsetParent !== null;
-
-
-      if (visible) {
-        loadDashboard(false);
-      }
-
-    },
-    30000
-  );
-
-
-  // ==========================================================
-  // INITIALIZE
-  // ==========================================================
-
-  function initializeDashboard() {
-
-    console.log(
-      "CRM FSI Dashboard.js berhasil dimuat."
-    );
-
-
-    const page =
-      getElement(
-        "dashboardPage"
-      );
-
-
-    if (
-      page &&
-      page.offsetParent !== null
-    ) {
-
-      loadDashboard(true);
-
+        return result.data || [];
     }
 
-  }
+    // ========================================================
+    // RENDER ALL
+    // ========================================================
 
+    function renderDashboard(leads) {
+        var stats = calculateStats(leads);
 
-  // ==========================================================
-  // DOM READY
-  // ==========================================================
+        renderStats(stats);
+        renderPipeline(stats);
+        renderStatus(leads);
+        renderRecentLeads(leads);
+        renderUpcomingFollowups(leads);
 
-  if (
-    document.readyState ===
-    "loading"
-  ) {
+        hideDashboardLoading();
+    }
 
-    document.addEventListener(
-      "DOMContentLoaded",
-      initializeDashboard
-    );
+    // ========================================================
+    // ERROR
+    // ========================================================
 
-  } else {
+    function renderDashboardError(error) {
+        console.error(
+            "CRM FSI Dashboard Error:",
+            error
+        );
 
-    initializeDashboard();
+        var message =
+            error && error.message
+                ? error.message
+                : "Gagal mengambil data dashboard.";
 
-  }
+        var containers = [
+            "dashPipeline",
+            "dashStatusList",
+            "dashRecentLeads",
+            "dashUpcomingFollowups"
+        ];
+
+        for (var i = 0; i < containers.length; i++) {
+            var container = el(containers[i]);
+
+            if (container) {
+                container.innerHTML =
+                    '<div class="dashboard-empty dashboard-error">' +
+                        escapeHtml(message) +
+                    "</div>";
+            }
+        }
+    }
+
+    // ========================================================
+    // MAIN LOAD
+    // ========================================================
+
+    async function loadFSIDashboard(force) {
+        /*
+         * Jangan melakukan query jika dashboard tidak sedang
+         * digunakan.
+         */
+        if (!isDashboardVisible()) {
+            return;
+        }
+
+        /*
+         * Hindari dua query dashboard berjalan bersamaan.
+         */
+        if (dashboardLoading) {
+            return;
+        }
+
+        /*
+         * Jika baru saja di-load, tidak perlu query lagi.
+         */
+        var now = Date.now();
+
+        if (
+            !force &&
+            lastDashboardLoad &&
+            now - lastDashboardLoad < 3000
+        ) {
+            return;
+        }
+
+        dashboardLoading = true;
+
+        /*
+         * Tampilkan dashboard terlebih dahulu.
+         */
+        showDashboardLoading();
+
+        try {
+            var leads = await fetchDashboardData();
+
+            renderDashboard(leads);
+
+            lastDashboardLoad = Date.now();
+
+        } catch (error) {
+            renderDashboardError(error);
+
+        } finally {
+            dashboardLoading = false;
+        }
+    }
+
+    // ========================================================
+    // PUBLIC REFRESH
+    // ========================================================
+
+    async function refreshDashboard() {
+        await loadFSIDashboard(true);
+    }
+
+    window.loadFSIDashboard = loadFSIDashboard;
+    window.refreshDashboard = refreshDashboard;
+
+    // ========================================================
+    // AUTO REFRESH
+    // ========================================================
+
+    function startDashboardAutoRefresh() {
+        if (dashboardTimer) {
+            clearInterval(dashboardTimer);
+        }
+
+        dashboardTimer = setInterval(
+            function () {
+                if (isDashboardVisible()) {
+                    loadFSIDashboard(false);
+                }
+            },
+            DASHBOARD_REFRESH_MS
+        );
+    }
+
+    // ========================================================
+    // INITIALIZE
+    // ========================================================
+
+    function initializeDashboard() {
+        startDashboardAutoRefresh();
+
+        if (isDashboardVisible()) {
+            loadFSIDashboard(true);
+        }
+
+        console.log(
+            "CRM FSI Fast Dashboard berhasil dimuat."
+        );
+    }
+
+    // Tunggu DOM selesai.
+    if (document.readyState === "loading") {
+        document.addEventListener(
+            "DOMContentLoaded",
+            initializeDashboard
+        );
+    } else {
+        initializeDashboard();
+    }
 
 })();
