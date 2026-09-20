@@ -1,1045 +1,1762 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+/* =========================================================
+   FSI CRM - LEADS
+   ========================================================= */
 
-  <title>Leads - FSI CRM</title>
-
-  <link rel="icon" href="../assets/logo-fsi.png">
-
-  <!-- Font Awesome -->
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-  >
-
-  <!-- CRM CSS -->
-  <link rel="stylesheet" href="../css/style.css">
-  <link rel="stylesheet" href="../css/dashboard.css">
-  <link rel="stylesheet" href="../css/leads.css">
-  <link rel="stylesheet" href="../css/profile.css">
-  <link rel="stylesheet" href="../css/sales.css">
-</head>
-
-<body>
-
-  <div id="app" class="app">
-
-    <!-- =====================================================
-         MAIN CONTENT
-    ====================================================== -->
-    <main class="main-content">
-
-      <!-- ===================================================
-           TOP HEADER
-      ==================================================== -->
-      <header class="top-header">
-
-        <!-- BRAND -->
-        <div class="brand-area">
-
-          <a
-            href="dashboard.html"
-            class="brand-logo"
-          >
-            <img
-              src="../assets/logo-fsi.png"
-              alt="FSI CRM"
-            >
-          </a>
-
-          <div class="brand-text">
-
-            <strong>
-              FSI CRM
-            </strong>
-
-            <span>
-              French Solar Industry
-            </span>
-
-          </div>
-
-        </div>
+let leadConfirmCallback = null;
+let leadSearchTimer = null;
 
 
-        <!-- PAGE TITLE -->
-        <div class="header-page-info">
+/* =========================================================
+   INITIALIZE
+   ========================================================= */
 
-          <h1 id="pageTitle">
-            Leads
-          </h1>
-
-          <p id="pageSubtitle">
-            Customer Lead Management
-          </p>
-
-        </div>
+document.addEventListener("DOMContentLoaded", () => {
+  initializeLeadsPage();
+});
 
 
-        <!-- TOP NAVIGATION -->
-        <nav class="top-navigation">
+async function initializeLeadsPage() {
+  try {
+    populateStatusOptions();
 
-          <a
-            class="top-nav-item"
-            href="dashboard.html"
-          >
-            <i class="fa-solid fa-chart-pie"></i>
-            <span>Dashboard</span>
-          </a>
+    await loadSalesLookup();
+    await loadFilterOptions();
 
-          <a
-            class="top-nav-item active"
-            href="leads.html"
-          >
-            <i class="fa-solid fa-users"></i>
-            <span>Leads</span>
-          </a>
+    setupLeadsEvents();
 
-          <a
-            class="top-nav-item admin-only"
-            href="sales.html"
-          >
-            <i class="fa-solid fa-user-tie"></i>
-            <span>Manage Sales</span>
-          </a>
+    const params = new URLSearchParams(window.location.search);
 
-        </nav>
+    const search = params.get("search");
 
+    if (search && $("leadSearch")) {
+      $("leadSearch").value = search;
+    }
 
-        <!-- HEADER RIGHT -->
-        <div class="header-right">
+    await loadLeads(1);
 
-          <!-- GLOBAL SEARCH -->
-          <div class="global-search">
+    if (params.get("add") === "1") {
+      setTimeout(() => {
+        openLeadModal();
+      }, 200);
+    }
 
-            <i class="fa-solid fa-magnifying-glass"></i>
+  } catch (error) {
+    console.error("initializeLeadsPage:", error);
 
-            <input
-              id="globalSearch"
-              type="search"
-              placeholder="Cari leads, pelanggan, atau nama..."
-              autocomplete="off"
-            >
-
-          </div>
+    showToast(
+      "Leads gagal dimuat: " + error.message,
+      "error"
+    );
+  }
+}
 
 
-          <!-- NOTIFICATION -->
-          <button
-            class="header-icon-btn"
-            type="button"
-            title="Notifikasi"
-          >
-            <i class="fa-regular fa-bell"></i>
-          </button>
+/* =========================================================
+   STATUS OPTIONS
+   ========================================================= */
+
+function populateStatusOptions() {
+  const select = $("statusFilter");
+  const formSelect = $("leadStatus");
+
+  if (select) {
+    select.innerHTML = `
+      <option value="">Semua Status</option>
+      ${CRM_CONFIG.statuses.map(status => `
+        <option value="${escapeHTML(status)}">
+          ${escapeHTML(status)}
+        </option>
+      `).join("")}
+    `;
+  }
+
+  if (formSelect) {
+    formSelect.innerHTML = `
+      <option value="">Pilih Status</option>
+      ${CRM_CONFIG.statuses.map(status => `
+        <option value="${escapeHTML(status)}">
+          ${escapeHTML(status)}
+        </option>
+      `).join("")}
+    `;
+  }
+}
 
 
-          <!-- USER MENU -->
-          <button
-            id="userMenu"
-            class="user-menu"
-            type="button"
-          >
+/* =========================================================
+   SALES LOOKUP
+   ========================================================= */
 
-            <span
-              id="userAvatarInitial"
-              class="user-avatar"
-            >
-              F
-            </span>
+async function loadSalesLookup() {
+  const { data, error } = await supabaseClient
+    .from(CRM_CONFIG.salesTable)
+    .select("id, name, role, status")
+    .order("name", { ascending: true });
 
-            <span
-              id="userInfo"
-              class="user-info"
-            >
-              <strong>User</strong>
-              <small>Sales</small>
-            </span>
+  if (error) {
+    console.error("loadSalesLookup:", error);
+    return;
+  }
 
-            <i class="fa-solid fa-chevron-down"></i>
+  salesUsersData = data || [];
 
-          </button>
+  populateSales();
+}
 
 
-          <!-- USER DROPDOWN -->
-          <div
-            id="userDropdown"
-            class="user-dropdown"
-            style="display:none"
-          >
+/* =========================================================
+   POPULATE SALES
+   ========================================================= */
+
+function populateSales() {
+  const formSelect = $("leadSalesAssign");
+  const filterSelect = $("salesFilter");
+
+  const activeSales = (salesUsersData || []).filter(
+    sales =>
+      !sales.status ||
+      String(sales.status).toLowerCase() === "active"
+  );
+
+  /* -------------------------------------------------------
+     FORM SALES
+  ------------------------------------------------------- */
+
+  if (formSelect) {
+
+    const currentValue = formSelect.value;
+
+    formSelect.innerHTML = `
+      <option value="">Pilih Sales</option>
+
+      ${activeSales.map(sales => `
+        <option value="${escapeHTML(sales.id)}">
+          ${escapeHTML(sales.name || "Sales")}
+        </option>
+      `).join("")}
+    `;
+
+    if (currentValue) {
+      formSelect.value = currentValue;
+    }
+
+    if (currentProfile?.role !== "Admin") {
+      formSelect.value = currentProfile?.id || "";
+      formSelect.disabled = true;
+    } else {
+      formSelect.disabled = false;
+    }
+  }
+
+
+  /* -------------------------------------------------------
+     FILTER SALES
+  ------------------------------------------------------- */
+
+  if (filterSelect) {
+
+    const currentValue = filterSelect.value;
+
+    filterSelect.innerHTML = `
+      <option value="">Semua Sales</option>
+
+      ${activeSales.map(sales => `
+        <option value="${escapeHTML(sales.id)}">
+          ${escapeHTML(sales.name || "Sales")}
+        </option>
+      `).join("")}
+    `;
+
+    if (currentValue) {
+      filterSelect.value = currentValue;
+    }
+  }
+}
+
+
+/* =========================================================
+   FILTER OPTIONS
+   ========================================================= */
+
+async function loadFilterOptions() {
+
+  const { data, error } = await supabaseClient
+    .from(CRM_CONFIG.leadTable)
+    .select("business, location");
+
+  if (error) {
+    console.error("loadFilterOptions:", error);
+    return;
+  }
+
+  const rows = data || [];
+
+  const businesses = [
+    ...new Set(
+      rows
+        .map(row => String(row.business || "").trim())
+        .filter(Boolean)
+    )
+  ].sort((a, b) => a.localeCompare(b));
+
+  const locations = [
+    ...new Set(
+      rows
+        .map(row => String(row.location || "").trim())
+        .filter(Boolean)
+    )
+  ].sort((a, b) => a.localeCompare(b));
+
+
+  populateSimpleSelect(
+    "businessFilter",
+    "Semua Business",
+    businesses
+  );
+
+  populateSimpleSelect(
+    "locationFilter",
+    "Semua Location",
+    locations
+  );
+}
+
+
+/* =========================================================
+   SIMPLE SELECT
+   ========================================================= */
+
+function populateSimpleSelect(
+  elementId,
+  placeholder,
+  values
+) {
+
+  const select = $(elementId);
+
+  if (!select) return;
+
+  select.innerHTML = `
+    <option value="">
+      ${escapeHTML(placeholder)}
+    </option>
+
+    ${values.map(value => `
+      <option value="${escapeHTML(value)}">
+        ${escapeHTML(value)}
+      </option>
+    `).join("")}
+  `;
+}
+
+
+/* =========================================================
+   BUILD QUERY
+   ========================================================= */
+
+function buildLeadQuery() {
+
+  let query = supabaseClient
+    .from(CRM_CONFIG.leadTable)
+    .select(
+      `
+        id,
+        customer_name,
+        phone,
+        email,
+        business,
+        location,
+        status,
+        follow_up_date,
+        appointment,
+        site_survey,
+        quotation,
+        spk,
+        closing,
+        notes,
+        created_at,
+        sales_id,
+        created_by,
+        updated_by
+      `,
+      {
+        count: "exact"
+      }
+    );
+
+
+  /* -------------------------------------------------------
+     SALES ROLE
+  ------------------------------------------------------- */
+
+  if (
+    currentProfile &&
+    currentProfile.role !== "Admin"
+  ) {
+
+    query = query.eq(
+      "sales_id",
+      currentProfile.id
+    );
+
+  }
+
+
+  /* -------------------------------------------------------
+     SEARCH
+  ------------------------------------------------------- */
+
+  const search =
+    $("leadSearch")?.value.trim() || "";
+
+  if (search) {
+
+    const safeSearch =
+      search.replace(/[%_]/g, "");
+
+    query = query.or(
+      `customer_name.ilike.%${safeSearch}%,` +
+      `phone.ilike.%${safeSearch}%,` +
+      `email.ilike.%${safeSearch}%,` +
+      `business.ilike.%${safeSearch}%,` +
+      `location.ilike.%${safeSearch}%`
+    );
+
+  }
+
+
+  /* -------------------------------------------------------
+     STATUS
+  ------------------------------------------------------- */
+
+  const status =
+    $("statusFilter")?.value || "";
+
+  if (status) {
+    query = query.eq("status", status);
+  }
+
+
+  /* -------------------------------------------------------
+     BUSINESS
+  ------------------------------------------------------- */
+
+  const business =
+    $("businessFilter")?.value || "";
+
+  if (business) {
+    query = query.eq("business", business);
+  }
+
+
+  /* -------------------------------------------------------
+     LOCATION
+  ------------------------------------------------------- */
+
+  const location =
+    $("locationFilter")?.value || "";
+
+  if (location) {
+    query = query.eq("location", location);
+  }
+
+
+  /* -------------------------------------------------------
+     ADMIN SALES FILTER
+  ------------------------------------------------------- */
+
+  if (
+    currentProfile?.role === "Admin"
+  ) {
+
+    const salesId =
+      $("salesFilter")?.value || "";
+
+    if (salesId) {
+      query = query.eq("sales_id", salesId);
+    }
+
+  }
+
+
+  return query;
+}
+
+
+/* =========================================================
+   LOAD LEADS
+   ========================================================= */
+
+async function loadLeads(page = 1) {
+
+  currentPage = page;
+
+  const tableBody = $("leadsTableBody");
+  const emptyState = $("leadsEmptyState");
+
+  if (!tableBody) return;
+
+
+  try {
+
+    setGlobalLoading(true);
+
+
+    const pageSize =
+      CRM_CONFIG.pageSize || 20;
+
+    const from =
+      (page - 1) * pageSize;
+
+    const to =
+      from + pageSize - 1;
+
+
+    const query =
+      buildLeadQuery()
+        .order(
+          "created_at",
+          {
+            ascending: false
+          }
+        )
+        .range(from, to);
+
+
+    const {
+      data,
+      error,
+      count
+    } = await query;
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    leadsData = data || [];
+
+    totalLeadsCount =
+      count || 0;
+
+
+    renderLeadsTable(
+      leadsData,
+      from
+    );
+
+    updateLeadCount(
+      totalLeadsCount
+    );
+
+    renderPagination(
+      totalLeadsCount,
+      page,
+      pageSize
+    );
+
+
+  } catch (error) {
+
+    console.error("loadLeads:", error);
+
+    tableBody.innerHTML = "";
+
+    if (emptyState) {
+      emptyState.style.display = "block";
+      emptyState.innerHTML = `
+        <i class="fa-solid fa-circle-exclamation"></i>
+
+        <h3>
+          Gagal memuat data
+        </h3>
+
+        <p>
+          ${escapeHTML(error.message || "Terjadi kesalahan.")}
+        </p>
+      `;
+    }
+
+    showToast(
+      "Gagal memuat leads: " +
+      error.message,
+      "error"
+    );
+
+  } finally {
+
+    setGlobalLoading(false);
+
+  }
+}
+
+
+/* =========================================================
+   UPDATE LEAD COUNT
+   ========================================================= */
+
+function updateLeadCount(total) {
+
+  const label =
+    $("leadCountLabel");
+
+  if (!label) return;
+
+  label.textContent =
+    `${Number(total || 0).toLocaleString("id-ID")} leads`;
+}
+
+
+/* =========================================================
+   RENDER TABLE
+   ========================================================= */
+
+function renderLeadsTable(
+  data,
+  startIndex = 0
+) {
+
+  const tableBody =
+    $("leadsTableBody");
+
+  const emptyState =
+    $("leadsEmptyState");
+
+
+  if (!tableBody) return;
+
+
+  if (!data.length) {
+
+    tableBody.innerHTML = "";
+
+    if (emptyState) {
+      emptyState.style.display = "block";
+    }
+
+    return;
+
+  }
+
+
+  if (emptyState) {
+    emptyState.style.display = "none";
+  }
+
+
+  tableBody.innerHTML =
+    data.map((lead, index) => {
+
+      const rowNumber =
+        startIndex + index + 1;
+
+
+      const customerName =
+        lead.customer_name || "-";
+
+
+      const customerId =
+        String(lead.id || "");
+
+
+      const salesName =
+        getSalesNameById(
+          lead.sales_id
+        );
+
+
+      const status =
+        normalizeLeadStatus(
+          lead.status
+        );
+
+
+      const statusClass =
+        status
+          .toLowerCase()
+          .replace(/\s+/g, "-");
+
+
+      const safeId =
+        escapeHTML(customerId);
+
+
+      return `
+
+        <tr>
+
+          <!-- NO -->
+          <td class="col-no">
+            ${rowNumber}
+          </td>
+
+
+          <!-- CUSTOMER -->
+          <td class="col-customer">
 
             <button
               type="button"
-              onclick="openProfileModal()"
+              class="customer-name-link"
+              onclick="openCustomerProfile('${safeId}')"
+              title="Buka Customer Profile"
             >
-              <i class="fa-solid fa-user"></i>
-              Profile
+              ${escapeHTML(customerName)}
             </button>
 
-            <div></div>
+          </td>
 
-            <button
-              id="dropdownLogout"
-              class="danger"
-              type="button"
+
+          <!-- BUSINESS -->
+          <td>
+            ${escapeHTML(
+              lead.business || "-"
+            )}
+          </td>
+
+
+          <!-- LOCATION -->
+          <td>
+            ${escapeHTML(
+              lead.location || "-"
+            )}
+          </td>
+
+
+          <!-- STATUS -->
+          <td>
+
+            <span
+              class="status-badge status-${statusClass}"
             >
-              <i class="fa-solid fa-right-from-bracket"></i>
-              Logout
-            </button>
+              ${escapeHTML(status || "-")}
+            </span>
 
-          </div>
-
-        </div>
-
-      </header>
+          </td>
 
 
-      <!-- ===================================================
-           PAGE CONTENT
-      ==================================================== -->
-      <section class="page-content">
+          <!-- SALES -->
+          <td>
 
-        <section
-          id="leadsPage"
-          class="page"
-        >
+            <span class="sales-cell">
 
-          <!-- =================================================
-               PAGE HEADING
-          ================================================== -->
-          <div class="content-heading">
+              ${escapeHTML(
+                salesName || "-"
+              )}
 
-            <div>
+            </span>
 
-              <span class="eyebrow">
-                CUSTOMER DATABASE
-              </span>
-
-              <h2>
-                Leads
-              </h2>
-
-              <p>
-                Kelola database customer dan proses follow-up.
-              </p>
-
-            </div>
+          </td>
 
 
-            <div class="content-heading-actions">
+          <!-- PHONE -->
+          <td>
 
-              <button
-                id="exportLeadsBtn"
-                class="btn btn-secondary"
-                type="button"
-              >
-                <i class="fa-solid fa-file-export"></i>
-                Export
-              </button>
-
-              <button
-                id="addLeadBtn"
-                class="btn btn-primary"
-                type="button"
-              >
-                <i class="fa-solid fa-plus"></i>
-                Tambah Lead
-              </button>
-
-            </div>
-
-          </div>
-
-
-          <!-- =================================================
-               FILTER CARD
-          ================================================== -->
-          <div class="leads-filter-card">
-
-            <div class="leads-filter-grid">
-
-              <!-- SEARCH -->
-              <div class="filter-field filter-search">
-
-                <label for="leadSearch">
-                  Search
-                </label>
-
-                <div class="filter-input-wrap">
-
-                  <i class="fa-solid fa-magnifying-glass"></i>
-
-                  <input
-                    id="leadSearch"
-                    type="search"
-                    placeholder="Nama customer, telepon, bisnis..."
-                    autocomplete="off"
+            ${
+              lead.phone
+                ? `
+                  <a
+                    href="${whatsappLink(lead.phone)}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="phone-link"
+                    title="Open WhatsApp"
                   >
+                    ${escapeHTML(lead.phone)}
+                  </a>
+                `
+                : "-"
+            }
 
-                </div>
-
-              </div>
-
-
-              <!-- STATUS -->
-              <div class="filter-field">
-
-                <label for="statusFilter">
-                  Status
-                </label>
-
-                <select id="statusFilter">
-
-                  <option value="">
-                    Semua Status
-                  </option>
-
-                </select>
-
-              </div>
+          </td>
 
 
-              <!-- BUSINESS -->
-              <div class="filter-field">
+          <!-- FOLLOW UP -->
+          <td>
 
-                <label for="businessFilter">
-                  Business
-                </label>
+            ${
+              lead.follow_up_date
+                ? formatDate(lead.follow_up_date)
+                : "-"
+            }
 
-                <select id="businessFilter">
-
-                  <option value="">
-                    Semua Business
-                  </option>
-
-                </select>
-
-              </div>
+          </td>
 
 
-              <!-- LOCATION -->
-              <div class="filter-field">
+          <!-- CREATED -->
+          <td>
 
-                <label for="locationFilter">
-                  Location
-                </label>
+            ${
+              lead.created_at
+                ? formatDate(lead.created_at)
+                : "-"
+            }
 
-                <select id="locationFilter">
-
-                  <option value="">
-                    Semua Location
-                  </option>
-
-                </select>
-
-              </div>
+          </td>
 
 
-              <!-- SALES -->
-              <div
-                class="filter-field admin-only"
-                id="salesFilterField"
+          <!-- ACTION -->
+          <td class="col-action">
+
+            <div class="table-actions">
+
+              <button
+                type="button"
+                class="table-action-btn"
+                title="Customer Profile"
+                onclick="openCustomerProfile('${safeId}')"
               >
-
-                <label for="salesFilter">
-                  Sales
-                </label>
-
-                <select id="salesFilter">
-
-                  <option value="">
-                    Semua Sales
-                  </option>
-
-                </select>
-
-              </div>
+                <i class="fa-solid fa-eye"></i>
+              </button>
 
 
-              <!-- RESET -->
-              <div class="filter-field filter-action">
-
-                <label>
-                  &nbsp;
-                </label>
-
-                <button
-                  id="resetFiltersBtn"
-                  class="btn btn-secondary"
-                  type="button"
-                >
-                  <i class="fa-solid fa-rotate-left"></i>
-                  Reset
-                </button>
-
-              </div>
-
-            </div>
-
-          </div>
-
-
-          <!-- =================================================
-               LEADS TABLE CARD
-          ================================================== -->
-          <div class="leads-card">
-
-            <!-- TABLE HEADER -->
-            <div class="leads-card-header">
-
-              <div>
-
-                <span class="card-eyebrow">
-                  DATABASE
-                </span>
-
-                <h3>
-                  Customer Leads
-                </h3>
-
-              </div>
-
-
-              <div class="lead-count">
-
-                <span id="leadCountLabel">
-                  0 leads
-                </span>
-
-              </div>
-
-            </div>
-
-
-            <!-- TABLE WRAPPER -->
-            <div class="table-wrapper">
-
-              <table class="crm-table">
-
-                <thead>
-
-                  <tr>
-
-                    <th class="col-no">
-                      No
-                    </th>
-
-                    <th class="col-customer">
-                      Customer
-                    </th>
-
-                    <th>
-                      Business
-                    </th>
-
-                    <th>
-                      Location
-                    </th>
-
-                    <th>
-                      Status
-                    </th>
-
-                    <th>
-                      Sales
-                    </th>
-
-                    <th>
-                      Phone
-                    </th>
-
-                    <th>
-                      Follow Up
-                    </th>
-
-                    <th>
-                      Created
-                    </th>
-
-                    <th class="col-action">
-                      Action
-                    </th>
-
-                  </tr>
-
-                </thead>
-
-
-                <tbody id="leadsTableBody">
-
-                  <!-- DATA LEADS AKAN DIMUAT DARI JAVASCRIPT -->
-
-                </tbody>
-
-              </table>
-
-
-              <!-- EMPTY STATE -->
-              <div
-                id="leadsEmptyState"
-                class="table-empty"
-                style="display:none"
+              <button
+                type="button"
+                class="table-action-btn"
+                title="Edit Lead"
+                onclick="editLead('${safeId}')"
               >
-
-                <i class="fa-solid fa-users-slash"></i>
-
-                <h3>
-                  Belum ada lead
-                </h3>
-
-                <p>
-                  Data customer yang sesuai dengan filter akan muncul di sini.
-                </p>
-
-              </div>
-
-            </div>
+                <i class="fa-solid fa-pen"></i>
+              </button>
 
 
-            <!-- =================================================
-                 PAGINATION
-            ================================================== -->
-            <div
-              id="leadsPagination"
-              class="pagination"
-            >
-
-              <div
-                id="paginationInfo"
-                class="pagination-info"
+              <button
+                type="button"
+                class="table-action-btn danger"
+                title="Delete Lead"
+                onclick="deleteLead('${safeId}')"
               >
-                Showing 0 of 0
-              </div>
-
-
-              <div class="pagination-controls">
-
-                <button
-                  id="prevPageBtn"
-                  class="pagination-btn"
-                  type="button"
-                  title="Previous"
-                >
-                  <i class="fa-solid fa-chevron-left"></i>
-                </button>
-
-
-                <div
-                  id="paginationNumbers"
-                  class="pagination-numbers"
-                ></div>
-
-
-                <button
-                  id="nextPageBtn"
-                  class="pagination-btn"
-                  type="button"
-                  title="Next"
-                >
-                  <i class="fa-solid fa-chevron-right"></i>
-                </button>
-
-              </div>
+                <i class="fa-solid fa-trash"></i>
+              </button>
 
             </div>
 
-          </div>
+          </td>
 
-        </section>
+        </tr>
 
-      </section>
+      `;
 
-    </main>
-
-  </div>
-
-
-  <!-- =========================================================
-       LEAD MODAL
-  ========================================================== -->
-  <div
-    id="leadModal"
-    class="modal-overlay"
-    style="display:none"
-  >
-
-    <div class="modal-card lead-modal-card">
-
-      <!-- MODAL HEADER -->
-      <div class="modal-header">
-
-        <div>
-
-          <span class="modal-eyebrow">
-            CUSTOMER
-          </span>
-
-          <h3 id="leadModalTitle">
-            Tambah Lead
-          </h3>
-
-        </div>
-
-        <button
-          type="button"
-          class="modal-close"
-          data-close="leadModal"
-        >
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-
-      </div>
+    }).join("");
+}
 
 
-      <!-- FORM -->
-      <form
-        id="leadForm"
-        class="lead-form"
+/* =========================================================
+   GET SALES NAME
+   ========================================================= */
+
+function getSalesNameById(id) {
+
+  if (!id) {
+
+    if (
+      currentProfile?.role !== "Admin"
+    ) {
+      return currentProfile?.name || "-";
+    }
+
+    return "-";
+  }
+
+
+  const sales =
+    (salesUsersData || []).find(
+      item =>
+        String(item.id) === String(id)
+    );
+
+
+  if (sales?.name) {
+    return sales.name;
+  }
+
+
+  if (
+    currentProfile &&
+    String(currentProfile.id) === String(id)
+  ) {
+    return currentProfile.name || "-";
+  }
+
+
+  return "-";
+}
+
+
+/* =========================================================
+   PAGINATION
+   ========================================================= */
+
+function renderPagination(
+  total,
+  page,
+  pageSize
+) {
+
+  const pagination =
+    $("leadsPagination");
+
+  const info =
+    $("paginationInfo");
+
+  const numbers =
+    $("paginationNumbers");
+
+  const prev =
+    $("prevPageBtn");
+
+  const next =
+    $("nextPageBtn");
+
+
+  if (!pagination) return;
+
+
+  const totalPages =
+    Math.max(
+      1,
+      Math.ceil(
+        total / pageSize
+      )
+    );
+
+
+  if (info) {
+
+    const start =
+      total === 0
+        ? 0
+        : ((page - 1) * pageSize) + 1;
+
+    const end =
+      Math.min(
+        page * pageSize,
+        total
+      );
+
+
+    info.textContent =
+      `Showing ${start}-${end} of ${total}`;
+
+  }
+
+
+  if (prev) {
+
+    prev.disabled =
+      page <= 1;
+
+  }
+
+
+  if (next) {
+
+    next.disabled =
+      page >= totalPages;
+
+  }
+
+
+  if (numbers) {
+
+    numbers.innerHTML =
+      buildPaginationNumbers(
+        page,
+        totalPages
+      );
+
+  }
+
+
+  pagination.style.display =
+    total > 0
+      ? "flex"
+      : "none";
+}
+
+
+/* =========================================================
+   PAGINATION NUMBERS
+   ========================================================= */
+
+function buildPaginationNumbers(
+  current,
+  totalPages
+) {
+
+  if (totalPages <= 1) {
+    return `
+      <button
+        type="button"
+        class="pagination-number active"
       >
+        1
+      </button>
+    `;
+  }
 
-        <input
-          type="hidden"
-          id="leadId"
-        >
 
+  const pages = [];
 
-        <!-- CUSTOMER -->
-        <div class="form-section">
 
-          <div class="form-section-title">
-            <i class="fa-solid fa-user"></i>
-            Customer Information
-          </div>
+  pages.push(1);
 
 
-          <div class="form-grid">
+  if (current > 3) {
+    pages.push("...");
+  }
 
-            <div class="form-field">
 
-              <label for="leadCustomerName">
-                Customer Name <span>*</span>
-              </label>
+  for (
+    let i = Math.max(2, current - 1);
+    i <= Math.min(totalPages - 1, current + 1);
+    i++
+  ) {
+    pages.push(i);
+  }
 
-              <input
-                id="leadCustomerName"
-                type="text"
-                required
-                placeholder="Nama customer"
-              >
 
-            </div>
+  if (current < totalPages - 2) {
+    pages.push("...");
+  }
 
 
-            <div class="form-field">
+  if (totalPages > 1) {
+    pages.push(totalPages);
+  }
 
-              <label for="leadPhone">
-                Phone
-              </label>
 
-              <input
-                id="leadPhone"
-                type="text"
-                placeholder="08xxxxxxxxxx"
-              >
+  return pages.map(page => {
 
-            </div>
+    if (page === "...") {
 
+      return `
+        <span class="pagination-dots">
+          ...
+        </span>
+      `;
 
-            <div class="form-field">
+    }
 
-              <label for="leadEmail">
-                Email
-              </label>
 
-              <input
-                id="leadEmail"
-                type="email"
-                placeholder="customer@email.com"
-              >
+    return `
+      <button
+        type="button"
+        class="pagination-number ${
+          page === current
+            ? "active"
+            : ""
+        }"
+        onclick="loadLeads(${page})"
+      >
+        ${page}
+      </button>
+    `;
 
-            </div>
+  }).join("");
+}
 
 
-            <div class="form-field">
+/* =========================================================
+   EVENTS
+   ========================================================= */
 
-              <label for="leadBusiness">
-                Business
-              </label>
+function setupLeadsEvents() {
 
-              <input
-                id="leadBusiness"
-                type="text"
-                placeholder="Residential / Villa / Hotel / Restaurant..."
-              >
+  $("addLeadBtn")?.addEventListener(
+    "click",
+    () => openLeadModal()
+  );
 
-            </div>
 
+  $("exportLeadsBtn")?.addEventListener(
+    "click",
+    exportLeadsCSV
+  );
 
-            <div class="form-field form-field-full">
 
-              <label for="leadLocation">
-                Location
-              </label>
+  $("resetFiltersBtn")?.addEventListener(
+    "click",
+    resetFilters
+  );
 
-              <input
-                id="leadLocation"
-                type="text"
-                placeholder="Denpasar, Sanur, Seminyak..."
-              >
 
-            </div>
+  $("prevPageBtn")?.addEventListener(
+    "click",
+    () => {
 
-          </div>
+      if (currentPage > 1) {
+        loadLeads(
+          currentPage - 1
+        );
+      }
 
-        </div>
+    }
+  );
 
 
-        <!-- SALES STATUS -->
-        <div class="form-section">
+  $("nextPageBtn")?.addEventListener(
+    "click",
+    () => {
 
-          <div class="form-section-title">
-            <i class="fa-solid fa-chart-line"></i>
-            Sales Process
-          </div>
+      const pageSize =
+        CRM_CONFIG.pageSize || 20;
 
+      const totalPages =
+        Math.ceil(
+          totalLeadsCount /
+          pageSize
+        );
 
-          <div class="form-grid">
+      if (
+        currentPage <
+        totalPages
+      ) {
+        loadLeads(
+          currentPage + 1
+        );
+      }
 
-            <!-- STATUS -->
-            <div class="form-field">
+    }
+  );
 
-              <label for="leadStatus">
-                Status
-              </label>
 
-              <select id="leadStatus">
+  $("leadForm")?.addEventListener(
+    "submit",
+    handleLeadSubmit
+  );
 
-                <option value="">
-                  Pilih Status
-                </option>
 
-              </select>
+  /* -------------------------------------------------------
+     SEARCH
+  ------------------------------------------------------- */
 
-            </div>
+  $("leadSearch")?.addEventListener(
+    "input",
+    () => {
 
+      clearTimeout(
+        leadSearchTimer
+      );
 
-            <!-- SALES -->
-            <div class="form-field">
+      leadSearchTimer =
+        setTimeout(
+          () => loadLeads(1),
+          400
+        );
 
-              <label for="leadSalesAssign">
-                Sales
-              </label>
+    }
+  );
 
-              <select id="leadSalesAssign">
 
-                <option value="">
-                  Pilih Sales
-                </option>
+  /* -------------------------------------------------------
+     FILTERS
+  ------------------------------------------------------- */
 
-              </select>
+  [
+    "statusFilter",
+    "businessFilter",
+    "locationFilter",
+    "salesFilter"
+  ].forEach(id => {
 
-            </div>
+    $(id)?.addEventListener(
+      "change",
+      () => loadLeads(1)
+    );
 
+  });
 
-            <!-- FOLLOW UP -->
-            <div class="form-field">
+}
 
-              <label for="leadFollowUpDate">
-                Follow Up
-              </label>
 
-              <input
-                id="leadFollowUpDate"
-                type="date"
-              >
+/* =========================================================
+   RESET FILTERS
+   ========================================================= */
 
-            </div>
+function resetFilters() {
 
+  if ($("leadSearch")) {
+    $("leadSearch").value = "";
+  }
 
-            <!-- APPOINTMENT -->
-            <div class="form-field">
+  if ($("statusFilter")) {
+    $("statusFilter").value = "";
+  }
 
-              <label for="leadAppointment">
-                Appointment
-              </label>
+  if ($("businessFilter")) {
+    $("businessFilter").value = "";
+  }
 
-              <input
-                id="leadAppointment"
-                type="date"
-              >
+  if ($("locationFilter")) {
+    $("locationFilter").value = "";
+  }
 
-            </div>
+  if ($("salesFilter")) {
+    $("salesFilter").value = "";
+  }
 
+  loadLeads(1);
+}
 
-            <!-- SITE SURVEY -->
-            <div class="form-field">
 
-              <label for="leadSiteSurvey">
-                Site Survey
-              </label>
+/* =========================================================
+   OPEN LEAD MODAL
+   ========================================================= */
 
-              <input
-                id="leadSiteSurvey"
-                type="date"
-              >
+function openLeadModal(id = null) {
 
-            </div>
+  const modal =
+    $("leadModal");
 
+  if (!modal) return;
 
-            <!-- QUOTATION -->
-            <div class="form-field">
 
-              <label for="leadQuotation">
-                Quotation
-              </label>
+  populateStatusOptions();
+  populateSales();
 
-              <input
-                id="leadQuotation"
-                type="date"
-              >
 
-            </div>
+  resetLeadForm();
 
 
-            <!-- SPK -->
-            <div class="form-field">
+  if (id) {
 
-              <label for="leadSpk">
-                SPK
-              </label>
+    const lead =
+      leadsData.find(
+        item =>
+          String(item.id) === String(id)
+      );
 
-              <input
-                id="leadSpk"
-                type="date"
-              >
+    if (lead) {
+      fillLeadForm(lead);
+    }
 
-            </div>
+  } else {
 
+    $("leadModalTitle").textContent =
+      "Tambah Lead";
 
-            <!-- CLOSING -->
-            <div class="form-field">
+    $("leadId").value = "";
 
-              <label for="leadClosing">
-                Closing
-              </label>
+    if (
+      currentProfile?.role !== "Admin"
+    ) {
 
-              <input
-                id="leadClosing"
-                type="date"
-              >
+      $("leadSalesAssign").value =
+        currentProfile?.id || "";
 
-            </div>
+      $("leadSalesAssign").disabled =
+        true;
 
-          </div>
+    }
 
-        </div>
+  }
 
 
-        <!-- NOTES -->
-        <div class="form-section">
+  openModal("leadModal");
+}
 
-          <div class="form-section-title">
-            <i class="fa-solid fa-note-sticky"></i>
-            Notes
-          </div>
 
+/* =========================================================
+   CLOSE LEAD MODAL
+   ========================================================= */
 
-          <div class="form-field">
+function closeLeadModal() {
+  closeModal("leadModal");
+}
 
-            <textarea
-              id="leadNotes"
-              rows="4"
-              placeholder="Catatan customer, kebutuhan, hasil follow-up, budget, dan informasi lainnya..."
-            ></textarea>
 
-          </div>
+/* =========================================================
+   RESET FORM
+   ========================================================= */
 
-        </div>
+function resetLeadForm() {
 
+  const form =
+    $("leadForm");
 
-        <!-- FORM MESSAGE -->
-        <div
-          id="leadFormMessage"
-          class="form-message"
-          style="display:none"
-        ></div>
+  if (form) {
+    form.reset();
+  }
 
 
-        <!-- MODAL ACTIONS -->
-        <div class="modal-actions">
+  if ($("leadId")) {
+    $("leadId").value = "";
+  }
 
-          <button
-            type="button"
-            class="btn btn-secondary"
-            data-close="leadModal"
-          >
-            Batal
-          </button>
 
-          <button
-            id="saveLeadBtn"
-            type="submit"
-            class="btn btn-primary"
-          >
-            <i class="fa-solid fa-floppy-disk"></i>
-            Simpan Lead
-          </button>
+  if ($("leadFormMessage")) {
 
-        </div>
+    $("leadFormMessage").style.display =
+      "none";
 
-      </form>
+    $("leadFormMessage").textContent =
+      "";
 
-    </div>
+  }
 
-  </div>
 
+  if ($("leadModalTitle")) {
 
-  <!-- =========================================================
-       CONFIRM MODAL
-  ========================================================== -->
-  <div
-    id="confirmModal"
-    class="modal-overlay"
-    style="display:none"
-  >
+    $("leadModalTitle").textContent =
+      "Tambah Lead";
 
-    <div class="modal-card confirm-modal-card">
+  }
 
-      <div class="confirm-icon">
-        <i class="fa-solid fa-triangle-exclamation"></i>
-      </div>
 
-      <h3 id="confirmTitle">
-        Konfirmasi
-      </h3>
+  if ($("leadSalesAssign")) {
 
-      <p id="confirmMessage">
-        Apakah Anda yakin?
-      </p>
+    $("leadSalesAssign").disabled =
+      currentProfile?.role !== "Admin";
 
+    if (
+      currentProfile?.role !== "Admin"
+    ) {
 
-      <div class="modal-actions">
+      $("leadSalesAssign").value =
+        currentProfile?.id || "";
 
-        <button
-          type="button"
-          class="btn btn-secondary"
-          data-close="confirmModal"
-        >
-          Batal
-        </button>
+    }
 
-        <button
-          id="confirmActionBtn"
-          type="button"
-          class="btn btn-danger"
-        >
-          Ya, Lanjutkan
-        </button>
+  }
 
-      </div>
+}
 
-    </div>
 
-  </div>
+/* =========================================================
+   FILL FORM
+   ========================================================= */
 
+function fillLeadForm(lead) {
 
-  <!-- =========================================================
-       PROFILE MODAL
-  ========================================================== -->
-  <div
-    id="profileModal"
-    class="modal-overlay"
-    style="display:none"
-  >
+  $("leadModalTitle").textContent =
+    "Edit Lead";
 
-    <div class="modal-card profile-modal-card">
 
-      <div class="modal-header">
+  $("leadId").value =
+    lead.id || "";
 
-        <div>
 
-          <span class="modal-eyebrow">
-            ACCOUNT
-          </span>
+  $("leadCustomerName").value =
+    lead.customer_name || "";
 
-          <h3>
-            My Profile
-          </h3>
 
-        </div>
+  $("leadPhone").value =
+    lead.phone || "";
 
-        <button
-          type="button"
-          class="modal-close"
-          data-close="profileModal"
-        >
-          <i class="fa-solid fa-xmark"></i>
-        </button>
 
-      </div>
+  $("leadEmail").value =
+    lead.email || "";
 
 
-      <div
-        id="userProfileContent"
-        class="profile-modal-content"
-      ></div>
+  $("leadBusiness").value =
+    lead.business || "";
 
-    </div>
 
-  </div>
+  $("leadLocation").value =
+    lead.location || "";
 
 
-  <!-- =========================================================
-       TOAST
-  ========================================================== -->
-  <div
-    id="toastContainer"
-    class="toast-container"
-  ></div>
+  $("leadStatus").value =
+    lead.status || "";
 
 
-  <!-- =========================================================
-       GLOBAL LOADING
-  ========================================================== -->
-  <div
-    id="globalLoading"
-    class="global-loading"
-    style="display:none"
-  >
+  $("leadFollowUpDate").value =
+    formatDateInput(lead.follow_up_date);
 
-    <div class="loading-box">
 
-      <i class="fa-solid fa-spinner fa-spin"></i>
+  $("leadAppointment").value =
+    formatDateInput(lead.appointment);
 
-      <span>
-        Memuat...
-      </span>
 
-    </div>
+  $("leadSiteSurvey").value =
+    formatDateInput(lead.site_survey);
 
-  </div>
 
+  $("leadQuotation").value =
+    formatDateInput(lead.quotation);
 
-  <!-- =========================================================
-       SUPABASE
-  ========================================================== -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+  $("leadSpk").value =
+    formatDateInput(lead.spk);
 
-  <!-- =========================================================
-       CRM JAVASCRIPT
-  ========================================================== -->
-  <script src="../js/config.js"></script>
-  <script src="../js/helpers.js"></script>
-  <script src="../js/modal.js"></script>
-  <script src="../js/auth.js"></script>
-  <script src="../js/navigation.js"></script>
-  <script src="../js/dashboard.js"></script>
-  <script src="../js/leads.js"></script>
-  <script src="../js/customer-profile.js"></script>
-  <script src="../js/sales.js"></script>
 
-</body>
-</html>
+  $("leadClosing").value =
+    formatDateInput(lead.closing);
+
+
+  $("leadNotes").value =
+    lead.notes || "";
+
+
+  if ($("leadSalesAssign")) {
+
+    $("leadSalesAssign").value =
+      lead.sales_id || currentProfile?.id || "";
+
+
+    $("leadSalesAssign").disabled =
+      currentProfile?.role !== "Admin";
+
+  }
+
+}
+
+
+/* =========================================================
+   FORM PAYLOAD
+   ========================================================= */
+
+function getLeadFormPayload() {
+
+  const payload = {
+
+    customer_name:
+      $("leadCustomerName")?.value.trim() || null,
+
+    phone:
+      $("leadPhone")?.value.trim() || null,
+
+    email:
+      $("leadEmail")?.value.trim() || null,
+
+    business:
+      $("leadBusiness")?.value.trim() || null,
+
+    location:
+      $("leadLocation")?.value.trim() || null,
+
+    status:
+      $("leadStatus")?.value || null,
+
+    follow_up_date:
+      $("leadFollowUpDate")?.value || null,
+
+    appointment:
+      $("leadAppointment")?.value || null,
+
+    site_survey:
+      $("leadSiteSurvey")?.value || null,
+
+    quotation:
+      $("leadQuotation")?.value || null,
+
+    spk:
+      $("leadSpk")?.value || null,
+
+    closing:
+      $("leadClosing")?.value || null,
+
+    notes:
+      $("leadNotes")?.value.trim() || null,
+
+    sales_id:
+      currentProfile?.role === "Admin"
+        ? ($("leadSalesAssign")?.value || null)
+        : currentProfile?.id || null
+
+  };
+
+
+  return payload;
+}
+
+
+/* =========================================================
+   SAVE LEAD
+   ========================================================= */
+
+async function handleLeadSubmit(event) {
+
+  event.preventDefault();
+
+
+  const saveButton =
+    $("saveLeadBtn");
+
+  const message =
+    $("leadFormMessage");
+
+
+  try {
+
+    setButtonLoading(
+      saveButton,
+      true,
+      "Menyimpan..."
+    );
+
+
+    const leadId =
+      $("leadId")?.value || "";
+
+
+    const payload =
+      getLeadFormPayload();
+
+
+    if (!payload.customer_name) {
+
+      throw new Error(
+        "Nama customer wajib diisi."
+      );
+
+    }
+
+
+    let result;
+
+
+    /* -----------------------------------------------------
+       UPDATE
+    ----------------------------------------------------- */
+
+    if (leadId) {
+
+      const updatePayload = {
+        ...payload,
+        updated_by:
+          currentUser?.id || null
+      };
+
+
+      result =
+        await supabaseClient
+          .from(CRM_CONFIG.leadTable)
+          .update(updatePayload)
+          .eq("id", leadId)
+          .select()
+          .single();
+
+    }
+
+
+    /* -----------------------------------------------------
+       INSERT
+    ----------------------------------------------------- */
+
+    else {
+
+      const insertPayload = {
+        ...payload,
+        created_by:
+          currentUser?.id || null,
+        updated_by:
+          currentUser?.id || null
+      };
+
+
+      result =
+        await supabaseClient
+          .from(CRM_CONFIG.leadTable)
+          .insert(insertPayload)
+          .select()
+          .single();
+
+    }
+
+
+    if (result.error) {
+      throw result.error;
+    }
+
+
+    closeLeadModal();
+
+
+    showToast(
+      leadId
+        ? "Lead berhasil diperbarui."
+        : "Lead berhasil ditambahkan.",
+      "success"
+    );
+
+
+    await loadLeads(
+      leadId
+        ? currentPage
+        : 1
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "handleLeadSubmit:",
+      error
+    );
+
+
+    if (message) {
+
+      message.style.display =
+        "block";
+
+      message.textContent =
+        error.message ||
+        "Gagal menyimpan lead.";
+
+    }
+
+
+    showToast(
+      error.message ||
+      "Gagal menyimpan lead.",
+      "error"
+    );
+
+  } finally {
+
+    setButtonLoading(
+      saveButton,
+      false
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   EDIT LEAD
+   ========================================================= */
+
+function editLead(id) {
+
+  if (!id) return;
+
+  openLeadModal(id);
+}
+
+
+/* =========================================================
+   DELETE LEAD
+   ========================================================= */
+
+function deleteLead(id) {
+
+  if (!id) return;
+
+
+  leadConfirmCallback =
+    async () => {
+
+      try {
+
+        setGlobalLoading(true);
+
+
+        const {
+          error
+        } =
+          await supabaseClient
+            .from(CRM_CONFIG.leadTable)
+            .delete()
+            .eq("id", id);
+
+
+        if (error) {
+          throw error;
+        }
+
+
+        closeModal(
+          "confirmModal"
+        );
+
+
+        showToast(
+          "Lead berhasil dihapus.",
+          "success"
+        );
+
+
+        await loadLeads(
+          currentPage
+        );
+
+
+      } catch (error) {
+
+        console.error(
+          "deleteLead:",
+          error
+        );
+
+
+        showToast(
+          "Gagal menghapus lead: " +
+          error.message,
+          "error"
+        );
+
+      } finally {
+
+        setGlobalLoading(false);
+
+      }
+
+    };
+
+
+  openConfirm(
+    "Hapus Lead?",
+    "Data customer ini akan dihapus dan tidak dapat dikembalikan."
+  );
+
+}
+
+
+/* =========================================================
+   OPEN CONFIRM
+   ========================================================= */
+
+function openConfirm(
+  title,
+  message,
+  callback = null
+) {
+
+  const modal =
+    $("confirmModal");
+
+  const titleElement =
+    $("confirmTitle");
+
+  const messageElement =
+    $("confirmMessage");
+
+  const actionButton =
+    $("confirmActionBtn");
+
+
+  if (!modal) return;
+
+
+  if (titleElement) {
+    titleElement.textContent =
+      title || "Konfirmasi";
+  }
+
+
+  if (messageElement) {
+    messageElement.textContent =
+      message || "Apakah Anda yakin?";
+  }
+
+
+  leadConfirmCallback =
+    callback || leadConfirmCallback;
+
+
+  if (actionButton) {
+
+    actionButton.onclick =
+      async () => {
+
+        if (
+          typeof leadConfirmCallback ===
+          "function"
+        ) {
+
+          await leadConfirmCallback();
+
+          leadConfirmCallback =
+            null;
+
+        }
+
+      };
+
+  }
+
+
+  openModal(
+    "confirmModal"
+  );
+
+}
+
+
+/* =========================================================
+   EXPORT CSV
+   ========================================================= */
+
+function exportLeadsCSV() {
+
+  if (!leadsData.length) {
+
+    showToast(
+      "Tidak ada data pada halaman ini untuk diexport.",
+      "warning"
+    );
+
+    return;
+
+  }
+
+
+  const rows =
+    leadsData.map(lead => ({
+
+      No:
+        lead.id,
+
+      Customer:
+        lead.customer_name || "",
+
+      Phone:
+        lead.phone || "",
+
+      Email:
+        lead.email || "",
+
+      Business:
+        lead.business || "",
+
+      Location:
+        lead.location || "",
+
+      Status:
+        normalizeLeadStatus(
+          lead.status
+        ),
+
+      Sales:
+        getSalesNameById(
+          lead.sales_id
+        ),
+
+      "Follow Up":
+        lead.follow_up_date || "",
+
+      Appointment:
+        lead.appointment || "",
+
+      "Site Survey":
+        lead.site_survey || "",
+
+      Quotation:
+        lead.quotation || "",
+
+      SPK:
+        lead.spk || "",
+
+      Closing:
+        lead.closing || "",
+
+      Notes:
+        lead.notes || "",
+
+      Created:
+        lead.created_at || ""
+
+    }));
+
+
+  exportCSV(
+    rows,
+    "fsi-crm-leads.csv"
+  );
+
+}
