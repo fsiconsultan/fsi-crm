@@ -4,11 +4,13 @@
 
 
 // ========================================
-// DOM HELPER
+// SHORT SELECTOR
 // ========================================
 
 function $(id) {
-  return document.getElementById(id);
+
+    return document.getElementById(id);
+
 }
 
 
@@ -18,227 +20,230 @@ function $(id) {
 
 function escapeHTML(value) {
 
-  return String(value ?? "")
-    .replace(/[&<>"']/g, (character) => {
+    if (
+        value === null ||
+        value === undefined
+    ) {
+        return "";
+    }
 
-      const entities = {
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#039;"
-      };
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 
-      return entities[character];
-    });
+}
+
+
+function safeText(value) {
+
+    return escapeHTML(value);
+
 }
 
 
 // ========================================
-// FORMAT DATE
+// DATE
 // ========================================
 
 function formatDate(value) {
 
-  if (!value) {
-    return "-";
-  }
-
-
-  const date =
-    new Date(value);
-
-
-  if (
-    Number.isNaN(
-      date.getTime()
-    )
-  ) {
-    return String(value);
-  }
-
-
-  return date.toLocaleDateString(
-    "id-ID",
-    {
-      day: "2-digit",
-      month: "short",
-      year: "numeric"
+    if (!value) {
+        return "-";
     }
-  );
+
+    try {
+
+        return new Intl.DateTimeFormat(
+            "id-ID",
+            {
+                day: "2-digit",
+                month: "short",
+                year: "numeric"
+            }
+        ).format(
+            new Date(value)
+        );
+
+    } catch {
+
+        return value;
+
+    }
+
 }
 
-
-// ========================================
-// FORMAT DATE INPUT
-// ========================================
 
 function formatDateInput(value) {
 
-  if (!value) {
-    return "";
-  }
+    if (!value) {
+        return "";
+    }
 
+    return String(value).substring(0, 10);
 
-  return String(value).slice(
-    0,
-    10
-  );
 }
 
 
 // ========================================
-// NORMALIZE LEAD STATUS
-// ========================================
-
-function normalizeLeadStatus(value) {
-
-  const status =
-    String(value || "")
-      .trim()
-      .toLowerCase();
-
-
-  const found =
-    CRM_CONFIG.statuses.find(
-      (item) =>
-        item.toLowerCase() ===
-        status
-    );
-
-
-  return (
-    found ||
-    value ||
-    "New"
-  );
-}
-
-
-// ========================================
-// NORMALIZE PHONE
+// PHONE
 // ========================================
 
 function normalizePhone(phone) {
 
-  let number =
-    String(phone || "")
-      .replace(/\D/g, "");
+    if (!phone) {
+        return "";
+    }
+
+    let value =
+        String(phone)
+            .replace(/\D/g, "");
 
 
-  if (
-    number.startsWith("0")
-  ) {
-    number =
-      "62" +
-      number.slice(1);
-  }
+    if (
+        value.startsWith("0")
+    ) {
+        value =
+            "62" +
+            value.substring(1);
+    }
 
 
-  if (
-    !number.startsWith("62") &&
-    number.length >= 9
-  ) {
-    number =
-      "62" +
-      number;
-  }
+    return value;
+
+}
 
 
-  return number;
+function whatsappLink(phone) {
+
+    const number =
+        normalizePhone(phone);
+
+    if (!number) {
+        return "#";
+    }
+
+    return `https://wa.me/${number}`;
+
 }
 
 
 // ========================================
-// WHATSAPP LINK
+// STATUS
 // ========================================
 
-function whatsappLink(
-  phone,
-  text = ""
-) {
+function normalizeLeadStatus(status) {
 
-  const number =
-    normalizePhone(phone);
+    if (!status) {
+        return "New";
+    }
 
-
-  if (!number) {
-    return "#";
-  }
+    const value =
+        String(status)
+            .trim()
+            .toLowerCase();
 
 
-  return (
-    "https://wa.me/" +
-    number +
-    (
-      text
-        ? "?text=" +
-          encodeURIComponent(text)
-        : ""
-    )
-  );
+    const map = {
+
+        "new": "New",
+        "belum dihubungi": "New",
+
+        "flyer sent": "Flyer Sent",
+        "flyer": "Flyer Sent",
+
+        "interested": "Interested",
+        "tertarik": "Interested",
+
+        "follow up": "Follow Up",
+        "follow-up": "Follow Up",
+
+        "closing": "Closing",
+
+        "not interested": "Not Interested",
+        "tidak tertarik": "Not Interested"
+
+    };
+
+
+    return (
+        map[value] ||
+        status
+    );
+
 }
 
 
 // ========================================
-// TOAST NOTIFICATION
+// TOAST
 // ========================================
 
 function showToast(
-  message,
-  type = "success"
+    message,
+    type = "success"
 ) {
 
-  const box =
-    $("toastContainer");
+    let toast =
+        document.querySelector(
+            ".crm-toast"
+        );
 
 
-  if (!box) {
-    return;
-  }
+    if (!toast) {
+
+        toast =
+            document.createElement("div");
+
+        toast.className =
+            "crm-toast";
+
+        document.body.appendChild(
+            toast
+        );
+
+    }
 
 
-  const item =
-    document.createElement("div");
+    toast.className =
+        `crm-toast ${type}`;
 
 
-  item.className =
-    "toast " + type;
+    toast.innerHTML = `
+        <i class="${
+            type === "error"
+            ? "fa-solid fa-circle-exclamation"
+            : "fa-solid fa-circle-check"
+        }"></i>
+
+        <span>
+            ${escapeHTML(message)}
+        </span>
+    `;
 
 
-  let icon =
-    "fa-circle-info";
+    requestAnimationFrame(() => {
+
+        toast.classList.add("show");
+
+    });
 
 
-  if (type === "success") {
-    icon =
-      "fa-circle-check";
-  }
+    clearTimeout(
+        toast._timer
+    );
 
 
-  if (type === "error") {
-    icon =
-      "fa-circle-xmark";
-  }
+    toast._timer =
+        setTimeout(() => {
 
+            toast.classList.remove(
+                "show"
+            );
 
-  item.innerHTML = `
-    <i class="fa-solid ${icon}"></i>
-    <span>
-      ${escapeHTML(message)}
-    </span>
-  `;
+        }, 3000);
 
-
-  box.appendChild(item);
-
-
-  setTimeout(
-    () => {
-      item.remove();
-    },
-    3500
-  );
 }
 
 
@@ -247,33 +252,69 @@ function showToast(
 // ========================================
 
 function setGlobalLoading(
-  show,
-  text = "Loading..."
+    active,
+    message = "Loading..."
 ) {
 
-  const element =
-    $("globalLoading");
+    const loading =
+        $("globalLoading");
+
+    if (!loading) {
+        return;
+    }
 
 
-  if (!element) {
-    return;
-  }
+    const text =
+        loading.querySelector(
+            ".loading-text"
+        );
 
 
-  element.style.display =
-    show
-      ? "flex"
-      : "none";
+    if (text) {
+        text.textContent =
+            message;
+    }
 
 
-  const textElement =
-    $("globalLoadingText");
+    if (active) {
+
+        loading.classList.add(
+            "active"
+        );
+
+        loading.style.display =
+            "flex";
+
+    } else {
+
+        loading.classList.remove(
+            "active"
+        );
+
+        loading.style.display =
+            "none";
+
+    }
+
+}
 
 
-  if (textElement) {
-    textElement.textContent =
-      text;
-  }
+function showGlobalLoading(message) {
+
+    setGlobalLoading(
+        true,
+        message
+    );
+
+}
+
+
+function hideGlobalLoading() {
+
+    setGlobalLoading(
+        false
+    );
+
 }
 
 
@@ -282,109 +323,48 @@ function setGlobalLoading(
 // ========================================
 
 function setButtonLoading(
-  button,
-  loading,
-  label
+    button,
+    loading
 ) {
 
-  if (!button) {
-    return;
-  }
+    if (!button) {
+        return;
+    }
 
 
-  button.disabled =
-    loading;
+    if (loading) {
 
+        if (
+            !button.dataset.originalHTML
+        ) {
 
-  if (!button.dataset.label) {
+            button.dataset.originalHTML =
+                button.innerHTML;
 
-    button.dataset.label =
-      label ||
-      button.textContent.trim();
+        }
 
-  }
+        button.disabled = true;
 
+        button.innerHTML = `
+            <i class="fa-solid fa-spinner fa-spin"></i>
+            Please wait...
+        `;
 
-  if (loading) {
+    } else {
 
-    button.innerHTML = `
-      <i class="fa-solid fa-spinner fa-spin"></i>
-      Loading...
-    `;
+        button.disabled = false;
 
-  } else {
+        if (
+            button.dataset.originalHTML
+        ) {
 
-    button.textContent =
-      button.dataset.label;
-  }
-}
+            button.innerHTML =
+                button.dataset.originalHTML;
 
+        }
 
-// ========================================
-// OPEN MODAL
-// ========================================
+    }
 
-function openModal(id) {
-
-  const element =
-    $(id);
-
-
-  if (!element) {
-    return;
-  }
-
-
-  element.style.display =
-    "flex";
-
-
-  element.classList.add(
-    "active"
-  );
-
-
-  document.body.classList.add(
-    "modal-open"
-  );
-}
-
-
-// ========================================
-// CLOSE MODAL
-// ========================================
-
-function closeModal(id) {
-
-  const element =
-    $(id);
-
-
-  if (!element) {
-    return;
-  }
-
-
-  if (
-    element.dataset.locked ===
-    "true"
-  ) {
-    return;
-  }
-
-
-  element.style.display =
-    "none";
-
-
-  element.classList.remove(
-    "active"
-  );
-
-
-  document.body.classList.remove(
-    "modal-open"
-  );
 }
 
 
@@ -393,79 +373,81 @@ function closeModal(id) {
 // ========================================
 
 function showFormMessage(
-  id,
-  message = "",
-  type = "error"
+    element,
+    message,
+    type = "error"
 ) {
 
-  const element =
-    $(id);
+    if (!element) {
+        return;
+    }
 
+    element.textContent =
+        message;
 
-  if (!element) {
-    return;
-  }
+    element.className =
+        `form-message ${type}`;
 
-
-  element.textContent =
-    message;
-
-
-  element.className =
-    "form-message " +
-    (
-      message
-        ? type
-        : ""
-    );
 }
 
 
 // ========================================
-// GET SALES NAME
+// SALES NAME
 // ========================================
 
 function getSalesName(id) {
 
-  const sales =
-    (salesUsersData || [])
-      .find(
-        (user) =>
-          String(user.id) ===
-          String(id)
-      );
+    if (!id) {
+        return "-";
+    }
 
 
-  if (!sales) {
-    return "-";
-  }
+    const sales =
+        Array.isArray(
+            salesUsersData
+        )
+            ? salesUsersData.find(
+                (item) =>
+                    String(item.id) ===
+                    String(id)
+            )
+            : null;
 
 
-  return (
-    sales.name ||
-    sales.username ||
-    "-"
-  );
+    if (!sales) {
+        return "-";
+    }
+
+
+    return (
+        sales.name ||
+        sales.username ||
+        "-"
+    );
+
 }
 
 
 // ========================================
-// COUNT STATUS
+// STATUS COUNT
 // ========================================
 
 function countStatus(
-  data,
-  status
+    data,
+    status
 ) {
 
-  return (
-    data || []
-  ).filter(
-    (lead) =>
-      normalizeLeadStatus(
-        lead.status
-      ) === status
-  ).length;
+    if (!Array.isArray(data)) {
+        return 0;
+    }
+
+    return data.filter(
+        (item) =>
+            normalizeLeadStatus(
+                item.status
+            ) === status
+    ).length;
+
 }
 
 
@@ -474,42 +456,27 @@ function countStatus(
 // ========================================
 
 function debounce(
-  fn,
-  delay = 350
+    callback,
+    delay = 400
 ) {
 
-  let timer;
+    let timer;
 
+    return function (...args) {
 
-  return (
-    ...args
-  ) => {
+        clearTimeout(timer);
 
-    clearTimeout(
-      timer
-    );
+        timer =
+            setTimeout(
+                () => callback.apply(
+                    this,
+                    args
+                ),
+                delay
+            );
 
+    };
 
-    timer =
-      setTimeout(
-        () => {
-          fn(...args);
-        },
-        delay
-      );
-  };
-}
-
-
-// ========================================
-// SAFE TEXT
-// ========================================
-
-function safeText(value) {
-
-  return escapeHTML(
-    value ?? "-"
-  );
 }
 
 
@@ -518,127 +485,86 @@ function safeText(value) {
 // ========================================
 
 function exportCSV(
-  rows,
-  filename = "fsi-leads.csv"
+    rows,
+    filename = "leads.csv"
 ) {
 
-  if (
-    !rows ||
-    !rows.length
-  ) {
+    if (
+        !Array.isArray(rows) ||
+        !rows.length
+    ) {
 
-    showToast(
-      "Tidak ada data untuk diexport.",
-      "info"
-    );
+        showToast(
+            "Tidak ada data untuk diexport.",
+            "error"
+        );
 
-    return;
-  }
+        return;
 
-
-  const headers =
-    Object.keys(
-      rows[0]
-    );
+    }
 
 
-  const csvRows = [];
+    const headers =
+        Object.keys(rows[0]);
 
 
-  // Header
-  csvRows.push(
-    headers
-      .map(
-        (header) =>
-          `"${String(header)
-            .replace(
-              /"/g,
-              '""'
-            )}"`
-      )
-      .join(",")
-  );
+    const csv = [
+
+        headers.join(","),
+
+        ...rows.map((row) => {
+
+            return headers
+                .map((header) => {
+
+                    const value =
+                        row[header] ??
+                        "";
+
+                    return `"${String(value)
+                        .replace(/"/g, '""')}"`;
+
+                })
+                .join(",");
+
+        })
+
+    ].join("\n");
 
 
-  // Data
-  rows.forEach(
-    (row) => {
-
-      const values =
-        headers.map(
-          (header) => {
-
-            const value =
-              row[header] ??
-              "";
-
-
-            return `"${String(
-              value
-            ).replace(
-              /"/g,
-              '""'
-            )}"`;
-          }
+    const blob =
+        new Blob(
+            [csv],
+            {
+                type:
+                    "text/csv;charset=utf-8;"
+            }
         );
 
 
-      csvRows.push(
-        values.join(",")
-      );
-    }
-  );
+    const url =
+        URL.createObjectURL(
+            blob
+        );
 
 
-  const csv =
-    "\uFEFF" +
-    csvRows.join(
-      "\n"
+    const link =
+        document.createElement(
+            "a"
+        );
+
+
+    link.href = url;
+    link.download = filename;
+
+    document.body.appendChild(
+        link
     );
 
+    link.click();
 
-  const blob =
-    new Blob(
-      [csv],
-      {
-        type:
-          "text/csv;charset=utf-8;"
-      }
-    );
+    link.remove();
 
+    URL.revokeObjectURL(url);
 
-  const url =
-    URL.createObjectURL(
-      blob
-    );
-
-
-  const link =
-    document.createElement(
-      "a"
-    );
-
-
-  link.href =
-    url;
-
-
-  link.download =
-    filename;
-
-
-  document.body.appendChild(
-    link
-  );
-
-
-  link.click();
-
-
-  link.remove();
-
-
-  URL.revokeObjectURL(
-    url
-  );
 }
