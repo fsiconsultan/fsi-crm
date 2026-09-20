@@ -1,330 +1,188 @@
-/* =========================================================
-   CRM FSI - CUSTOMER PROFILE
-========================================================= */
-
-
-/* =========================================================
-   OPEN PROFILE
-========================================================= */
-
-function openCustomerProfile(id){
-
-    if(!id) return;
-
-
-    window.location.href =
-        `customer-profile.html?id=${encodeURIComponent(id)}`;
-
-}
-
-
-/* =========================================================
-   INITIALIZE
-========================================================= */
-
-let customerProfileInitialized = false;
-
-
-async function initializeCustomerProfilePage(){
-
-    if(customerProfileInitialized){
-
-        return;
-
-    }
-
-
-    customerProfileInitialized = true;
-
-
-    const params =
-        new URLSearchParams(
-            window.location.search
-        );
-
-
-    const id =
-        params.get("id");
-
-
-    if(!id){
-
-        renderProfileError(
-            "Customer ID tidak ditemukan."
-        );
-
-        return;
-
-    }
-
-
-    await loadCustomerProfile(
-        id
-    );
-
-}
-
-
-/* =========================================================
-   LOAD
-========================================================= */
-
-async function loadCustomerProfile(id){
-
-    const container =
-        $("customerProfileContent");
-
-
-    if(!container) return;
-
-
-    container.innerHTML = `
-        <div class="profile-loading">
-            <div class="loading-spinner"></div>
-            <span>Loading customer profile...</span>
-        </div>
-    `;
-
-
-    const {
-        data,
-        error
-    } =
-        await supabaseClient
-            .from(
-                CRM_CONFIG.leadTable
-            )
-            .select(`
-                id,
-                customer_name,
-                phone,
-                business,
-                location,
-                status,
-                follow_up_date,
-                appointment,
-                site_survey,
-                quotation,
-                spk,
-                closing,
-                notes,
-                created_at,
-                sales_id,
-                created_by,
-                updated_by
-            `)
-            .eq(
-                "id",
-                id
-            )
-            .single();
-
-
-    if(error){
-
-        console.error(
-            "Customer profile:",
-            error
-        );
-
-
-        renderProfileError(
-            error.message ||
-            "Customer tidak ditemukan."
-        );
-
-        return;
-
-    }
-
-
-    if(!canViewCustomer(data)){
-
-        renderProfileError(
-            "Anda tidak memiliki akses ke customer ini."
-        );
-
-        return;
-
-    }
-
-
-    renderCustomerProfile(
-        data
-    );
-
-}
-
-
-/* =========================================================
-   ACCESS
-========================================================= */
-
-function canViewCustomer(lead){
-
-    if(
-        currentProfile?.role ===
-        "Admin"
-    ){
-
-        return true;
-
-    }
-
-
-    return String(
-        lead.sales_id
-    ) === String(
-        currentProfile?.id
-    );
-
-}
-
-
-/* =========================================================
-   RENDER
-========================================================= */
-
-function renderCustomerProfile(lead){
-
-    const container =
-        $("customerProfileContent");
-
-
-    if(!container) return;
-
-
-    const status =
-        normalizeLeadStatus(
-            lead.status
-        );
-
-
-    const statusClass =
-        getProfileStatusClass(
-            status
-        );
-
-
-    const salesName =
-        getSalesName(
-            lead.sales_id
-        );
-
-
-    const initials =
-        getProfileInitials(
-            lead.customer_name
-        );
-
-
-    container.innerHTML = `
-
-        <div class="customer-profile-page">
-
-
-            <!-- HERO -->
-
-            <div class="profile-hero">
-
-                <div class="profile-back">
-
-                    <button
-                        type="button"
-                        class="profile-back-btn"
-                        onclick="history.back()"
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="description"
+        content="FSI CRM - Customer Profile"
+    >
+
+    <meta
+        name="theme-color"
+        content="#0b63ce"
+    >
+
+    <title>Customer Profile | FSI CRM</title>
+
+    <!-- FONT -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <!-- FONT AWESOME -->
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    >
+
+    <!-- CRM CSS -->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link rel="stylesheet" href="../css/leads.css">
+    <link rel="stylesheet" href="../css/profile.css">
+    <link rel="stylesheet" href="../css/sales.css">
+</head>
+
+<body>
+
+<div id="app" class="app">
+
+    <!-- =====================================================
+         MAIN CONTENT
+    ====================================================== -->
+
+    <main class="main-content">
+
+        <!-- =================================================
+             TOP HEADER
+        ================================================== -->
+
+        <header class="top-header">
+
+            <div class="header-left">
+
+                <div class="header-brand">
+
+                    <img
+                        src="../assets/logo-fsi.png"
+                        alt="FSI CRM"
+                        class="header-logo"
                     >
-                        <i class="fa-solid fa-arrow-left"></i>
-                        Back
-                    </button>
+
+                    <div class="header-brand-text">
+                        <strong>FSI CRM</strong>
+                        <span>French Solar Industry</span>
+                    </div>
+
+                </div>
+
+                <nav class="top-navigation">
+
+                    <a
+                        href="dashboard.html"
+                        class="top-nav-item"
+                    >
+                        <i class="fa-solid fa-chart-pie"></i>
+                        <span>Dashboard</span>
+                    </a>
+
+                    <a
+                        href="leads.html"
+                        class="top-nav-item active"
+                    >
+                        <i class="fa-solid fa-users"></i>
+                        <span>Leads</span>
+                    </a>
+
+                    <a
+                        href="sales.html"
+                        class="top-nav-item admin-only"
+                    >
+                        <i class="fa-solid fa-user-tie"></i>
+                        <span>Manage Sales</span>
+                    </a>
+
+                </nav>
+
+            </div>
+
+
+            <!-- =============================================
+                 HEADER RIGHT
+            ============================================== -->
+
+            <div class="header-right">
+
+                <!-- GLOBAL SEARCH -->
+
+                <div class="global-search">
+
+                    <i class="fa-solid fa-magnifying-glass"></i>
+
+                    <input
+                        id="globalSearch"
+                        type="search"
+                        placeholder="Cari leads, pelanggan, atau nama..."
+                        autocomplete="off"
+                    >
 
                 </div>
 
 
-                <div class="profile-main">
+                <!-- USER MENU -->
 
-                    <div class="profile-avatar-large">
-                        ${escapeHTML(initials)}
-                    </div>
+                <div class="user-menu">
 
+                    <button
+                        id="userMenuTrigger"
+                        class="user-menu-trigger"
+                        type="button"
+                    >
 
-                    <div class="profile-identity">
-
-                        <div class="profile-breadcrumb">
-                            CRM
-                            <i class="fa-solid fa-chevron-right"></i>
-                            Customer Profile
-                        </div>
-
-
-                        <h1>
-                            ${escapeHTML(
-                                lead.customer_name ||
-                                "Unnamed Customer"
-                            )}
-                        </h1>
-
-
-                        <div class="profile-subline">
-
-                            <span>
-                                <i class="fa-solid fa-location-dot"></i>
-                                ${escapeHTML(
-                                    lead.location || "-"
-                                )}
-                            </span>
-
-
-                            <span>
-                                <i class="fa-solid fa-building"></i>
-                                ${escapeHTML(
-                                    lead.business || "-"
-                                )}
-                            </span>
-
-
-                            <span>
-                                Lead #${escapeHTML(lead.id)}
-                            </span>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="profile-hero-actions">
-
-                        <span class="status-pill ${statusClass}">
-                            ${escapeHTML(status)}
+                        <span
+                            id="userAvatarInitial"
+                            class="user-avatar"
+                        >
+                            F
                         </span>
 
+                        <span
+                            id="userInfo"
+                            class="user-info"
+                        >
+                            <strong>User</strong>
+                            <small>Sales</small>
+                        </span>
 
-                        ${
-                            lead.phone
-                            ?
-                            `
-                            <a
-                                href="${whatsappLink(lead.phone)}"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="profile-whatsapp"
-                            >
-                                <i class="fa-brands fa-whatsapp"></i>
-                                WhatsApp
-                            </a>
-                            `
-                            :
-                            ""
-                        }
+                        <i class="fa-solid fa-chevron-down"></i>
 
+                    </button>
+
+
+                    <!-- DROPDOWN -->
+
+                    <div
+                        id="userDropdown"
+                        class="user-dropdown"
+                    >
 
                         <button
+                            id="profileBtn"
                             type="button"
-                            class="profile-edit-btn"
-                            onclick="editLeadFromProfile('${escapeHTML(lead.id)}')"
                         >
-                            <i class="fa-regular fa-pen-to-square"></i>
-                            Edit
+                            <i class="fa-solid fa-user"></i>
+                            <span>My Profile</span>
+                        </button>
+
+                        <div class="dropdown-divider"></div>
+
+                        <button
+                            id="dropdownLogout"
+                            class="danger"
+                            type="button"
+                        >
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                            <span>Logout</span>
                         </button>
 
                     </div>
@@ -333,581 +191,204 @@ function renderCustomerProfile(lead){
 
             </div>
 
-
-            <!-- BODY -->
-
-            <div class="profile-grid">
+        </header>
 
 
-                <!-- CUSTOMER INFO -->
+        <!-- =================================================
+             PAGE CONTENT
+        ================================================== -->
 
-                <section class="profile-card">
+        <section class="page-content">
 
-                    <div class="profile-card-header">
+            <section
+                id="customerProfilePage"
+                class="page customer-profile-page-wrapper"
+            >
 
-                        <div>
+                <div id="customerProfileContent">
 
-                            <h2>
-                                Customer Information
-                            </h2>
+                    <!-- LOADING -->
 
-                            <span>
-                                Basic customer details
-                            </span>
+                    <div class="profile-loading">
 
-                        </div>
+                        <div class="loading-spinner"></div>
 
-                        <div class="profile-card-icon blue">
-                            <i class="fa-solid fa-user"></i>
-                        </div>
+                        <span>
+                            Loading customer profile...
+                        </span>
 
                     </div>
 
+                </div>
 
-                    <div class="profile-info-grid">
+            </section>
 
+        </section>
 
-                        <div class="profile-info-item">
+    </main>
 
-                            <span>
-                                Customer
-                            </span>
+</div>
 
-                            <strong>
-                                ${escapeHTML(
-                                    lead.customer_name || "-"
-                                )}
-                            </strong>
 
-                        </div>
+<!-- =========================================================
+     CONFIRM MODAL
+========================================================= -->
 
+<div
+    id="confirmModal"
+    class="modal-overlay"
+    style="display:none"
+>
 
-                        <div class="profile-info-item">
+    <div
+        class="modal modal-small"
+        role="dialog"
+        aria-modal="true"
+    >
 
-                            <span>
-                                Phone
-                            </span>
-
-                            <strong>
-                                ${escapeHTML(
-                                    lead.phone || "-"
-                                )}
-                            </strong>
-
-                        </div>
-
-
-                        <div class="profile-info-item">
-
-                            <span>
-                                Business
-                            </span>
-
-                            <strong>
-                                ${escapeHTML(
-                                    lead.business || "-"
-                                )}
-                            </strong>
-
-                        </div>
-
-
-                        <div class="profile-info-item">
-
-                            <span>
-                                Location
-                            </span>
-
-                            <strong>
-                                ${escapeHTML(
-                                    lead.location || "-"
-                                )}
-                            </strong>
-
-                        </div>
-
-
-                        <div class="profile-info-item">
-
-                            <span>
-                                Assigned Sales
-                            </span>
-
-                            <strong>
-                                ${escapeHTML(
-                                    salesName
-                                )}
-                            </strong>
-
-                        </div>
-
-
-                        <div class="profile-info-item">
-
-                            <span>
-                                Created
-                            </span>
-
-                            <strong>
-                                ${escapeHTML(
-                                    formatProfileDate(
-                                        lead.created_at
-                                    )
-                                )}
-                            </strong>
-
-                        </div>
-
-                    </div>
-
-                </section>
-
-
-                <!-- PIPELINE -->
-
-                <section class="profile-card">
-
-                    <div class="profile-card-header">
-
-                        <div>
-
-                            <h2>
-                                Sales Pipeline
-                            </h2>
-
-                            <span>
-                                Customer journey
-                            </span>
-
-                        </div>
-
-                        <div class="profile-card-icon green">
-                            <i class="fa-solid fa-chart-line"></i>
-                        </div>
-
-                    </div>
-
-
-                    <div class="profile-timeline">
-
-                        ${renderTimelineItem(
-                            "Follow Up",
-                            lead.follow_up_date,
-                            "fa-solid fa-phone",
-                            "orange"
-                        )}
-
-                        ${renderTimelineItem(
-                            "Appointment",
-                            lead.appointment,
-                            "fa-solid fa-calendar-check",
-                            "purple"
-                        )}
-
-                        ${renderTimelineItem(
-                            "Site Survey",
-                            lead.site_survey,
-                            "fa-solid fa-location-crosshairs",
-                            "blue"
-                        )}
-
-                        ${renderTimelineItem(
-                            "Quotation",
-                            lead.quotation,
-                            "fa-solid fa-file-invoice-dollar",
-                            "orange"
-                        )}
-
-                        ${renderTimelineItem(
-                            "SPK",
-                            lead.spk,
-                            "fa-solid fa-file-signature",
-                            "purple"
-                        )}
-
-                        ${renderTimelineItem(
-                            "Closing",
-                            lead.closing,
-                            "fa-solid fa-circle-check",
-                            "green"
-                        )}
-
-                    </div>
-
-                </section>
-
-
-                <!-- NOTES -->
-
-                <section class="profile-card profile-card-wide">
-
-                    <div class="profile-card-header">
-
-                        <div>
-
-                            <h2>
-                                Customer Notes
-                            </h2>
-
-                            <span>
-                                Sales notes and important information
-                            </span>
-
-                        </div>
-
-                        <div class="profile-card-icon orange">
-                            <i class="fa-regular fa-note-sticky"></i>
-                        </div>
-
-                    </div>
-
-
-                    <div class="profile-notes">
-
-                        ${
-                            lead.notes
-                            ?
-                            escapeHTML(
-                                lead.notes
-                            ).replace(
-                                /\n/g,
-                                "<br>"
-                            )
-                            :
-                            `
-                            <div class="profile-no-notes">
-                                <i class="fa-regular fa-note-sticky"></i>
-                                <span>
-                                    Belum ada catatan.
-                                </span>
-                            </div>
-                            `
-                        }
-
-                    </div>
-
-                </section>
-
-
-                <!-- SYSTEM -->
-
-                <section class="profile-card profile-card-wide">
-
-                    <div class="profile-card-header">
-
-                        <div>
-
-                            <h2>
-                                System Information
-                            </h2>
-
-                            <span>
-                                CRM record information
-                            </span>
-
-                        </div>
-
-                        <div class="profile-card-icon gray">
-                            <i class="fa-solid fa-database"></i>
-                        </div>
-
-                    </div>
-
-
-                    <div class="profile-system-grid">
-
-                        <div>
-                            <span>Lead ID</span>
-                            <strong>#${escapeHTML(lead.id)}</strong>
-                        </div>
-
-                        <div>
-                            <span>Created</span>
-                            <strong>
-                                ${escapeHTML(
-                                    formatProfileDate(
-                                        lead.created_at
-                                    )
-                                )}
-                            </strong>
-                        </div>
-
-                        <div>
-                            <span>Sales</span>
-                            <strong>
-                                ${escapeHTML(salesName)}
-                            </strong>
-                        </div>
-
-                        <div>
-                            <span>Current Status</span>
-                            <strong>
-                                ${escapeHTML(status)}
-                            </strong>
-                        </div>
-
-                    </div>
-
-                </section>
-
-
-            </div>
-
+        <div class="confirm-icon">
+            <i class="fa-solid fa-triangle-exclamation"></i>
         </div>
 
-    `;
+        <h2 id="confirmTitle">
+            Confirm
+        </h2>
 
-}
+        <p id="confirmMessage">
+        </p>
 
-
-/* =========================================================
-   TIMELINE
-========================================================= */
-
-function renderTimelineItem(
-    title,
-    date,
-    icon,
-    color
-){
-
-    const completed =
-        Boolean(date);
-
-
-    return `
-
-        <div class="
-            profile-timeline-item
-            ${completed ? "completed" : ""}
-        ">
-
-            <div class="
-                timeline-icon
-                ${color}
-            ">
-
-                <i class="${icon}"></i>
-
-            </div>
-
-
-            <div class="timeline-content">
-
-                <strong>
-                    ${escapeHTML(title)}
-                </strong>
-
-                <span>
-                    ${
-                        date
-                        ?
-                        escapeHTML(
-                            formatProfileDate(date)
-                        )
-                        :
-                        "Belum dilakukan"
-                    }
-                </span>
-
-            </div>
-
-
-            <div class="timeline-check">
-
-                ${
-                    completed
-                    ?
-                    `
-                    <i class="fa-solid fa-check"></i>
-                    `
-                    :
-                    `
-                    <i class="fa-solid fa-minus"></i>
-                    `
-                }
-
-            </div>
-
-        </div>
-
-    `;
-
-}
-
-
-/* =========================================================
-   EDIT FROM PROFILE
-========================================================= */
-
-function editLeadFromProfile(id){
-
-    window.location.href =
-        `leads.html?edit=${encodeURIComponent(id)}`;
-
-}
-
-
-/* =========================================================
-   ERROR
-========================================================= */
-
-function renderProfileError(message){
-
-    const container =
-        $("customerProfileContent");
-
-
-    if(!container) return;
-
-
-    container.innerHTML = `
-
-        <div class="profile-error">
-
-            <div class="profile-error-icon">
-
-                <i class="fa-solid fa-circle-exclamation"></i>
-
-            </div>
-
-
-            <h2>
-                Customer Tidak Dapat Dibuka
-            </h2>
-
-
-            <p>
-                ${escapeHTML(message)}
-            </p>
-
+        <div class="modal-footer">
 
             <button
+                class="btn btn-secondary"
                 type="button"
-                class="btn btn-primary"
-                onclick="history.back()"
+                data-close-modal="confirmModal"
             >
-                <i class="fa-solid fa-arrow-left"></i>
-                Kembali
+                Cancel
+            </button>
+
+            <button
+                id="confirmActionBtn"
+                class="btn btn-danger"
+                type="button"
+            >
+                Confirm
             </button>
 
         </div>
 
-    `;
+    </div>
 
-}
-
-
-/* =========================================================
-   HELPERS
-========================================================= */
-
-function getProfileInitials(name){
-
-    if(!name){
-
-        return "NA";
-
-    }
+</div>
 
 
-    const parts =
-        String(name)
-            .trim()
-            .split(/\s+/)
-            .filter(Boolean);
+<!-- =========================================================
+     MY PROFILE MODAL
+========================================================= -->
+
+<div
+    id="profileModal"
+    class="modal-overlay"
+    style="display:none"
+>
+
+    <div
+        class="modal profile-modal-container"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="profileModalTitle"
+    >
+
+        <div class="modal-header">
+
+            <div>
+
+                <h2 id="profileModalTitle">
+                    My Profile
+                </h2>
+
+                <p>
+                    Informasi akun pengguna CRM.
+                </p>
+
+            </div>
+
+            <button
+                class="modal-close"
+                type="button"
+                data-close-modal="profileModal"
+                aria-label="Close"
+            >
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+        </div>
 
 
-    if(parts.length === 1){
+        <div
+            id="userProfileContent"
+            class="profile-modal-content"
+        >
+        </div>
 
-        return parts[0]
-            .substring(0,2)
-            .toUpperCase();
+    </div>
 
-    }
-
-
-    return (
-        parts[0][0] +
-        parts[parts.length - 1][0]
-    ).toUpperCase();
-
-}
+</div>
 
 
-function formatProfileDate(value){
+<!-- =========================================================
+     TOAST
+========================================================= -->
 
-    if(!value){
-
-        return "-";
-
-    }
-
-
-    try{
-
-        return new Intl.DateTimeFormat(
-            "id-ID",
-            {
-                day:"2-digit",
-                month:"long",
-                year:"numeric"
-            }
-        ).format(
-            new Date(value)
-        );
-
-    }
-    catch{
-
-        return value;
-
-    }
-
-}
+<div
+    id="toastContainer"
+    class="toast-container"
+></div>
 
 
-function getProfileStatusClass(
-    status
-){
+<!-- =========================================================
+     GLOBAL LOADING
+========================================================= -->
 
-    return "status-" +
-        String(status)
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g,"-")
-            .replace(/^-|-$/g,"");
+<div
+    id="globalLoading"
+    class="global-loading"
+    style="display:none"
+>
 
-}
+    <div>
+
+        <i class="fa-solid fa-spinner fa-spin"></i>
+
+        <span id="globalLoadingText">
+            Loading...
+        </span>
+
+    </div>
+
+</div>
 
 
-/* =========================================================
-   AUTO INITIALIZE
-========================================================= */
+<!-- =========================================================
+     SUPABASE
+========================================================= -->
 
-document.addEventListener(
-    "DOMContentLoaded",
-    () => {
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-        if(
-            document.getElementById(
-                "customerProfileContent"
-            )
-        ){
 
-            setTimeout(() => {
+<!-- =========================================================
+     CRM JAVASCRIPT
+========================================================= -->
 
-                if(
-                    typeof initializeCustomerProfilePage ===
-                    "function"
-                ){
+<script src="../js/config.js"></script>
+<script src="../js/helpers.js"></script>
+<script src="../js/modal.js"></script>
+<script src="../js/navigation.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/dashboard.js"></script>
+<script src="../js/leads.js"></script>
+<script src="../js/customer-profile.js"></script>
+<script src="../js/sales.js"></script>
 
-                    initializeCustomerProfilePage();
-
-                }
-
-            }, 250);
-
-        }
-
-    }
-);
+</body>
+</html>
