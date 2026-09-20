@@ -1,0 +1,1108 @@
+/* =========================================================
+   CRM FSI - LOGIN DESIGN
+   Khusus tampilan login
+   Semua selector menggunakan prefix fsi-login-
+   agar tidak bentrok dengan CSS CRM lainnya.
+   ========================================================= */
+
+
+/* =========================================================
+   RESET KHUSUS LOGIN
+   ========================================================= */
+
+.fsi-login-page,
+.fsi-login-page * {
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   LOGIN FULL SCREEN
+   ========================================================= */
+
+.fsi-login-page {
+    position: relative;
+
+    width: 100%;
+    min-height: 100vh;
+
+    min-height: 100svh;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 40px 20px;
+
+    overflow: hidden;
+
+    font-family:
+        Inter,
+        "Segoe UI",
+        Roboto,
+        Arial,
+        sans-serif;
+
+    color: #ffffff;
+
+    background:
+        #14263d;
+}
+
+
+/* =========================================================
+   BACKGROUND IMAGE
+   ========================================================= */
+
+.fsi-login-background {
+    position: absolute;
+
+    inset: 0;
+
+    z-index: 0;
+
+    background-image:
+        url("login-background.jpg");
+
+    background-size: cover;
+
+    background-position: center center;
+
+    background-repeat: no-repeat;
+
+    transform: scale(1.03);
+
+    filter:
+        brightness(0.90)
+        saturate(1.05);
+
+}
+
+
+/* =========================================================
+   DARK OVERLAY
+   Standar untuk foto yang cerah
+   ========================================================= */
+
+.fsi-login-overlay {
+    position: absolute;
+
+    inset: 0;
+
+    z-index: 1;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(4, 17, 32, 0.48),
+            rgba(8, 28, 52, 0.34),
+            rgba(3, 15, 29, 0.48)
+        );
+}
+
+
+/* =========================================================
+   EXTRA SOFT GRADIENT
+   ========================================================= */
+
+.fsi-login-page::after {
+    content: "";
+
+    position: absolute;
+
+    inset: 0;
+
+    z-index: 1;
+
+    pointer-events: none;
+
+    background:
+        radial-gradient(
+            circle at 50% 42%,
+            rgba(255, 255, 255, 0.08),
+            transparent 34%
+        );
+}
+
+
+/* =========================================================
+   DECORATIVE LIGHT
+   ========================================================= */
+
+.fsi-login-glow {
+    position: absolute;
+
+    z-index: 2;
+
+    width: 380px;
+    height: 380px;
+
+    border-radius: 50%;
+
+    pointer-events: none;
+
+    filter: blur(90px);
+
+    opacity: 0.16;
+}
+
+.fsi-login-glow-one {
+    top: -180px;
+    left: -120px;
+
+    background:
+        rgba(78, 164, 255, 0.8);
+}
+
+.fsi-login-glow-two {
+    right: -150px;
+    bottom: -180px;
+
+    background:
+        rgba(30, 118, 220, 0.75);
+}
+
+
+/* =========================================================
+   LOGIN CARD
+   GLASSMORPHISM
+   ========================================================= */
+
+.fsi-login-card {
+    position: relative;
+
+    z-index: 5;
+
+    width: min(100%, 430px);
+
+    padding: 38px 40px 30px;
+
+    border-radius: 26px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255, 255, 255, 0.20),
+            rgba(255, 255, 255, 0.08)
+        );
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.30);
+
+    backdrop-filter:
+        blur(22px)
+        saturate(150%);
+
+    -webkit-backdrop-filter:
+        blur(22px)
+        saturate(150%);
+
+    box-shadow:
+        0 30px 80px rgba(0, 0, 0, 0.34),
+        0 10px 30px rgba(0, 0, 0, 0.20),
+        inset 0 1px 0 rgba(255, 255, 255, 0.22);
+
+    animation:
+        fsiLoginCardAppear
+        0.65s
+        ease-out
+        both;
+}
+
+
+/* Highlight bagian atas kaca */
+
+.fsi-login-card::before {
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    left: 8%;
+
+    width: 84%;
+    height: 1px;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.55),
+            transparent
+        );
+
+    pointer-events: none;
+}
+
+
+/* =========================================================
+   LOGO
+   ========================================================= */
+
+.fsi-login-brand {
+    display: flex;
+
+    justify-content: center;
+
+    margin-bottom: 20px;
+}
+
+.fsi-login-logo-wrap {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    min-width: 96px;
+    min-height: 72px;
+
+    padding: 10px 18px;
+
+    border-radius: 18px;
+
+    background:
+        rgba(255, 255, 255, 0.92);
+
+    box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.16);
+
+    border:
+        1px solid rgba(255, 255, 255, 0.95);
+}
+
+.fsi-login-logo {
+    display: block;
+
+    width: auto;
+    max-width: 145px;
+
+    max-height: 58px;
+
+    object-fit: contain;
+}
+
+
+/* =========================================================
+   HEADING
+   ========================================================= */
+
+.fsi-login-heading {
+    text-align: center;
+
+    margin-bottom: 28px;
+}
+
+.fsi-login-heading h1 {
+    margin: 0 0 8px;
+
+    font-size: 28px;
+
+    line-height: 1.2;
+
+    font-weight: 750;
+
+    letter-spacing: -0.5px;
+
+    color: #ffffff;
+
+    text-shadow:
+        0 2px 12px rgba(0, 0, 0, 0.18);
+}
+
+.fsi-login-heading p {
+    margin: 0;
+
+    font-size: 13px;
+
+    line-height: 1.6;
+
+    color:
+        rgba(255, 255, 255, 0.78);
+}
+
+.fsi-login-heading strong {
+    color: #ffffff;
+
+    font-weight: 650;
+}
+
+
+/* =========================================================
+   FORM
+   ========================================================= */
+
+.fsi-login-form {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 18px;
+}
+
+
+/* =========================================================
+   FIELD
+   ========================================================= */
+
+.fsi-login-field {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 8px;
+}
+
+.fsi-login-field label {
+    font-size: 12px;
+
+    font-weight: 650;
+
+    letter-spacing: 0.25px;
+
+    color:
+        rgba(255, 255, 255, 0.88);
+}
+
+
+/* =========================================================
+   INPUT WRAPPER
+   ========================================================= */
+
+.fsi-login-input-wrap {
+    position: relative;
+
+    display: flex;
+
+    align-items: center;
+
+    width: 100%;
+}
+
+
+/* =========================================================
+   INPUT ICON
+   ========================================================= */
+
+.fsi-login-input-icon {
+    position: absolute;
+
+    left: 15px;
+
+    width: 19px;
+    height: 19px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    color:
+        rgba(255, 255, 255, 0.62);
+
+    pointer-events: none;
+
+    z-index: 2;
+}
+
+.fsi-login-input-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+
+/* =========================================================
+   INPUT
+   ========================================================= */
+
+.fsi-login-input-wrap input {
+    width: 100%;
+
+    height: 52px;
+
+    padding:
+        0 46px
+        0 46px;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.24);
+
+    border-radius: 13px;
+
+    outline: none;
+
+    background:
+        rgba(255, 255, 255, 0.10);
+
+    color: #ffffff;
+
+    font-family: inherit;
+
+    font-size: 14px;
+
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.fsi-login-input-wrap input::placeholder {
+    color:
+        rgba(255, 255, 255, 0.52);
+}
+
+.fsi-login-input-wrap input:hover {
+    background:
+        rgba(255, 255, 255, 0.13);
+
+    border-color:
+        rgba(255, 255, 255, 0.34);
+}
+
+.fsi-login-input-wrap input:focus {
+    background:
+        rgba(255, 255, 255, 0.15);
+
+    border-color:
+        rgba(255, 255, 255, 0.65);
+
+    box-shadow:
+        0 0 0 3px
+        rgba(255, 255, 255, 0.08);
+}
+
+
+/* =========================================================
+   PASSWORD TOGGLE
+   ========================================================= */
+
+.fsi-login-password-toggle {
+    position: absolute;
+
+    right: 7px;
+
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border: 0;
+
+    border-radius: 10px;
+
+    background:
+        transparent;
+
+    color:
+        rgba(255, 255, 255, 0.62);
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease;
+}
+
+.fsi-login-password-toggle:hover {
+    background:
+        rgba(255, 255, 255, 0.10);
+
+    color: #ffffff;
+}
+
+.fsi-login-password-toggle svg {
+    width: 19px;
+    height: 19px;
+}
+
+.fsi-eye-closed {
+    display: none;
+}
+
+.fsi-login-password-toggle.show-password
+.fsi-eye-open {
+    display: none;
+}
+
+.fsi-login-password-toggle.show-password
+.fsi-eye-closed {
+    display: block;
+}
+
+
+/* =========================================================
+   REMEMBER + FORGOT
+   ========================================================= */
+
+.fsi-login-options {
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 12px;
+
+    margin-top: -2px;
+}
+
+.fsi-login-remember {
+    position: relative;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    cursor: pointer;
+
+    font-size: 12px;
+
+    color:
+        rgba(255, 255, 255, 0.78);
+
+    user-select: none;
+}
+
+.fsi-login-remember input {
+    position: absolute;
+
+    opacity: 0;
+
+    pointer-events: none;
+}
+
+.fsi-login-checkmark {
+    width: 17px;
+    height: 17px;
+
+    flex: 0 0 17px;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.40);
+
+    border-radius: 5px;
+
+    background:
+        rgba(255, 255, 255, 0.08);
+
+    transition:
+        all 0.2s ease;
+}
+
+.fsi-login-remember input:checked
++ .fsi-login-checkmark {
+    background:
+        #ffffff;
+
+    border-color:
+        #ffffff;
+
+    box-shadow:
+        0 3px 10px
+        rgba(0, 0, 0, 0.12);
+}
+
+.fsi-login-remember input:checked
++ .fsi-login-checkmark::after {
+    content: "";
+
+    display: block;
+
+    width: 4px;
+    height: 8px;
+
+    margin:
+        2px 0 0 5px;
+
+    border:
+        solid #173452;
+
+    border-width:
+        0 2px 2px 0;
+
+    transform:
+        rotate(45deg);
+}
+
+.fsi-login-forgot {
+    padding: 0;
+
+    border: 0;
+
+    background: transparent;
+
+    color:
+        rgba(255, 255, 255, 0.88);
+
+    font-family: inherit;
+
+    font-size: 12px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        color 0.2s ease;
+}
+
+.fsi-login-forgot:hover {
+    color: #ffffff;
+
+    text-decoration: underline;
+}
+
+
+/* =========================================================
+   LOGIN BUTTON
+   ========================================================= */
+
+.fsi-login-button {
+    position: relative;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 12px;
+
+    width: 100%;
+
+    height: 54px;
+
+    margin-top: 3px;
+
+    border: 0;
+
+    border-radius: 13px;
+
+    cursor: pointer;
+
+    font-family: inherit;
+
+    font-size: 13px;
+
+    font-weight: 800;
+
+    letter-spacing: 1.1px;
+
+    color: #14304d;
+
+    background:
+        linear-gradient(
+            135deg,
+            #ffffff,
+            #e9f4ff
+        );
+
+    box-shadow:
+        0 12px 25px
+        rgba(0, 0, 0, 0.20),
+        inset 0 1px 0
+        rgba(255, 255, 255, 0.9);
+
+    overflow: hidden;
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.fsi-login-button::before {
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    left: -120%;
+
+    width: 80%;
+    height: 100%;
+
+    transform:
+        skewX(-20deg);
+
+    background:
+        rgba(255, 255, 255, 0.55);
+
+    transition:
+        left 0.5s ease;
+}
+
+.fsi-login-button:hover {
+    transform:
+        translateY(-2px);
+
+    box-shadow:
+        0 16px 30px
+        rgba(0, 0, 0, 0.25),
+        inset 0 1px 0
+        rgba(255, 255, 255, 0.9);
+}
+
+.fsi-login-button:hover::before {
+    left: 140%;
+}
+
+.fsi-login-button:active {
+    transform:
+        translateY(0);
+}
+
+.fsi-login-button-text {
+    position: relative;
+
+    z-index: 2;
+}
+
+.fsi-login-button-arrow {
+    position: relative;
+
+    z-index: 2;
+
+    font-size: 18px;
+
+    line-height: 1;
+
+    transition:
+        transform 0.2s ease;
+}
+
+.fsi-login-button:hover
+.fsi-login-button-arrow {
+    transform:
+        translateX(3px);
+}
+
+
+/* =========================================================
+   MESSAGE
+   ========================================================= */
+
+.fsi-login-message {
+    min-height: 0;
+
+    text-align: center;
+
+    font-size: 12px;
+
+    line-height: 1.5;
+
+    color:
+        rgba(255, 255, 255, 0.90);
+}
+
+
+/* =========================================================
+   ADMIN HELP
+   ========================================================= */
+
+.fsi-login-help {
+    display: flex;
+
+    align-items: flex-start;
+
+    gap: 11px;
+
+    margin-top: 23px;
+
+    padding: 13px 14px;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.14);
+
+    border-radius: 12px;
+
+    background:
+        rgba(255, 255, 255, 0.06);
+}
+
+.fsi-login-help-icon {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 24px;
+    height: 24px;
+
+    flex: 0 0 24px;
+
+    border-radius: 50%;
+
+    background:
+        rgba(255, 255, 255, 0.14);
+
+    color: #ffffff;
+
+    font-size: 13px;
+
+    font-weight: 750;
+}
+
+.fsi-login-help-text {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 2px;
+
+    line-height: 1.4;
+}
+
+.fsi-login-help-text strong {
+    font-size: 11px;
+
+    color:
+        rgba(255, 255, 255, 0.92);
+}
+
+.fsi-login-help-text span {
+    font-size: 10px;
+
+    color:
+        rgba(255, 255, 255, 0.60);
+}
+
+
+/* =========================================================
+   SECURITY FOOTER
+   ========================================================= */
+
+.fsi-login-security {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    flex-wrap: wrap;
+
+    gap: 7px;
+
+    margin-top: 20px;
+
+    color:
+        rgba(255, 255, 255, 0.50);
+
+    font-size: 9px;
+
+    letter-spacing: 0.3px;
+}
+
+.fsi-security-lock {
+    display: flex;
+
+    width: 14px;
+    height: 14px;
+}
+
+.fsi-security-lock svg {
+    width: 100%;
+    height: 100%;
+}
+
+.fsi-security-dot {
+    width: 3px;
+    height: 3px;
+
+    border-radius: 50%;
+
+    background:
+        rgba(255, 255, 255, 0.40);
+}
+
+
+/* =========================================================
+   PAGE FOOTER
+   ========================================================= */
+
+.fsi-login-footer {
+    position: absolute;
+
+    z-index: 5;
+
+    bottom: 15px;
+
+    left: 0;
+    right: 0;
+
+    text-align: center;
+
+    color:
+        rgba(255, 255, 255, 0.46);
+
+    font-size: 9px;
+
+    letter-spacing: 0.5px;
+
+    pointer-events: none;
+}
+
+
+/* =========================================================
+   ANIMATION
+   ========================================================= */
+
+@keyframes fsiLoginCardAppear {
+
+    from {
+        opacity: 0;
+
+        transform:
+            translateY(18px)
+            scale(0.97);
+    }
+
+    to {
+        opacity: 1;
+
+        transform:
+            translateY(0)
+            scale(1);
+    }
+
+}
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+    .fsi-login-page {
+        padding: 25px 16px;
+    }
+
+    .fsi-login-card {
+        width: min(100%, 410px);
+
+        padding:
+            32px 28px 26px;
+
+        border-radius: 22px;
+    }
+
+    .fsi-login-heading h1 {
+        font-size: 25px;
+    }
+
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 480px) {
+
+    .fsi-login-page {
+        padding:
+            20px 13px 45px;
+    }
+
+    .fsi-login-card {
+        width: 100%;
+
+        padding:
+            27px 21px 23px;
+
+        border-radius: 20px;
+
+        backdrop-filter:
+            blur(18px);
+
+        -webkit-backdrop-filter:
+            blur(18px);
+    }
+
+    .fsi-login-logo-wrap {
+        min-width: 86px;
+        min-height: 62px;
+
+        padding:
+            8px 14px;
+
+        border-radius: 15px;
+    }
+
+    .fsi-login-logo {
+        max-width: 125px;
+
+        max-height: 48px;
+    }
+
+    .fsi-login-heading {
+        margin-bottom: 23px;
+    }
+
+    .fsi-login-heading h1 {
+        font-size: 23px;
+    }
+
+    .fsi-login-heading p {
+        font-size: 12px;
+    }
+
+    .fsi-login-form {
+        gap: 15px;
+    }
+
+    .fsi-login-input-wrap input {
+        height: 50px;
+
+        font-size: 13px;
+    }
+
+    .fsi-login-options {
+        align-items: flex-start;
+
+        flex-direction: column;
+
+        gap: 9px;
+    }
+
+    .fsi-login-button {
+        height: 52px;
+    }
+
+    .fsi-login-help {
+        margin-top: 19px;
+    }
+
+    .fsi-login-footer {
+        bottom: 10px;
+    }
+
+}
+
+
+/* =========================================================
+   VERY SMALL SCREEN
+   ========================================================= */
+
+@media (max-width: 350px) {
+
+    .fsi-login-card {
+        padding:
+            23px 17px 20px;
+    }
+
+    .fsi-login-heading h1 {
+        font-size: 21px;
+    }
+
+    .fsi-login-help-text span {
+        font-size: 9px;
+    }
+
+}
