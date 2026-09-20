@@ -3,6 +3,41 @@
 // ========================================
 
 let editingSalesId = null;
+let salesEventsBound = false;
+
+
+// ========================================
+// INITIALIZE SALES PAGE
+// ========================================
+
+async function initializeSalesPage() {
+
+  console.log("================================");
+  console.log("CRM FSI - INITIALIZE SALES");
+  console.log("================================");
+
+
+  // Hanya Admin
+  if (currentProfile?.role !== "Admin") {
+
+    console.warn(
+      "Sales Management hanya untuk Admin."
+    );
+
+    return;
+  }
+
+
+  bindSalesEvents();
+
+  await loadSalesUsers();
+
+
+  console.log(
+    "CRM FSI - SALES READY"
+  );
+
+}
 
 
 // ========================================
@@ -12,74 +47,136 @@ let editingSalesId = null;
 async function loadSalesUsers() {
 
   if (
-    currentProfile?.role !== "Admin" ||
-    !$("salesTableBody")
+    currentProfile?.role !== "Admin"
   ) {
     return;
   }
 
+
+  if (!$("salesTableBody")) {
+    return;
+  }
+
+
   try {
+
+    console.log(
+      "CRM FSI - MEMUAT SALES USERS..."
+    );
+
+
+    /*
+      Gunakan select("*") supaya kita tidak
+      bergantung pada kolom tertentu seperti
+      photo_url yang mungkin belum ada.
+    */
 
     const {
       data,
       error
-    } = await supabaseClient
-      .from("sales_users")
-      .select(`
-        id,
-        name,
-        username,
-        role,
-        status,
-        email,
-        photo_url,
-        "auth_user-id",
-        created_at
-      `)
-      .order("name", {
-        ascending: true
-      });
+    } =
+      await supabaseClient
+        .from("sales_users")
+        .select("*")
+        .order(
+          "name",
+          {
+            ascending: true
+          }
+        );
+
 
     if (error) {
+
+      console.error(
+        "LOAD SALES ERROR:",
+        error
+      );
+
       throw error;
     }
 
-    salesUsersData = data || [];
+
+    salesUsersData =
+      data || [];
+
+
+    console.log(
+      "CRM FSI - SALES DATA:",
+      salesUsersData
+    );
+
+
+    /*
+      Hanya role Sales yang ditampilkan
+      pada Manage Sales.
+    */
 
     const salesOnly =
       salesUsersData.filter(
-        user => user.role === "Sales"
+        user =>
+          String(
+            user.role || ""
+          ).toLowerCase() === "sales"
       );
+
 
     const active =
       salesOnly.filter(
         user =>
-          String(user.status || "")
-            .toLowerCase() === "active"
+          String(
+            user.status || ""
+          ).toLowerCase() === "active"
       ).length;
+
+
+    const inactive =
+      salesOnly.length -
+      active;
+
+
+    // ======================================
+    // STATISTICS
+    // ======================================
 
     setText(
       "totalSalesUsers",
       salesOnly.length
     );
 
+
     setText(
       "activeSalesUsers",
       active
     );
 
+
     setText(
       "inactiveSalesUsers",
-      salesOnly.length - active
+      inactive
     );
+
+
+    // ======================================
+    // TABLE
+    // ======================================
 
     renderSalesTable();
 
+
+    /*
+      Refresh lookup Sales untuk Leads.
+    */
+
     if (
-      typeof loadSalesLookup === "function"
+      typeof loadSalesLookup ===
+      "function"
     ) {
+
       await loadSalesLookup();
+
     }
+
 
   } catch (error) {
 
@@ -87,6 +184,43 @@ async function loadSalesUsers() {
       "loadSalesUsers:",
       error
     );
+
+
+    const tableBody =
+      $("salesTableBody");
+
+
+    if (tableBody) {
+
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="7">
+
+            <div class="sales-empty">
+
+              <div class="sales-empty-icon">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+              </div>
+
+              <strong>
+                Gagal memuat data Sales
+              </strong>
+
+              <span>
+                ${escapeHTML(
+                  error.message ||
+                  "Terjadi kesalahan."
+                )}
+              </span>
+
+            </div>
+
+          </td>
+        </tr>
+      `;
+
+    }
+
 
     showToast(
       error.message ||
@@ -108,46 +242,66 @@ function renderSalesTable() {
   const tableBody =
     $("salesTableBody");
 
+
   if (!tableBody) {
     return;
   }
 
+
   const search =
     (
-      $("salesSearch")?.value || ""
+      $("salesSearch")?.value ||
+      ""
     )
       .trim()
       .toLowerCase();
 
+
   const rows =
-    salesUsersData
+    (salesUsersData || [])
       .filter(
         user =>
-          user.role === "Sales"
+          String(
+            user.role || ""
+          ).toLowerCase() === "sales"
       )
-      .filter(user => {
+      .filter(
+        user => {
 
-        const name =
-          String(user.name || "")
-            .toLowerCase();
+          const name =
+            String(
+              user.name || ""
+            ).toLowerCase();
 
-        const username =
-          String(user.username || "")
-            .toLowerCase();
 
-        return (
-          name.includes(search) ||
-          username.includes(search)
-        );
+          const username =
+            String(
+              user.username || ""
+            ).toLowerCase();
 
-      });
+
+          return (
+            name.includes(search) ||
+            username.includes(search)
+          );
+
+        }
+      );
+
+
+  // ======================================
+  // EMPTY
+  // ======================================
 
   if (!rows.length) {
 
     tableBody.innerHTML = `
       <tr>
+
         <td colspan="7">
+
           <div class="sales-empty">
+
             <div class="sales-empty-icon">
               <i class="fa-solid fa-user-slash"></i>
             </div>
@@ -159,8 +313,11 @@ function renderSalesTable() {
             <span>
               Belum ada data Sales yang sesuai.
             </span>
+
           </div>
+
         </td>
+
       </tr>
     `;
 
@@ -168,173 +325,263 @@ function renderSalesTable() {
   }
 
 
+  // ======================================
+  // TABLE ROWS
+  // ======================================
+
   tableBody.innerHTML =
-    rows.map(
-      (sales, index) => {
+    rows
+      .map(
+        (sales, index) => {
 
-        const isActive =
-          String(
-            sales.status || ""
-          ).toLowerCase() === "active";
-
-        const statusClass =
-          isActive
-            ? "status-active"
-            : "status-inactive";
-
-        const statusText =
-          sales.status || "Inactive";
-
-        const photo =
-          getSalesPhotoUrl(sales);
-
-        const initials =
-          getSalesInitials(
-            sales.name
-          );
-
-        const safeId =
-          String(sales.id)
-            .replace(/'/g, "\\'");
+          const isActive =
+            String(
+              sales.status || ""
+            ).toLowerCase() === "active";
 
 
-        return `
-          <tr>
-
-            <td>
-              <span class="sales-row-number">
-                ${index + 1}
-              </span>
-            </td>
+          const statusClass =
+            isActive
+              ? "status-active"
+              : "status-inactive";
 
 
-            <td>
+          const statusText =
+            sales.status ||
+            "Inactive";
 
-              <div class="sales-person-cell">
 
-                ${
-                  photo
-                    ? `
-                      <img
-                        src="${escapeHTML(photo)}"
-                        alt="${escapeHTML(
-                          sales.name || "Sales"
-                        )}"
-                        class="sales-avatar-table"
-                        onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
-                      >
-                    `
-                    : ""
-                }
+          const photo =
+            getSalesPhotoUrl(
+              sales
+            );
+
+
+          const initials =
+            getSalesInitials(
+              sales.name
+            );
+
+
+          const safeId =
+            String(
+              sales.id
+            )
+              .replace(
+                /'/g,
+                "\\'"
+              );
+
+
+          const email =
+            sales.email ||
+            "";
+
+
+          return `
+            <tr>
+
+
+              <!-- NUMBER -->
+
+              <td>
+
+                <span
+                  class="sales-row-number"
+                >
+                  ${index + 1}
+                </span>
+
+              </td>
+
+
+              <!-- SALES -->
+
+              <td>
 
                 <div
-                  class="sales-avatar-fallback"
-                  style="${
+                  class="sales-person-cell"
+                >
+
+                  ${
                     photo
-                      ? "display:none;"
-                      : "display:flex;"
-                  }"
-                >
-                  ${escapeHTML(initials)}
+                      ? `
+                        <img
+                          src="${escapeHTML(photo)}"
+                          alt="${escapeHTML(
+                            sales.name ||
+                            "Sales"
+                          )}"
+                          class="sales-avatar-table"
+                          onerror="
+                            this.style.display='none';
+                            this.nextElementSibling.style.display='flex';
+                          "
+                        >
+                      `
+                      : ""
+                  }
+
+
+                  <div
+                    class="sales-avatar-fallback"
+                    style="${
+                      photo
+                        ? "display:none;"
+                        : "display:flex;"
+                    }"
+                  >
+                    ${escapeHTML(
+                      initials
+                    )}
+                  </div>
+
+
+                  <div
+                    class="sales-person-info"
+                  >
+
+                    <strong>
+                      ${escapeHTML(
+                        sales.name ||
+                        "-"
+                      )}
+                    </strong>
+
+
+                    ${
+                      email
+                        ? `
+                          <span>
+                            ${escapeHTML(
+                              email
+                            )}
+                          </span>
+                        `
+                        : ""
+                    }
+
+                  </div>
+
                 </div>
 
-                <div class="sales-person-info">
+              </td>
 
-                  <strong>
-                    ${escapeHTML(
-                      sales.name || "-"
-                    )}
-                  </strong>
 
-                  <span>
-                    ${escapeHTML(
-                      sales.email || "-"
-                    )}
-                  </span>
+              <!-- USERNAME -->
+
+              <td>
+
+                <span
+                  class="sales-username"
+                >
+                  ${escapeHTML(
+                    sales.username ||
+                    "-"
+                  )}
+                </span>
+
+              </td>
+
+
+              <!-- ROLE -->
+
+              <td>
+
+                <span
+                  class="sales-role"
+                >
+                  ${escapeHTML(
+                    sales.role ||
+                    "Sales"
+                  )}
+                </span>
+
+              </td>
+
+
+              <!-- STATUS -->
+
+              <td>
+
+                <span
+                  class="status-badge ${statusClass}"
+                >
+
+                  <i
+                    class="fa-solid fa-circle"
+                  ></i>
+
+                  ${escapeHTML(
+                    statusText
+                  )}
+
+                </span>
+
+              </td>
+
+
+              <!-- CREATED -->
+
+              <td>
+
+                <span
+                  class="sales-created"
+                >
+                  ${formatDate(
+                    sales.created_at
+                  )}
+                </span>
+
+              </td>
+
+
+              <!-- ACTION -->
+
+              <td>
+
+                <div
+                  class="action-buttons"
+                >
+
+                  <button
+                    type="button"
+                    class="icon-btn sales-edit-btn"
+                    onclick="openEditSales('${safeId}')"
+                    title="Edit Sales"
+                  >
+
+                    <i
+                      class="fa-regular fa-pen-to-square"
+                    ></i>
+
+                  </button>
+
+
+                  <button
+                    type="button"
+                    class="icon-btn"
+                    onclick="toggleSalesStatus('${safeId}')"
+                    title="Toggle status"
+                  >
+
+                    <i
+                      class="fa-solid fa-power-off"
+                    ></i>
+
+                  </button>
 
                 </div>
 
-              </div>
-
-            </td>
+              </td>
 
 
-            <td>
+            </tr>
+          `;
 
-              <span class="sales-username">
-                ${escapeHTML(
-                  sales.username || "-"
-                )}
-              </span>
-
-            </td>
-
-
-            <td>
-
-              <span class="sales-role">
-                ${escapeHTML(
-                  sales.role || "Sales"
-                )}
-              </span>
-
-            </td>
-
-
-            <td>
-
-              <span
-                class="status-badge ${statusClass}"
-              >
-                <i class="fa-solid fa-circle"></i>
-                ${escapeHTML(statusText)}
-              </span>
-
-            </td>
-
-
-            <td>
-
-              <span class="sales-created">
-                ${formatDate(
-                  sales.created_at
-                )}
-              </span>
-
-            </td>
-
-
-            <td>
-
-              <div class="action-buttons">
-
-                <button
-                  type="button"
-                  class="icon-btn sales-edit-btn"
-                  onclick="openEditSales('${safeId}')"
-                  title="Edit Sales"
-                >
-                  <i class="fa-regular fa-pen-to-square"></i>
-                </button>
-
-
-                <button
-                  type="button"
-                  class="icon-btn"
-                  onclick="toggleSalesStatus('${safeId}')"
-                  title="Toggle status"
-                >
-                  <i class="fa-solid fa-power-off"></i>
-                </button>
-
-              </div>
-
-            </td>
-
-          </tr>
-        `;
-      }
-    ).join("");
+        }
+      )
+      .join("");
 
 }
 
@@ -345,25 +592,42 @@ function renderSalesTable() {
 
 function getSalesPhotoUrl(sales) {
 
-  if (sales?.photo_url) {
+  /*
+    Kalau photo_url memang tersedia
+    di database, gunakan.
+  */
+
+  if (
+    sales &&
+    sales.photo_url
+  ) {
+
     return sales.photo_url;
+
   }
 
+
   /*
-    Foto Rist yang sudah ada di Supabase Storage.
-    Ini fallback sementara jika photo_url belum diisi.
+    Fallback Rist.
+    Tidak mempengaruhi database.
   */
 
   const name =
-    String(sales?.name || "")
+    String(
+      sales?.name || ""
+    )
       .trim()
       .toLowerCase();
 
-  if (name === "rist") {
+
+  if (
+    name === "rist"
+  ) {
 
     return "https://yoyszukutqwoxxdolzcg.supabase.co/storage/v1/object/public/sales-avatar/rist.jpeg";
 
   }
+
 
   return "";
 
@@ -380,23 +644,33 @@ function getSalesInitials(name) {
     return "SA";
   }
 
+
   const parts =
     String(name)
       .trim()
       .split(/\s+/)
       .filter(Boolean);
 
-  if (parts.length === 1) {
+
+  if (
+    parts.length === 1
+  ) {
 
     return parts[0]
-      .substring(0, 2)
+      .substring(
+        0,
+        2
+      )
       .toUpperCase();
 
   }
 
+
   return (
     parts[0][0] +
-    parts[parts.length - 1][0]
+    parts[
+      parts.length - 1
+    ][0]
   ).toUpperCase();
 
 }
@@ -420,56 +694,79 @@ function openAddSales() {
     return;
   }
 
-  editingSalesId = null;
+
+  editingSalesId =
+    null;
+
 
   $("salesForm")?.reset();
+
 
   setValue(
     "salesId",
     ""
   );
 
+
   setText(
     "salesModalTitle",
     "Add New Sales"
   );
+
 
   setText(
     "salesModalSubtitle",
     "Buat akun Sales baru."
   );
 
+
   setText(
     "saveSalesText",
     "Create Sales"
   );
 
+
   const passwordGroup =
     $("salesPasswordGroup");
 
+
   if (passwordGroup) {
-    passwordGroup.style.display = "block";
+
+    passwordGroup.style.display =
+      "block";
+
   }
+
 
   const statusGroup =
     $("salesStatusGroup");
 
+
   if (statusGroup) {
-    statusGroup.style.display = "none";
+
+    statusGroup.style.display =
+      "none";
+
   }
+
 
   setValue(
     "salesStatus",
     "Active"
   );
 
-  showSalesPhotoPreview("");
+
+  showSalesPhotoPreview(
+    ""
+  );
+
 
   showFormMessage(
     "salesFormMessage",
     "",
     ""
   );
+
 
   openModal(
     "salesModal"
@@ -496,12 +793,15 @@ function openEditSales(id) {
     return;
   }
 
+
   const sales =
-    salesUsersData.find(
-      user =>
-        String(user.id) ===
-        String(id)
-    );
+    (salesUsersData || [])
+      .find(
+        user =>
+          String(user.id) ===
+          String(id)
+      );
+
 
   if (!sales) {
 
@@ -513,72 +813,95 @@ function openEditSales(id) {
     return;
   }
 
+
   editingSalesId =
     sales.id;
+
 
   setValue(
     "salesId",
     sales.id
   );
 
+
   setValue(
     "salesName",
     sales.name || ""
   );
+
 
   setValue(
     "salesUsername",
     sales.username || ""
   );
 
+
   setValue(
     "salesPhotoUrl",
     sales.photo_url || ""
   );
 
+
   setValue(
     "salesStatus",
-    sales.status || "Active"
+    sales.status ||
+    "Active"
   );
+
 
   setText(
     "salesModalTitle",
     "Edit Sales"
   );
 
+
   setText(
     "salesModalSubtitle",
     "Perbarui informasi Sales."
   );
+
 
   setText(
     "saveSalesText",
     "Save Changes"
   );
 
+
   const passwordGroup =
     $("salesPasswordGroup");
 
+
   if (passwordGroup) {
-    passwordGroup.style.display = "none";
+
+    passwordGroup.style.display =
+      "none";
+
   }
+
 
   const statusGroup =
     $("salesStatusGroup");
 
+
   if (statusGroup) {
-    statusGroup.style.display = "block";
+
+    statusGroup.style.display =
+      "block";
+
   }
+
 
   showSalesPhotoPreview(
     sales.photo_url || ""
   );
+
 
   showFormMessage(
     "salesFormMessage",
     "",
     ""
   );
+
 
   openModal(
     "salesModal"
@@ -591,14 +914,18 @@ function openEditSales(id) {
 // PHOTO PREVIEW
 // ========================================
 
-function showSalesPhotoPreview(url) {
+function showSalesPhotoPreview(
+  url
+) {
 
   const preview =
     $("salesPhotoPreview");
 
+
   if (!preview) {
     return;
   }
+
 
   if (!url) {
 
@@ -606,20 +933,27 @@ function showSalesPhotoPreview(url) {
       <i class="fa-solid fa-user"></i>
     `;
 
+
     preview.classList.remove(
       "has-image"
     );
 
+
     return;
   }
+
 
   preview.innerHTML = `
     <img
       src="${escapeHTML(url)}"
       alt="Sales photo"
-      onerror="this.parentElement.innerHTML='<i class=&quot;fa-solid fa-user&quot;></i>';this.parentElement.classList.remove('has-image');"
+      onerror="
+        this.parentElement.innerHTML='<i class=&quot;fa-solid fa-user&quot;></i>';
+        this.parentElement.classList.remove('has-image');
+      "
     >
   `;
+
 
   preview.classList.add(
     "has-image"
@@ -632,9 +966,12 @@ function showSalesPhotoPreview(url) {
 // CREATE / UPDATE SALES
 // ========================================
 
-async function handleCreateSales(event) {
+async function handleCreateSales(
+  event
+) {
 
   event.preventDefault();
+
 
   if (
     currentProfile?.role !== "Admin"
@@ -648,29 +985,43 @@ async function handleCreateSales(event) {
     return;
   }
 
+
   const name =
     $("salesName")
       ?.value
-      .trim() || "";
+      .trim() ||
+    "";
+
 
   const username =
     $("salesUsername")
       ?.value
-      .trim() || "";
+      .trim() ||
+    "";
+
 
   const password =
     $("salesPassword")
-      ?.value || "";
+      ?.value ||
+    "";
+
 
   const photoUrl =
     $("salesPhotoUrl")
       ?.value
-      .trim() || null;
+      .trim() ||
+    null;
+
 
   const status =
     $("salesStatus")
-      ?.value || "Active";
+      ?.value ||
+    "Active";
 
+
+  // ======================================
+  // VALIDATION
+  // ======================================
 
   if (
     !name ||
@@ -720,6 +1071,7 @@ async function handleCreateSales(event) {
   const saveButton =
     $("saveSalesBtn");
 
+
   setButtonLoading(
     saveButton,
     true
@@ -728,9 +1080,10 @@ async function handleCreateSales(event) {
 
   try {
 
-    // ======================================
+
+    // ====================================
     // CREATE
-    // ======================================
+    // ====================================
 
     if (!editingSalesId) {
 
@@ -738,20 +1091,24 @@ async function handleCreateSales(event) {
         data,
         error
       } =
-        await supabaseClient.functions.invoke(
-          CRM_CONFIG.salesCreateFunction,
-          {
-            body: {
-              name,
-              username,
-              password
+        await supabaseClient
+          .functions
+          .invoke(
+            CRM_CONFIG.salesCreateFunction,
+            {
+              body: {
+                name,
+                username,
+                password
+              }
             }
-          }
-        );
+          );
+
 
       if (error) {
         throw error;
       }
+
 
       if (data?.error) {
 
@@ -759,7 +1116,8 @@ async function handleCreateSales(event) {
           data.error +
           (
             data.detail
-              ? ": " + data.detail
+              ? ": " +
+                data.detail
               : ""
           )
         );
@@ -768,12 +1126,14 @@ async function handleCreateSales(event) {
 
 
       /*
-        Ambil ID Sales yang baru dibuat,
-        lalu simpan photo_url jika diisi.
+        Simpan photo_url hanya jika
+        Edge Function mengembalikan ID
+        Sales baru.
       */
 
       const createdSales =
         data?.sales;
+
 
       if (
         createdSales?.id &&
@@ -781,20 +1141,28 @@ async function handleCreateSales(event) {
       ) {
 
         const {
-          error: photoError
+          error:
+            photoError
         } =
           await supabaseClient
             .from("sales_users")
             .update({
-              photo_url: photoUrl
+              photo_url:
+                photoUrl
             })
             .eq(
               "id",
               createdSales.id
             );
 
+
         if (photoError) {
-          throw photoError;
+
+          console.warn(
+            "Photo URL tidak tersimpan:",
+            photoError
+          );
+
         }
 
       }
@@ -808,11 +1176,15 @@ async function handleCreateSales(event) {
     }
 
 
-    // ======================================
+    // ====================================
     // UPDATE
-    // ======================================
+    // ====================================
 
     else {
+
+      /*
+        Update field dasar terlebih dahulu.
+      */
 
       const {
         error
@@ -822,16 +1194,52 @@ async function handleCreateSales(event) {
           .update({
             name,
             username,
-            status,
-            photo_url: photoUrl
+            status
           })
           .eq(
             "id",
             editingSalesId
           );
 
+
       if (error) {
         throw error;
+      }
+
+
+      /*
+        photo_url dicoba terpisah.
+        Kalau kolom belum ada, data utama
+        Sales tetap tidak gagal.
+      */
+
+      if (photoUrl !== null) {
+
+        const {
+          error:
+            photoError
+        } =
+          await supabaseClient
+            .from("sales_users")
+            .update({
+              photo_url:
+                photoUrl
+            })
+            .eq(
+              "id",
+              editingSalesId
+            );
+
+
+        if (photoError) {
+
+          console.warn(
+            "Photo URL tidak tersimpan:",
+            photoError
+          );
+
+        }
+
       }
 
 
@@ -847,16 +1255,21 @@ async function handleCreateSales(event) {
       "salesModal"
     );
 
-    editingSalesId = null;
+
+    editingSalesId =
+      null;
+
 
     await loadSalesUsers();
+
 
   } catch (error) {
 
     console.error(
-      "handleCreateSales:",
+      "HANDLE SALES ERROR:",
       error
     );
+
 
     showFormMessage(
       "salesFormMessage",
@@ -864,6 +1277,7 @@ async function handleCreateSales(event) {
       "Gagal menyimpan Sales.",
       "error"
     );
+
 
   } finally {
 
@@ -881,7 +1295,9 @@ async function handleCreateSales(event) {
 // TOGGLE STATUS
 // ========================================
 
-async function toggleSalesStatus(id) {
+async function toggleSalesStatus(
+  id
+) {
 
   if (
     currentProfile?.role !== "Admin"
@@ -895,12 +1311,15 @@ async function toggleSalesStatus(id) {
     return;
   }
 
+
   const sales =
-    salesUsersData.find(
-      user =>
-        String(user.id) ===
-        String(id)
-    );
+    (salesUsersData || [])
+      .find(
+        user =>
+          String(user.id) ===
+          String(id)
+      );
+
 
   if (!sales) {
 
@@ -912,10 +1331,12 @@ async function toggleSalesStatus(id) {
     return;
   }
 
+
   const currentStatus =
     String(
       sales.status || ""
     ).toLowerCase();
+
 
   const nextStatus =
     currentStatus === "active"
@@ -928,34 +1349,58 @@ async function toggleSalesStatus(id) {
 
     `Ubah status ${
       sales.name ||
-      sales.username
+      sales.username ||
+      "Sales"
     } menjadi ${nextStatus}?`,
 
     async () => {
 
-      const {
-        error
-      } =
-        await supabaseClient
-          .from("sales_users")
-          .update({
-            status: nextStatus
-          })
-          .eq(
-            "id",
-            id
-          );
+      try {
 
-      if (error) {
-        throw error;
+        const {
+          error
+        } =
+          await supabaseClient
+            .from("sales_users")
+            .update({
+              status:
+                nextStatus
+            })
+            .eq(
+              "id",
+              id
+            );
+
+
+        if (error) {
+          throw error;
+        }
+
+
+        showToast(
+          "Status Sales diperbarui.",
+          "success"
+        );
+
+
+        await loadSalesUsers();
+
+
+      } catch (error) {
+
+        console.error(
+          "TOGGLE SALES STATUS ERROR:",
+          error
+        );
+
+
+        showToast(
+          error.message ||
+          "Gagal mengubah status Sales.",
+          "error"
+        );
+
       }
-
-      showToast(
-        "Status Sales diperbarui.",
-        "success"
-      );
-
-      await loadSalesUsers();
 
     }
   );
@@ -967,11 +1412,23 @@ async function toggleSalesStatus(id) {
 // EVENTS
 // ========================================
 
-document.addEventListener(
-  "DOMContentLoaded",
-  () => {
+function bindSalesEvents() {
 
-    $("salesSearch")?.addEventListener(
+  if (salesEventsBound) {
+    return;
+  }
+
+
+  salesEventsBound =
+    true;
+
+
+  // ======================================
+  // SEARCH
+  // ======================================
+
+  $("salesSearch")
+    ?.addEventListener(
       "input",
       debounce(
         () => {
@@ -982,29 +1439,45 @@ document.addEventListener(
     );
 
 
-    $("addSalesBtn")?.addEventListener(
+  // ======================================
+  // ADD SALES
+  // ======================================
+
+  $("addSalesBtn")
+    ?.addEventListener(
       "click",
       openAddSales
     );
 
 
-    $("salesForm")?.addEventListener(
+  // ======================================
+  // SALES FORM
+  // ======================================
+
+  $("salesForm")
+    ?.addEventListener(
       "submit",
       handleCreateSales
     );
 
 
-    $("salesPhotoUrl")?.addEventListener(
+  // ======================================
+  // PHOTO PREVIEW
+  // ======================================
+
+  $("salesPhotoUrl")
+    ?.addEventListener(
       "input",
       event => {
+
         showSalesPhotoPreview(
           event.target.value.trim()
         );
+
       }
     );
 
-  }
-);
+}
 
 
 // ========================================
@@ -1018,17 +1491,23 @@ function debounce(
 
   let timer;
 
+
   return function (...args) {
 
-    clearTimeout(timer);
+    clearTimeout(
+      timer
+    );
+
 
     timer =
       setTimeout(
         () => {
+
           callback.apply(
             this,
             args
           );
+
         },
         delay
       );
@@ -1036,3 +1515,35 @@ function debounce(
   };
 
 }
+
+
+// ========================================
+// PUBLIC FUNCTIONS
+// ========================================
+
+window.initializeSalesPage =
+  initializeSalesPage;
+
+
+window.loadSalesUsers =
+  loadSalesUsers;
+
+
+window.renderSalesTable =
+  renderSalesTable;
+
+
+window.openAddSales =
+  openAddSales;
+
+
+window.openEditSales =
+  openEditSales;
+
+
+window.toggleSalesStatus =
+  toggleSalesStatus;
+
+
+window.handleCreateSales =
+  handleCreateSales;
