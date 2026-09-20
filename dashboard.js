@@ -1,50 +1,97 @@
-```javascript
 // ============================================================
-// CRM FSI - DASHBOARD
+// CRM FSI - DASHBOARD.JS
 // ============================================================
-// File ini KHUSUS mengurus Dashboard.
-// Tidak mengubah Login, Leads, Sales, atau fungsi lainnya.
-// Membutuhkan:
-//   - supabaseClient dari script.js
-//   - currentProfile dari script.js
+// KHUSUS DASHBOARD
+//
+// Membutuhkan dari script.js:
+//   - supabaseClient
+//   - currentProfile
+//
+// Membutuhkan HTML:
 //   - <div id="dashboardPage"></div>
-//   - dashboard.css
+//
 // ============================================================
 
 (function () {
   "use strict";
 
+  // ==========================================================
+  // STATE
+  // ==========================================================
+
   let dashboardLoading = false;
   let dashboardBuilt = false;
   let dashboardProfileId = null;
-  let dashboardAutoRefreshTimer = null;
+
 
   // ==========================================================
-  // HELPERS
+  // GET SUPABASE CLIENT
   // ==========================================================
 
   function getClient() {
-    return window.supabaseClient || null;
+    try {
+      if (typeof supabaseClient !== "undefined") {
+        return supabaseClient;
+      }
+    } catch (error) {
+      console.error(
+        "CRM FSI Dashboard: supabaseClient tidak tersedia.",
+        error
+      );
+    }
+
+    return null;
   }
 
+
+  // ==========================================================
+  // GET CURRENT PROFILE
+  // ==========================================================
+
   function getProfile() {
-    return window.currentProfile || null;
+    try {
+      if (typeof currentProfile !== "undefined") {
+        return currentProfile;
+      }
+    } catch (error) {
+      console.error(
+        "CRM FSI Dashboard: currentProfile tidak tersedia.",
+        error
+      );
+    }
+
+    return null;
   }
+
+
+  // ==========================================================
+  // DOM HELPER
+  // ==========================================================
 
   function getElement(id) {
     return document.getElementById(id);
   }
 
+
   function setText(id, value) {
     const element = getElement(id);
 
     if (element) {
-      element.textContent = value ?? "0";
+      element.textContent =
+        value === null ||
+        value === undefined
+          ? "0"
+          : String(value);
     }
   }
 
+
+  // ==========================================================
+  // ESCAPE HTML
+  // ==========================================================
+
   function escapeHtml(value) {
-    return String(value ?? "")
+    return String(value || "")
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
@@ -52,8 +99,15 @@
       .replace(/'/g, "&#039;");
   }
 
+
+  // ==========================================================
+  // DATE FORMAT
+  // ==========================================================
+
   function formatDate(value) {
-    if (!value) return "-";
+    if (!value) {
+      return "-";
+    }
 
     const date = new Date(value);
 
@@ -61,27 +115,56 @@
       return String(value);
     }
 
-    return date.toLocaleDateString("id-ID", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric"
-    });
+    return date.toLocaleDateString(
+      "id-ID",
+      {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+      }
+    );
   }
+
+
+  // ==========================================================
+  // TODAY
+  // ==========================================================
 
   function getLocalToday() {
     const date = new Date();
 
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
+    const year =
+      date.getFullYear();
 
-    return `${year}-${month}-${day}`;
+    const month =
+      String(
+        date.getMonth() + 1
+      ).padStart(2, "0");
+
+    const day =
+      String(
+        date.getDate()
+      ).padStart(2, "0");
+
+    return (
+      year +
+      "-" +
+      month +
+      "-" +
+      day
+    );
   }
 
+
+  // ==========================================================
+  // NORMALIZE STATUS
+  // ==========================================================
+
   function normalizeStatus(status) {
-    const value = String(status || "")
-      .trim()
-      .toLowerCase();
+    const value =
+      String(status || "")
+        .trim()
+        .toLowerCase();
 
     if (
       value === "new" ||
@@ -132,6 +215,11 @@
     return status || "New";
   }
 
+
+  // ==========================================================
+  // STATUS CLASS
+  // ==========================================================
+
   function statusClass(status) {
     return normalizeStatus(status)
       .toLowerCase()
@@ -139,12 +227,20 @@
       .replace(/[^a-z0-9-]/g, "");
   }
 
-  function isSales(profile) {
-    if (!profile) return false;
 
-    const role = String(profile.role || "")
-      .trim()
-      .toLowerCase();
+  // ==========================================================
+  // ROLE
+  // ==========================================================
+
+  function isSales(profile) {
+    if (!profile) {
+      return false;
+    }
+
+    const role =
+      String(profile.role || "")
+        .trim()
+        .toLowerCase();
 
     return (
       role === "sales" ||
@@ -153,12 +249,16 @@
     );
   }
 
-  function isAdmin(profile) {
-    if (!profile) return false;
 
-    const role = String(profile.role || "")
-      .trim()
-      .toLowerCase();
+  function isAdmin(profile) {
+    if (!profile) {
+      return false;
+    }
+
+    const role =
+      String(profile.role || "")
+        .trim()
+        .toLowerCase();
 
     return (
       role === "admin" ||
@@ -167,11 +267,13 @@
     );
   }
 
+
   // ==========================================================
-  // ROLE SCOPE
+  // APPLY ROLE SCOPE
   // ==========================================================
 
   function applyScope(query, profile) {
+
     if (
       isSales(profile) &&
       profile.id
@@ -185,324 +287,297 @@
     return query;
   }
 
+
   // ==========================================================
-  // BUILD DASHBOARD HTML
+  // BUILD DASHBOARD
   // ==========================================================
 
   function buildDashboard() {
-    const page = getElement("dashboardPage");
+
+    const page =
+      getElement("dashboardPage");
 
     if (!page) {
+
       console.error(
         "CRM FSI Dashboard: #dashboardPage tidak ditemukan."
       );
+
       return false;
     }
 
-    const profile = getProfile();
-    const salesMode = isSales(profile);
 
-    page.innerHTML = `
-      <div class="dashboard-shell">
+    const profile =
+      getProfile();
 
-        <!-- ================================================
-             HEADER
-        ================================================= -->
+    const salesMode =
+      isSales(profile);
 
-        <div class="dashboard-toolbar">
 
-          <div class="dashboard-heading">
+    // ========================================================
+    // DASHBOARD HTML
+    // ========================================================
 
-            <div class="dashboard-heading-icon">
-              📊
-            </div>
+    page.innerHTML =
+      '<div class="dashboard-shell">' +
 
-            <div>
+        '<div class="dashboard-toolbar">' +
 
-              <div class="dashboard-kicker">
-                CRM FSI
-              </div>
+          '<div class="dashboard-heading">' +
 
-              <h1>
-                Sales Dashboard
-              </h1>
+            '<div class="dashboard-heading-icon">' +
+              '📊' +
+            '</div>' +
 
-              <span class="dashboard-role-badge">
-                ${
+            '<div>' +
+
+              '<div class="dashboard-kicker">' +
+                'CRM FSI' +
+              '</div>' +
+
+              '<h1>Sales Dashboard</h1>' +
+
+              '<span class="dashboard-role-badge">' +
+                (
                   salesMode
-                    ? "My Sales Overview"
-                    : "Admin Overview"
-                }
-              </span>
+                    ? 'My Sales Overview'
+                    : 'Admin Overview'
+                ) +
+              '</span>' +
 
-            </div>
+            '</div>' +
 
-          </div>
+          '</div>' +
 
-          <button
-            type="button"
-            class="dashboard-refresh-btn"
-            id="dashboardRefreshButton"
-          >
-            ↻ Refresh
-          </button>
+          '<button ' +
+            'type="button" ' +
+            'class="dashboard-refresh-btn" ' +
+            'id="dashboardRefreshButton">' +
+            '↻ Refresh' +
+          '</button>' +
 
-        </div>
+        '</div>' +
 
 
-        <!-- ================================================
-             STATISTICS
-        ================================================= -->
+        // ====================================================
+        // STAT CARDS
+        // ====================================================
 
-        <div class="dashboard-stats-grid">
+        '<div class="dashboard-stats-grid">' +
 
-          <div class="dashboard-stat-card total">
+          '<div class="dashboard-stat-card total">' +
+            '<div class="dashboard-stat-icon">👥</div>' +
+            '<div>' +
+              '<span>Total Leads</span>' +
+              '<strong id="dashTotal">0</strong>' +
+            '</div>' +
+          '</div>' +
 
-            <div class="dashboard-stat-icon">
-              👥
-            </div>
 
-            <div>
-              <span>Total Leads</span>
-              <strong id="dashTotal">0</strong>
-            </div>
+          '<div class="dashboard-stat-card new">' +
+            '<div class="dashboard-stat-icon">🆕</div>' +
+            '<div>' +
+              '<span>New</span>' +
+              '<strong id="dashNew">0</strong>' +
+            '</div>' +
+          '</div>' +
 
-          </div>
 
+          '<div class="dashboard-stat-card interested">' +
+            '<div class="dashboard-stat-icon">❤️</div>' +
+            '<div>' +
+              '<span>Interested</span>' +
+              '<strong id="dashInterested">0</strong>' +
+            '</div>' +
+          '</div>' +
 
-          <div class="dashboard-stat-card new">
 
-            <div class="dashboard-stat-icon">
-              🆕
-            </div>
+          '<div class="dashboard-stat-card followup">' +
+            '<div class="dashboard-stat-icon">🔔</div>' +
+            '<div>' +
+              '<span>Follow Up</span>' +
+              '<strong id="dashFollowUp">0</strong>' +
+            '</div>' +
+          '</div>' +
 
-            <div>
-              <span>New</span>
-              <strong id="dashNew">0</strong>
-            </div>
 
-          </div>
+          '<div class="dashboard-stat-card appointment">' +
+            '<div class="dashboard-stat-icon">📅</div>' +
+            '<div>' +
+              '<span>Appointment</span>' +
+              '<strong id="dashAppointment">0</strong>' +
+            '</div>' +
+          '</div>' +
 
 
-          <div class="dashboard-stat-card interested">
+          '<div class="dashboard-stat-card survey">' +
+            '<div class="dashboard-stat-icon">📍</div>' +
+            '<div>' +
+              '<span>Site Survey</span>' +
+              '<strong id="dashSiteSurvey">0</strong>' +
+            '</div>' +
+          '</div>' +
 
-            <div class="dashboard-stat-icon">
-              ❤️
-            </div>
 
-            <div>
-              <span>Interested</span>
-              <strong id="dashInterested">0</strong>
-            </div>
+          '<div class="dashboard-stat-card quotation">' +
+            '<div class="dashboard-stat-icon">📄</div>' +
+            '<div>' +
+              '<span>Quotation</span>' +
+              '<strong id="dashQuotation">0</strong>' +
+            '</div>' +
+          '</div>' +
 
-          </div>
 
+          '<div class="dashboard-stat-card closing">' +
+            '<div class="dashboard-stat-icon">✓</div>' +
+            '<div>' +
+              '<span>Closing</span>' +
+              '<strong id="dashClosing">0</strong>' +
+            '</div>' +
+          '</div>' +
 
-          <div class="dashboard-stat-card followup">
+        '</div>' +
 
-            <div class="dashboard-stat-icon">
-              🔔
-            </div>
 
-            <div>
-              <span>Follow Up</span>
-              <strong id="dashFollowUp">0</strong>
-            </div>
+        // ====================================================
+        // PIPELINE + STATUS
+        // ====================================================
 
-          </div>
+        '<div class="dashboard-main-grid">' +
 
+          '<section class="dashboard-panel">' +
 
-          <div class="dashboard-stat-card appointment">
+            '<div class="dashboard-panel-header">' +
 
-            <div class="dashboard-stat-icon">
-              📅
-            </div>
+              '<div>' +
+                '<h2>Sales Pipeline</h2>' +
+                '<p>Lead progression</p>' +
+              '</div>' +
 
-            <div>
-              <span>Appointment</span>
-              <strong id="dashAppointment">0</strong>
-            </div>
+              '<strong id="dashPipelineTotal">0</strong>' +
 
-          </div>
+            '</div>' +
 
+            '<div ' +
+              'class="dashboard-pipeline" ' +
+              'id="dashPipeline">' +
+              '<div class="dashboard-empty">' +
+                'Loading...' +
+              '</div>' +
+            '</div>' +
 
-          <div class="dashboard-stat-card survey">
+          '</section>' +
 
-            <div class="dashboard-stat-icon">
-              📍
-            </div>
 
-            <div>
-              <span>Site Survey</span>
-              <strong id="dashSiteSurvey">0</strong>
-            </div>
+          '<section class="dashboard-panel">' +
 
-          </div>
+            '<div class="dashboard-panel-header">' +
 
+              '<div>' +
+                '<h2>Lead Status</h2>' +
+                '<p>Current distribution</p>' +
+              '</div>' +
 
-          <div class="dashboard-stat-card quotation">
+            '</div>' +
 
-            <div class="dashboard-stat-icon">
-              📄
-            </div>
+            '<div ' +
+              'class="dashboard-status-list" ' +
+              'id="dashStatusList">' +
+              '<div class="dashboard-empty">' +
+                'Loading...' +
+              '</div>' +
+            '</div>' +
 
-            <div>
-              <span>Quotation</span>
-              <strong id="dashQuotation">0</strong>
-            </div>
+          '</section>' +
 
-          </div>
+        '</div>' +
 
 
-          <div class="dashboard-stat-card closing">
+        // ====================================================
+        // RECENT + FOLLOW UP
+        // ====================================================
 
-            <div class="dashboard-stat-icon">
-              ✓
-            </div>
+        '<div class="dashboard-bottom-grid">' +
 
-            <div>
-              <span>Closing</span>
-              <strong id="dashClosing">0</strong>
-            </div>
+          '<section class="dashboard-panel">' +
 
-          </div>
+            '<div class="dashboard-panel-header">' +
 
-        </div>
+              '<div>' +
+                '<h2>Recent Leads</h2>' +
+                '<p>Latest customer activity</p>' +
+              '</div>' +
 
+              '<button ' +
+                'type="button" ' +
+                'class="dashboard-view-btn" ' +
+                'id="dashboardViewLeadsButton">' +
+                'View Leads' +
+              '</button>' +
 
-        <!-- ================================================
-             PIPELINE + STATUS
-        ================================================= -->
+            '</div>' +
 
-        <div class="dashboard-main-grid">
+            '<div ' +
+              'class="dashboard-recent-leads" ' +
+              'id="dashRecentLeads">' +
+              '<div class="dashboard-empty">' +
+                'Loading...' +
+              '</div>' +
+            '</div>' +
 
-          <section class="dashboard-panel">
+          '</section>' +
 
-            <div class="dashboard-panel-header">
 
-              <div>
-                <h2>Sales Pipeline</h2>
-                <p>Lead progression</p>
-              </div>
+          '<section class="dashboard-panel">' +
 
-              <strong id="dashPipelineTotal">
-                0
-              </strong>
+            '<div class="dashboard-panel-header">' +
 
-            </div>
+              '<div>' +
+                '<h2>Upcoming Follow Up</h2>' +
+                '<p>Next customer actions</p>' +
+              '</div>' +
 
-            <div
-              class="dashboard-pipeline"
-              id="dashPipeline"
-            >
-              <div class="dashboard-empty">
-                Loading...
-              </div>
-            </div>
+            '</div>' +
 
-          </section>
+            '<div ' +
+              'class="dashboard-upcoming" ' +
+              'id="dashUpcomingFollowups">' +
+              '<div class="dashboard-empty">' +
+                'Loading...' +
+              '</div>' +
+            '</div>' +
 
+          '</section>' +
 
-          <section class="dashboard-panel">
+        '</div>' +
 
-            <div class="dashboard-panel-header">
+      '</div>';
 
-              <div>
-                <h2>Lead Status</h2>
-                <p>Current distribution</p>
-              </div>
 
-            </div>
-
-            <div
-              class="dashboard-status-list"
-              id="dashStatusList"
-            >
-              <div class="dashboard-empty">
-                Loading...
-              </div>
-            </div>
-
-          </section>
-
-        </div>
-
-
-        <!-- ================================================
-             RECENT LEADS + FOLLOW UP
-        ================================================= -->
-
-        <div class="dashboard-bottom-grid">
-
-          <section class="dashboard-panel">
-
-            <div class="dashboard-panel-header">
-
-              <div>
-                <h2>Recent Leads</h2>
-                <p>Latest customer activity</p>
-              </div>
-
-              <button
-                type="button"
-                class="dashboard-view-btn"
-                id="dashboardViewLeadsButton"
-              >
-                View Leads
-              </button>
-
-            </div>
-
-            <div
-              class="dashboard-recent-leads"
-              id="dashRecentLeads"
-            >
-              <div class="dashboard-empty">
-                Loading...
-              </div>
-            </div>
-
-          </section>
-
-
-          <section class="dashboard-panel">
-
-            <div class="dashboard-panel-header">
-
-              <div>
-                <h2>Upcoming Follow Up</h2>
-                <p>Next customer actions</p>
-              </div>
-
-            </div>
-
-            <div
-              class="dashboard-upcoming"
-              id="dashUpcomingFollowups"
-            >
-              <div class="dashboard-empty">
-                Loading...
-              </div>
-            </div>
-
-          </section>
-
-        </div>
-
-      </div>
-    `;
+    // ========================================================
+    // REFRESH BUTTON
+    // ========================================================
 
     const refreshButton =
-      getElement("dashboardRefreshButton");
+      getElement(
+        "dashboardRefreshButton"
+      );
 
     if (refreshButton) {
+
       refreshButton.addEventListener(
         "click",
         function () {
           loadDashboard(true);
         }
       );
+
     }
+
+
+    // ========================================================
+    // VIEW LEADS BUTTON
+    // ========================================================
 
     const viewLeadsButton =
       getElement(
@@ -510,9 +585,18 @@
       );
 
     if (viewLeadsButton) {
+
       viewLeadsButton.addEventListener(
         "click",
         function () {
+
+          if (
+            typeof showLeads ===
+            "function"
+          ) {
+            showLeads();
+            return;
+          }
 
           if (
             typeof window.showLeads ===
@@ -523,50 +607,67 @@
 
         }
       );
+
     }
+
 
     dashboardBuilt = true;
 
     return true;
   }
 
+
   // ==========================================================
-  // TOTAL COUNT
+  // TOTAL
   // ==========================================================
 
   async function loadTotal(profile) {
-    const client = getClient();
+
+    const client =
+      getClient();
 
     if (!client) {
       return 0;
     }
 
-    let query = client
-      .from("leads")
-      .select("id", {
-        count: "exact",
-        head: true
-      });
 
-    query = applyScope(
-      query,
-      profile
-    );
+    let query =
+      client
+        .from("leads")
+        .select(
+          "id",
+          {
+            count: "exact",
+            head: true
+          }
+        );
 
-    const { count, error } =
+
+    query =
+      applyScope(
+        query,
+        profile
+      );
+
+
+    const result =
       await query;
 
-    if (error) {
+
+    if (result.error) {
+
       console.error(
         "Dashboard total error:",
-        error
+        result.error
       );
 
       return 0;
     }
 
-    return count || 0;
+
+    return result.count || 0;
   }
+
 
   // ==========================================================
   // STATUS COUNT
@@ -576,127 +677,186 @@
     statuses,
     profile
   ) {
-    const client = getClient();
+
+    const client =
+      getClient();
 
     if (!client) {
       return 0;
     }
 
-    let query = client
-      .from("leads")
-      .select("status");
 
-    query = applyScope(
-      query,
-      profile
-    );
+    let query =
+      client
+        .from("leads")
+        .select("status");
 
-    const { data, error } =
+
+    query =
+      applyScope(
+        query,
+        profile
+      );
+
+
+    const result =
       await query;
 
-    if (error) {
+
+    if (result.error) {
+
       console.error(
         "Dashboard status count error:",
-        error
+        result.error
       );
 
       return 0;
     }
 
-    const targets =
-      statuses.map(normalizeStatus);
 
-    return (data || []).filter(row => {
-      return targets.includes(
-        normalizeStatus(row.status)
+    const targets =
+      statuses.map(
+        normalizeStatus
       );
+
+
+    return (
+      result.data || []
+    ).filter(function (row) {
+
+      return targets.includes(
+        normalizeStatus(
+          row.status
+        )
+      );
+
     }).length;
   }
 
+
   // ==========================================================
-  // DATE FIELD COUNT
+  // DATE COUNT
   // ==========================================================
 
   async function loadDateCount(
     field,
     profile
   ) {
-    const client = getClient();
+
+    const client =
+      getClient();
 
     if (!client) {
       return 0;
     }
 
-    let query = client
-      .from("leads")
-      .select(`id, ${field}`)
-      .not(field, "is", null);
 
-    query = applyScope(
-      query,
-      profile
-    );
+    let query =
+      client
+        .from("leads")
+        .select(
+          "id," +
+          field
+        )
+        .not(
+          field,
+          "is",
+          null
+        );
 
-    const { data, error } =
+
+    query =
+      applyScope(
+        query,
+        profile
+      );
+
+
+    const result =
       await query;
 
-    if (error) {
+
+    if (result.error) {
+
       console.error(
-        `Dashboard ${field} error:`,
-        error
+        "Dashboard " +
+        field +
+        " error:",
+        result.error
       );
 
       return 0;
     }
 
-    return (data || []).filter(row => {
+
+    return (
+      result.data || []
+    ).filter(function (row) {
+
       return (
         row[field] !== null &&
         row[field] !== ""
       );
+
     }).length;
   }
+
 
   // ==========================================================
   // CLOSING COUNT
   // ==========================================================
 
-  async function loadClosingCount(profile) {
-    const client = getClient();
+  async function loadClosingCount(
+    profile
+  ) {
+
+    const client =
+      getClient();
 
     if (!client) {
       return 0;
     }
 
-    let query = client
-      .from("leads")
-      .select(
-        "status, closing"
+
+    let query =
+      client
+        .from("leads")
+        .select(
+          "status, closing"
+        );
+
+
+    query =
+      applyScope(
+        query,
+        profile
       );
 
-    query = applyScope(
-      query,
-      profile
-    );
 
-    const { data, error } =
+    const result =
       await query;
 
-    if (error) {
+
+    if (result.error) {
+
       console.error(
         "Dashboard closing error:",
-        error
+        result.error
       );
 
       return 0;
     }
 
-    return (data || []).filter(row => {
+
+    return (
+      result.data || []
+    ).filter(function (row) {
 
       const status =
         normalizeStatus(
           row.status
         );
+
 
       return (
         status === "Closing" ||
@@ -709,14 +869,16 @@
     }).length;
   }
 
+
   // ==========================================================
-  // LOAD STATISTICS
+  // LOAD STATS
   // ==========================================================
 
   async function loadStats(profile) {
 
     const results =
       await Promise.all([
+
         loadTotal(profile),
 
         loadStatusCount(
@@ -749,8 +911,12 @@
           profile
         ),
 
-        loadClosingCount(profile)
+        loadClosingCount(
+          profile
+        )
+
       ]);
+
 
     setText(
       "dashTotal",
@@ -793,38 +959,52 @@
     );
   }
 
+
   // ==========================================================
   // PIPELINE
   // ==========================================================
 
   async function loadPipeline(profile) {
 
-    const client = getClient();
+    const client =
+      getClient();
 
-    if (!client) return;
+    if (!client) {
+      return;
+    }
 
-    let query = client
-      .from("leads")
-      .select("status");
 
-    query = applyScope(
-      query,
-      profile
-    );
+    let query =
+      client
+        .from("leads")
+        .select("status");
 
-    const { data, error } =
+
+    query =
+      applyScope(
+        query,
+        profile
+      );
+
+
+    const result =
       await query;
 
-    if (error) {
+
+    if (result.error) {
+
       console.error(
         "Dashboard pipeline error:",
-        error
+        result.error
       );
 
       return;
     }
 
-    const rows = data || [];
+
+    const rows =
+      result.data || [];
+
 
     const statuses = [
       "New",
@@ -835,107 +1015,146 @@
       "Not Interested"
     ];
 
-    const total = rows.length;
+
+    const total =
+      rows.length;
+
 
     const container =
       getElement(
         "dashPipeline"
       );
 
+
     if (!container) {
       return;
     }
+
 
     setText(
       "dashPipelineTotal",
       total
     );
 
+
     container.innerHTML =
-      statuses.map(status => {
+      statuses.map(
+        function (status) {
 
-        const count =
-          rows.filter(row => {
-            return (
-              normalizeStatus(
-                row.status
-              ) === status
-            );
-          }).length;
+          const count =
+            rows.filter(
+              function (row) {
 
-        const percentage =
-          total > 0
-            ? Math.round(
-                (count / total) * 100
-              )
-            : 0;
+                return (
+                  normalizeStatus(
+                    row.status
+                  ) === status
+                );
 
-        return `
-          <div class="dashboard-pipeline-row">
+              }
+            ).length;
 
-            <div class="dashboard-pipeline-label">
 
-              <span>
-                ${escapeHtml(status)}
-              </span>
+          const percentage =
+            total > 0
+              ? Math.round(
+                  (
+                    count /
+                    total
+                  ) *
+                  100
+                )
+              : 0;
 
-              <strong>
-                ${count}
-              </strong>
 
-            </div>
+          return (
+            '<div class="dashboard-pipeline-row">' +
 
-            <div class="dashboard-pipeline-track">
+              '<div class="dashboard-pipeline-label">' +
 
-              <div
-                class="dashboard-pipeline-fill ${statusClass(status)}"
-                style="width:${percentage}%"
-              ></div>
+                '<span>' +
+                  escapeHtml(status) +
+                '</span>' +
 
-            </div>
+                '<strong>' +
+                  count +
+                '</strong>' +
 
-            <small>
-              ${percentage}%
-            </small>
+              '</div>' +
 
-          </div>
-        `;
+              '<div class="dashboard-pipeline-track">' +
 
-      }).join("");
+                '<div ' +
+                  'class="dashboard-pipeline-fill ' +
+                  statusClass(status) +
+                  '" ' +
+                  'style="width:' +
+                  percentage +
+                  '%">' +
+                '</div>' +
+
+              '</div>' +
+
+              '<small>' +
+                percentage +
+                '%' +
+              '</small>' +
+
+            '</div>'
+          );
+
+        }
+      ).join("");
   }
+
 
   // ==========================================================
   // STATUS DISTRIBUTION
   // ==========================================================
 
-  async function loadStatusDistribution(profile) {
+  async function loadStatusDistribution(
+    profile
+  ) {
 
-    const client = getClient();
+    const client =
+      getClient();
 
-    if (!client) return;
+    if (!client) {
+      return;
+    }
 
-    let query = client
-      .from("leads")
-      .select("status");
 
-    query = applyScope(
-      query,
-      profile
-    );
+    let query =
+      client
+        .from("leads")
+        .select("status");
 
-    const { data, error } =
+
+    query =
+      applyScope(
+        query,
+        profile
+      );
+
+
+    const result =
       await query;
 
-    if (error) {
+
+    if (result.error) {
+
       console.error(
         "Dashboard status list error:",
-        error
+        result.error
       );
 
       return;
     }
 
-    const rows = data || [];
+
+    const rows =
+      result.data || [];
+
 
     const statuses = [
       "New",
@@ -946,342 +1165,412 @@
       "Not Interested"
     ];
 
-    const total = rows.length;
+
+    const total =
+      rows.length;
+
 
     const container =
       getElement(
         "dashStatusList"
       );
 
+
     if (!container) {
       return;
     }
 
+
     container.innerHTML =
-      statuses.map(status => {
+      statuses.map(
+        function (status) {
 
-        const count =
-          rows.filter(row => {
-            return (
-              normalizeStatus(
-                row.status
-              ) === status
-            );
-          }).length;
+          const count =
+            rows.filter(
+              function (row) {
 
-        const percentage =
-          total > 0
-            ? Math.round(
-                (count / total) * 100
-              )
-            : 0;
+                return (
+                  normalizeStatus(
+                    row.status
+                  ) === status
+                );
 
-        return `
-          <div class="dashboard-status-row">
+              }
+            ).length;
 
-            <div class="dashboard-status-name">
 
-              <span
-                class="dashboard-status-dot ${statusClass(status)}"
-              ></span>
+          const percentage =
+            total > 0
+              ? Math.round(
+                  (
+                    count /
+                    total
+                  ) *
+                  100
+                )
+              : 0;
 
-              <span>
-                ${escapeHtml(status)}
-              </span>
 
-            </div>
+          return (
+            '<div class="dashboard-status-row">' +
 
-            <strong>
-              ${count}
-            </strong>
+              '<div class="dashboard-status-name">' +
 
-            <small>
-              ${percentage}%
-            </small>
+                '<span ' +
+                  'class="dashboard-status-dot ' +
+                  statusClass(status) +
+                  '">' +
+                '</span>' +
 
-          </div>
-        `;
+                '<span>' +
+                  escapeHtml(status) +
+                '</span>' +
 
-      }).join("");
+              '</div>' +
+
+              '<strong>' +
+                count +
+              '</strong>' +
+
+              '<small>' +
+                percentage +
+                '%' +
+              '</small>' +
+
+            '</div>'
+          );
+
+        }
+      ).join("");
   }
+
 
   // ==========================================================
   // RECENT LEADS
   // ==========================================================
 
-  async function loadRecentLeads(profile) {
+  async function loadRecentLeads(
+    profile
+  ) {
 
-    const client = getClient();
+    const client =
+      getClient();
 
-    if (!client) return;
+    if (!client) {
+      return;
+    }
 
-    let query = client
-      .from("leads")
-      .select(
-        "customer_name, business, location, status, created_at"
-      )
-      .order(
-        "created_at",
-        {
-          ascending: false
-        }
-      )
-      .limit(6);
 
-    query = applyScope(
-      query,
-      profile
-    );
+    let query =
+      client
+        .from("leads")
+        .select(
+          "customer_name, business, location, status, created_at"
+        )
+        .order(
+          "created_at",
+          {
+            ascending: false
+          }
+        )
+        .limit(6);
 
-    const { data, error } =
+
+    query =
+      applyScope(
+        query,
+        profile
+      );
+
+
+    const result =
       await query;
+
 
     const container =
       getElement(
         "dashRecentLeads"
       );
 
+
     if (!container) {
       return;
     }
 
-    if (error) {
+
+    if (result.error) {
 
       console.error(
         "Dashboard recent leads error:",
-        error
+        result.error
       );
 
-      container.innerHTML = `
-        <div class="dashboard-empty">
-          Failed to load leads.
-        </div>
-      `;
+      container.innerHTML =
+        '<div class="dashboard-empty">' +
+          'Failed to load leads.' +
+        '</div>';
 
       return;
     }
 
-    if (
-      !data ||
-      data.length === 0
-    ) {
 
-      container.innerHTML = `
-        <div class="dashboard-empty">
-          No leads yet.
-        </div>
-      `;
+    const data =
+      result.data || [];
+
+
+    if (data.length === 0) {
+
+      container.innerHTML =
+        '<div class="dashboard-empty">' +
+          'No leads yet.' +
+        '</div>';
 
       return;
     }
+
 
     container.innerHTML =
-      data.map(lead => {
+      data.map(
+        function (lead) {
 
-        const status =
-          normalizeStatus(
-            lead.status
+          const status =
+            normalizeStatus(
+              lead.status
+            );
+
+
+          const initial =
+            String(
+              lead.customer_name ||
+              "?"
+            )
+              .charAt(0)
+              .toUpperCase();
+
+
+          let locationText = "";
+
+
+          if (lead.location) {
+
+            locationText =
+              " · " +
+              escapeHtml(
+                lead.location
+              );
+
+          }
+
+
+          return (
+            '<div class="dashboard-recent-lead">' +
+
+              '<div class="dashboard-recent-avatar">' +
+                escapeHtml(initial) +
+              '</div>' +
+
+              '<div class="dashboard-recent-info">' +
+
+                '<strong>' +
+                  escapeHtml(
+                    lead.customer_name ||
+                    "No Name"
+                  ) +
+                '</strong>' +
+
+                '<span>' +
+                  escapeHtml(
+                    lead.business ||
+                    "-"
+                  ) +
+                  locationText +
+                '</span>' +
+
+              '</div>' +
+
+              '<div class="dashboard-recent-meta">' +
+
+                '<span ' +
+                  'class="dashboard-status-badge ' +
+                  statusClass(status) +
+                  '">' +
+                  escapeHtml(status) +
+                '</span>' +
+
+                '<small>' +
+                  formatDate(
+                    lead.created_at
+                  ) +
+                '</small>' +
+
+              '</div>' +
+
+            '</div>'
           );
 
-        const initial =
-          String(
-            lead.customer_name ||
-            "?"
-          )
-            .charAt(0)
-            .toUpperCase();
-
-        return `
-          <div class="dashboard-recent-lead">
-
-            <div class="dashboard-recent-avatar">
-              ${escapeHtml(initial)}
-            </div>
-
-            <div class="dashboard-recent-info">
-
-              <strong>
-                ${escapeHtml(
-                  lead.customer_name ||
-                  "No Name"
-                )}
-              </strong>
-
-              <span>
-                ${escapeHtml(
-                  lead.business ||
-                  "-"
-                )}
-
-                ${
-                  lead.location
-                    ? ` · ${escapeHtml(
-                        lead.location
-                      )}`
-                    : ""
-                }
-              </span>
-
-            </div>
-
-            <div class="dashboard-recent-meta">
-
-              <span
-                class="dashboard-status-badge ${statusClass(status)}"
-              >
-                ${escapeHtml(status)}
-              </span>
-
-              <small>
-                ${formatDate(
-                  lead.created_at
-                )}
-              </small>
-
-            </div>
-
-          </div>
-        `;
-
-      }).join("");
+        }
+      ).join("");
   }
+
 
   // ==========================================================
   // UPCOMING FOLLOW UPS
   // ==========================================================
 
-  async function loadUpcomingFollowUps(profile) {
+  async function loadUpcomingFollowUps(
+    profile
+  ) {
 
-    const client = getClient();
+    const client =
+      getClient();
 
-    if (!client) return;
+    if (!client) {
+      return;
+    }
+
 
     const today =
       getLocalToday();
 
-    let query = client
-      .from("leads")
-      .select(
-        "customer_name, business, location, status, follow_up_date"
-      )
-      .not(
-        "follow_up_date",
-        "is",
-        null
-      )
-      .gte(
-        "follow_up_date",
-        today
-      )
-      .order(
-        "follow_up_date",
-        {
-          ascending: true
-        }
-      )
-      .limit(6);
 
-    query = applyScope(
-      query,
-      profile
-    );
+    let query =
+      client
+        .from("leads")
+        .select(
+          "customer_name, business, location, status, follow_up_date"
+        )
+        .not(
+          "follow_up_date",
+          "is",
+          null
+        )
+        .gte(
+          "follow_up_date",
+          today
+        )
+        .order(
+          "follow_up_date",
+          {
+            ascending: true
+          }
+        )
+        .limit(6);
 
-    const { data, error } =
+
+    query =
+      applyScope(
+        query,
+        profile
+      );
+
+
+    const result =
       await query;
+
 
     const container =
       getElement(
         "dashUpcomingFollowups"
       );
 
+
     if (!container) {
       return;
     }
 
-    if (error) {
+
+    if (result.error) {
 
       console.error(
         "Dashboard follow-up error:",
-        error
+        result.error
       );
 
-      container.innerHTML = `
-        <div class="dashboard-empty">
-          Failed to load follow-ups.
-        </div>
-      `;
+      container.innerHTML =
+        '<div class="dashboard-empty">' +
+          'Failed to load follow-ups.' +
+        '</div>';
 
       return;
     }
 
-    if (
-      !data ||
-      data.length === 0
-    ) {
 
-      container.innerHTML = `
-        <div class="dashboard-empty">
-          No upcoming follow-ups.
-        </div>
-      `;
+    const data =
+      result.data || [];
+
+
+    if (data.length === 0) {
+
+      container.innerHTML =
+        '<div class="dashboard-empty">' +
+          'No upcoming follow-ups.' +
+        '</div>';
 
       return;
     }
+
 
     container.innerHTML =
-      data.map(lead => {
+      data.map(
+        function (lead) {
 
-        let formattedDate =
-          formatDate(
-            lead.follow_up_date
+          const formattedDate =
+            formatDate(
+              lead.follow_up_date
+            );
+
+
+          const normalized =
+            normalizeStatus(
+              lead.status
+            );
+
+
+          return (
+            '<div class="dashboard-followup-item">' +
+
+              '<div class="dashboard-followup-date">' +
+
+                '<strong>' +
+                  escapeHtml(
+                    formattedDate
+                  ) +
+                '</strong>' +
+
+              '</div>' +
+
+              '<div class="dashboard-followup-info">' +
+
+                '<strong>' +
+                  escapeHtml(
+                    lead.customer_name ||
+                    "No Name"
+                  ) +
+                '</strong>' +
+
+                '<span>' +
+                  escapeHtml(
+                    lead.business ||
+                    "-"
+                  ) +
+                '</span>' +
+
+              '</div>' +
+
+              '<span ' +
+                'class="dashboard-status-badge ' +
+                statusClass(normalized) +
+                '">' +
+                escapeHtml(normalized) +
+              '</span>' +
+
+            '</div>'
           );
 
-        return `
-          <div class="dashboard-followup-item">
-
-            <div class="dashboard-followup-date">
-              <strong>
-                ${escapeHtml(
-                  formattedDate
-                )}
-              </strong>
-            </div>
-
-            <div class="dashboard-followup-info">
-
-              <strong>
-                ${escapeHtml(
-                  lead.customer_name ||
-                  "No Name"
-                )}
-              </strong>
-
-              <span>
-                ${escapeHtml(
-                  lead.business ||
-                  "-"
-                )}
-              </span>
-
-            </div>
-
-            <span
-              class="dashboard-status-badge ${statusClass(
-                lead.status
-              )}"
-            >
-              ${escapeHtml(
-                normalizeStatus(
-                  lead.status
-                )
-              )}
-            </span>
-
-          </div>
-        `;
-
-      }).join("");
+        }
+      ).join("");
   }
+
 
   // ==========================================================
   // LOAD DASHBOARD
@@ -1296,26 +1585,42 @@
       return;
     }
 
+
     const page =
       getElement(
         "dashboardPage"
       );
 
+
     if (!page) {
+
+      console.error(
+        "CRM FSI Dashboard: #dashboardPage tidak ditemukan."
+      );
+
       return;
     }
+
 
     const profile =
       getProfile();
 
+
     if (!profile) {
+
+      console.log(
+        "CRM FSI Dashboard: menunggu currentProfile..."
+      );
+
       return;
     }
+
 
     const profileId =
       profile.id ||
       profile.auth_user_id ||
-      profile.auth_user_id;
+      null;
+
 
     if (
       !dashboardBuilt ||
@@ -1328,16 +1633,24 @@
         profileId;
     }
 
+
     dashboardLoading = true;
+
 
     try {
 
       await Promise.all([
+
         loadStats(profile),
+
         loadPipeline(profile),
+
         loadStatusDistribution(profile),
+
         loadRecentLeads(profile),
+
         loadUpcomingFollowUps(profile)
+
       ]);
 
     } catch (error) {
@@ -1354,92 +1667,62 @@
     }
   }
 
+
   // ==========================================================
-  // PUBLIC REFRESH
+  // PUBLIC FUNCTIONS
   // ==========================================================
+
+  window.loadFSIDashboard =
+    function (force) {
+      return loadDashboard(
+        force === true
+      );
+    };
+
 
   window.refreshDashboard =
     function () {
       return loadDashboard(true);
     };
 
-  // ==========================================================
-  // DASHBOARD VISIBILITY
-  // ==========================================================
-
-  function isDashboardVisible() {
-
-    const page =
-      getElement(
-        "dashboardPage"
-      );
-
-    if (!page) {
-      return false;
-    }
-
-    const style =
-      window.getComputedStyle(
-        page
-      );
-
-    return (
-      style.display !== "none" &&
-      page.offsetParent !== null
-    );
-  }
-
-  // ==========================================================
-  // WATCH DASHBOARD
-  // ==========================================================
-
-  function watchDashboard() {
-
-    let wasVisible = false;
-
-    setInterval(() => {
-
-      const visible =
-        isDashboardVisible();
-
-      if (
-        visible &&
-        !wasVisible
-      ) {
-        loadDashboard(true);
-      }
-
-      wasVisible =
-        visible;
-
-    }, 500);
-  }
 
   // ==========================================================
   // AUTO REFRESH
   // ==========================================================
 
-  function startAutoRefresh() {
+  setInterval(
+    function () {
 
-    if (
-      dashboardAutoRefreshTimer
-    ) {
-      clearInterval(
-        dashboardAutoRefreshTimer
-      );
-    }
+      const page =
+        getElement(
+          "dashboardPage"
+        );
 
-    dashboardAutoRefreshTimer =
-      setInterval(() => {
 
-        if (
-          isDashboardVisible()
-        ) {
-          loadDashboard(true);
-        }
+      if (!page) {
+        return;
+      }
 
-      }, 30000);
-  }
+
+      const style =
+        window.getComputedStyle(
+          page
+        );
+
+
+      const visible =
+        style.display !== "none" &&
+        page.offsetParent !== null;
+
+
+      if (visible) {
+        loadDashboard(false);
+      }
+
+    },
+    30000
+  );
+
 
   // ==========================================================
   // INITIALIZE
@@ -1447,18 +1730,28 @@
 
   function initializeDashboard() {
 
-    watchDashboard();
+    console.log(
+      "CRM FSI Dashboard.js berhasil dimuat."
+    );
 
-    startAutoRefresh();
 
-    // Jika dashboard sudah terbuka
-    // saat script selesai dimuat.
+    const page =
+      getElement(
+        "dashboardPage"
+      );
+
+
     if (
-      isDashboardVisible()
+      page &&
+      page.offsetParent !== null
     ) {
+
       loadDashboard(true);
+
     }
+
   }
+
 
   // ==========================================================
   // DOM READY
@@ -1481,4 +1774,3 @@
   }
 
 })();
-```
