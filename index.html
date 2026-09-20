@@ -1,13 +1,325 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="refresh" content="0; url=pages/login.html">
-  <title>FSI CRM</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FSI CRM - French Solar Industry</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/leads.css">
+    <link rel="stylesheet" href="css/profile.css">
+    <link rel="stylesheet" href="css/sales.css">
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-  <script>window.location.replace("pages/login.html");</script>
-  <noscript><a href="pages/login.html">Open FSI CRM</a></noscript>
+
+    <!-- Loading Overlay -->
+    <div id="global-loading" class="loading-overlay hidden">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- LOGIN VIEW -->
+    <div id="view-login" class="view-container active">
+        <div class="login-split">
+            <div class="login-left">
+                <img src="logo-fsi.png" alt="FSI Logo" class="login-logo">
+                <h1>Welcome to FSI CRM</h1>
+                <p>Manage your leads, track sales, and grow together.</p>
+            </div>
+            <div class="login-right">
+                <div class="login-card">
+                    <h2>Login</h2>
+                    <p>Masuk ke akun Anda</p>
+                    <form id="login-form">
+                        <div class="form-group">
+                            <label><i class="fas fa-user"></i> Email atau username</label>
+                            <input type="email" id="login-email" required placeholder="email@fsi.com">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-lock"></i> Password</label>
+                            <input type="password" id="login-password" required placeholder="••••••••">
+                        </div>
+                        <div class="form-actions">
+                            <label><input type="checkbox"> Ingat saya</label>
+                            <a href="#" class="forgot-link">Lupa password?</a>
+                        </div>
+                        <button type="submit" class="btn-primary btn-block">Login</button>
+                    </form>
+                    <p class="login-footer">Belum punya akun? Hubungi admin</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP SHELL -->
+    <div id="view-app" class="view-container hidden layout-app">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="logo-fsi.png" alt="FSI CRM" class="sidebar-logo">
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" data-target="dashboard" class="nav-item active"><i class="fas fa-chart-pie"></i> Dashboard</a>
+                <a href="#" data-target="leads" class="nav-item"><i class="fas fa-users"></i> Leads</a>
+                <a href="#" data-target="profile" class="nav-item"><i class="fas fa-address-card"></i> Customers</a>
+                <a href="#" data-target="sales" class="nav-item admin-only"><i class="fas fa-briefcase"></i> Sales</a>
+                
+                <div class="nav-divider"></div>
+                <a href="#" class="nav-item"><i class="fas fa-cog"></i> Settings</a>
+                <a href="#" id="btn-logout" class="nav-item"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Topbar -->
+            <header class="topbar">
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Cari leads, pelanggan, atau nama...">
+                </div>
+                <div class="user-profile">
+                    <div class="user-info">
+                        <span id="user-name" class="name">User Name</span>
+                        <span id="user-role" class="role">Role</span>
+                    </div>
+                    <div class="avatar"><i class="fas fa-user-circle"></i></div>
+                </div>
+            </header>
+
+            <!-- Dashboard View -->
+            <section id="section-dashboard" class="content-section active">
+                <div class="section-header">
+                    <div>
+                        <h2>Dashboard</h2>
+                        <p>Selamat datang! Berikut ringkasan aktivitas Anda.</p>
+                    </div>
+                    <button class="btn-primary" onclick="appNavigation.navigateTo('leads')">+ Add Lead</button>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <p>Total Leads</p>
+                        <h3 id="stat-total">0</h3>
+                        <span class="trend up"><i class="fas fa-arrow-up"></i> Data aktual</span>
+                    </div>
+                    <div class="stat-card">
+                        <p>Qualified / Interested</p>
+                        <h3 id="stat-qualified">0</h3>
+                        <span class="trend up"><i class="fas fa-arrow-up"></i> Data aktual</span>
+                    </div>
+                    <div class="stat-card">
+                        <p>Appointments</p>
+                        <h3 id="stat-appointments">0</h3>
+                        <span class="trend up"><i class="fas fa-arrow-up"></i> Data aktual</span>
+                    </div>
+                    <div class="stat-card">
+                        <p>Closed Deals</p>
+                        <h3 id="stat-closed">0</h3>
+                        <span class="trend up"><i class="fas fa-arrow-up"></i> Data aktual</span>
+                    </div>
+                </div>
+
+                <div class="dashboard-tables">
+                    <div class="card recent-leads">
+                        <h3>Recent Leads</h3>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nama</th>
+                                        <th>Tipe Bisnis</th>
+                                        <th>Status</th>
+                                        <th>Tanggal</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dash-recent-leads">
+                                    <!-- Rendered via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Leads View -->
+            <section id="section-leads" class="content-section hidden">
+                <div class="section-header">
+                    <h2>Leads Management</h2>
+                    <button class="btn-primary" onclick="leadsManager.openModal()">+ Add New Lead</button>
+                </div>
+                
+                <div class="filters-bar card">
+                    <input type="text" id="filter-search" placeholder="Cari nama, bisnis...">
+                    <select id="filter-status">
+                        <option value="">Semua Status</option>
+                        <option value="New">New</option>
+                        <option value="Flyer Sent">Flyer Sent</option>
+                        <option value="Interested">Interested</option>
+                        <option value="Follow Up">Follow Up</option>
+                        <option value="Appointment">Appointment</option>
+                        <option value="Site Survey">Site Survey</option>
+                        <option value="Quotation">Quotation</option>
+                        <option value="SPK">SPK</option>
+                        <option value="Closing">Closing</option>
+                        <option value="Not Interested">Not Interested</option>
+                    </select>
+                    <select id="filter-sales" class="admin-only">
+                        <option value="">Semua Sales</option>
+                    </select>
+                    <button class="btn-secondary" onclick="leadsManager.loadLeads()">Filter</button>
+                </div>
+
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="data-table" id="leads-table">
+                            <thead>
+                                <tr>
+                                    <th>Customer Name</th>
+                                    <th>Phone</th>
+                                    <th>Business</th>
+                                    <th>Location</th>
+                                    <th>Status</th>
+                                    <th class="admin-only">Sales</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leads-tbody">
+                                <!-- Rendered via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination">
+                        <button id="page-prev" class="btn-secondary" onclick="leadsManager.prevPage()">Previous</button>
+                        <span id="page-info">Page 1</span>
+                        <button id="page-next" class="btn-secondary" onclick="leadsManager.nextPage()">Next</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Customer Profile View -->
+            <section id="section-profile" class="content-section hidden">
+                <div class="section-header">
+                    <h2>Customer Profile</h2>
+                    <button class="btn-secondary" onclick="appNavigation.navigateTo('leads')">Kembali ke Leads</button>
+                </div>
+                <div id="profile-container" class="profile-grid">
+                    <!-- Rendered via JS -->
+                    <p>Silakan pilih Lead dari menu Leads untuk melihat detail.</p>
+                </div>
+            </section>
+
+            <!-- Sales Management View -->
+            <section id="section-sales" class="content-section hidden admin-only">
+                <div class="section-header">
+                    <h2>Sales Management</h2>
+                    <button class="btn-primary" onclick="salesManager.openModal()">+ Add Sales</button>
+                </div>
+                <div class="card">
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Nama Sales</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sales-tbody">
+                                <!-- Rendered via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <!-- Lead Modal -->
+    <div id="modal-lead" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-lead-title">Add/Edit Lead</h3>
+                <span class="close-modal" onclick="leadsManager.closeModal()">&times;</span>
+            </div>
+            <form id="form-lead" class="modal-body">
+                <input type="hidden" id="lead-id">
+                <div class="form-group">
+                    <label>Customer Name</label>
+                    <input type="text" id="lead-name" required>
+                </div>
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="text" id="lead-phone" required>
+                </div>
+                <div class="form-group">
+                    <label>Business Type</label>
+                    <input type="text" id="lead-business">
+                </div>
+                <div class="form-group">
+                    <label>Location</label>
+                    <input type="text" id="lead-location">
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="lead-status">
+                        <option value="New">New</option>
+                        <option value="Flyer Sent">Flyer Sent</option>
+                        <option value="Interested">Interested</option>
+                        <option value="Follow Up">Follow Up</option>
+                        <option value="Appointment">Appointment</option>
+                        <option value="Site Survey">Site Survey</option>
+                        <option value="Quotation">Quotation</option>
+                        <option value="SPK">SPK</option>
+                        <option value="Closing">Closing</option>
+                        <option value="Not Interested">Not Interested</option>
+                    </select>
+                </div>
+                <div class="form-group admin-only" id="lead-sales-container">
+                    <label>Assign to Sales</label>
+                    <select id="lead-sales-id"></select>
+                </div>
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="lead-notes" rows="3"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="leadsManager.closeModal()">Batal</button>
+                    <button type="submit" class="btn-primary">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/helpers.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/leads.js"></script>
+    <script src="js/customer-profile.js"></script>
+    <script src="js/sales.js"></script>
+    <script>
+        // Init Application
+        document.addEventListener('DOMContentLoaded', () => {
+            authManager.init();
+        });
+    </script>
 </body>
 </html>
