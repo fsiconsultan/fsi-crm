@@ -14,11 +14,20 @@ body {
   min-height: 100%;
 }
 
+html {
+  overflow-x: hidden;
+}
+
 body {
   font-family: Inter, Arial, sans-serif;
   font-size: 14px;
   background: #f4f7fb;
   color: #172033;
+  overflow-x: hidden;
+}
+
+body.modal-open {
+  overflow: hidden;
 }
 
 button,
@@ -41,6 +50,10 @@ a {
   color: inherit;
 }
 
+img {
+  max-width: 100%;
+}
+
 
 /* ========================================
    APP
@@ -50,11 +63,6 @@ a {
   min-height: 100vh;
   width: 100%;
 }
-
-
-/* ========================================
-   MAIN CONTENT
-======================================== */
 
 .main-content {
   width: 100%;
@@ -69,7 +77,7 @@ a {
 .top-header {
   min-height: 76px;
   width: 100%;
-  background: rgba(255, 255, 255, 0.96);
+  background: rgba(255, 255, 255, 0.97);
   border-bottom: 1px solid #e5eaf1;
   display: flex;
   align-items: center;
@@ -80,6 +88,7 @@ a {
   top: 0;
   z-index: 50;
   backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
 .header-left {
@@ -289,11 +298,7 @@ a {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: linear-gradient(
-    135deg,
-    #e7f2ff,
-    #d8eaff
-  );
+  background: linear-gradient(135deg, #e7f2ff, #d8eaff);
   color: #0869d2;
   display: grid;
   place-items: center;
@@ -446,18 +451,12 @@ a {
 
 .btn-primary {
   color: #fff;
-  background: linear-gradient(
-    135deg,
-    #0874dc,
-    #0860bd
-  );
-  box-shadow:
-    0 8px 18px rgba(8, 105, 210, 0.2);
+  background: linear-gradient(135deg, #0874dc, #0860bd);
+  box-shadow: 0 8px 18px rgba(8, 105, 210, 0.2);
 }
 
 .btn-primary:hover {
-  box-shadow:
-    0 10px 22px rgba(8, 105, 210, 0.28);
+  box-shadow: 0 10px 22px rgba(8, 105, 210, 0.28);
 }
 
 .btn-secondary {
@@ -528,8 +527,7 @@ a {
 .form-group textarea:focus,
 .filter-card select:focus {
   border-color: #1680e8;
-  box-shadow:
-    0 0 0 3px rgba(22, 128, 232, 0.1);
+  box-shadow: 0 0 0 3px rgba(22, 128, 232, 0.1);
 }
 
 .form-group textarea {
@@ -551,12 +549,10 @@ a {
   border-radius: 13px;
   padding: 14px;
   display: grid;
-  grid-template-columns:
-    2fr repeat(4, 1fr) auto;
+  grid-template-columns: 2fr repeat(4, 1fr) auto;
   gap: 10px;
   margin-bottom: 18px;
-  box-shadow:
-    0 5px 20px rgba(15, 40, 70, 0.035);
+  box-shadow: 0 5px 20px rgba(15, 40, 70, 0.035);
 }
 
 .filter-search {
@@ -567,6 +563,11 @@ a {
   background: #fff;
   border-radius: 8px;
   padding: 0 11px;
+}
+
+.filter-search:focus-within {
+  border-color: #1680e8;
+  box-shadow: 0 0 0 3px rgba(22, 128, 232, 0.08);
 }
 
 .filter-search input {
@@ -587,8 +588,7 @@ a {
   background: #fff;
   border: 1px solid #e5eaf0;
   border-radius: 14px;
-  box-shadow:
-    0 5px 20px rgba(15, 40, 70, 0.035);
+  box-shadow: 0 5px 20px rgba(15, 40, 70, 0.035);
 }
 
 .data-card {
@@ -718,13 +718,13 @@ a {
 }
 
 .status-interested {
-  background: #fff1df;
-  color: #d77a00;
+  background: #e4f8ec;
+  color: #13804d;
 }
 
 .status-follow-up {
-  background: #f2eaff;
-  color: #7c42bd;
+  background: #fff1df;
+  color: #d77a00;
 }
 
 .status-closing {
@@ -874,15 +874,16 @@ a {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  pointer-events: none;
 }
 
 .toast {
+  pointer-events: auto;
   background: #172033;
   color: #fff;
   padding: 11px 14px;
   border-radius: 9px;
-  box-shadow:
-    0 12px 30px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
   display: flex;
   align-items: center;
   gap: 9px;
@@ -904,29 +905,52 @@ a {
 
 /* ========================================
    MODAL
+   IMPORTANT:
+   DEFAULT = HIDDEN
 ======================================== */
 
 .modal-overlay {
   position: fixed;
   inset: 0;
+
   background: rgba(8, 28, 53, 0.48);
+
   backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+
   z-index: 150;
-  display: flex;
+
+  display: none;
+
   align-items: center;
   justify-content: center;
+
   padding: 20px;
+
+  overflow-y: auto;
+}
+
+/* JS membuka modal dengan class active */
+.modal-overlay.active {
+  display: flex;
 }
 
 .modal {
+  position: relative;
   width: min(520px, 100%);
   max-height: 90vh;
-  overflow: auto;
+  overflow-y: auto;
+
   background: #fff;
+
   border-radius: 15px;
+
   box-shadow:
     0 30px 70px rgba(0, 0, 0, 0.2);
+
   padding: 20px;
+
+  pointer-events: auto;
 }
 
 .modal-large {
@@ -1005,23 +1029,43 @@ a {
 
 /* ========================================
    GLOBAL LOADING
+   IMPORTANT:
+   DEFAULT = HIDDEN
 ======================================== */
 
 .global-loading {
   position: fixed;
   inset: 0;
-  background: rgba(255, 255, 255, 0.7);
+
+  background: rgba(255, 255, 255, 0.72);
+
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+
   z-index: 300;
+
+  display: none;
+
   align-items: center;
   justify-content: center;
+
+  pointer-events: none;
+}
+
+/* Hanya aktif jika JavaScript menambahkan .active */
+.global-loading.active {
+  display: flex;
+  pointer-events: auto;
 }
 
 .global-loading > div {
   background: #fff;
   padding: 18px 25px;
   border-radius: 12px;
+
   box-shadow:
     0 15px 40px rgba(0, 0, 0, 0.12);
+
   display: flex;
   gap: 10px;
   align-items: center;
@@ -1029,6 +1073,29 @@ a {
 
 .global-loading i {
   color: #0869d2;
+}
+
+
+/* ========================================
+   PROFILE
+======================================== */
+
+.profile-hero.compact {
+  margin-bottom: 18px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.profile-hero.compact h2 {
+  font-size: 18px;
+}
+
+.profile-hero.compact p {
+  margin-top: 4px;
+  color: #7b8798;
+  font-size: 12px;
 }
 
 
@@ -1055,12 +1122,7 @@ a {
   display: flex;
   align-items: center;
   padding: 70px;
-  background:
-    linear-gradient(
-      135deg,
-      #062f5d,
-      #0b78db
-    );
+  background: linear-gradient(135deg, #062f5d, #0b78db);
   overflow: hidden;
 }
 
@@ -1139,8 +1201,7 @@ a {
   padding: 42px;
   border-radius: 18px;
   border: 1px solid #e7edf4;
-  box-shadow:
-    0 15px 50px rgba(13, 48, 87, 0.08);
+  box-shadow: 0 15px 50px rgba(13, 48, 87, 0.08);
 }
 
 .login-mobile-logo {
@@ -1177,8 +1238,7 @@ a {
 
 .input-wrapper:focus-within {
   border-color: #1680e8;
-  box-shadow:
-    0 0 0 3px rgba(22, 128, 232, 0.08);
+  box-shadow: 0 0 0 3px rgba(22, 128, 232, 0.08);
 }
 
 .input-wrapper input {
@@ -1228,29 +1288,6 @@ a {
 
 .login-footer strong {
   color: #0969d1;
-}
-
-
-/* ========================================
-   PROFILE HELPERS
-======================================== */
-
-.profile-hero.compact {
-  margin-bottom: 18px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
-.profile-hero.compact h2 {
-  font-size: 18px;
-}
-
-.profile-hero.compact p {
-  margin-top: 4px;
-  color: #7b8798;
-  font-size: 12px;
 }
 
 
@@ -1311,8 +1348,7 @@ a {
   }
 
   .filter-card {
-    grid-template-columns:
-      1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
   }
 
   .filter-search {
