@@ -25,20 +25,32 @@ async function initializeLeadsPage(){
     await loadLeadFilters();
     await loadLeads();
 
-    const params = new URLSearchParams(window.location.search);
+    const params =
+        new URLSearchParams(
+            window.location.search
+        );
 
-    const editId = params.get("edit");
+    const editId =
+        params.get("edit");
 
     if(editId){
+
         setTimeout(() => {
+
             openEditLead(editId);
+
         }, 300);
+
     }
 
     if(params.get("add") === "1"){
+
         setTimeout(() => {
+
             openAddLead();
+
         }, 300);
+
     }
 
 }
@@ -50,23 +62,33 @@ async function initializeLeadsPage(){
 
 function bindLeadEvents(){
 
-    const search = $("leadSearch");
+    const search =
+        $("leadSearch");
 
     if(search){
 
-        search.addEventListener("input", () => {
+        search.addEventListener(
+            "input",
+            () => {
 
-            clearTimeout(leadSearchTimer);
+                clearTimeout(
+                    leadSearchTimer
+                );
 
-            leadSearchTimer = setTimeout(() => {
+                leadSearchTimer =
+                    setTimeout(
+                        () => {
 
-                currentPage = 1;
+                            currentPage = 1;
 
-                loadLeads();
+                            loadLeads();
 
-            }, 400);
+                        },
+                        400
+                    );
 
-        });
+            }
+        );
 
     }
 
@@ -78,102 +100,134 @@ function bindLeadEvents(){
         "salesFilter"
     ].forEach(id => {
 
-        const element = $(id);
+        const element =
+            $(id);
 
         if(!element) return;
 
-        element.addEventListener("change", () => {
+        element.addEventListener(
+            "change",
+            () => {
 
-            currentPage = 1;
+                currentPage = 1;
 
-            loadLeads();
+                loadLeads();
 
-        });
+            }
+        );
 
     });
 
 
-    const reset = $("resetFiltersBtn");
+    const reset =
+        $("resetFiltersBtn");
 
     if(reset){
 
-        reset.addEventListener("click", resetLeadFilters);
+        reset.addEventListener(
+            "click",
+            resetLeadFilters
+        );
 
     }
 
 
-    const addBtn = $("addLeadBtn");
+    const addBtn =
+        $("addLeadBtn");
 
     if(addBtn){
 
-        addBtn.addEventListener("click", openAddLead);
+        addBtn.addEventListener(
+            "click",
+            openAddLead
+        );
 
     }
 
 
-    const emptyAdd = $("emptyAddLeadBtn");
+    const emptyAdd =
+        $("emptyAddLeadBtn");
 
     if(emptyAdd){
 
-        emptyAdd.addEventListener("click", openAddLead);
+        emptyAdd.addEventListener(
+            "click",
+            openAddLead
+        );
 
     }
 
 
-    const exportBtn = $("exportLeadsBtn");
+    const exportBtn =
+        $("exportLeadsBtn");
 
     if(exportBtn){
 
-        exportBtn.addEventListener("click", exportLeads);
+        exportBtn.addEventListener(
+            "click",
+            exportLeads
+        );
 
     }
 
 
-    const prev = $("prevPageBtn");
+    const prev =
+        $("prevPageBtn");
 
     if(prev){
 
-        prev.addEventListener("click", () => {
+        prev.addEventListener(
+            "click",
+            () => {
 
-            if(currentPage > 1){
+                if(currentPage > 1){
 
-                currentPage--;
+                    currentPage--;
 
-                loadLeads();
+                    loadLeads();
+
+                }
 
             }
-
-        });
+        );
 
     }
 
 
-    const next = $("nextPageBtn");
+    const next =
+        $("nextPageBtn");
 
     if(next){
 
-        next.addEventListener("click", () => {
+        next.addEventListener(
+            "click",
+            () => {
 
-            const totalPages =
-                Math.ceil(
-                    totalLeadsCount /
-                    CRM_CONFIG.pageSize
-                );
+                const totalPages =
+                    Math.ceil(
+                        totalLeadsCount /
+                        CRM_CONFIG.pageSize
+                    );
 
-            if(currentPage < totalPages){
+                if(
+                    currentPage <
+                    totalPages
+                ){
 
-                currentPage++;
+                    currentPage++;
 
-                loadLeads();
+                    loadLeads();
+
+                }
 
             }
-
-        });
+        );
 
     }
 
 
-    const form = $("leadForm");
+    const form =
+        $("leadForm");
 
     if(form){
 
@@ -214,8 +268,11 @@ async function loadLeadFilters(){
 
 function populateStatusFilters(){
 
-    const statusFilter = $("statusFilter");
-    const leadStatus = $("leadStatus");
+    const statusFilter =
+        $("statusFilter");
+
+    const leadStatus =
+        $("leadStatus");
 
     const statuses =
         CRM_CONFIG.statuses || [];
@@ -229,18 +286,20 @@ function populateStatusFilters(){
             </option>
         `;
 
-        statuses.forEach(status => {
+        statuses.forEach(
+            status => {
 
-            statusFilter.insertAdjacentHTML(
-                "beforeend",
-                `
-                <option value="${escapeHTML(status)}">
-                    ${escapeHTML(status)}
-                </option>
-                `
-            );
+                statusFilter.insertAdjacentHTML(
+                    "beforeend",
+                    `
+                    <option value="${escapeHTML(status)}">
+                        ${escapeHTML(status)}
+                    </option>
+                    `
+                );
 
-        });
+            }
+        );
 
     }
 
@@ -249,18 +308,20 @@ function populateStatusFilters(){
 
         leadStatus.innerHTML = "";
 
-        statuses.forEach(status => {
+        statuses.forEach(
+            status => {
 
-            leadStatus.insertAdjacentHTML(
-                "beforeend",
-                `
-                <option value="${escapeHTML(status)}">
-                    ${escapeHTML(status)}
-                </option>
-                `
-            );
+                leadStatus.insertAdjacentHTML(
+                    "beforeend",
+                    `
+                    <option value="${escapeHTML(status)}">
+                        ${escapeHTML(status)}
+                    </option>
+                    `
+                );
 
-        });
+            }
+        );
 
     }
 
@@ -273,7 +334,8 @@ function populateStatusFilters(){
 
 async function loadBusinessFilters(){
 
-    const select = $("businessFilter");
+    const select =
+        $("businessFilter");
 
     if(!select) return;
 
@@ -281,11 +343,22 @@ async function loadBusinessFilters(){
     const {
         data,
         error
-    } = await supabaseClient
-        .from(CRM_CONFIG.leadTable)
-        .select("business")
-        .not("business","is",null)
-        .order("business");
+    } =
+        await supabaseClient
+            .from(
+                CRM_CONFIG.leadTable
+            )
+            .select(
+                "business"
+            )
+            .not(
+                "business",
+                "is",
+                null
+            )
+            .order(
+                "business"
+            );
 
 
     if(error){
@@ -303,9 +376,15 @@ async function loadBusinessFilters(){
     const values = [
         ...new Set(
             (data || [])
-                .map(row => row.business)
+                .map(
+                    row =>
+                        row.business
+                )
                 .filter(Boolean)
-                .map(value => value.trim())
+                .map(
+                    value =>
+                        value.trim()
+                )
         )
     ];
 
@@ -317,18 +396,20 @@ async function loadBusinessFilters(){
     `;
 
 
-    values.forEach(value => {
+    values.forEach(
+        value => {
 
-        select.insertAdjacentHTML(
-            "beforeend",
-            `
-            <option value="${escapeHTML(value)}">
-                ${escapeHTML(value)}
-            </option>
-            `
-        );
+            select.insertAdjacentHTML(
+                "beforeend",
+                `
+                <option value="${escapeHTML(value)}">
+                    ${escapeHTML(value)}
+                </option>
+                `
+            );
 
-    });
+        }
+    );
 
 }
 
@@ -339,7 +420,8 @@ async function loadBusinessFilters(){
 
 async function loadSalesFilters(){
 
-    const filter = $("salesFilter");
+    const filter =
+        $("salesFilter");
 
     if(!filter) return;
 
@@ -347,10 +429,17 @@ async function loadSalesFilters(){
     const {
         data,
         error
-    } = await supabaseClient
-        .from(CRM_CONFIG.salesTable)
-        .select("id,name,role,status")
-        .order("name");
+    } =
+        await supabaseClient
+            .from(
+                CRM_CONFIG.salesTable
+            )
+            .select(
+                "id,name,role,status"
+            )
+            .order(
+                "name"
+            );
 
 
     if(error){
@@ -380,18 +469,22 @@ async function loadSalesFilters(){
     `;
 
 
-    salesUsersData.forEach(sales => {
+    salesUsersData.forEach(
+        sales => {
 
-        filter.insertAdjacentHTML(
-            "beforeend",
-            `
-            <option value="${escapeHTML(sales.id)}">
-                ${escapeHTML(sales.name || "-")}
-            </option>
-            `
-        );
+            filter.insertAdjacentHTML(
+                "beforeend",
+                `
+                <option value="${escapeHTML(sales.id)}">
+                    ${escapeHTML(
+                        sales.name || "-"
+                    )}
+                </option>
+                `
+            );
 
-    });
+        }
+    );
 
 
     const assign =
@@ -407,18 +500,22 @@ async function loadSalesFilters(){
         `;
 
 
-        salesUsersData.forEach(sales => {
+        salesUsersData.forEach(
+            sales => {
 
-            assign.insertAdjacentHTML(
-                "beforeend",
-                `
-                <option value="${escapeHTML(sales.id)}">
-                    ${escapeHTML(sales.name || "-")}
-                </option>
-                `
-            );
+                assign.insertAdjacentHTML(
+                    "beforeend",
+                    `
+                    <option value="${escapeHTML(sales.id)}">
+                        ${escapeHTML(
+                            sales.name || "-"
+                        )}
+                    </option>
+                    `
+                );
 
-        });
+            }
+        );
 
     }
 
@@ -433,7 +530,9 @@ function buildLeadQuery(){
 
     let query =
         supabaseClient
-            .from(CRM_CONFIG.leadTable)
+            .from(
+                CRM_CONFIG.leadTable
+            )
             .select(
                 `
                 id,
@@ -479,7 +578,9 @@ function buildLeadQuery(){
 
 
     const search =
-        $("leadSearch")?.value?.trim();
+        $("leadSearch")
+            ?.value
+            ?.trim();
 
 
     if(search){
@@ -500,7 +601,8 @@ function buildLeadQuery(){
 
 
     const status =
-        $("statusFilter")?.value;
+        $("statusFilter")
+            ?.value;
 
 
     if(status){
@@ -515,7 +617,8 @@ function buildLeadQuery(){
 
 
     const business =
-        $("businessFilter")?.value;
+        $("businessFilter")
+            ?.value;
 
 
     if(business){
@@ -530,7 +633,9 @@ function buildLeadQuery(){
 
 
     const location =
-        $("locationFilter")?.value?.trim();
+        $("locationFilter")
+            ?.value
+            ?.trim();
 
 
     if(location){
@@ -545,12 +650,14 @@ function buildLeadQuery(){
 
 
     const sales =
-        $("salesFilter")?.value;
+        $("salesFilter")
+            ?.value;
 
 
     if(
         sales &&
-        currentProfile?.role === "Admin"
+        currentProfile?.role ===
+        "Admin"
     ){
 
         query =
@@ -588,7 +695,9 @@ async function loadLeads(){
             <td colspan="10">
                 <div class="table-loading">
                     <div class="loading-spinner"></div>
-                    <span>Loading leads...</span>
+                    <span>
+                        Loading leads...
+                    </span>
                 </div>
             </td>
         </tr>
@@ -622,7 +731,10 @@ async function loadLeads(){
                     ascending:false
                 }
             )
-            .range(from,to);
+            .range(
+                from,
+                to
+            );
 
 
     if(error){
@@ -637,9 +749,20 @@ async function loadLeads(){
             <tr>
                 <td colspan="10">
                     <div class="table-error">
+
                         <i class="fa-solid fa-circle-exclamation"></i>
-                        <strong>Unable to load leads</strong>
-                        <span>${escapeHTML(error.message || "Unknown error")}</span>
+
+                        <strong>
+                            Unable to load leads
+                        </strong>
+
+                        <span>
+                            ${escapeHTML(
+                                error.message ||
+                                "Unknown error"
+                            )}
+                        </span>
+
                     </div>
                 </td>
             </tr>
@@ -689,7 +812,8 @@ function renderLeadTable(){
 
         if(empty){
 
-            empty.style.display = "flex";
+            empty.style.display =
+                "flex";
 
         }
 
@@ -702,19 +826,28 @@ function renderLeadTable(){
 
     if(empty){
 
-        empty.style.display = "none";
+        empty.style.display =
+            "none";
 
     }
 
 
     tbody.innerHTML =
         leadsData.map(
-            (lead,index) => {
+            (
+                lead,
+                index
+            ) => {
 
                 const rowNumber =
                     (
-                        (currentPage - 1) *
-                        (CRM_CONFIG.pageSize || 20)
+                        (
+                            currentPage - 1
+                        ) *
+                        (
+                            CRM_CONFIG.pageSize ||
+                            20
+                        )
                     ) +
                     index +
                     1;
@@ -733,7 +866,9 @@ function renderLeadTable(){
 
 
                 const statusClass =
-                    getStatusClass(status);
+                    getStatusClass(
+                        status
+                    );
 
 
                 const sales =
@@ -771,7 +906,9 @@ function renderLeadTable(){
                             <div class="customer-cell">
 
                                 <div class="customer-avatar">
-                                    ${escapeHTML(initials)}
+                                    ${escapeHTML(
+                                        initials
+                                    )}
                                 </div>
 
                                 <div class="customer-info">
@@ -779,11 +916,14 @@ function renderLeadTable(){
                                     <span
                                         class="customer-name"
                                         data-action="profile"
-                                        data-id="${escapeHTML(lead.id)}"
+                                        data-id="${escapeHTML(
+                                            lead.id
+                                        )}"
                                         title="Open Customer Profile"
                                     >
                                         ${escapeHTML(
-                                            lead.customer_name || "Unnamed Customer"
+                                            lead.customer_name ||
+                                            "Unnamed Customer"
                                         )}
                                     </span>
 
@@ -791,7 +931,9 @@ function renderLeadTable(){
 
                                         <i class="fa-regular fa-calendar"></i>
 
-                                        Lead #${escapeHTML(lead.id)}
+                                        Lead #${escapeHTML(
+                                            lead.id
+                                        )}
 
                                     </div>
 
@@ -808,7 +950,8 @@ function renderLeadTable(){
 
                                 <strong>
                                     ${escapeHTML(
-                                        lead.business || "-"
+                                        lead.business ||
+                                        "-"
                                     )}
                                 </strong>
 
@@ -828,7 +971,8 @@ function renderLeadTable(){
                                 <i class="fa-solid fa-location-dot"></i>
 
                                 ${escapeHTML(
-                                    lead.location || "-"
+                                    lead.location ||
+                                    "-"
                                 )}
 
                             </div>
@@ -839,7 +983,9 @@ function renderLeadTable(){
                         <td>
 
                             <span class="status-pill ${statusClass}">
-                                ${escapeHTML(status)}
+                                ${escapeHTML(
+                                    status
+                                )}
                             </span>
 
                         </td>
@@ -851,12 +997,16 @@ function renderLeadTable(){
 
                                 <div class="sales-avatar">
                                     ${escapeHTML(
-                                        getInitials(sales)
+                                        getInitials(
+                                            sales
+                                        )
                                     )}
                                 </div>
 
                                 <span class="sales-name">
-                                    ${escapeHTML(sales)}
+                                    ${escapeHTML(
+                                        sales
+                                    )}
                                 </span>
 
                             </div>
@@ -873,7 +1023,9 @@ function renderLeadTable(){
                                     ?
                                     `
                                     <a
-                                        href="${whatsappLink(lead.phone)}"
+                                        href="${whatsappLink(
+                                            lead.phone
+                                        )}"
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         class="whatsapp-link"
@@ -884,7 +1036,10 @@ function renderLeadTable(){
                                     `
                                     :
                                     `
-                                    <span class="whatsapp-link" style="opacity:.35">
+                                    <span
+                                        class="whatsapp-link"
+                                        style="opacity:.35"
+                                    >
                                         <i class="fa-brands fa-whatsapp"></i>
                                     </span>
                                     `
@@ -892,7 +1047,9 @@ function renderLeadTable(){
 
 
                                 <span class="phone-number">
-                                    ${escapeHTML(phone)}
+                                    ${escapeHTML(
+                                        phone
+                                    )}
                                 </span>
 
                             </div>
@@ -902,7 +1059,9 @@ function renderLeadTable(){
 
                         <td>
 
-                            <div class="${getDateClass(lead.follow_up_date)}">
+                            <div class="${getDateClass(
+                                lead.follow_up_date
+                            )}">
                                 ${followDate}
                             </div>
 
@@ -926,7 +1085,9 @@ function renderLeadTable(){
                                     type="button"
                                     class="row-action"
                                     data-action="profile"
-                                    data-id="${escapeHTML(lead.id)}"
+                                    data-id="${escapeHTML(
+                                        lead.id
+                                    )}"
                                     title="View"
                                 >
                                     <i class="fa-regular fa-eye"></i>
@@ -937,7 +1098,9 @@ function renderLeadTable(){
                                     type="button"
                                     class="row-action"
                                     data-action="edit"
-                                    data-id="${escapeHTML(lead.id)}"
+                                    data-id="${escapeHTML(
+                                        lead.id
+                                    )}"
                                     title="Edit"
                                 >
                                     <i class="fa-regular fa-pen-to-square"></i>
@@ -948,7 +1111,9 @@ function renderLeadTable(){
                                     type="button"
                                     class="row-action danger"
                                     data-action="delete"
-                                    data-id="${escapeHTML(lead.id)}"
+                                    data-id="${escapeHTML(
+                                        lead.id
+                                    )}"
                                     title="Delete"
                                 >
                                     <i class="fa-regular fa-trash-can"></i>
@@ -962,7 +1127,8 @@ function renderLeadTable(){
                 `;
 
             }
-        ).join("");
+        )
+        .join("");
 
 
     updateLeadCount();
@@ -985,7 +1151,8 @@ function updateLeadKPIs(){
             lead =>
                 normalizeLeadStatus(
                     lead.status
-                ) === "Follow Up"
+                ) ===
+                "Follow Up"
         ).length;
 
 
@@ -1001,7 +1168,8 @@ function updateLeadKPIs(){
             lead =>
                 normalizeLeadStatus(
                     lead.status
-                ) === "Closing"
+                ) ===
+                "Closing"
                 ||
                 lead.closing
         ).length;
@@ -1012,15 +1180,18 @@ function updateLeadKPIs(){
         total
     );
 
+
     setText(
         "kpiFollowUp",
         followUp
     );
 
+
     setText(
         "kpiAppointment",
         appointment
     );
+
 
     setText(
         "kpiClosing",
@@ -1055,12 +1226,19 @@ function renderPagination(){
         ?
         0
         :
-        ((currentPage - 1) * pageSize) + 1;
+        (
+            (
+                currentPage - 1
+            ) *
+            pageSize
+        ) +
+        1;
 
 
     const end =
         Math.min(
-            currentPage * pageSize,
+            currentPage *
+            pageSize,
             totalLeadsCount
         );
 
@@ -1070,10 +1248,12 @@ function renderPagination(){
         start
     );
 
+
     setText(
         "paginationEnd",
         end
     );
+
 
     setText(
         "paginationTotal",
@@ -1099,7 +1279,8 @@ function renderPagination(){
     if(next){
 
         next.disabled =
-            currentPage >= totalPages;
+            currentPage >=
+            totalPages;
 
     }
 
@@ -1121,26 +1302,34 @@ function renderPagination(){
         Math.max(
             1,
             currentPage -
-            Math.floor(maxButtons / 2)
+            Math.floor(
+                maxButtons / 2
+            )
         );
 
 
     let endPage =
         Math.min(
             totalPages,
-            startPage + maxButtons - 1
+            startPage +
+            maxButtons -
+            1
         );
 
 
     if(
-        endPage - startPage + 1 <
+        endPage -
+        startPage +
+        1 <
         maxButtons
     ){
 
         startPage =
             Math.max(
                 1,
-                endPage - maxButtons + 1
+                endPage -
+                maxButtons +
+                1
             );
 
     }
@@ -1153,17 +1342,23 @@ function renderPagination(){
     ){
 
         const button =
-            document.createElement("button");
+            document.createElement(
+                "button"
+            );
 
 
-        button.type = "button";
+        button.type =
+            "button";
+
 
         button.className =
             "pagination-number" +
             (
                 page === currentPage
-                ? " active"
-                : ""
+                ?
+                " active"
+                :
+                ""
             );
 
 
@@ -1176,13 +1371,18 @@ function renderPagination(){
             () => {
 
                 if(
-                    page === currentPage
+                    page ===
+                    currentPage
                 ){
+
                     return;
+
                 }
+
 
                 currentPage =
                     page;
+
 
                 loadLeads();
 
@@ -1190,7 +1390,9 @@ function renderPagination(){
         );
 
 
-        numbers.appendChild(button);
+        numbers.appendChild(
+            button
+        );
 
     }
 
@@ -1213,8 +1415,10 @@ function updateLeadCount(){
     label.textContent =
         `${totalLeadsCount} ${
             totalLeadsCount === 1
-            ? "lead"
-            : "leads"
+            ?
+            "lead"
+            :
+            "leads"
         }`;
 
 }
@@ -1226,9 +1430,12 @@ function updateLeadCount(){
 
 async function openAddLead(){
 
-    editingLeadId = null;
+    editingLeadId =
+        null;
+
 
     resetLeadForm();
+
 
     setText(
         "leadModalTitle",
@@ -1255,7 +1462,8 @@ async function openAddLead(){
     if(
         assign &&
         currentProfile &&
-        currentProfile.role !== "Admin"
+        currentProfile.role !==
+        "Admin"
     ){
 
         assign.value =
@@ -1273,56 +1481,20 @@ async function openAddLead(){
 
 /* =========================================================
    EDIT LEAD
+   EDIT SEKARANG MEMBUKA HALAMAN PENUH
 ========================================================= */
 
-async function openEditLead(id){
+function openEditLead(id){
 
-    const lead =
-        await getLeadById(id);
-
-
-    if(!lead){
-
-        showToast(
-            "Lead tidak ditemukan.",
-            "error"
-        );
+    if(!id){
 
         return;
 
     }
 
 
-    if(!canEditLead(lead)){
-
-        showToast(
-            "Anda tidak memiliki akses.",
-            "error"
-        );
-
-        return;
-
-    }
-
-
-    editingLeadId =
-        id;
-
-
-    fillLeadForm(
-        lead
-    );
-
-
-    setText(
-        "leadModalTitle",
-        "Edit Customer Lead"
-    );
-
-
-    openModal(
-        "leadModal"
-    );
+    window.location.href =
+        `customer-form.html?id=${encodeURIComponent(id)}`;
 
 }
 
@@ -1338,8 +1510,11 @@ async function getLeadById(id){
         error
     } =
         await supabaseClient
-            .from(CRM_CONFIG.leadTable)
-            .select(`
+            .from(
+                CRM_CONFIG.leadTable
+            )
+            .select(
+                `
                 id,
                 customer_name,
                 phone,
@@ -1357,7 +1532,8 @@ async function getLeadById(id){
                 sales_id,
                 created_by,
                 updated_by
-            `)
+                `
+            )
             .eq(
                 "id",
                 id
@@ -1404,55 +1580,66 @@ function resetLeadForm(){
         ""
     );
 
+
     setValue(
         "leadCustomerName",
         ""
     );
+
 
     setValue(
         "leadPhone",
         ""
     );
 
+
     setValue(
         "leadBusiness",
         ""
     );
+
 
     setValue(
         "leadLocation",
         ""
     );
 
+
     setValue(
         "leadFollowUpDate",
         ""
     );
+
 
     setValue(
         "leadAppointment",
         ""
     );
 
+
     setValue(
         "leadSiteSurvey",
         ""
     );
+
 
     setValue(
         "leadQuotation",
         ""
     );
 
+
     setValue(
         "leadSpk",
         ""
     );
 
+
     setValue(
         "leadClosing",
         ""
     );
+
 
     setValue(
         "leadNotes",
@@ -1480,25 +1667,34 @@ function fillLeadForm(lead){
         lead.id
     );
 
+
     setValue(
         "leadCustomerName",
-        lead.customer_name || ""
+        lead.customer_name ||
+        ""
     );
+
 
     setValue(
         "leadPhone",
-        lead.phone || ""
+        lead.phone ||
+        ""
     );
+
 
     setValue(
         "leadBusiness",
-        lead.business || ""
+        lead.business ||
+        ""
     );
+
 
     setValue(
         "leadLocation",
-        lead.location || ""
+        lead.location ||
+        ""
     );
+
 
     setValue(
         "leadStatus",
@@ -1507,12 +1703,14 @@ function fillLeadForm(lead){
         )
     );
 
+
     setValue(
         "leadFollowUpDate",
         formatDateInput(
             lead.follow_up_date
         )
     );
+
 
     setValue(
         "leadAppointment",
@@ -1521,12 +1719,14 @@ function fillLeadForm(lead){
         )
     );
 
+
     setValue(
         "leadSiteSurvey",
         formatDateInput(
             lead.site_survey
         )
     );
+
 
     setValue(
         "leadQuotation",
@@ -1535,12 +1735,14 @@ function fillLeadForm(lead){
         )
     );
 
+
     setValue(
         "leadSpk",
         formatDateInput(
             lead.spk
         )
     );
+
 
     setValue(
         "leadClosing",
@@ -1549,14 +1751,18 @@ function fillLeadForm(lead){
         )
     );
 
+
     setValue(
         "leadNotes",
-        lead.notes || ""
+        lead.notes ||
+        ""
     );
+
 
     setValue(
         "leadSalesAssign",
-        lead.sales_id || ""
+        lead.sales_id ||
+        ""
     );
 
 }
@@ -1572,7 +1778,9 @@ async function saveLead(event){
 
 
     const customerName =
-        $("leadCustomerName")?.value?.trim();
+        $("leadCustomerName")
+            ?.value
+            ?.trim();
 
 
     if(!customerName){
@@ -1594,57 +1802,76 @@ async function saveLead(event){
             customerName,
 
         phone:
-            $("leadPhone")?.value?.trim() || null,
+            $("leadPhone")
+                ?.value
+                ?.trim() ||
+            null,
 
         business:
-            $("leadBusiness")?.value?.trim() || null,
+            $("leadBusiness")
+                ?.value
+                ?.trim() ||
+            null,
 
         location:
-            $("leadLocation")?.value?.trim() || null,
+            $("leadLocation")
+                ?.value
+                ?.trim() ||
+            null,
 
         status:
-            $("leadStatus")?.value ||
+            $("leadStatus")
+                ?.value ||
             "New",
 
         follow_up_date:
-            $("leadFollowUpDate")?.value ||
+            $("leadFollowUpDate")
+                ?.value ||
             null,
 
         appointment:
-            $("leadAppointment")?.value ||
+            $("leadAppointment")
+                ?.value ||
             null,
 
         site_survey:
-            $("leadSiteSurvey")?.value ||
+            $("leadSiteSurvey")
+                ?.value ||
             null,
 
         quotation:
-            $("leadQuotation")?.value ||
+            $("leadQuotation")
+                ?.value ||
             null,
 
         spk:
-            $("leadSpk")?.value ||
+            $("leadSpk")
+                ?.value ||
             null,
 
         closing:
-            $("leadClosing")?.value ||
+            $("leadClosing")
+                ?.value ||
             null,
 
         notes:
-            $("leadNotes")?.value?.trim() ||
+            $("leadNotes")
+                ?.value
+                ?.trim() ||
             null
 
     };
 
 
     /*
-       SALES hanya bisa menyimpan lead
-       ke dirinya sendiri.
+       SALES hanya bisa menyimpan
+       lead ke dirinya sendiri.
     */
 
     if(
         currentProfile &&
-        currentProfile.role !== "Admin"
+        currentProfile.role !==
+        "Admin"
     ){
 
         payload.sales_id =
@@ -1654,7 +1881,8 @@ async function saveLead(event){
     else{
 
         payload.sales_id =
-            $("leadSalesAssign")?.value ||
+            $("leadSalesAssign")
+                ?.value ||
             null;
 
     }
@@ -1687,7 +1915,9 @@ async function saveLead(event){
                     .from(
                         CRM_CONFIG.leadTable
                     )
-                    .update(payload)
+                    .update(
+                        payload
+                    )
                     .eq(
                         "id",
                         editingLeadId
@@ -1735,7 +1965,8 @@ async function saveLead(event){
         );
 
 
-        editingLeadId = null;
+        editingLeadId =
+            null;
 
 
         await loadLeads();
@@ -1824,6 +2055,7 @@ function confirmDeleteLead(id){
                     error
                 );
 
+
                 showToast(
                     error.message ||
                     "Gagal menghapus lead.",
@@ -1864,6 +2096,7 @@ function openConfirm(
         title
     );
 
+
     setText(
         "confirmMessage",
         message
@@ -1892,8 +2125,10 @@ function openConfirm(
 
                 }
 
+
                 confirmCallback =
                     null;
+
 
                 closeModal(
                     "confirmModal"
@@ -1939,21 +2174,27 @@ function handleLeadActionClick(event){
 
     if(action === "profile"){
 
-        openCustomerProfile(id);
+        openCustomerProfile(
+            id
+        );
 
     }
 
 
     if(action === "edit"){
 
-        openEditLead(id);
+        openEditLead(
+            id
+        );
 
     }
 
 
     if(action === "delete"){
 
-        confirmDeleteLead(id);
+        confirmDeleteLead(
+            id
+        );
 
     }
 
@@ -1961,7 +2202,7 @@ function handleLeadActionClick(event){
 
 
 /* =========================================================
-   PROFILE
+   PROFILE / PERMISSION
 ========================================================= */
 
 function canEditLead(lead){
@@ -1996,20 +2237,24 @@ function resetLeadFilters(){
         ""
     );
 
+
     setValue(
         "statusFilter",
         ""
     );
+
 
     setValue(
         "businessFilter",
         ""
     );
 
+
     setValue(
         "locationFilter",
         ""
     );
+
 
     setValue(
         "salesFilter",
@@ -2017,7 +2262,9 @@ function resetLeadFilters(){
     );
 
 
-    currentPage = 1;
+    currentPage =
+        1;
+
 
     loadLeads();
 
@@ -2160,7 +2407,10 @@ function getInitials(name){
     if(parts.length === 1){
 
         return parts[0]
-            .substring(0,2)
+            .substring(
+                0,
+                2
+            )
             .toUpperCase();
 
     }
@@ -2306,8 +2556,14 @@ function getStatusClass(status){
     return "status-" +
         String(status)
             .toLowerCase()
-            .replace(/[^a-z0-9]+/g,"-")
-            .replace(/^-|-$/g,"");
+            .replace(
+                /[^a-z0-9]+/g,
+                "-"
+            )
+            .replace(
+                /^-|-$/g,
+                ""
+            );
 
 }
 
@@ -2327,22 +2583,25 @@ document.addEventListener(
         ){
 
             /*
-               auth.js akan tetap menangani
+               auth.js tetap menangani
                authentication.
             */
 
-            setTimeout(() => {
+            setTimeout(
+                () => {
 
-                if(
-                    typeof initializeLeadsPage ===
-                    "function"
-                ){
+                    if(
+                        typeof initializeLeadsPage ===
+                        "function"
+                    ){
 
-                    initializeLeadsPage();
+                        initializeLeadsPage();
 
-                }
+                    }
 
-            }, 250);
+                },
+                250
+            );
 
         }
 
