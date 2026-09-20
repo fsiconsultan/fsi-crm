@@ -7,6 +7,41 @@ let salesEventsBound = false;
 
 
 // ========================================
+// SMALL DOM HELPERS
+// ========================================
+
+function salesElement(id) {
+  return document.getElementById(id);
+}
+
+
+function salesSetText(id, value) {
+
+  const element =
+    salesElement(id);
+
+  if (element) {
+    element.textContent =
+      value ?? "";
+  }
+
+}
+
+
+function salesSetValue(id, value) {
+
+  const element =
+    salesElement(id);
+
+  if (element) {
+    element.value =
+      value ?? "";
+  }
+
+}
+
+
+// ========================================
 // INITIALIZE SALES PAGE
 // ========================================
 
@@ -15,6 +50,7 @@ async function initializeSalesPage() {
   console.log("================================");
   console.log("CRM FSI - INITIALIZE SALES");
   console.log("================================");
+
 
   if (currentProfile?.role !== "Admin") {
 
@@ -25,22 +61,17 @@ async function initializeSalesPage() {
     return;
   }
 
-  /*
-    Pasang event terlebih dahulu.
-    Ini memastikan tombol Add New Sales
-    langsung aktif saat halaman dibuka.
-  */
+
   bindSalesEvents();
 
-  /*
-    Setelah event siap,
-    baru ambil database Sales.
-  */
+
   await loadSalesUsers();
+
 
   console.log(
     "CRM FSI - SALES READY"
   );
+
 }
 
 
@@ -61,7 +92,7 @@ async function loadSalesUsers() {
 
 
   const tableBody =
-    $("salesTableBody");
+    salesElement("salesTableBody");
 
 
   if (!tableBody) {
@@ -117,12 +148,7 @@ async function loadSalesUsers() {
 
 
     if (error) {
-
-      throw new Error(
-        error.message ||
-        "Gagal membaca tabel sales_users."
-      );
-
+      throw error;
     }
 
 
@@ -137,11 +163,6 @@ async function loadSalesUsers() {
       salesUsersData.length
     );
 
-
-    /*
-      Hanya role Sales yang
-      ditampilkan di Manage Sales.
-    */
 
     const salesOnly =
       salesUsersData.filter(
@@ -159,36 +180,6 @@ async function loadSalesUsers() {
       "TOTAL SALES:",
       salesOnly.length
     );
-
-
-    /*
-      Kalau database terbaca tetapi
-      tidak ada role Sales, tampilkan
-      isi role di Console untuk diagnosis.
-    */
-
-    if (
-      salesUsersData.length > 0 &&
-      salesOnly.length === 0
-    ) {
-
-      console.warn(
-        "Data sales_users ada, tetapi tidak ada row dengan role = Sales."
-      );
-
-      console.table(
-        salesUsersData.map(
-          user => ({
-            id: user.id,
-            name: user.name,
-            username: user.username,
-            role: user.role,
-            status: user.status
-          })
-        )
-      );
-
-    }
 
 
     const activeCount =
@@ -212,19 +203,19 @@ async function loadSalesUsers() {
     // STATISTICS
     // ======================================
 
-    setText(
+    salesSetText(
       "totalSalesUsers",
       salesOnly.length
     );
 
 
-    setText(
+    salesSetText(
       "activeSalesUsers",
       activeCount
     );
 
 
-    setText(
+    salesSetText(
       "inactiveSalesUsers",
       inactiveCount
     );
@@ -237,10 +228,9 @@ async function loadSalesUsers() {
     renderSalesTable();
 
 
-    /*
-      Refresh lookup Sales
-      untuk Leads dan halaman lain.
-    */
+    // ======================================
+    // SALES LOOKUP
+    // ======================================
 
     if (
       typeof loadSalesLookup ===
@@ -265,21 +255,14 @@ async function loadSalesUsers() {
   } catch (error) {
 
     console.error(
-      "================================"
-    );
-
-    console.error(
       "LOAD SALES ERROR:",
       error
-    );
-
-    console.error(
-      "================================"
     );
 
 
     tableBody.innerHTML = `
       <tr>
+
         <td colspan="7">
 
           <div class="sales-empty">
@@ -302,6 +285,7 @@ async function loadSalesUsers() {
           </div>
 
         </td>
+
       </tr>
     `;
 
@@ -324,7 +308,7 @@ async function loadSalesUsers() {
 function renderSalesTable() {
 
   const tableBody =
-    $("salesTableBody");
+    salesElement("salesTableBody");
 
 
   if (!tableBody) {
@@ -339,7 +323,7 @@ function renderSalesTable() {
 
   const search =
     String(
-      $("salesSearch")?.value ||
+      salesElement("salesSearch")?.value ||
       ""
     )
       .trim()
@@ -363,22 +347,19 @@ function renderSalesTable() {
           const name =
             String(
               user.name || ""
-            )
-              .toLowerCase();
+            ).toLowerCase();
 
 
           const username =
             String(
               user.username || ""
-            )
-              .toLowerCase();
+            ).toLowerCase();
 
 
           const email =
             String(
               user.email || ""
-            )
-              .toLowerCase();
+            ).toLowerCase();
 
 
           return (
@@ -474,9 +455,11 @@ function renderSalesTable() {
             <tr>
 
               <td>
+
                 <span class="sales-row-number">
                   ${index + 1}
                 </span>
+
               </td>
 
 
@@ -737,12 +720,8 @@ function openAddSales() {
   }
 
 
-  const form =
-    $("salesForm");
-
-
   const modal =
-    $("salesModal");
+    salesElement("salesModal");
 
 
   if (!modal) {
@@ -765,35 +744,37 @@ function openAddSales() {
     null;
 
 
-  form?.reset();
+  salesElement("salesForm")?.reset();
 
 
-  setValue(
+  salesSetValue(
     "salesId",
     ""
   );
 
 
-  setText(
+  salesSetText(
     "salesModalTitle",
     "Add New Sales"
   );
 
 
-  setText(
+  salesSetText(
     "salesModalSubtitle",
     "Buat akun Sales baru."
   );
 
 
-  setText(
+  salesSetText(
     "saveSalesText",
     "Create Sales"
   );
 
 
   const passwordGroup =
-    $("salesPasswordGroup");
+    salesElement(
+      "salesPasswordGroup"
+    );
 
 
   if (passwordGroup) {
@@ -805,7 +786,9 @@ function openAddSales() {
 
 
   const statusGroup =
-    $("salesStatusGroup");
+    salesElement(
+      "salesStatusGroup"
+    );
 
 
   if (statusGroup) {
@@ -816,7 +799,7 @@ function openAddSales() {
   }
 
 
-  setValue(
+  salesSetValue(
     "salesStatus",
     "Active"
   );
@@ -886,57 +869,59 @@ function openEditSales(
     sales.id;
 
 
-  setValue(
+  salesSetValue(
     "salesId",
     sales.id
   );
 
 
-  setValue(
+  salesSetValue(
     "salesName",
     sales.name || ""
   );
 
 
-  setValue(
+  salesSetValue(
     "salesUsername",
     sales.username || ""
   );
 
 
-  setValue(
+  salesSetValue(
     "salesPhotoUrl",
     sales.photo_url || ""
   );
 
 
-  setValue(
+  salesSetValue(
     "salesStatus",
     sales.status ||
     "Active"
   );
 
 
-  setText(
+  salesSetText(
     "salesModalTitle",
     "Edit Sales"
   );
 
 
-  setText(
+  salesSetText(
     "salesModalSubtitle",
     "Perbarui informasi Sales."
   );
 
 
-  setText(
+  salesSetText(
     "saveSalesText",
     "Save Changes"
   );
 
 
   const passwordGroup =
-    $("salesPasswordGroup");
+    salesElement(
+      "salesPasswordGroup"
+    );
 
 
   if (passwordGroup) {
@@ -948,7 +933,9 @@ function openEditSales(
 
 
   const statusGroup =
-    $("salesStatusGroup");
+    salesElement(
+      "salesStatusGroup"
+    );
 
 
   if (statusGroup) {
@@ -987,7 +974,9 @@ function showSalesPhotoPreview(
 ) {
 
   const preview =
-    $("salesPhotoPreview");
+    salesElement(
+      "salesPhotoPreview"
+    );
 
 
   if (!preview) {
@@ -1058,41 +1047,39 @@ async function handleCreateSales(
 
 
   const name =
-    $("salesName")
-      ?.value
-      .trim() ||
+    salesElement(
+      "salesName"
+    )?.value.trim() ||
     "";
 
 
   const username =
-    $("salesUsername")
-      ?.value
-      .trim() ||
+    salesElement(
+      "salesUsername"
+    )?.value.trim() ||
     "";
 
 
   const password =
-    $("salesPassword")
-      ?.value ||
+    salesElement(
+      "salesPassword"
+    )?.value ||
     "";
 
 
   const photoUrl =
-    $("salesPhotoUrl")
-      ?.value
-      .trim() ||
+    salesElement(
+      "salesPhotoUrl"
+    )?.value.trim() ||
     "";
 
 
   const status =
-    $("salesStatus")
-      ?.value ||
+    salesElement(
+      "salesStatus"
+    )?.value ||
     "Active";
 
-
-  // ======================================
-  // VALIDATION
-  // ======================================
 
   if (!name || !username) {
 
@@ -1137,7 +1124,9 @@ async function handleCreateSales(
 
 
   const saveButton =
-    $("saveSalesBtn");
+    salesElement(
+      "saveSalesBtn"
+    );
 
 
   setButtonLoading(
@@ -1194,9 +1183,7 @@ async function handleCreateSales(
 
 
       if (error) {
-
         throw error;
-
       }
 
 
@@ -1215,14 +1202,6 @@ async function handleCreateSales(
       }
 
 
-      /*
-        Jangan bergantung pada
-        data.sales.id.
-
-        Edge Function utama sudah membuat
-        akun dan profile Sales.
-      */
-
       if (
         data &&
         data.success === false
@@ -1235,12 +1214,6 @@ async function handleCreateSales(
 
       }
 
-
-      /*
-        Photo hanya tambahan.
-        Kalau Edge Function mengembalikan
-        ID Sales, kita coba simpan.
-      */
 
       const createdSales =
         data?.sales;
@@ -1514,22 +1487,33 @@ async function toggleSalesStatus(
 
 function bindSalesEvents() {
 
-  /*
-    Jangan tandai bound sebelum
-    elemen halaman benar-benar ditemukan.
-  */
+  if (salesEventsBound) {
+    return;
+  }
+
 
   const addButton =
-    $("addSalesBtn");
+    salesElement(
+      "addSalesBtn"
+    );
+
 
   const form =
-    $("salesForm");
+    salesElement(
+      "salesForm"
+    );
+
 
   const searchInput =
-    $("salesSearch");
+    salesElement(
+      "salesSearch"
+    );
+
 
   const photoInput =
-    $("salesPhotoUrl");
+    salesElement(
+      "salesPhotoUrl"
+    );
 
 
   console.log(
@@ -1542,20 +1526,6 @@ function bindSalesEvents() {
     }
   );
 
-
-  /*
-    Kalau event sudah dipasang,
-    jangan dipasang dua kali.
-  */
-
-  if (salesEventsBound) {
-    return;
-  }
-
-
-  // ======================================
-  // SEARCH
-  // ======================================
 
   if (searchInput) {
 
@@ -1573,10 +1543,6 @@ function bindSalesEvents() {
 
   }
 
-
-  // ======================================
-  // ADD SALES
-  // ======================================
 
   if (addButton) {
 
@@ -1604,10 +1570,6 @@ function bindSalesEvents() {
   }
 
 
-  // ======================================
-  // SALES FORM
-  // ======================================
-
   if (form) {
 
     form.addEventListener(
@@ -1623,10 +1585,6 @@ function bindSalesEvents() {
 
   }
 
-
-  // ======================================
-  // PHOTO PREVIEW
-  // ======================================
 
   if (photoInput) {
 
