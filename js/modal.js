@@ -1,88 +1,70 @@
 // ========================================
 // CRM FSI - MODAL & PROFILE
-// FINAL VERSION
-// ========================================
-
-
-// ========================================
-// MODAL EVENTS
+// FINAL
 // ========================================
 
 document.addEventListener("DOMContentLoaded", () => {
 
-  // ----------------------------------------
-  // Tombol dengan data-close
-  // ----------------------------------------
+    // Support both:
+    // data-close="modalId"
+    // data-close-modal="modalId"
+    document.querySelectorAll("[data-close], [data-close-modal]")
+        .forEach((button) => {
 
-  document
-    .querySelectorAll("[data-close]")
-    .forEach((button) => {
+            button.addEventListener("click", (event) => {
 
-      button.addEventListener("click", () => {
+                event.preventDefault();
+                event.stopPropagation();
 
-        const modalId =
-          button.dataset.close;
+                const modalId =
+                    button.dataset.close ||
+                    button.dataset.closeModal;
 
-        if (modalId) {
-          closeModal(modalId);
+                if (modalId) {
+                    closeModal(modalId);
+                }
+
+            });
+
+        });
+
+
+    // Click outside modal
+    document.querySelectorAll(".modal-overlay")
+        .forEach((overlay) => {
+
+            overlay.addEventListener("click", (event) => {
+
+                if (
+                    event.target === overlay &&
+                    overlay.dataset.locked !== "true"
+                ) {
+                    closeModal(overlay.id);
+                }
+
+            });
+
+        });
+
+
+    // ESC
+    document.addEventListener("keydown", (event) => {
+
+        if (event.key !== "Escape") {
+            return;
         }
 
-      });
+        const openedModal =
+            document.querySelector(".modal-overlay.active");
 
-    });
-
-
-  // ----------------------------------------
-  // Klik area luar modal
-  // ----------------------------------------
-
-  document
-    .querySelectorAll(".modal-overlay")
-    .forEach((overlay) => {
-
-      overlay.addEventListener("click", (event) => {
-
-        // Hanya tutup kalau yang diklik
-        // benar-benar area overlay
         if (
-          event.target === overlay &&
-          overlay.dataset.locked !== "true"
+            openedModal &&
+            openedModal.dataset.locked !== "true"
         ) {
-
-          closeModal(overlay.id);
-
+            closeModal(openedModal.id);
         }
 
-      });
-
     });
-
-
-  // ----------------------------------------
-  // Tombol ESC
-  // ----------------------------------------
-
-  document.addEventListener("keydown", (event) => {
-
-    if (event.key !== "Escape") {
-      return;
-    }
-
-    const openedModal =
-      document.querySelector(
-        ".modal-overlay.active"
-      );
-
-    if (
-      openedModal &&
-      openedModal.dataset.locked !== "true"
-    ) {
-
-      closeModal(openedModal.id);
-
-    }
-
-  });
 
 });
 
@@ -93,21 +75,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function openModal(id) {
 
-  const modal = $(id);
+    const modal = $(id);
 
-  if (!modal) {
-    return;
-  }
+    if (!modal) {
+        return;
+    }
 
-  // Pastikan modal sebelumnya tidak
-  // mempunyai inline display yang salah
-  modal.style.display = "flex";
+    modal.classList.add("active");
 
-  // Aktifkan modal
-  modal.classList.add("active");
+    modal.style.display = "flex";
 
-  // Kunci scroll halaman
-  document.body.classList.add("modal-open");
+    document.body.classList.add("modal-open");
 
 }
 
@@ -118,68 +96,49 @@ function openModal(id) {
 
 function closeModal(id) {
 
-  const modal = $(id);
+    const modal = $(id);
 
-  if (!modal) {
-    return;
-  }
+    if (!modal) {
+        return;
+    }
 
-  // Modal yang dikunci tidak boleh ditutup
-  if (modal.dataset.locked === "true") {
-    return;
-  }
+    if (modal.dataset.locked === "true") {
+        return;
+    }
 
-  // Hilangkan class aktif
-  modal.classList.remove("active");
+    modal.classList.remove("active");
 
-  // Hapus inline style agar CSS
-  // kembali mengontrol display
-  modal.style.display = "none";
+    modal.style.display = "none";
 
-  // Jika tidak ada modal lain yang terbuka,
-  // aktifkan kembali scroll halaman
-  const anotherModal =
-    document.querySelector(
-      ".modal-overlay.active"
-    );
+    const anotherModal =
+        document.querySelector(".modal-overlay.active");
 
-  if (!anotherModal) {
-    document.body.classList.remove(
-      "modal-open"
-    );
-  }
+    if (!anotherModal) {
+        document.body.classList.remove("modal-open");
+    }
 
 }
 
 
 // ========================================
-// CLOSE ALL MODALS
+// CLOSE ALL
 // ========================================
 
 function closeAllModals() {
 
-  document
-    .querySelectorAll(".modal-overlay")
-    .forEach((modal) => {
+    document.querySelectorAll(".modal-overlay")
+        .forEach((modal) => {
 
-      if (
-        modal.dataset.locked !== "true"
-      ) {
+            if (modal.dataset.locked === "true") {
+                return;
+            }
 
-        modal.classList.remove(
-          "active"
-        );
+            modal.classList.remove("active");
+            modal.style.display = "none";
 
-        modal.style.display =
-          "none";
+        });
 
-      }
-
-    });
-
-  document.body.classList.remove(
-    "modal-open"
-  );
+    document.body.classList.remove("modal-open");
 
 }
 
@@ -190,248 +149,175 @@ function closeAllModals() {
 
 function showGlobalLoading() {
 
-  const loading =
-    $("globalLoading");
+    const loading = $("globalLoading");
 
-  if (!loading) {
-    return;
-  }
+    if (!loading) {
+        return;
+    }
 
-  loading.classList.add(
-    "active"
-  );
-
-  loading.style.display =
-    "flex";
+    loading.classList.add("active");
+    loading.style.display = "flex";
 
 }
 
 
 function hideGlobalLoading() {
 
-  const loading =
-    $("globalLoading");
+    const loading = $("globalLoading");
 
-  if (!loading) {
-    return;
-  }
+    if (!loading) {
+        return;
+    }
 
-  loading.classList.remove(
-    "active"
-  );
-
-  loading.style.display =
-    "none";
+    loading.classList.remove("active");
+    loading.style.display = "none";
 
 }
 
 
 // ========================================
-// OPEN PROFILE MODAL
+// PROFILE MODAL
 // ========================================
 
 function openProfileModal() {
 
-  const modal =
-    $("profileModal");
+    const modal = $("profileModal");
 
-  if (!modal) {
-    return;
-  }
+    if (!modal) {
+        return;
+    }
 
-  renderProfile();
+    renderProfile();
 
-  openModal(
-    "profileModal"
-  );
+    openModal("profileModal");
+
+}
+
+
+function closeProfileModal() {
+
+    closeModal("profileModal");
 
 }
 
 
 // ========================================
-// RENDER PROFILE
+// RENDER USER PROFILE
 // ========================================
 
 function renderProfile() {
 
-  const box =
-    $("userProfileContent");
+    const box = $("userProfileContent");
 
-  if (
-    !box ||
-    !currentProfile
-  ) {
-    return;
-  }
+    if (!box) {
+        return;
+    }
 
+    if (!currentProfile) {
 
-  const name =
-    currentProfile.name ||
-    currentProfile.username ||
-    "User";
+        box.innerHTML = `
+            <div class="profile-empty">
+                <i class="fa-solid fa-user-slash"></i>
+                <p>Data profile belum tersedia.</p>
+            </div>
+        `;
 
-
-  const role =
-    currentProfile.role ||
-    "Sales";
+        return;
+    }
 
 
-  const status =
-    currentProfile.status ||
-    "-";
+    const name =
+        currentProfile.name ||
+        currentProfile.username ||
+        "User";
+
+    const username =
+        currentProfile.username ||
+        "-";
+
+    const role =
+        currentProfile.role ||
+        "Sales";
+
+    const status =
+        currentProfile.status ||
+        "-";
+
+    const createdAt =
+        currentProfile.created_at;
+
+    const userId =
+        currentProfile.id ||
+        "-";
+
+    const initial =
+        String(name)
+            .charAt(0)
+            .toUpperCase();
 
 
-  const username =
-    currentProfile.username ||
-    "-";
+    box.innerHTML = `
+
+        <div class="profile-hero compact">
+
+            <div class="profile-avatar-xl">
+                ${safeText(initial)}
+            </div>
+
+            <div>
+                <h2>${safeText(name)}</h2>
+                <p>${safeText(role)}</p>
+            </div>
+
+        </div>
 
 
-  const createdAt =
-    currentProfile.created_at;
+        <div class="detail-grid">
 
+            <div>
+                <label>Name</label>
+                <strong>
+                    ${safeText(name)}
+                </strong>
+            </div>
 
-  const userId =
-    currentProfile.id ||
-    "-";
+            <div>
+                <label>Username</label>
+                <strong>
+                    ${safeText(username)}
+                </strong>
+            </div>
 
+            <div>
+                <label>Role</label>
+                <strong>
+                    ${safeText(role)}
+                </strong>
+            </div>
 
-  const initial =
-    name
-      .charAt(0)
-      .toUpperCase();
+            <div>
+                <label>Status</label>
+                <strong>
+                    ${safeText(status)}
+                </strong>
+            </div>
 
+            <div>
+                <label>Created</label>
+                <strong>
+                    ${formatDate(createdAt)}
+                </strong>
+            </div>
 
-  box.innerHTML = `
+            <div>
+                <label>User ID</label>
+                <strong>
+                    ${safeText(userId)}
+                </strong>
+            </div>
 
-    <div class="profile-hero compact">
+        </div>
 
-      <div class="profile-avatar-xl">
-        ${safeText(initial)}
-      </div>
-
-      <div>
-
-        <h2>
-          ${safeText(name)}
-        </h2>
-
-        <p>
-          ${safeText(role)}
-        </p>
-
-      </div>
-
-    </div>
-
-
-    <div class="detail-grid">
-
-      <div>
-
-        <label>
-          Name
-        </label>
-
-        <strong>
-          ${safeText(
-            currentProfile.name ||
-            "-"
-          )}
-        </strong>
-
-      </div>
-
-
-      <div>
-
-        <label>
-          Username
-        </label>
-
-        <strong>
-          ${safeText(
-            username
-          )}
-        </strong>
-
-      </div>
-
-
-      <div>
-
-        <label>
-          Role
-        </label>
-
-        <strong>
-          ${safeText(
-            currentProfile.role ||
-            "-"
-          )}
-        </strong>
-
-      </div>
-
-
-      <div>
-
-        <label>
-          Status
-        </label>
-
-        <strong>
-          ${safeText(
-            status
-          )}
-        </strong>
-
-      </div>
-
-
-      <div>
-
-        <label>
-          Created
-        </label>
-
-        <strong>
-          ${formatDate(
-            createdAt
-          )}
-        </strong>
-
-      </div>
-
-
-      <div>
-
-        <label>
-          User ID
-        </label>
-
-        <strong>
-          ${safeText(
-            userId
-          )}
-        </strong>
-
-      </div>
-
-    </div>
-
-  `;
-
-}
-
-
-// ========================================
-// CLOSE PROFILE MODAL
-// ========================================
-
-function closeProfileModal() {
-
-  closeModal(
-    "profileModal"
-  );
+    `;
 
 }
