@@ -1,140 +1,185 @@
 // ======================================================
 // CRM FSI - LEADS
-// Supabase / Multi Page Version
 // ======================================================
 
 let leadsEventsBound = false;
 
+
 // ======================================================
-// STATUS
+// STATUS OPTIONS
 // ======================================================
 
 function populateStatusOptions() {
-  const selects = [$("statusFilter"), $("leadStatus")];
+    const statusFilter = $("statusFilter");
+    const leadStatus = $("leadStatus");
 
-  selects.forEach((select, index) => {
+    if (statusFilter) {
+        const current = statusFilter.value;
+
+        statusFilter.innerHTML =
+            `<option value="">All Status</option>`;
+
+        CRM_CONFIG.statuses.forEach(status => {
+            const option = document.createElement("option");
+            option.value = status;
+            option.textContent = status;
+            statusFilter.appendChild(option);
+        });
+
+        statusFilter.value = current;
+    }
+
+    if (leadStatus) {
+        const current = leadStatus.value;
+
+        leadStatus.innerHTML = "";
+
+        CRM_CONFIG.statuses.forEach(status => {
+            const option = document.createElement("option");
+            option.value = status;
+            option.textContent = status;
+            leadStatus.appendChild(option);
+        });
+
+        leadStatus.value =
+            CRM_CONFIG.statuses.includes(current)
+                ? current
+                : "New";
+    }
+}
+
+
+// ======================================================
+// BUSINESS FILTER
+// ======================================================
+
+function populateBusinessFilter(values) {
+    const select = $("businessFilter");
+
     if (!select) return;
 
     const current = select.value;
 
-    select.innerHTML = "";
+    select.innerHTML =
+        `<option value="">All Business</option>`;
 
-    if (index === 0) {
-      const option = document.createElement("option");
-      option.value = "";
-      option.textContent = "All Status";
-      select.appendChild(option);
-    }
+    [...new Set(
+        (values || [])
+            .filter(value => value !== null && value !== "")
+            .map(value => String(value).trim())
+    )]
+        .sort((a, b) => a.localeCompare(b))
+        .forEach(value => {
+            const option = document.createElement("option");
 
-    (CRM_CONFIG.statuses || []).forEach(status => {
-      const option = document.createElement("option");
-      option.value = status;
-      option.textContent = status;
-      select.appendChild(option);
-    });
+            option.value = value;
+            option.textContent = value;
 
-    if ((CRM_CONFIG.statuses || []).includes(current)) {
-      select.value = current;
-    }
-  });
+            select.appendChild(option);
+        });
+
+    select.value = current;
 }
 
 
 // ======================================================
-// GENERIC SELECT
-// ======================================================
-
-function populateSelect(id, values, firstText) {
-  const element = $(id);
-  if (!element) return;
-
-  const current = element.value;
-
-  element.innerHTML = "";
-
-  const firstOption = document.createElement("option");
-  firstOption.value = "";
-  firstOption.textContent = firstText;
-  element.appendChild(firstOption);
-
-  [...new Set((values || []).filter(Boolean))]
-    .sort((a, b) =>
-      String(a).localeCompare(String(b))
-    )
-    .forEach(value => {
-      const option = document.createElement("option");
-
-      option.value = value;
-      option.textContent = value;
-
-      element.appendChild(option);
-    });
-
-  element.value = current;
-}
-
-
-// ======================================================
-// SALES DROPDOWN
+// SALES OPTIONS
 // ======================================================
 
 function populateSales() {
-  const filter = $("salesFilter");
-  const assign = $("leadSalesAssign");
 
-  const salesOnly = (salesUsersData || []).filter(
-    user =>
-      user.role === "Sales" &&
-      String(user.status || "Active").toLowerCase() === "active"
-  );
+    const salesFilter = $("salesFilter");
+    const salesAssign = $("leadSalesAssign");
 
-  // ADMIN FILTER
-  if (filter) {
-    filter.innerHTML = "";
+    const salesList =
+        (salesUsersData || []).filter(
+            sales =>
+                sales.role === "Sales" &&
+                String(sales.status || "Active")
+                    .toLowerCase() === "active"
+        );
 
-    const allOption = document.createElement("option");
-    allOption.value = "";
-    allOption.textContent = "All Sales";
 
-    filter.appendChild(allOption);
+    // ----------------------------------------------
+    // ADMIN SALES FILTER
+    // ----------------------------------------------
 
-    salesOnly.forEach(sales => {
-      const option = document.createElement("option");
+    if (salesFilter) {
 
-      option.value = sales.id;
-      option.textContent = sales.name || sales.username;
+        const current = salesFilter.value;
 
-      filter.appendChild(option);
-    });
-  }
+        salesFilter.innerHTML =
+            `<option value="">All Sales</option>`;
 
-  // ASSIGN SALES
-  if (assign) {
-    assign.innerHTML = "";
+        salesList.forEach(sales => {
 
-    if (currentProfile?.role === "Admin") {
-      const unassigned = document.createElement("option");
+            const option =
+                document.createElement("option");
 
-      unassigned.value = "";
-      unassigned.textContent = "Unassigned";
+            option.value = sales.id;
 
-      assign.appendChild(unassigned);
+            option.textContent =
+                sales.name ||
+                sales.username ||
+                "Sales";
+
+            salesFilter.appendChild(option);
+        });
+
+        salesFilter.value = current;
     }
 
-    salesOnly.forEach(sales => {
-      const option = document.createElement("option");
 
-      option.value = sales.id;
-      option.textContent = sales.name || sales.username;
+    // ----------------------------------------------
+    // ASSIGN SALES
+    // ----------------------------------------------
 
-      assign.appendChild(option);
-    });
+    if (salesAssign) {
 
-    // SALES hanya boleh melihat dirinya sendiri
-    if (currentProfile?.role !== "Admin") {
-      assign.value = currentProfile?.id || "";
+        const current = salesAssign.value;
+
+        salesAssign.innerHTML = "";
+
+        if (currentProfile?.role === "Admin") {
+
+            const option =
+                document.createElement("option");
+
+            option.value = "";
+
+            option.textContent =
+                "Unassigned";
+
+            salesAssign.appendChild(option);
+        }
+
+        salesList.forEach(sales => {
+
+            const option =
+                document.createElement("option");
+
+            option.value = sales.id;
+
+            option.textContent =
+                sales.name ||
+                sales.username ||
+                "Sales";
+
+            salesAssign.appendChild(option);
+        });
+
+
+        // Sales biasa otomatis dirinya sendiri
+        if (currentProfile?.role !== "Admin") {
+
+            salesAssign.value =
+                currentProfile?.id || "";
+
+        } else if (current) {
+
+            salesAssign.value = current;
+        }
     }
-  }
 }
 
 
@@ -143,140 +188,242 @@ function populateSales() {
 // ======================================================
 
 async function loadSalesLookup() {
-  try {
-    const { data, error } = await supabaseClient
-      .from("sales_users")
-      .select("id,name,username,role,status,created_at")
-      .order("name", { ascending: true });
 
-    if (error) {
-      console.error("LOAD SALES ERROR:", error);
-      salesUsersData = [];
-      populateSales();
-      return;
+    try {
+
+        const {
+            data,
+            error
+        } = await supabaseClient
+            .from("sales_users")
+            .select(
+                "id,name,username,role,status,created_at"
+            )
+            .order(
+                "name",
+                {
+                    ascending: true
+                }
+            );
+
+
+        if (error) {
+
+            console.error(
+                "LOAD SALES ERROR:",
+                error
+            );
+
+            salesUsersData = [];
+
+            populateSales();
+
+            return;
+        }
+
+
+        salesUsersData =
+            data || [];
+
+        populateSales();
+
+    } catch (error) {
+
+        console.error(
+            "LOAD SALES EXCEPTION:",
+            error
+        );
+
+        salesUsersData = [];
+
+        populateSales();
     }
-
-    salesUsersData = data || [];
-
-    populateSales();
-
-  } catch (error) {
-    console.error("LOAD SALES EXCEPTION:", error);
-    salesUsersData = [];
-    populateSales();
-  }
 }
 
 
 // ======================================================
-// FILTER OPTIONS
+// LOAD FILTER OPTIONS
 // ======================================================
 
 async function loadFilterOptions() {
-  if (!$("statusFilter")) return;
 
-  populateStatusOptions();
+    populateStatusOptions();
 
-  try {
-    const { data, error } = await supabaseClient
-      .from("leads")
-      .select("business,location");
 
-    if (error) {
-      console.error("LOAD FILTER ERROR:", error);
-      return;
+    try {
+
+        const {
+            data,
+            error
+        } = await supabaseClient
+            .from("leads")
+            .select(
+                "business"
+            );
+
+
+        if (error) {
+
+            console.error(
+                "LOAD BUSINESS FILTER ERROR:",
+                error
+            );
+
+            return;
+        }
+
+
+        populateBusinessFilter(
+            (data || []).map(
+                row => row.business
+            )
+        );
+
+
+        populateSales();
+
+    } catch (error) {
+
+        console.error(
+            "FILTER ERROR:",
+            error
+        );
     }
-
-    const rows = data || [];
-
-    populateSelect(
-      "businessFilter",
-      rows.map(row => row.business),
-      "All Business"
-    );
-
-    populateSelect(
-      "locationFilter",
-      rows.map(row => row.location),
-      "All Location"
-    );
-
-    populateSales();
-
-  } catch (error) {
-    console.error("FILTER EXCEPTION:", error);
-  }
 }
 
 
 // ======================================================
-// BUILD LEAD QUERY
+// BUILD QUERY
 // ======================================================
 
 function buildLeadQuery() {
-  const search =
-    $("leadSearch")?.value.trim() || "";
 
-  const status =
-    $("statusFilter")?.value || "";
+    const search =
+        $("leadSearch")?.value.trim() || "";
 
-  const business =
-    $("businessFilter")?.value || "";
+    const status =
+        $("statusFilter")?.value || "";
 
-  const location =
-    $("locationFilter")?.value || "";
+    const business =
+        $("businessFilter")?.value || "";
 
-  const sales =
-    $("salesFilter")?.value || "";
+    const location =
+        $("locationFilter")?.value.trim() || "";
 
-  let query = supabaseClient
-    .from("leads")
-    .select("*", {
-      count: "exact"
-    });
+    const sales =
+        $("salesFilter")?.value || "";
 
-  // SALES hanya melihat lead miliknya
-  if (currentProfile?.role !== "Admin") {
-    query = query.eq(
-      "sales_id",
-      currentProfile.id
-    );
-  }
 
-  // SEARCH
-  if (search) {
-    const safeSearch = search
-      .replace(/[(),%]/g, " ")
-      .trim();
+    let query =
+        supabaseClient
+            .from("leads")
+            .select(
+                "*",
+                {
+                    count: "exact"
+                }
+            );
 
-    if (safeSearch) {
-      query = query.or(
-        `customer_name.ilike.%${safeSearch}%,phone.ilike.%${safeSearch}%,business.ilike.%${safeSearch}%,location.ilike.%${safeSearch}%`
-      );
+
+    // ----------------------------------------------
+    // SALES
+    // ----------------------------------------------
+
+    if (
+        currentProfile?.role !== "Admin"
+    ) {
+
+        query =
+            query.eq(
+                "sales_id",
+                currentProfile.id
+            );
     }
-  }
 
-  if (status) {
-    query = query.eq("status", status);
-  }
 
-  if (business) {
-    query = query.eq("business", business);
-  }
+    // ----------------------------------------------
+    // SEARCH
+    // ----------------------------------------------
 
-  if (location) {
-    query = query.eq("location", location);
-  }
+    if (search) {
 
-  // ADMIN bisa filter berdasarkan Sales
-  if (
-    currentProfile?.role === "Admin" &&
-    sales
-  ) {
-    query = query.eq("sales_id", sales);
-  }
+        const safeSearch =
+            search
+                .replace(/[(),%]/g, " ")
+                .trim();
 
-  return query;
+
+        if (safeSearch) {
+
+            query =
+                query.or(
+                    `customer_name.ilike.%${safeSearch}%,phone.ilike.%${safeSearch}%,business.ilike.%${safeSearch}%,location.ilike.%${safeSearch}%`
+                );
+        }
+    }
+
+
+    // ----------------------------------------------
+    // STATUS
+    // ----------------------------------------------
+
+    if (status) {
+
+        query =
+            query.eq(
+                "status",
+                status
+            );
+    }
+
+
+    // ----------------------------------------------
+    // BUSINESS
+    // ----------------------------------------------
+
+    if (business) {
+
+        query =
+            query.eq(
+                "business",
+                business
+            );
+    }
+
+
+    // ----------------------------------------------
+    // LOCATION
+    // Karena HTML menggunakan INPUT TEXT
+    // ----------------------------------------------
+
+    if (location) {
+
+        query =
+            query.ilike(
+                "location",
+                `%${location}%`
+            );
+    }
+
+
+    // ----------------------------------------------
+    // ADMIN SALES FILTER
+    // ----------------------------------------------
+
+    if (
+        currentProfile?.role === "Admin" &&
+        sales
+    ) {
+
+        query =
+            query.eq(
+                "sales_id",
+                sales
+            );
+    }
+
+
+    return query;
 }
 
 
@@ -285,94 +432,161 @@ function buildLeadQuery() {
 // ======================================================
 
 async function loadLeads(page = 1) {
-  const tbody = $("leadsTableBody");
 
-  if (!tbody) return;
+    const tbody =
+        $("leadsTableBody");
 
-  currentPage = Math.max(1, page);
+    if (!tbody) return;
 
-  tbody.innerHTML = `
-    <tr>
-      <td colspan="10" class="table-loading">
-        <i class="fa-solid fa-spinner fa-spin"></i>
-        Loading leads...
-      </td>
-    </tr>
-  `;
 
-  if ($("leadsEmptyState")) {
-    $("leadsEmptyState").style.display = "none";
-  }
+    currentPage =
+        Math.max(
+            1,
+            Number(page) || 1
+        );
 
-  try {
-    const from =
-      (currentPage - 1) *
-      CRM_CONFIG.pageSize;
-
-    const to =
-      from +
-      CRM_CONFIG.pageSize -
-      1;
-
-    const {
-      data,
-      error,
-      count
-    } = await buildLeadQuery()
-      .order("created_at", {
-        ascending: false
-      })
-      .range(from, to);
-
-    if (error) {
-      throw error;
-    }
-
-    leadsData = data || [];
-
-    totalLeadsCount = count || 0;
-
-    console.log(
-      "CRM FSI - LEADS LOADED:",
-      leadsData.length,
-      "of",
-      totalLeadsCount
-    );
-
-    renderLeadsTable();
-    renderPagination();
-    updateLeadKPI();
-
-  } catch (error) {
-    console.error(
-      "LOAD LEADS ERROR:",
-      error
-    );
-
-    leadsData = [];
-    totalLeadsCount = 0;
 
     tbody.innerHTML = `
-      <tr>
-        <td colspan="10" class="table-error">
-          ${safeText(
-            error.message ||
-            "Gagal memuat database Leads."
-          )}
-        </td>
-      </tr>
+        <tr>
+            <td
+                colspan="10"
+                class="table-loading"
+            >
+                <i
+                    class="fa-solid fa-spinner fa-spin"
+                ></i>
+
+                Loading leads...
+            </td>
+        </tr>
     `;
 
-    if ($("leadCountLabel")) {
-      $("leadCountLabel").textContent =
-        "0 leads";
+
+    if ($("leadsEmptyState")) {
+
+        $("leadsEmptyState").style.display =
+            "none";
     }
 
-    showToast(
-      "Database Leads gagal dimuat.",
-      "error"
-    );
-  }
+
+    try {
+
+        const from =
+            (currentPage - 1) *
+            CRM_CONFIG.pageSize;
+
+        const to =
+            from +
+            CRM_CONFIG.pageSize -
+            1;
+
+
+        console.log(
+            "CRM FSI - QUERY LEADS",
+            {
+                page: currentPage,
+                from,
+                to,
+                role: currentProfile?.role,
+                profileId: currentProfile?.id
+            }
+        );
+
+
+        const {
+            data,
+            error,
+            count
+        } =
+            await buildLeadQuery()
+                .order(
+                    "created_at",
+                    {
+                        ascending: false
+                    }
+                )
+                .range(
+                    from,
+                    to
+                );
+
+
+        if (error) {
+
+            console.error(
+                "SUPABASE LEADS ERROR:",
+                error
+            );
+
+            throw error;
+        }
+
+
+        leadsData =
+            data || [];
+
+        totalLeadsCount =
+            count || 0;
+
+
+        console.log(
+            "CRM FSI - DATA LEADS:",
+            leadsData.length,
+            "TOTAL:",
+            totalLeadsCount
+        );
+
+
+        renderLeadsTable();
+
+        renderPagination();
+
+        updateLeadKPI();
+
+
+    } catch (error) {
+
+        console.error(
+            "LOAD LEADS ERROR:",
+            error
+        );
+
+
+        leadsData = [];
+
+        totalLeadsCount = 0;
+
+
+        tbody.innerHTML = `
+            <tr>
+                <td
+                    colspan="10"
+                    class="table-error"
+                >
+                    ${safeText(
+                        error.message ||
+                        "Gagal memuat database Leads."
+                    )}
+                </td>
+            </tr>
+        `;
+
+
+        if ($("leadCountLabel")) {
+
+            $("leadCountLabel").textContent =
+                "0 leads";
+        }
+
+
+        renderPagination();
+
+
+        showToast(
+            "Database Leads gagal dimuat.",
+            "error"
+        );
+    }
 }
 
 
@@ -381,672 +595,820 @@ async function loadLeads(page = 1) {
 // ======================================================
 
 function renderLeadsTable() {
-  const tbody = $("leadsTableBody");
 
-  if (!tbody) return;
+    const tbody =
+        $("leadsTableBody");
 
-  if (!leadsData.length) {
-    tbody.innerHTML = "";
+    if (!tbody) return;
+
+
+    // ----------------------------------------------
+    // EMPTY
+    // ----------------------------------------------
+
+    if (!leadsData.length) {
+
+        tbody.innerHTML = "";
+
+        if ($("leadsEmptyState")) {
+
+            $("leadsEmptyState").style.display =
+                "block";
+        }
+
+        if ($("leadCountLabel")) {
+
+            $("leadCountLabel").textContent =
+                "0 leads";
+        }
+
+        return;
+    }
+
 
     if ($("leadsEmptyState")) {
-      $("leadsEmptyState").style.display =
-        "block";
+
+        $("leadsEmptyState").style.display =
+            "none";
     }
+
 
     if ($("leadCountLabel")) {
-      $("leadCountLabel").textContent =
-        "0 leads";
+
+        $("leadCountLabel").textContent =
+            `${totalLeadsCount} leads`;
     }
 
-    return;
-  }
 
-  if ($("leadsEmptyState")) {
-    $("leadsEmptyState").style.display =
-      "none";
-  }
+    tbody.innerHTML =
+        leadsData
+            .map(
+                (lead, index) => {
 
-  if ($("leadCountLabel")) {
-    $("leadCountLabel").textContent =
-      `${totalLeadsCount} leads`;
-  }
+                    const salesName =
+                        getSalesName(
+                            lead.sales_id
+                        );
 
-  tbody.innerHTML = leadsData
-    .map((lead, index) => {
 
-      const salesName =
-        getSalesName(lead.sales_id);
+                    const status =
+                        normalizeLeadStatus(
+                            lead.status
+                        );
 
-      const status =
-        normalizeLeadStatus(
-          lead.status
-        );
 
-      const encodedId =
-        encodeURIComponent(
-          lead.id
-        );
+                    const id =
+                        encodeURIComponent(
+                            lead.id
+                        );
 
-      const rowNumber =
-        (currentPage - 1) *
-          CRM_CONFIG.pageSize +
-        index +
-        1;
 
-      return `
-        <tr>
+                    const number =
+                        (
+                            (currentPage - 1) *
+                            CRM_CONFIG.pageSize
+                        ) +
+                        index +
+                        1;
 
-          <td>
-            ${rowNumber}
-          </td>
 
-          <td>
-            <a
-              class="customer-link"
-              href="customer-profile.html?id=${encodedId}"
-            >
-              ${safeText(
-                lead.customer_name
-              )}
-            </a>
-          </td>
+                    const statusClass =
+                        status
+                            .toLowerCase()
+                            .replace(
+                                /\s+/g,
+                                "-"
+                            );
 
-          <td>
-            ${safeText(
-              lead.business
-            )}
-          </td>
 
-          <td>
-            ${safeText(
-              lead.location
-            )}
-          </td>
+                    return `
+                        <tr>
 
-          <td>
-            <span
-              class="status-badge status-${status
-                .toLowerCase()
-                .replace(
-                  /\\s+/g,
-                  "-"
-                )}"
-            >
-              ${safeText(status)}
-            </span>
-          </td>
+                            <td>
+                                ${number}
+                            </td>
 
-          <td>
-            ${safeText(
-              salesName
-            )}
-          </td>
 
-          <td>
-            ${
-              lead.phone
-                ? `
-                  <a
-                    class="wa-link"
-                    target="_blank"
-                    rel="noopener"
-                    href="${whatsappLink(
-                      lead.phone
-                    )}"
-                  >
-                    <i class="fa-brands fa-whatsapp"></i>
-                    ${safeText(
-                      lead.phone
-                    )}
-                  </a>
-                `
-                : "-"
-            }
-          </td>
+                            <td>
 
-          <td>
-            ${formatDate(
-              lead.follow_up_date
-            )}
-          </td>
+                                <a
+                                    class="customer-link"
+                                    href="customer-profile.html?id=${id}"
+                                >
+                                    ${safeText(
+                                        lead.customer_name
+                                    )}
+                                </a>
 
-          <td>
-            ${formatDate(
-              lead.created_at
-            )}
-          </td>
+                            </td>
 
-          <td>
-            <div class="action-buttons">
 
-              <a
-                class="icon-btn"
-                title="View"
-                href="customer-profile.html?id=${encodedId}"
-              >
-                <i class="fa-solid fa-eye"></i>
-              </a>
+                            <td>
+                                ${safeText(
+                                    lead.business
+                                )}
+                            </td>
 
-              <button
-                type="button"
-                class="icon-btn"
-                title="Edit"
-                onclick="editLead('${String(
-                  lead.id
-                ).replace(
-                  /'/g,
-                  "\\'"
-                )}')"
-              >
-                <i class="fa-solid fa-pen"></i>
-              </button>
 
-              <button
-                type="button"
-                class="icon-btn danger"
-                title="Delete"
-                onclick="deleteLead('${String(
-                  lead.id
-                ).replace(
-                  /'/g,
-                  "\\'"
-                )}')"
-              >
-                <i class="fa-solid fa-trash"></i>
-              </button>
+                            <td>
+                                ${safeText(
+                                    lead.location
+                                )}
+                            </td>
 
-            </div>
-          </td>
 
-        </tr>
-      `;
-    })
-    .join("");
+                            <td>
+
+                                <span
+                                    class="status-badge status-${statusClass}"
+                                >
+                                    ${safeText(
+                                        status
+                                    )}
+                                </span>
+
+                            </td>
+
+
+                            <td>
+                                ${safeText(
+                                    salesName
+                                )}
+                            </td>
+
+
+                            <td>
+
+                                ${
+                                    lead.phone
+                                        ? `
+                                            <a
+                                                class="wa-link"
+                                                target="_blank"
+                                                rel="noopener"
+                                                href="${whatsappLink(
+                                                    lead.phone
+                                                )}"
+                                            >
+                                                <i
+                                                    class="fa-brands fa-whatsapp"
+                                                ></i>
+
+                                                ${safeText(
+                                                    lead.phone
+                                                )}
+                                            </a>
+                                        `
+                                        : "-"
+                                }
+
+                            </td>
+
+
+                            <td>
+                                ${formatDate(
+                                    lead.follow_up_date
+                                )}
+                            </td>
+
+
+                            <td>
+                                ${formatDate(
+                                    lead.created_at
+                                )}
+                            </td>
+
+
+                            <td>
+
+                                <div
+                                    class="action-buttons"
+                                >
+
+                                    <a
+                                        class="icon-btn"
+                                        title="View"
+                                        href="customer-profile.html?id=${id}"
+                                    >
+                                        <i
+                                            class="fa-solid fa-eye"
+                                        ></i>
+                                    </a>
+
+
+                                    <button
+                                        type="button"
+                                        class="icon-btn"
+                                        title="Edit"
+                                        onclick="editLead('${String(
+                                            lead.id
+                                        ).replace(
+                                            /'/g,
+                                            "\\'"
+                                        )}')"
+                                    >
+                                        <i
+                                            class="fa-solid fa-pen"
+                                        ></i>
+                                    </button>
+
+
+                                    <button
+                                        type="button"
+                                        class="icon-btn danger"
+                                        title="Delete"
+                                        onclick="deleteLead('${String(
+                                            lead.id
+                                        ).replace(
+                                            /'/g,
+                                            "\\'"
+                                        )}')"
+                                    >
+                                        <i
+                                            class="fa-solid fa-trash"
+                                        ></i>
+                                    </button>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+                    `;
+                }
+            )
+            .join("");
 }
 
 
 // ======================================================
 // PAGINATION
-// SESUAI DENGAN ID DI leads.html
 // ======================================================
 
 function renderPagination() {
 
-  const startEl =
-    $("paginationStart");
+    const start =
+        $("paginationStart");
 
-  const endEl =
-    $("paginationEnd");
+    const end =
+        $("paginationEnd");
 
-  const totalEl =
-    $("paginationTotal");
+    const total =
+        $("paginationTotal");
 
-  const prevBtn =
-    $("prevPageBtn");
+    const previous =
+        $("prevPageBtn");
 
-  const nextBtn =
-    $("nextPageBtn");
+    const next =
+        $("nextPageBtn");
 
-  const numbers =
-    $("paginationNumbers");
+    const numbers =
+        $("paginationNumbers");
 
-  if (
-    !startEl ||
-    !endEl ||
-    !totalEl ||
-    !numbers
-  ) {
-    return;
-  }
 
-  const totalPages =
-    Math.max(
-      1,
-      Math.ceil(
-        totalLeadsCount /
-        CRM_CONFIG.pageSize
-      )
-    );
+    if (
+        !start ||
+        !end ||
+        !total ||
+        !numbers
+    ) {
+        return;
+    }
 
-  const start =
-    totalLeadsCount > 0
-      ? (currentPage - 1) *
-          CRM_CONFIG.pageSize +
-        1
-      : 0;
 
-  const end =
-    Math.min(
-      currentPage *
-        CRM_CONFIG.pageSize,
-      totalLeadsCount
-    );
+    const totalPages =
+        Math.max(
+            1,
+            Math.ceil(
+                totalLeadsCount /
+                CRM_CONFIG.pageSize
+            )
+        );
 
-  startEl.textContent = start;
-  endEl.textContent = end;
-  totalEl.textContent =
-    totalLeadsCount;
 
-  if (prevBtn) {
-    prevBtn.disabled =
-      currentPage <= 1;
-  }
+    const first =
+        totalLeadsCount > 0
+            ? (
+                (currentPage - 1) *
+                CRM_CONFIG.pageSize
+            ) + 1
+            : 0;
 
-  if (nextBtn) {
-    nextBtn.disabled =
-      currentPage >= totalPages;
-  }
 
-  const maxVisible =
-    Math.min(totalPages, 5);
+    const last =
+        Math.min(
+            currentPage *
+            CRM_CONFIG.pageSize,
+            totalLeadsCount
+        );
 
-  numbers.innerHTML =
-    Array.from(
-      {
-        length: maxVisible
-      },
-      (_, index) => {
 
-        const page =
-          index + 1;
+    start.textContent =
+        first;
 
-        return `
-          <button
-            type="button"
-            class="page-number ${
-              page === currentPage
-                ? "active"
-                : ""
-            }"
-            onclick="loadLeads(${page})"
-          >
-            ${page}
-          </button>
-        `;
-      }
-    ).join("");
+    end.textContent =
+        last;
+
+    total.textContent =
+        totalLeadsCount;
+
+
+    if (previous) {
+
+        previous.disabled =
+            currentPage <= 1;
+    }
+
+
+    if (next) {
+
+        next.disabled =
+            currentPage >= totalPages;
+    }
+
+
+    numbers.innerHTML = "";
+
+
+    const maxButtons =
+        5;
+
+
+    let startPage =
+        Math.max(
+            1,
+            currentPage - 2
+        );
+
+
+    let endPage =
+        Math.min(
+            totalPages,
+            startPage + maxButtons - 1
+        );
+
+
+    if (
+        endPage - startPage + 1 <
+        maxButtons
+    ) {
+
+        startPage =
+            Math.max(
+                1,
+                endPage - maxButtons + 1
+            );
+    }
+
+
+    for (
+        let page = startPage;
+        page <= endPage;
+        page++
+    ) {
+
+        const button =
+            document.createElement(
+                "button"
+            );
+
+        button.type =
+            "button";
+
+        button.className =
+            "page-number" +
+            (
+                page === currentPage
+                    ? " active"
+                    : ""
+            );
+
+        button.textContent =
+            page;
+
+        button.addEventListener(
+            "click",
+            () => loadLeads(page)
+        );
+
+        numbers.appendChild(
+            button
+        );
+    }
 }
 
 
 // ======================================================
-// KPI LEADS
+// KPI
 // ======================================================
 
 function updateLeadKPI() {
-  if (!$("leadsTableBody")) return;
 
-  const total =
-    totalLeadsCount;
+    if (!$("leadsTableBody")) {
+        return;
+    }
 
-  const followUp =
-    leadsData.filter(
-      lead =>
-        normalizeLeadStatus(
-          lead.status
-        ) === "Follow Up"
-    ).length;
 
-  const appointment =
-    leadsData.filter(
-      lead => !!lead.appointment
-    ).length;
+    if ($("kpiTotalLeads")) {
 
-  const closing =
-    leadsData.filter(
-      lead =>
-        !!lead.closing ||
-        normalizeLeadStatus(
-          lead.status
-        ) === "Closing"
-    ).length;
+        $("kpiTotalLeads").textContent =
+            totalLeadsCount;
+    }
 
-  if ($("kpiTotalLeads")) {
-    $("kpiTotalLeads").textContent =
-      total;
-  }
 
-  if ($("kpiFollowUp")) {
-    $("kpiFollowUp").textContent =
-      followUp;
-  }
+    const followUpCount =
+        leadsData.filter(
+            lead =>
+                normalizeLeadStatus(
+                    lead.status
+                ) === "Follow Up"
+        ).length;
 
-  if ($("kpiAppointment")) {
-    $("kpiAppointment").textContent =
-      appointment;
-  }
 
-  if ($("kpiClosing")) {
-    $("kpiClosing").textContent =
-      closing;
-  }
+    const appointmentCount =
+        leadsData.filter(
+            lead =>
+                !!lead.appointment
+        ).length;
+
+
+    const closingCount =
+        leadsData.filter(
+            lead =>
+                !!lead.closing ||
+                normalizeLeadStatus(
+                    lead.status
+                ) === "Closing"
+        ).length;
+
+
+    if ($("kpiFollowUp")) {
+
+        $("kpiFollowUp").textContent =
+            followUpCount;
+    }
+
+
+    if ($("kpiAppointment")) {
+
+        $("kpiAppointment").textContent =
+            appointmentCount;
+    }
+
+
+    if ($("kpiClosing")) {
+
+        $("kpiClosing").textContent =
+            closingCount;
+    }
 }
 
 
 // ======================================================
-// EVENT LISTENERS
+// EVENTS
 // ======================================================
 
 function bindLeadsEvents() {
 
-  if (leadsEventsBound) {
-    return;
-  }
+    if (leadsEventsBound) {
+        return;
+    }
 
-  leadsEventsBound = true;
 
-  $("prevPageBtn")
-    ?.addEventListener(
-      "click",
-      () =>
-        loadLeads(
-          currentPage - 1
-        )
-    );
+    leadsEventsBound = true;
 
-  $("nextPageBtn")
-    ?.addEventListener(
-      "click",
-      () =>
-        loadLeads(
-          currentPage + 1
-        )
-    );
 
-  $("leadSearch")
-    ?.addEventListener(
-      "input",
-      debounce(
-        () => loadLeads(1),
-        400
-      )
-    );
+    // Previous
+    $("prevPageBtn")
+        ?.addEventListener(
+            "click",
+            () =>
+                loadLeads(
+                    currentPage - 1
+                )
+        );
 
-  [
-    "statusFilter",
-    "businessFilter",
-    "locationFilter",
-    "salesFilter"
-  ].forEach(id => {
 
-    $(id)?.addEventListener(
-      "change",
-      () => loadLeads(1)
-    );
+    // Next
+    $("nextPageBtn")
+        ?.addEventListener(
+            "click",
+            () =>
+                loadLeads(
+                    currentPage + 1
+                )
+        );
 
-  });
 
-  $("resetFiltersBtn")
-    ?.addEventListener(
-      "click",
-      () => {
+    // Search
+    $("leadSearch")
+        ?.addEventListener(
+            "input",
+            debounce(
+                () =>
+                    loadLeads(1),
+                400
+            )
+        );
 
-        [
-          "leadSearch",
-          "statusFilter",
-          "businessFilter",
-          "locationFilter",
-          "salesFilter"
-        ].forEach(id => {
 
-          const element = $(id);
+    // Status
+    $("statusFilter")
+        ?.addEventListener(
+            "change",
+            () =>
+                loadLeads(1)
+        );
 
-          if (element) {
-            element.value = "";
-          }
 
-        });
+    // Business
+    $("businessFilter")
+        ?.addEventListener(
+            "change",
+            () =>
+                loadLeads(1)
+        );
 
-        loadLeads(1);
-      }
-    );
 
-  $("addLeadBtn")
-    ?.addEventListener(
-      "click",
-      () => openLeadModal()
-    );
+    // Location TEXT INPUT
+    $("locationFilter")
+        ?.addEventListener(
+            "input",
+            debounce(
+                () =>
+                    loadLeads(1),
+                400
+            )
+        );
 
-  $("exportLeadsBtn")
-    ?.addEventListener(
-      "click",
-      exportLeads
-    );
+
+    // Sales
+    $("salesFilter")
+        ?.addEventListener(
+            "change",
+            () =>
+                loadLeads(1)
+        );
+
+
+    // Reset
+    $("resetFiltersBtn")
+        ?.addEventListener(
+            "click",
+            () => {
+
+                if ($("leadSearch")) {
+                    $("leadSearch").value = "";
+                }
+
+                if ($("statusFilter")) {
+                    $("statusFilter").value = "";
+                }
+
+                if ($("businessFilter")) {
+                    $("businessFilter").value = "";
+                }
+
+                if ($("locationFilter")) {
+                    $("locationFilter").value = "";
+                }
+
+                if ($("salesFilter")) {
+                    $("salesFilter").value = "";
+                }
+
+                loadLeads(1);
+            }
+        );
+
+
+    // Add Lead
+    $("addLeadBtn")
+        ?.addEventListener(
+            "click",
+            () =>
+                openLeadModal()
+        );
+
+
+    // Empty Add Lead
+    $("emptyAddLeadBtn")
+        ?.addEventListener(
+            "click",
+            () =>
+                openLeadModal()
+        );
+
+
+    // Export
+    $("exportLeadsBtn")
+        ?.addEventListener(
+            "click",
+            () =>
+                exportLeads()
+        );
 }
 
 
 // ======================================================
-// INITIALIZE LEADS PAGE
+// INITIALIZE
 // ======================================================
 
 async function initializeLeadsPage() {
 
-  console.log(
-    "CRM FSI - INITIALIZE LEADS"
-  );
-
-  if (!$("leadsTableBody")) {
-    console.warn(
-      "leadsTableBody tidak ditemukan."
+    console.log(
+        "================================"
     );
-    return;
-  }
 
-  bindLeadsEvents();
+    console.log(
+        "CRM FSI - INITIALIZE LEADS"
+    );
 
-  populateStatusOptions();
-
-  await loadSalesLookup();
-
-  await loadFilterOptions();
-
-  await loadLeads(1);
-
-  console.log(
-    "CRM FSI - LEADS READY"
-  );
-}
+    console.log(
+        "================================"
+    );
 
 
-// ======================================================
-// EXPORT CSV
-// ======================================================
+    if (!$("leadsTableBody")) {
 
-async function exportLeads() {
+        console.warn(
+            "leadsTableBody tidak ditemukan."
+        );
 
-  try {
-
-    const {
-      data,
-      error
-    } =
-      await buildLeadQuery()
-        .order(
-          "created_at",
-          {
-            ascending: false
-          }
-        )
-        .limit(5000);
-
-    if (error) {
-      throw error;
+        return;
     }
 
-    exportCSV(
-      (data || []).map(lead => ({
-        customer_name:
-          lead.customer_name,
 
-        phone:
-          lead.phone,
+    bindLeadsEvents();
 
-        business:
-          lead.business,
+    populateStatusOptions();
 
-        location:
-          lead.location,
+    await loadSalesLookup();
 
-        status:
-          lead.status,
+    await loadFilterOptions();
 
-        sales:
-          getSalesName(
-            lead.sales_id
-          ),
+    await loadLeads(1);
 
-        follow_up_date:
-          lead.follow_up_date,
 
-        appointment:
-          lead.appointment,
+    // URL ?add=1
+    const params =
+        new URLSearchParams(
+            window.location.search
+        );
 
-        site_survey:
-          lead.site_survey,
 
-        quotation:
-          lead.quotation,
+    if (
+        params.get("add") === "1"
+    ) {
 
-        spk:
-          lead.spk,
+        openLeadModal();
+    }
 
-        closing:
-          lead.closing,
 
-        notes:
-          lead.notes,
+    // URL ?edit=ID
+    const editId =
+        params.get("edit");
 
-        created_at:
-          lead.created_at
-      })),
-      "fsi-leads.csv"
+
+    if (editId) {
+
+        await editLead(
+            editId
+        );
+    }
+
+
+    console.log(
+        "CRM FSI - LEADS READY"
     );
-
-    showToast(
-      "Data Leads berhasil diexport."
-    );
-
-  } catch (error) {
-
-    console.error(
-      "EXPORT ERROR:",
-      error
-    );
-
-    showToast(
-      error.message,
-      "error"
-    );
-  }
 }
 
 
 // ======================================================
-// RESET FORM
+// FORM
 // ======================================================
 
 function resetLeadForm() {
 
-  const form =
-    $("leadForm");
+    const form =
+        $("leadForm");
 
-  if (form) {
-    form.reset();
-  }
+    if (form) {
+        form.reset();
+    }
 
-  if ($("leadId")) {
-    $("leadId").value = "";
-  }
 
-  if ($("leadModalTitle")) {
-    $("leadModalTitle").textContent =
-      "Add Lead";
-  }
+    if ($("leadId")) {
+        $("leadId").value = "";
+    }
 
-  populateStatusOptions();
 
-  populateSales();
+    if ($("leadModalTitle")) {
 
-  showFormMessage(
-    "leadFormMessage",
-    ""
-  );
+        $("leadModalTitle").textContent =
+            "Add New Lead";
+    }
+
+
+    populateStatusOptions();
+
+    populateSales();
+
+    showFormMessage(
+        "leadFormMessage",
+        ""
+    );
 }
 
 
 // ======================================================
-// OPEN MODAL
+// OPEN FORM
 // ======================================================
 
 function openLeadModal(
-  lead = null
+    lead = null
 ) {
 
-  if (!$("leadModal")) {
-    return;
-  }
+    if (!$("leadModal")) {
+        return;
+    }
 
-  resetLeadForm();
 
-  if (lead) {
-    fillLeadForm(lead);
-  }
+    resetLeadForm();
 
-  openModal("leadModal");
+
+    if (lead) {
+        fillLeadForm(lead);
+    }
+
+
+    openModal(
+        "leadModal"
+    );
 }
 
 
 // ======================================================
-// EDIT LEAD
+// EDIT
 // ======================================================
 
 async function editLead(id) {
 
-  let lead =
-    leadsData.find(
-      item =>
-        String(item.id) ===
-        String(id)
-    );
+    let lead =
+        leadsData.find(
+            item =>
+                String(item.id) ===
+                String(id)
+        );
 
-  if (!lead) {
 
-    const {
-      data,
-      error
-    } =
-      await supabaseClient
-        .from("leads")
-        .select("*")
-        .eq("id", id)
-        .single();
+    if (!lead) {
 
-    if (error) {
-      showToast(
-        error.message,
-        "error"
-      );
-      return;
+        const {
+            data,
+            error
+        } =
+            await supabaseClient
+                .from("leads")
+                .select("*")
+                .eq("id", id)
+                .single();
+
+
+        if (error) {
+
+            showToast(
+                error.message,
+                "error"
+            );
+
+            return;
+        }
+
+
+        lead = data;
     }
 
-    lead = data;
-  }
 
-  // Sales hanya boleh edit miliknya
-  if (
-    currentProfile?.role !== "Admin" &&
-    String(lead.sales_id) !==
-      String(currentProfile.id)
-  ) {
+    // Sales hanya boleh edit lead sendiri
+    if (
+        currentProfile?.role !== "Admin" &&
+        String(lead.sales_id) !==
+            String(currentProfile.id)
+    ) {
 
-    showToast(
-      "Access denied.",
-      "error"
+        showToast(
+            "Access denied.",
+            "error"
+        );
+
+        return;
+    }
+
+
+    openLeadModal(
+        lead
     );
-
-    return;
-  }
-
-  openLeadModal(lead);
 }
 
 
@@ -1056,254 +1418,307 @@ async function editLead(id) {
 
 function fillLeadForm(lead) {
 
-  if ($("leadModalTitle")) {
-    $("leadModalTitle").textContent =
-      "Edit Lead";
-  }
+    if ($("leadModalTitle")) {
 
-  $("leadId").value =
-    lead.id || "";
+        $("leadModalTitle").textContent =
+            "Edit Lead";
+    }
 
-  $("leadCustomerName").value =
-    lead.customer_name || "";
 
-  $("leadPhone").value =
-    lead.phone || "";
+    $("leadId").value =
+        lead.id || "";
 
-  $("leadBusiness").value =
-    lead.business || "";
 
-  $("leadLocation").value =
-    lead.location || "";
+    $("leadCustomerName").value =
+        lead.customer_name || "";
 
-  $("leadStatus").value =
-    normalizeLeadStatus(
-      lead.status
-    );
 
-  $("leadFollowUpDate").value =
-    formatDateInput(
-      lead.follow_up_date
-    );
+    $("leadPhone").value =
+        lead.phone || "";
 
-  $("leadAppointment").value =
-    formatDateInput(
-      lead.appointment
-    );
 
-  $("leadSiteSurvey").value =
-    formatDateInput(
-      lead.site_survey
-    );
+    $("leadBusiness").value =
+        lead.business || "";
 
-  $("leadQuotation").value =
-    formatDateInput(
-      lead.quotation
-    );
 
-  $("leadSpk").value =
-    formatDateInput(
-      lead.spk
-    );
+    $("leadLocation").value =
+        lead.location || "";
 
-  $("leadClosing").value =
-    formatDateInput(
-      lead.closing
-    );
 
-  $("leadNotes").value =
-    lead.notes || "";
+    $("leadStatus").value =
+        normalizeLeadStatus(
+            lead.status
+        );
 
-  populateSales();
 
-  if (
-    lead.sales_id &&
-    $("leadSalesAssign")
-  ) {
-    $("leadSalesAssign").value =
-      lead.sales_id;
-  }
+    $("leadFollowUpDate").value =
+        formatDateInput(
+            lead.follow_up_date
+        );
+
+
+    $("leadAppointment").value =
+        formatDateInput(
+            lead.appointment
+        );
+
+
+    $("leadSiteSurvey").value =
+        formatDateInput(
+            lead.site_survey
+        );
+
+
+    $("leadQuotation").value =
+        formatDateInput(
+            lead.quotation
+        );
+
+
+    $("leadSpk").value =
+        formatDateInput(
+            lead.spk
+        );
+
+
+    $("leadClosing").value =
+        formatDateInput(
+            lead.closing
+        );
+
+
+    $("leadNotes").value =
+        lead.notes || "";
+
+
+    populateSales();
+
+
+    if (
+        lead.sales_id &&
+        $("leadSalesAssign")
+    ) {
+
+        $("leadSalesAssign").value =
+            lead.sales_id;
+    }
 }
 
 
 // ======================================================
-// FORM PAYLOAD
-// SESUAI SCHEMA LEADS
+// PAYLOAD
 // ======================================================
 
 function formPayload() {
 
-  const payload = {
+    const payload = {
 
-    customer_name:
-      $("leadCustomerName")
-        ?.value.trim() || "",
+        customer_name:
+            $("leadCustomerName")
+                ?.value.trim() || "",
 
-    phone:
-      $("leadPhone")
-        ?.value.trim() || null,
 
-    business:
-      $("leadBusiness")
-        ?.value.trim() || null,
+        phone:
+            $("leadPhone")
+                ?.value.trim() || null,
 
-    location:
-      $("leadLocation")
-        ?.value.trim() || null,
 
-    status:
-      $("leadStatus")
-        ?.value || "New",
+        business:
+            $("leadBusiness")
+                ?.value.trim() || null,
 
-    follow_up_date:
-      $("leadFollowUpDate")
-        ?.value || null,
 
-    appointment:
-      $("leadAppointment")
-        ?.value || null,
+        location:
+            $("leadLocation")
+                ?.value.trim() || null,
 
-    site_survey:
-      $("leadSiteSurvey")
-        ?.value || null,
 
-    quotation:
-      $("leadQuotation")
-        ?.value || null,
+        status:
+            $("leadStatus")
+                ?.value || "New",
 
-    spk:
-      $("leadSpk")
-        ?.value || null,
 
-    closing:
-      $("leadClosing")
-        ?.value || null,
+        follow_up_date:
+            $("leadFollowUpDate")
+                ?.value || null,
 
-    notes:
-      $("leadNotes")
-        ?.value.trim() || null
-  };
 
-  // Admin bebas menentukan Sales
-  if (currentProfile?.role === "Admin") {
+        appointment:
+            $("leadAppointment")
+                ?.value || null,
 
-    payload.sales_id =
-      $("leadSalesAssign")
-        ?.value || null;
 
-  } else {
+        site_survey:
+            $("leadSiteSurvey")
+                ?.value || null,
 
-    // Sales otomatis miliknya sendiri
-    payload.sales_id =
-      currentProfile?.id || null;
-  }
 
-  return payload;
+        quotation:
+            $("leadQuotation")
+                ?.value || null,
+
+
+        spk:
+            $("leadSpk")
+                ?.value || null,
+
+
+        closing:
+            $("leadClosing")
+                ?.value || null,
+
+
+        notes:
+            $("leadNotes")
+                ?.value.trim() || null
+    };
+
+
+    // ADMIN
+    if (
+        currentProfile?.role === "Admin"
+    ) {
+
+        payload.sales_id =
+            $("leadSalesAssign")
+                ?.value || null;
+
+    }
+
+    // SALES
+    else {
+
+        payload.sales_id =
+            currentProfile?.id || null;
+    }
+
+
+    return payload;
 }
 
 
 // ======================================================
-// SAVE LEAD
+// SAVE
 // ======================================================
 
-async function saveLeadFromForm(event) {
+async function saveLeadFromForm(
+    event
+) {
 
-  event.preventDefault();
+    event.preventDefault();
 
-  const id =
-    $("leadId")?.value || "";
 
-  const payload =
-    formPayload();
+    const id =
+        $("leadId")
+            ?.value || "";
 
-  if (!payload.customer_name) {
 
-    showFormMessage(
-      "leadFormMessage",
-      "Customer name wajib diisi."
-    );
+    const payload =
+        formPayload();
 
-    return;
-  }
 
-  setButtonLoading(
-    $("saveLeadBtn"),
-    true,
-    "Save Lead"
-  );
+    if (!payload.customer_name) {
 
-  try {
+        showFormMessage(
+            "leadFormMessage",
+            "Customer name wajib diisi."
+        );
 
-    let result;
-
-    if (id) {
-
-      // UPDATE
-      result =
-        await supabaseClient
-          .from("leads")
-          .update({
-            ...payload,
-            updated_by:
-              currentProfile?.id ||
-              null
-          })
-          .eq("id", id);
-
-    } else {
-
-      // INSERT
-      result =
-        await supabaseClient
-          .from("leads")
-          .insert([
-            {
-              ...payload,
-              created_by:
-                currentProfile?.id ||
-                null
-            }
-          ]);
+        return;
     }
 
-    if (result.error) {
-      throw result.error;
-    }
-
-    closeModal("leadModal");
-
-    showToast(
-      id
-        ? "Lead updated successfully."
-        : "Lead added successfully."
-    );
-
-    await loadFilterOptions();
-
-    await loadLeads(
-      currentPage
-    );
-
-  } catch (error) {
-
-    console.error(
-      "SAVE LEAD ERROR:",
-      error
-    );
-
-    showFormMessage(
-      "leadFormMessage",
-      error.message
-    );
-
-  } finally {
 
     setButtonLoading(
-      $("saveLeadBtn"),
-      false,
-      "Save Lead"
+        $("saveLeadBtn"),
+        true,
+        "Save Lead"
     );
-  }
+
+
+    try {
+
+        let result;
+
+
+        // UPDATE
+        if (id) {
+
+            result =
+                await supabaseClient
+                    .from("leads")
+                    .update(
+                        payload
+                    )
+                    .eq(
+                        "id",
+                        id
+                    );
+        }
+
+
+        // INSERT
+        else {
+
+            result =
+                await supabaseClient
+                    .from("leads")
+                    .insert([
+                        {
+                            ...payload,
+                            created_by:
+                                currentProfile?.id ||
+                                null
+                        }
+                    ]);
+        }
+
+
+        if (result.error) {
+            throw result.error;
+        }
+
+
+        closeModal(
+            "leadModal"
+        );
+
+
+        showToast(
+            id
+                ? "Lead updated successfully."
+                : "Lead added successfully."
+        );
+
+
+        await loadFilterOptions();
+
+        await loadLeads(
+            currentPage
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "SAVE LEAD ERROR:",
+            error
+        );
+
+
+        showFormMessage(
+            "leadFormMessage",
+            error.message
+        );
+
+
+    } finally {
+
+        setButtonLoading(
+            $("saveLeadBtn"),
+            false,
+            "Save Lead"
+        );
+    }
 }
 
 
@@ -1313,152 +1728,282 @@ async function saveLeadFromForm(event) {
 
 async function deleteLead(id) {
 
-  openConfirm(
-    "Delete Lead",
-    "Data lead ini akan dihapus. Lanjutkan?",
-    async () => {
+    openConfirm(
+        "Delete Lead",
+        "Data lead ini akan dihapus. Lanjutkan?",
+        async () => {
 
-      const {
-        error
-      } =
-        await supabaseClient
-          .from("leads")
-          .delete()
-          .eq("id", id);
+            const {
+                error
+            } =
+                await supabaseClient
+                    .from("leads")
+                    .delete()
+                    .eq(
+                        "id",
+                        id
+                    );
 
-      if (error) {
 
-        showToast(
-          error.message,
-          "error"
-        );
+            if (error) {
 
-        return;
-      }
+                showToast(
+                    error.message,
+                    "error"
+                );
 
-      showToast(
-        "Lead deleted."
-      );
+                return;
+            }
 
-      // Kalau halaman terakhir kosong,
-      // mundur satu halaman
-      const maxPage =
-        Math.max(
-          1,
-          Math.ceil(
-            (totalLeadsCount - 1) /
-              CRM_CONFIG.pageSize
-          )
-        );
 
-      if (
-        currentPage > maxPage
-      ) {
-        currentPage =
-          maxPage;
-      }
+            showToast(
+                "Lead deleted."
+            );
 
-      await loadLeads(
-        currentPage
-      );
-    }
-  );
+
+            const remaining =
+                Math.max(
+                    0,
+                    totalLeadsCount - 1
+                );
+
+
+            const maxPage =
+                Math.max(
+                    1,
+                    Math.ceil(
+                        remaining /
+                        CRM_CONFIG.pageSize
+                    )
+                );
+
+
+            if (
+                currentPage >
+                maxPage
+            ) {
+
+                currentPage =
+                    maxPage;
+            }
+
+
+            await loadLeads(
+                currentPage
+            );
+        }
+    );
 }
 
 
 // ======================================================
-// CONFIRM MODAL
+// EXPORT
+// ======================================================
+
+async function exportLeads() {
+
+    try {
+
+        const {
+            data,
+            error
+        } =
+            await buildLeadQuery()
+                .order(
+                    "created_at",
+                    {
+                        ascending: false
+                    }
+                )
+                .limit(5000);
+
+
+        if (error) {
+            throw error;
+        }
+
+
+        const rows =
+            (data || []).map(
+                lead => ({
+
+                    customer_name:
+                        lead.customer_name,
+
+                    phone:
+                        lead.phone,
+
+                    business:
+                        lead.business,
+
+                    location:
+                        lead.location,
+
+                    status:
+                        lead.status,
+
+                    sales:
+                        getSalesName(
+                            lead.sales_id
+                        ),
+
+                    follow_up_date:
+                        lead.follow_up_date,
+
+                    appointment:
+                        lead.appointment,
+
+                    site_survey:
+                        lead.site_survey,
+
+                    quotation:
+                        lead.quotation,
+
+                    spk:
+                        lead.spk,
+
+                    closing:
+                        lead.closing,
+
+                    notes:
+                        lead.notes,
+
+                    created_at:
+                        lead.created_at
+                })
+            );
+
+
+        exportCSV(
+            rows,
+            "fsi-leads.csv"
+        );
+
+
+        showToast(
+            "Data Leads berhasil diexport."
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "EXPORT ERROR:",
+            error
+        );
+
+
+        showToast(
+            error.message,
+            "error"
+        );
+    }
+}
+
+
+// ======================================================
+// CONFIRM
 // ======================================================
 
 function openConfirm(
-  title,
-  message,
-  action
+    title,
+    message,
+    action
 ) {
 
-  if ($("confirmTitle")) {
-    $("confirmTitle").textContent =
-      title;
-  }
+    if ($("confirmTitle")) {
 
-  if ($("confirmMessage")) {
-    $("confirmMessage").textContent =
-      message;
-  }
+        $("confirmTitle").textContent =
+            title;
+    }
 
-  if ($("confirmActionBtn")) {
 
-    $("confirmActionBtn").onclick =
-      async () => {
+    if ($("confirmMessage")) {
 
-        closeModal(
-          "confirmModal"
-        );
+        $("confirmMessage").textContent =
+            message;
+    }
 
-        await action();
-      };
-  }
 
-  openModal(
-    "confirmModal"
-  );
+    if ($("confirmActionBtn")) {
+
+        $("confirmActionBtn").onclick =
+            async () => {
+
+                closeModal(
+                    "confirmModal"
+                );
+
+                await action();
+            };
+    }
+
+
+    openModal(
+        "confirmModal"
+    );
 }
 
 
 // ======================================================
-// FORM SUBMIT
+// FORM EVENT
 // ======================================================
 
 function bindLeadForm() {
 
-  const form =
-    $("leadForm");
+    const form =
+        $("leadForm");
 
-  if (!form) return;
+    if (!form) return;
 
-  if (
-    form.dataset.bound === "true"
-  ) {
-    return;
-  }
 
-  form.dataset.bound = "true";
+    if (
+        form.dataset.bound ===
+        "true"
+    ) {
+        return;
+    }
 
-  form.addEventListener(
-    "submit",
-    saveLeadFromForm
-  );
+
+    form.dataset.bound =
+        "true";
+
+
+    form.addEventListener(
+        "submit",
+        saveLeadFromForm
+    );
 }
 
 
 // ======================================================
-// PUBLIC FUNCTIONS
+// PUBLIC
 // ======================================================
 
 window.initializeLeadsPage =
-  initializeLeadsPage;
+    initializeLeadsPage;
 
 window.loadLeads =
-  loadLeads;
+    loadLeads;
 
 window.openLeadModal =
-  openLeadModal;
+    openLeadModal;
 
 window.editLead =
-  editLead;
+    editLead;
 
 window.deleteLead =
-  deleteLead;
+    deleteLead;
 
 window.loadSalesLookup =
-  loadSalesLookup;
+    loadSalesLookup;
 
 window.loadFilterOptions =
-  loadFilterOptions;
+    loadFilterOptions;
 
 
 // ======================================================
-// FORM BIND
+// START FORM BIND
 // ======================================================
 
 bindLeadForm();
