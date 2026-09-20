@@ -16,7 +16,6 @@ async function initializeSalesPage() {
   console.log("CRM FSI - INITIALIZE SALES");
   console.log("================================");
 
-
   if (currentProfile?.role !== "Admin") {
 
     console.warn(
@@ -26,17 +25,22 @@ async function initializeSalesPage() {
     return;
   }
 
-
+  /*
+    Pasang event terlebih dahulu.
+    Ini memastikan tombol Add New Sales
+    langsung aktif saat halaman dibuka.
+  */
   bindSalesEvents();
 
-
+  /*
+    Setelah event siap,
+    baru ambil database Sales.
+  */
   await loadSalesUsers();
-
 
   console.log(
     "CRM FSI - SALES READY"
   );
-
 }
 
 
@@ -47,6 +51,11 @@ async function initializeSalesPage() {
 async function loadSalesUsers() {
 
   if (currentProfile?.role !== "Admin") {
+
+    console.warn(
+      "LOAD SALES DITOLAK: User bukan Admin."
+    );
+
     return;
   }
 
@@ -56,6 +65,11 @@ async function loadSalesUsers() {
 
 
   if (!tableBody) {
+
+    console.error(
+      "ELEMENT salesTableBody TIDAK DITEMUKAN."
+    );
+
     return;
   }
 
@@ -63,16 +77,17 @@ async function loadSalesUsers() {
   try {
 
     console.log(
-      "CRM FSI - MEMUAT SALES USERS..."
+      "================================"
     );
 
+    console.log(
+      "CRM FSI - MEMUAT SALES USERS"
+    );
 
-    /*
-      Gunakan select("*").
-      Ini mengikuti struktur database lama
-      dan tidak mengunci query ke kolom
-      tambahan seperti photo_url.
-    */
+    console.log(
+      "================================"
+    );
+
 
     const {
       data,
@@ -102,12 +117,25 @@ async function loadSalesUsers() {
 
 
     if (error) {
-      throw error;
+
+      throw new Error(
+        error.message ||
+        "Gagal membaca tabel sales_users."
+      );
+
     }
 
 
     salesUsersData =
-      data || [];
+      Array.isArray(data)
+        ? data
+        : [];
+
+
+    console.log(
+      "TOTAL ROW sales_users:",
+      salesUsersData.length
+    );
 
 
     /*
@@ -120,9 +148,47 @@ async function loadSalesUsers() {
         user =>
           String(
             user.role || ""
-          ).toLowerCase() ===
+          )
+            .trim()
+            .toLowerCase() ===
           "sales"
       );
+
+
+    console.log(
+      "TOTAL SALES:",
+      salesOnly.length
+    );
+
+
+    /*
+      Kalau database terbaca tetapi
+      tidak ada role Sales, tampilkan
+      isi role di Console untuk diagnosis.
+    */
+
+    if (
+      salesUsersData.length > 0 &&
+      salesOnly.length === 0
+    ) {
+
+      console.warn(
+        "Data sales_users ada, tetapi tidak ada row dengan role = Sales."
+      );
+
+      console.table(
+        salesUsersData.map(
+          user => ({
+            id: user.id,
+            name: user.name,
+            username: user.username,
+            role: user.role,
+            status: user.status
+          })
+        )
+      );
+
+    }
 
 
     const activeCount =
@@ -130,7 +196,9 @@ async function loadSalesUsers() {
         user =>
           String(
             user.status || ""
-          ).toLowerCase() ===
+          )
+            .trim()
+            .toLowerCase() ===
           "active"
       ).length;
 
@@ -170,8 +238,8 @@ async function loadSalesUsers() {
 
 
     /*
-      Refresh Sales lookup untuk
-      Leads dan halaman lainnya.
+      Refresh lookup Sales
+      untuk Leads dan halaman lain.
     */
 
     if (
@@ -179,22 +247,39 @@ async function loadSalesUsers() {
       "function"
     ) {
 
-      await loadSalesLookup();
+      try {
+
+        await loadSalesLookup();
+
+      } catch (lookupError) {
+
+        console.warn(
+          "LOAD SALES LOOKUP ERROR:",
+          lookupError
+        );
+
+      }
 
     }
 
-
   } catch (error) {
+
+    console.error(
+      "================================"
+    );
 
     console.error(
       "LOAD SALES ERROR:",
       error
     );
 
+    console.error(
+      "================================"
+    );
+
 
     tableBody.innerHTML = `
       <tr>
-
         <td colspan="7">
 
           <div class="sales-empty">
@@ -209,21 +294,20 @@ async function loadSalesUsers() {
 
             <span>
               ${escapeHTML(
-                error.message ||
-                "Terjadi kesalahan."
+                error?.message ||
+                "Terjadi kesalahan saat membaca sales_users."
               )}
             </span>
 
           </div>
 
         </td>
-
       </tr>
     `;
 
 
     showToast(
-      error.message ||
+      error?.message ||
       "Gagal memuat data Sales.",
       "error"
     );
@@ -244,6 +328,11 @@ function renderSalesTable() {
 
 
   if (!tableBody) {
+
+    console.error(
+      "salesTableBody tidak ditemukan."
+    );
+
     return;
   }
 
@@ -263,7 +352,9 @@ function renderSalesTable() {
         user =>
           String(
             user.role || ""
-          ).toLowerCase() ===
+          )
+            .trim()
+            .toLowerCase() ===
           "sales"
       )
       .filter(
@@ -272,19 +363,22 @@ function renderSalesTable() {
           const name =
             String(
               user.name || ""
-            ).toLowerCase();
+            )
+              .toLowerCase();
 
 
           const username =
             String(
               user.username || ""
-            ).toLowerCase();
+            )
+              .toLowerCase();
 
 
           const email =
             String(
               user.email || ""
-            ).toLowerCase();
+            )
+              .toLowerCase();
 
 
           return (
@@ -337,7 +431,9 @@ function renderSalesTable() {
           const isActive =
             String(
               sales.status || ""
-            ).toLowerCase() ===
+            )
+              .trim()
+              .toLowerCase() ===
             "active";
 
 
@@ -378,11 +474,9 @@ function renderSalesTable() {
             <tr>
 
               <td>
-
                 <span class="sales-row-number">
                   ${index + 1}
                 </span>
-
               </td>
 
 
@@ -562,11 +656,6 @@ function getSalesPhotoUrl(
   }
 
 
-  /*
-    Fallback foto Rist.
-    Tidak mengubah database.
-  */
-
   const name =
     String(
       sales?.name || ""
@@ -630,6 +719,11 @@ function getSalesInitials(
 
 function openAddSales() {
 
+  console.log(
+    "OPEN ADD SALES"
+  );
+
+
   if (
     currentProfile?.role !== "Admin"
   ) {
@@ -643,11 +737,35 @@ function openAddSales() {
   }
 
 
+  const form =
+    $("salesForm");
+
+
+  const modal =
+    $("salesModal");
+
+
+  if (!modal) {
+
+    console.error(
+      "salesModal tidak ditemukan."
+    );
+
+
+    showToast(
+      "Modal Add New Sales tidak ditemukan.",
+      "error"
+    );
+
+    return;
+  }
+
+
   editingSalesId =
     null;
 
 
-  $("salesForm")?.reset();
+  form?.reset();
 
 
   setValue(
@@ -921,6 +1039,11 @@ async function handleCreateSales(
   event.preventDefault();
 
 
+  console.log(
+    "SALES FORM SUBMIT"
+  );
+
+
   if (
     currentProfile?.role !== "Admin"
   ) {
@@ -1031,6 +1154,15 @@ async function handleCreateSales(
 
     if (!editingSalesId) {
 
+      console.log(
+        "CREATE SALES:",
+        {
+          name,
+          username
+        }
+      );
+
+
       const {
         data,
         error
@@ -1049,8 +1181,22 @@ async function handleCreateSales(
           );
 
 
+      console.log(
+        "CREATE SALES RESPONSE:",
+        data
+      );
+
+
+      console.log(
+        "CREATE SALES ERROR:",
+        error
+      );
+
+
       if (error) {
+
         throw error;
+
       }
 
 
@@ -1070,10 +1216,30 @@ async function handleCreateSales(
 
 
       /*
-        Photo hanya dicoba jika
-        kolom photo_url memang ada.
-        Jika tidak ada, akun Sales
-        tetap berhasil dibuat.
+        Jangan bergantung pada
+        data.sales.id.
+
+        Edge Function utama sudah membuat
+        akun dan profile Sales.
+      */
+
+      if (
+        data &&
+        data.success === false
+      ) {
+
+        throw new Error(
+          data.message ||
+          "Gagal membuat Sales."
+        );
+
+      }
+
+
+      /*
+        Photo hanya tambahan.
+        Kalau Edge Function mengembalikan
+        ID Sales, kita coba simpan.
       */
 
       const createdSales =
@@ -1147,12 +1313,6 @@ async function handleCreateSales(
       }
 
 
-      /*
-        Photo bersifat tambahan.
-        Jika kolom photo_url belum ada,
-        update utama tetap berhasil.
-      */
-
       if (photoUrl) {
 
         const {
@@ -1213,7 +1373,7 @@ async function handleCreateSales(
 
     showFormMessage(
       "salesFormMessage",
-      error.message ||
+      error?.message ||
       "Gagal menyimpan Sales.",
       "error"
     );
@@ -1274,7 +1434,9 @@ async function toggleSalesStatus(
   const currentStatus =
     String(
       sales.status || ""
-    ).toLowerCase();
+    )
+      .trim()
+      .toLowerCase();
 
 
   const nextStatus =
@@ -1333,7 +1495,7 @@ async function toggleSalesStatus(
 
 
         showToast(
-          error.message ||
+          error?.message ||
           "Gagal mengubah status Sales.",
           "error"
         );
@@ -1352,59 +1514,123 @@ async function toggleSalesStatus(
 
 function bindSalesEvents() {
 
+  /*
+    Jangan tandai bound sebelum
+    elemen halaman benar-benar ditemukan.
+  */
+
+  const addButton =
+    $("addSalesBtn");
+
+  const form =
+    $("salesForm");
+
+  const searchInput =
+    $("salesSearch");
+
+  const photoInput =
+    $("salesPhotoUrl");
+
+
+  console.log(
+    "BIND SALES EVENTS:",
+    {
+      addButton: !!addButton,
+      form: !!form,
+      searchInput: !!searchInput,
+      photoInput: !!photoInput
+    }
+  );
+
+
+  /*
+    Kalau event sudah dipasang,
+    jangan dipasang dua kali.
+  */
+
   if (salesEventsBound) {
     return;
   }
-
-
-  salesEventsBound =
-    true;
 
 
   // ======================================
   // SEARCH
   // ======================================
 
-  $("salesSearch")
-    ?.addEventListener(
+  if (searchInput) {
+
+    searchInput.addEventListener(
       "input",
       debounce(
         () => {
+
           renderSalesTable();
+
         },
         300
       )
     );
+
+  }
 
 
   // ======================================
   // ADD SALES
   // ======================================
 
-  $("addSalesBtn")
-    ?.addEventListener(
+  if (addButton) {
+
+    addButton.addEventListener(
       "click",
-      openAddSales
+      event => {
+
+        event.preventDefault();
+
+        console.log(
+          "ADD NEW SALES CLICK"
+        );
+
+        openAddSales();
+
+      }
     );
+
+  } else {
+
+    console.error(
+      "TOMBOL addSalesBtn TIDAK DITEMUKAN."
+    );
+
+  }
 
 
   // ======================================
   // SALES FORM
   // ======================================
 
-  $("salesForm")
-    ?.addEventListener(
+  if (form) {
+
+    form.addEventListener(
       "submit",
       handleCreateSales
     );
+
+  } else {
+
+    console.error(
+      "FORM salesForm TIDAK DITEMUKAN."
+    );
+
+  }
 
 
   // ======================================
   // PHOTO PREVIEW
   // ======================================
 
-  $("salesPhotoUrl")
-    ?.addEventListener(
+  if (photoInput) {
+
+    photoInput.addEventListener(
       "input",
       event => {
 
@@ -1414,6 +1640,12 @@ function bindSalesEvents() {
 
       }
     );
+
+  }
+
+
+  salesEventsBound =
+    true;
 
 }
 
