@@ -4,175 +4,233 @@
 
 document.addEventListener("DOMContentLoaded", () => {
 
-  // ================================
-  // LOGOUT
-  // ================================
+    // ========================================
+    // USER MENU
+    // ========================================
 
-  $("logoutBtn")?.addEventListener(
-    "click",
-    logout
-  );
+    const userMenuTrigger =
+        $("userMenuTrigger");
 
-  $("dropdownLogout")?.addEventListener(
-    "click",
-    logout
-  );
-
-
-  // ================================
-  // USER DROPDOWN
-  // ================================
-
-  $("userMenu")?.addEventListener(
-    "click",
-    (event) => {
-
-      event.stopPropagation();
-
-      const dropdown =
+    const userDropdown =
         $("userDropdown");
 
-      if (!dropdown) return;
 
-      const isHidden =
-        dropdown.style.display === "none" ||
-        dropdown.style.display === "";
+    if (
+        userMenuTrigger &&
+        userDropdown
+    ) {
 
-      dropdown.style.display =
-        isHidden
-          ? "block"
-          : "none";
-    }
-  );
+        userMenuTrigger.addEventListener(
+            "click",
+            (event) => {
 
+                event.preventDefault();
+                event.stopPropagation();
 
-  // ================================
-  // CLOSE USER DROPDOWN
-  // ================================
+                userDropdown.classList.toggle("active");
 
-  document.addEventListener(
-    "click",
-    (event) => {
-
-      const userMenu =
-        $("userMenu");
-
-      const userDropdown =
-        $("userDropdown");
-
-      if (!userMenu || !userDropdown) {
-        return;
-      }
-
-      if (
-        !userMenu.contains(event.target) &&
-        !userDropdown.contains(event.target)
-      ) {
-
-        userDropdown.style.display =
-          "none";
-      }
-    }
-  );
-
-
-  // ================================
-  // GLOBAL SEARCH
-  // ================================
-
-  $("globalSearch")?.addEventListener(
-    "keydown",
-    (event) => {
-
-      if (event.key !== "Enter") {
-        return;
-      }
-
-      const value =
-        event.target.value.trim();
-
-      const url =
-        "leads.html" +
-        (
-          value
-            ? "?search=" +
-              encodeURIComponent(value)
-            : ""
+            }
         );
 
-      window.location.href = url;
+
+        document.addEventListener(
+            "click",
+            (event) => {
+
+                const userMenu =
+                    document.querySelector(".user-menu");
+
+                if (
+                    userMenu &&
+                    !userMenu.contains(event.target)
+                ) {
+
+                    userDropdown.classList.remove(
+                        "active"
+                    );
+
+                }
+
+            }
+        );
+
     }
-  );
+
+
+    // ========================================
+    // PROFILE
+    // ========================================
+
+    const profileBtn =
+        $("profileBtn");
+
+    if (profileBtn) {
+
+        profileBtn.addEventListener(
+            "click",
+            (event) => {
+
+                event.preventDefault();
+
+                if (userDropdown) {
+                    userDropdown.classList.remove(
+                        "active"
+                    );
+                }
+
+                if (
+                    typeof openProfileModal ===
+                    "function"
+                ) {
+                    openProfileModal();
+                }
+
+            }
+        );
+
+    }
+
+
+    // ========================================
+    // LOGOUT
+    // ========================================
+
+    const logoutBtn =
+        $("logoutBtn");
+
+    const dropdownLogout =
+        $("dropdownLogout");
+
+
+    if (logoutBtn) {
+
+        logoutBtn.addEventListener(
+            "click",
+            logout
+        );
+
+    }
+
+
+    if (dropdownLogout) {
+
+        dropdownLogout.addEventListener(
+            "click",
+            logout
+        );
+
+    }
+
+
+    // ========================================
+    // GLOBAL SEARCH
+    // ========================================
+
+    const globalSearch =
+        $("globalSearch");
+
+
+    if (globalSearch) {
+
+        globalSearch.addEventListener(
+            "keydown",
+            (event) => {
+
+                if (
+                    event.key !== "Enter"
+                ) {
+                    return;
+                }
+
+                const value =
+                    globalSearch.value.trim();
+
+
+                if (!value) {
+                    return;
+                }
+
+
+                window.location.href =
+                    `leads.html?search=${encodeURIComponent(value)}`;
+
+            }
+        );
+
+    }
 
 });
 
 
 // ========================================
-// PAGE NAVIGATION
+// LOGOUT
 // ========================================
 
-function showPage(page) {
+async function logout() {
 
-  const routes = {
+    try {
 
-    dashboard:
-      "dashboard.html",
+        await supabaseClient.auth.signOut();
 
-    leads:
-      "leads.html",
+    } catch (error) {
 
-    sales:
-      "sales.html",
+        console.error(
+            "Logout error:",
+            error
+        );
 
-    customer:
-      "customer-profile.html"
-
-  };
-
-  if (routes[page]) {
+    }
 
     window.location.href =
-      routes[page];
-
-  }
+        "login.html";
 
 }
 
 
 // ========================================
-// SHORTCUT NAVIGATION
+// NAVIGATION
 // ========================================
+
+function showPage(page) {
+
+    if (!page) {
+        return;
+    }
+
+    window.location.href =
+        page;
+
+}
+
 
 function showDashboard() {
 
-  window.location.href =
-    "dashboard.html";
+    showPage("dashboard.html");
 
 }
 
 
 function showLeads() {
 
-  window.location.href =
-    "leads.html";
+    showPage("leads.html");
 
 }
 
 
 function showSales() {
 
-  window.location.href =
-    "sales.html";
+    showPage("sales.html");
 
 }
 
 
 function showCustomerProfile(id) {
 
-  if (!id) return;
+    if (!id) {
+        return;
+    }
 
-  window.location.href =
-    "customer-profile.html?id=" +
-    encodeURIComponent(id);
+    window.location.href =
+        `customer-profile.html?id=${encodeURIComponent(id)}`;
 
 }
