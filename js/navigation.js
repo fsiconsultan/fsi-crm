@@ -1,236 +1,252 @@
-// ========================================
+// ============================================================
 // CRM FSI - NAVIGATION
-// ========================================
+// ============================================================
 
 document.addEventListener("DOMContentLoaded", () => {
 
-    // ========================================
+    // ========================================================
     // USER MENU
-    // ========================================
+    // ========================================================
 
-    const userMenuTrigger =
-        $("userMenuTrigger");
+    const userMenu =
+        document.getElementById("userMenu") ||
+        document.getElementById("userMenuTrigger");
 
     const userDropdown =
-        $("userDropdown");
+        document.getElementById("userDropdown");
 
-
-    if (
-        userMenuTrigger &&
-        userDropdown
-    ) {
-
-        userMenuTrigger.addEventListener(
-            "click",
-            (event) => {
-
-                event.preventDefault();
-                event.stopPropagation();
-
-                userDropdown.classList.toggle("active");
-
-            }
-        );
-
-
-        document.addEventListener(
-            "click",
-            (event) => {
-
-                const userMenu =
-                    document.querySelector(".user-menu");
-
-                if (
-                    userMenu &&
-                    !userMenu.contains(event.target)
-                ) {
-
-                    userDropdown.classList.remove(
-                        "active"
-                    );
-
-                }
-
-            }
-        );
-
-    }
-
-
-    // ========================================
-    // PROFILE
-    // ========================================
+    const userMenuWrapper =
+        document.querySelector(".user-menu-wrapper");
 
     const profileBtn =
-        $("profileBtn");
+        document.getElementById("profileBtn");
+
+    const logoutBtn =
+        document.getElementById("dropdownLogout");
+
+    // ========================================================
+    // OPEN / CLOSE USER DROPDOWN
+    // ========================================================
+
+    function openUserDropdown() {
+
+        if (!userDropdown) return;
+
+        userDropdown.style.display = "block";
+        userDropdown.classList.add("active");
+
+        if (userMenu) {
+            userMenu.setAttribute(
+                "aria-expanded",
+                "true"
+            );
+        }
+    }
+
+    function closeUserDropdown() {
+
+        if (!userDropdown) return;
+
+        userDropdown.style.display = "none";
+        userDropdown.classList.remove("active");
+
+        if (userMenu) {
+            userMenu.setAttribute(
+                "aria-expanded",
+                "false"
+            );
+        }
+    }
+
+    function toggleUserDropdown(event) {
+
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+
+        if (!userDropdown) return;
+
+        const isOpen =
+            userDropdown.style.display === "block" ||
+            userDropdown.classList.contains("active");
+
+        if (isOpen) {
+            closeUserDropdown();
+        } else {
+            openUserDropdown();
+        }
+    }
+
+    // ========================================================
+    // USER BUTTON CLICK
+    // ========================================================
+
+    if (userMenu && userDropdown) {
+
+        userMenu.addEventListener(
+            "click",
+            toggleUserDropdown
+        );
+    }
+
+    // ========================================================
+    // CLICK OUTSIDE
+    // ========================================================
+
+    document.addEventListener("click", (event) => {
+
+        if (!userMenuWrapper) {
+            return;
+        }
+
+        if (!userMenuWrapper.contains(event.target)) {
+            closeUserDropdown();
+        }
+    });
+
+    // ========================================================
+    // PROFILE
+    // ========================================================
 
     if (profileBtn) {
 
-        profileBtn.addEventListener(
-            "click",
-            (event) => {
+        profileBtn.addEventListener("click", (event) => {
 
-                event.preventDefault();
+            event.preventDefault();
+            event.stopPropagation();
 
-                if (userDropdown) {
-                    userDropdown.classList.remove(
-                        "active"
-                    );
-                }
+            closeUserDropdown();
 
-                if (
-                    typeof openProfileModal ===
-                    "function"
-                ) {
-                    openProfileModal();
-                }
-
+            if (typeof openProfileModal === "function") {
+                openProfileModal();
+            } else {
+                console.warn(
+                    "openProfileModal() belum tersedia."
+                );
             }
-        );
-
+        });
     }
 
-
-    // ========================================
+    // ========================================================
     // LOGOUT
-    // ========================================
-
-    const logoutBtn =
-        $("logoutBtn");
-
-    const dropdownLogout =
-        $("dropdownLogout");
-
+    // ========================================================
 
     if (logoutBtn) {
 
-        logoutBtn.addEventListener(
-            "click",
-            logout
-        );
+        logoutBtn.addEventListener("click", async (event) => {
 
-    }
+            event.preventDefault();
+            event.stopPropagation();
 
+            closeUserDropdown();
 
-    if (dropdownLogout) {
+            // Gunakan fungsi logout dari auth.js
+            if (typeof logoutUser === "function") {
+                await logoutUser();
+                return;
+            }
 
-        dropdownLogout.addEventListener(
-            "click",
-            logout
-        );
+            if (typeof handleLogout === "function") {
+                await handleLogout();
+                return;
+            }
 
-    }
+            if (typeof signOutUser === "function") {
+                await signOutUser();
+                return;
+            }
 
+            // Fallback
+            try {
 
-    // ========================================
-    // GLOBAL SEARCH
-    // ========================================
-
-    const globalSearch =
-        $("globalSearch");
-
-
-    if (globalSearch) {
-
-        globalSearch.addEventListener(
-            "keydown",
-            (event) => {
-
-                if (
-                    event.key !== "Enter"
-                ) {
-                    return;
-                }
-
-                const value =
-                    globalSearch.value.trim();
-
-
-                if (!value) {
-                    return;
-                }
-
+                await supabaseClient.auth.signOut();
 
                 window.location.href =
-                    `leads.html?search=${encodeURIComponent(value)}`;
+                    "login.html";
 
+            } catch (error) {
+
+                console.error(
+                    "Fallback logout error:",
+                    error
+                );
+
+                window.location.href =
+                    "login.html";
             }
-        );
-
+        });
     }
 
+    // ========================================================
+    // ESCAPE KEY
+    // ========================================================
+
+    document.addEventListener("keydown", (event) => {
+
+        if (event.key === "Escape") {
+            closeUserDropdown();
+        }
+    });
+
+    // ========================================================
+    // ACTIVE NAVIGATION
+    // ========================================================
+
+    const currentPage =
+        window.location.pathname
+            .split("/")
+            .pop()
+            .toLowerCase();
+
+    document
+        .querySelectorAll(".top-nav-item")
+        .forEach((item) => {
+
+            const href =
+                item.getAttribute("href");
+
+            if (!href) return;
+
+            const targetPage =
+                href.split("/")
+                    .pop()
+                    .toLowerCase();
+
+            item.classList.remove("active");
+
+            if (
+                targetPage === currentPage ||
+                (
+                    currentPage === "" &&
+                    targetPage === "dashboard.html"
+                )
+            ) {
+                item.classList.add("active");
+            }
+        });
 });
 
+// ============================================================
+// GLOBAL NAVIGATION HELPERS
+// ============================================================
 
-// ========================================
-// LOGOUT
-// ========================================
-
-async function logout() {
-
-    try {
-
-        await supabaseClient.auth.signOut();
-
-    } catch (error) {
-
-        console.error(
-            "Logout error:",
-            error
-        );
-
-    }
-
-    window.location.href =
-        "login.html";
-
+function goToDashboard() {
+    window.location.href = "dashboard.html";
 }
 
-
-// ========================================
-// NAVIGATION
-// ========================================
-
-function showPage(page) {
-
-    if (!page) {
-        return;
-    }
-
-    window.location.href =
-        page;
-
+function goToLeads() {
+    window.location.href = "leads.html";
 }
 
+function goToCustomerProfile(id) {
 
-function showDashboard() {
-
-    showPage("dashboard.html");
-
-}
-
-
-function showLeads() {
-
-    showPage("leads.html");
-
-}
-
-
-function showSales() {
-
-    showPage("sales.html");
-
-}
-
-
-function showCustomerProfile(id) {
-
-    if (!id) {
-        return;
-    }
+    if (!id) return;
 
     window.location.href =
         `customer-profile.html?id=${encodeURIComponent(id)}`;
-
 }
+
+window.goToDashboard = goToDashboard;
+window.goToLeads = goToLeads;
+window.goToCustomerProfile = goToCustomerProfile;
