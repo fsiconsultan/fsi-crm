@@ -36,7 +36,7 @@
 
   <link
     rel="preconnect"
-    href="https://fonts.gstatic.com"
+    href="https://fonts.googleapis.com"
     crossorigin
   >
 
@@ -105,11 +105,45 @@
       <header class="top-header">
 
 
-        <!-- Header Left -->
+        <!-- ==================================
+             HEADER LEFT
+        =================================== -->
 
         <div class="header-left">
 
-          <div class="header-title">
+
+          <!-- FSI BRAND -->
+
+          <a
+            href="dashboard.html"
+            class="brand-area"
+            aria-label="FSI CRM Dashboard"
+          >
+
+            <img
+              src="../assets/logo-fsi.png"
+              alt="FSI Logo"
+              class="brand-logo"
+            >
+
+            <div class="brand-text">
+
+              <strong>
+                FSI CRM
+              </strong>
+
+              <span>
+                French Solar Industry
+              </span>
+
+            </div>
+
+          </a>
+
+
+          <!-- PAGE TITLE -->
+
+          <div class="page-heading">
 
             <h1 id="pageTitle">
               Dashboard
@@ -124,78 +158,58 @@
         </div>
 
 
-        <!-- Header Right -->
+        <!-- ==================================
+             HEADER RIGHT
+        =================================== -->
 
         <div class="header-right">
 
 
-          <!-- Global Search -->
-
-          <div class="global-search">
-
-            <i
-              class="fa-solid fa-magnifying-glass"
-            ></i>
-
-            <input
-              id="globalSearch"
-              type="search"
-              placeholder="Cari leads, pelanggan, atau nama..."
-              autocomplete="off"
-            >
-
-          </div>
-
-
-          <!-- Navigation -->
+          <!-- ==================================
+               MAIN NAVIGATION
+          =================================== -->
 
           <nav class="top-navigation">
+
+
+            <!-- Dashboard -->
 
             <a
               href="dashboard.html"
               class="top-nav-item active"
             >
+
               <i class="fa-solid fa-chart-pie"></i>
-              <span>Dashboard</span>
+
+              <span>
+                Dashboard
+              </span>
+
             </a>
 
+
+            <!-- Leads -->
 
             <a
               href="leads.html"
               class="top-nav-item"
             >
+
               <i class="fa-solid fa-users"></i>
-              <span>Leads</span>
+
+              <span>
+                Leads
+              </span>
+
             </a>
 
-
-            <a
-              href="sales.html"
-              class="top-nav-item admin-only"
-            >
-              <i class="fa-solid fa-user-tie"></i>
-              <span>Manage Sales</span>
-            </a>
 
           </nav>
 
 
-          <!-- Notification -->
-
-          <button
-            class="header-icon-btn"
-            type="button"
-            aria-label="Notifications"
-          >
-
-            <i
-              class="fa-regular fa-bell"
-            ></i>
-
-          </button>
-
-
-          <!-- User Menu -->
+          <!-- ==================================
+               USER MENU
+          =================================== -->
 
           <div class="user-menu-wrapper">
 
@@ -214,6 +228,7 @@
                 F
               </span>
 
+
               <span
                 id="userInfo"
                 class="user-info"
@@ -229,6 +244,7 @@
 
               </span>
 
+
               <i
                 class="fa-solid fa-chevron-down"
               ></i>
@@ -236,7 +252,9 @@
             </button>
 
 
-            <!-- User Dropdown -->
+            <!-- ==================================
+                 USER DROPDOWN
+            =================================== -->
 
             <div
               id="userDropdown"
@@ -244,7 +262,9 @@
               style="display: none;"
             >
 
+
               <button
+                id="profileBtn"
                 type="button"
                 onclick="openProfileModal()"
               >
@@ -253,12 +273,14 @@
                   class="fa-solid fa-user"
                 ></i>
 
-                Profile
+                <span>
+                  Profile
+                </span>
 
               </button>
 
 
-              <div></div>
+              <div class="dropdown-divider"></div>
 
 
               <button
@@ -271,13 +293,17 @@
                   class="fa-solid fa-right-from-bracket"
                 ></i>
 
-                Logout
+                <span>
+                  Logout
+                </span>
 
               </button>
+
 
             </div>
 
           </div>
+
 
         </div>
 
