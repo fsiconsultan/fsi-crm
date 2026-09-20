@@ -1,7 +1,0 @@
-.sales-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 20px;
-}
-.status-active { color: var(--success); font-weight: 600; }
-.status-inactive { color: var(--danger); font-weight: 600; }
