@@ -2,7 +2,6 @@
 <html lang="id">
 
 <head>
-
   <meta charset="UTF-8">
 
   <meta
@@ -15,19 +14,7 @@
     content="FSI CRM - Manage Sales"
   >
 
-  <meta
-    name="theme-color"
-    content="#0b63ce"
-  >
-
-  <title>
-    Manage Sales | FSI CRM
-  </title>
-
-
-  <!-- ========================================
-       GOOGLE FONT
-  ========================================= -->
+  <title>Manage Sales | FSI CRM</title>
 
   <link
     rel="preconnect"
@@ -36,7 +23,7 @@
 
   <link
     rel="preconnect"
-    href="https://fonts.googleapis.com"
+    href="https://fonts.gstatic.com"
     crossorigin
   >
 
@@ -45,20 +32,10 @@
     rel="stylesheet"
   >
 
-
-  <!-- ========================================
-       FONT AWESOME
-  ========================================= -->
-
   <link
     rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
   >
-
-
-  <!-- ========================================
-       CRM CSS
-  ========================================= -->
 
   <link
     rel="stylesheet"
@@ -77,612 +54,485 @@
 
 </head>
 
-
 <body>
 
+<div id="app" class="app">
 
-  <!-- ========================================
-       APP
-  ========================================= -->
+  <main class="main-content">
 
-  <div
-    id="app"
-    class="app"
-  >
+    <!-- HEADER -->
 
+    <header class="top-header">
 
-    <main class="main-content">
+      <div class="header-left">
 
-
-      <!-- ====================================
-           TOP HEADER
-      ===================================== -->
-
-      <header class="top-header">
-
-
-        <!-- Header Left -->
-
-        <div class="header-left">
-
-          <div class="header-title">
-
-            <h1 id="pageTitle">
-              Manage Sales
-            </h1>
-
-            <p id="pageSubtitle">
-              CRM French Solar Industry
-            </p>
-
-          </div>
-
-        </div>
-
-
-        <!-- Header Right -->
-
-        <div class="header-right">
-
-
-          <!-- Global Search -->
-
-          <div class="global-search">
-
-            <i
-              class="fa-solid fa-magnifying-glass"
-            ></i>
-
-            <input
-              id="globalSearch"
-              type="search"
-              placeholder="Cari leads, pelanggan, atau nama..."
-              autocomplete="off"
-            >
-
-          </div>
-
-
-          <!-- Top Navigation -->
-
-          <nav class="top-navigation">
-
-            <a
-              href="dashboard.html"
-              class="top-nav-item"
-            >
-
-              <i
-                class="fa-solid fa-chart-pie"
-              ></i>
-
-              <span>
-                Dashboard
-              </span>
-
-            </a>
-
-
-            <a
-              href="leads.html"
-              class="top-nav-item"
-            >
-
-              <i
-                class="fa-solid fa-users"
-              ></i>
-
-              <span>
-                Leads
-              </span>
-
-            </a>
-
-
-            <a
-              href="sales.html"
-              class="top-nav-item active admin-only"
-            >
-
-              <i
-                class="fa-solid fa-user-tie"
-              ></i>
-
-              <span>
-                Manage Sales
-              </span>
-
-            </a>
-
-          </nav>
-
-
-          <!-- Notification -->
-
-          <button
-            class="header-icon-btn"
-            type="button"
-            aria-label="Notifications"
-          >
-
-            <i
-              class="fa-regular fa-bell"
-            ></i>
-
-          </button>
-
-
-          <!-- User Menu -->
-
-          <div class="user-menu-wrapper">
-
-            <button
-              id="userMenu"
-              class="user-menu"
-              type="button"
-              aria-haspopup="true"
-              aria-expanded="false"
-            >
-
-              <span
-                id="userAvatarInitial"
-                class="user-avatar"
-              >
-                F
-              </span>
-
-
-              <span
-                id="userInfo"
-                class="user-info"
-              >
-
-                <strong>
-                  User
-                </strong>
-
-                <small>
-                  Admin
-                </small>
-
-              </span>
-
-
-              <i
-                class="fa-solid fa-chevron-down"
-              ></i>
-
-            </button>
-
-
-            <!-- User Dropdown -->
-
-            <div
-              id="userDropdown"
-              class="user-dropdown"
-              style="display: none;"
-            >
-
-              <button
-                type="button"
-                onclick="openProfileModal()"
-              >
-
-                <i
-                  class="fa-solid fa-user"
-                ></i>
-
-                Profile
-
-              </button>
-
-
-              <div></div>
-
-
-              <button
-                id="dropdownLogout"
-                class="danger"
-                type="button"
-              >
-
-                <i
-                  class="fa-solid fa-right-from-bracket"
-                ></i>
-
-                Logout
-
-              </button>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </header>
-
-
-      <!-- ====================================
-           PAGE CONTENT
-      ===================================== -->
-
-      <section class="page-content">
-
-
-        <section
-          id="salesPage"
-          class="page"
+        <a
+          href="dashboard.html"
+          class="brand-area"
+          aria-label="FSI CRM Dashboard"
         >
 
+          <img
+            src="../assets/logo-fsi.png"
+            alt="FSI Logo"
+            class="brand-logo"
+          >
 
-          <!-- Page Header -->
-
-          <div class="section-header">
-
-            <div>
-
-              <h2>
-                Manage Sales
-              </h2>
-
-              <p>
-                Kelola user dan akses Sales FSI.
-              </p>
-
-            </div>
-
-
-            <button
-              id="addSalesBtn"
-              class="btn btn-primary"
-              type="button"
-            >
-
-              <i
-                class="fa-solid fa-user-plus"
-              ></i>
-
-              Add Sales
-
-            </button>
-
+          <div class="brand-text">
+            <strong>FSI CRM</strong>
+            <span>French Solar Industry</span>
           </div>
 
+        </a>
 
-          <!-- ==================================
-               SALES STATISTICS
-          =================================== -->
+        <div class="page-heading">
 
-          <div class="sales-stats">
+          <h1 id="pageTitle">
+            Manage Sales
+          </h1>
 
-
-            <!-- Total -->
-
-            <div>
-
-              <span>
-                Total Sales
-              </span>
-
-              <strong id="totalSalesUsers">
-                0
-              </strong>
-
-            </div>
-
-
-            <!-- Active -->
-
-            <div>
-
-              <span>
-                Active
-              </span>
-
-              <strong id="activeSalesUsers">
-                0
-              </strong>
-
-            </div>
-
-
-            <!-- Inactive -->
-
-            <div>
-
-              <span>
-                Inactive
-              </span>
-
-              <strong id="inactiveSalesUsers">
-                0
-              </strong>
-
-            </div>
-
-          </div>
-
-
-          <!-- ==================================
-               SALES DATABASE
-          =================================== -->
-
-          <div class="data-card">
-
-
-            <!-- Header -->
-
-            <div class="data-card-header">
-
-              <div>
-
-                <h3>
-                  Sales Team
-                </h3>
-
-                <span>
-                  Daftar user Sales FSI
-                </span>
-
-              </div>
-
-
-              <!-- Search -->
-
-              <div
-                class="filter-search compact"
-              >
-
-                <i
-                  class="fa-solid fa-magnifying-glass"
-                ></i>
-
-                <input
-                  id="salesSearch"
-                  type="search"
-                  placeholder="Cari sales..."
-                  autocomplete="off"
-                >
-
-              </div>
-
-            </div>
-
-
-            <!-- Table -->
-
-            <div class="table-wrapper">
-
-              <table class="data-table">
-
-                <thead>
-
-                  <tr>
-
-                    <th>
-                      No
-                    </th>
-
-                    <th>
-                      Name
-                    </th>
-
-                    <th>
-                      Username
-                    </th>
-
-                    <th>
-                      Role
-                    </th>
-
-                    <th>
-                      Status
-                    </th>
-
-                    <th>
-                      Created
-                    </th>
-
-                    <th>
-                      Action
-                    </th>
-
-                  </tr>
-
-                </thead>
-
-
-                <tbody
-                  id="salesTableBody"
-                ></tbody>
-
-              </table>
-
-            </div>
-
-          </div>
-
-        </section>
-
-      </section>
-
-    </main>
-
-  </div>
-
-
-  <!-- ========================================
-       ADD SALES MODAL
-  ========================================= -->
-
-  <div
-    id="salesModal"
-    class="modal-overlay"
-    style="display: none;"
-  >
-
-    <div class="modal">
-
-
-      <!-- Modal Header -->
-
-      <div class="modal-header">
-
-        <div>
-
-          <h2>
-            Add Sales
-          </h2>
-
-          <p>
-            Akun dibuat melalui Edge Function CRM.
+          <p id="pageSubtitle">
+            Kelola user Sales FSI
           </p>
 
         </div>
 
-
-        <button
-          class="modal-close"
-          type="button"
-          data-close="salesModal"
-          aria-label="Close"
-        >
-
-          <i
-            class="fa-solid fa-xmark"
-          ></i>
-
-        </button>
-
       </div>
 
 
-      <!-- Sales Form -->
+      <div class="header-right">
 
-      <form id="salesForm">
+        <nav class="top-navigation">
 
-
-        <!-- Name -->
-
-        <div class="form-group">
-
-          <label for="salesName">
-            Name *
-          </label>
-
-          <input
-            id="salesName"
-            type="text"
-            autocomplete="name"
-            required
+          <a
+            href="dashboard.html"
+            class="top-nav-item"
           >
+            <i class="fa-solid fa-chart-pie"></i>
+            <span>Dashboard</span>
+          </a>
 
-        </div>
-
-
-        <!-- Username -->
-
-        <div class="form-group">
-
-          <label for="salesUsername">
-            Username *
-          </label>
-
-          <input
-            id="salesUsername"
-            type="text"
-            autocomplete="username"
-            required
+          <a
+            href="leads.html"
+            class="top-nav-item"
           >
+            <i class="fa-solid fa-users"></i>
+            <span>Leads</span>
+          </a>
 
-        </div>
-
-
-        <!-- Password -->
-
-        <div class="form-group">
-
-          <label for="salesPassword">
-            Password *
-          </label>
-
-          <input
-            id="salesPassword"
-            type="password"
-            autocomplete="new-password"
-            required
+          <a
+            href="sales.html"
+            class="top-nav-item active admin-only"
           >
+            <i class="fa-solid fa-user-tie"></i>
+            <span>Manage Sales</span>
+          </a>
 
-        </div>
-
-
-        <!-- Message -->
-
-        <div
-          id="salesFormMessage"
-          class="form-message"
-        ></div>
+        </nav>
 
 
-        <!-- Footer -->
-
-        <div class="modal-footer">
+        <div class="user-menu-wrapper">
 
           <button
-            class="btn btn-secondary"
+            id="userMenu"
+            class="user-menu"
             type="button"
-            data-close="salesModal"
+            aria-haspopup="true"
+            aria-expanded="false"
           >
-            Cancel
+
+            <span
+              id="userAvatarInitial"
+              class="user-avatar"
+            >
+              F
+            </span>
+
+            <span
+              id="userInfo"
+              class="user-info"
+            >
+              <strong>User</strong>
+              <small>Admin</small>
+            </span>
+
+            <i class="fa-solid fa-chevron-down"></i>
+
           </button>
 
 
-          <button
-            id="saveSalesBtn"
-            class="btn btn-primary"
-            type="submit"
+          <div
+            id="userDropdown"
+            class="user-dropdown"
+            style="display:none;"
           >
-            Create Sales
+
+            <button
+              id="profileBtn"
+              type="button"
+              onclick="openProfileModal()"
+            >
+              <i class="fa-solid fa-user"></i>
+              <span>Profile</span>
+            </button>
+
+            <div class="dropdown-divider"></div>
+
+            <button
+              id="dropdownLogout"
+              class="danger"
+              type="button"
+            >
+              <i class="fa-solid fa-right-from-bracket"></i>
+              <span>Logout</span>
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </header>
+
+
+    <!-- PAGE -->
+
+    <section class="page-content">
+
+      <section
+        id="salesPage"
+        class="sales-page"
+      >
+
+        <!-- PAGE TITLE -->
+
+        <div class="sales-page-header">
+
+          <div>
+
+            <div class="sales-eyebrow">
+              <i class="fa-solid fa-users-gear"></i>
+              Administration
+            </div>
+
+            <h2>
+              Manage Sales
+            </h2>
+
+            <p>
+              Kelola user, status, dan akses Sales FSI.
+            </p>
+
+          </div>
+
+
+          <button
+            id="addSalesBtn"
+            class="btn btn-primary sales-add-btn"
+            type="button"
+          >
+
+            <i class="fa-solid fa-user-plus"></i>
+
+            <span>Add New Sales</span>
+
           </button>
 
         </div>
 
-      </form>
+
+        <!-- STATS -->
+
+        <div class="sales-stats">
+
+          <div class="sales-stat-card">
+
+            <div class="sales-stat-icon">
+              <i class="fa-solid fa-users"></i>
+            </div>
+
+            <div>
+              <span>Total Sales</span>
+              <strong id="totalSalesUsers">0</strong>
+            </div>
+
+          </div>
+
+
+          <div class="sales-stat-card">
+
+            <div class="sales-stat-icon active">
+              <i class="fa-solid fa-circle-check"></i>
+            </div>
+
+            <div>
+              <span>Active</span>
+              <strong id="activeSalesUsers">0</strong>
+            </div>
+
+          </div>
+
+
+          <div class="sales-stat-card">
+
+            <div class="sales-stat-icon inactive">
+              <i class="fa-solid fa-circle-pause"></i>
+            </div>
+
+            <div>
+              <span>Inactive</span>
+              <strong id="inactiveSalesUsers">0</strong>
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- SALES DATABASE -->
+
+        <div class="data-card sales-data-card">
+
+          <div class="data-card-header">
+
+            <div>
+
+              <h3>
+                Sales Team
+              </h3>
+
+              <span>
+                Daftar seluruh user Sales FSI
+              </span>
+
+            </div>
+
+
+            <div class="filter-search compact">
+
+              <i class="fa-solid fa-magnifying-glass"></i>
+
+              <input
+                id="salesSearch"
+                type="search"
+                placeholder="Cari nama atau username..."
+                autocomplete="off"
+              >
+
+            </div>
+
+          </div>
+
+
+          <div class="table-wrapper">
+
+            <table class="data-table sales-table">
+
+              <thead>
+
+                <tr>
+
+                  <th>No</th>
+
+                  <th>Sales</th>
+
+                  <th>Username</th>
+
+                  <th>Role</th>
+
+                  <th>Status</th>
+
+                  <th>Created</th>
+
+                  <th>Action</th>
+
+                </tr>
+
+              </thead>
+
+
+              <tbody id="salesTableBody"></tbody>
+
+            </table>
+
+          </div>
+
+        </div>
+
+      </section>
+
+    </section>
+
+  </main>
+
+</div>
+
+
+<!-- ADD / EDIT SALES -->
+
+<div
+  id="salesModal"
+  class="modal-overlay"
+  style="display:none;"
+>
+
+  <div class="modal sales-modal">
+
+    <div class="modal-header">
+
+      <div>
+
+        <h2 id="salesModalTitle">
+          Add New Sales
+        </h2>
+
+        <p id="salesModalSubtitle">
+          Buat akun Sales baru.
+        </p>
+
+      </div>
+
+      <button
+        class="modal-close"
+        type="button"
+        data-close="salesModal"
+      >
+        <i class="fa-solid fa-xmark"></i>
+      </button>
 
     </div>
 
-  </div>
+
+    <form id="salesForm">
+
+      <input
+        id="salesId"
+        type="hidden"
+      >
 
 
-  <!-- ========================================
-       CONFIRM MODAL
-  ========================================= -->
+      <div class="sales-photo-preview">
 
-  <div
-    id="confirmModal"
-    class="modal-overlay"
-    style="display: none;"
-  >
+        <div
+          id="salesPhotoPreview"
+          class="sales-photo-large"
+        >
+          <i class="fa-solid fa-user"></i>
+        </div>
 
-    <div class="modal modal-small">
+        <div>
 
+          <strong>Foto Sales</strong>
 
-      <div class="confirm-icon">
+          <p>
+            Masukkan URL foto dari Supabase Storage.
+          </p>
 
-        <i
-          class="fa-solid fa-triangle-exclamation"
-        ></i>
+        </div>
 
       </div>
 
 
-      <h2 id="confirmTitle">
-        Confirm
-      </h2>
+      <div class="form-group">
+
+        <label for="salesPhotoUrl">
+          Photo URL
+        </label>
+
+        <input
+          id="salesPhotoUrl"
+          type="url"
+          placeholder="https://.../sales-avatar/nama.jpeg"
+          autocomplete="off"
+        >
+
+      </div>
 
 
-      <p id="confirmMessage"></p>
+      <div class="form-group">
+
+        <label for="salesName">
+          Name *
+        </label>
+
+        <input
+          id="salesName"
+          type="text"
+          autocomplete="name"
+          required
+        >
+
+      </div>
+
+
+      <div class="form-group">
+
+        <label for="salesUsername">
+          Username *
+        </label>
+
+        <input
+          id="salesUsername"
+          type="text"
+          autocomplete="username"
+          required
+        >
+
+      </div>
+
+
+      <div
+        class="form-group"
+        id="salesPasswordGroup"
+      >
+
+        <label for="salesPassword">
+          Password *
+        </label>
+
+        <input
+          id="salesPassword"
+          type="password"
+          autocomplete="new-password"
+        >
+
+        <small class="form-hint">
+          Minimal 6 karakter untuk Sales baru.
+        </small>
+
+      </div>
+
+
+      <div
+        class="form-group"
+        id="salesStatusGroup"
+        style="display:none;"
+      >
+
+        <label for="salesStatus">
+          Status
+        </label>
+
+        <select id="salesStatus">
+
+          <option value="Active">
+            Active
+          </option>
+
+          <option value="Inactive">
+            Inactive
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <div
+        id="salesFormMessage"
+        class="form-message"
+      ></div>
 
 
       <div class="modal-footer">
@@ -690,149 +540,156 @@
         <button
           class="btn btn-secondary"
           type="button"
-          data-close="confirmModal"
+          data-close="salesModal"
         >
           Cancel
         </button>
 
 
         <button
-          id="confirmActionBtn"
-          class="btn btn-danger"
-          type="button"
+          id="saveSalesBtn"
+          class="btn btn-primary"
+          type="submit"
         >
-          Confirm
+          <span id="saveSalesText">
+            Create Sales
+          </span>
         </button>
 
       </div>
 
+    </form>
+
+  </div>
+
+</div>
+
+
+<!-- CONFIRM -->
+
+<div
+  id="confirmModal"
+  class="modal-overlay"
+  style="display:none;"
+>
+
+  <div class="modal modal-small">
+
+    <div class="confirm-icon">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+    </div>
+
+    <h2 id="confirmTitle">
+      Confirm
+    </h2>
+
+    <p id="confirmMessage"></p>
+
+    <div class="modal-footer">
+
+      <button
+        class="btn btn-secondary"
+        type="button"
+        data-close="confirmModal"
+      >
+        Cancel
+      </button>
+
+      <button
+        id="confirmActionBtn"
+        class="btn btn-danger"
+        type="button"
+      >
+        Confirm
+      </button>
+
     </div>
 
   </div>
 
-
-  <!-- ========================================
-       PROFILE MODAL
-  ========================================= -->
-
-  <div
-    id="profileModal"
-    class="modal-overlay"
-    style="display: none;"
-  >
-
-    <div class="modal">
+</div>
 
 
-      <div class="modal-header">
+<!-- PROFILE -->
 
-        <div>
+<div
+  id="profileModal"
+  class="modal-overlay"
+  style="display:none;"
+>
 
-          <h2>
-            My Profile
-          </h2>
+  <div class="modal">
 
-          <p>
-            Informasi akun pengguna CRM.
-          </p>
+    <div class="modal-header">
 
-        </div>
+      <div>
 
+        <h2>My Profile</h2>
 
-        <button
-          class="modal-close"
-          type="button"
-          data-close="profileModal"
-          aria-label="Close"
-        >
-
-          <i
-            class="fa-solid fa-xmark"
-          ></i>
-
-        </button>
+        <p>
+          Informasi akun pengguna CRM.
+        </p>
 
       </div>
 
-
-      <div
-        id="userProfileContent"
-        class="profile-card"
-      ></div>
-
-    </div>
-
-  </div>
-
-
-  <!-- ========================================
-       TOAST
-  ========================================= -->
-
-  <div
-    id="toastContainer"
-    class="toast-container"
-    aria-live="polite"
-    aria-atomic="true"
-  ></div>
-
-
-  <!-- ========================================
-       GLOBAL LOADING
-  ========================================= -->
-
-  <div
-    id="globalLoading"
-    class="global-loading"
-    style="display: none;"
-  >
-
-    <div>
-
-      <i
-        class="fa-solid fa-spinner fa-spin"
-      ></i>
-
-      <span id="globalLoadingText">
-        Loading...
-      </span>
+      <button
+        class="modal-close"
+        type="button"
+        data-close="profileModal"
+      >
+        <i class="fa-solid fa-xmark"></i>
+      </button>
 
     </div>
 
+    <div
+      id="userProfileContent"
+      class="profile-card"
+    ></div>
+
   </div>
 
-
-  <!-- ========================================
-       SUPABASE
-  ========================================= -->
-
-  <script
-    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
-  ></script>
+</div>
 
 
-  <!-- ========================================
-       FSI CRM JAVASCRIPT
-  ========================================= -->
+<div
+  id="toastContainer"
+  class="toast-container"
+  aria-live="polite"
+  aria-atomic="true"
+></div>
 
-  <script src="../js/config.js"></script>
 
-  <script src="../js/helpers.js"></script>
+<div
+  id="globalLoading"
+  class="global-loading"
+  style="display:none;"
+>
 
-  <script src="../js/modal.js"></script>
+  <div>
 
-  <script src="../js/auth.js"></script>
+    <i class="fa-solid fa-spinner fa-spin"></i>
 
-  <script src="../js/navigation.js"></script>
+    <span id="globalLoadingText">
+      Loading...
+    </span>
 
-  <script src="../js/dashboard.js"></script>
+  </div>
 
-  <script src="../js/leads.js"></script>
+</div>
 
-  <script src="../js/customer-profile.js"></script>
 
-  <script src="../js/sales.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="../js/config.js"></script>
+<script src="../js/helpers.js"></script>
+<script src="../js/modal.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/navigation.js"></script>
+<script src="../js/dashboard.js"></script>
+<script src="../js/leads.js"></script>
+<script src="../js/customer-profile.js"></script>
+<script src="../js/sales.js"></script>
 
 </body>
-
 </html>
