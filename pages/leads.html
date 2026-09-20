@@ -1,1045 +1,1200 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-  <title>Leads - FSI CRM</title>
+    <title>Leads | FSI CRM</title>
 
-  <link rel="icon" href="../assets/logo-fsi.png">
+    <link rel="icon" href="../assets/logo-fsi.png">
 
-  <!-- Font Awesome -->
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-  >
+    <!-- Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-  <!-- CRM CSS -->
-  <link rel="stylesheet" href="../css/style.css">
-  <link rel="stylesheet" href="../css/dashboard.css">
-  <link rel="stylesheet" href="../css/leads.css">
-  <link rel="stylesheet" href="../css/profile.css">
-  <link rel="stylesheet" href="../css/sales.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <!-- Icons -->
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    >
+
+    <!-- Global -->
+    <link rel="stylesheet" href="../css/style.css">
+
+    <!-- Leads -->
+    <link rel="stylesheet" href="../css/leads.css">
 </head>
 
 <body>
 
-  <div id="app" class="app">
-
-    <!-- =====================================================
-         MAIN CONTENT
-    ====================================================== -->
-    <main class="main-content">
-
-      <!-- ===================================================
-           TOP HEADER
-      ==================================================== -->
-      <header class="top-header">
-
-        <!-- BRAND -->
-        <div class="brand-area">
-
-          <a
-            href="dashboard.html"
-            class="brand-logo"
-          >
-            <img
-              src="../assets/logo-fsi.png"
-              alt="FSI CRM"
-            >
-          </a>
-
-          <div class="brand-text">
-
-            <strong>
-              FSI CRM
-            </strong>
-
-            <span>
-              French Solar Industry
-            </span>
-
-          </div>
-
-        </div>
+<div id="globalLoading" class="global-loading">
+    <div class="loading-spinner"></div>
+</div>
 
 
-        <!-- PAGE TITLE -->
-        <div class="header-page-info">
+<!-- =========================================================
+     TOP HEADER
+========================================================= -->
 
-          <h1 id="pageTitle">
-            Leads
-          </h1>
+<header class="top-header">
 
-          <p id="pageSubtitle">
-            Customer Lead Management
-          </p>
+    <div class="header-left">
 
-        </div>
+        <a href="dashboard.html" class="brand">
+
+            <div class="brand-logo">
+                <img
+                    src="../assets/logo-fsi.png"
+                    alt="FSI Logo"
+                >
+            </div>
+
+            <div class="brand-text">
+                <strong>FSI CRM</strong>
+                <span>French Solar Industry</span>
+            </div>
+
+        </a>
+
+    </div>
 
 
-        <!-- TOP NAVIGATION -->
+    <div class="header-center">
+
         <nav class="top-navigation">
 
-          <a
-            class="top-nav-item"
-            href="dashboard.html"
-          >
-            <i class="fa-solid fa-chart-pie"></i>
-            <span>Dashboard</span>
-          </a>
+            <a
+                href="dashboard.html"
+                class="nav-item"
+            >
+                <i class="fa-solid fa-chart-pie"></i>
+                <span>Dashboard</span>
+            </a>
 
-          <a
-            class="top-nav-item active"
-            href="leads.html"
-          >
-            <i class="fa-solid fa-users"></i>
-            <span>Leads</span>
-          </a>
+            <a
+                href="leads.html"
+                class="nav-item active"
+            >
+                <i class="fa-solid fa-users"></i>
+                <span>Leads</span>
+            </a>
 
-          <a
-            class="top-nav-item admin-only"
-            href="sales.html"
-          >
-            <i class="fa-solid fa-user-tie"></i>
-            <span>Manage Sales</span>
-          </a>
+            <a
+                href="sales.html"
+                class="nav-item admin-only"
+            >
+                <i class="fa-solid fa-user-group"></i>
+                <span>Manage Sales</span>
+            </a>
 
         </nav>
 
+    </div>
 
-        <!-- HEADER RIGHT -->
-        <div class="header-right">
 
-          <!-- GLOBAL SEARCH -->
-          <div class="global-search">
+    <div class="header-right">
+
+        <div class="global-search">
 
             <i class="fa-solid fa-magnifying-glass"></i>
 
             <input
-              id="globalSearch"
-              type="search"
-              placeholder="Cari leads, pelanggan, atau nama..."
-              autocomplete="off"
+                type="text"
+                id="globalSearch"
+                placeholder="Search..."
+                autocomplete="off"
             >
 
-          </div>
-
-
-          <!-- NOTIFICATION -->
-          <button
-            class="header-icon-btn"
-            type="button"
-            title="Notifikasi"
-          >
-            <i class="fa-regular fa-bell"></i>
-          </button>
-
-
-          <!-- USER MENU -->
-          <button
-            id="userMenu"
-            class="user-menu"
-            type="button"
-          >
-
-            <span
-              id="userAvatarInitial"
-              class="user-avatar"
-            >
-              F
-            </span>
-
-            <span
-              id="userInfo"
-              class="user-info"
-            >
-              <strong>User</strong>
-              <small>Sales</small>
-            </span>
-
-            <i class="fa-solid fa-chevron-down"></i>
-
-          </button>
-
-
-          <!-- USER DROPDOWN -->
-          <div
-            id="userDropdown"
-            class="user-dropdown"
-            style="display:none"
-          >
-
-            <button
-              type="button"
-              onclick="openProfileModal()"
-            >
-              <i class="fa-solid fa-user"></i>
-              Profile
-            </button>
-
-            <div></div>
-
-            <button
-              id="dropdownLogout"
-              class="danger"
-              type="button"
-            >
-              <i class="fa-solid fa-right-from-bracket"></i>
-              Logout
-            </button>
-
-          </div>
+            <kbd>⌘ K</kbd>
 
         </div>
 
-      </header>
 
-
-      <!-- ===================================================
-           PAGE CONTENT
-      ==================================================== -->
-      <section class="page-content">
-
-        <section
-          id="leadsPage"
-          class="page"
+        <button
+            class="header-icon-btn"
+            id="notificationBtn"
+            type="button"
+            title="Notifications"
         >
-
-          <!-- =================================================
-               PAGE HEADING
-          ================================================== -->
-          <div class="content-heading">
-
-            <div>
-
-              <span class="eyebrow">
-                CUSTOMER DATABASE
-              </span>
-
-              <h2>
-                Leads
-              </h2>
-
-              <p>
-                Kelola database customer dan proses follow-up.
-              </p>
-
-            </div>
+            <i class="fa-regular fa-bell"></i>
+            <span class="notification-dot"></span>
+        </button>
 
 
-            <div class="content-heading-actions">
+        <div class="user-menu">
 
-              <button
-                id="exportLeadsBtn"
-                class="btn btn-secondary"
+            <button
+                class="user-menu-trigger"
+                id="userMenuTrigger"
                 type="button"
-              >
-                <i class="fa-solid fa-file-export"></i>
-                Export
-              </button>
+            >
 
-              <button
-                id="addLeadBtn"
-                class="btn btn-primary"
-                type="button"
-              >
-                <i class="fa-solid fa-plus"></i>
-                Tambah Lead
-              </button>
+                <div
+                    class="user-avatar"
+                    id="headerUserAvatar"
+                >
+                    U
+                </div>
 
-            </div>
+                <div class="user-menu-info">
 
-          </div>
+                    <strong id="headerUserName">
+                        User
+                    </strong>
 
-
-          <!-- =================================================
-               FILTER CARD
-          ================================================== -->
-          <div class="leads-filter-card">
-
-            <div class="leads-filter-grid">
-
-              <!-- SEARCH -->
-              <div class="filter-field filter-search">
-
-                <label for="leadSearch">
-                  Search
-                </label>
-
-                <div class="filter-input-wrap">
-
-                  <i class="fa-solid fa-magnifying-glass"></i>
-
-                  <input
-                    id="leadSearch"
-                    type="search"
-                    placeholder="Nama customer, telepon, bisnis..."
-                    autocomplete="off"
-                  >
+                    <span id="headerUserRole">
+                        Sales
+                    </span>
 
                 </div>
 
-              </div>
+                <i class="fa-solid fa-chevron-down"></i>
+
+            </button>
 
 
-              <!-- STATUS -->
-              <div class="filter-field">
+            <div
+                class="user-dropdown"
+                id="userDropdown"
+            >
 
-                <label for="statusFilter">
-                  Status
-                </label>
+                <div class="dropdown-user-info">
 
-                <select id="statusFilter">
+                    <div
+                        class="dropdown-avatar"
+                        id="dropdownAvatar"
+                    >
+                        U
+                    </div>
 
-                  <option value="">
-                    Semua Status
-                  </option>
+                    <div>
 
-                </select>
+                        <strong id="dropdownUserName">
+                            User
+                        </strong>
 
-              </div>
+                        <span id="dropdownUserEmail">
+                            -
+                        </span>
 
+                    </div>
 
-              <!-- BUSINESS -->
-              <div class="filter-field">
-
-                <label for="businessFilter">
-                  Business
-                </label>
-
-                <select id="businessFilter">
-
-                  <option value="">
-                    Semua Business
-                  </option>
-
-                </select>
-
-              </div>
+                </div>
 
 
-              <!-- LOCATION -->
-              <div class="filter-field">
+                <div class="dropdown-divider"></div>
 
-                <label for="locationFilter">
-                  Location
-                </label>
-
-                <select id="locationFilter">
-
-                  <option value="">
-                    Semua Location
-                  </option>
-
-                </select>
-
-              </div>
-
-
-              <!-- SALES -->
-              <div
-                class="filter-field admin-only"
-                id="salesFilterField"
-              >
-
-                <label for="salesFilter">
-                  Sales
-                </label>
-
-                <select id="salesFilter">
-
-                  <option value="">
-                    Semua Sales
-                  </option>
-
-                </select>
-
-              </div>
-
-
-              <!-- RESET -->
-              <div class="filter-field filter-action">
-
-                <label>
-                  &nbsp;
-                </label>
 
                 <button
-                  id="resetFiltersBtn"
-                  class="btn btn-secondary"
-                  type="button"
+                    type="button"
+                    class="dropdown-item"
+                    id="profileBtn"
                 >
-                  <i class="fa-solid fa-rotate-left"></i>
-                  Reset
+                    <i class="fa-regular fa-user"></i>
+                    <span>My Profile</span>
                 </button>
 
-              </div>
+
+                <button
+                    type="button"
+                    class="dropdown-item danger"
+                    id="dropdownLogout"
+                >
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    <span>Logout</span>
+                </button>
 
             </div>
 
-          </div>
+        </div>
+
+    </div>
+
+</header>
 
 
-          <!-- =================================================
-               LEADS TABLE CARD
-          ================================================== -->
-          <div class="leads-card">
+<!-- =========================================================
+     MAIN
+========================================================= -->
 
-            <!-- TABLE HEADER -->
-            <div class="leads-card-header">
-
-              <div>
-
-                <span class="card-eyebrow">
-                  DATABASE
-                </span>
-
-                <h3>
-                  Customer Leads
-                </h3>
-
-              </div>
+<main class="leads-page">
 
 
-              <div class="lead-count">
+    <!-- =====================================================
+         PAGE HERO
+    ====================================================== -->
 
-                <span id="leadCountLabel">
-                  0 leads
-                </span>
+    <section class="leads-hero">
 
-              </div>
+        <div class="hero-copy">
+
+            <div class="breadcrumb">
+
+                <span>CRM</span>
+
+                <i class="fa-solid fa-chevron-right"></i>
+
+                <strong>Leads</strong>
 
             </div>
 
 
-            <!-- TABLE WRAPPER -->
-            <div class="table-wrapper">
+            <div class="hero-title-row">
 
-              <table class="crm-table">
+                <div>
+
+                    <h1>
+                        Customer Leads
+                    </h1>
+
+                    <p>
+                        Kelola seluruh prospek pelanggan,
+                        follow-up, dan pipeline penjualan Anda.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="hero-actions">
+
+            <button
+                type="button"
+                class="btn btn-light"
+                id="exportLeadsBtn"
+            >
+                <i class="fa-solid fa-arrow-up-from-bracket"></i>
+                Export
+            </button>
+
+            <button
+                type="button"
+                class="btn btn-primary btn-add-lead"
+                id="addLeadBtn"
+            >
+                <i class="fa-solid fa-plus"></i>
+                Add New Lead
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         KPI MINI CARDS
+    ====================================================== -->
+
+    <section class="lead-kpis">
+
+        <div class="lead-kpi-card">
+
+            <div class="lead-kpi-icon blue">
+                <i class="fa-solid fa-users"></i>
+            </div>
+
+            <div class="lead-kpi-content">
+
+                <span>Total Leads</span>
+
+                <strong id="kpiTotalLeads">
+                    0
+                </strong>
+
+                <small>
+                    Semua customer
+                </small>
+
+            </div>
+
+        </div>
+
+
+        <div class="lead-kpi-card">
+
+            <div class="lead-kpi-icon orange">
+                <i class="fa-solid fa-clock"></i>
+            </div>
+
+            <div class="lead-kpi-content">
+
+                <span>Follow Up</span>
+
+                <strong id="kpiFollowUp">
+                    0
+                </strong>
+
+                <small>
+                    Perlu ditindaklanjuti
+                </small>
+
+            </div>
+
+        </div>
+
+
+        <div class="lead-kpi-card">
+
+            <div class="lead-kpi-icon purple">
+                <i class="fa-solid fa-calendar-check"></i>
+            </div>
+
+            <div class="lead-kpi-content">
+
+                <span>Appointment</span>
+
+                <strong id="kpiAppointment">
+                    0
+                </strong>
+
+                <small>
+                    Jadwal customer
+                </small>
+
+            </div>
+
+        </div>
+
+
+        <div class="lead-kpi-card">
+
+            <div class="lead-kpi-icon green">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+
+            <div class="lead-kpi-content">
+
+                <span>Closing</span>
+
+                <strong id="kpiClosing">
+                    0
+                </strong>
+
+                <small>
+                    Customer closing
+                </small>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         FILTER PANEL
+    ====================================================== -->
+
+    <section class="lead-filter-card">
+
+        <div class="filter-top">
+
+            <div class="filter-heading">
+
+                <div class="filter-heading-icon">
+                    <i class="fa-solid fa-sliders"></i>
+                </div>
+
+                <div>
+
+                    <strong>
+                        Lead Database
+                    </strong>
+
+                    <span>
+                        Search & filter customer
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <button
+                type="button"
+                class="filter-reset"
+                id="resetFiltersBtn"
+            >
+                <i class="fa-solid fa-rotate-left"></i>
+                Reset Filter
+            </button>
+
+        </div>
+
+
+        <div class="lead-filters">
+
+            <!-- Search -->
+
+            <div class="filter-field search-field">
+
+                <label>
+                    Search Customer
+                </label>
+
+                <div class="input-with-icon">
+
+                    <i class="fa-solid fa-magnifying-glass"></i>
+
+                    <input
+                        type="search"
+                        id="leadSearch"
+                        placeholder="Nama, phone, business..."
+                        autocomplete="off"
+                    >
+
+                </div>
+
+            </div>
+
+
+            <!-- Status -->
+
+            <div class="filter-field">
+
+                <label>
+                    Status
+                </label>
+
+                <div class="select-wrap">
+
+                    <select id="statusFilter">
+
+                        <option value="">
+                            All Status
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <!-- Business -->
+
+            <div class="filter-field">
+
+                <label>
+                    Business
+                </label>
+
+                <div class="select-wrap">
+
+                    <select id="businessFilter">
+
+                        <option value="">
+                            All Business
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <!-- Location -->
+
+            <div class="filter-field">
+
+                <label>
+                    Location
+                </label>
+
+                <div class="input-with-icon">
+
+                    <i class="fa-solid fa-location-dot"></i>
+
+                    <input
+                        type="text"
+                        id="locationFilter"
+                        placeholder="Location..."
+                    >
+
+                </div>
+
+            </div>
+
+
+            <!-- Sales -->
+
+            <div
+                class="filter-field admin-only"
+                id="salesFilterWrapper"
+            >
+
+                <label>
+                    Sales
+                </label>
+
+                <div class="select-wrap">
+
+                    <select id="salesFilter">
+
+                        <option value="">
+                            All Sales
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         TABLE CARD
+    ====================================================== -->
+
+    <section class="leads-table-card">
+
+
+        <!-- Table Header -->
+
+        <div class="table-card-header">
+
+            <div class="table-title-area">
+
+                <div class="table-title-icon">
+                    <i class="fa-solid fa-database"></i>
+                </div>
+
+                <div>
+
+                    <h2>
+                        Customer Database
+                    </h2>
+
+                    <span id="leadCountLabel">
+                        0 leads
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="table-header-tools">
+
+                <span class="database-status">
+
+                    <i></i>
+
+                    Database Connected
+
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- Table -->
+
+        <div class="table-scroll">
+
+            <table class="leads-table">
 
                 <thead>
 
-                  <tr>
+                    <tr>
 
-                    <th class="col-no">
-                      No
-                    </th>
+                        <th class="col-no">
+                            #
+                        </th>
 
-                    <th class="col-customer">
-                      Customer
-                    </th>
+                        <th class="col-customer">
+                            Customer
+                        </th>
 
-                    <th>
-                      Business
-                    </th>
+                        <th>
+                            Business
+                        </th>
 
-                    <th>
-                      Location
-                    </th>
+                        <th>
+                            Location
+                        </th>
 
-                    <th>
-                      Status
-                    </th>
+                        <th>
+                            Status
+                        </th>
 
-                    <th>
-                      Sales
-                    </th>
+                        <th>
+                            Sales
+                        </th>
 
-                    <th>
-                      Phone
-                    </th>
+                        <th>
+                            Contact
+                        </th>
 
-                    <th>
-                      Follow Up
-                    </th>
+                        <th>
+                            Follow Up
+                        </th>
 
-                    <th>
-                      Created
-                    </th>
+                        <th>
+                            Created
+                        </th>
 
-                    <th class="col-action">
-                      Action
-                    </th>
+                        <th class="col-action">
+                            Action
+                        </th>
 
-                  </tr>
+                    </tr>
 
                 </thead>
 
 
                 <tbody id="leadsTableBody">
-
-                  <!-- DATA LEADS AKAN DIMUAT DARI JAVASCRIPT -->
-
+                    <!-- JS -->
                 </tbody>
 
-              </table>
+            </table>
 
 
-              <!-- EMPTY STATE -->
-              <div
+            <!-- Empty -->
+
+            <div
+                class="leads-empty"
                 id="leadsEmptyState"
-                class="table-empty"
-                style="display:none"
-              >
+                style="display:none;"
+            >
 
-                <i class="fa-solid fa-users-slash"></i>
+                <div class="empty-icon">
+                    <i class="fa-solid fa-user-group"></i>
+                </div>
 
                 <h3>
-                  Belum ada lead
+                    No Leads Found
                 </h3>
 
                 <p>
-                  Data customer yang sesuai dengan filter akan muncul di sini.
+                    Belum ada customer yang sesuai
+                    dengan filter Anda.
                 </p>
 
-              </div>
+                <button
+                    type="button"
+                    class="btn btn-primary"
+                    id="emptyAddLeadBtn"
+                >
+                    <i class="fa-solid fa-plus"></i>
+                    Add New Lead
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- Pagination -->
+
+        <div class="leads-pagination" id="leadsPagination">
+
+            <div class="pagination-info">
+
+                Showing
+                <strong id="paginationStart">
+                    0
+                </strong>
+                –
+                <strong id="paginationEnd">
+                    0
+                </strong>
+
+                of
+
+                <strong id="paginationTotal">
+                    0
+                </strong>
 
             </div>
 
 
-            <!-- =================================================
-                 PAGINATION
-            ================================================== -->
-            <div
-              id="leadsPagination"
-              class="pagination"
-            >
-
-              <div
-                id="paginationInfo"
-                class="pagination-info"
-              >
-                Showing 0 of 0
-              </div>
-
-
-              <div class="pagination-controls">
+            <div class="pagination-controls">
 
                 <button
-                  id="prevPageBtn"
-                  class="pagination-btn"
-                  type="button"
-                  title="Previous"
+                    type="button"
+                    id="prevPageBtn"
+                    class="page-btn"
+                    disabled
                 >
-                  <i class="fa-solid fa-chevron-left"></i>
+                    <i class="fa-solid fa-chevron-left"></i>
                 </button>
 
 
                 <div
-                  id="paginationNumbers"
-                  class="pagination-numbers"
-                ></div>
+                    id="paginationNumbers"
+                    class="pagination-numbers"
+                >
+                </div>
 
 
                 <button
-                  id="nextPageBtn"
-                  class="pagination-btn"
-                  type="button"
-                  title="Next"
+                    type="button"
+                    id="nextPageBtn"
+                    class="page-btn"
                 >
-                  <i class="fa-solid fa-chevron-right"></i>
+                    <i class="fa-solid fa-chevron-right"></i>
                 </button>
 
-              </div>
-
             </div>
 
-          </div>
+        </div>
 
-        </section>
+    </section>
 
-      </section>
-
-    </main>
-
-  </div>
+</main>
 
 
-  <!-- =========================================================
-       LEAD MODAL
-  ========================================================== -->
-  <div
+<!-- =========================================================
+     ADD / EDIT LEAD MODAL
+========================================================= -->
+
+<div
+    class="modal-overlay"
     id="leadModal"
-    class="modal-overlay"
-    style="display:none"
-  >
+    style="display:none;"
+>
 
-    <div class="modal-card lead-modal-card">
+    <div class="lead-modal">
 
-      <!-- MODAL HEADER -->
-      <div class="modal-header">
+        <div class="modal-header">
 
-        <div>
+            <div class="modal-title">
 
-          <span class="modal-eyebrow">
-            CUSTOMER
-          </span>
+                <div class="modal-title-icon">
+                    <i class="fa-solid fa-user-plus"></i>
+                </div>
 
-          <h3 id="leadModalTitle">
-            Tambah Lead
-          </h3>
+                <div>
 
-        </div>
+                    <h3 id="leadModalTitle">
+                        Add New Lead
+                    </h3>
 
-        <button
-          type="button"
-          class="modal-close"
-          data-close="leadModal"
-        >
-          <i class="fa-solid fa-xmark"></i>
-        </button>
+                    <span>
+                        Customer information
+                    </span>
 
-      </div>
-
-
-      <!-- FORM -->
-      <form
-        id="leadForm"
-        class="lead-form"
-      >
-
-        <input
-          type="hidden"
-          id="leadId"
-        >
-
-
-        <!-- CUSTOMER -->
-        <div class="form-section">
-
-          <div class="form-section-title">
-            <i class="fa-solid fa-user"></i>
-            Customer Information
-          </div>
-
-
-          <div class="form-grid">
-
-            <div class="form-field">
-
-              <label for="leadCustomerName">
-                Customer Name <span>*</span>
-              </label>
-
-              <input
-                id="leadCustomerName"
-                type="text"
-                required
-                placeholder="Nama customer"
-              >
+                </div>
 
             </div>
 
 
-            <div class="form-field">
-
-              <label for="leadPhone">
-                Phone
-              </label>
-
-              <input
-                id="leadPhone"
-                type="text"
-                placeholder="08xxxxxxxxxx"
-              >
-
-            </div>
-
-
-            <div class="form-field">
-
-              <label for="leadEmail">
-                Email
-              </label>
-
-              <input
-                id="leadEmail"
-                type="email"
-                placeholder="customer@email.com"
-              >
-
-            </div>
-
-
-            <div class="form-field">
-
-              <label for="leadBusiness">
-                Business
-              </label>
-
-              <input
-                id="leadBusiness"
-                type="text"
-                placeholder="Residential / Villa / Hotel / Restaurant..."
-              >
-
-            </div>
-
-
-            <div class="form-field form-field-full">
-
-              <label for="leadLocation">
-                Location
-              </label>
-
-              <input
-                id="leadLocation"
-                type="text"
-                placeholder="Denpasar, Sanur, Seminyak..."
-              >
-
-            </div>
-
-          </div>
+            <button
+                type="button"
+                class="modal-close"
+                data-close-modal="leadModal"
+            >
+                <i class="fa-solid fa-xmark"></i>
+            </button>
 
         </div>
 
 
-        <!-- SALES STATUS -->
-        <div class="form-section">
+        <form id="leadForm">
 
-          <div class="form-section-title">
-            <i class="fa-solid fa-chart-line"></i>
-            Sales Process
-          </div>
+            <input
+                type="hidden"
+                id="leadId"
+            >
 
 
-          <div class="form-grid">
+            <div class="modal-body">
 
-            <!-- STATUS -->
-            <div class="form-field">
+                <!-- Customer -->
 
-              <label for="leadStatus">
-                Status
-              </label>
+                <div class="form-section">
 
-              <select id="leadStatus">
+                    <div class="form-section-title">
 
-                <option value="">
-                  Pilih Status
-                </option>
+                        <i class="fa-solid fa-user"></i>
 
-              </select>
+                        Customer Information
+
+                    </div>
+
+
+                    <div class="form-grid">
+
+                        <div class="form-group full">
+
+                            <label>
+                                Customer Name
+                                <span>*</span>
+                            </label>
+
+                            <input
+                                type="text"
+                                id="leadCustomerName"
+                                placeholder="Nama customer"
+                                required
+                            >
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>
+                                Phone
+                            </label>
+
+                            <input
+                                type="text"
+                                id="leadPhone"
+                                placeholder="08xxxxxxxxxx"
+                            >
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>
+                                Business
+                            </label>
+
+                            <input
+                                type="text"
+                                id="leadBusiness"
+                                placeholder="Residential / Villa / Hotel..."
+                            >
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>
+                                Location
+                            </label>
+
+                            <input
+                                type="text"
+                                id="leadLocation"
+                                placeholder="Denpasar / Sanur / Seminyak..."
+                            >
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Pipeline -->
+
+                <div class="form-section">
+
+                    <div class="form-section-title">
+
+                        <i class="fa-solid fa-chart-line"></i>
+
+                        Sales Pipeline
+
+                    </div>
+
+
+                    <div class="form-grid">
+
+                        <div class="form-group">
+
+                            <label>
+                                Status
+                            </label>
+
+                            <select id="leadStatus">
+
+                            </select>
+
+                        </div>
+
+
+                        <div
+                            class="form-group admin-only"
+                            id="leadSalesAssignWrapper"
+                        >
+
+                            <label>
+                                Assign Sales
+                            </label>
+
+                            <select id="leadSalesAssign">
+
+                            </select>
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>
+                                Follow Up Date
+                            </label>
+
+                            <input
+                                type="date"
+                                id="leadFollowUpDate"
+                            >
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>
+                                Appointment
+                            </label>
+
+                            <input
+                                type="date"
+                                id="leadAppointment"
+                            >
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>
+                                Site Survey
+                            </label>
+
+                            <input
+                                type="date"
+                                id="leadSiteSurvey"
+                            >
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>
+                                Quotation
+                            </label>
+
+                            <input
+                                type="date"
+                                id="leadQuotation"
+                            >
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>
+                                SPK
+                            </label>
+
+                            <input
+                                type="date"
+                                id="leadSpk"
+                            >
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label>
+                                Closing
+                            </label>
+
+                            <input
+                                type="date"
+                                id="leadClosing"
+                            >
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Notes -->
+
+                <div class="form-section">
+
+                    <div class="form-section-title">
+
+                        <i class="fa-regular fa-note-sticky"></i>
+
+                        Notes
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <textarea
+                            id="leadNotes"
+                            rows="4"
+                            placeholder="Catatan customer, kebutuhan PLTS, budget, follow-up..."
+                        ></textarea>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    id="leadFormMessage"
+                    class="form-message"
+                ></div>
 
             </div>
 
 
-            <!-- SALES -->
-            <div class="form-field">
+            <div class="modal-footer">
 
-              <label for="leadSalesAssign">
-                Sales
-              </label>
+                <button
+                    type="button"
+                    class="btn btn-light"
+                    data-close-modal="leadModal"
+                >
+                    Cancel
+                </button>
 
-              <select id="leadSalesAssign">
-
-                <option value="">
-                  Pilih Sales
-                </option>
-
-              </select>
-
-            </div>
-
-
-            <!-- FOLLOW UP -->
-            <div class="form-field">
-
-              <label for="leadFollowUpDate">
-                Follow Up
-              </label>
-
-              <input
-                id="leadFollowUpDate"
-                type="date"
-              >
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                    id="saveLeadBtn"
+                >
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    Save Lead
+                </button>
 
             </div>
 
-
-            <!-- APPOINTMENT -->
-            <div class="form-field">
-
-              <label for="leadAppointment">
-                Appointment
-              </label>
-
-              <input
-                id="leadAppointment"
-                type="date"
-              >
-
-            </div>
-
-
-            <!-- SITE SURVEY -->
-            <div class="form-field">
-
-              <label for="leadSiteSurvey">
-                Site Survey
-              </label>
-
-              <input
-                id="leadSiteSurvey"
-                type="date"
-              >
-
-            </div>
-
-
-            <!-- QUOTATION -->
-            <div class="form-field">
-
-              <label for="leadQuotation">
-                Quotation
-              </label>
-
-              <input
-                id="leadQuotation"
-                type="date"
-              >
-
-            </div>
-
-
-            <!-- SPK -->
-            <div class="form-field">
-
-              <label for="leadSpk">
-                SPK
-              </label>
-
-              <input
-                id="leadSpk"
-                type="date"
-              >
-
-            </div>
-
-
-            <!-- CLOSING -->
-            <div class="form-field">
-
-              <label for="leadClosing">
-                Closing
-              </label>
-
-              <input
-                id="leadClosing"
-                type="date"
-              >
-
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <!-- NOTES -->
-        <div class="form-section">
-
-          <div class="form-section-title">
-            <i class="fa-solid fa-note-sticky"></i>
-            Notes
-          </div>
-
-
-          <div class="form-field">
-
-            <textarea
-              id="leadNotes"
-              rows="4"
-              placeholder="Catatan customer, kebutuhan, hasil follow-up, budget, dan informasi lainnya..."
-            ></textarea>
-
-          </div>
-
-        </div>
-
-
-        <!-- FORM MESSAGE -->
-        <div
-          id="leadFormMessage"
-          class="form-message"
-          style="display:none"
-        ></div>
-
-
-        <!-- MODAL ACTIONS -->
-        <div class="modal-actions">
-
-          <button
-            type="button"
-            class="btn btn-secondary"
-            data-close="leadModal"
-          >
-            Batal
-          </button>
-
-          <button
-            id="saveLeadBtn"
-            type="submit"
-            class="btn btn-primary"
-          >
-            <i class="fa-solid fa-floppy-disk"></i>
-            Simpan Lead
-          </button>
-
-        </div>
-
-      </form>
+        </form>
 
     </div>
 
-  </div>
+</div>
 
 
-  <!-- =========================================================
-       CONFIRM MODAL
-  ========================================================== -->
-  <div
+<!-- =========================================================
+     CONFIRM MODAL
+========================================================= -->
+
+<div
+    class="modal-overlay"
     id="confirmModal"
-    class="modal-overlay"
-    style="display:none"
-  >
+    style="display:none;"
+>
 
-    <div class="modal-card confirm-modal-card">
+    <div class="confirm-modal">
 
-      <div class="confirm-icon">
-        <i class="fa-solid fa-triangle-exclamation"></i>
-      </div>
+        <div class="confirm-icon">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
 
-      <h3 id="confirmTitle">
-        Konfirmasi
-      </h3>
+        <h3 id="confirmTitle">
+            Confirm Action
+        </h3>
 
-      <p id="confirmMessage">
-        Apakah Anda yakin?
-      </p>
+        <p id="confirmMessage">
+            Are you sure?
+        </p>
 
+        <div class="confirm-actions">
 
-      <div class="modal-actions">
+            <button
+                type="button"
+                class="btn btn-light"
+                data-close-modal="confirmModal"
+            >
+                Cancel
+            </button>
 
-        <button
-          type="button"
-          class="btn btn-secondary"
-          data-close="confirmModal"
-        >
-          Batal
-        </button>
-
-        <button
-          id="confirmActionBtn"
-          type="button"
-          class="btn btn-danger"
-        >
-          Ya, Lanjutkan
-        </button>
-
-      </div>
-
-    </div>
-
-  </div>
-
-
-  <!-- =========================================================
-       PROFILE MODAL
-  ========================================================== -->
-  <div
-    id="profileModal"
-    class="modal-overlay"
-    style="display:none"
-  >
-
-    <div class="modal-card profile-modal-card">
-
-      <div class="modal-header">
-
-        <div>
-
-          <span class="modal-eyebrow">
-            ACCOUNT
-          </span>
-
-          <h3>
-            My Profile
-          </h3>
+            <button
+                type="button"
+                class="btn btn-danger"
+                id="confirmActionBtn"
+            >
+                Confirm
+            </button>
 
         </div>
 
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     PROFILE MODAL
+========================================================= -->
+
+<div
+    class="modal-overlay"
+    id="profileModal"
+    style="display:none;"
+>
+
+    <div class="profile-modal">
+
         <button
-          type="button"
-          class="modal-close"
-          data-close="profileModal"
+            type="button"
+            class="modal-close"
+            data-close-modal="profileModal"
         >
-          <i class="fa-solid fa-xmark"></i>
+            <i class="fa-solid fa-xmark"></i>
         </button>
 
-      </div>
-
-
-      <div
-        id="userProfileContent"
-        class="profile-modal-content"
-      ></div>
+        <div id="userProfileContent"></div>
 
     </div>
 
-  </div>
+</div>
 
 
-  <!-- =========================================================
-       TOAST
-  ========================================================== -->
-  <div
+<!-- =========================================================
+     TOAST
+========================================================= -->
+
+<div
     id="toastContainer"
     class="toast-container"
-  ></div>
+>
+</div>
 
 
-  <!-- =========================================================
-       GLOBAL LOADING
-  ========================================================== -->
-  <div
-    id="globalLoading"
-    class="global-loading"
-    style="display:none"
-  >
+<!-- =========================================================
+     SCRIPTS
+========================================================= -->
 
-    <div class="loading-box">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-      <i class="fa-solid fa-spinner fa-spin"></i>
-
-      <span>
-        Memuat...
-      </span>
-
-    </div>
-
-  </div>
-
-
-  <!-- =========================================================
-       SUPABASE
-  ========================================================== -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-
-  <!-- =========================================================
-       CRM JAVASCRIPT
-  ========================================================== -->
-  <script src="../js/config.js"></script>
-  <script src="../js/helpers.js"></script>
-  <script src="../js/modal.js"></script>
-  <script src="../js/auth.js"></script>
-  <script src="../js/navigation.js"></script>
-  <script src="../js/dashboard.js"></script>
-  <script src="../js/leads.js"></script>
-  <script src="../js/customer-profile.js"></script>
-  <script src="../js/sales.js"></script>
+<script src="../js/config.js"></script>
+<script src="../js/helpers.js"></script>
+<script src="../js/modal.js"></script>
+<script src="../js/navigation.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/dashboard.js"></script>
+<script src="../js/leads.js"></script>
+<script src="../js/customer-profile.js"></script>
+<script src="../js/sales.js"></script>
 
 </body>
 </html>
