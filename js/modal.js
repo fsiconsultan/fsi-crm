@@ -1,5 +1,6 @@
 // ========================================
 // CRM FSI - MODAL & PROFILE
+// FINAL VERSION
 // ========================================
 
 
@@ -7,61 +8,83 @@
 // MODAL EVENTS
 // ========================================
 
-document.addEventListener(
-  "DOMContentLoaded",
-  () => {
+document.addEventListener("DOMContentLoaded", () => {
 
-    // Tombol dengan data-close
-    document
-      .querySelectorAll(
-        "[data-close]"
-      )
-      .forEach((button) => {
+  // ----------------------------------------
+  // Tombol dengan data-close
+  // ----------------------------------------
 
-        button.addEventListener(
-          "click",
-          () => {
+  document
+    .querySelectorAll("[data-close]")
+    .forEach((button) => {
 
-            closeModal(
-              button.dataset.close
-            );
+      button.addEventListener("click", () => {
 
-          }
-        );
+        const modalId =
+          button.dataset.close;
+
+        if (modalId) {
+          closeModal(modalId);
+        }
 
       });
 
+    });
 
-    // Klik area luar modal
-    document
-      .querySelectorAll(
-        ".modal-overlay"
-      )
-      .forEach((overlay) => {
 
-        overlay.addEventListener(
-          "click",
-          (event) => {
+  // ----------------------------------------
+  // Klik area luar modal
+  // ----------------------------------------
 
-            if (
-              event.target === overlay &&
-              overlay.dataset.locked !==
-                "true"
-            ) {
+  document
+    .querySelectorAll(".modal-overlay")
+    .forEach((overlay) => {
 
-              closeModal(
-                overlay.id
-              );
+      overlay.addEventListener("click", (event) => {
 
-            }
+        // Hanya tutup kalau yang diklik
+        // benar-benar area overlay
+        if (
+          event.target === overlay &&
+          overlay.dataset.locked !== "true"
+        ) {
 
-          }
-        );
+          closeModal(overlay.id);
+
+        }
 
       });
 
-  }
-);
+    });
+
+
+  // ----------------------------------------
+  // Tombol ESC
+  // ----------------------------------------
+
+  document.addEventListener("keydown", (event) => {
+
+    if (event.key !== "Escape") {
+      return;
+    }
+
+    const openedModal =
+      document.querySelector(
+        ".modal-overlay.active"
+      );
+
+    if (
+      openedModal &&
+      openedModal.dataset.locked !== "true"
+    ) {
+
+      closeModal(openedModal.id);
+
+    }
+
+  });
+
+});
 
 
 // ========================================
@@ -70,27 +93,22 @@ document.addEventListener(
 
 function openModal(id) {
 
-  const modal =
-    $(id);
-
+  const modal = $(id);
 
   if (!modal) {
     return;
   }
 
+  // Pastikan modal sebelumnya tidak
+  // mempunyai inline display yang salah
+  modal.style.display = "flex";
 
-  modal.classList.add(
-    "active"
-  );
+  // Aktifkan modal
+  modal.classList.add("active");
 
-  modal.style.display =
-    "flex";
+  // Kunci scroll halaman
+  document.body.classList.add("modal-open");
 
-
-  // Prevent background scrolling
-  document.body.classList.add(
-    "modal-open"
-  );
 }
 
 
@@ -100,35 +118,111 @@ function openModal(id) {
 
 function closeModal(id) {
 
-  const modal =
-    $(id);
-
+  const modal = $(id);
 
   if (!modal) {
     return;
   }
 
-
-  if (
-    modal.dataset.locked ===
-    "true"
-  ) {
+  // Modal yang dikunci tidak boleh ditutup
+  if (modal.dataset.locked === "true") {
     return;
   }
 
+  // Hilangkan class aktif
+  modal.classList.remove("active");
 
-  modal.classList.remove(
-    "active"
-  );
+  // Hapus inline style agar CSS
+  // kembali mengontrol display
+  modal.style.display = "none";
 
-  modal.style.display =
-    "none";
+  // Jika tidak ada modal lain yang terbuka,
+  // aktifkan kembali scroll halaman
+  const anotherModal =
+    document.querySelector(
+      ".modal-overlay.active"
+    );
+
+  if (!anotherModal) {
+    document.body.classList.remove(
+      "modal-open"
+    );
+  }
+
+}
 
 
-  // Restore scrolling
+// ========================================
+// CLOSE ALL MODALS
+// ========================================
+
+function closeAllModals() {
+
+  document
+    .querySelectorAll(".modal-overlay")
+    .forEach((modal) => {
+
+      if (
+        modal.dataset.locked !== "true"
+      ) {
+
+        modal.classList.remove(
+          "active"
+        );
+
+        modal.style.display =
+          "none";
+
+      }
+
+    });
+
   document.body.classList.remove(
     "modal-open"
   );
+
+}
+
+
+// ========================================
+// GLOBAL LOADING
+// ========================================
+
+function showGlobalLoading() {
+
+  const loading =
+    $("globalLoading");
+
+  if (!loading) {
+    return;
+  }
+
+  loading.classList.add(
+    "active"
+  );
+
+  loading.style.display =
+    "flex";
+
+}
+
+
+function hideGlobalLoading() {
+
+  const loading =
+    $("globalLoading");
+
+  if (!loading) {
+    return;
+  }
+
+  loading.classList.remove(
+    "active"
+  );
+
+  loading.style.display =
+    "none";
+
 }
 
 
@@ -141,18 +235,16 @@ function openProfileModal() {
   const modal =
     $("profileModal");
 
-
   if (!modal) {
     return;
   }
 
-
   renderProfile();
-
 
   openModal(
     "profileModal"
   );
+
 }
 
 
@@ -164,7 +256,6 @@ function renderProfile() {
 
   const box =
     $("userProfileContent");
-
 
   if (
     !box ||
@@ -218,7 +309,6 @@ function renderProfile() {
         ${safeText(initial)}
       </div>
 
-
       <div>
 
         <h2>
@@ -244,7 +334,8 @@ function renderProfile() {
 
         <strong>
           ${safeText(
-            currentProfile.name
+            currentProfile.name ||
+            "-"
           )}
         </strong>
 
@@ -274,7 +365,8 @@ function renderProfile() {
 
         <strong>
           ${safeText(
-            currentProfile.role
+            currentProfile.role ||
+            "-"
           )}
         </strong>
 
@@ -328,6 +420,7 @@ function renderProfile() {
     </div>
 
   `;
+
 }
 
 
@@ -340,4 +433,5 @@ function closeProfileModal() {
   closeModal(
     "profileModal"
   );
+
 }
