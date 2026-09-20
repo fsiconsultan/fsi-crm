@@ -23,6 +23,7 @@ async function initializeLeadsPage(){
     bindLeadEvents();
 
     await loadLeadFilters();
+
     await loadLeads();
 
     const params =
@@ -108,6 +109,11 @@ function bindLeadEvents(){
         element.addEventListener(
             "change",
             () => {
+
+                /*
+                   Setiap filter berubah,
+                   selalu kembali ke halaman 1.
+                */
 
                 currentPage = 1;
 
@@ -203,10 +209,13 @@ function bindLeadEvents(){
             "click",
             () => {
 
+                const pageSize =
+                    CRM_CONFIG.pageSize || 20;
+
                 const totalPages =
                     Math.ceil(
                         totalLeadsCount /
-                        CRM_CONFIG.pageSize
+                        pageSize
                     );
 
                 if(
@@ -238,6 +247,11 @@ function bindLeadEvents(){
 
     }
 
+
+    /*
+       Gunakan satu event listener global
+       untuk action pada table.
+    */
 
     document.addEventListener(
         "click",
@@ -383,8 +397,9 @@ async function loadBusinessFilters(){
                 .filter(Boolean)
                 .map(
                     value =>
-                        value.trim()
+                        String(value).trim()
                 )
+                .filter(Boolean)
         )
     ];
 
@@ -426,6 +441,31 @@ async function loadSalesFilters(){
     if(!filter) return;
 
 
+    /*
+       Default option.
+    */
+
+    filter.innerHTML = `
+        <option value="">
+            All Sales
+        </option>
+    `;
+
+
+    /*
+       Sales biasa tidak perlu melihat
+       dropdown Sales.
+    */
+
+    if(
+        currentProfile?.role !== "Admin"
+    ){
+
+        return;
+
+    }
+
+
     const {
         data,
         error
@@ -437,8 +477,15 @@ async function loadSalesFilters(){
             .select(
                 "id,name,role,status"
             )
+            .eq(
+                "role",
+                "Sales"
+            )
             .order(
-                "name"
+                "name",
+                {
+                    ascending:true
+                }
             );
 
 
@@ -454,38 +501,57 @@ async function loadSalesFilters(){
     }
 
 
+    /*
+       Hanya Sales ACTIVE yang muncul
+       di dropdown.
+       
+       Dibuat case-insensitive supaya
+       Active / active / ACTIVE tetap terbaca.
+    */
+
     salesUsersData =
         (data || []).filter(
             sales =>
-                sales.role !== "Admin" &&
-                sales.status !== "inactive"
+                String(
+                    sales.role || ""
+                ).toLowerCase() === "sales" &&
+                String(
+                    sales.status || ""
+                ).toLowerCase() === "active"
         );
 
 
-    filter.innerHTML = `
-        <option value="">
-            All Sales
-        </option>
-    `;
-
+    /*
+       Isi dropdown filter Sales.
+    */
 
     salesUsersData.forEach(
         sales => {
 
-            filter.insertAdjacentHTML(
-                "beforeend",
-                `
-                <option value="${escapeHTML(sales.id)}">
-                    ${escapeHTML(
-                        sales.name || "-"
-                    )}
-                </option>
-                `
+            const option =
+                document.createElement(
+                    "option"
+                );
+
+            option.value =
+                sales.id;
+
+            option.textContent =
+                sales.name ||
+                "Unnamed Sales";
+
+            filter.appendChild(
+                option
             );
 
         }
     );
 
+
+    /*
+       Isi dropdown Sales pada
+       form Add/Edit Lead.
+    */
 
     const assign =
         $("leadSalesAssign");
@@ -503,15 +569,20 @@ async function loadSalesFilters(){
         salesUsersData.forEach(
             sales => {
 
-                assign.insertAdjacentHTML(
-                    "beforeend",
-                    `
-                    <option value="${escapeHTML(sales.id)}">
-                        ${escapeHTML(
-                            sales.name || "-"
-                        )}
-                    </option>
-                    `
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+                option.value =
+                    sales.id;
+
+                option.textContent =
+                    sales.name ||
+                    "Unnamed Sales";
+
+                assign.appendChild(
+                    option
                 );
 
             }
@@ -560,7 +631,14 @@ function buildLeadQuery(){
 
 
     /*
-       SALES hanya melihat lead miliknya.
+       =====================================================
+       SALES PERMISSION
+       =====================================================
+
+       Sales hanya boleh melihat lead miliknya.
+
+       Admin boleh melihat semua lead dan
+       menggunakan Sales Filter.
     */
 
     if(
@@ -577,6 +655,12 @@ function buildLeadQuery(){
     }
 
 
+    /*
+       =====================================================
+       SEARCH
+       =====================================================
+    */
+
     const search =
         $("leadSearch")
             ?.value
@@ -586,19 +670,34 @@ function buildLeadQuery(){
     if(search){
 
         const safe =
-            search.replace(
-                /[%_]/g,
-                ""
-            );
+            search
+                .replace(
+                    /[%_]/g,
+                    ""
+                )
+                .replace(
+                    /,/g,
+                    " "
+                );
 
 
-        query =
-            query.or(
-                `customer_name.ilike.%${safe}%,phone.ilike.%${safe}%,business.ilike.%${safe}%,location.ilike.%${safe}%`
-            );
+        if(safe){
+
+            query =
+                query.or(
+                    `customer_name.ilike.%${safe}%,phone.ilike.%${safe}%,business.ilike.%${safe}%,location.ilike.%${safe}%`
+                );
+
+        }
 
     }
 
+
+    /*
+       =====================================================
+       STATUS
+       =====================================================
+    */
 
     const status =
         $("statusFilter")
@@ -616,6 +715,12 @@ function buildLeadQuery(){
     }
 
 
+    /*
+       =====================================================
+       BUSINESS
+       =====================================================
+    */
+
     const business =
         $("businessFilter")
             ?.value;
@@ -631,6 +736,12 @@ function buildLeadQuery(){
 
     }
 
+
+    /*
+       =====================================================
+       LOCATION
+       =====================================================
+    */
 
     const location =
         $("locationFilter")
@@ -649,22 +760,37 @@ function buildLeadQuery(){
     }
 
 
-    const sales =
-        $("salesFilter")
-            ?.value;
+    /*
+       =====================================================
+       SALES FILTER - ADMIN ONLY
+       =====================================================
 
+       Empty:
+       All Sales
+
+       Ada ID:
+       Hanya lead milik Sales tersebut.
+    */
 
     if(
-        sales &&
-        currentProfile?.role ===
-        "Admin"
+        currentProfile?.role === "Admin"
     ){
 
-        query =
-            query.eq(
-                "sales_id",
-                sales
-            );
+        const selectedSales =
+            $("salesFilter")
+                ?.value
+                ?.trim();
+
+
+        if(selectedSales){
+
+            query =
+                query.eq(
+                    "sales_id",
+                    selectedSales
+                );
+
+        }
 
     }
 
@@ -694,10 +820,13 @@ async function loadLeads(){
         <tr>
             <td colspan="10">
                 <div class="table-loading">
+
                     <div class="loading-spinner"></div>
+
                     <span>
                         Loading leads...
                     </span>
+
                 </div>
             </td>
         </tr>
@@ -708,8 +837,21 @@ async function loadLeads(){
         CRM_CONFIG.pageSize || 20;
 
 
+    /*
+       Pastikan currentPage valid.
+    */
+
+    if(currentPage < 1){
+
+        currentPage = 1;
+
+    }
+
+
     const from =
-        (currentPage - 1) *
+        (
+            currentPage - 1
+        ) *
         pageSize;
 
 
@@ -719,25 +861,86 @@ async function loadLeads(){
         1;
 
 
-    const {
-        data,
-        error,
-        count
-    } =
-        await buildLeadQuery()
-            .order(
-                "created_at",
-                {
-                    ascending:false
-                }
-            )
-            .range(
-                from,
-                to
+    try{
+
+        const {
+            data,
+            error,
+            count
+        } =
+            await buildLeadQuery()
+                .order(
+                    "created_at",
+                    {
+                        ascending:false
+                    }
+                )
+                .range(
+                    from,
+                    to
+                );
+
+
+        if(error){
+
+            throw error;
+
+        }
+
+
+        leadsData =
+            data || [];
+
+
+        totalLeadsCount =
+            Number(count || 0);
+
+
+        /*
+           Jika user berada di halaman
+           yang sudah tidak tersedia setelah
+           filter berubah, kembali ke halaman 1.
+        */
+
+        const totalPages =
+            Math.ceil(
+                totalLeadsCount /
+                pageSize
             );
 
 
-    if(error){
+        if(
+            totalPages > 0 &&
+            currentPage > totalPages
+        ){
+
+            currentPage =
+                totalPages;
+
+            return loadLeads();
+
+        }
+
+
+        if(
+            totalLeadsCount === 0
+        ){
+
+            currentPage = 1;
+
+        }
+
+
+        updateLeadKPIs();
+
+        renderLeadTable();
+
+        renderPagination();
+
+        updateLeadCount();
+
+    }
+    catch(error){
 
         console.error(
             "Load leads:",
@@ -745,9 +948,15 @@ async function loadLeads(){
         );
 
 
+        leadsData = [];
+
+        totalLeadsCount = 0;
+
+
         tbody.innerHTML = `
             <tr>
                 <td colspan="10">
+
                     <div class="table-error">
 
                         <i class="fa-solid fa-circle-exclamation"></i>
@@ -764,28 +973,27 @@ async function loadLeads(){
                         </span>
 
                     </div>
+
                 </td>
             </tr>
         `;
 
-        return;
+
+        if(empty){
+
+            empty.style.display =
+                "none";
+
+        }
+
+
+        updateLeadKPIs();
+
+        renderPagination();
+
+        updateLeadCount();
 
     }
-
-
-    leadsData =
-        data || [];
-
-
-    totalLeadsCount =
-        count || 0;
-
-
-    updateLeadKPIs();
-
-    renderLeadTable();
-
-    renderPagination();
 
 }
 
@@ -810,12 +1018,14 @@ function renderLeadTable(){
 
         tbody.innerHTML = "";
 
+
         if(empty){
 
             empty.style.display =
                 "flex";
 
         }
+
 
         updateLeadCount();
 
@@ -1142,9 +1352,22 @@ function renderLeadTable(){
 
 function updateLeadKPIs(){
 
+    /*
+       Total menggunakan COUNT dari Supabase.
+       Jadi ketika Admin memilih Sales A,
+       total mengikuti Sales A.
+    */
+
     const total =
         totalLeadsCount || 0;
 
+
+    /*
+       KPI berikut menghitung data
+       pada halaman yang sedang ditampilkan.
+
+       Total tetap menggunakan exact count.
+    */
 
     const followUp =
         leadsData.filter(
@@ -1263,6 +1486,7 @@ function renderPagination(){
 
     const prev =
         $("prevPageBtn");
+
 
     const next =
         $("nextPageBtn");
