@@ -14,30 +14,20 @@ function salesElement(id) {
   return document.getElementById(id);
 }
 
-
 function salesSetText(id, value) {
-
-  const element =
-    salesElement(id);
+  const element = salesElement(id);
 
   if (element) {
-    element.textContent =
-      value ?? "";
+    element.textContent = value ?? "";
   }
-
 }
 
-
 function salesSetValue(id, value) {
-
-  const element =
-    salesElement(id);
+  const element = salesElement(id);
 
   if (element) {
-    element.value =
-      value ?? "";
+    element.value = value ?? "";
   }
-
 }
 
 
@@ -51,27 +41,16 @@ async function initializeSalesPage() {
   console.log("CRM FSI - INITIALIZE SALES");
   console.log("================================");
 
-
   if (currentProfile?.role !== "Admin") {
-
-    console.warn(
-      "Sales Management hanya untuk Admin."
-    );
-
+    console.warn("Sales Management hanya untuk Admin.");
     return;
   }
 
-
   bindSalesEvents();
-
 
   await loadSalesUsers();
 
-
-  console.log(
-    "CRM FSI - SALES READY"
-  );
-
+  console.log("CRM FSI - SALES READY");
 }
 
 
@@ -82,121 +61,70 @@ async function initializeSalesPage() {
 async function loadSalesUsers() {
 
   if (currentProfile?.role !== "Admin") {
-
-    console.warn(
-      "LOAD SALES DITOLAK: User bukan Admin."
-    );
-
+    console.warn("LOAD SALES DITOLAK: User bukan Admin.");
     return;
   }
 
-
-  const tableBody =
-    salesElement("salesTableBody");
-
+  const tableBody = salesElement("salesTableBody");
 
   if (!tableBody) {
-
-    console.error(
-      "ELEMENT salesTableBody TIDAK DITEMUKAN."
-    );
-
+    console.error("ELEMENT salesTableBody TIDAK DITEMUKAN.");
     return;
   }
-
 
   try {
 
-    console.log(
-      "================================"
-    );
-
-    console.log(
-      "CRM FSI - MEMUAT SALES USERS"
-    );
-
-    console.log(
-      "================================"
-    );
-
+    console.log("================================");
+    console.log("CRM FSI - MEMUAT SALES USERS");
+    console.log("================================");
 
     const {
       data,
       error
-    } =
-      await supabaseClient
-        .from("sales_users")
-        .select("*")
-        .order(
-          "created_at",
-          {
-            ascending: true
-          }
-        );
+    } = await supabaseClient
+      .from("sales_users")
+      .select("*")
+      .order("created_at", {
+        ascending: true
+      });
 
-
-    console.log(
-      "SALES QUERY DATA:",
-      data
-    );
-
-
-    console.log(
-      "SALES QUERY ERROR:",
-      error
-    );
-
+    console.log("SALES QUERY DATA:", data);
+    console.log("SALES QUERY ERROR:", error);
 
     if (error) {
       throw error;
     }
 
-
-    salesUsersData =
-      Array.isArray(data)
-        ? data
-        : [];
-
+    salesUsersData = Array.isArray(data)
+      ? data
+      : [];
 
     console.log(
       "TOTAL ROW sales_users:",
       salesUsersData.length
     );
 
-
-    const salesOnly =
-      salesUsersData.filter(
-        user =>
-          String(
-            user.role || ""
-          )
-            .trim()
-            .toLowerCase() ===
-          "sales"
-      );
-
+    const salesOnly = salesUsersData.filter(
+      user =>
+        String(user.role || "")
+          .trim()
+          .toLowerCase() === "sales"
+    );
 
     console.log(
       "TOTAL SALES:",
       salesOnly.length
     );
 
-
-    const activeCount =
-      salesOnly.filter(
-        user =>
-          String(
-            user.status || ""
-          )
-            .trim()
-            .toLowerCase() ===
-          "active"
-      ).length;
-
+    const activeCount = salesOnly.filter(
+      user =>
+        String(user.status || "")
+          .trim()
+          .toLowerCase() === "active"
+    ).length;
 
     const inactiveCount =
-      salesOnly.length -
-      activeCount;
+      salesOnly.length - activeCount;
 
 
     // ======================================
@@ -208,12 +136,10 @@ async function loadSalesUsers() {
       salesOnly.length
     );
 
-
     salesSetText(
       "activeSalesUsers",
       activeCount
     );
-
 
     salesSetText(
       "inactiveSalesUsers",
@@ -233,8 +159,7 @@ async function loadSalesUsers() {
     // ======================================
 
     if (
-      typeof loadSalesLookup ===
-      "function"
+      typeof loadSalesLookup === "function"
     ) {
 
       try {
@@ -259,12 +184,9 @@ async function loadSalesUsers() {
       error
     );
 
-
     tableBody.innerHTML = `
       <tr>
-
         <td colspan="7">
-
           <div class="sales-empty">
 
             <div class="sales-empty-icon">
@@ -283,21 +205,16 @@ async function loadSalesUsers() {
             </span>
 
           </div>
-
         </td>
-
       </tr>
     `;
-
 
     showToast(
       error?.message ||
       "Gagal memuat data Sales.",
       "error"
     );
-
   }
-
 }
 
 
@@ -310,73 +227,58 @@ function renderSalesTable() {
   const tableBody =
     salesElement("salesTableBody");
 
-
   if (!tableBody) {
-
     console.error(
       "salesTableBody tidak ditemukan."
     );
-
     return;
   }
 
-
   const search =
     String(
-      salesElement("salesSearch")?.value ||
-      ""
+      salesElement("salesSearch")?.value || ""
     )
       .trim()
       .toLowerCase();
-
 
   const rows =
     (salesUsersData || [])
       .filter(
         user =>
-          String(
-            user.role || ""
-          )
+          String(user.role || "")
             .trim()
-            .toLowerCase() ===
-          "sales"
+            .toLowerCase() === "sales"
       )
-      .filter(
-        user => {
+      .filter(user => {
 
-          const name =
-            String(
-              user.name || ""
-            ).toLowerCase();
+        const name =
+          String(
+            user.name || ""
+          ).toLowerCase();
 
+        const username =
+          String(
+            user.username || ""
+          ).toLowerCase();
 
-          const username =
-            String(
-              user.username || ""
-            ).toLowerCase();
+        const email =
+          String(
+            user.email || ""
+          ).toLowerCase();
 
+        return (
+          name.includes(search) ||
+          username.includes(search) ||
+          email.includes(search)
+        );
 
-          const email =
-            String(
-              user.email || ""
-            ).toLowerCase();
-
-
-          return (
-            name.includes(search) ||
-            username.includes(search) ||
-            email.includes(search)
-          );
-
-        }
-      );
+      });
 
 
   if (!rows.length) {
 
     tableBody.innerHTML = `
       <tr>
-
         <td colspan="7">
 
           <div class="sales-empty">
@@ -396,7 +298,6 @@ function renderSalesTable() {
           </div>
 
         </td>
-
       </tr>
     `;
 
@@ -414,54 +315,36 @@ function renderSalesTable() {
               sales.status || ""
             )
               .trim()
-              .toLowerCase() ===
-            "active";
-
+              .toLowerCase() === "active";
 
           const statusClass =
             isActive
               ? "status-active"
               : "status-inactive";
 
-
           const statusText =
             sales.status ||
             "Inactive";
 
-
           const photo =
-            getSalesPhotoUrl(
-              sales
-            );
-
+            getSalesPhotoUrl(sales);
 
           const initials =
-            getSalesInitials(
-              sales.name
-            );
-
+            getSalesInitials(sales.name);
 
           const safeId =
-            String(
-              sales.id
-            )
-              .replace(
-                /'/g,
-                "\\'"
-              );
+            String(sales.id)
+              .replace(/'/g, "\\'");
 
 
           return `
             <tr>
 
               <td>
-
                 <span class="sales-row-number">
                   ${index + 1}
                 </span>
-
               </td>
-
 
               <td>
 
@@ -473,8 +356,7 @@ function renderSalesTable() {
                         <img
                           src="${escapeHTML(photo)}"
                           alt="${escapeHTML(
-                            sales.name ||
-                            "Sales"
+                            sales.name || "Sales"
                           )}"
                           class="sales-avatar-table"
                           onerror="
@@ -486,7 +368,6 @@ function renderSalesTable() {
                       : ""
                   }
 
-
                   <div
                     class="sales-avatar-fallback"
                     style="${
@@ -495,21 +376,16 @@ function renderSalesTable() {
                         : "display:flex;"
                     }"
                   >
-                    ${escapeHTML(
-                      initials
-                    )}
+                    ${escapeHTML(initials)}
                   </div>
-
 
                   <div class="sales-person-info">
 
                     <strong>
                       ${escapeHTML(
-                        sales.name ||
-                        "-"
+                        sales.name || "-"
                       )}
                     </strong>
-
 
                     ${
                       sales.email
@@ -529,30 +405,21 @@ function renderSalesTable() {
 
               </td>
 
-
               <td>
-
                 <span class="sales-username">
                   ${escapeHTML(
-                    sales.username ||
-                    "-"
+                    sales.username || "-"
                   )}
                 </span>
-
               </td>
-
 
               <td>
-
                 <span class="sales-role">
                   ${escapeHTML(
-                    sales.role ||
-                    "Sales"
+                    sales.role || "Sales"
                   )}
                 </span>
-
               </td>
-
 
               <td>
 
@@ -562,14 +429,11 @@ function renderSalesTable() {
 
                   <i class="fa-solid fa-circle"></i>
 
-                  ${escapeHTML(
-                    statusText
-                  )}
+                  ${escapeHTML(statusText)}
 
                 </span>
 
               </td>
-
 
               <td>
 
@@ -580,7 +444,6 @@ function renderSalesTable() {
                 </span>
 
               </td>
-
 
               <td>
 
@@ -594,7 +457,6 @@ function renderSalesTable() {
                   >
                     <i class="fa-regular fa-pen-to-square"></i>
                   </button>
-
 
                   <button
                     type="button"
@@ -611,11 +473,9 @@ function renderSalesTable() {
 
             </tr>
           `;
-
         }
       )
       .join("");
-
 }
 
 
@@ -623,21 +483,16 @@ function renderSalesTable() {
 // SALES PHOTO
 // ========================================
 
-function getSalesPhotoUrl(
-  sales
-) {
+function getSalesPhotoUrl(sales) {
 
   if (
     sales &&
     sales.photo_url
   ) {
-
     return String(
       sales.photo_url
     );
-
   }
-
 
   const name =
     String(
@@ -646,16 +501,11 @@ function getSalesPhotoUrl(
       .trim()
       .toLowerCase();
 
-
   if (name === "rist") {
-
     return "https://yoyszukutqwoxxdolzcg.supabase.co/storage/v1/object/public/sales-avatar/rist.jpeg";
-
   }
 
-
   return "";
-
 }
 
 
@@ -663,21 +513,17 @@ function getSalesPhotoUrl(
 // INITIALS
 // ========================================
 
-function getSalesInitials(
-  name
-) {
+function getSalesInitials(name) {
 
   if (!name) {
     return "SA";
   }
-
 
   const parts =
     String(name)
       .trim()
       .split(/\s+/)
       .filter(Boolean);
-
 
   if (parts.length === 1) {
 
@@ -687,12 +533,10 @@ function getSalesInitials(
 
   }
 
-
   return (
     parts[0][0] +
     parts[parts.length - 1][0]
   ).toUpperCase();
-
 }
 
 
@@ -702,10 +546,7 @@ function getSalesInitials(
 
 function openAddSales() {
 
-  console.log(
-    "OPEN ADD SALES"
-  );
-
+  console.log("OPEN ADD SALES");
 
   if (
     currentProfile?.role !== "Admin"
@@ -719,17 +560,14 @@ function openAddSales() {
     return;
   }
 
-
   const modal =
     salesElement("salesModal");
-
 
   if (!modal) {
 
     console.error(
       "salesModal tidak ditemukan."
     );
-
 
     showToast(
       "Modal Add New Sales tidak ditemukan.",
@@ -739,76 +577,58 @@ function openAddSales() {
     return;
   }
 
+  editingSalesId = null;
 
-  editingSalesId =
-    null;
-
-
-  salesElement("salesForm")?.reset();
-
+  salesElement(
+    "salesForm"
+  )?.reset();
 
   salesSetValue(
     "salesId",
     ""
   );
 
-
   salesSetText(
     "salesModalTitle",
     "Add New Sales"
   );
-
 
   salesSetText(
     "salesModalSubtitle",
     "Buat akun Sales baru."
   );
 
-
   salesSetText(
     "saveSalesText",
     "Create Sales"
   );
-
 
   const passwordGroup =
     salesElement(
       "salesPasswordGroup"
     );
 
-
   if (passwordGroup) {
-
     passwordGroup.style.display =
       "block";
-
   }
-
 
   const statusGroup =
     salesElement(
       "salesStatusGroup"
     );
 
-
   if (statusGroup) {
-
     statusGroup.style.display =
       "none";
-
   }
-
 
   salesSetValue(
     "salesStatus",
     "Active"
   );
 
-
-  showSalesPhotoPreview(
-    ""
-  );
-
+  showSalesPhotoPreview("");
 
   showFormMessage(
     "salesFormMessage",
@@ -816,11 +636,7 @@ function openAddSales() {
     ""
   );
 
-
-  openModal(
-    "salesModal"
-  );
-
+  openModal("salesModal");
 }
 
 
@@ -828,9 +644,7 @@ function openAddSales() {
 // EDIT SALES
 // ========================================
 
-function openEditSales(
-  id
-) {
+function openEditSales(id) {
 
   if (
     currentProfile?.role !== "Admin"
@@ -844,7 +658,6 @@ function openEditSales(
     return;
   }
 
-
   const sales =
     (salesUsersData || [])
       .find(
@@ -852,7 +665,6 @@ function openEditSales(
           String(user.id) ===
           String(id)
       );
-
 
   if (!sales) {
 
@@ -864,92 +676,72 @@ function openEditSales(
     return;
   }
 
-
   editingSalesId =
     sales.id;
-
 
   salesSetValue(
     "salesId",
     sales.id
   );
 
-
   salesSetValue(
     "salesName",
     sales.name || ""
   );
-
 
   salesSetValue(
     "salesUsername",
     sales.username || ""
   );
 
-
   salesSetValue(
     "salesPhotoUrl",
     sales.photo_url || ""
   );
 
-
   salesSetValue(
     "salesStatus",
-    sales.status ||
-    "Active"
+    sales.status || "Active"
   );
-
 
   salesSetText(
     "salesModalTitle",
     "Edit Sales"
   );
 
-
   salesSetText(
     "salesModalSubtitle",
     "Perbarui informasi Sales."
   );
-
 
   salesSetText(
     "saveSalesText",
     "Save Changes"
   );
 
-
   const passwordGroup =
     salesElement(
       "salesPasswordGroup"
     );
 
-
   if (passwordGroup) {
-
     passwordGroup.style.display =
       "none";
-
   }
-
 
   const statusGroup =
     salesElement(
       "salesStatusGroup"
     );
 
-
   if (statusGroup) {
-
     statusGroup.style.display =
       "block";
-
   }
-
 
   showSalesPhotoPreview(
     sales.photo_url || ""
   );
-
 
   showFormMessage(
     "salesFormMessage",
@@ -957,11 +749,7 @@ function openEditSales(
     ""
   );
 
-
-  openModal(
-    "salesModal"
-  );
-
+  openModal("salesModal");
 }
 
 
@@ -969,20 +757,16 @@ function openEditSales(
 // PHOTO PREVIEW
 // ========================================
 
-function showSalesPhotoPreview(
-  url
-) {
+function showSalesPhotoPreview(url) {
 
   const preview =
     salesElement(
       "salesPhotoPreview"
     );
 
-
   if (!preview) {
     return;
   }
-
 
   if (!url) {
 
@@ -991,15 +775,12 @@ function showSalesPhotoPreview(
         <i class="fa-solid fa-user"></i>
       `;
 
-
     preview.classList.remove(
       "has-image"
     );
 
-
     return;
   }
-
 
   preview.innerHTML =
     `
@@ -1009,11 +790,9 @@ function showSalesPhotoPreview(
       >
     `;
 
-
   preview.classList.add(
     "has-image"
   );
-
 }
 
 
@@ -1021,17 +800,13 @@ function showSalesPhotoPreview(
 // CREATE / UPDATE SALES
 // ========================================
 
-async function handleCreateSales(
-  event
-) {
+async function handleCreateSales(event) {
 
   event.preventDefault();
-
 
   console.log(
     "SALES FORM SUBMIT"
   );
-
 
   if (
     currentProfile?.role !== "Admin"
@@ -1045,40 +820,30 @@ async function handleCreateSales(
     return;
   }
 
-
   const name =
     salesElement(
       "salesName"
-    )?.value.trim() ||
-    "";
-
+    )?.value.trim() || "";
 
   const username =
     salesElement(
       "salesUsername"
-    )?.value.trim() ||
-    "";
-
+    )?.value.trim() || "";
 
   const password =
     salesElement(
       "salesPassword"
-    )?.value ||
-    "";
-
+    )?.value || "";
 
   const photoUrl =
     salesElement(
       "salesPhotoUrl"
-    )?.value.trim() ||
-    "";
-
+    )?.value.trim() || "";
 
   const status =
     salesElement(
       "salesStatus"
-    )?.value ||
-    "Active";
+    )?.value || "Active";
 
 
   if (!name || !username) {
@@ -1128,7 +893,6 @@ async function handleCreateSales(
       "saveSalesBtn"
     );
 
-
   setButtonLoading(
     saveButton,
     true
@@ -1151,7 +915,6 @@ async function handleCreateSales(
         }
       );
 
-
       const {
         data,
         error
@@ -1169,23 +932,19 @@ async function handleCreateSales(
             }
           );
 
-
       console.log(
         "CREATE SALES RESPONSE:",
         data
       );
-
 
       console.log(
         "CREATE SALES ERROR:",
         error
       );
 
-
       if (error) {
         throw error;
       }
-
 
       if (data?.error) {
 
@@ -1193,14 +952,11 @@ async function handleCreateSales(
           data.error +
           (
             data.detail
-              ? ": " +
-                data.detail
+              ? ": " + data.detail
               : ""
           )
         );
-
       }
-
 
       if (
         data &&
@@ -1211,13 +967,15 @@ async function handleCreateSales(
           data.message ||
           "Gagal membuat Sales."
         );
-
       }
 
 
+      // ==================================
+      // PHOTO URL
+      // ==================================
+
       const createdSales =
         data?.sales;
-
 
       if (
         createdSales?.id &&
@@ -1225,8 +983,7 @@ async function handleCreateSales(
       ) {
 
         const {
-          error:
-            photoError
+          error: photoError
         } =
           await supabaseClient
             .from("sales_users")
@@ -1239,7 +996,6 @@ async function handleCreateSales(
               createdSales.id
             );
 
-
         if (photoError) {
 
           console.warn(
@@ -1248,7 +1004,6 @@ async function handleCreateSales(
           );
 
         }
-
       }
 
 
@@ -1258,6 +1013,7 @@ async function handleCreateSales(
       );
 
     }
+
 
     // ====================================
     // UPDATE SALES
@@ -1280,7 +1036,6 @@ async function handleCreateSales(
             editingSalesId
           );
 
-
       if (error) {
         throw error;
       }
@@ -1289,8 +1044,7 @@ async function handleCreateSales(
       if (photoUrl) {
 
         const {
-          error:
-            photoError
+          error: photoError
         } =
           await supabaseClient
             .from("sales_users")
@@ -1303,7 +1057,6 @@ async function handleCreateSales(
               editingSalesId
             );
 
-
         if (photoError) {
 
           console.warn(
@@ -1312,7 +1065,6 @@ async function handleCreateSales(
           );
 
         }
-
       }
 
 
@@ -1320,7 +1072,6 @@ async function handleCreateSales(
         "Data Sales berhasil diperbarui.",
         "success"
       );
-
     }
 
 
@@ -1328,10 +1079,8 @@ async function handleCreateSales(
       "salesModal"
     );
 
-
     editingSalesId =
       null;
-
 
     await loadSalesUsers();
 
@@ -1342,7 +1091,6 @@ async function handleCreateSales(
       "HANDLE SALES ERROR:",
       error
     );
-
 
     showFormMessage(
       "salesFormMessage",
@@ -1359,7 +1107,6 @@ async function handleCreateSales(
     );
 
   }
-
 }
 
 
@@ -1367,9 +1114,7 @@ async function handleCreateSales(
 // TOGGLE STATUS
 // ========================================
 
-async function toggleSalesStatus(
-  id
-) {
+async function toggleSalesStatus(id) {
 
   if (
     currentProfile?.role !== "Admin"
@@ -1383,7 +1128,6 @@ async function toggleSalesStatus(
     return;
   }
 
-
   const sales =
     (salesUsersData || [])
       .find(
@@ -1391,7 +1135,6 @@ async function toggleSalesStatus(
           String(user.id) ===
           String(id)
       );
-
 
   if (!sales) {
 
@@ -1403,14 +1146,12 @@ async function toggleSalesStatus(
     return;
   }
 
-
   const currentStatus =
     String(
       sales.status || ""
     )
       .trim()
       .toLowerCase();
-
 
   const nextStatus =
     currentStatus === "active"
@@ -1445,17 +1186,14 @@ async function toggleSalesStatus(
               id
             );
 
-
         if (error) {
           throw error;
         }
-
 
         showToast(
           "Status Sales diperbarui.",
           "success"
         );
-
 
         await loadSalesUsers();
 
@@ -1466,18 +1204,14 @@ async function toggleSalesStatus(
           error
         );
 
-
         showToast(
           error?.message ||
           "Gagal mengubah status Sales.",
           "error"
         );
-
       }
-
     }
   );
-
 }
 
 
@@ -1491,24 +1225,20 @@ function bindSalesEvents() {
     return;
   }
 
-
   const addButton =
     salesElement(
       "addSalesBtn"
     );
-
 
   const form =
     salesElement(
       "salesForm"
     );
 
-
   const searchInput =
     salesElement(
       "salesSearch"
     );
-
 
   const photoInput =
     salesElement(
@@ -1531,16 +1261,13 @@ function bindSalesEvents() {
 
     searchInput.addEventListener(
       "input",
-      debounce(
+      salesDebounce(
         () => {
-
           renderSalesTable();
-
         },
         300
       )
     );
-
   }
 
 
@@ -1557,7 +1284,6 @@ function bindSalesEvents() {
         );
 
         openAddSales();
-
       }
     );
 
@@ -1566,7 +1292,6 @@ function bindSalesEvents() {
     console.error(
       "TOMBOL addSalesBtn TIDAK DITEMUKAN."
     );
-
   }
 
 
@@ -1582,7 +1307,6 @@ function bindSalesEvents() {
     console.error(
       "FORM salesForm TIDAK DITEMUKAN."
     );
-
   }
 
 
@@ -1598,34 +1322,28 @@ function bindSalesEvents() {
 
       }
     );
-
   }
 
 
   salesEventsBound =
     true;
-
 }
 
 
 // ========================================
-// DEBOUNCE
+// SALES DEBOUNCE
 // ========================================
 
-function debounce(
+function salesDebounce(
   callback,
   delay = 300
 ) {
 
   let timer;
 
-
   return function (...args) {
 
-    clearTimeout(
-      timer
-    );
-
+    clearTimeout(timer);
 
     timer =
       setTimeout(
@@ -1639,9 +1357,7 @@ function debounce(
         },
         delay
       );
-
   };
-
 }
 
 
@@ -1652,26 +1368,20 @@ function debounce(
 window.initializeSalesPage =
   initializeSalesPage;
 
-
 window.loadSalesUsers =
   loadSalesUsers;
-
 
 window.renderSalesTable =
   renderSalesTable;
 
-
 window.openAddSales =
   openAddSales;
-
 
 window.openEditSales =
   openEditSales;
 
-
 window.toggleSalesStatus =
   toggleSalesStatus;
-
 
 window.handleCreateSales =
   handleCreateSales;
