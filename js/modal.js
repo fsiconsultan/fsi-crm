@@ -1,248 +1,144 @@
 // ========================================
-// CRM FSI - HELPERS
+// CRM FSI - MODAL & PROFILE
+// FINAL
 // ========================================
 
+document.addEventListener("DOMContentLoaded", () => {
 
-// ========================================
-// SHORT SELECTOR
-// ========================================
+    // Support both:
+    // data-close="modalId"
+    // data-close-modal="modalId"
+    document.querySelectorAll("[data-close], [data-close-modal]")
+        .forEach((button) => {
 
-function $(id) {
+            button.addEventListener("click", (event) => {
 
-    return document.getElementById(id);
+                event.preventDefault();
+                event.stopPropagation();
 
-}
+                const modalId =
+                    button.dataset.close ||
+                    button.dataset.closeModal;
 
+                if (modalId) {
+                    closeModal(modalId);
+                }
 
-// ========================================
-// ESCAPE HTML
-// ========================================
+            });
 
-function escapeHTML(value) {
+        });
 
-    if (
-        value === null ||
-        value === undefined
-    ) {
-        return "";
-    }
 
-    return String(value)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+    // Click outside modal
+    document.querySelectorAll(".modal-overlay")
+        .forEach((overlay) => {
 
-}
+            overlay.addEventListener("click", (event) => {
 
+                if (
+                    event.target === overlay &&
+                    overlay.dataset.locked !== "true"
+                ) {
+                    closeModal(overlay.id);
+                }
 
-function safeText(value) {
+            });
 
-    return escapeHTML(value);
+        });
 
-}
 
+    // ESC
+    document.addEventListener("keydown", (event) => {
 
-// ========================================
-// DATE
-// ========================================
+        if (event.key !== "Escape") {
+            return;
+        }
 
-function formatDate(value) {
+        const openedModal =
+            document.querySelector(".modal-overlay.active");
 
-    if (!value) {
-        return "-";
-    }
-
-    try {
-
-        return new Intl.DateTimeFormat(
-            "id-ID",
-            {
-                day: "2-digit",
-                month: "short",
-                year: "numeric"
-            }
-        ).format(
-            new Date(value)
-        );
-
-    } catch {
-
-        return value;
-
-    }
-
-}
-
-
-function formatDateInput(value) {
-
-    if (!value) {
-        return "";
-    }
-
-    return String(value).substring(0, 10);
-
-}
-
-
-// ========================================
-// PHONE
-// ========================================
-
-function normalizePhone(phone) {
-
-    if (!phone) {
-        return "";
-    }
-
-    let value =
-        String(phone)
-            .replace(/\D/g, "");
-
-
-    if (
-        value.startsWith("0")
-    ) {
-        value =
-            "62" +
-            value.substring(1);
-    }
-
-
-    return value;
-
-}
-
-
-function whatsappLink(phone) {
-
-    const number =
-        normalizePhone(phone);
-
-    if (!number) {
-        return "#";
-    }
-
-    return `https://wa.me/${number}`;
-
-}
-
-
-// ========================================
-// STATUS
-// ========================================
-
-function normalizeLeadStatus(status) {
-
-    if (!status) {
-        return "New";
-    }
-
-    const value =
-        String(status)
-            .trim()
-            .toLowerCase();
-
-
-    const map = {
-
-        "new": "New",
-        "belum dihubungi": "New",
-
-        "flyer sent": "Flyer Sent",
-        "flyer": "Flyer Sent",
-
-        "interested": "Interested",
-        "tertarik": "Interested",
-
-        "follow up": "Follow Up",
-        "follow-up": "Follow Up",
-
-        "closing": "Closing",
-
-        "not interested": "Not Interested",
-        "tidak tertarik": "Not Interested"
-
-    };
-
-
-    return (
-        map[value] ||
-        status
-    );
-
-}
-
-
-// ========================================
-// TOAST
-// ========================================
-
-function showToast(
-    message,
-    type = "success"
-) {
-
-    let toast =
-        document.querySelector(
-            ".crm-toast"
-        );
-
-
-    if (!toast) {
-
-        toast =
-            document.createElement("div");
-
-        toast.className =
-            "crm-toast";
-
-        document.body.appendChild(
-            toast
-        );
-
-    }
-
-
-    toast.className =
-        `crm-toast ${type}`;
-
-
-    toast.innerHTML = `
-        <i class="${
-            type === "error"
-            ? "fa-solid fa-circle-exclamation"
-            : "fa-solid fa-circle-check"
-        }"></i>
-
-        <span>
-            ${escapeHTML(message)}
-        </span>
-    `;
-
-
-    requestAnimationFrame(() => {
-
-        toast.classList.add("show");
+        if (
+            openedModal &&
+            openedModal.dataset.locked !== "true"
+        ) {
+            closeModal(openedModal.id);
+        }
 
     });
 
-
-    clearTimeout(
-        toast._timer
-    );
+});
 
 
-    toast._timer =
-        setTimeout(() => {
+// ========================================
+// OPEN MODAL
+// ========================================
 
-            toast.classList.remove(
-                "show"
-            );
+function openModal(id) {
 
-        }, 3000);
+    const modal = $(id);
+
+    if (!modal) {
+        return;
+    }
+
+    modal.classList.add("active");
+
+    modal.style.display = "flex";
+
+    document.body.classList.add("modal-open");
+
+}
+
+
+// ========================================
+// CLOSE MODAL
+// ========================================
+
+function closeModal(id) {
+
+    const modal = $(id);
+
+    if (!modal) {
+        return;
+    }
+
+    if (modal.dataset.locked === "true") {
+        return;
+    }
+
+    modal.classList.remove("active");
+
+    modal.style.display = "none";
+
+    const anotherModal =
+        document.querySelector(".modal-overlay.active");
+
+    if (!anotherModal) {
+        document.body.classList.remove("modal-open");
+    }
+
+}
+
+
+// ========================================
+// CLOSE ALL
+// ========================================
+
+function closeAllModals() {
+
+    document.querySelectorAll(".modal-overlay")
+        .forEach((modal) => {
+
+            if (modal.dataset.locked === "true") {
+                return;
+            }
+
+            modal.classList.remove("active");
+            modal.style.display = "none";
+
+        });
+
+    document.body.classList.remove("modal-open");
 
 }
 
@@ -251,320 +147,177 @@ function showToast(
 // GLOBAL LOADING
 // ========================================
 
-function setGlobalLoading(
-    active,
-    message = "Loading..."
-) {
+function showGlobalLoading() {
 
-    const loading =
-        $("globalLoading");
+    const loading = $("globalLoading");
 
     if (!loading) {
         return;
     }
 
-
-    const text =
-        loading.querySelector(
-            ".loading-text"
-        );
-
-
-    if (text) {
-        text.textContent =
-            message;
-    }
-
-
-    if (active) {
-
-        loading.classList.add(
-            "active"
-        );
-
-        loading.style.display =
-            "flex";
-
-    } else {
-
-        loading.classList.remove(
-            "active"
-        );
-
-        loading.style.display =
-            "none";
-
-    }
-
-}
-
-
-function showGlobalLoading(message) {
-
-    setGlobalLoading(
-        true,
-        message
-    );
+    loading.classList.add("active");
+    loading.style.display = "flex";
 
 }
 
 
 function hideGlobalLoading() {
 
-    setGlobalLoading(
-        false
-    );
+    const loading = $("globalLoading");
+
+    if (!loading) {
+        return;
+    }
+
+    loading.classList.remove("active");
+    loading.style.display = "none";
 
 }
 
 
 // ========================================
-// BUTTON LOADING
+// PROFILE MODAL
 // ========================================
 
-function setButtonLoading(
-    button,
-    loading
-) {
+function openProfileModal() {
 
-    if (!button) {
+    const modal = $("profileModal");
+
+    if (!modal) {
         return;
     }
 
+    renderProfile();
 
-    if (loading) {
+    openModal("profileModal");
 
-        if (
-            !button.dataset.originalHTML
-        ) {
+}
 
-            button.dataset.originalHTML =
-                button.innerHTML;
 
-        }
+function closeProfileModal() {
 
-        button.disabled = true;
+    closeModal("profileModal");
 
-        button.innerHTML = `
-            <i class="fa-solid fa-spinner fa-spin"></i>
-            Please wait...
+}
+
+
+// ========================================
+// RENDER USER PROFILE
+// ========================================
+
+function renderProfile() {
+
+    const box = $("userProfileContent");
+
+    if (!box) {
+        return;
+    }
+
+    if (!currentProfile) {
+
+        box.innerHTML = `
+            <div class="profile-empty">
+                <i class="fa-solid fa-user-slash"></i>
+                <p>Data profile belum tersedia.</p>
+            </div>
         `;
 
-    } else {
-
-        button.disabled = false;
-
-        if (
-            button.dataset.originalHTML
-        ) {
-
-            button.innerHTML =
-                button.dataset.originalHTML;
-
-        }
-
-    }
-
-}
-
-
-// ========================================
-// FORM MESSAGE
-// ========================================
-
-function showFormMessage(
-    element,
-    message,
-    type = "error"
-) {
-
-    if (!element) {
         return;
     }
 
-    element.textContent =
-        message;
 
-    element.className =
-        `form-message ${type}`;
+    const name =
+        currentProfile.name ||
+        currentProfile.username ||
+        "User";
 
-}
+    const username =
+        currentProfile.username ||
+        "-";
 
+    const role =
+        currentProfile.role ||
+        "Sales";
 
-// ========================================
-// SALES NAME
-// ========================================
+    const status =
+        currentProfile.status ||
+        "-";
 
-function getSalesName(id) {
+    const createdAt =
+        currentProfile.created_at;
 
-    if (!id) {
-        return "-";
-    }
+    const userId =
+        currentProfile.id ||
+        "-";
 
-
-    const sales =
-        Array.isArray(
-            salesUsersData
-        )
-            ? salesUsersData.find(
-                (item) =>
-                    String(item.id) ===
-                    String(id)
-            )
-            : null;
-
-
-    if (!sales) {
-        return "-";
-    }
+    const initial =
+        String(name)
+            .charAt(0)
+            .toUpperCase();
 
 
-    return (
-        sales.name ||
-        sales.username ||
-        "-"
-    );
+    box.innerHTML = `
 
-}
+        <div class="profile-hero compact">
 
+            <div class="profile-avatar-xl">
+                ${safeText(initial)}
+            </div>
 
-// ========================================
-// STATUS COUNT
-// ========================================
+            <div>
+                <h2>${safeText(name)}</h2>
+                <p>${safeText(role)}</p>
+            </div>
 
-function countStatus(
-    data,
-    status
-) {
-
-    if (!Array.isArray(data)) {
-        return 0;
-    }
-
-    return data.filter(
-        (item) =>
-            normalizeLeadStatus(
-                item.status
-            ) === status
-    ).length;
-
-}
+        </div>
 
 
-// ========================================
-// DEBOUNCE
-// ========================================
+        <div class="detail-grid">
 
-function debounce(
-    callback,
-    delay = 400
-) {
+            <div>
+                <label>Name</label>
+                <strong>
+                    ${safeText(name)}
+                </strong>
+            </div>
 
-    let timer;
+            <div>
+                <label>Username</label>
+                <strong>
+                    ${safeText(username)}
+                </strong>
+            </div>
 
-    return function (...args) {
+            <div>
+                <label>Role</label>
+                <strong>
+                    ${safeText(role)}
+                </strong>
+            </div>
 
-        clearTimeout(timer);
+            <div>
+                <label>Status</label>
+                <strong>
+                    ${safeText(status)}
+                </strong>
+            </div>
 
-        timer =
-            setTimeout(
-                () => callback.apply(
-                    this,
-                    args
-                ),
-                delay
-            );
+            <div>
+                <label>Created</label>
+                <strong>
+                    ${formatDate(createdAt)}
+                </strong>
+            </div>
 
-    };
+            <div>
+                <label>User ID</label>
+                <strong>
+                    ${safeText(userId)}
+                </strong>
+            </div>
 
-}
+        </div>
 
-
-// ========================================
-// EXPORT CSV
-// ========================================
-
-function exportCSV(
-    rows,
-    filename = "leads.csv"
-) {
-
-    if (
-        !Array.isArray(rows) ||
-        !rows.length
-    ) {
-
-        showToast(
-            "Tidak ada data untuk diexport.",
-            "error"
-        );
-
-        return;
-
-    }
-
-
-    const headers =
-        Object.keys(rows[0]);
-
-
-    const csv = [
-
-        headers.join(","),
-
-        ...rows.map((row) => {
-
-            return headers
-                .map((header) => {
-
-                    const value =
-                        row[header] ??
-                        "";
-
-                    return `"${String(value)
-                        .replace(/"/g, '""')}"`;
-
-                })
-                .join(",");
-
-        })
-
-    ].join("\n");
-
-
-    const blob =
-        new Blob(
-            [csv],
-            {
-                type:
-                    "text/csv;charset=utf-8;"
-            }
-        );
-
-
-    const url =
-        URL.createObjectURL(
-            blob
-        );
-
-
-    const link =
-        document.createElement(
-            "a"
-        );
-
-
-    link.href = url;
-    link.download = filename;
-
-    document.body.appendChild(
-        link
-    );
-
-    link.click();
-
-    link.remove();
-
-    URL.revokeObjectURL(url);
+    `;
 
 }
