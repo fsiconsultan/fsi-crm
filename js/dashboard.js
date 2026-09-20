@@ -31,7 +31,32 @@ async function initializeDashboard(){
 function bindDashboardEvents(){
 
     /* =====================================================
-       ADD CUSTOMER
+       ADD LEAD / ADD CUSTOMER
+    ===================================================== */
+
+    const dashboardAddLead =
+        document.getElementById(
+            "dashboardAddLead"
+        );
+
+    if(dashboardAddLead){
+
+        dashboardAddLead.addEventListener(
+            "click",
+            function(){
+
+                window.location.href =
+                    "customer-form.html?new=1";
+
+            }
+        );
+
+    }
+
+
+    /* =====================================================
+       BACKWARD COMPATIBILITY
+       Jika ada tombol lama addCustomerBtn
     ===================================================== */
 
     const addCustomerBtn =
@@ -39,7 +64,10 @@ function bindDashboardEvents(){
             "addCustomerBtn"
         );
 
-    if(addCustomerBtn){
+    if(
+        addCustomerBtn &&
+        addCustomerBtn !== dashboardAddLead
+    ){
 
         addCustomerBtn.addEventListener(
             "click",
@@ -136,14 +164,50 @@ async function loadDashboardData(){
                 : [];
 
 
+        /* =================================================
+           STATISTICS
+        ================================================= */
+
         renderDashboardStatistics(
             leads
         );
 
 
+        /* =================================================
+           NEXT STEP
+        ================================================= */
+
         renderDashboardNextStep(
             leads
         );
+
+
+        /* =================================================
+           RECENT LEADS
+        ================================================= */
+
+        renderDashboardRecentLeads(
+            leads
+        );
+
+
+        /* =================================================
+           SALES OVERVIEW
+        ================================================= */
+
+        renderDashboardSalesOverview(
+            leads
+        );
+
+
+        /* =================================================
+           SALES PIPELINE
+        ================================================= */
+
+        renderDashboardPipeline(
+            leads
+        );
+
 
     }
     catch(error){
@@ -231,6 +295,8 @@ function renderDashboardStatistics(
 
     setDashboardValue(
         [
+            "statTotal",
+
             "totalLeads",
             "totalCustomers",
             "totalCustomer",
@@ -247,6 +313,8 @@ function renderDashboardStatistics(
 
     setDashboardValue(
         [
+            "statNew",
+
             "newLeads",
             "newCount",
             "dashboardNew"
@@ -261,6 +329,8 @@ function renderDashboardStatistics(
 
     setDashboardValue(
         [
+            "statInterested",
+
             "interestedLeads",
             "interestedCount",
             "dashboardInterested"
@@ -275,6 +345,8 @@ function renderDashboardStatistics(
 
     setDashboardValue(
         [
+            "statFollowUp",
+
             "followUpLeads",
             "followUpCount",
             "dashboardFollowUp",
@@ -290,6 +362,8 @@ function renderDashboardStatistics(
 
     setDashboardValue(
         [
+            "statAppointment",
+
             "appointmentLeads",
             "appointmentCount",
             "dashboardAppointment",
@@ -305,6 +379,8 @@ function renderDashboardStatistics(
 
     setDashboardValue(
         [
+            "statSiteSurvey",
+
             "siteSurveyLeads",
             "siteSurveyCount",
             "dashboardSiteSurvey"
@@ -319,6 +395,8 @@ function renderDashboardStatistics(
 
     setDashboardValue(
         [
+            "statQuotation",
+
             "quotationLeads",
             "quotationCount",
             "dashboardQuotation"
@@ -333,6 +411,8 @@ function renderDashboardStatistics(
 
     setDashboardValue(
         [
+            "statClosing",
+
             "closingLeads",
             "closingCount",
             "dashboardClosing",
@@ -587,6 +667,333 @@ function renderDashboardNextStep(
 
 
 /* =========================================================
+   RECENT LEADS
+========================================================= */
+
+function renderDashboardRecentLeads(
+    leads
+){
+
+    const container =
+        document.getElementById(
+            "recentLeads"
+        );
+
+
+    if(!container){
+        return;
+    }
+
+
+    if(
+        !Array.isArray(leads) ||
+        leads.length === 0
+    ){
+
+        container.innerHTML = `
+            <div class="empty-state">
+
+                <i class="fa-solid fa-users"></i>
+
+                <p>
+                    Belum ada lead.
+                </p>
+
+            </div>
+        `;
+
+        return;
+
+    }
+
+
+    const sortedLeads =
+        [...leads].sort(
+            (
+                a,
+                b
+            ) => {
+
+                return (
+                    new Date(
+                        b.created_at || 0
+                    ).getTime()
+                    -
+                    new Date(
+                        a.created_at || 0
+                    ).getTime()
+                );
+
+            }
+        );
+
+
+    const recent =
+        sortedLeads.slice(
+            0,
+            5
+        );
+
+
+    container.innerHTML =
+        recent.map(
+            lead => {
+
+                const status =
+                    typeof normalizeLeadStatus ===
+                    "function"
+                        ?
+                        normalizeLeadStatus(
+                            lead.status
+                        )
+                        :
+                        (
+                            lead.status ||
+                            "New"
+                        );
+
+
+                return `
+                    <div
+                        class="recent-lead-item"
+                        onclick="showCustomerProfile(${Number(
+                            lead.id
+                        )})"
+                    >
+
+                        <div class="recent-lead-avatar">
+
+                            ${escapeDashboardText(
+                                getDashboardInitials(
+                                    lead.customer_name
+                                )
+                            )}
+
+                        </div>
+
+
+                        <div class="recent-lead-info">
+
+                            <strong>
+                                ${escapeDashboardText(
+                                    lead.customer_name ||
+                                    "Unnamed Customer"
+                                )}
+                            </strong>
+
+                            <span>
+                                ${escapeDashboardText(
+                                    lead.business ||
+                                    lead.location ||
+                                    "-"
+                                )}
+                            </span>
+
+                        </div>
+
+
+                        <span class="status-pill">
+
+                            ${escapeDashboardText(
+                                status
+                            )}
+
+                        </span>
+
+                    </div>
+                `;
+
+            }
+        ).join("");
+
+}
+
+
+/* =========================================================
+   SALES OVERVIEW
+========================================================= */
+
+function renderDashboardSalesOverview(
+    leads
+){
+
+    const container =
+        document.getElementById(
+            "salesOverviewChart"
+        );
+
+
+    if(!container){
+        return;
+    }
+
+
+    const statuses = [
+        {
+            name: "New",
+            key: "New"
+        },
+        {
+            name: "Interested",
+            key: "Interested"
+        },
+        {
+            name: "Follow Up",
+            key: "Follow Up"
+        },
+        {
+            name: "Closing",
+            key: "Closing"
+        },
+        {
+            name: "Not Interested",
+            key: "Not Interested"
+        }
+    ];
+
+
+    const total =
+        leads.length || 1;
+
+
+    container.innerHTML =
+        statuses.map(
+            item => {
+
+                const count =
+                    countDashboardStatus(
+                        leads,
+                        item.key
+                    );
+
+
+                const percentage =
+                    Math.round(
+                        (
+                            count /
+                            total
+                        ) * 100
+                    );
+
+
+                return `
+                    <div class="chart-row">
+
+                        <div class="chart-label">
+
+                            <span>
+                                ${escapeDashboardText(
+                                    item.name
+                                )}
+                            </span>
+
+                            <strong>
+                                ${count}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="chart-track">
+
+                            <div
+                                class="chart-bar"
+                                style="width:${percentage}%"
+                            ></div>
+
+                        </div>
+
+                    </div>
+                `;
+
+            }
+        ).join("");
+
+}
+
+
+/* =========================================================
+   SALES PIPELINE
+========================================================= */
+
+function renderDashboardPipeline(
+    leads
+){
+
+    const container =
+        document.getElementById(
+            "dashboardPipeline"
+        );
+
+
+    if(!container){
+        return;
+    }
+
+
+    const pipeline = [
+        {
+            label: "New",
+            value: countDashboardStatus(
+                leads,
+                "New"
+            )
+        },
+        {
+            label: "Interested",
+            value: countDashboardStatus(
+                leads,
+                "Interested"
+            )
+        },
+        {
+            label: "Follow Up",
+            value: countDashboardStatus(
+                leads,
+                "Follow Up"
+            )
+        },
+        {
+            label: "Closing",
+            value: countDashboardStatus(
+                leads,
+                "Closing"
+            )
+        }
+    ];
+
+
+    container.innerHTML =
+        pipeline.map(
+            item => {
+
+                return `
+                    <div class="pipeline-stage">
+
+                        <div class="pipeline-stage-title">
+
+                            <span>
+                                ${escapeDashboardText(
+                                    item.label
+                                )}
+                            </span>
+
+                            <strong>
+                                ${item.value}
+                            </strong>
+
+                        </div>
+
+                    </div>
+                `;
+
+            }
+        ).join("");
+
+}
+
+
+/* =========================================================
    NEXT STEP TEXT
 ========================================================= */
 
@@ -715,8 +1122,8 @@ function formatDashboardDate(
         return new Intl.DateTimeFormat(
             "id-ID",
             {
-                day:"2-digit",
-                month:"short"
+                day: "2-digit",
+                month: "short"
             }
         ).format(
             new Date(value)
@@ -788,10 +1195,22 @@ document.addEventListener(
 
                 if(
                     document.getElementById(
+                        "dashboardAddLead"
+                    ) ||
+                    document.getElementById(
                         "addCustomerBtn"
                     ) ||
                     document.getElementById(
                         "dashboardNextStep"
+                    ) ||
+                    document.getElementById(
+                        "recentLeads"
+                    ) ||
+                    document.getElementById(
+                        "salesOverviewChart"
+                    ) ||
+                    document.getElementById(
+                        "dashboardPipeline"
                     )
                 ){
 
