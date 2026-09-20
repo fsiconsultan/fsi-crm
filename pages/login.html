@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta
+    name="description"
+    content="FSI CRM Login"
+  >
+
+  <meta
+    name="theme-color"
+    content="#0b63ce"
+  >
+
+  <title>Login | FSI CRM</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  >
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
+
+  <!-- Font Awesome -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+  >
+
+  <!-- FSI CRM CSS -->
+  <link
+    rel="stylesheet"
+    href="../css/style.css"
+  >
+</head>
+
+<body>
+
+  <!-- ========================================
+       LOGIN PAGE
+  ========================================= -->
+
+  <section
+    id="loginPage"
+    class="login-page"
+  >
+
+    <div class="login-container">
+
+      <!-- ======================================
+           BRAND PANEL
+      ======================================= -->
+
+      <div class="login-brand-panel">
+
+        <div class="login-brand-content">
+
+          <img
+            src="../assets/logo-fsi.png"
+            alt="FSI"
+            class="login-logo"
+          >
+
+          <h1>
+            Welcome to
+            <span>FSI CRM</span>
+          </h1>
+
+          <p>
+            Manage your leads, track sales,
+            and grow together.
+          </p>
+
+          <div class="login-brand-tagline">
+            More Solar
+            <br>
+            More Tomorrow
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- ======================================
+           LOGIN FORM PANEL
+      ======================================= -->
+
+      <div class="login-form-panel">
+
+        <div class="login-form-wrapper">
+
+          <!-- Mobile Logo -->
+          <img
+            src="../assets/logo-fsi.png"
+            alt="FSI"
+            class="login-mobile-logo"
+          >
+
+
+          <!-- Login Heading -->
+          <div class="login-heading">
+
+            <span>FSI CRM</span>
+
+            <h2>
+              Login
+            </h2>
+
+            <p>
+              Masuk ke akun Anda
+            </p>
+
+          </div>
+
+
+          <!-- ==================================
+               LOGIN FORM
+          =================================== -->
+
+          <form id="loginForm">
+
+            <!-- Username -->
+            <div class="form-group">
+
+              <label for="loginUsername">
+                Username
+              </label>
+
+              <div class="input-wrapper">
+
+                <i class="fa-solid fa-user"></i>
+
+                <input
+                  id="loginUsername"
+                  type="text"
+                  placeholder="Email atau username"
+                  autocomplete="username"
+                  required
+                >
+
+              </div>
+
+            </div>
+
+
+            <!-- Password -->
+            <div class="form-group">
+
+              <label for="loginPassword">
+                Password
+              </label>
+
+              <div class="input-wrapper">
+
+                <i class="fa-solid fa-lock"></i>
+
+                <input
+                  id="loginPassword"
+                  type="password"
+                  placeholder="Password"
+                  autocomplete="current-password"
+                  required
+                >
+
+                <button
+                  type="button"
+                  id="togglePassword"
+                  class="password-toggle"
+                  aria-label="Tampilkan password"
+                >
+                  <i class="fa-regular fa-eye"></i>
+                </button>
+
+              </div>
+
+            </div>
+
+
+            <!-- Login Options -->
+            <div class="login-options">
+
+              <label class="remember-me">
+
+                <input
+                  id="rememberLogin"
+                  type="checkbox"
+                >
+
+                <span>
+                  Ingat saya
+                </span>
+
+              </label>
+
+
+              <button
+                type="button"
+                id="forgotPasswordBtn"
+                class="link-button"
+              >
+                Lupa password?
+              </button>
+
+            </div>
+
+
+            <!-- Login Button -->
+            <button
+              id="loginButton"
+              class="btn btn-primary btn-login"
+              type="submit"
+            >
+
+              <span id="loginButtonText">
+                Login
+              </span>
+
+              <i
+                id="loginButtonLoader"
+                class="fa-solid fa-spinner fa-spin"
+                style="display: none;"
+              ></i>
+
+            </button>
+
+
+            <!-- Login Message -->
+            <div
+              id="loginMessage"
+              class="login-message"
+              role="alert"
+              aria-live="polite"
+            ></div>
+
+          </form>
+
+
+          <!-- Footer -->
+          <div class="login-footer">
+
+            Belum punya akun?
+
+            <strong>
+              Hubungi admin
+            </strong>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- ========================================
+       GLOBAL TOAST
+  ========================================= -->
+
+  <div
+    id="toastContainer"
+    class="toast-container"
+    aria-live="polite"
+    aria-atomic="true"
+  ></div>
+
+
+  <!-- ========================================
+       SUPABASE
+  ========================================= -->
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+  ></script>
+
+
+  <!-- ========================================
+       FSI CRM JAVASCRIPT
+  ========================================= -->
+
+  <script src="../js/config.js"></script>
+  <script src="../js/helpers.js"></script>
+  <script src="../js/modal.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/navigation.js"></script>
+
+</body>
+</html>
