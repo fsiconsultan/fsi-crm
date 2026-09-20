@@ -1,252 +1,51 @@
-// ============================================================
-// CRM FSI - NAVIGATION
-// ============================================================
+const appNavigation = {
+    showLogin: () => {
+        document.getElementById('view-login').classList.remove('hidden');
+        document.getElementById('view-app').classList.add('hidden');
+    },
 
-document.addEventListener("DOMContentLoaded", () => {
+    showApp: () => {
+        document.getElementById('view-login').classList.add('hidden');
+        document.getElementById('view-app').classList.remove('hidden');
+        appNavigation.initMenu();
+    },
 
-    // ========================================================
-    // USER MENU
-    // ========================================================
+    initMenu: () => {
+        const navItems = document.querySelectorAll('.sidebar-nav .nav-item[data-target]');
+        navItems.forEach(item => {
+            item.onclick = (e) => {
+                e.preventDefault();
+                const target = e.currentTarget.getAttribute('data-target');
+                appNavigation.navigateTo(target);
+            };
+        });
+    },
 
-    const userMenu =
-        document.getElementById("userMenu") ||
-        document.getElementById("userMenuTrigger");
+    navigateTo: (target) => {
+        // Update menu aktif
+        document.querySelectorAll('.sidebar-nav .nav-item').forEach(el => el.classList.remove('active'));
+        const activeNav = document.querySelector(`.sidebar-nav .nav-item[data-target="${target}"]`);
+        if (activeNav) activeNav.classList.add('active');
 
-    const userDropdown =
-        document.getElementById("userDropdown");
+        // Sembunyikan semua section
+        document.querySelectorAll('.content-section').forEach(el => el.classList.add('hidden'));
+        
+        // Tampilkan section target
+        const section = document.getElementById(`section-${target}`);
+        if (section) section.classList.remove('hidden');
 
-    const userMenuWrapper =
-        document.querySelector(".user-menu-wrapper");
+        // Memuat data sesuai section
+        if (target === 'dashboard') dashboardManager.loadDashboardStats();
+        if (target === 'leads') leadsManager.loadLeads();
+        if (target === 'sales' && authManager.isAdmin()) salesManager.loadSales();
+    },
 
-    const profileBtn =
-        document.getElementById("profileBtn");
-
-    const logoutBtn =
-        document.getElementById("dropdownLogout");
-
-    // ========================================================
-    // OPEN / CLOSE USER DROPDOWN
-    // ========================================================
-
-    function openUserDropdown() {
-
-        if (!userDropdown) return;
-
-        userDropdown.style.display = "block";
-        userDropdown.classList.add("active");
-
-        if (userMenu) {
-            userMenu.setAttribute(
-                "aria-expanded",
-                "true"
-            );
-        }
-    }
-
-    function closeUserDropdown() {
-
-        if (!userDropdown) return;
-
-        userDropdown.style.display = "none";
-        userDropdown.classList.remove("active");
-
-        if (userMenu) {
-            userMenu.setAttribute(
-                "aria-expanded",
-                "false"
-            );
-        }
-    }
-
-    function toggleUserDropdown(event) {
-
-        if (event) {
-            event.preventDefault();
-            event.stopPropagation();
-        }
-
-        if (!userDropdown) return;
-
-        const isOpen =
-            userDropdown.style.display === "block" ||
-            userDropdown.classList.contains("active");
-
-        if (isOpen) {
-            closeUserDropdown();
+    applyRolePermissions: (role) => {
+        const adminElements = document.querySelectorAll('.admin-only');
+        if (role === config.ROLES.ADMIN) {
+            adminElements.forEach(el => el.classList.remove('hidden'));
         } else {
-            openUserDropdown();
+            adminElements.forEach(el => el.classList.add('hidden'));
         }
     }
-
-    // ========================================================
-    // USER BUTTON CLICK
-    // ========================================================
-
-    if (userMenu && userDropdown) {
-
-        userMenu.addEventListener(
-            "click",
-            toggleUserDropdown
-        );
-    }
-
-    // ========================================================
-    // CLICK OUTSIDE
-    // ========================================================
-
-    document.addEventListener("click", (event) => {
-
-        if (!userMenuWrapper) {
-            return;
-        }
-
-        if (!userMenuWrapper.contains(event.target)) {
-            closeUserDropdown();
-        }
-    });
-
-    // ========================================================
-    // PROFILE
-    // ========================================================
-
-    if (profileBtn) {
-
-        profileBtn.addEventListener("click", (event) => {
-
-            event.preventDefault();
-            event.stopPropagation();
-
-            closeUserDropdown();
-
-            if (typeof openProfileModal === "function") {
-                openProfileModal();
-            } else {
-                console.warn(
-                    "openProfileModal() belum tersedia."
-                );
-            }
-        });
-    }
-
-    // ========================================================
-    // LOGOUT
-    // ========================================================
-
-    if (logoutBtn) {
-
-        logoutBtn.addEventListener("click", async (event) => {
-
-            event.preventDefault();
-            event.stopPropagation();
-
-            closeUserDropdown();
-
-            // Gunakan fungsi logout dari auth.js
-            if (typeof logoutUser === "function") {
-                await logoutUser();
-                return;
-            }
-
-            if (typeof handleLogout === "function") {
-                await handleLogout();
-                return;
-            }
-
-            if (typeof signOutUser === "function") {
-                await signOutUser();
-                return;
-            }
-
-            // Fallback
-            try {
-
-                await supabaseClient.auth.signOut();
-
-                window.location.href =
-                    "login.html";
-
-            } catch (error) {
-
-                console.error(
-                    "Fallback logout error:",
-                    error
-                );
-
-                window.location.href =
-                    "login.html";
-            }
-        });
-    }
-
-    // ========================================================
-    // ESCAPE KEY
-    // ========================================================
-
-    document.addEventListener("keydown", (event) => {
-
-        if (event.key === "Escape") {
-            closeUserDropdown();
-        }
-    });
-
-    // ========================================================
-    // ACTIVE NAVIGATION
-    // ========================================================
-
-    const currentPage =
-        window.location.pathname
-            .split("/")
-            .pop()
-            .toLowerCase();
-
-    document
-        .querySelectorAll(".top-nav-item")
-        .forEach((item) => {
-
-            const href =
-                item.getAttribute("href");
-
-            if (!href) return;
-
-            const targetPage =
-                href.split("/")
-                    .pop()
-                    .toLowerCase();
-
-            item.classList.remove("active");
-
-            if (
-                targetPage === currentPage ||
-                (
-                    currentPage === "" &&
-                    targetPage === "dashboard.html"
-                )
-            ) {
-                item.classList.add("active");
-            }
-        });
-});
-
-// ============================================================
-// GLOBAL NAVIGATION HELPERS
-// ============================================================
-
-function goToDashboard() {
-    window.location.href = "dashboard.html";
-}
-
-function goToLeads() {
-    window.location.href = "leads.html";
-}
-
-function goToCustomerProfile(id) {
-
-    if (!id) return;
-
-    window.location.href =
-        `customer-profile.html?id=${encodeURIComponent(id)}`;
-}
-
-window.goToDashboard = goToDashboard;
-window.goToLeads = goToLeads;
-window.goToCustomerProfile = goToCustomerProfile;
+};
