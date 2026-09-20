@@ -1,807 +1,913 @@
 /* =========================================================
-   FSI CRM - CUSTOMER PROFILE
-   ========================================================= */
+   CRM FSI - CUSTOMER PROFILE
+========================================================= */
 
 
 /* =========================================================
-   OPEN CUSTOMER PROFILE
-   ========================================================= */
+   OPEN PROFILE
+========================================================= */
 
-function openCustomerProfile(id) {
+function openCustomerProfile(id){
 
-  if (!id) return;
+    if(!id) return;
 
 
-  window.location.href =
-    "customer-profile.html?id=" +
-    encodeURIComponent(id);
+    window.location.href =
+        `customer-profile.html?id=${encodeURIComponent(id)}`;
 
 }
-
-
-/* Make function globally accessible */
-window.openCustomerProfile =
-  openCustomerProfile;
-
-
-/* =========================================================
-   INITIALIZE CUSTOMER PROFILE PAGE
-   ========================================================= */
-
-document.addEventListener(
-  "DOMContentLoaded",
-  () => {
-
-    initializeCustomerProfilePage();
-
-  }
-);
 
 
 /* =========================================================
    INITIALIZE
-   ========================================================= */
+========================================================= */
 
-async function initializeCustomerProfilePage() {
-
-  const content =
-    $("customerProfileContent");
-
-  if (!content) {
-    return;
-  }
+let customerProfileInitialized = false;
 
 
-  const params =
-    new URLSearchParams(
-      window.location.search
+async function initializeCustomerProfilePage(){
+
+    if(customerProfileInitialized){
+
+        return;
+
+    }
+
+
+    customerProfileInitialized = true;
+
+
+    const params =
+        new URLSearchParams(
+            window.location.search
+        );
+
+
+    const id =
+        params.get("id");
+
+
+    if(!id){
+
+        renderProfileError(
+            "Customer ID tidak ditemukan."
+        );
+
+        return;
+
+    }
+
+
+    await loadCustomerProfile(
+        id
     );
-
-
-  const id =
-    params.get("id");
-
-
-  if (!id) {
-
-    renderProfileError(
-      "Customer ID tidak ditemukan."
-    );
-
-    return;
-
-  }
-
-
-  await loadCustomerProfilePage(
-    id
-  );
 
 }
 
 
 /* =========================================================
-   LOAD CUSTOMER
-   ========================================================= */
+   LOAD
+========================================================= */
 
-async function loadCustomerProfilePage(id) {
+async function loadCustomerProfile(id){
 
-  const content =
-    $("customerProfileContent");
-
-
-  if (!content) return;
+    const container =
+        $("customerProfileContent");
 
 
-  selectedCustomerId =
-    id;
+    if(!container) return;
 
 
-  content.innerHTML = `
+    container.innerHTML = `
+        <div class="profile-loading">
+            <div class="loading-spinner"></div>
+            <span>Loading customer profile...</span>
+        </div>
+    `;
 
-    <div class="profile-loading">
-
-      <i class="fa-solid fa-spinner fa-spin"></i>
-
-      <span>
-        Loading customer...
-      </span>
-
-    </div>
-
-  `;
-
-
-  try {
 
     const {
-      data,
-      error
+        data,
+        error
     } =
-      await supabaseClient
-        .from(CRM_CONFIG.leadTable)
-        .select("*")
-        .eq("id", id)
-        .single();
+        await supabaseClient
+            .from(
+                CRM_CONFIG.leadTable
+            )
+            .select(`
+                id,
+                customer_name,
+                phone,
+                business,
+                location,
+                status,
+                follow_up_date,
+                appointment,
+                site_survey,
+                quotation,
+                spk,
+                closing,
+                notes,
+                created_at,
+                sales_id,
+                created_by,
+                updated_by
+            `)
+            .eq(
+                "id",
+                id
+            )
+            .single();
 
 
-    if (error) {
-      throw error;
+    if(error){
+
+        console.error(
+            "Customer profile:",
+            error
+        );
+
+
+        renderProfileError(
+            error.message ||
+            "Customer tidak ditemukan."
+        );
+
+        return;
+
     }
 
 
-    if (!data) {
+    if(!canViewCustomer(data)){
 
-      throw new Error(
-        "Customer tidak ditemukan."
-      );
+        renderProfileError(
+            "Anda tidak memiliki akses ke customer ini."
+        );
 
-    }
-
-
-    /* -----------------------------------------------------
-       ACCESS CONTROL
-    ----------------------------------------------------- */
-
-    if (
-      currentProfile?.role !== "Admin" &&
-      String(data.sales_id) !==
-        String(currentProfile?.id)
-    ) {
-
-      throw new Error(
-        "Anda tidak memiliki akses ke customer ini."
-      );
+        return;
 
     }
 
 
     renderCustomerProfile(
-      data
+        data
     );
-
-
-  } catch (error) {
-
-    console.error(
-      "loadCustomerProfilePage:",
-      error
-    );
-
-
-    renderProfileError(
-      error.message ||
-      "Terjadi kesalahan saat memuat customer."
-    );
-
-  }
 
 }
 
 
 /* =========================================================
-   RENDER ERROR
-   ========================================================= */
+   ACCESS
+========================================================= */
 
-function renderProfileError(
-  message
-) {
+function canViewCustomer(lead){
 
-  const content =
-    $("customerProfileContent");
+    if(
+        currentProfile?.role ===
+        "Admin"
+    ){
 
+        return true;
 
-  if (!content) return;
-
-
-  content.innerHTML = `
-
-    <div class="empty-state">
-
-      <i class="fa-solid fa-circle-xmark"></i>
-
-      <h3>
-        Gagal memuat customer
-      </h3>
-
-      <p>
-        ${escapeHTML(
-          message ||
-          "Terjadi kesalahan."
-        )}
-      </p>
-
-      <br>
-
-      <a
-        href="leads.html"
-        class="btn btn-secondary"
-      >
-        <i class="fa-solid fa-arrow-left"></i>
-        Kembali ke Leads
-      </a>
-
-    </div>
-
-  `;
-
-}
-
-
-/* =========================================================
-   RENDER CUSTOMER PROFILE
-   ========================================================= */
-
-function renderCustomerProfile(
-  lead
-) {
-
-  const content =
-    $("customerProfileContent");
-
-
-  if (!content) return;
-
-
-  const status =
-    normalizeLeadStatus(
-      lead.status
-    );
-
-
-  const statusClass =
-    status
-      .toLowerCase()
-      .replace(/\s+/g, "-");
-
-
-  const salesName =
-    getSalesNameForProfile(
-      lead.sales_id
-    );
-
-
-  content.innerHTML = `
-
-    <!-- ================================================
-         PROFILE HERO
-    ================================================= -->
-
-    <div class="customer-profile-hero">
-
-      <div class="customer-profile-avatar">
-
-        ${escapeHTML(
-          (lead.customer_name || "?")
-            .charAt(0)
-            .toUpperCase()
-        )}
-
-      </div>
-
-
-      <div class="customer-profile-main">
-
-        <div class="customer-profile-name-row">
-
-          <h2>
-            ${escapeHTML(
-              lead.customer_name || "-"
-            )}
-          </h2>
-
-          <span
-            class="status-badge status-${statusClass}"
-          >
-            ${escapeHTML(
-              status || "-"
-            )}
-          </span>
-
-        </div>
-
-
-        <p>
-          ${escapeHTML(
-            lead.business || "Customer"
-          )}
-
-          ${
-            lead.location
-              ? `
-                <span>•</span>
-                ${escapeHTML(
-                  lead.location
-                )}
-              `
-              : ""
-          }
-        </p>
-
-      </div>
-
-
-      <div class="customer-profile-actions">
-
-        ${
-          lead.phone
-            ? `
-              <a
-                href="${whatsappLink(lead.phone)}"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="btn btn-primary"
-              >
-                <i class="fa-brands fa-whatsapp"></i>
-                WhatsApp
-              </a>
-            `
-            : ""
-        }
-
-
-        <button
-          type="button"
-          class="btn btn-secondary"
-          onclick="editLeadFromProfile('${escapeHTML(String(lead.id))}')"
-        >
-          <i class="fa-solid fa-pen"></i>
-          Edit
-        </button>
-
-      </div>
-
-    </div>
-
-
-    <!-- ================================================
-         INFORMATION GRID
-    ================================================= -->
-
-    <div class="customer-profile-grid">
-
-
-      <!-- CUSTOMER INFORMATION -->
-      <div class="profile-card">
-
-        <div class="profile-card-header">
-
-          <div>
-
-            <span class="card-eyebrow">
-              CUSTOMER
-            </span>
-
-            <h3>
-              Customer Information
-            </h3>
-
-          </div>
-
-          <i class="fa-solid fa-user"></i>
-
-        </div>
-
-
-        <div class="profile-info-list">
-
-
-          <div class="profile-info-row">
-
-            <span>
-              <i class="fa-solid fa-user"></i>
-              Customer
-            </span>
-
-            <strong>
-              ${escapeHTML(
-                lead.customer_name || "-"
-              )}
-            </strong>
-
-          </div>
-
-
-          <div class="profile-info-row">
-
-            <span>
-              <i class="fa-solid fa-phone"></i>
-              Phone
-            </span>
-
-            <strong>
-              ${
-                lead.phone
-                  ? `
-                    <a
-                      href="${whatsappLink(lead.phone)}"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      ${escapeHTML(
-                        lead.phone
-                      )}
-                    </a>
-                  `
-                  : "-"
-              }
-            </strong>
-
-          </div>
-
-
-          <div class="profile-info-row">
-
-            <span>
-              <i class="fa-solid fa-envelope"></i>
-              Email
-            </span>
-
-            <strong>
-              ${escapeHTML(
-                lead.email || "-"
-              )}
-            </strong>
-
-          </div>
-
-
-          <div class="profile-info-row">
-
-            <span>
-              <i class="fa-solid fa-building"></i>
-              Business
-            </span>
-
-            <strong>
-              ${escapeHTML(
-                lead.business || "-"
-              )}
-            </strong>
-
-          </div>
-
-
-          <div class="profile-info-row">
-
-            <span>
-              <i class="fa-solid fa-location-dot"></i>
-              Location
-            </span>
-
-            <strong>
-              ${escapeHTML(
-                lead.location || "-"
-              )}
-            </strong>
-
-          </div>
-
-
-          <div class="profile-info-row">
-
-            <span>
-              <i class="fa-solid fa-user-tie"></i>
-              Sales
-            </span>
-
-            <strong>
-              ${escapeHTML(
-                salesName || "-"
-              )}
-            </strong>
-
-          </div>
-
-
-        </div>
-
-      </div>
-
-
-      <!-- SALES PIPELINE -->
-      <div class="profile-card">
-
-        <div class="profile-card-header">
-
-          <div>
-
-            <span class="card-eyebrow">
-              SALES PROCESS
-            </span>
-
-            <h3>
-              Sales Timeline
-            </h3>
-
-          </div>
-
-          <i class="fa-solid fa-chart-line"></i>
-
-        </div>
-
-
-        <div class="profile-timeline">
-
-
-          ${profileTimelineItem(
-            "Follow Up",
-            lead.follow_up_date,
-            "fa-phone",
-            !!lead.follow_up_date
-          )}
-
-
-          ${profileTimelineItem(
-            "Appointment",
-            lead.appointment,
-            "fa-calendar-check",
-            !!lead.appointment
-          )}
-
-
-          ${profileTimelineItem(
-            "Site Survey",
-            lead.site_survey,
-            "fa-location-dot",
-            !!lead.site_survey
-          )}
-
-
-          ${profileTimelineItem(
-            "Quotation",
-            lead.quotation,
-            "fa-file-invoice-dollar",
-            !!lead.quotation
-          )}
-
-
-          ${profileTimelineItem(
-            "SPK",
-            lead.spk,
-            "fa-file-signature",
-            !!lead.spk
-          )}
-
-
-          ${profileTimelineItem(
-            "Closing",
-            lead.closing,
-            "fa-circle-check",
-            !!lead.closing
-          )}
-
-
-        </div>
-
-      </div>
-
-
-    </div>
-
-
-    <!-- ================================================
-         NOTES
-    ================================================= -->
-
-    <div class="profile-card profile-notes-card">
-
-      <div class="profile-card-header">
-
-        <div>
-
-          <span class="card-eyebrow">
-            NOTES
-          </span>
-
-          <h3>
-            Customer Notes
-          </h3>
-
-        </div>
-
-        <i class="fa-solid fa-note-sticky"></i>
-
-      </div>
-
-
-      <div class="profile-notes">
-
-        ${
-          lead.notes
-            ? `
-              <p>
-                ${escapeHTML(
-                  lead.notes
-                ).replace(
-                  /\n/g,
-                  "<br>"
-                )}
-              </p>
-            `
-            : `
-              <div class="empty-inline">
-                Belum ada catatan customer.
-              </div>
-            `
-        }
-
-      </div>
-
-    </div>
-
-
-    <!-- ================================================
-         SYSTEM INFORMATION
-    ================================================= -->
-
-    <div class="profile-system-info">
-
-      <span>
-        Created:
-        ${lead.created_at
-          ? formatDate(lead.created_at)
-          : "-"
-        }
-      </span>
-
-      ${
-        lead.updated_at
-          ? `
-            <span>
-              Updated:
-              ${formatDate(
-                lead.updated_at
-              )}
-            </span>
-          `
-          : ""
-      }
-
-    </div>
-
-  `;
-
-}
-
-
-/* =========================================================
-   PROFILE TIMELINE ITEM
-   ========================================================= */
-
-function profileTimelineItem(
-  label,
-  date,
-  icon,
-  completed
-) {
-
-  return `
-
-    <div
-      class="profile-timeline-item ${
-        completed
-          ? "completed"
-          : ""
-      }"
-    >
-
-      <div class="timeline-icon">
-
-        <i class="fa-solid ${icon}"></i>
-
-      </div>
-
-
-      <div class="timeline-content">
-
-        <strong>
-          ${escapeHTML(label)}
-        </strong>
-
-        <span>
-          ${
-            date
-              ? formatDate(date)
-              : "Belum ada"
-          }
-        </span>
-
-      </div>
-
-
-      <div class="timeline-status">
-
-        ${
-          completed
-            ? `
-              <i class="fa-solid fa-circle-check"></i>
-            `
-            : `
-              <i class="fa-regular fa-circle"></i>
-            `
-        }
-
-      </div>
-
-    </div>
-
-  `;
-
-}
-
-
-/* =========================================================
-   SALES NAME
-   ========================================================= */
-
-function getSalesNameForProfile(
-  salesId
-) {
-
-  if (!salesId) {
-
-    if (
-      currentProfile?.role !== "Admin"
-    ) {
-      return currentProfile?.name || "-";
     }
 
-    return "-";
 
-  }
-
-
-  const sales =
-    (salesUsersData || []).find(
-      item =>
-        String(item.id) ===
-        String(salesId)
+    return String(
+        lead.sales_id
+    ) === String(
+        currentProfile?.id
     );
 
-
-  if (sales?.name) {
-    return sales.name;
-  }
+}
 
 
-  if (
-    currentProfile &&
-    String(currentProfile.id) ===
-      String(salesId)
-  ) {
+/* =========================================================
+   RENDER
+========================================================= */
 
-    return (
-      currentProfile.name ||
-      "-"
-    );
+function renderCustomerProfile(lead){
 
-  }
+    const container =
+        $("customerProfileContent");
 
 
-  return "-";
+    if(!container) return;
+
+
+    const status =
+        normalizeLeadStatus(
+            lead.status
+        );
+
+
+    const statusClass =
+        getProfileStatusClass(
+            status
+        );
+
+
+    const salesName =
+        getSalesName(
+            lead.sales_id
+        );
+
+
+    const initials =
+        getProfileInitials(
+            lead.customer_name
+        );
+
+
+    container.innerHTML = `
+
+        <div class="customer-profile-page">
+
+
+            <!-- HERO -->
+
+            <div class="profile-hero">
+
+                <div class="profile-back">
+
+                    <button
+                        type="button"
+                        class="profile-back-btn"
+                        onclick="history.back()"
+                    >
+                        <i class="fa-solid fa-arrow-left"></i>
+                        Back
+                    </button>
+
+                </div>
+
+
+                <div class="profile-main">
+
+                    <div class="profile-avatar-large">
+                        ${escapeHTML(initials)}
+                    </div>
+
+
+                    <div class="profile-identity">
+
+                        <div class="profile-breadcrumb">
+                            CRM
+                            <i class="fa-solid fa-chevron-right"></i>
+                            Customer Profile
+                        </div>
+
+
+                        <h1>
+                            ${escapeHTML(
+                                lead.customer_name ||
+                                "Unnamed Customer"
+                            )}
+                        </h1>
+
+
+                        <div class="profile-subline">
+
+                            <span>
+                                <i class="fa-solid fa-location-dot"></i>
+                                ${escapeHTML(
+                                    lead.location || "-"
+                                )}
+                            </span>
+
+
+                            <span>
+                                <i class="fa-solid fa-building"></i>
+                                ${escapeHTML(
+                                    lead.business || "-"
+                                )}
+                            </span>
+
+
+                            <span>
+                                Lead #${escapeHTML(lead.id)}
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="profile-hero-actions">
+
+                        <span class="status-pill ${statusClass}">
+                            ${escapeHTML(status)}
+                        </span>
+
+
+                        ${
+                            lead.phone
+                            ?
+                            `
+                            <a
+                                href="${whatsappLink(lead.phone)}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="profile-whatsapp"
+                            >
+                                <i class="fa-brands fa-whatsapp"></i>
+                                WhatsApp
+                            </a>
+                            `
+                            :
+                            ""
+                        }
+
+
+                        <button
+                            type="button"
+                            class="profile-edit-btn"
+                            onclick="editLeadFromProfile('${escapeHTML(lead.id)}')"
+                        >
+                            <i class="fa-regular fa-pen-to-square"></i>
+                            Edit
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- BODY -->
+
+            <div class="profile-grid">
+
+
+                <!-- CUSTOMER INFO -->
+
+                <section class="profile-card">
+
+                    <div class="profile-card-header">
+
+                        <div>
+
+                            <h2>
+                                Customer Information
+                            </h2>
+
+                            <span>
+                                Basic customer details
+                            </span>
+
+                        </div>
+
+                        <div class="profile-card-icon blue">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+
+                    </div>
+
+
+                    <div class="profile-info-grid">
+
+
+                        <div class="profile-info-item">
+
+                            <span>
+                                Customer
+                            </span>
+
+                            <strong>
+                                ${escapeHTML(
+                                    lead.customer_name || "-"
+                                )}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="profile-info-item">
+
+                            <span>
+                                Phone
+                            </span>
+
+                            <strong>
+                                ${escapeHTML(
+                                    lead.phone || "-"
+                                )}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="profile-info-item">
+
+                            <span>
+                                Business
+                            </span>
+
+                            <strong>
+                                ${escapeHTML(
+                                    lead.business || "-"
+                                )}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="profile-info-item">
+
+                            <span>
+                                Location
+                            </span>
+
+                            <strong>
+                                ${escapeHTML(
+                                    lead.location || "-"
+                                )}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="profile-info-item">
+
+                            <span>
+                                Assigned Sales
+                            </span>
+
+                            <strong>
+                                ${escapeHTML(
+                                    salesName
+                                )}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="profile-info-item">
+
+                            <span>
+                                Created
+                            </span>
+
+                            <strong>
+                                ${escapeHTML(
+                                    formatProfileDate(
+                                        lead.created_at
+                                    )
+                                )}
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- PIPELINE -->
+
+                <section class="profile-card">
+
+                    <div class="profile-card-header">
+
+                        <div>
+
+                            <h2>
+                                Sales Pipeline
+                            </h2>
+
+                            <span>
+                                Customer journey
+                            </span>
+
+                        </div>
+
+                        <div class="profile-card-icon green">
+                            <i class="fa-solid fa-chart-line"></i>
+                        </div>
+
+                    </div>
+
+
+                    <div class="profile-timeline">
+
+                        ${renderTimelineItem(
+                            "Follow Up",
+                            lead.follow_up_date,
+                            "fa-solid fa-phone",
+                            "orange"
+                        )}
+
+                        ${renderTimelineItem(
+                            "Appointment",
+                            lead.appointment,
+                            "fa-solid fa-calendar-check",
+                            "purple"
+                        )}
+
+                        ${renderTimelineItem(
+                            "Site Survey",
+                            lead.site_survey,
+                            "fa-solid fa-location-crosshairs",
+                            "blue"
+                        )}
+
+                        ${renderTimelineItem(
+                            "Quotation",
+                            lead.quotation,
+                            "fa-solid fa-file-invoice-dollar",
+                            "orange"
+                        )}
+
+                        ${renderTimelineItem(
+                            "SPK",
+                            lead.spk,
+                            "fa-solid fa-file-signature",
+                            "purple"
+                        )}
+
+                        ${renderTimelineItem(
+                            "Closing",
+                            lead.closing,
+                            "fa-solid fa-circle-check",
+                            "green"
+                        )}
+
+                    </div>
+
+                </section>
+
+
+                <!-- NOTES -->
+
+                <section class="profile-card profile-card-wide">
+
+                    <div class="profile-card-header">
+
+                        <div>
+
+                            <h2>
+                                Customer Notes
+                            </h2>
+
+                            <span>
+                                Sales notes and important information
+                            </span>
+
+                        </div>
+
+                        <div class="profile-card-icon orange">
+                            <i class="fa-regular fa-note-sticky"></i>
+                        </div>
+
+                    </div>
+
+
+                    <div class="profile-notes">
+
+                        ${
+                            lead.notes
+                            ?
+                            escapeHTML(
+                                lead.notes
+                            ).replace(
+                                /\n/g,
+                                "<br>"
+                            )
+                            :
+                            `
+                            <div class="profile-no-notes">
+                                <i class="fa-regular fa-note-sticky"></i>
+                                <span>
+                                    Belum ada catatan.
+                                </span>
+                            </div>
+                            `
+                        }
+
+                    </div>
+
+                </section>
+
+
+                <!-- SYSTEM -->
+
+                <section class="profile-card profile-card-wide">
+
+                    <div class="profile-card-header">
+
+                        <div>
+
+                            <h2>
+                                System Information
+                            </h2>
+
+                            <span>
+                                CRM record information
+                            </span>
+
+                        </div>
+
+                        <div class="profile-card-icon gray">
+                            <i class="fa-solid fa-database"></i>
+                        </div>
+
+                    </div>
+
+
+                    <div class="profile-system-grid">
+
+                        <div>
+                            <span>Lead ID</span>
+                            <strong>#${escapeHTML(lead.id)}</strong>
+                        </div>
+
+                        <div>
+                            <span>Created</span>
+                            <strong>
+                                ${escapeHTML(
+                                    formatProfileDate(
+                                        lead.created_at
+                                    )
+                                )}
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>Sales</span>
+                            <strong>
+                                ${escapeHTML(salesName)}
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>Current Status</span>
+                            <strong>
+                                ${escapeHTML(status)}
+                            </strong>
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+            </div>
+
+        </div>
+
+    `;
+
+}
+
+
+/* =========================================================
+   TIMELINE
+========================================================= */
+
+function renderTimelineItem(
+    title,
+    date,
+    icon,
+    color
+){
+
+    const completed =
+        Boolean(date);
+
+
+    return `
+
+        <div class="
+            profile-timeline-item
+            ${completed ? "completed" : ""}
+        ">
+
+            <div class="
+                timeline-icon
+                ${color}
+            ">
+
+                <i class="${icon}"></i>
+
+            </div>
+
+
+            <div class="timeline-content">
+
+                <strong>
+                    ${escapeHTML(title)}
+                </strong>
+
+                <span>
+                    ${
+                        date
+                        ?
+                        escapeHTML(
+                            formatProfileDate(date)
+                        )
+                        :
+                        "Belum dilakukan"
+                    }
+                </span>
+
+            </div>
+
+
+            <div class="timeline-check">
+
+                ${
+                    completed
+                    ?
+                    `
+                    <i class="fa-solid fa-check"></i>
+                    `
+                    :
+                    `
+                    <i class="fa-solid fa-minus"></i>
+                    `
+                }
+
+            </div>
+
+        </div>
+
+    `;
 
 }
 
 
 /* =========================================================
    EDIT FROM PROFILE
-   ========================================================= */
+========================================================= */
 
-function editLeadFromProfile(
-  id
-) {
+function editLeadFromProfile(id){
 
-  if (!id) return;
-
-
-  /*
-   * Customer profile berada di halaman berbeda.
-   * Kita kembali ke Leads dan membuka modal edit.
-   */
-
-  window.location.href =
-    "leads.html?edit=" +
-    encodeURIComponent(id);
+    window.location.href =
+        `leads.html?edit=${encodeURIComponent(id)}`;
 
 }
+
+
+/* =========================================================
+   ERROR
+========================================================= */
+
+function renderProfileError(message){
+
+    const container =
+        $("customerProfileContent");
+
+
+    if(!container) return;
+
+
+    container.innerHTML = `
+
+        <div class="profile-error">
+
+            <div class="profile-error-icon">
+
+                <i class="fa-solid fa-circle-exclamation"></i>
+
+            </div>
+
+
+            <h2>
+                Customer Tidak Dapat Dibuka
+            </h2>
+
+
+            <p>
+                ${escapeHTML(message)}
+            </p>
+
+
+            <button
+                type="button"
+                class="btn btn-primary"
+                onclick="history.back()"
+            >
+                <i class="fa-solid fa-arrow-left"></i>
+                Kembali
+            </button>
+
+        </div>
+
+    `;
+
+}
+
+
+/* =========================================================
+   HELPERS
+========================================================= */
+
+function getProfileInitials(name){
+
+    if(!name){
+
+        return "NA";
+
+    }
+
+
+    const parts =
+        String(name)
+            .trim()
+            .split(/\s+/)
+            .filter(Boolean);
+
+
+    if(parts.length === 1){
+
+        return parts[0]
+            .substring(0,2)
+            .toUpperCase();
+
+    }
+
+
+    return (
+        parts[0][0] +
+        parts[parts.length - 1][0]
+    ).toUpperCase();
+
+}
+
+
+function formatProfileDate(value){
+
+    if(!value){
+
+        return "-";
+
+    }
+
+
+    try{
+
+        return new Intl.DateTimeFormat(
+            "id-ID",
+            {
+                day:"2-digit",
+                month:"long",
+                year:"numeric"
+            }
+        ).format(
+            new Date(value)
+        );
+
+    }
+    catch{
+
+        return value;
+
+    }
+
+}
+
+
+function getProfileStatusClass(
+    status
+){
+
+    return "status-" +
+        String(status)
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g,"-")
+            .replace(/^-|-$/g,"");
+
+}
+
+
+/* =========================================================
+   AUTO INITIALIZE
+========================================================= */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        if(
+            document.getElementById(
+                "customerProfileContent"
+            )
+        ){
+
+            setTimeout(() => {
+
+                if(
+                    typeof initializeCustomerProfilePage ===
+                    "function"
+                ){
+
+                    initializeCustomerProfilePage();
+
+                }
+
+            }, 250);
+
+        }
+
+    }
+);
