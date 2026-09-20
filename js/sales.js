@@ -17,7 +17,6 @@ async function initializeSalesPage() {
   console.log("================================");
 
 
-  // Hanya Admin
   if (currentProfile?.role !== "Admin") {
 
     console.warn(
@@ -29,6 +28,7 @@ async function initializeSalesPage() {
 
 
   bindSalesEvents();
+
 
   await loadSalesUsers();
 
@@ -46,14 +46,16 @@ async function initializeSalesPage() {
 
 async function loadSalesUsers() {
 
-  if (
-    currentProfile?.role !== "Admin"
-  ) {
+  if (currentProfile?.role !== "Admin") {
     return;
   }
 
 
-  if (!$("salesTableBody")) {
+  const tableBody =
+    $("salesTableBody");
+
+
+  if (!tableBody) {
     return;
   }
 
@@ -66,9 +68,10 @@ async function loadSalesUsers() {
 
 
     /*
-      Gunakan select("*") supaya kita tidak
-      bergantung pada kolom tertentu seperti
-      photo_url yang mungkin belum ada.
+      Gunakan select("*").
+      Ini mengikuti struktur database lama
+      dan tidak mengunci query ke kolom
+      tambahan seperti photo_url.
     */
 
     const {
@@ -79,20 +82,26 @@ async function loadSalesUsers() {
         .from("sales_users")
         .select("*")
         .order(
-          "name",
+          "created_at",
           {
             ascending: true
           }
         );
 
 
+    console.log(
+      "SALES QUERY DATA:",
+      data
+    );
+
+
+    console.log(
+      "SALES QUERY ERROR:",
+      error
+    );
+
+
     if (error) {
-
-      console.error(
-        "LOAD SALES ERROR:",
-        error
-      );
-
       throw error;
     }
 
@@ -101,15 +110,9 @@ async function loadSalesUsers() {
       data || [];
 
 
-    console.log(
-      "CRM FSI - SALES DATA:",
-      salesUsersData
-    );
-
-
     /*
-      Hanya role Sales yang ditampilkan
-      pada Manage Sales.
+      Hanya role Sales yang
+      ditampilkan di Manage Sales.
     */
 
     const salesOnly =
@@ -117,22 +120,24 @@ async function loadSalesUsers() {
         user =>
           String(
             user.role || ""
-          ).toLowerCase() === "sales"
+          ).toLowerCase() ===
+          "sales"
       );
 
 
-    const active =
+    const activeCount =
       salesOnly.filter(
         user =>
           String(
             user.status || ""
-          ).toLowerCase() === "active"
+          ).toLowerCase() ===
+          "active"
       ).length;
 
 
-    const inactive =
+    const inactiveCount =
       salesOnly.length -
-      active;
+      activeCount;
 
 
     // ======================================
@@ -147,13 +152,13 @@ async function loadSalesUsers() {
 
     setText(
       "activeSalesUsers",
-      active
+      activeCount
     );
 
 
     setText(
       "inactiveSalesUsers",
-      inactive
+      inactiveCount
     );
 
 
@@ -165,7 +170,8 @@ async function loadSalesUsers() {
 
 
     /*
-      Refresh lookup Sales untuk Leads.
+      Refresh Sales lookup untuk
+      Leads dan halaman lainnya.
     */
 
     if (
@@ -181,45 +187,39 @@ async function loadSalesUsers() {
   } catch (error) {
 
     console.error(
-      "loadSalesUsers:",
+      "LOAD SALES ERROR:",
       error
     );
 
 
-    const tableBody =
-      $("salesTableBody");
+    tableBody.innerHTML = `
+      <tr>
 
+        <td colspan="7">
 
-    if (tableBody) {
+          <div class="sales-empty">
 
-      tableBody.innerHTML = `
-        <tr>
-          <td colspan="7">
-
-            <div class="sales-empty">
-
-              <div class="sales-empty-icon">
-                <i class="fa-solid fa-triangle-exclamation"></i>
-              </div>
-
-              <strong>
-                Gagal memuat data Sales
-              </strong>
-
-              <span>
-                ${escapeHTML(
-                  error.message ||
-                  "Terjadi kesalahan."
-                )}
-              </span>
-
+            <div class="sales-empty-icon">
+              <i class="fa-solid fa-triangle-exclamation"></i>
             </div>
 
-          </td>
-        </tr>
-      `;
+            <strong>
+              Gagal memuat data Sales
+            </strong>
 
-    }
+            <span>
+              ${escapeHTML(
+                error.message ||
+                "Terjadi kesalahan."
+              )}
+            </span>
+
+          </div>
+
+        </td>
+
+      </tr>
+    `;
 
 
     showToast(
@@ -249,7 +249,7 @@ function renderSalesTable() {
 
 
   const search =
-    (
+    String(
       $("salesSearch")?.value ||
       ""
     )
@@ -263,7 +263,8 @@ function renderSalesTable() {
         user =>
           String(
             user.role || ""
-          ).toLowerCase() === "sales"
+          ).toLowerCase() ===
+          "sales"
       )
       .filter(
         user => {
@@ -280,18 +281,21 @@ function renderSalesTable() {
             ).toLowerCase();
 
 
+          const email =
+            String(
+              user.email || ""
+            ).toLowerCase();
+
+
           return (
             name.includes(search) ||
-            username.includes(search)
+            username.includes(search) ||
+            email.includes(search)
           );
 
         }
       );
 
-
-  // ======================================
-  // EMPTY
-  // ======================================
 
   if (!rows.length) {
 
@@ -325,10 +329,6 @@ function renderSalesTable() {
   }
 
 
-  // ======================================
-  // TABLE ROWS
-  // ======================================
-
   tableBody.innerHTML =
     rows
       .map(
@@ -337,7 +337,8 @@ function renderSalesTable() {
           const isActive =
             String(
               sales.status || ""
-            ).toLowerCase() === "active";
+            ).toLowerCase() ===
+            "active";
 
 
           const statusClass =
@@ -373,35 +374,21 @@ function renderSalesTable() {
               );
 
 
-          const email =
-            sales.email ||
-            "";
-
-
           return `
             <tr>
 
-
-              <!-- NUMBER -->
-
               <td>
 
-                <span
-                  class="sales-row-number"
-                >
+                <span class="sales-row-number">
                   ${index + 1}
                 </span>
 
               </td>
 
 
-              <!-- SALES -->
-
               <td>
 
-                <div
-                  class="sales-person-cell"
-                >
+                <div class="sales-person-cell">
 
                   ${
                     photo
@@ -437,9 +424,7 @@ function renderSalesTable() {
                   </div>
 
 
-                  <div
-                    class="sales-person-info"
-                  >
+                  <div class="sales-person-info">
 
                     <strong>
                       ${escapeHTML(
@@ -450,11 +435,11 @@ function renderSalesTable() {
 
 
                     ${
-                      email
+                      sales.email
                         ? `
                           <span>
                             ${escapeHTML(
-                              email
+                              sales.email
                             )}
                           </span>
                         `
@@ -468,13 +453,9 @@ function renderSalesTable() {
               </td>
 
 
-              <!-- USERNAME -->
-
               <td>
 
-                <span
-                  class="sales-username"
-                >
+                <span class="sales-username">
                   ${escapeHTML(
                     sales.username ||
                     "-"
@@ -484,13 +465,9 @@ function renderSalesTable() {
               </td>
 
 
-              <!-- ROLE -->
-
               <td>
 
-                <span
-                  class="sales-role"
-                >
+                <span class="sales-role">
                   ${escapeHTML(
                     sales.role ||
                     "Sales"
@@ -500,17 +477,13 @@ function renderSalesTable() {
               </td>
 
 
-              <!-- STATUS -->
-
               <td>
 
                 <span
                   class="status-badge ${statusClass}"
                 >
 
-                  <i
-                    class="fa-solid fa-circle"
-                  ></i>
+                  <i class="fa-solid fa-circle"></i>
 
                   ${escapeHTML(
                     statusText
@@ -521,13 +494,9 @@ function renderSalesTable() {
               </td>
 
 
-              <!-- CREATED -->
-
               <td>
 
-                <span
-                  class="sales-created"
-                >
+                <span class="sales-created">
                   ${formatDate(
                     sales.created_at
                   )}
@@ -536,13 +505,9 @@ function renderSalesTable() {
               </td>
 
 
-              <!-- ACTION -->
-
               <td>
 
-                <div
-                  class="action-buttons"
-                >
+                <div class="action-buttons">
 
                   <button
                     type="button"
@@ -550,11 +515,7 @@ function renderSalesTable() {
                     onclick="openEditSales('${safeId}')"
                     title="Edit Sales"
                   >
-
-                    <i
-                      class="fa-regular fa-pen-to-square"
-                    ></i>
-
+                    <i class="fa-regular fa-pen-to-square"></i>
                   </button>
 
 
@@ -562,19 +523,14 @@ function renderSalesTable() {
                     type="button"
                     class="icon-btn"
                     onclick="toggleSalesStatus('${safeId}')"
-                    title="Toggle status"
+                    title="Ubah status"
                   >
-
-                    <i
-                      class="fa-solid fa-power-off"
-                    ></i>
-
+                    <i class="fa-solid fa-power-off"></i>
                   </button>
 
                 </div>
 
               </td>
-
 
             </tr>
           `;
@@ -590,26 +546,25 @@ function renderSalesTable() {
 // SALES PHOTO
 // ========================================
 
-function getSalesPhotoUrl(sales) {
-
-  /*
-    Kalau photo_url memang tersedia
-    di database, gunakan.
-  */
+function getSalesPhotoUrl(
+  sales
+) {
 
   if (
     sales &&
     sales.photo_url
   ) {
 
-    return sales.photo_url;
+    return String(
+      sales.photo_url
+    );
 
   }
 
 
   /*
-    Fallback Rist.
-    Tidak mempengaruhi database.
+    Fallback foto Rist.
+    Tidak mengubah database.
   */
 
   const name =
@@ -620,9 +575,7 @@ function getSalesPhotoUrl(sales) {
       .toLowerCase();
 
 
-  if (
-    name === "rist"
-  ) {
+  if (name === "rist") {
 
     return "https://yoyszukutqwoxxdolzcg.supabase.co/storage/v1/object/public/sales-avatar/rist.jpeg";
 
@@ -638,7 +591,9 @@ function getSalesPhotoUrl(sales) {
 // INITIALS
 // ========================================
 
-function getSalesInitials(name) {
+function getSalesInitials(
+  name
+) {
 
   if (!name) {
     return "SA";
@@ -652,15 +607,10 @@ function getSalesInitials(name) {
       .filter(Boolean);
 
 
-  if (
-    parts.length === 1
-  ) {
+  if (parts.length === 1) {
 
     return parts[0]
-      .substring(
-        0,
-        2
-      )
+      .substring(0, 2)
       .toUpperCase();
 
   }
@@ -668,9 +618,7 @@ function getSalesInitials(name) {
 
   return (
     parts[0][0] +
-    parts[
-      parts.length - 1
-    ][0]
+    parts[parts.length - 1][0]
   ).toUpperCase();
 
 }
@@ -779,7 +727,9 @@ function openAddSales() {
 // EDIT SALES
 // ========================================
 
-function openEditSales(id) {
+function openEditSales(
+  id
+) {
 
   if (
     currentProfile?.role !== "Admin"
@@ -929,9 +879,10 @@ function showSalesPhotoPreview(
 
   if (!url) {
 
-    preview.innerHTML = `
-      <i class="fa-solid fa-user"></i>
-    `;
+    preview.innerHTML =
+      `
+        <i class="fa-solid fa-user"></i>
+      `;
 
 
     preview.classList.remove(
@@ -943,16 +894,13 @@ function showSalesPhotoPreview(
   }
 
 
-  preview.innerHTML = `
-    <img
-      src="${escapeHTML(url)}"
-      alt="Sales photo"
-      onerror="
-        this.parentElement.innerHTML='<i class=&quot;fa-solid fa-user&quot;></i>';
-        this.parentElement.classList.remove('has-image');
-      "
-    >
-  `;
+  preview.innerHTML =
+    `
+      <img
+        src="${escapeHTML(url)}"
+        alt="Sales photo"
+      >
+    `;
 
 
   preview.classList.add(
@@ -1010,7 +958,7 @@ async function handleCreateSales(
     $("salesPhotoUrl")
       ?.value
       .trim() ||
-    null;
+    "";
 
 
   const status =
@@ -1023,10 +971,7 @@ async function handleCreateSales(
   // VALIDATION
   // ======================================
 
-  if (
-    !name ||
-    !username
-  ) {
+  if (!name || !username) {
 
     showFormMessage(
       "salesFormMessage",
@@ -1080,9 +1025,8 @@ async function handleCreateSales(
 
   try {
 
-
     // ====================================
-    // CREATE
+    // CREATE SALES
     // ====================================
 
     if (!editingSalesId) {
@@ -1126,9 +1070,10 @@ async function handleCreateSales(
 
 
       /*
-        Simpan photo_url hanya jika
-        Edge Function mengembalikan ID
-        Sales baru.
+        Photo hanya dicoba jika
+        kolom photo_url memang ada.
+        Jika tidak ada, akun Sales
+        tetap berhasil dibuat.
       */
 
       const createdSales =
@@ -1160,7 +1105,7 @@ async function handleCreateSales(
 
           console.warn(
             "Photo URL tidak tersimpan:",
-            photoError
+            photoError.message
           );
 
         }
@@ -1175,16 +1120,11 @@ async function handleCreateSales(
 
     }
 
-
     // ====================================
-    // UPDATE
+    // UPDATE SALES
     // ====================================
 
     else {
-
-      /*
-        Update field dasar terlebih dahulu.
-      */
 
       const {
         error
@@ -1208,12 +1148,12 @@ async function handleCreateSales(
 
 
       /*
-        photo_url dicoba terpisah.
-        Kalau kolom belum ada, data utama
-        Sales tetap tidak gagal.
+        Photo bersifat tambahan.
+        Jika kolom photo_url belum ada,
+        update utama tetap berhasil.
       */
 
-      if (photoUrl !== null) {
+      if (photoUrl) {
 
         const {
           error:
@@ -1235,7 +1175,7 @@ async function handleCreateSales(
 
           console.warn(
             "Photo URL tidak tersimpan:",
-            photoError
+            photoError.message
           );
 
         }
@@ -1277,7 +1217,6 @@ async function handleCreateSales(
       "Gagal menyimpan Sales.",
       "error"
     );
-
 
   } finally {
 
@@ -1384,7 +1323,6 @@ async function toggleSalesStatus(
 
 
         await loadSalesUsers();
-
 
       } catch (error) {
 
