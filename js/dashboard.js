@@ -8,6 +8,8 @@
 // - Dashboard statistics
 // - Admin / Sales access handling
 // - Refresh dashboard
+// - Pipeline summary
+// - Recent leads / activities
 // - Modern + legacy page ID compatibility
 // ============================================================
 
@@ -25,12 +27,39 @@ let dashboardInitialized = false;
 
 
 // ============================================================
+// GET SUPABASE CLIENT
+// ============================================================
+
+function dashboardGetSupabase() {
+
+    if (
+        typeof window.supabaseClient !== "undefined" &&
+        window.supabaseClient
+    ) {
+        return window.supabaseClient;
+    }
+
+    if (
+        typeof supabaseClient !== "undefined" &&
+        supabaseClient
+    ) {
+        return supabaseClient;
+    }
+
+    return null;
+}
+
+
+// ============================================================
 // GET CURRENT PROFILE
 // ============================================================
 
 function dashboardGetProfile() {
 
-    if (window.currentProfile) {
+    if (
+        typeof window.currentProfile !== "undefined" &&
+        window.currentProfile
+    ) {
         return window.currentProfile;
     }
 
@@ -51,7 +80,10 @@ function dashboardGetProfile() {
 
 function dashboardGetUser() {
 
-    if (window.currentUser) {
+    if (
+        typeof window.currentUser !== "undefined" &&
+        window.currentUser
+    ) {
         return window.currentUser;
     }
 
@@ -63,6 +95,32 @@ function dashboardGetUser() {
     }
 
     return null;
+}
+
+
+// ============================================================
+// NORMALIZE ROLE
+// ============================================================
+
+function dashboardNormalizeRole(role) {
+
+    if (
+        typeof window.authNormalizeRole ===
+        "function"
+    ) {
+        return window.authNormalizeRole(role);
+    }
+
+    if (
+        typeof window.normalizeRole ===
+        "function"
+    ) {
+        return window.normalizeRole(role);
+    }
+
+    return String(role || "")
+        .trim()
+        .toLowerCase();
 }
 
 
@@ -80,9 +138,9 @@ function dashboardIsAdmin() {
     }
 
     const role =
-        String(profile.role || "")
-            .trim()
-            .toLowerCase();
+        dashboardNormalizeRole(
+            profile.role
+        );
 
     return (
         role === "admin" ||
@@ -102,9 +160,9 @@ function dashboardIsSales() {
     }
 
     const role =
-        String(profile.role || "")
-            .trim()
-            .toLowerCase();
+        dashboardNormalizeRole(
+            profile.role
+        );
 
     return (
         role === "sales" ||
@@ -117,34 +175,36 @@ function dashboardIsSales() {
 // PAGE ELEMENT FINDER
 // ============================================================
 
-function dashboardFindPage(
-    type
-) {
+function dashboardFindPage(type) {
 
     const pageMap = {
 
         dashboard: [
             "view-dashboard",
             "dashboardPage",
-            "dashboard-page"
+            "dashboard-page",
+            "dashboard-view"
         ],
 
         leads: [
             "view-leads",
             "leadsPage",
-            "leads-page"
+            "leads-page",
+            "leads-view"
         ],
 
         sales: [
             "view-sales",
             "salesPage",
-            "sales-page"
+            "sales-page",
+            "sales-view"
         ],
 
         customerProfile: [
             "view-customer-profile",
             "customerProfilePage",
-            "customer-profile-page"
+            "customer-profile-page",
+            "customer-profile-view"
         ]
     };
 
@@ -153,7 +213,9 @@ function dashboardFindPage(
         pageMap[type] || [];
 
 
-    for (const id of ids) {
+    for (
+        const id of ids
+    ) {
 
         const element =
             document.getElementById(id);
@@ -205,43 +267,6 @@ function hideAllPages() {
             );
         }
     );
-
-
-    // --------------------------------------------------------
-    // Additional legacy / custom view containers
-    // --------------------------------------------------------
-
-    const extraIds = [
-        "dashboard-view",
-        "leads-view",
-        "sales-view",
-        "customer-profile-view"
-    ];
-
-
-    extraIds.forEach(
-        id => {
-
-            const element =
-                document.getElementById(id);
-
-            if (!element) {
-                return;
-            }
-
-            element.classList.add(
-                "hidden"
-            );
-
-            element.style.display =
-                "none";
-
-            element.setAttribute(
-                "aria-hidden",
-                "true"
-            );
-        }
-    );
 }
 
 
@@ -249,9 +274,7 @@ function hideAllPages() {
 // SHOW PAGE
 // ============================================================
 
-function dashboardShowPage(
-    type
-) {
+function dashboardShowPage(type) {
 
     hideAllPages();
 
@@ -263,7 +286,7 @@ function dashboardShowPage(
     if (!page) {
 
         console.warn(
-            `Dashboard navigation: page "${type}" not found.`
+            `FSI CRM: page "${type}" tidak ditemukan.`
         );
 
         return null;
@@ -274,15 +297,15 @@ function dashboardShowPage(
         "hidden"
     );
 
-    page.style.display =
-        "";
+
+    page.style.display = "";
 
 
-    // Some older layouts use block.
     if (
         getComputedStyle(page).display ===
         "none"
     ) {
+
         page.style.display =
             "block";
     }
@@ -302,9 +325,7 @@ function dashboardShowPage(
 // PAGE TITLE
 // ============================================================
 
-function dashboardSetPageTitle(
-    title
-) {
+function dashboardSetPageTitle(title) {
 
     if (
         typeof window.setPageTitle ===
@@ -320,9 +341,9 @@ function dashboardSetPageTitle(
 
 
     const titleIds = [
+        "current-page-title",
         "pageTitle",
-        "page-title",
-        "current-page-title"
+        "page-title"
     ];
 
 
@@ -333,6 +354,7 @@ function dashboardSetPageTitle(
                 document.getElementById(id);
 
             if (element) {
+
                 element.textContent =
                     title;
             }
@@ -342,19 +364,42 @@ function dashboardSetPageTitle(
 
 
 // ============================================================
+// PAGE DESCRIPTION
+// ============================================================
+
+function dashboardSetPageDescription(
+    description
+) {
+
+    const element =
+        document.getElementById(
+            "current-page-description"
+        );
+
+    if (element) {
+
+        element.textContent =
+            description || "";
+    }
+}
+
+
+// ============================================================
 // UPDATE ACTIVE NAVIGATION
 // ============================================================
 
-function dashboardSetActiveNav(
-    target
-) {
+function dashboardSetActiveNav(target) {
 
     const links =
         document.querySelectorAll(
-            ".nav-link, " +
-            ".nav-dropdown-item, " +
-            "[data-page], " +
-            "[data-view]"
+            [
+                ".nav-link",
+                ".nav-dropdown-item",
+                "[data-page]",
+                "[data-view]",
+                "[data-nav]",
+                "[data-crm-nav]"
+            ].join(",")
         );
 
 
@@ -373,9 +418,14 @@ function dashboardSetActiveNav(
 
 
     const selectors = [
+
         `[data-page="${target}"]`,
+
         `[data-view="${target}"]`,
-        `[data-nav="${target}"]`
+
+        `[data-nav="${target}"]`,
+
+        `[data-crm-nav="${target}"]`
     ];
 
 
@@ -383,7 +433,9 @@ function dashboardSetActiveNav(
         selector => {
 
             document
-                .querySelectorAll(selector)
+                .querySelectorAll(
+                    selector
+                )
                 .forEach(
                     element => {
 
@@ -415,7 +467,7 @@ async function showDashboard() {
     if (!profile) {
 
         console.warn(
-            "Cannot open dashboard: profile not ready."
+            "FSI CRM: profile belum siap, dashboard tidak dibuka."
         );
 
         return;
@@ -432,6 +484,13 @@ async function showDashboard() {
     );
 
 
+    dashboardSetPageDescription(
+        dashboardIsAdmin()
+            ? "Overview seluruh aktivitas dan pipeline sales."
+            : "Overview aktivitas dan pipeline customer Anda."
+    );
+
+
     dashboardSetActiveNav(
         "dashboard"
     );
@@ -440,10 +499,7 @@ async function showDashboard() {
     await updateDashboard();
 
 
-    window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-    });
+    dashboardScrollTop();
 }
 
 
@@ -460,7 +516,7 @@ async function showLeads() {
     if (!profile) {
 
         console.warn(
-            "Cannot open leads: profile not ready."
+            "FSI CRM: profile belum siap, leads tidak dibuka."
         );
 
         return;
@@ -472,14 +528,21 @@ async function showLeads() {
     );
 
 
-    const title =
-        dashboardIsAdmin()
-            ? "All Leads"
-            : "My Leads";
+    const isAdmin =
+        dashboardIsAdmin();
 
 
     dashboardSetPageTitle(
-        title
+        isAdmin
+            ? "All Leads"
+            : "My Leads"
+    );
+
+
+    dashboardSetPageDescription(
+        isAdmin
+            ? "Kelola seluruh database customer dan lead."
+            : "Kelola database customer dan lead Anda."
     );
 
 
@@ -489,7 +552,7 @@ async function showLeads() {
 
 
     // --------------------------------------------------------
-    // Load filter options
+    // LOAD FILTER OPTIONS
     // --------------------------------------------------------
 
     if (
@@ -504,7 +567,7 @@ async function showLeads() {
         } catch (error) {
 
             console.error(
-                "Load filter options error:",
+                "FSI CRM: load filter options error:",
                 error
             );
         }
@@ -512,7 +575,7 @@ async function showLeads() {
 
 
     // --------------------------------------------------------
-    // Load leads
+    // LOAD LEADS
     // --------------------------------------------------------
 
     if (
@@ -529,22 +592,19 @@ async function showLeads() {
         } catch (error) {
 
             console.error(
-                "Load leads error:",
+                "FSI CRM: load leads error:",
                 error
             );
         }
     }
 
 
-    window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-    });
+    dashboardScrollTop();
 }
 
 
 // ============================================================
-// SHOW SALES
+// SHOW SALES MANAGEMENT
 // ============================================================
 
 async function showSales() {
@@ -582,6 +642,11 @@ async function showSales() {
     );
 
 
+    dashboardSetPageDescription(
+        "Kelola user Sales, status akun, dan akses tim."
+    );
+
+
     dashboardSetActiveNav(
         "sales"
     );
@@ -599,17 +664,14 @@ async function showSales() {
         } catch (error) {
 
             console.error(
-                "Load Sales users error:",
+                "FSI CRM: load Sales users error:",
                 error
             );
         }
     }
 
 
-    window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-    });
+    dashboardScrollTop();
 }
 
 
@@ -618,6 +680,15 @@ async function showSales() {
 // ============================================================
 
 async function showCustomerProfile() {
+
+    const profile =
+        dashboardGetProfile();
+
+
+    if (!profile) {
+        return;
+    }
+
 
     dashboardShowPage(
         "customerProfile"
@@ -629,15 +700,40 @@ async function showCustomerProfile() {
     );
 
 
+    dashboardSetPageDescription(
+        "Detail customer, pipeline, aktivitas, dan follow-up."
+    );
+
+
     dashboardSetActiveNav(
         "customerProfile"
     );
 
 
-    window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-    });
+    dashboardScrollTop();
+}
+
+
+// ============================================================
+// SCROLL TOP
+// ============================================================
+
+function dashboardScrollTop() {
+
+    try {
+
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
+
+    } catch (error) {
+
+        window.scrollTo(
+            0,
+            0
+        );
+    }
 }
 
 
@@ -647,11 +743,11 @@ async function showCustomerProfile() {
 
 async function dashboardFetchLeads() {
 
-    if (
-        typeof supabaseClient ===
-        "undefined" ||
-        !supabaseClient
-    ) {
+    const client =
+        dashboardGetSupabase();
+
+
+    if (!client) {
 
         throw new Error(
             "Supabase client belum siap."
@@ -669,19 +765,27 @@ async function dashboardFetchLeads() {
 
 
     // --------------------------------------------------------
-    // IMPORTANT
+    // SECURITY NOTE
     // --------------------------------------------------------
-    // RLS Supabase tetap menjadi lapisan keamanan utama.
+    // Frontend role checking bukan security utama.
     //
-    // Admin akan mendapatkan data yang diizinkan Admin.
-    // Sales hanya mendapatkan data miliknya jika RLS
-    // pada tabel leads sudah dikonfigurasi dengan benar.
+    // Supabase RLS WAJIB memastikan:
+    //
+    // Admin:
+    //   dapat membaca seluruh leads.
+    //
+    // Sales:
+    //   hanya dapat membaca leads miliknya.
+    //
+    // Query di bawah sengaja tidak melakukan filter
+    // sales_id untuk Sales agar RLS menjadi sumber
+    // pembatasan data.
     // --------------------------------------------------------
 
     const {
         data,
         error
-    } = await supabaseClient
+    } = await client
         .from("leads")
         .select(
             [
@@ -697,6 +801,12 @@ async function dashboardFetchLeads() {
                 "sales_id",
                 "created_at"
             ].join(",")
+        )
+        .order(
+            "created_at",
+            {
+                ascending: false
+            }
         );
 
 
@@ -712,12 +822,154 @@ async function dashboardFetchLeads() {
 
 
 // ============================================================
+// NORMALIZE STATUS
+// ============================================================
+
+function dashboardNormalizeStatus(status) {
+
+    if (
+        typeof window.normalizeLeadStatus ===
+        "function"
+    ) {
+
+        return window.normalizeLeadStatus(
+            status
+        );
+    }
+
+
+    return String(status || "")
+        .trim();
+}
+
+
+// ============================================================
+// CHECK DATE VALUE
+// ============================================================
+
+function dashboardHasValue(value) {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+        return false;
+    }
+
+
+    if (
+        typeof value === "string"
+    ) {
+
+        return value.trim() !== "";
+    }
+
+
+    return true;
+}
+
+
+// ============================================================
+// COUNT STATUS
+// ============================================================
+
+function dashboardCountStatus(
+    list,
+    status
+) {
+
+    if (
+        typeof window.countNormalizedStatus ===
+        "function"
+    ) {
+
+        return window.countNormalizedStatus(
+            list,
+            status
+        );
+    }
+
+
+    return list.filter(
+        item =>
+            dashboardNormalizeStatus(
+                item.status
+            ) === status
+    ).length;
+}
+
+
+// ============================================================
+// COUNT DATE FIELD
+// ============================================================
+
+function dashboardCountDateField(
+    list,
+    field
+) {
+
+    if (
+        typeof window.countDateField ===
+        "function"
+    ) {
+
+        return window.countDateField(
+            list,
+            field
+        );
+    }
+
+
+    return list.filter(
+        item =>
+            dashboardHasValue(
+                item[field]
+            )
+    ).length;
+}
+
+
+// ============================================================
+// COUNT CLOSING
+// ============================================================
+
+function dashboardCountClosing(list) {
+
+    if (
+        typeof window.countClosing ===
+        "function"
+    ) {
+
+        return window.countClosing(
+            list
+        );
+    }
+
+
+    return list.filter(
+        item => {
+
+            const status =
+                dashboardNormalizeStatus(
+                    item.status
+                );
+
+            return (
+                status === "Closing" ||
+                dashboardHasValue(
+                    item.closing
+                )
+            );
+        }
+    ).length;
+}
+
+
+// ============================================================
 // CALCULATE DASHBOARD STATS
 // ============================================================
 
-function calculateDashboardStats(
-    data
-) {
+function calculateDashboardStats(data) {
 
     const list =
         Array.isArray(data)
@@ -730,105 +982,74 @@ function calculateDashboardStats(
         total:
             list.length,
 
+
         new:
-            typeof countNormalizedStatus ===
-            "function"
-                ? countNormalizedStatus(
-                    list,
-                    "New"
-                )
-                : list.filter(
-                    item =>
-                        normalizeLeadStatus(
-                            item.status
-                        ) === "New"
-                ).length,
+            dashboardCountStatus(
+                list,
+                "New"
+            ),
+
 
         flyerSent:
-            typeof countNormalizedStatus ===
-            "function"
-                ? countNormalizedStatus(
-                    list,
-                    "Flyer Sent"
-                )
-                : 0,
+            dashboardCountStatus(
+                list,
+                "Flyer Sent"
+            ),
+
 
         interested:
-            typeof countNormalizedStatus ===
-            "function"
-                ? countNormalizedStatus(
-                    list,
-                    "Interested"
-                )
-                : 0,
+            dashboardCountStatus(
+                list,
+                "Interested"
+            ),
+
 
         followUp:
-            typeof countNormalizedStatus ===
-            "function"
-                ? countNormalizedStatus(
-                    list,
-                    "Follow Up"
-                )
-                : 0,
+            dashboardCountStatus(
+                list,
+                "Follow Up"
+            ),
+
 
         appointment:
-            typeof countDateField ===
-            "function"
-                ? countDateField(
-                    list,
-                    "appointment"
-                )
-                : 0,
+            dashboardCountDateField(
+                list,
+                "appointment"
+            ),
+
 
         siteSurvey:
-            typeof countDateField ===
-            "function"
-                ? countDateField(
-                    list,
-                    "site_survey"
-                )
-                : 0,
+            dashboardCountDateField(
+                list,
+                "site_survey"
+            ),
+
 
         quotation:
-            typeof countDateField ===
-            "function"
-                ? countDateField(
-                    list,
-                    "quotation"
-                )
-                : 0,
+            dashboardCountDateField(
+                list,
+                "quotation"
+            ),
+
 
         spk:
-            typeof countDateField ===
-            "function"
-                ? countDateField(
-                    list,
-                    "spk"
-                )
-                : 0,
+            dashboardCountDateField(
+                list,
+                "spk"
+            ),
+
 
         closing:
-            typeof countClosing ===
-            "function"
-                ? countClosing(
-                    list
-                )
-                : list.filter(
-                    item =>
-                        normalizeLeadStatus(
-                            item.status
-                        ) ===
-                        "Closing"
-                ).length,
+            dashboardCountClosing(
+                list
+            ),
+
 
         notInterested:
-            typeof countNormalizedStatus ===
-            "function"
-                ? countNormalizedStatus(
-                    list,
-                    "Not Interested"
-                )
-                : 0
+            dashboardCountStatus(
+                list,
+                "Not Interested"
+            )
     };
 }
 
@@ -837,9 +1058,7 @@ function calculateDashboardStats(
 // UPDATE DASHBOARD CARDS
 // ============================================================
 
-function renderDashboardStats(
-    stats
-) {
+function renderDashboardStats(stats) {
 
     if (!stats) {
         return;
@@ -898,24 +1117,27 @@ function renderDashboardStats(
                     value
                 );
 
-            } else {
+                return;
+            }
 
-                const element =
-                    document.getElementById(
-                        id
-                    );
 
-                if (element) {
-                    element.textContent =
-                        value;
-                }
+            const element =
+                document.getElementById(
+                    id
+                );
+
+
+            if (element) {
+
+                element.textContent =
+                    value;
             }
         }
     );
 
 
     // --------------------------------------------------------
-    // Alternative IDs
+    // LEGACY IDs
     // --------------------------------------------------------
 
     const alternatives = {
@@ -925,6 +1147,9 @@ function renderDashboardStats(
 
         newLeads:
             stats.new,
+
+        flyerSentLeads:
+            stats.flyerSent,
 
         interestedLeads:
             stats.interested,
@@ -941,8 +1166,14 @@ function renderDashboardStats(
         quotationLeads:
             stats.quotation,
 
+        spkLeads:
+            stats.spk,
+
         closingLeads:
-            stats.closing
+            stats.closing,
+
+        notInterestedLeads:
+            stats.notInterested
     };
 
 
@@ -956,12 +1187,389 @@ function renderDashboardStats(
                     id
                 );
 
+
             if (element) {
+
                 element.textContent =
                     value;
             }
         }
     );
+}
+
+
+// ============================================================
+// RENDER PIPELINE
+// ============================================================
+
+function renderDashboardPipeline(
+    data
+) {
+
+    const container =
+        document.getElementById(
+            "dashboard-pipeline"
+        );
+
+
+    if (!container) {
+        return;
+    }
+
+
+    const list =
+        Array.isArray(data)
+            ? data
+            : [];
+
+
+    const stages = [
+
+        {
+            label: "New",
+            className: "status-new"
+        },
+
+        {
+            label: "Flyer Sent",
+            className: "status-flyer"
+        },
+
+        {
+            label: "Interested",
+            className: "status-interested"
+        },
+
+        {
+            label: "Follow Up",
+            className: "status-follow-up"
+        },
+
+        {
+            label: "Appointment",
+            className: "status-appointment"
+        },
+
+        {
+            label: "Site Survey",
+            className: "status-site-survey"
+        },
+
+        {
+            label: "Quotation",
+            className: "status-quotation"
+        },
+
+        {
+            label: "Closing",
+            className: "status-closing"
+        },
+
+        {
+            label: "Not Interested",
+            className: "status-not-interested"
+        }
+    ];
+
+
+    const html =
+        stages.map(
+            stage => {
+
+                let count = 0;
+
+
+                if (
+                    stage.label ===
+                    "Appointment"
+                ) {
+
+                    count =
+                        dashboardCountDateField(
+                            list,
+                            "appointment"
+                        );
+
+                } else if (
+                    stage.label ===
+                    "Site Survey"
+                ) {
+
+                    count =
+                        dashboardCountDateField(
+                            list,
+                            "site_survey"
+                        );
+
+                } else if (
+                    stage.label ===
+                    "Quotation"
+                ) {
+
+                    count =
+                        dashboardCountDateField(
+                            list,
+                            "quotation"
+                        );
+
+                } else if (
+                    stage.label ===
+                    "Closing"
+                ) {
+
+                    count =
+                        dashboardCountClosing(
+                            list
+                        );
+
+                } else {
+
+                    count =
+                        dashboardCountStatus(
+                            list,
+                            stage.label
+                        );
+                }
+
+
+                return `
+                    <div class="pipeline-item">
+                        <div class="pipeline-item-main">
+                            <span class="pipeline-status ${stage.className}">
+                                ${dashboardEscapeHTML(stage.label)}
+                            </span>
+                        </div>
+
+                        <strong class="pipeline-count">
+                            ${count}
+                        </strong>
+                    </div>
+                `;
+            }
+        ).join("");
+
+
+    container.innerHTML =
+        html;
+
+
+    if (
+        typeof window.refreshIcons ===
+        "function"
+    ) {
+
+        window.refreshIcons();
+    }
+}
+
+
+// ============================================================
+// RENDER RECENT LEADS
+// ============================================================
+
+function renderDashboardRecentLeads(
+    data
+) {
+
+    const container =
+        document.getElementById(
+            "dashboard-activities"
+        );
+
+
+    if (!container) {
+        return;
+    }
+
+
+    const list =
+        Array.isArray(data)
+            ? data
+            : [];
+
+
+    const recent =
+        [...list]
+            .sort(
+                (
+                    a,
+                    b
+                ) => {
+
+                    const dateA =
+                        new Date(
+                            a.created_at ||
+                            0
+                        ).getTime();
+
+                    const dateB =
+                        new Date(
+                            b.created_at ||
+                            0
+                        ).getTime();
+
+                    return dateB - dateA;
+                }
+            )
+            .slice(
+                0,
+                8
+            );
+
+
+    if (!recent.length) {
+
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i data-lucide="inbox"></i>
+                </div>
+
+                <h4>No recent leads</h4>
+
+                <p>
+                    Belum ada data customer terbaru.
+                </p>
+            </div>
+        `;
+
+
+        if (
+            typeof window.refreshIcons ===
+            "function"
+        ) {
+
+            window.refreshIcons();
+        }
+
+        return;
+    }
+
+
+    container.innerHTML =
+        recent.map(
+            lead => {
+
+                const name =
+                    lead.customer_name ||
+                    "Unnamed Customer";
+
+
+                const status =
+                    dashboardNormalizeStatus(
+                        lead.status
+                    ) ||
+                    "New";
+
+
+                const statusClass =
+                    typeof window.getStatusClass ===
+                    "function"
+                        ? window.getStatusClass(
+                            status
+                        )
+                        : "status-new";
+
+
+                const date =
+                    typeof window.formatDateTime ===
+                    "function"
+                        ? window.formatDateTime(
+                            lead.created_at
+                        )
+                        : (
+                            lead.created_at
+                                ? new Date(
+                                    lead.created_at
+                                ).toLocaleString(
+                                    "id-ID"
+                                )
+                                : "-"
+                        );
+
+
+                return `
+                    <div class="activity-item">
+                        <div class="activity-icon">
+                            <i data-lucide="user-plus"></i>
+                        </div>
+
+                        <div class="activity-content">
+                            <div class="activity-title">
+                                ${dashboardEscapeHTML(name)}
+                            </div>
+
+                            <div class="activity-meta">
+                                <span class="status-badge ${statusClass}">
+                                    ${dashboardEscapeHTML(status)}
+                                </span>
+
+                                <span>
+                                    ${dashboardEscapeHTML(date)}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        ).join("");
+
+
+    if (
+        typeof window.refreshIcons ===
+        "function"
+    ) {
+
+        window.refreshIcons();
+    }
+}
+
+
+// ============================================================
+// ESCAPE HTML
+// ============================================================
+
+function dashboardEscapeHTML(value) {
+
+    if (
+        typeof window.escapeHTML ===
+        "function"
+    ) {
+
+        return window.escapeHTML(
+            value
+        );
+    }
+
+
+    const text =
+        String(
+            value ??
+            ""
+        );
+
+
+    return text
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
+        );
 }
 
 
@@ -985,7 +1593,22 @@ async function updateDashboard() {
     }
 
 
-    dashboardLoading = true;
+    dashboardLoading =
+        true;
+
+
+    const dashboardPage =
+        dashboardFindPage(
+            "dashboard"
+        );
+
+
+    if (dashboardPage) {
+
+        dashboardPage.classList.add(
+            "dashboard-loading"
+        );
+    }
 
 
     try {
@@ -1005,8 +1628,18 @@ async function updateDashboard() {
         );
 
 
+        renderDashboardPipeline(
+            data
+        );
+
+
+        renderDashboardRecentLeads(
+            data
+        );
+
+
         // ----------------------------------------------------
-        // Save dashboard state
+        // SAVE DASHBOARD STATE
         // ----------------------------------------------------
 
         window.FSIDashboard.stats =
@@ -1021,7 +1654,7 @@ async function updateDashboard() {
 
 
         // ----------------------------------------------------
-        // Optional callbacks
+        // OPTIONAL CUSTOM CALLBACK
         // ----------------------------------------------------
 
         if (
@@ -1039,16 +1672,22 @@ async function updateDashboard() {
             } catch (error) {
 
                 console.warn(
-                    "Dashboard chart render error:",
+                    "FSI CRM: dashboard chart render error:",
                     error
                 );
             }
         }
 
 
+        // ----------------------------------------------------
+        // OPTIONAL CUSTOM RECENT LEADS CALLBACK
+        // ----------------------------------------------------
+
         if (
             typeof window.renderDashboardRecentLeads ===
-            "function"
+            "function" &&
+            window.renderDashboardRecentLeads !==
+            renderDashboardRecentLeads
         ) {
 
             try {
@@ -1060,17 +1699,37 @@ async function updateDashboard() {
             } catch (error) {
 
                 console.warn(
-                    "Dashboard recent leads error:",
+                    "FSI CRM: custom recent leads error:",
                     error
                 );
             }
         }
 
 
+        // ----------------------------------------------------
+        // HIDE ERROR MESSAGE AFTER SUCCESS
+        // ----------------------------------------------------
+
+        const errorElement =
+            document.getElementById(
+                "dashboardError"
+            );
+
+
+        if (errorElement) {
+
+            errorElement.textContent =
+                "";
+
+            errorElement.style.display =
+                "none";
+        }
+
+
     } catch (error) {
 
         console.error(
-            "Dashboard update error:",
+            "FSI CRM: dashboard update error:",
             error
         );
 
@@ -1089,15 +1748,10 @@ async function updateDashboard() {
 
 
         console.error(
-            "Dashboard message:",
+            "FSI CRM: dashboard message:",
             message
         );
 
-
-        // Jangan menghapus angka lama kalau
-        // refresh gagal.
-        // Tampilkan pesan hanya jika ada
-        // elemen error khusus.
 
         const errorElement =
             document.getElementById(
@@ -1114,10 +1768,32 @@ async function updateDashboard() {
                 "";
         }
 
+
+        if (
+            typeof window.showToast ===
+            "function"
+        ) {
+
+            window.showToast(
+                message,
+                "error"
+            );
+        }
+
+
     } finally {
 
         dashboardLoading =
             false;
+
+
+        if (dashboardPage) {
+
+            dashboardPage.classList.remove(
+                "dashboard-loading"
+            );
+        }
+
 
         if (
             typeof window.refreshIcons ===
@@ -1135,6 +1811,13 @@ async function updateDashboard() {
 // ============================================================
 
 async function refreshDashboard() {
+
+    if (
+        dashboardLoading
+    ) {
+        return;
+    }
+
 
     await updateDashboard();
 }
@@ -1168,7 +1851,24 @@ async function dashboardOpenSales() {
         return;
     }
 
+
     await showSales();
+}
+
+
+// ============================================================
+// DASHBOARD STATE GETTERS
+// ============================================================
+
+function isDashboardInitialized() {
+
+    return dashboardInitialized;
+}
+
+
+function isDashboardLoading() {
+
+    return dashboardLoading;
 }
 
 
@@ -1212,11 +1912,41 @@ window.dashboardShowPage =
 window.dashboardSetPageTitle =
     dashboardSetPageTitle;
 
+window.dashboardSetActiveNav =
+    dashboardSetActiveNav;
+
+window.dashboardFetchLeads =
+    dashboardFetchLeads;
+
 window.calculateDashboardStats =
     calculateDashboardStats;
 
 window.renderDashboardStats =
     renderDashboardStats;
+
+window.renderDashboardPipeline =
+    renderDashboardPipeline;
+
+window.renderDashboardRecentLeads =
+    renderDashboardRecentLeads;
+
+window.dashboardGetProfile =
+    dashboardGetProfile;
+
+window.dashboardGetUser =
+    dashboardGetUser;
+
+window.dashboardIsAdmin =
+    dashboardIsAdmin;
+
+window.dashboardIsSales =
+    dashboardIsSales;
+
+window.isDashboardInitialized =
+    isDashboardInitialized;
+
+window.isDashboardLoading =
+    isDashboardLoading;
 
 
 // ============================================================
@@ -1228,24 +1958,52 @@ Object.assign(
     {
 
         showDashboard,
+
         showLeads,
+
         showSales,
+
         showCustomerProfile,
 
         hideAllPages,
+
         updateDashboard,
+
         refreshDashboard,
 
         dashboardOpenLeads,
+
         dashboardOpenSales,
 
         dashboardFindPage,
+
         dashboardShowPage,
 
         dashboardSetPageTitle,
 
+        dashboardSetActiveNav,
+
+        dashboardFetchLeads,
+
         calculateDashboardStats,
-        renderDashboardStats
+
+        renderDashboardStats,
+
+        renderDashboardPipeline,
+
+        renderDashboardRecentLeads,
+
+        dashboardGetProfile,
+
+        dashboardGetUser,
+
+        dashboardIsAdmin,
+
+        dashboardIsSales,
+
+        isDashboardInitialized,
+
+        isDashboardLoading
     }
 );
 
@@ -1270,9 +2028,42 @@ document.addEventListener(
         } catch (error) {
 
             console.error(
-                "Dashboard initialization error:",
+                "FSI CRM dashboard initialization error:",
                 error
             );
         }
+    }
+);
+
+
+// ============================================================
+// PROFILE READY EVENT
+// ============================================================
+
+document.addEventListener(
+    "fsi:profile-ready",
+    function () {
+
+        dashboardInitialized =
+            false;
+
+        console.log(
+            "FSI CRM dashboard: profile ready."
+        );
+    }
+);
+
+
+// ============================================================
+// APP READY EVENT
+// ============================================================
+
+document.addEventListener(
+    "fsi:app-ready",
+    function () {
+
+        console.log(
+            "FSI CRM dashboard: app ready."
+        );
     }
 );
