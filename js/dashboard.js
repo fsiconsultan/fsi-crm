@@ -6,10 +6,12 @@
 // Fungsi:
 // - Dashboard navigation
 // - Dashboard statistics
+// - Load data leads dari Supabase
 // - Admin / Sales access handling
 // - Refresh dashboard
 // - Pipeline summary
 // - Recent leads / activities
+// - Pagination data Supabase > 1000 rows
 // - Modern + legacy page ID compatibility
 // ============================================================
 
@@ -24,6 +26,10 @@ window.FSIDashboard = window.FSIDashboard || {};
 
 let dashboardLoading = false;
 let dashboardInitialized = false;
+let dashboardData = [];
+let dashboardStats = null;
+
+const DASHBOARD_BATCH_SIZE = 1000;
 
 
 // ============================================================
@@ -32,19 +38,41 @@ let dashboardInitialized = false;
 
 function dashboardGetSupabase() {
 
-    if (
-        typeof window.supabaseClient !== "undefined" &&
-        window.supabaseClient
-    ) {
-        return window.supabaseClient;
+    try {
+
+        if (
+            window.supabaseClient &&
+            typeof window.supabaseClient
+                .from === "function"
+        ) {
+            return window.supabaseClient;
+        }
+
+    } catch (error) {
+        console.warn(
+            "FSI CRM: window.supabaseClient error:",
+            error
+        );
     }
 
-    if (
-        typeof supabaseClient !== "undefined" &&
-        supabaseClient
-    ) {
-        return supabaseClient;
+
+    try {
+
+        if (
+            typeof supabaseClient !== "undefined" &&
+            supabaseClient &&
+            typeof supabaseClient.from === "function"
+        ) {
+            return supabaseClient;
+        }
+
+    } catch (error) {
+        console.warn(
+            "FSI CRM: supabaseClient error:",
+            error
+        );
     }
+
 
     return null;
 }
@@ -56,19 +84,33 @@ function dashboardGetSupabase() {
 
 function dashboardGetProfile() {
 
-    if (
-        typeof window.currentProfile !== "undefined" &&
-        window.currentProfile
-    ) {
-        return window.currentProfile;
+    try {
+
+        if (
+            window.currentProfile &&
+            typeof window.currentProfile === "object"
+        ) {
+            return window.currentProfile;
+        }
+
+    } catch (error) {
+        // ignore
     }
 
-    if (
-        typeof currentProfile !== "undefined" &&
-        currentProfile
-    ) {
-        return currentProfile;
+
+    try {
+
+        if (
+            typeof currentProfile !== "undefined" &&
+            currentProfile
+        ) {
+            return currentProfile;
+        }
+
+    } catch (error) {
+        // ignore
     }
+
 
     return null;
 }
@@ -80,19 +122,33 @@ function dashboardGetProfile() {
 
 function dashboardGetUser() {
 
-    if (
-        typeof window.currentUser !== "undefined" &&
-        window.currentUser
-    ) {
-        return window.currentUser;
+    try {
+
+        if (
+            window.currentUser &&
+            typeof window.currentUser === "object"
+        ) {
+            return window.currentUser;
+        }
+
+    } catch (error) {
+        // ignore
     }
 
-    if (
-        typeof currentUser !== "undefined" &&
-        currentUser
-    ) {
-        return currentUser;
+
+    try {
+
+        if (
+            typeof currentUser !== "undefined" &&
+            currentUser
+        ) {
+            return currentUser;
+        }
+
+    } catch (error) {
+        // ignore
     }
+
 
     return null;
 }
@@ -108,17 +164,27 @@ function dashboardNormalizeRole(role) {
         typeof window.authNormalizeRole ===
         "function"
     ) {
-        return window.authNormalizeRole(role);
+
+        return window.authNormalizeRole(
+            role
+        );
     }
+
 
     if (
         typeof window.normalizeRole ===
         "function"
     ) {
-        return window.normalizeRole(role);
+
+        return window.normalizeRole(
+            role
+        );
     }
 
-    return String(role || "")
+
+    return String(
+        role || ""
+    )
         .trim()
         .toLowerCase();
 }
@@ -133,14 +199,17 @@ function dashboardIsAdmin() {
     const profile =
         dashboardGetProfile();
 
+
     if (!profile) {
         return false;
     }
+
 
     const role =
         dashboardNormalizeRole(
             profile.role
         );
+
 
     return (
         role === "admin" ||
@@ -155,14 +224,17 @@ function dashboardIsSales() {
     const profile =
         dashboardGetProfile();
 
+
     if (!profile) {
         return false;
     }
+
 
     const role =
         dashboardNormalizeRole(
             profile.role
         );
+
 
     return (
         role === "sales" ||
@@ -220,6 +292,7 @@ function dashboardFindPage(type) {
         const element =
             document.getElementById(id);
 
+
         if (element) {
             return element;
         }
@@ -250,16 +323,25 @@ function hideAllPages() {
             const element =
                 dashboardFindPage(type);
 
+
             if (!element) {
                 return;
             }
+
 
             element.classList.add(
                 "hidden"
             );
 
+
+            element.classList.remove(
+                "active"
+            );
+
+
             element.style.display =
                 "none";
+
 
             element.setAttribute(
                 "aria-hidden",
@@ -276,9 +358,6 @@ function hideAllPages() {
 
 function dashboardShowPage(type) {
 
-    hideAllPages();
-
-
     const page =
         dashboardFindPage(type);
 
@@ -293,22 +372,35 @@ function dashboardShowPage(type) {
     }
 
 
+    /*
+     * Jangan menggunakan navigation.js secara paksa di sini.
+     * Dashboard harus tetap bisa dibuka walaupun module
+     * navigation belum selesai melakukan binding.
+     */
+
+    hideAllPages();
+
+
     page.classList.remove(
         "hidden"
     );
 
 
-    page.style.display = "";
+    page.classList.add(
+        "active"
+    );
 
 
-    if (
-        getComputedStyle(page).display ===
-        "none"
-    ) {
+    page.style.display =
+        "block";
 
-        page.style.display =
-            "block";
-    }
+
+    page.style.visibility =
+        "visible";
+
+
+    page.style.opacity =
+        "1";
 
 
     page.setAttribute(
@@ -353,6 +445,7 @@ function dashboardSetPageTitle(title) {
             const element =
                 document.getElementById(id);
 
+
             if (element) {
 
                 element.textContent =
@@ -371,15 +464,28 @@ function dashboardSetPageDescription(
     description
 ) {
 
-    const element =
-        document.getElementById(
-            "current-page-description"
-        );
+    const ids = [
+        "current-page-description",
+        "pageDescription",
+        "page-description"
+    ];
 
-    if (element) {
 
-        element.textContent =
-            description || "";
+    for (
+        const id of ids
+    ) {
+
+        const element =
+            document.getElementById(id);
+
+
+        if (element) {
+
+            element.textContent =
+                description || "";
+
+            return;
+        }
     }
 }
 
@@ -467,16 +573,22 @@ async function showDashboard() {
     if (!profile) {
 
         console.warn(
-            "FSI CRM: profile belum siap, dashboard tidak dibuka."
+            "FSI CRM: profile belum siap. Dashboard belum dapat dimuat."
         );
 
         return;
     }
 
 
-    dashboardShowPage(
-        "dashboard"
-    );
+    const page =
+        dashboardShowPage(
+            "dashboard"
+        );
+
+
+    if (!page) {
+        return;
+    }
 
 
     dashboardSetPageTitle(
@@ -495,6 +607,11 @@ async function showDashboard() {
         "dashboard"
     );
 
+
+    /*
+     * Selalu refresh ketika Dashboard dibuka.
+     * Jadi jika ada lead baru, angka langsung berubah.
+     */
 
     await updateDashboard();
 
@@ -523,9 +640,15 @@ async function showLeads() {
     }
 
 
-    dashboardShowPage(
-        "leads"
-    );
+    const page =
+        dashboardShowPage(
+            "leads"
+        );
+
+
+    if (!page) {
+        return;
+    }
 
 
     const isAdmin =
@@ -551,10 +674,6 @@ async function showLeads() {
     );
 
 
-    // --------------------------------------------------------
-    // LOAD FILTER OPTIONS
-    // --------------------------------------------------------
-
     if (
         typeof window.loadFilterOptions ===
         "function"
@@ -573,10 +692,6 @@ async function showLeads() {
         }
     }
 
-
-    // --------------------------------------------------------
-    // LOAD LEADS
-    // --------------------------------------------------------
 
     if (
         typeof window.loadLeads ===
@@ -632,9 +747,15 @@ async function showSales() {
     }
 
 
-    dashboardShowPage(
-        "sales"
-    );
+    const page =
+        dashboardShowPage(
+            "sales"
+        );
+
+
+    if (!page) {
+        return;
+    }
 
 
     dashboardSetPageTitle(
@@ -690,9 +811,15 @@ async function showCustomerProfile() {
     }
 
 
-    dashboardShowPage(
-        "customerProfile"
-    );
+    const page =
+        dashboardShowPage(
+            "customerProfile"
+        );
+
+
+    if (!page) {
+        return;
+    }
 
 
     dashboardSetPageTitle(
@@ -760,64 +887,186 @@ async function dashboardFetchLeads() {
 
 
     if (!profile) {
-        return [];
+
+        throw new Error(
+            "Profile user belum siap."
+        );
     }
 
 
-    // --------------------------------------------------------
-    // SECURITY NOTE
-    // --------------------------------------------------------
-    // Frontend role checking bukan security utama.
-    //
-    // Supabase RLS WAJIB memastikan:
-    //
-    // Admin:
-    //   dapat membaca seluruh leads.
-    //
-    // Sales:
-    //   hanya dapat membaca leads miliknya.
-    //
-    // Query di bawah sengaja tidak melakukan filter
-    // sales_id untuk Sales agar RLS menjadi sumber
-    // pembatasan data.
-    // --------------------------------------------------------
+    const isAdmin =
+        dashboardIsAdmin();
 
-    const {
-        data,
-        error
-    } = await client
-        .from("leads")
-        .select(
-            [
-                "id",
-                "customer_name",
-                "status",
-                "appointment",
-                "site_survey",
-                "quotation",
-                "spk",
-                "closing",
-                "follow_up_date",
-                "sales_id",
-                "created_at"
-            ].join(",")
-        )
-        .order(
-            "created_at",
-            {
-                ascending: false
+
+    const isSales =
+        dashboardIsSales();
+
+
+    /*
+     * ========================================================
+     * QUERY DASAR
+     * ========================================================
+     *
+     * Kita gunakan select("*") supaya Dashboard tidak gagal
+     * hanya karena ada field tambahan pada tabel leads.
+     */
+
+    async function fetchBatch(
+        from,
+        to
+    ) {
+
+        let query =
+            client
+                .from("leads")
+                .select("*")
+                .order(
+                    "created_at",
+                    {
+                        ascending: false
+                    }
+                )
+                .range(
+                    from,
+                    to
+                );
+
+
+        /*
+         * SALES:
+         *
+         * Dashboard Sales hanya mengambil leads miliknya.
+         *
+         * Admin:
+         * tidak diberi filter sales_id.
+         */
+
+        if (
+            isSales &&
+            !isAdmin
+        ) {
+
+            if (!profile.id) {
+
+                throw new Error(
+                    "ID profile Sales tidak ditemukan."
+                );
             }
+
+
+            query =
+                query.eq(
+                    "sales_id",
+                    profile.id
+                );
+        }
+
+
+        const {
+            data,
+            error
+        } = await query;
+
+
+        if (error) {
+            throw error;
+        }
+
+
+        return Array.isArray(data)
+            ? data
+            : [];
+    }
+
+
+    /*
+     * ========================================================
+     * LOAD BERTAHAP
+     * ========================================================
+     *
+     * Supabase biasanya membatasi hasil query.
+     * Kita ambil 1.000 row per batch sampai data habis.
+     */
+
+    const allLeads = [];
+
+    let start =
+        0;
+
+
+    while (true) {
+
+        const end =
+            start +
+            DASHBOARD_BATCH_SIZE -
+            1;
+
+
+        const batch =
+            await fetchBatch(
+                start,
+                end
+            );
+
+
+        if (!batch.length) {
+            break;
+        }
+
+
+        allLeads.push(
+            ...batch
         );
 
 
-    if (error) {
-        throw error;
+        /*
+         * Jika jumlah batch kurang dari 1000,
+         * berarti sudah sampai data terakhir.
+         */
+
+        if (
+            batch.length <
+            DASHBOARD_BATCH_SIZE
+        ) {
+            break;
+        }
+
+
+        start +=
+            DASHBOARD_BATCH_SIZE;
+
+
+        /*
+         * Pengaman agar tidak terjadi loop tidak terbatas.
+         */
+
+        if (
+            start >
+            1000000
+        ) {
+
+            console.warn(
+                "FSI CRM: Dashboard berhenti setelah membaca 1.000.000 leads."
+            );
+
+            break;
+        }
     }
 
 
-    return Array.isArray(data)
-        ? data
-        : [];
+    console.log(
+        "FSI CRM Dashboard: leads berhasil dimuat:",
+        allLeads.length,
+        {
+            role: profile.role,
+            profileId: profile.id,
+            admin: isAdmin,
+            sales: isSales
+        }
+    );
+
+
+    return allLeads;
 }
 
 
@@ -838,13 +1087,15 @@ function dashboardNormalizeStatus(status) {
     }
 
 
-    return String(status || "")
+    return String(
+        status || ""
+    )
         .trim();
 }
 
 
 // ============================================================
-// CHECK DATE VALUE
+// CHECK VALUE
 // ============================================================
 
 function dashboardHasValue(value) {
@@ -933,7 +1184,9 @@ function dashboardCountDateField(
 // COUNT CLOSING
 // ============================================================
 
-function dashboardCountClosing(list) {
+function dashboardCountClosing(
+    list
+) {
 
     if (
         typeof window.countClosing ===
@@ -954,6 +1207,7 @@ function dashboardCountClosing(list) {
                     item.status
                 );
 
+
             return (
                 status === "Closing" ||
                 dashboardHasValue(
@@ -969,7 +1223,9 @@ function dashboardCountClosing(list) {
 // CALCULATE DASHBOARD STATS
 // ============================================================
 
-function calculateDashboardStats(data) {
+function calculateDashboardStats(
+    data
+) {
 
     const list =
         Array.isArray(data)
@@ -1055,10 +1311,37 @@ function calculateDashboardStats(data) {
 
 
 // ============================================================
+// SET ELEMENT TEXT
+// ============================================================
+
+function dashboardSetElementText(
+    id,
+    value
+) {
+
+    const element =
+        document.getElementById(id);
+
+
+    if (!element) {
+        return;
+    }
+
+
+    element.textContent =
+        String(
+            value ?? 0
+        );
+}
+
+
+// ============================================================
 // UPDATE DASHBOARD CARDS
 // ============================================================
 
-function renderDashboardStats(stats) {
+function renderDashboardStats(
+    stats
+) {
 
     if (!stats) {
         return;
@@ -1117,28 +1400,33 @@ function renderDashboardStats(stats) {
                     value
                 );
 
-                return;
-            }
+            } else {
 
-
-            const element =
-                document.getElementById(
-                    id
+                dashboardSetElementText(
+                    id,
+                    value
                 );
-
-
-            if (element) {
-
-                element.textContent =
-                    value;
             }
+
+
+            /*
+             * Pastikan juga langsung set jika helper
+             * tidak bekerja karena ID berbeda.
+             */
+
+            dashboardSetElementText(
+                id,
+                value
+            );
         }
     );
 
 
-    // --------------------------------------------------------
-    // LEGACY IDs
-    // --------------------------------------------------------
+    /*
+     * ========================================================
+     * LEGACY IDs
+     * ========================================================
+     */
 
     const alternatives = {
 
@@ -1182,17 +1470,10 @@ function renderDashboardStats(stats) {
     ).forEach(
         ([id, value]) => {
 
-            const element =
-                document.getElementById(
-                    id
-                );
-
-
-            if (element) {
-
-                element.textContent =
-                    value;
-            }
+            dashboardSetElementText(
+                id,
+                value
+            );
         }
     );
 }
@@ -1334,15 +1615,19 @@ function renderDashboardPipeline(
 
                 return `
                     <div class="pipeline-item">
+
                         <div class="pipeline-item-main">
+
                             <span class="pipeline-status ${stage.className}">
                                 ${dashboardEscapeHTML(stage.label)}
                             </span>
+
                         </div>
 
                         <strong class="pipeline-count">
                             ${count}
                         </strong>
+
                     </div>
                 `;
             }
@@ -1402,13 +1687,16 @@ function renderDashboardRecentLeads(
                             0
                         ).getTime();
 
+
                     const dateB =
                         new Date(
                             b.created_at ||
                             0
                         ).getTime();
 
-                    return dateB - dateA;
+
+                    return dateB -
+                        dateA;
                 }
             )
             .slice(
@@ -1421,6 +1709,7 @@ function renderDashboardRecentLeads(
 
         container.innerHTML = `
             <div class="empty-state">
+
                 <div class="empty-state-icon">
                     <i data-lucide="inbox"></i>
                 </div>
@@ -1430,6 +1719,7 @@ function renderDashboardRecentLeads(
                 <p>
                     Belum ada data customer terbaru.
                 </p>
+
             </div>
         `;
 
@@ -1441,6 +1731,7 @@ function renderDashboardRecentLeads(
 
             window.refreshIcons();
         }
+
 
         return;
     }
@@ -1465,18 +1756,22 @@ function renderDashboardRecentLeads(
                 const statusClass =
                     typeof window.getStatusClass ===
                     "function"
+
                         ? window.getStatusClass(
                             status
                         )
+
                         : "status-new";
 
 
                 const date =
                     typeof window.formatDateTime ===
                     "function"
+
                         ? window.formatDateTime(
                             lead.created_at
                         )
+
                         : (
                             lead.created_at
                                 ? new Date(
@@ -1490,16 +1785,19 @@ function renderDashboardRecentLeads(
 
                 return `
                     <div class="activity-item">
+
                         <div class="activity-icon">
                             <i data-lucide="user-plus"></i>
                         </div>
 
                         <div class="activity-content">
+
                             <div class="activity-title">
                                 ${dashboardEscapeHTML(name)}
                             </div>
 
                             <div class="activity-meta">
+
                                 <span class="status-badge ${statusClass}">
                                     ${dashboardEscapeHTML(status)}
                                 </span>
@@ -1507,8 +1805,11 @@ function renderDashboardRecentLeads(
                                 <span>
                                     ${dashboardEscapeHTML(date)}
                                 </span>
+
                             </div>
+
                         </div>
+
                     </div>
                 `;
             }
@@ -1529,7 +1830,9 @@ function renderDashboardRecentLeads(
 // ESCAPE HTML
 // ============================================================
 
-function dashboardEscapeHTML(value) {
+function dashboardEscapeHTML(
+    value
+) {
 
     if (
         typeof window.escapeHTML ===
@@ -1544,8 +1847,7 @@ function dashboardEscapeHTML(value) {
 
     const text =
         String(
-            value ??
-            ""
+            value ?? ""
         );
 
 
@@ -1574,6 +1876,48 @@ function dashboardEscapeHTML(value) {
 
 
 // ============================================================
+// SHOW DASHBOARD LOADING
+// ============================================================
+
+function dashboardShowLoading() {
+
+    const page =
+        dashboardFindPage(
+            "dashboard"
+        );
+
+
+    if (page) {
+
+        page.classList.add(
+            "dashboard-loading"
+        );
+    }
+}
+
+
+// ============================================================
+// HIDE DASHBOARD LOADING
+// ============================================================
+
+function dashboardHideLoading() {
+
+    const page =
+        dashboardFindPage(
+            "dashboard"
+        );
+
+
+    if (page) {
+
+        page.classList.remove(
+            "dashboard-loading"
+        );
+    }
+}
+
+
+// ============================================================
 // UPDATE DASHBOARD
 // ============================================================
 
@@ -1584,6 +1928,11 @@ async function updateDashboard() {
 
 
     if (!profile) {
+
+        console.warn(
+            "FSI CRM: tidak bisa update dashboard karena profile belum tersedia."
+        );
+
         return;
     }
 
@@ -1597,65 +1946,88 @@ async function updateDashboard() {
         true;
 
 
-    const dashboardPage =
-        dashboardFindPage(
-            "dashboard"
-        );
-
-
-    if (dashboardPage) {
-
-        dashboardPage.classList.add(
-            "dashboard-loading"
-        );
-    }
+    dashboardShowLoading();
 
 
     try {
+
+        console.log(
+            "FSI CRM Dashboard: loading leads..."
+        );
+
 
         const data =
             await dashboardFetchLeads();
 
 
+        console.log(
+            "FSI CRM Dashboard: total leads:",
+            data.length
+        );
+
+
+        /*
+         * Simpan data global.
+         */
+
+        dashboardData =
+            Array.isArray(data)
+                ? data
+                : [];
+
+
+        window.FSIDashboard.data =
+            dashboardData;
+
+
+        /*
+         * Hitung statistik.
+         */
+
         const stats =
             calculateDashboardStats(
-                data
+                dashboardData
             );
 
+
+        dashboardStats =
+            stats;
+
+
+        window.FSIDashboard.stats =
+            stats;
+
+
+        /*
+         * Render kartu.
+         */
 
         renderDashboardStats(
             stats
         );
 
 
+        /*
+         * Render pipeline.
+         */
+
         renderDashboardPipeline(
-            data
+            dashboardData
         );
 
+
+        /*
+         * Render recent leads.
+         */
 
         renderDashboardRecentLeads(
-            data
+            dashboardData
         );
 
 
-        // ----------------------------------------------------
-        // SAVE DASHBOARD STATE
-        // ----------------------------------------------------
-
-        window.FSIDashboard.stats =
-            stats;
-
-        window.FSIDashboard.data =
-            data;
-
-
-        dashboardInitialized =
-            true;
-
-
-        // ----------------------------------------------------
-        // OPTIONAL CUSTOM CALLBACK
-        // ----------------------------------------------------
+        /*
+         * Callback tambahan jika ada.
+         */
 
         if (
             typeof window.renderDashboardCharts ===
@@ -1665,7 +2037,7 @@ async function updateDashboard() {
             try {
 
                 window.renderDashboardCharts(
-                    data,
+                    dashboardData,
                     stats
                 );
 
@@ -1679,36 +2051,9 @@ async function updateDashboard() {
         }
 
 
-        // ----------------------------------------------------
-        // OPTIONAL CUSTOM RECENT LEADS CALLBACK
-        // ----------------------------------------------------
-
-        if (
-            typeof window.renderDashboardRecentLeads ===
-            "function" &&
-            window.renderDashboardRecentLeads !==
-            renderDashboardRecentLeads
-        ) {
-
-            try {
-
-                window.renderDashboardRecentLeads(
-                    data
-                );
-
-            } catch (error) {
-
-                console.warn(
-                    "FSI CRM: custom recent leads error:",
-                    error
-                );
-            }
-        }
-
-
-        // ----------------------------------------------------
-        // HIDE ERROR MESSAGE AFTER SUCCESS
-        // ----------------------------------------------------
+        /*
+         * Hilangkan pesan error.
+         */
 
         const errorElement =
             document.getElementById(
@@ -1726,10 +2071,20 @@ async function updateDashboard() {
         }
 
 
+        dashboardInitialized =
+            true;
+
+
+        console.log(
+            "FSI CRM Dashboard: update berhasil.",
+            stats
+        );
+
+
     } catch (error) {
 
         console.error(
-            "FSI CRM: dashboard update error:",
+            "FSI CRM Dashboard: gagal mengambil data leads:",
             error
         );
 
@@ -1737,20 +2092,16 @@ async function updateDashboard() {
         const message =
             typeof window.getSupabaseErrorMessage ===
             "function"
+
                 ? window.getSupabaseErrorMessage(
                     error,
-                    "Gagal memuat dashboard."
+                    "Gagal memuat data Dashboard."
                 )
+
                 : (
                     error?.message ||
-                    "Gagal memuat dashboard."
+                    "Gagal memuat data Dashboard."
                 );
-
-
-        console.error(
-            "FSI CRM: dashboard message:",
-            message
-        );
 
 
         const errorElement =
@@ -1767,6 +2118,25 @@ async function updateDashboard() {
             errorElement.style.display =
                 "";
         }
+
+
+        /*
+         * Tetap tampilkan 0 jika query gagal,
+         * supaya dashboard tidak terlihat rusak.
+         */
+
+        const emptyStats =
+            calculateDashboardStats([]);
+
+
+        renderDashboardStats(
+            emptyStats
+        );
+
+
+        renderDashboardPipeline(
+            []
+        );
 
 
         if (
@@ -1787,12 +2157,7 @@ async function updateDashboard() {
             false;
 
 
-        if (dashboardPage) {
-
-            dashboardPage.classList.remove(
-                "dashboard-loading"
-            );
-        }
+        dashboardHideLoading();
 
 
         if (
@@ -1872,8 +2237,173 @@ function isDashboardLoading() {
 }
 
 
+function getDashboardData() {
+
+    return dashboardData;
+}
+
+
+function getDashboardStats() {
+
+    return dashboardStats;
+}
+
+
 // ============================================================
-// NAVIGATION COMPATIBILITY
+// LISTEN FOR LEAD CHANGES
+// ============================================================
+
+document.addEventListener(
+    "fsi:lead-changed",
+    function () {
+
+        /*
+         * Jika user sedang berada di Dashboard,
+         * langsung refresh angka.
+         */
+
+        const page =
+            dashboardFindPage(
+                "dashboard"
+            );
+
+
+        if (!page) {
+            return;
+        }
+
+
+        const isVisible =
+            page.classList.contains(
+                "active"
+            ) &&
+            !page.classList.contains(
+                "hidden"
+            );
+
+
+        if (
+            isVisible &&
+            dashboardGetProfile()
+        ) {
+
+            updateDashboard();
+        }
+    }
+);
+
+
+// ============================================================
+// LISTEN FOR PROFILE READY
+// ============================================================
+
+document.addEventListener(
+    "fsi:profile-ready",
+    function () {
+
+        dashboardInitialized =
+            false;
+
+
+        dashboardData =
+            [];
+
+
+        dashboardStats =
+            null;
+
+
+        console.log(
+            "FSI CRM Dashboard: profile ready."
+        );
+    }
+);
+
+
+// ============================================================
+// LISTEN FOR APP READY
+// ============================================================
+
+document.addEventListener(
+    "fsi:app-ready",
+    function () {
+
+        console.log(
+            "FSI CRM Dashboard: app ready."
+        );
+
+
+        /*
+         * Jangan langsung query jika profile belum siap.
+         * Auth module akan memanggil showDashboard()
+         * setelah profile berhasil dimuat.
+         */
+
+        const profile =
+            dashboardGetProfile();
+
+
+        if (
+            profile &&
+            dashboardFindPage("dashboard")
+        ) {
+
+            setTimeout(
+                function () {
+
+                    const dashboardPage =
+                        dashboardFindPage(
+                            "dashboard"
+                        );
+
+
+                    if (
+                        dashboardPage &&
+                        dashboardPage.classList.contains(
+                            "active"
+                        )
+                    ) {
+
+                        updateDashboard();
+                    }
+
+                },
+                100
+            );
+        }
+    }
+);
+
+
+// ============================================================
+// DOM READY
+// ============================================================
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        dashboardInitialized =
+            false;
+
+
+        dashboardData =
+            [];
+
+
+        dashboardStats =
+            null;
+
+
+        console.log(
+            "FSI CRM dashboard.js loaded successfully."
+        );
+    }
+);
+
+
+// ============================================================
+// GLOBAL EXPORTS
 // ============================================================
 
 window.showDashboard =
@@ -1948,6 +2478,12 @@ window.isDashboardInitialized =
 window.isDashboardLoading =
     isDashboardLoading;
 
+window.getDashboardData =
+    getDashboardData;
+
+window.getDashboardStats =
+    getDashboardStats;
+
 
 // ============================================================
 // FSI DASHBOARD NAMESPACE
@@ -2003,67 +2539,19 @@ Object.assign(
 
         isDashboardInitialized,
 
-        isDashboardLoading
+        isDashboardLoading,
+
+        getDashboardData,
+
+        getDashboardStats
     }
 );
 
 
 // ============================================================
-// INITIALIZATION
+// INITIAL STATE
 // ============================================================
 
-document.addEventListener(
-    "DOMContentLoaded",
-    function () {
-
-        try {
-
-            dashboardInitialized =
-                false;
-
-            console.log(
-                "FSI CRM dashboard.js loaded successfully."
-            );
-
-        } catch (error) {
-
-            console.error(
-                "FSI CRM dashboard initialization error:",
-                error
-            );
-        }
-    }
-);
-
-
-// ============================================================
-// PROFILE READY EVENT
-// ============================================================
-
-document.addEventListener(
-    "fsi:profile-ready",
-    function () {
-
-        dashboardInitialized =
-            false;
-
-        console.log(
-            "FSI CRM dashboard: profile ready."
-        );
-    }
-);
-
-
-// ============================================================
-// APP READY EVENT
-// ============================================================
-
-document.addEventListener(
-    "fsi:app-ready",
-    function () {
-
-        console.log(
-            "FSI CRM dashboard: app ready."
-        );
-    }
+console.log(
+    "FSI CRM: Dashboard module initialized."
 );
