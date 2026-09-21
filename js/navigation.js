@@ -1,5 +1,5 @@
 // ============================================================
-// FSI CRM - NAVIGATION MANAGEMENT
+// FSI CRM - NAVIGATION SYSTEM
 // File: js/navigation.js
 // ============================================================
 
@@ -7,1559 +7,1431 @@
 
 (function () {
 
-    // ========================================================
-    // STATE
-    // ========================================================
+  // ==========================================================
+  // STATE
+  // ==========================================================
 
-    let navigationInitialized = false;
-    let documentClickBound = false;
-    let escapeKeyBound = false;
-    let resizeBound = false;
+  let navigationInitialized = false;
+  let navigationEventsBound = false;
+  let currentPage = "dashboard";
 
-    // ========================================================
-    // DOM HELPERS
-    // ========================================================
 
-    function navElement(...ids) {
+  // ==========================================================
+  // PAGE MAP
+  // ==========================================================
 
-        for (const id of ids) {
+  const PAGE_MAP = {
+    dashboard: "view-dashboard",
+    leads: "view-leads",
+    customers: "view-leads",
+    customer: "view-customer-profile",
+    "customer-profile": "view-customer-profile",
+    profile: "view-customer-profile",
+    sales: "view-sales",
+    manageSales: "view-sales",
+    "manage-sales": "view-sales"
+  };
 
-            const element =
-                document.getElementById(id);
 
-            if (element) {
-                return element;
-            }
-        }
+  // ==========================================================
+  // DOM HELPERS
+  // ==========================================================
 
-        return null;
+  function $(selector, parent) {
+    return (parent || document).querySelector(selector);
+  }
+
+  function $$(selector, parent) {
+    return Array.from(
+      (parent || document).querySelectorAll(selector)
+    );
+  }
+
+
+  function getElement(id) {
+    return document.getElementById(id);
+  }
+
+
+  // ==========================================================
+  // PROFILE / ROLE
+  // ==========================================================
+
+  function getProfile() {
+    if (window.currentProfile) {
+      return window.currentProfile;
     }
 
-    function getProfile() {
-
-        return window.currentProfile || null;
+    try {
+      if (typeof currentProfile !== "undefined") {
+        return currentProfile;
+      }
+    } catch (error) {
+      // Ignore
     }
 
-    function getCurrentUser() {
+    return null;
+  }
 
-        return window.currentUser || null;
+
+  function getCurrentUser() {
+    if (window.currentUser) {
+      return window.currentUser;
     }
 
-    function hasProfile() {
-
-        return !!getProfile();
+    try {
+      if (typeof currentUser !== "undefined") {
+        return currentUser;
+      }
+    } catch (error) {
+      // Ignore
     }
 
-    function isAdmin() {
+    return null;
+  }
 
-        const profile =
-            getProfile();
 
-        if (!profile) {
-            return false;
-        }
+  function normalizeRole(role) {
+    return String(role || "")
+      .trim()
+      .toLowerCase();
+  }
 
-        if (
-            typeof window.isAdminRole ===
-            "function"
-        ) {
-            return window.isAdminRole(
-                profile
-            );
-        }
 
-        return (
-            String(
-                profile.role || ""
-            )
-                .trim()
-                .toLowerCase() ===
-            "admin"
+  function isAdmin() {
+    const profile = getProfile();
+
+    if (!profile) {
+      return false;
+    }
+
+    const role = normalizeRole(profile.role);
+
+    return (
+      role === "admin" ||
+      role === "owner" ||
+      role === "administrator"
+    );
+  }
+
+
+  function isSales() {
+    const profile = getProfile();
+
+    if (!profile) {
+      return false;
+    }
+
+    const role = normalizeRole(profile.role);
+
+    return (
+      role === "sales" ||
+      role === "salesperson"
+    );
+  }
+
+
+  // ==========================================================
+  // PAGE RESOLUTION
+  // ==========================================================
+
+  function normalizeTarget(target) {
+
+    if (!target) {
+      return null;
+    }
+
+    let value = String(target).trim();
+
+    if (!value) {
+      return null;
+    }
+
+    // Remove leading #
+    value = value.replace(/^#/, "");
+
+    // Direct page ID
+    if (Object.values(PAGE_MAP).includes(value)) {
+
+      return Object.keys(PAGE_MAP).find(
+        key => PAGE_MAP[key] === value
+      ) || null;
+    }
+
+    // Normalize
+    value = value
+      .replace(/_/g, "-")
+      .toLowerCase();
+
+    if (PAGE_MAP[value]) {
+      return value;
+    }
+
+    // Common aliases
+    const aliases = {
+      home: "dashboard",
+      dash: "dashboard",
+      customer: "customer-profile",
+      customers: "leads",
+      lead: "leads",
+      leadlist: "leads",
+      salesmanagement: "sales",
+      "sales-management": "sales",
+      "manage-sales": "sales"
+    };
+
+    if (aliases[value]) {
+      return aliases[value];
+    }
+
+    return null;
+  }
+
+
+  function getPageElement(pageName) {
+
+    const normalized = normalizeTarget(pageName);
+
+    if (!normalized) {
+      return null;
+    }
+
+    const pageId = PAGE_MAP[normalized];
+
+    if (!pageId) {
+      return null;
+    }
+
+    return getElement(pageId);
+  }
+
+
+  function getAllPages() {
+
+    return $$(".crm-page");
+  }
+
+
+  // ==========================================================
+  // PAGE VISIBILITY
+  // ==========================================================
+
+  function hideAllPages() {
+
+    getAllPages().forEach(function (page) {
+
+      page.classList.remove("active");
+      page.classList.add("hidden");
+
+      page.setAttribute("aria-hidden", "true");
+
+    });
+  }
+
+
+  function showPage(pageName, options) {
+
+    options = options || {};
+
+    const normalized = normalizeTarget(pageName);
+
+    if (!normalized) {
+      console.warn(
+        "[FSI Navigation] Unknown page:",
+        pageName
+      );
+
+      return false;
+    }
+
+    // Sales page hanya untuk Admin
+    if (normalized === "sales" && !isAdmin()) {
+
+      if (typeof window.showToast === "function") {
+        window.showToast(
+          "Hanya Admin yang dapat membuka Manage Sales.",
+          "warning"
         );
+      }
+
+      return false;
     }
 
-    // ========================================================
-    // PAGE ELEMENTS
-    // ========================================================
+    const page = getPageElement(normalized);
 
-    function getPage(type) {
+    if (!page) {
 
-        const pages = {
+      console.warn(
+        "[FSI Navigation] Page element tidak ditemukan:",
+        normalized
+      );
 
-            dashboard: [
-                "view-dashboard",
-                "dashboardPage",
-                "dashboard-page"
-            ],
-
-            leads: [
-                "view-leads",
-                "leadsPage",
-                "leads-page"
-            ],
-
-            sales: [
-                "view-sales",
-                "salesPage",
-                "sales-page"
-            ],
-
-            customerProfile: [
-                "view-customer-profile",
-                "customerProfilePage",
-                "customer-profile-page"
-            ]
-        };
-
-        const ids =
-            pages[type] || [];
-
-        for (const id of ids) {
-
-            const element =
-                document.getElementById(id);
-
-            if (element) {
-                return element;
-            }
-        }
-
-        return null;
+      return false;
     }
 
-    // ========================================================
-    // GET ALL CRM PAGES
-    // ========================================================
+    hideAllPages();
 
-    function getAllPages() {
+    page.classList.remove("hidden");
+    page.classList.add("active");
 
-        return [
-            getPage("dashboard"),
-            getPage("leads"),
-            getPage("sales"),
-            getPage("customerProfile")
-        ].filter(Boolean);
+    page.setAttribute("aria-hidden", "false");
+
+    currentPage = normalized;
+
+    setActiveNavigation(normalized);
+    setNavigationTitle(normalized);
+
+    closeAllDropdowns();
+    closeMobileMenu();
+
+    // Scroll ke atas
+    if (!options.keepScroll) {
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+
     }
 
-    // ========================================================
-    // HIDE ALL PAGES
-    // ========================================================
+    // Event untuk module lain
+    try {
 
-    function hideAllPages() {
+      window.dispatchEvent(
+        new CustomEvent("fsi:navigation-changed", {
+          detail: {
+            page: normalized,
+            element: page
+          }
+        })
+      );
 
-        getAllPages().forEach(
-            page => {
-
-                page.style.display =
-                    "none";
-
-                page.classList.remove(
-                    "active"
-                );
-
-                page.setAttribute(
-                    "aria-hidden",
-                    "true"
-                );
-            }
-        );
+    } catch (error) {
+      // Ignore
     }
 
-    // ========================================================
-    // SHOW PAGE
-    // ========================================================
+    return true;
+  }
 
-    function showPage(type) {
 
-        const normalized =
-            normalizeTarget(type);
+  // ==========================================================
+  // ACTIVE NAVIGATION
+  // ==========================================================
 
-        const page =
-            getPage(normalized);
+  function getNavigationTarget(element) {
 
-        if (!page) {
-
-            console.warn(
-                `FSI CRM: Page "${normalized}" not found.`
-            );
-
-            return false;
-        }
-
-        hideAllPages();
-
-        page.style.display =
-            "block";
-
-        page.classList.add(
-            "active"
-        );
-
-        page.setAttribute(
-            "aria-hidden",
-            "false"
-        );
-
-        return true;
+    if (!element) {
+      return null;
     }
 
-    // ========================================================
-    // NORMALIZE NAV TARGET
-    // ========================================================
+    const dataset = element.dataset || {};
 
-    function normalizeTarget(target) {
+    return (
+      dataset.page ||
+      dataset.view ||
+      dataset.nav ||
+      dataset.crmNav ||
+      dataset.target ||
+      null
+    );
+  }
 
-        const value =
-            String(
-                target || ""
-            )
-                .trim()
-                .toLowerCase();
 
-        // Dashboard
-        if (
-            value === "home" ||
-            value === "dashboard" ||
-            value === "dashboardpage" ||
-            value === "dashboard-page" ||
-            value === "view-dashboard"
-        ) {
-            return "dashboard";
-        }
+  function setActiveNavigation(pageName) {
 
-        // Leads
-        if (
-            value === "lead" ||
-            value === "leads" ||
-            value === "leadspage" ||
-            value === "leads-page" ||
-            value === "view-leads"
-        ) {
-            return "leads";
-        }
+    const normalized = normalizeTarget(pageName);
 
-        // Sales
-        if (
-            value === "sales" ||
-            value === "salespage" ||
-            value === "sales-page" ||
-            value === "view-sales"
-        ) {
-            return "sales";
-        }
-
-        // Customer profile
-        if (
-            value === "customer" ||
-            value === "customerprofile" ||
-            value === "customer-profile" ||
-            value === "customerprofilepage" ||
-            value === "customer-profile-page" ||
-            value === "view-customer-profile"
-        ) {
-            return "customerProfile";
-        }
-
-        return value;
+    if (!normalized) {
+      return;
     }
 
-    // ========================================================
-    // PAGE TITLE
-    // ========================================================
+    const navElements = $$(
+      [
+        "[data-page]",
+        "[data-view]",
+        "[data-nav]",
+        "[data-crm-nav]"
+      ].join(",")
+    );
 
-    function setNavigationTitle(title) {
+    navElements.forEach(function (element) {
 
-        if (
-            typeof window.setPageTitle ===
-            "function"
-        ) {
+      const target = getNavigationTarget(element);
+      const normalizedTarget = normalizeTarget(target);
 
-            window.setPageTitle(
-                title
-            );
+      element.classList.remove("active");
 
-            return;
-        }
+      if (
+        normalizedTarget &&
+        normalizedTarget === normalized
+      ) {
+        element.classList.add("active");
+      }
 
-        const ids = [
-            "current-page-title",
-            "pageTitle",
-            "page-title"
-        ];
+    });
+  }
 
-        ids.forEach(
-            id => {
 
-                const element =
-                    document.getElementById(id);
+  // ==========================================================
+  // PAGE TITLE
+  // ==========================================================
 
-                if (element) {
-                    element.textContent =
-                        title;
-                }
-            }
-        );
+  function setNavigationTitle(pageName) {
+
+    const normalized = normalizeTarget(pageName);
+
+    const titles = {
+      dashboard: {
+        title: "Dashboard",
+        subtitle: "Overview CRM dan aktivitas customer."
+      },
+
+      leads: {
+        title: isAdmin()
+          ? "Customer & Leads"
+          : "My Customers",
+
+        subtitle: isAdmin()
+          ? "Kelola seluruh database customer dan leads."
+          : "Kelola database customer Anda."
+      },
+
+      "customer-profile": {
+        title: "Customer Profile",
+        subtitle: "Detail informasi dan aktivitas customer."
+      },
+
+      sales: {
+        title: "Manage Sales",
+        subtitle: "Kelola akun, role, dan status Sales."
+      }
+    };
+
+    const config = titles[normalized];
+
+    if (!config) {
+      return;
     }
 
-    // ========================================================
-    // ACTIVE NAVIGATION
-    // ========================================================
+    const titleElements = [
+      getElement("current-page-title"),
+      getElement("page-title"),
+      getElement("pageTitle")
+    ].filter(Boolean);
 
-    function setActiveNavigation(target) {
+    titleElements.forEach(function (element) {
 
-        const normalizedTarget =
-            normalizeTarget(
-                target
-            );
+      element.textContent = config.title;
 
-        const selectors = [
-            ".nav-link[data-page]",
-            ".nav-link[data-view]",
-            ".nav-link[data-nav]",
-            ".nav-dropdown-item[data-page]",
-            ".nav-dropdown-item[data-view]",
-            ".nav-dropdown-item[data-nav]",
-            "[data-crm-nav]"
-        ];
+    });
 
-        const elements =
-            document.querySelectorAll(
-                selectors.join(",")
-            );
+    const subtitleElements = [
+      getElement("current-page-subtitle"),
+      getElement("page-subtitle"),
+      getElement("pageSubtitle")
+    ].filter(Boolean);
 
-        elements.forEach(
-            element => {
+    subtitleElements.forEach(function (element) {
 
-                const elementTarget =
-                    element.dataset.page ||
-                    element.dataset.view ||
-                    element.dataset.nav ||
-                    element.dataset.crmNav ||
-                    "";
+      element.textContent = config.subtitle;
 
-                const normalizedElement =
-                    normalizeTarget(
-                        elementTarget
-                    );
+    });
 
-                const isActive =
-                    normalizedElement ===
-                    normalizedTarget;
+  }
 
-                element.classList.toggle(
-                    "active",
-                    isActive
-                );
 
-                if (isActive) {
+  // ==========================================================
+  // ADMIN NAVIGATION
+  // ==========================================================
 
-                    element.setAttribute(
-                        "aria-current",
-                        "page"
-                    );
+  function updateAdminNavigation() {
 
-                } else {
+    const adminElements = $$(
+      ".admin-only, .admin-only-nav, [data-admin-only]"
+    );
 
-                    element.removeAttribute(
-                        "aria-current"
-                    );
-                }
-            }
-        );
+    adminElements.forEach(function (element) {
+
+      if (isAdmin()) {
+
+        element.style.display = "";
+
+        element.removeAttribute("aria-hidden");
+
+      } else {
+
+        element.style.display = "none";
+
+        element.setAttribute("aria-hidden", "true");
+
+      }
+
+    });
+
+  }
+
+
+  // ==========================================================
+  // MOBILE MENU
+  // ==========================================================
+
+  function getMobileMenu() {
+
+    return (
+      getElement("mobileNav") ||
+      getElement("mobile-menu") ||
+      $(".mobile-nav")
+    );
+
+  }
+
+
+  function getMobileMenuButton() {
+
+    return (
+      getElement("mobileMenuBtn") ||
+      getElement("mobile-menu-btn") ||
+      $(".mobile-menu-btn")
+    );
+
+  }
+
+
+  function openMobileMenu() {
+
+    const menu = getMobileMenu();
+    const button = getMobileMenuButton();
+
+    if (!menu) {
+      return;
     }
 
-    // ========================================================
-    // MOBILE MENU
-    // ========================================================
+    menu.classList.add("open");
+    menu.classList.add("active");
 
-    function closeMobileMenu() {
+    menu.setAttribute("aria-hidden", "false");
 
-        const mobileNav =
-            navElement(
-                "mobileNav"
-            );
-
-        const menuButton =
-            navElement(
-                "mobileMenuBtn"
-            );
-
-        if (mobileNav) {
-
-            mobileNav.classList.remove(
-                "show",
-                "open",
-                "active"
-            );
-
-            mobileNav.style.display =
-                "";
-
-            mobileNav.setAttribute(
-                "aria-hidden",
-                "true"
-            );
-        }
-
-        if (menuButton) {
-
-            menuButton.classList.remove(
-                "active",
-                "open"
-            );
-
-            menuButton.setAttribute(
-                "aria-expanded",
-                "false"
-            );
-        }
-
-        document.body.classList.remove(
-            "mobile-menu-open"
-        );
+    if (button) {
+      button.classList.add("active");
+      button.setAttribute("aria-expanded", "true");
     }
 
-    function openMobileMenu() {
+    document.body.classList.add("mobile-menu-open");
+  }
 
-        const mobileNav =
-            navElement(
-                "mobileNav"
-            );
 
-        const menuButton =
-            navElement(
-                "mobileMenuBtn"
-            );
+  function closeMobileMenu() {
 
-        if (!mobileNav) {
-            return;
-        }
+    const menu = getMobileMenu();
+    const button = getMobileMenuButton();
 
-        mobileNav.classList.add(
-            "show",
-            "open",
-            "active"
-        );
+    if (menu) {
 
-        mobileNav.style.display =
-            "block";
+      menu.classList.remove("open");
+      menu.classList.remove("active");
 
-        mobileNav.setAttribute(
-            "aria-hidden",
-            "false"
-        );
+      menu.setAttribute("aria-hidden", "true");
 
-        if (menuButton) {
-
-            menuButton.classList.add(
-                "active",
-                "open"
-            );
-
-            menuButton.setAttribute(
-                "aria-expanded",
-                "true"
-            );
-        }
-
-        document.body.classList.add(
-            "mobile-menu-open"
-        );
     }
 
-    function toggleMobileMenu() {
+    if (button) {
 
-        const mobileNav =
-            navElement(
-                "mobileNav"
-            );
+      button.classList.remove("active");
 
-        if (!mobileNav) {
-            return;
-        }
+      button.setAttribute("aria-expanded", "false");
 
-        const isOpen =
-            mobileNav.classList.contains(
-                "show"
-            ) ||
-            mobileNav.classList.contains(
-                "open"
-            ) ||
-            mobileNav.classList.contains(
-                "active"
-            );
-
-        if (isOpen) {
-            closeMobileMenu();
-        } else {
-            openMobileMenu();
-        }
     }
 
-    // ========================================================
-    // DROPDOWN HELPERS
-    // ========================================================
+    document.body.classList.remove("mobile-menu-open");
+  }
 
-    function getDropdownButton(dropdown) {
 
-        if (!dropdown) {
-            return null;
-        }
+  function toggleMobileMenu() {
 
-        return dropdown.querySelector(
-            ".nav-dropdown-btn, " +
-            ".nav-dropdown-toggle, " +
-            "[aria-haspopup='true']"
-        );
+    const menu = getMobileMenu();
+
+    if (!menu) {
+      return;
     }
 
-    function getDropdownMenu(dropdown) {
-
-        if (!dropdown) {
-            return null;
-        }
-
-        return dropdown.querySelector(
-            ".nav-dropdown-menu"
-        );
-    }
-
-    // ========================================================
-    // CLOSE DROPDOWNS
-    // ========================================================
-
-    function closeAllDropdowns(except = null) {
-
-        const dropdowns =
-            document.querySelectorAll(
-                ".nav-dropdown"
-            );
-
-        dropdowns.forEach(
-            dropdown => {
-
-                if (
-                    except &&
-                    dropdown === except
-                ) {
-                    return;
-                }
-
-                dropdown.classList.remove(
-                    "open"
-                );
-
-                const menu =
-                    getDropdownMenu(
-                        dropdown
-                    );
-
-                if (menu) {
-
-                    menu.classList.remove(
-                        "show",
-                        "open"
-                    );
-
-                    menu.setAttribute(
-                        "aria-hidden",
-                        "true"
-                    );
-                }
-
-                const button =
-                    getDropdownButton(
-                        dropdown
-                    );
-
-                if (button) {
-
-                    button.setAttribute(
-                        "aria-expanded",
-                        "false"
-                    );
-                }
-            }
-        );
-    }
-
-    // ========================================================
-    // TOGGLE DROPDOWN
-    // ========================================================
-
-    function toggleDropdown(dropdown) {
-
-        if (!dropdown) {
-            return;
-        }
-
-        const isOpen =
-            dropdown.classList.contains(
-                "open"
-            );
-
-        if (isOpen) {
-
-            closeAllDropdowns();
-
-            return;
-        }
-
-        closeAllDropdowns(
-            dropdown
-        );
-
-        dropdown.classList.add(
-            "open"
-        );
-
-        const menu =
-            getDropdownMenu(
-                dropdown
-            );
-
-        if (menu) {
-
-            menu.classList.add(
-                "show",
-                "open"
-            );
-
-            menu.setAttribute(
-                "aria-hidden",
-                "false"
-            );
-        }
-
-        const button =
-            getDropdownButton(
-                dropdown
-            );
-
-        if (button) {
-
-            button.setAttribute(
-                "aria-expanded",
-                "true"
-            );
-        }
-    }
-
-    // ========================================================
-    // ADMIN NAVIGATION VISIBILITY
-    // ========================================================
-
-    function updateAdminNavigation() {
-
-        const allowed =
-            isAdmin();
-
-        const adminOnlySelectors = [
-            "[data-admin-only]",
-            ".admin-only",
-            "#salesNavLink",
-            "#salesNavItem",
-            "#salesManagementNav",
-            "#salesDropdown"
-        ];
-
-        const elements =
-            document.querySelectorAll(
-                adminOnlySelectors.join(",")
-            );
-
-        elements.forEach(
-            element => {
-
-                if (allowed) {
-
-                    element.style.display =
-                        "";
-
-                    element.setAttribute(
-                        "aria-hidden",
-                        "false"
-                    );
-
-                } else {
-
-                    element.style.display =
-                        "none";
-
-                    element.setAttribute(
-                        "aria-hidden",
-                        "true"
-                    );
-                }
-            }
-        );
-
-        // Additional protection:
-        // hide Manage Sales page for non-admin
-        const salesPage =
-            getPage("sales");
-
-        if (
-            salesPage &&
-            !allowed
-        ) {
-
-            salesPage.style.display =
-                "none";
-
-            salesPage.classList.remove(
-                "active"
-            );
-        }
-    }
-
-    // ========================================================
-    // NAVIGATE DASHBOARD
-    // ========================================================
-
-    async function navigateDashboard() {
-
-        closeAllDropdowns();
-
-        closeMobileMenu();
-
-        if (
-            typeof window.showDashboard ===
-            "function"
-        ) {
-
-            await window.showDashboard();
-
-        } else {
-
-            showPage(
-                "dashboard"
-            );
-
-            setNavigationTitle(
-                "Dashboard"
-            );
-        }
-
-        setActiveNavigation(
-            "dashboard"
-        );
-    }
-
-    // ========================================================
-    // NAVIGATE LEADS
-    // ========================================================
-
-    async function navigateLeads() {
-
-        closeAllDropdowns();
-
-        closeMobileMenu();
-
-        if (
-            typeof window.showLeads ===
-            "function"
-        ) {
-
-            await window.showLeads();
-
-        } else {
-
-            showPage(
-                "leads"
-            );
-
-            setNavigationTitle(
-                isAdmin()
-                    ? "All Leads"
-                    : "My Leads"
-            );
-        }
-
-        setActiveNavigation(
-            "leads"
-        );
-    }
-
-    // ========================================================
-    // NAVIGATE SALES
-    // ========================================================
-
-    async function navigateSales() {
-
-        if (!hasProfile()) {
-
-            if (
-                typeof window.showToast ===
-                "function"
-            ) {
-
-                window.showToast(
-                    "Please login first.",
-                    "error"
-                );
-            }
-
-            return;
-        }
-
-        if (!isAdmin()) {
-
-            if (
-                typeof window.showToast ===
-                "function"
-            ) {
-
-                window.showToast(
-                    "Access denied. Admin only.",
-                    "error"
-                );
-            }
-
-            return;
-        }
-
-        closeAllDropdowns();
-
-        closeMobileMenu();
-
-        if (
-            typeof window.showSales ===
-            "function"
-        ) {
-
-            await window.showSales();
-
-        } else {
-
-            showPage(
-                "sales"
-            );
-
-            setNavigationTitle(
-                "Manage Sales"
-            );
-
-            if (
-                typeof window.loadSalesUsers ===
-                "function"
-            ) {
-
-                await window.loadSalesUsers();
-            }
-        }
-
-        setActiveNavigation(
-            "sales"
-        );
-    }
-
-    // ========================================================
-    // NAVIGATE CUSTOMER PROFILE
-    // ========================================================
-
-    async function navigateCustomerProfile(
-        customerId = null
+    if (
+      menu.classList.contains("open") ||
+      menu.classList.contains("active")
     ) {
 
-        closeAllDropdowns();
+      closeMobileMenu();
 
+    } else {
+
+      openMobileMenu();
+
+    }
+
+  }
+
+
+  // ==========================================================
+  // DROPDOWNS
+  // ==========================================================
+
+  function closeAllDropdowns(except) {
+
+    $$(".nav-dropdown").forEach(function (dropdown) {
+
+      if (except && dropdown === except) {
+        return;
+      }
+
+      dropdown.classList.remove("open");
+
+      const button = dropdown.querySelector(
+        ".nav-dropdown-btn, [aria-haspopup='true']"
+      );
+
+      const menu = dropdown.querySelector(
+        ".nav-dropdown-menu"
+      );
+
+      if (button) {
+        button.setAttribute("aria-expanded", "false");
+      }
+
+      if (menu) {
+        menu.classList.remove("open");
+      }
+
+    });
+
+
+    // User dropdown
+    $$(".user-menu").forEach(function (menuContainer) {
+
+      if (
+        except &&
+        menuContainer === except
+      ) {
+        return;
+      }
+
+      menuContainer.classList.remove("open");
+
+      const button = menuContainer.querySelector(
+        ".user-menu-btn, [aria-haspopup='true']"
+      );
+
+      const dropdown = menuContainer.querySelector(
+        ".user-menu-dropdown"
+      );
+
+      if (button) {
+        button.setAttribute("aria-expanded", "false");
+      }
+
+      if (dropdown) {
+        dropdown.classList.remove("open");
+      }
+
+    });
+
+  }
+
+
+  function toggleDropdown(dropdown) {
+
+    if (!dropdown) {
+      return;
+    }
+
+    const isOpen =
+      dropdown.classList.contains("open");
+
+    closeAllDropdowns(dropdown);
+
+    if (isOpen) {
+
+      dropdown.classList.remove("open");
+
+    } else {
+
+      dropdown.classList.add("open");
+
+    }
+
+    const button = dropdown.querySelector(
+      ".nav-dropdown-btn, [aria-haspopup='true']"
+    );
+
+    const menu = dropdown.querySelector(
+      ".nav-dropdown-menu"
+    );
+
+    if (button) {
+
+      button.setAttribute(
+        "aria-expanded",
+        isOpen ? "false" : "true"
+      );
+
+    }
+
+    if (menu) {
+
+      menu.classList.toggle(
+        "open",
+        !isOpen
+      );
+
+    }
+
+  }
+
+
+  function bindNavigationDropdowns() {
+
+    $$(".nav-dropdown").forEach(function (dropdown) {
+
+      const button = dropdown.querySelector(
+        ".nav-dropdown-btn, [aria-haspopup='true']"
+      );
+
+      if (!button) {
+        return;
+      }
+
+      if (button.dataset.navigationBound === "true") {
+        return;
+      }
+
+      button.dataset.navigationBound = "true";
+
+      button.addEventListener(
+        "click",
+        function (event) {
+
+          event.preventDefault();
+          event.stopPropagation();
+
+          toggleDropdown(dropdown);
+
+        }
+      );
+
+    });
+
+  }
+
+
+  // ==========================================================
+  // USER DROPDOWN
+  // ==========================================================
+
+  function bindUserDropdown() {
+
+    $$(".user-menu").forEach(function (container) {
+
+      const button = container.querySelector(
+        ".user-menu-btn, [aria-haspopup='true']"
+      );
+
+      if (!button) {
+        return;
+      }
+
+      if (button.dataset.navigationBound === "true") {
+        return;
+      }
+
+      button.dataset.navigationBound = "true";
+
+      button.addEventListener(
+        "click",
+        function (event) {
+
+          event.preventDefault();
+          event.stopPropagation();
+
+          const isOpen =
+            container.classList.contains("open");
+
+          closeAllDropdowns(container);
+
+          container.classList.toggle(
+            "open",
+            !isOpen
+          );
+
+          button.setAttribute(
+            "aria-expanded",
+            !isOpen ? "true" : "false"
+          );
+
+          const dropdown =
+            container.querySelector(
+              ".user-menu-dropdown"
+            );
+
+          if (dropdown) {
+
+            dropdown.classList.toggle(
+              "open",
+              !isOpen
+            );
+
+          }
+
+        }
+      );
+
+    });
+
+  }
+
+
+  // ==========================================================
+  // NAVIGATION ACTIONS
+  // ==========================================================
+
+  function navigateDashboard() {
+
+    if (
+      window.FSIDashboard &&
+      typeof window.FSIDashboard.showDashboard === "function"
+    ) {
+
+      return window.FSIDashboard.showDashboard();
+
+    }
+
+    return showPage("dashboard");
+  }
+
+
+  function navigateLeads() {
+
+    if (
+      window.FSIDashboard &&
+      typeof window.FSIDashboard.showLeads === "function"
+    ) {
+
+      return window.FSIDashboard.showLeads();
+
+    }
+
+    return showPage("leads");
+  }
+
+
+  function navigateSales() {
+
+    if (!isAdmin()) {
+
+      if (typeof window.showToast === "function") {
+
+        window.showToast(
+          "Akses Manage Sales hanya untuk Admin.",
+          "warning"
+        );
+
+      }
+
+      return false;
+    }
+
+    if (
+      window.FSIDashboard &&
+      typeof window.FSIDashboard.showSales === "function"
+    ) {
+
+      return window.FSIDashboard.showSales();
+
+    }
+
+    return showPage("sales");
+  }
+
+
+  function navigateCustomerProfile(customerId) {
+
+    if (
+      window.crmOpenCustomerProfile &&
+      typeof window.crmOpenCustomerProfile === "function"
+    ) {
+
+      return window.crmOpenCustomerProfile(
+        customerId
+      );
+
+    }
+
+    if (
+      window.FSIDashboard &&
+      typeof window.FSIDashboard.showCustomerProfile === "function"
+    ) {
+
+      return window.FSIDashboard.showCustomerProfile(
+        customerId
+      );
+
+    }
+
+    return showPage("customer-profile");
+  }
+
+
+  // ==========================================================
+  // MAIN NAVIGATION FUNCTION
+  // ==========================================================
+
+  function crmNavigate(target, data) {
+
+    const normalized = normalizeTarget(target);
+
+    if (!normalized) {
+
+      console.warn(
+        "[FSI Navigation] Target tidak dikenal:",
+        target
+      );
+
+      return false;
+    }
+
+    switch (normalized) {
+
+      case "dashboard":
+        return navigateDashboard();
+
+      case "leads":
+        return navigateLeads();
+
+      case "sales":
+        return navigateSales();
+
+      case "customer-profile":
+        return navigateCustomerProfile(
+          data && data.customerId
+            ? data.customerId
+            : data && data.id
+              ? data.id
+              : null
+        );
+
+      default:
+        return showPage(normalized);
+
+    }
+
+  }
+
+
+  // ==========================================================
+  // NAVIGATION CLICK HANDLER
+  // ==========================================================
+
+  function handleNavigationClick(event) {
+
+    const element =
+      event.currentTarget;
+
+    if (!element) {
+      return;
+    }
+
+    // Jangan proses dropdown toggle
+    if (
+      element.classList.contains("nav-dropdown-btn") ||
+      element.getAttribute("aria-haspopup") === "true"
+    ) {
+
+      return;
+
+    }
+
+    const target =
+      getNavigationTarget(element);
+
+    if (!target) {
+      return;
+    }
+
+    event.preventDefault();
+
+    const normalized =
+      normalizeTarget(target);
+
+    if (!normalized) {
+      return;
+    }
+
+    const customerId =
+      element.dataset.customerId ||
+      element.dataset.id ||
+      null;
+
+    crmNavigate(
+      normalized,
+      {
+        customerId: customerId
+      }
+    );
+
+  }
+
+
+  // ==========================================================
+  // BIND NAVIGATION LINKS
+  // ==========================================================
+
+  function bindNavigationLinks() {
+
+    const selector = [
+      ".nav-link[data-page]",
+      ".nav-link[data-view]",
+      ".nav-link[data-nav]",
+      ".nav-link[data-crm-nav]",
+
+      ".nav-item[data-page]",
+      ".nav-item[data-view]",
+      ".nav-item[data-nav]",
+      ".nav-item[data-crm-nav]",
+
+      ".nav-dropdown-item[data-page]",
+      ".nav-dropdown-item[data-view]",
+      ".nav-dropdown-item[data-nav]",
+      ".nav-dropdown-item[data-crm-nav]",
+
+      "[data-crm-nav]"
+    ].join(",");
+
+    $$(selector).forEach(function (element) {
+
+      if (element.dataset.navigationBound === "true") {
+        return;
+      }
+
+      const target =
+        getNavigationTarget(element);
+
+      if (!target) {
+        return;
+      }
+
+      element.dataset.navigationBound = "true";
+
+      element.addEventListener(
+        "click",
+        handleNavigationClick
+      );
+
+    });
+
+  }
+
+
+  // ==========================================================
+  // LOGO / HOME
+  // ==========================================================
+
+  function bindHomeButtons() {
+
+    const elements = $$(
+      "[data-home]"
+    );
+
+    elements.forEach(function (element) {
+
+      if (element.dataset.navigationBound === "true") {
+        return;
+      }
+
+      element.dataset.navigationBound = "true";
+
+      element.addEventListener(
+        "click",
+        function (event) {
+
+          event.preventDefault();
+
+          crmNavigate("dashboard");
+
+        }
+      );
+
+    });
+
+  }
+
+
+  // ==========================================================
+  // MOBILE BUTTON BINDING
+  // ==========================================================
+
+  function bindMobileMenu() {
+
+    const button =
+      getMobileMenuButton();
+
+    if (!button) {
+      return;
+    }
+
+    if (button.dataset.navigationBound === "true") {
+      return;
+    }
+
+    button.dataset.navigationBound = "true";
+
+    button.setAttribute(
+      "aria-expanded",
+      "false"
+    );
+
+    button.addEventListener(
+      "click",
+      function (event) {
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        toggleMobileMenu();
+
+      }
+    );
+
+  }
+
+
+  // ==========================================================
+  // OUTSIDE CLICK
+  // ==========================================================
+
+  function bindDocumentClick() {
+
+    document.addEventListener(
+      "click",
+      function (event) {
+
+        const target = event.target;
+
+        if (!(target instanceof Element)) {
+          return;
+        }
+
+        const insideDropdown =
+          target.closest(
+            ".nav-dropdown, .user-menu"
+          );
+
+        const insideMobile =
+          target.closest(
+            "#mobileNav, .mobile-nav, #mobileMenuBtn, .mobile-menu-btn"
+          );
+
+        if (!insideDropdown) {
+
+          closeAllDropdowns();
+
+        }
+
+        if (!insideMobile) {
+
+          closeMobileMenu();
+
+        }
+
+      }
+    );
+
+  }
+
+
+  // ==========================================================
+  // ESCAPE KEY
+  // ==========================================================
+
+  function bindEscapeKey() {
+
+    document.addEventListener(
+      "keydown",
+      function (event) {
+
+        if (event.key !== "Escape") {
+          return;
+        }
+
+        closeAllDropdowns();
         closeMobileMenu();
 
-        if (
-            customerId &&
-            typeof window.crmOpenCustomerProfile ===
-            "function"
-        ) {
+      }
+    );
 
-            await window.crmOpenCustomerProfile(
-                customerId
-            );
+  }
 
-            setActiveNavigation(
-                "customerProfile"
-            );
 
-            return;
+  // ==========================================================
+  // WINDOW RESIZE
+  // ==========================================================
+
+  function bindResize() {
+
+    window.addEventListener(
+      "resize",
+      function () {
+
+        if (window.innerWidth > 1150) {
+
+          closeMobileMenu();
+
         }
 
-        if (
-            typeof window.showCustomerProfile ===
-            "function"
-        ) {
+      }
+    );
 
-            await window.showCustomerProfile();
+  }
 
-            setActiveNavigation(
-                "customerProfile"
-            );
 
-            return;
-        }
+  // ==========================================================
+  // DEFAULT PAGE
+  // ==========================================================
 
-        showPage(
-            "customerProfile"
+  function initializeDefaultPage() {
+
+    const profile =
+      getProfile();
+
+    if (!profile) {
+      return;
+    }
+
+    const pages =
+      getAllPages();
+
+    if (!pages.length) {
+      return;
+    }
+
+    const activePage =
+      $(".crm-page.active");
+
+    if (activePage) {
+
+      const pageName =
+        normalizeTarget(
+          activePage.id
+        );
+
+      if (pageName) {
+
+        currentPage =
+          pageName;
+
+        setActiveNavigation(
+          pageName
         );
 
         setNavigationTitle(
-            "Customer Profile"
+          pageName
         );
 
-        setActiveNavigation(
-            "customerProfile"
-        );
+        return;
+
+      }
+
     }
 
-    // ========================================================
-    // MAIN CRM NAVIGATION
-    // ========================================================
+    // Default selalu Dashboard
+    showPage("dashboard");
 
-    async function crmNavigate(
-        target,
-        data = null
-    ) {
+  }
 
-        const normalized =
-            normalizeTarget(
-                target
-            );
 
-        switch (normalized) {
+  // ==========================================================
+  // REFRESH NAVIGATION
+  // ==========================================================
 
-            case "dashboard":
+  function refreshNavigation() {
 
-                await navigateDashboard();
+    updateAdminNavigation();
 
-                break;
+    setActiveNavigation(
+      currentPage
+    );
 
-            case "leads":
+    setNavigationTitle(
+      currentPage
+    );
 
-                await navigateLeads();
+  }
 
-                break;
 
-            case "sales":
+  // ==========================================================
+  // APP READY
+  // ==========================================================
 
-                await navigateSales();
+  function handleAppReady() {
 
-                break;
+    refreshNavigation();
 
-            case "customerProfile":
+    initializeDefaultPage();
 
-                await navigateCustomerProfile(
-                    data
-                );
+  }
 
-                break;
 
-            default:
+  // ==========================================================
+  // PROFILE READY
+  // ==========================================================
 
-                console.warn(
-                    `FSI CRM: Unknown navigation target "${target}".`
-                );
+  function handleProfileReady() {
 
-                await navigateDashboard();
+    refreshNavigation();
 
-                break;
-        }
+    initializeDefaultPage();
+
+  }
+
+
+  // ==========================================================
+  // INITIALIZE
+  // ==========================================================
+
+  function initializeNavigation() {
+
+    if (navigationInitialized) {
+      return;
     }
 
-    // ========================================================
-    // DATA ATTRIBUTE NAVIGATION
-    // ========================================================
+    navigationInitialized = true;
 
-    function handleNavigationClick(event) {
+    bindNavigationLinks();
+    bindNavigationDropdowns();
+    bindUserDropdown();
+    bindHomeButtons();
+    bindMobileMenu();
 
-        const element =
-            event.currentTarget;
+    if (!navigationEventsBound) {
 
-        if (!element) {
-            return;
-        }
+      navigationEventsBound = true;
 
-        const target =
-            element.dataset.page ||
-            element.dataset.view ||
-            element.dataset.nav ||
-            element.dataset.crmNav ||
-            "";
+      bindDocumentClick();
+      bindEscapeKey();
+      bindResize();
 
-        if (!target) {
-            return;
-        }
+      window.addEventListener(
+        "fsi:app-ready",
+        handleAppReady
+      );
 
-        const normalized =
-            normalizeTarget(
-                target
-            );
+      window.addEventListener(
+        "fsi:profile-ready",
+        handleProfileReady
+      );
 
-        // Sales = Admin only
-        if (
-            normalized === "sales" &&
-            !isAdmin()
-        ) {
+      window.addEventListener(
+        "fsi:auth-ready",
+        handleProfileReady
+      );
 
-            event.preventDefault();
+      window.addEventListener(
+        "fsi:sales-changed",
+        refreshNavigation
+      );
 
-            if (
-                typeof window.showToast ===
-                "function"
-            ) {
-
-                window.showToast(
-                    "Access denied. Admin only.",
-                    "error"
-                );
-            }
-
-            return;
-        }
-
-        event.preventDefault();
-
-        crmNavigate(
-            normalized
-        );
     }
 
-    // ========================================================
-    // BIND NAVIGATION LINKS
-    // ========================================================
+    refreshNavigation();
 
-    function bindNavigationLinks() {
+    console.log(
+      "FSI Navigation initialized."
+    );
 
-        const links =
-            document.querySelectorAll(
-                [
-                    ".nav-link[data-page]",
-                    ".nav-link[data-view]",
-                    ".nav-link[data-nav]",
-                    ".nav-dropdown-item[data-page]",
-                    ".nav-dropdown-item[data-view]",
-                    ".nav-dropdown-item[data-nav]",
-                    "[data-crm-nav]"
-                ].join(",")
-            );
+  }
 
-        links.forEach(
-            link => {
 
-                if (
-                    link.dataset.navigationBound ===
-                    "true"
-                ) {
-                    return;
-                }
+  // ==========================================================
+  // DOM READY
+  // ==========================================================
 
-                // IMPORTANT:
-                // Dropdown toggle itself is NOT a page link.
-                if (
-                    link.classList.contains(
-                        "nav-dropdown-toggle"
-                    ) ||
-                    link.classList.contains(
-                        "nav-dropdown-btn"
-                    )
-                ) {
-                    return;
-                }
-
-                link.dataset.navigationBound =
-                    "true";
-
-                link.addEventListener(
-                    "click",
-                    handleNavigationClick
-                );
-            }
-        );
-    }
-
-    // ========================================================
-    // BIND DROPDOWNS
-    // ========================================================
-
-    function bindDropdowns() {
-
-        const dropdowns =
-            document.querySelectorAll(
-                ".nav-dropdown"
-            );
-
-        dropdowns.forEach(
-            dropdown => {
-
-                const button =
-                    getDropdownButton(
-                        dropdown
-                    );
-
-                if (!button) {
-                    return;
-                }
-
-                if (
-                    button.dataset.dropdownBound ===
-                    "true"
-                ) {
-                    return;
-                }
-
-                button.dataset.dropdownBound =
-                    "true";
-
-                button.setAttribute(
-                    "aria-haspopup",
-                    "true"
-                );
-
-                button.setAttribute(
-                    "aria-expanded",
-                    "false"
-                );
-
-                button.addEventListener(
-                    "click",
-                    function (event) {
-
-                        event.preventDefault();
-
-                        event.stopPropagation();
-
-                        toggleDropdown(
-                            dropdown
-                        );
-                    }
-                );
-            }
-        );
-    }
-
-    // ========================================================
-    // BIND MOBILE MENU
-    // ========================================================
-
-    function bindMobileMenu() {
-
-        const button =
-            navElement(
-                "mobileMenuBtn"
-            );
-
-        if (!button) {
-            return;
-        }
-
-        if (
-            button.dataset.mobileBound ===
-            "true"
-        ) {
-            return;
-        }
-
-        button.dataset.mobileBound =
-            "true";
-
-        button.setAttribute(
-            "aria-expanded",
-            "false"
-        );
-
-        button.setAttribute(
-            "aria-controls",
-            "mobileNav"
-        );
-
-        button.addEventListener(
-            "click",
-            function (event) {
-
-                event.preventDefault();
-
-                event.stopPropagation();
-
-                toggleMobileMenu();
-            }
-        );
-    }
-
-    // ========================================================
-    // BIND DOCUMENT CLICK
-    // ========================================================
-
-    function bindDocumentClick() {
-
-        if (documentClickBound) {
-            return;
-        }
-
-        documentClickBound =
-            true;
-
-        document.addEventListener(
-            "click",
-            function (event) {
-
-                const target =
-                    event.target;
-
-                if (
-                    target &&
-                    typeof target.closest ===
-                    "function"
-                ) {
-
-                    if (
-                        target.closest(
-                            ".nav-dropdown"
-                        )
-                    ) {
-                        return;
-                    }
-                }
-
-                closeAllDropdowns();
-            }
-        );
-    }
-
-    // ========================================================
-    // BIND ESCAPE KEY
-    // ========================================================
-
-    function bindEscapeKey() {
-
-        if (escapeKeyBound) {
-            return;
-        }
-
-        escapeKeyBound =
-            true;
-
-        document.addEventListener(
-            "keydown",
-            function (event) {
-
-                if (
-                    event.key !==
-                    "Escape"
-                ) {
-                    return;
-                }
-
-                closeAllDropdowns();
-
-                closeMobileMenu();
-            }
-        );
-    }
-
-    // ========================================================
-    // BIND RESIZE
-    // ========================================================
-
-    function bindResize() {
-
-        if (resizeBound) {
-            return;
-        }
-
-        resizeBound =
-            true;
-
-        window.addEventListener(
-            "resize",
-            function () {
-
-                if (
-                    window.innerWidth >
-                    900
-                ) {
-
-                    closeMobileMenu();
-                }
-            }
-        );
-    }
-
-    // ========================================================
-    // BIND LOGO
-    // ========================================================
-
-    function bindLogo() {
-
-        const logos =
-            document.querySelectorAll(
-                ".brand, .brand-logo, [data-home]"
-            );
-
-        logos.forEach(
-            logo => {
-
-                if (
-                    logo.dataset.logoBound ===
-                    "true"
-                ) {
-                    return;
-                }
-
-                logo.dataset.logoBound =
-                    "true";
-
-                logo.addEventListener(
-                    "click",
-                    function (event) {
-
-                        event.preventDefault();
-
-                        crmNavigate(
-                            "dashboard"
-                        );
-                    }
-                );
-            }
-        );
-    }
-
-    // ========================================================
-    // INITIAL PAGE
-    // ========================================================
-
-    function initializeDefaultPage() {
-
-        const profile =
-            getProfile();
-
-        if (!profile) {
-            return;
-        }
-
-        updateAdminNavigation();
-
-        const pages =
-            getAllPages();
-
-        const visiblePage =
-            pages.find(
-                page =>
-                    page &&
-                    window.getComputedStyle(
-                        page
-                    ).display !==
-                    "none"
-            );
-
-        if (visiblePage) {
-
-            return;
-        }
-
-        navigateDashboard();
-    }
-
-    // ========================================================
-    // REFRESH NAVIGATION
-    // ========================================================
-
-    function refreshNavigation() {
-
-        updateAdminNavigation();
-
-        bindNavigationLinks();
-
-        bindDropdowns();
-
-        bindMobileMenu();
-
-        bindLogo();
-
-        initializeDefaultPage();
-    }
-
-    // ========================================================
-    // PUBLIC API
-    // ========================================================
-
-    window.crmNavigate =
-        crmNavigate;
-
-    window.navigateDashboard =
-        navigateDashboard;
-
-    window.navigateLeads =
-        navigateLeads;
-
-    window.navigateSales =
-        navigateSales;
-
-    window.navigateCustomerProfile =
-        navigateCustomerProfile;
-
-    window.showPage =
-        showPage;
-
-    window.hideAllPages =
-        hideAllPages;
-
-    window.setActiveNavigation =
-        setActiveNavigation;
-
-    window.updateAdminNavigation =
-        updateAdminNavigation;
-
-    window.openMobileMenu =
-        openMobileMenu;
-
-    window.closeMobileMenu =
-        closeMobileMenu;
-
-    window.toggleMobileMenu =
-        toggleMobileMenu;
-
-    window.toggleDropdown =
-        toggleDropdown;
-
-    window.closeAllDropdowns =
-        closeAllDropdowns;
-
-    window.refreshNavigation =
-        refreshNavigation;
-
-    window.normalizeNavigationTarget =
-        normalizeTarget;
-
-    window.FSINavigation = {
-
-        crmNavigate,
-
-        navigateDashboard,
-
-        navigateLeads,
-
-        navigateSales,
-
-        navigateCustomerProfile,
-
-        showPage,
-
-        hideAllPages,
-
-        setActiveNavigation,
-
-        updateAdminNavigation,
-
-        openMobileMenu,
-
-        closeMobileMenu,
-
-        toggleMobileMenu,
-
-        toggleDropdown,
-
-        closeAllDropdowns,
-
-        refreshNavigation,
-
-        normalizeTarget
-    };
-
-    // ========================================================
-    // DOM READY
-    // ========================================================
+  if (
+    document.readyState === "loading"
+  ) {
 
     document.addEventListener(
-        "DOMContentLoaded",
-        function () {
-
-            if (
-                navigationInitialized
-            ) {
-                return;
-            }
-
-            navigationInitialized =
-                true;
-
-            bindNavigationLinks();
-
-            bindDropdowns();
-
-            bindMobileMenu();
-
-            bindDocumentClick();
-
-            bindEscapeKey();
-
-            bindResize();
-
-            bindLogo();
-
-            updateAdminNavigation();
-
-            console.log(
-                "FSI CRM: Navigation module loaded."
-            );
-        }
+      "DOMContentLoaded",
+      initializeNavigation
     );
 
-    // ========================================================
-    // APP READY
-    // ========================================================
+  } else {
 
-    window.addEventListener(
-        "fsi:app-ready",
-        function () {
+    initializeNavigation();
 
-            refreshNavigation();
+  }
 
-            updateAdminNavigation();
-        }
-    );
 
-    // ========================================================
-    // PROFILE READY
-    // ========================================================
+  // ==========================================================
+  // PUBLIC API
+  // ==========================================================
 
-    window.addEventListener(
-        "fsi:profile-ready",
-        function () {
+  window.FSINavigation = {
 
-            refreshNavigation();
+    initialize: initializeNavigation,
 
-            updateAdminNavigation();
-        }
-    );
+    showPage: showPage,
 
-    // ========================================================
-    // AUTH STATE SUPPORT
-    // ========================================================
+    navigate: crmNavigate,
 
-    window.addEventListener(
-        "fsi:logged-out",
-        function () {
+    navigateDashboard: navigateDashboard,
 
-            closeAllDropdowns();
+    navigateLeads: navigateLeads,
 
-            closeMobileMenu();
+    navigateSales: navigateSales,
 
-            hideAllPages();
+    navigateCustomerProfile:
+      navigateCustomerProfile,
 
-            const loginPage =
-                document.getElementById(
-                    "login-page"
-                );
+    setActiveNavigation:
+      setActiveNavigation,
 
-            if (loginPage) {
+    refresh:
+      refreshNavigation,
 
-                loginPage.style.display =
-                    "flex";
+    closeDropdowns:
+      closeAllDropdowns,
 
-                loginPage.setAttribute(
-                    "aria-hidden",
-                    "false"
-                );
-            }
-        }
-    );
+    closeMobileMenu:
+      closeMobileMenu,
+
+    openMobileMenu:
+      openMobileMenu,
+
+    getCurrentPage: function () {
+      return currentPage;
+    },
+
+    isAdmin:
+      isAdmin,
+
+    isSales:
+      isSales
+
+  };
+
+
+  // Global compatibility
+  window.crmNavigate = crmNavigate;
+
+  window.showCRMPage = showPage;
+
+  window.navigateDashboard =
+    navigateDashboard;
+
+  window.navigateLeads =
+    navigateLeads;
+
+  window.navigateSales =
+    navigateSales;
+
+  window.navigateCustomerProfile =
+    navigateCustomerProfile;
+
 
 })();
