@@ -22,11 +22,14 @@
 
   const PAGE_MAP = {
     dashboard: "view-dashboard",
+
     leads: "view-leads",
     customers: "view-leads",
+
     customer: "view-customer-profile",
     "customer-profile": "view-customer-profile",
     profile: "view-customer-profile",
+
     sales: "view-sales",
     manageSales: "view-sales",
     "manage-sales": "view-sales"
@@ -163,26 +166,36 @@
       return null;
     }
 
+
+    // --------------------------------------------------------
     // Remove leading #
+    // --------------------------------------------------------
+
     value =
       value.replace(/^#/, "");
 
 
+    // --------------------------------------------------------
     // Direct page ID
-    if (
-      Object.values(PAGE_MAP).includes(value)
-    ) {
+    // --------------------------------------------------------
 
-      return (
-        Object.keys(PAGE_MAP).find(
-          key => PAGE_MAP[key] === value
-        ) || null
+    const directPageKey =
+      Object.keys(PAGE_MAP).find(
+        function (key) {
+          return PAGE_MAP[key] === value;
+        }
       );
 
+
+    if (directPageKey) {
+      return directPageKey;
     }
 
 
+    // --------------------------------------------------------
     // Normalize
+    // --------------------------------------------------------
+
     value =
       value
         .replace(/_/g, "-")
@@ -194,7 +207,10 @@
     }
 
 
+    // --------------------------------------------------------
     // Common aliases
+    // --------------------------------------------------------
+
     const aliases = {
 
       home:
@@ -246,6 +262,7 @@
       return null;
     }
 
+
     const pageId =
       PAGE_MAP[normalized];
 
@@ -253,14 +270,55 @@
       return null;
     }
 
+
     return getElement(pageId);
 
   }
 
 
+  // ==========================================================
+  // GET ALL CRM PAGES
+  // ==========================================================
+  //
+  // IMPORTANT:
+  // Versi sebelumnya hanya mencari ".crm-page".
+  //
+  // Index.html kita menggunakan ".app-page".
+  //
+  // Sekarang kita dukung:
+  //   .crm-page
+  //   .app-page
+  //   [id^="view-"]
+  //
+  // Dengan ini Dashboard, Leads, Customer Profile,
+  // dan Manage Sales semuanya ikut dikontrol navigation.
+  // ==========================================================
+
   function getAllPages() {
 
-    return $$(".crm-page");
+    const elements =
+      new Set();
+
+
+    $$(".crm-page")
+      .forEach(function (element) {
+        elements.add(element);
+      });
+
+
+    $$(".app-page")
+      .forEach(function (element) {
+        elements.add(element);
+      });
+
+
+    $$('[id^="view-"]')
+      .forEach(function (element) {
+        elements.add(element);
+      });
+
+
+    return Array.from(elements);
 
   }
 
@@ -280,6 +338,12 @@
         "aria-hidden",
         "true"
       );
+
+
+      // IMPORTANT:
+      // Jangan biarkan inline display:none
+      // mengalahkan class "active".
+      page.style.display = "none";
 
     });
 
@@ -308,7 +372,10 @@
     }
 
 
+    // --------------------------------------------------------
     // Sales page hanya untuk Admin
+    // --------------------------------------------------------
+
     if (
       normalized === "sales" &&
       !isAdmin()
@@ -339,7 +406,8 @@
 
       console.warn(
         "[FSI Navigation] Page element tidak ditemukan:",
-        normalized
+        normalized,
+        PAGE_MAP[normalized]
       );
 
       return false;
@@ -347,8 +415,16 @@
     }
 
 
+    // --------------------------------------------------------
+    // HIDE SEMUA PAGE
+    // --------------------------------------------------------
+
     hideAllPages();
 
+
+    // --------------------------------------------------------
+    // SHOW PAGE YANG DIPILIH
+    // --------------------------------------------------------
 
     page.classList.remove("hidden");
     page.classList.add("active");
@@ -359,35 +435,92 @@
     );
 
 
+    // IMPORTANT:
+    // Ini yang memastikan page benar-benar terlihat,
+    // walaupun sebelumnya mempunyai:
+    //
+    // display:none;
+    //
+    // di HTML atau CSS.
+    page.style.display = "";
+
+
+    // --------------------------------------------------------
+    // Fallback untuk CSS yang memakai block
+    // --------------------------------------------------------
+
+    const computedStyle =
+      window.getComputedStyle(page);
+
+
+    if (
+      computedStyle.display === "none"
+    ) {
+
+      page.style.display = "block";
+
+    }
+
+
     currentPage =
       normalized;
 
 
+    // --------------------------------------------------------
+    // ACTIVE NAVIGATION
+    // --------------------------------------------------------
+
     setActiveNavigation(
       normalized
     );
+
+
+    // --------------------------------------------------------
+    // TITLE
+    // --------------------------------------------------------
 
     setNavigationTitle(
       normalized
     );
 
 
+    // --------------------------------------------------------
+    // CLOSE MENU
+    // --------------------------------------------------------
+
     closeAllDropdowns();
     closeMobileMenu();
 
 
-    // Scroll ke atas
+    // --------------------------------------------------------
+    // SCROLL TOP
+    // --------------------------------------------------------
+
     if (!options.keepScroll) {
 
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-      });
+      try {
+
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth"
+        });
+
+      } catch (error) {
+
+        window.scrollTo(
+          0,
+          0
+        );
+
+      }
 
     }
 
 
-    // Event untuk module lain
+    // --------------------------------------------------------
+    // EVENT
+    // --------------------------------------------------------
+
     try {
 
       window.dispatchEvent(
@@ -395,8 +528,11 @@
           "fsi:navigation-changed",
           {
             detail: {
-              page: normalized,
-              element: page
+              page:
+                normalized,
+
+              element:
+                page
             }
           }
         )
@@ -504,7 +640,9 @@
     const titles = {
 
       dashboard: {
-        title: "Dashboard",
+        title:
+          "Dashboard",
+
         subtitle:
           "Overview CRM dan aktivitas customer."
       },
@@ -656,20 +794,6 @@
   // ==========================================================
   // ROLE BASED HEADER NAVIGATION
   // ==========================================================
-  //
-  // PENTING:
-  // Bagian ini HANYA mengatur tampilan menu header.
-  //
-  // Admin:
-  // Dashboard | My Leads | Sales ▼ | Manage Sales | User
-  //
-  // Sales:
-  // Dashboard | My Leads | User
-  //
-  // Tidak menghapus fungsi Sales dropdown.
-  // Tidak menghapus fungsi Manage Sales.
-  // Fungsi tersebut hanya disembunyikan untuk role Sales.
-  // ==========================================================
 
   function updateRoleBasedHeaderNavigation() {
 
@@ -689,15 +813,14 @@
 
       if (isAdmin()) {
 
-        // Admin tetap melihat Sales dropdown
         container.style.display = "";
+
         container.removeAttribute(
           "aria-hidden"
         );
 
       } else {
 
-        // Sales tidak melihat Sales dropdown
         container.style.display = "none";
 
         container.setAttribute(
@@ -705,10 +828,10 @@
           "true"
         );
 
-        // Pastikan dropdown tertutup
         container.classList.remove(
           "open"
         );
+
 
         if (salesDropdown.button) {
 
@@ -718,6 +841,7 @@
           );
 
         }
+
 
         if (salesDropdown.menu) {
 
@@ -734,15 +858,6 @@
 
     // --------------------------------------------------------
     // MANAGE SALES
-    // --------------------------------------------------------
-    //
-    // Cari menu Manage Sales berdasarkan:
-    // data-page="manageSales"
-    // data-page="manage-sales"
-    // data-nav="manageSales"
-    // data-nav="manage-sales"
-    // data-view yang mengarah ke sales
-    // atau teks "Manage Sales"
     // --------------------------------------------------------
 
     const manageSalesElements =
@@ -787,10 +902,6 @@
       new Set();
 
 
-    // --------------------------------------------------------
-    // Berdasarkan data attribute
-    // --------------------------------------------------------
-
     const selectors = [
 
       '[data-page="manageSales"]',
@@ -822,13 +933,6 @@
       }
     );
 
-
-    // --------------------------------------------------------
-    // Berdasarkan teks "Manage Sales"
-    // --------------------------------------------------------
-    //
-    // Hanya cek elemen navigasi, bukan seluruh halaman.
-    // --------------------------------------------------------
 
     const navigationElements =
       $$(
@@ -1025,14 +1129,6 @@
           .toLowerCase();
 
 
-      /*
-       * Cari tombol header yang benar-benar bernama Sales.
-       *
-       * Tidak menggunakan data-page="sales"
-       * karena tombol Sales adalah dropdown nama
-       * Sales, bukan halaman Manage Sales.
-       */
-
       if (
         text === "sales" ||
         text.includes("sales")
@@ -1069,7 +1165,6 @@
 
   async function loadSalesHeaderDropdown() {
 
-    // Hanya Admin yang mendapatkan daftar Sales.
     if (!isAdmin()) {
       return;
     }
@@ -1150,12 +1245,11 @@
           );
 
 
-      // Bersihkan isi dropdown lama.
       target.menu.innerHTML = "";
 
 
       // ------------------------------------------------------
-      // HEADER DROPDOWN
+      // HEADER
       // ------------------------------------------------------
 
       const headerItem =
@@ -1195,14 +1289,11 @@
 
       allItem.href = "#";
 
-
       allItem.className =
         "nav-dropdown-item";
 
-
       allItem.textContent =
         "Semua Sales";
-
 
       allItem.dataset.salesId =
         "";
@@ -1231,7 +1322,7 @@
 
 
       // ------------------------------------------------------
-      // NAMA SALES
+      // SALES
       // ------------------------------------------------------
 
       if (!activeSales.length) {
@@ -1245,14 +1336,11 @@
         emptyItem.className =
           "nav-dropdown-item disabled";
 
-
         emptyItem.textContent =
           "Belum ada Sales aktif";
 
-
         emptyItem.style.opacity =
           "0.55";
-
 
         emptyItem.style.cursor =
           "default";
@@ -1290,18 +1378,14 @@
 
             item.href = "#";
 
-
             item.className =
               "nav-dropdown-item sales-header-item";
-
 
             item.textContent =
               salesName;
 
-
             item.dataset.salesId =
               salesId;
-
 
             item.dataset.salesName =
               salesName;
@@ -1334,7 +1418,6 @@
       }
 
 
-      // Refresh icon jika tersedia
       if (
         typeof window.refreshIcons ===
         "function"
@@ -1365,11 +1448,6 @@
     salesName
   ) {
 
-    /*
-     * Simpan pilihan supaya module Leads
-     * bisa menggunakannya.
-     */
-
     window.crmSelectedSalesId =
       salesId || null;
 
@@ -1377,13 +1455,6 @@
     window.crmSelectedSalesName =
       salesName || "Semua Sales";
 
-
-    /*
-     * Compatibility:
-     *
-     * Jika leads.js / module lain memiliki
-     * fungsi selectSalesFilter(), gunakan.
-     */
 
     if (
       typeof window.selectSalesFilter ===
@@ -1409,10 +1480,6 @@
     }
 
 
-    /*
-     * Compatibility lain jika tersedia.
-     */
-
     if (
       typeof window.setSalesFilter ===
       "function"
@@ -1436,10 +1503,6 @@
 
     }
 
-
-    /*
-     * Event khusus untuk Leads.
-     */
 
     try {
 
@@ -1466,16 +1529,8 @@
     }
 
 
-    /*
-     * Masuk ke halaman Leads / My Leads.
-     */
-
     navigateLeads();
 
-
-    /*
-     * Tutup dropdown setelah memilih Sales.
-     */
 
     closeAllDropdowns();
 
@@ -1710,7 +1765,6 @@
       );
 
 
-    // User dropdown
     $$(".user-menu")
       .forEach(
         function (menuContainer) {
@@ -1771,7 +1825,6 @@
     }
 
 
-    // Jangan buka Sales dropdown jika bukan Admin.
     if (
       dropdown ===
         (
@@ -2076,34 +2129,82 @@
   }
 
 
+  // ==========================================================
+  // NAVIGATE CUSTOMER PROFILE
+  // ==========================================================
+
   function navigateCustomerProfile(
     customerId
   ) {
 
-    if (
-      window.crmOpenCustomerProfile &&
-      typeof window.crmOpenCustomerProfile ===
-        "function"
-    ) {
+    const id =
+      customerId !== undefined &&
+      customerId !== null
+        ? String(customerId).trim()
+        : "";
 
-      return window.crmOpenCustomerProfile(
-        customerId
-      );
+
+    // --------------------------------------------------------
+    // Kalau ada ID → buka customer yang dipilih
+    // --------------------------------------------------------
+
+    if (id) {
+
+      if (
+        window.crmOpenCustomerProfile &&
+        typeof window.crmOpenCustomerProfile ===
+          "function"
+      ) {
+
+        return window.crmOpenCustomerProfile(
+          id
+        );
+
+      }
+
+
+      if (
+        window.FSIDashboard &&
+        typeof window.FSIDashboard
+          .showCustomerProfile ===
+          "function"
+      ) {
+
+        return window.FSIDashboard
+          .showCustomerProfile(
+            id
+          );
+
+      }
 
     }
 
 
-    if (
-      window.FSIDashboard &&
-      typeof window.FSIDashboard
-        .showCustomerProfile ===
-        "function"
-    ) {
+    // --------------------------------------------------------
+    // Kalau tidak ada ID:
+    //
+    // Jangan panggil crmOpenCustomerProfile(null)
+    // karena itu menyebabkan:
+    //
+    // "Customer ID tidak ditemukan."
+    //
+    // Cukup tampilkan halaman Customer Profile.
+    // shelter.js dapat menangani halaman kosong.
+    // --------------------------------------------------------
 
-      return window.FSIDashboard
-        .showCustomerProfile(
-          customerId
-        );
+    const page =
+      getPageElement(
+        "customer-profile"
+      );
+
+
+    if (!page) {
+
+      console.warn(
+        "[FSI Navigation] Customer Profile page tidak ditemukan."
+      );
+
+      return false;
 
     }
 
@@ -2198,7 +2299,6 @@
     }
 
 
-    // Jangan proses dropdown toggle
     if (
       element.classList.contains(
         "nav-dropdown-btn"
@@ -2547,7 +2647,9 @@
 
 
     const activePage =
-      $(".crm-page.active");
+      $(".crm-page.active") ||
+      $(".app-page.active") ||
+      $('[id^="view-"].active');
 
 
     if (activePage) {
@@ -2574,6 +2676,26 @@
         );
 
 
+        // Pastikan active page benar-benar terlihat.
+        activePage.classList.remove(
+          "hidden"
+        );
+
+        activePage.style.display =
+          "";
+
+        if (
+          window.getComputedStyle(
+            activePage
+          ).display === "none"
+        ) {
+
+          activePage.style.display =
+            "block";
+
+        }
+
+
         return;
 
       }
@@ -2595,13 +2717,8 @@
 
   function refreshNavigation() {
 
-    // Existing admin navigation
     updateAdminNavigation();
 
-
-    // NEW:
-    // Hanya mengatur tampilan header berdasarkan role.
-    // Tidak menghapus fungsi apa pun.
     updateRoleBasedHeaderNavigation();
 
 
@@ -2615,7 +2732,6 @@
     );
 
 
-    // Hanya Admin yang mengisi dropdown Sales.
     refreshSalesHeaderDropdown();
 
   }
@@ -2794,7 +2910,7 @@
     getCurrentPage:
       function () {
         return currentPage;
-      },
+    },
 
     isAdmin:
       isAdmin,
