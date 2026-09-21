@@ -1,31 +1,143 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="theme-color"
+        content="#0f172a"
+    >
+
+    <meta
+        name="description"
+        content="FSI CRM Sales Management"
+    >
 
     <title>FSI CRM Sales Management</title>
+
+
+    <!-- =====================================================
+         REMOVE LOGIN CREDENTIALS FROM URL
+         =====================================================
+
+         Jika seseorang membuka:
+
+         ?username=Rist&password=xxxxx
+
+         parameter tersebut langsung dihapus dari address bar
+         sebelum module CRM dijalankan.
+
+         CATATAN:
+         Login tetap dilakukan melalui form.
+         Password TIDAK digunakan dari URL.
+    ====================================================== -->
+
+    <script>
+    (function () {
+
+        try {
+
+            const url =
+                new URL(
+                    window.location.href
+                );
+
+            const params =
+                url.searchParams;
+
+            const hasSensitiveParams =
+                params.has("username") ||
+                params.has("password") ||
+                params.has("email") ||
+                params.has("token") ||
+                params.has("access_token") ||
+                params.has("refresh_token");
+
+            if (hasSensitiveParams) {
+
+                params.delete("username");
+                params.delete("password");
+                params.delete("email");
+                params.delete("token");
+                params.delete("access_token");
+                params.delete("refresh_token");
+
+                const cleanQuery =
+                    params.toString();
+
+                const cleanUrl =
+                    url.pathname +
+                    (cleanQuery
+                        ? "?" + cleanQuery
+                        : "") +
+                    url.hash;
+
+                window.history.replaceState(
+                    {},
+                    document.title,
+                    cleanUrl
+                );
+            }
+
+        } catch (error) {
+
+            console.warn(
+                "URL cleanup gagal:",
+                error
+            );
+
+        }
+
+    })();
+    </script>
+
 
     <!-- =====================================================
          GOOGLE FONT
     ====================================================== -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
 
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
         rel="stylesheet"
     >
 
+
     <!-- =====================================================
-         CSS
+         CRM CSS
     ====================================================== -->
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/dashboard.css">
+
+    <link
+        rel="stylesheet"
+        href="css/style.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="css/dashboard.css"
+    >
 
 </head>
 
+
 <body>
+
 
 <!-- =========================================================
      LOGIN PAGE
@@ -38,6 +150,8 @@
 
     <div class="login-card">
 
+        <!-- BRAND -->
+
         <div class="login-brand">
 
             <img
@@ -47,27 +161,49 @@
                 onerror="this.style.display='none'"
             >
 
-            <div>
-                <h1>FSI CRM</h1>
-                <p>Sales Management</p>
+            <div class="login-brand-text">
+
+                <h1>
+                    FSI CRM
+                </h1>
+
+                <p>
+                    Sales Management
+                </p>
+
             </div>
 
         </div>
 
 
+        <!-- LOGIN CONTENT -->
+
         <div class="login-form-wrapper">
 
-            <h2>Welcome Back</h2>
+            <div class="login-heading">
 
-            <p>
-                Login untuk mengakses CRM FSI.
-            </p>
+                <span class="eyebrow">
+                    FSI CONSULTANT
+                </span>
+
+                <h2>
+                    Welcome Back
+                </h2>
+
+                <p>
+                    Login untuk mengakses CRM FSI.
+                </p>
+
+            </div>
 
 
             <form
                 id="login-form"
                 class="login-form"
+                autocomplete="on"
             >
+
+                <!-- USERNAME -->
 
                 <div class="form-group">
 
@@ -87,6 +223,8 @@
                 </div>
 
 
+                <!-- PASSWORD -->
+
                 <div class="form-group">
 
                     <label for="loginPassword">
@@ -105,14 +243,26 @@
                 </div>
 
 
+                <!-- LOGIN BUTTON -->
+
                 <button
                     type="submit"
                     id="login-btn"
                     class="login-btn"
                 >
-                    <span>Login</span>
+
+                    <span>
+                        Login
+                    </span>
+
+                    <i
+                        data-lucide="arrow-right"
+                    ></i>
+
                 </button>
 
+
+                <!-- LOGIN MESSAGE -->
 
                 <div
                     id="login-message"
@@ -131,7 +281,7 @@
 
 
 <!-- =========================================================
-     APPLICATION
+     APPLICATION SHELL
 ========================================================= -->
 
 <div
@@ -140,22 +290,29 @@
     style="display:none;"
 >
 
+
     <!-- =====================================================
          TOP HEADER
     ====================================================== -->
 
-    <header class="top-header">
+    <header
+        class="top-header"
+        id="top-header"
+    >
 
         <div class="header-inner">
 
 
-            <!-- BRAND -->
+            <!-- =================================================
+                 BRAND
+            ================================================== -->
 
             <button
                 type="button"
                 class="brand"
                 id="crm-brand"
                 data-page="dashboard"
+                data-view="dashboard"
                 aria-label="FSI CRM Dashboard"
             >
 
@@ -181,7 +338,9 @@
             </button>
 
 
-            <!-- MOBILE MENU -->
+            <!-- =================================================
+                 MOBILE MENU BUTTON
+            ================================================== -->
 
             <button
                 type="button"
@@ -189,8 +348,13 @@
                 class="mobile-menu-btn"
                 aria-label="Buka menu"
                 aria-expanded="false"
+                aria-controls="mobileNav"
             >
-                <i data-lucide="menu"></i>
+
+                <i
+                    data-lucide="menu"
+                ></i>
+
             </button>
 
 
@@ -204,6 +368,8 @@
                 aria-label="Main navigation"
             >
 
+                <!-- DASHBOARD -->
+
                 <button
                     type="button"
                     class="nav-link active"
@@ -211,7 +377,9 @@
                     data-view="dashboard"
                 >
 
-                    <i data-lucide="layout-dashboard"></i>
+                    <i
+                        data-lucide="layout-dashboard"
+                    ></i>
 
                     <span>
                         Dashboard
@@ -220,6 +388,8 @@
                 </button>
 
 
+                <!-- CUSTOMER & LEADS -->
+
                 <button
                     type="button"
                     class="nav-link"
@@ -227,7 +397,9 @@
                     data-view="leads"
                 >
 
-                    <i data-lucide="users"></i>
+                    <i
+                        data-lucide="users"
+                    ></i>
 
                     <span>
                         Customer & Leads
@@ -236,7 +408,10 @@
                 </button>
 
 
-                <!-- ADMIN SALES NAV -->
+                <!-- =================================================
+                     SALES DROPDOWN
+                     ADMIN ONLY
+                ================================================== -->
 
                 <div
                     id="salesDropdown"
@@ -249,9 +424,13 @@
                         id="salesDropdownBtn"
                         class="nav-link nav-dropdown-toggle"
                         data-page="sales"
+                        aria-haspopup="true"
+                        aria-expanded="false"
                     >
 
-                        <i data-lucide="users-round"></i>
+                        <i
+                            data-lucide="users-round"
+                        ></i>
 
                         <span id="salesDropdownLabel">
                             Sales
@@ -276,8 +455,15 @@
                             data-sales-id=""
                             data-sales-name="Semua Sales"
                         >
-                            <i data-lucide="users"></i>
-                            <span>Semua Sales</span>
+
+                            <i
+                                data-lucide="users"
+                            ></i>
+
+                            <span>
+                                Semua Sales
+                            </span>
+
                         </button>
 
                     </div>
@@ -285,7 +471,7 @@
                 </div>
 
 
-                <!-- ADMIN MANAGEMENT -->
+                <!-- MANAGE SALES -->
 
                 <button
                     type="button"
@@ -295,7 +481,9 @@
                     data-view="sales"
                 >
 
-                    <i data-lucide="user-check"></i>
+                    <i
+                        data-lucide="user-check"
+                    ></i>
 
                     <span>
                         Manage Sales
@@ -312,13 +500,18 @@
 
             <div class="header-user-area">
 
-                <div class="user-menu">
+                <div
+                    class="user-menu"
+                    id="user-menu"
+                >
 
                     <button
                         type="button"
                         id="userMenuBtn"
                         class="user-menu-btn"
                         aria-label="User menu"
+                        aria-haspopup="true"
+                        aria-expanded="false"
                     >
 
                         <span
@@ -327,6 +520,7 @@
                         >
                             A
                         </span>
+
 
                         <span class="user-menu-info">
 
@@ -340,6 +534,7 @@
 
                         </span>
 
+
                         <i
                             data-lucide="chevron-down"
                             class="user-chevron"
@@ -348,22 +543,33 @@
                     </button>
 
 
+                    <!-- USER DROPDOWN -->
+
                     <div
                         id="userDropdown"
                         class="user-dropdown"
                     >
 
-                        <div class="user-dropdown-header">
+                        <div
+                            class="user-dropdown-header"
+                        >
 
-                            <strong id="dropdown-user-name">
+                            <strong
+                                id="dropdown-user-name"
+                            >
                                 Admin FSI
                             </strong>
 
-                            <span id="dropdown-user-role">
+                            <span
+                                id="dropdown-user-role"
+                            >
                                 Administrator
                             </span>
 
                         </div>
+
+
+                        <div class="user-dropdown-divider"></div>
 
 
                         <button
@@ -372,7 +578,9 @@
                             class="user-dropdown-item danger"
                         >
 
-                            <i data-lucide="log-out"></i>
+                            <i
+                                data-lucide="log-out"
+                            ></i>
 
                             <span>
                                 Logout
@@ -404,8 +612,15 @@
                 data-page="dashboard"
                 data-view="dashboard"
             >
-                <i data-lucide="layout-dashboard"></i>
-                Dashboard
+
+                <i
+                    data-lucide="layout-dashboard"
+                ></i>
+
+                <span>
+                    Dashboard
+                </span>
+
             </button>
 
 
@@ -415,8 +630,15 @@
                 data-page="leads"
                 data-view="leads"
             >
-                <i data-lucide="users"></i>
-                Customer & Leads
+
+                <i
+                    data-lucide="users"
+                ></i>
+
+                <span>
+                    Customer & Leads
+                </span>
+
             </button>
 
 
@@ -427,8 +649,15 @@
                 data-page="sales"
                 data-view="sales"
             >
-                <i data-lucide="user-check"></i>
-                Manage Sales
+
+                <i
+                    data-lucide="user-check"
+                ></i>
+
+                <span>
+                    Manage Sales
+                </span>
+
             </button>
 
         </div>
@@ -440,9 +669,15 @@
          MAIN CONTENT
     ====================================================== -->
 
-    <main class="main-content">
+    <main
+        class="main-content"
+        id="main-content"
+    >
 
-        <!-- PAGE HEADER -->
+
+        <!-- =================================================
+             PAGE HEADING
+        ================================================== -->
 
         <div class="page-heading">
 
@@ -466,15 +701,18 @@
 
 
         <!-- =================================================
-             DASHBOARD PAGE
+             DASHBOARD
         ================================================== -->
 
         <section
             id="view-dashboard"
             class="crm-page"
+            data-crm-page="dashboard"
         >
 
-            <!-- STATS -->
+            <!-- =================================================
+                 STATISTICS
+            ================================================== -->
 
             <div class="stats-grid">
 
@@ -484,7 +722,9 @@
                 <div class="stat-card">
 
                     <div class="stat-icon">
-                        <i data-lucide="users"></i>
+                        <i
+                            data-lucide="users"
+                        ></i>
                     </div>
 
                     <div class="stat-details">
@@ -511,7 +751,9 @@
                 <div class="stat-card">
 
                     <div class="stat-icon">
-                        <i data-lucide="user-plus"></i>
+                        <i
+                            data-lucide="user-plus"
+                        ></i>
                     </div>
 
                     <div class="stat-details">
@@ -538,7 +780,9 @@
                 <div class="stat-card">
 
                     <div class="stat-icon">
-                        <i data-lucide="heart-handshake"></i>
+                        <i
+                            data-lucide="heart-handshake"
+                        ></i>
                     </div>
 
                     <div class="stat-details">
@@ -565,7 +809,9 @@
                 <div class="stat-card">
 
                     <div class="stat-icon">
-                        <i data-lucide="phone-call"></i>
+                        <i
+                            data-lucide="phone-call"
+                        ></i>
                     </div>
 
                     <div class="stat-details">
@@ -592,7 +838,9 @@
                 <div class="stat-card">
 
                     <div class="stat-icon">
-                        <i data-lucide="calendar-check"></i>
+                        <i
+                            data-lucide="calendar-check"
+                        ></i>
                     </div>
 
                     <div class="stat-details">
@@ -619,7 +867,9 @@
                 <div class="stat-card">
 
                     <div class="stat-icon">
-                        <i data-lucide="map-pin"></i>
+                        <i
+                            data-lucide="map-pin"
+                        ></i>
                     </div>
 
                     <div class="stat-details">
@@ -646,7 +896,9 @@
                 <div class="stat-card">
 
                     <div class="stat-icon">
-                        <i data-lucide="file-text"></i>
+                        <i
+                            data-lucide="file-text"
+                        ></i>
                     </div>
 
                     <div class="stat-details">
@@ -673,7 +925,9 @@
                 <div class="stat-card">
 
                     <div class="stat-icon">
-                        <i data-lucide="file-check-2"></i>
+                        <i
+                            data-lucide="file-check-2"
+                        ></i>
                     </div>
 
                     <div class="stat-details">
@@ -700,7 +954,9 @@
                 <div class="stat-card">
 
                     <div class="stat-icon">
-                        <i data-lucide="badge-check"></i>
+                        <i
+                            data-lucide="badge-check"
+                        ></i>
                     </div>
 
                     <div class="stat-details">
@@ -727,7 +983,9 @@
                 <div class="stat-card">
 
                     <div class="stat-icon">
-                        <i data-lucide="user-x"></i>
+                        <i
+                            data-lucide="user-x"
+                        ></i>
                     </div>
 
                     <div class="stat-details">
@@ -751,7 +1009,9 @@
             </div>
 
 
-            <!-- DASHBOARD PANELS -->
+            <!-- =================================================
+                 DASHBOARD PANELS
+            ================================================== -->
 
             <div class="dashboard-grid">
 
@@ -785,7 +1045,7 @@
                 </div>
 
 
-                <!-- RECENT ACTIVITY -->
+                <!-- RECENT ACTIVITIES -->
 
                 <div class="panel dashboard-panel">
 
@@ -813,7 +1073,9 @@
 
                         <div class="empty-state">
 
-                            <i data-lucide="activity"></i>
+                            <i
+                                data-lucide="activity"
+                            ></i>
 
                             <span>
                                 Belum ada aktivitas.
@@ -831,18 +1093,23 @@
 
 
         <!-- =================================================
-             LEADS PAGE
+             CUSTOMER & LEADS
         ================================================== -->
 
         <section
             id="view-leads"
             class="crm-page"
+            data-crm-page="leads"
             style="display:none;"
         >
 
             <div class="page-header-row">
 
                 <div>
+
+                    <span class="eyebrow">
+                        CUSTOMER DATABASE
+                    </span>
 
                     <h2>
                         Customer & Leads
@@ -859,10 +1126,11 @@
                     type="button"
                     id="btn-add-lead"
                     class="primary-btn"
-                    onclick="openAddLeadModal()"
                 >
 
-                    <i data-lucide="plus"></i>
+                    <i
+                        data-lucide="plus"
+                    ></i>
 
                     <span>
                         Tambah Customer
@@ -873,13 +1141,19 @@
             </div>
 
 
-            <!-- FILTERS -->
+            <!-- =================================================
+                 FILTERS
+            ================================================== -->
 
             <div class="panel filters-bar">
 
+                <!-- SEARCH -->
+
                 <div class="search-box">
 
-                    <i data-lucide="search"></i>
+                    <i
+                        data-lucide="search"
+                    ></i>
 
                     <input
                         type="text"
@@ -891,7 +1165,12 @@
                 </div>
 
 
-                <select id="filter-status">
+                <!-- STATUS -->
+
+                <select
+                    id="filter-status"
+                    aria-label="Filter status"
+                >
 
                     <option value="">
                         Semua Status
@@ -936,7 +1215,12 @@
                 </select>
 
 
-                <select id="filter-business">
+                <!-- BUSINESS -->
+
+                <select
+                    id="filter-business"
+                    aria-label="Filter business"
+                >
 
                     <option value="">
                         Semua Business
@@ -945,7 +1229,12 @@
                 </select>
 
 
-                <select id="filter-location">
+                <!-- LOCATION -->
+
+                <select
+                    id="filter-location"
+                    aria-label="Filter lokasi"
+                >
 
                     <option value="">
                         Semua Lokasi
@@ -954,10 +1243,13 @@
                 </select>
 
 
+                <!-- SALES -->
+
                 <select
                     id="salesFilter"
                     class="admin-only"
                     data-admin-only
+                    aria-label="Filter sales"
                 >
 
                     <option value="">
@@ -969,13 +1261,18 @@
             </div>
 
 
-            <!-- TABLE -->
+            <!-- =================================================
+                 LEADS TABLE
+            ================================================== -->
 
             <div class="panel table-panel">
 
                 <div class="table-wrap">
 
-                    <table class="crm-table">
+                    <table
+                        class="crm-table"
+                        id="leads-table"
+                    >
 
                         <thead>
 
@@ -1042,7 +1339,9 @@
                 </div>
 
 
-                <!-- PAGINATION -->
+                <!-- =================================================
+                     PAGINATION
+                ================================================== -->
 
                 <div class="pagination-bar">
 
@@ -1060,17 +1359,24 @@
                             type="button"
                             id="btn-prev-page"
                             class="secondary-btn"
-                            onclick="changePage(-1)"
+                            aria-label="Halaman sebelumnya"
                         >
 
-                            <i data-lucide="chevron-left"></i>
+                            <i
+                                data-lucide="chevron-left"
+                            ></i>
 
-                            Previous
+                            <span>
+                                Previous
+                            </span>
 
                         </button>
 
 
-                        <span id="pageIndicator">
+                        <span
+                            id="pageIndicator"
+                            class="page-indicator"
+                        >
                             1 / 1
                         </span>
 
@@ -1079,12 +1385,16 @@
                             type="button"
                             id="btn-next-page"
                             class="secondary-btn"
-                            onclick="changePage(1)"
+                            aria-label="Halaman berikutnya"
                         >
 
-                            Next
+                            <span>
+                                Next
+                            </span>
 
-                            <i data-lucide="chevron-right"></i>
+                            <i
+                                data-lucide="chevron-right"
+                            ></i>
 
                         </button>
 
@@ -1098,12 +1408,13 @@
 
 
         <!-- =================================================
-             CUSTOMER PROFILE PAGE
+             CUSTOMER PROFILE
         ================================================== -->
 
         <section
             id="view-customer-profile"
             class="crm-page"
+            data-crm-page="customerProfile"
             style="display:none;"
         >
 
@@ -1116,7 +1427,9 @@
 
                     <div class="empty-state">
 
-                        <i data-lucide="user-round"></i>
+                        <i
+                            data-lucide="user-round"
+                        ></i>
 
                         <span>
                             Pilih customer untuk melihat profil.
@@ -1132,18 +1445,23 @@
 
 
         <!-- =================================================
-             SALES MANAGEMENT PAGE
+             SALES MANAGEMENT
         ================================================== -->
 
         <section
             id="view-sales"
             class="crm-page"
+            data-crm-page="sales"
             style="display:none;"
         >
 
             <div class="page-header-row">
 
                 <div>
+
+                    <span class="eyebrow">
+                        TEAM MANAGEMENT
+                    </span>
 
                     <h2>
                         Manage Sales
@@ -1160,10 +1478,11 @@
                     type="button"
                     id="btn-add-sales"
                     class="primary-btn"
-                    onclick="openAddSalesModal()"
                 >
 
-                    <i data-lucide="user-plus"></i>
+                    <i
+                        data-lucide="user-plus"
+                    ></i>
 
                     <span>
                         Tambah Sales
@@ -1178,7 +1497,10 @@
 
                 <div class="table-wrap">
 
-                    <table class="crm-table sales-table">
+                    <table
+                        class="crm-table sales-table"
+                        id="sales-table"
+                    >
 
                         <thead>
 
@@ -1249,6 +1571,9 @@
     id="leadModal"
     class="modal-overlay"
     style="display:none;"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="leadModalTitle"
 >
 
     <div class="modal-card modal-lg">
@@ -1256,6 +1581,10 @@
         <div class="modal-header">
 
             <div>
+
+                <span class="eyebrow">
+                    CUSTOMER
+                </span>
 
                 <h3 id="leadModalTitle">
                     Tambah Customer
@@ -1271,7 +1600,7 @@
             <button
                 type="button"
                 class="modal-close"
-                onclick="closeLeadModal()"
+                id="leadModalClose"
                 aria-label="Tutup"
             >
                 &times;
@@ -1282,12 +1611,13 @@
 
         <form
             id="leadForm"
-            onsubmit="saveLead(event)"
+            autocomplete="off"
         >
 
             <input
                 type="hidden"
                 id="leadId"
+                name="id"
             >
 
 
@@ -1308,6 +1638,8 @@
                             type="text"
                             id="leadCustomerName"
                             name="customer_name"
+                            autocomplete="name"
+                            placeholder="Nama customer"
                             required
                         >
 
@@ -1323,9 +1655,11 @@
                         </label>
 
                         <input
-                            type="text"
+                            type="tel"
                             id="leadPhone"
                             name="phone"
+                            autocomplete="tel"
+                            placeholder="08xxxxxxxxxx"
                             required
                         >
 
@@ -1344,6 +1678,7 @@
                             type="text"
                             id="leadBusiness"
                             name="business"
+                            placeholder="Contoh: Villa, Restaurant, Residence"
                         >
 
                     </div>
@@ -1361,6 +1696,7 @@
                             type="text"
                             id="leadLocation"
                             name="location"
+                            placeholder="Contoh: Denpasar, Sanur, Seminyak"
                         >
 
                     </div>
@@ -1450,6 +1786,7 @@
                         <input
                             type="date"
                             id="leadFollowUp"
+                            name="follow_up_date"
                         >
 
                     </div>
@@ -1466,6 +1803,7 @@
                         <input
                             type="date"
                             id="leadAppointment"
+                            name="appointment"
                         >
 
                     </div>
@@ -1482,6 +1820,7 @@
                         <input
                             type="date"
                             id="leadSiteSurvey"
+                            name="site_survey"
                         >
 
                     </div>
@@ -1498,6 +1837,7 @@
                         <input
                             type="date"
                             id="leadQuotation"
+                            name="quotation"
                         >
 
                     </div>
@@ -1514,6 +1854,7 @@
                         <input
                             type="date"
                             id="leadSpk"
+                            name="spk"
                         >
 
                     </div>
@@ -1530,6 +1871,7 @@
                         <input
                             type="date"
                             id="leadClosing"
+                            name="closing"
                         >
 
                     </div>
@@ -1545,6 +1887,7 @@
 
                         <textarea
                             id="leadNotes"
+                            name="notes"
                             rows="4"
                             placeholder="Catatan customer..."
                         ></textarea>
@@ -1556,25 +1899,34 @@
             </div>
 
 
+            <!-- MODAL FOOTER -->
+
             <div class="modal-footer">
 
                 <button
                     type="button"
+                    id="btn-cancel-lead"
                     class="secondary-btn"
-                    onclick="closeLeadModal()"
                 >
+
                     Batal
+
                 </button>
 
 
                 <button
                     type="submit"
+                    id="btn-save-lead"
                     class="primary-btn"
                 >
 
-                    <i data-lucide="save"></i>
+                    <i
+                        data-lucide="save"
+                    ></i>
 
-                    Simpan Customer
+                    <span>
+                        Simpan Customer
+                    </span>
 
                 </button>
 
@@ -1588,13 +1940,16 @@
 
 
 <!-- =========================================================
-     ADD SALES MODAL
+     SALES MODAL
 ========================================================= -->
 
 <div
     id="salesModal"
     class="modal-overlay"
     style="display:none;"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="salesModalTitle"
 >
 
     <div class="modal-card modal-sm">
@@ -1603,7 +1958,11 @@
 
             <div>
 
-                <h3>
+                <span class="eyebrow">
+                    TEAM
+                </span>
+
+                <h3 id="salesModalTitle">
                     Tambah Sales
                 </h3>
 
@@ -1617,7 +1976,7 @@
             <button
                 type="button"
                 class="modal-close"
-                onclick="closeSalesModal()"
+                id="salesModalClose"
                 aria-label="Tutup"
             >
                 &times;
@@ -1628,10 +1987,13 @@
 
         <form
             id="salesForm"
-            onsubmit="createSales(event)"
+            autocomplete="off"
         >
 
             <div class="modal-body">
+
+
+                <!-- NAME -->
 
                 <div class="form-group">
 
@@ -1642,11 +2004,16 @@
                     <input
                         type="text"
                         id="salesName"
+                        name="name"
+                        autocomplete="name"
+                        placeholder="Nama sales"
                         required
                     >
 
                 </div>
 
+
+                <!-- USERNAME -->
 
                 <div class="form-group">
 
@@ -1657,12 +2024,16 @@
                     <input
                         type="text"
                         id="salesUsername"
+                        name="username"
                         autocomplete="off"
+                        placeholder="Username login"
                         required
                     >
 
                 </div>
 
+
+                <!-- PASSWORD -->
 
                 <div class="form-group">
 
@@ -1673,7 +2044,9 @@
                     <input
                         type="password"
                         id="salesPassword"
+                        name="password"
                         autocomplete="new-password"
+                        placeholder="Password"
                         required
                     >
 
@@ -1682,12 +2055,14 @@
             </div>
 
 
+            <!-- FOOTER -->
+
             <div class="modal-footer">
 
                 <button
                     type="button"
+                    id="btn-cancel-sales"
                     class="secondary-btn"
-                    onclick="closeSalesModal()"
                 >
                     Batal
                 </button>
@@ -1695,12 +2070,17 @@
 
                 <button
                     type="submit"
+                    id="btn-save-sales"
                     class="primary-btn"
                 >
 
-                    <i data-lucide="user-plus"></i>
+                    <i
+                        data-lucide="user-plus"
+                    ></i>
 
-                    Buat Sales
+                    <span>
+                        Buat Sales
+                    </span>
 
                 </button>
 
@@ -1717,35 +2097,33 @@
      SUPABASE
 ========================================================= -->
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+></script>
 
 
 <!-- =========================================================
-     LUCIDE
+     LUCIDE ICONS
 ========================================================= -->
 
-<script src="https://unpkg.com/lucide@latest"></script>
+<script
+    src="https://unpkg.com/lucide@latest"
+></script>
 
 
 <!-- =========================================================
      CRM MODULES
      
-     IMPORTANT:
-     config
-       ↓
-     helpers
-       ↓
-     navigation
-       ↓
-     dashboard
-       ↓
-     leads
-       ↓
-     sales
-       ↓
-     shelter
-       ↓
-     auth
+     LOAD ORDER:
+
+     1. config
+     2. helpers
+     3. navigation
+     4. dashboard
+     5. leads
+     6. sales
+     7. shelter
+     8. auth
 ========================================================= -->
 
 <script src="js/config.js"></script>
@@ -1771,24 +2149,38 @@
 
 <script>
 
-document.addEventListener(
-    "DOMContentLoaded",
-    function () {
+(function () {
 
-        /*
-         * Lucide icons
-         */
+    "use strict";
+
+
+    function refreshCRMIcons() {
+
         if (
-            typeof lucide !== "undefined"
+            typeof lucide !== "undefined" &&
+            typeof lucide.createIcons === "function"
         ) {
-            lucide.createIcons();
+
+            try {
+
+                lucide.createIcons();
+
+            } catch (error) {
+
+                console.warn(
+                    "Lucide icon refresh gagal:",
+                    error
+                );
+
+            }
+
         }
 
+    }
 
-        /*
-         * Make sure login/app state
-         * starts correctly.
-         */
+
+    function prepareInitialUI() {
+
         const loginPage =
             document.getElementById(
                 "login-page"
@@ -1801,54 +2193,108 @@ document.addEventListener(
 
 
         /*
-         * Hide application until
-         * auth.js confirms session.
+         * IMPORTANT:
+         *
+         * Jangan tampilkan application
+         * sebelum auth.js menentukan
+         * apakah session masih valid.
          */
+
         if (appShell) {
-            appShell.style.display = "none";
-        }
 
+            appShell.style.display =
+                "none";
 
-        if (loginPage) {
-            loginPage.style.display = "flex";
         }
 
 
         /*
-         * Re-render icons after
-         * navigation updates.
+         * Login ditampilkan sebagai
+         * default state.
          */
-        window.addEventListener(
-            "fsi:app-ready",
-            function () {
 
-                if (
-                    typeof lucide !== "undefined"
-                ) {
-                    lucide.createIcons();
-                }
+        if (loginPage) {
 
-            }
-        );
+            loginPage.style.display =
+                "flex";
+
+        }
 
 
-        window.addEventListener(
-            "fsi:profile-ready",
-            function () {
-
-                if (
-                    typeof lucide !== "undefined"
-                ) {
-                    lucide.createIcons();
-                }
-
-            }
-        );
+        refreshCRMIcons();
 
     }
-);
+
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        function () {
+
+            prepareInitialUI();
+
+        }
+    );
+
+
+    /*
+     * AUTH READY
+     *
+     * Dipanggil oleh auth.js
+     * setelah session/profile siap.
+     */
+
+    window.addEventListener(
+        "fsi:app-ready",
+        function () {
+
+            refreshCRMIcons();
+
+        }
+    );
+
+
+    window.addEventListener(
+        "fsi:profile-ready",
+        function () {
+
+            refreshCRMIcons();
+
+        }
+    );
+
+
+    /*
+     * NAVIGATION UPDATE
+     */
+
+    window.addEventListener(
+        "fsi:navigation-updated",
+        function () {
+
+            refreshCRMIcons();
+
+        }
+    );
+
+
+    /*
+     * CUSTOMER PROFILE UPDATE
+     */
+
+    window.addEventListener(
+        "fsi:customer-profile-updated",
+        function () {
+
+            refreshCRMIcons();
+
+        }
+    );
+
+
+})();
 
 </script>
+
 
 </body>
 </html>
