@@ -1,18 +1,26 @@
 // ============================================================
-// FSI CRM - SUPABASE CONFIGURATION & GLOBAL STATE
+// FSI CRM - SUPABASE CONFIGURATION
 // ============================================================
-// File: js/config.js
+// File : js/config.js
 //
-// File ini hanya menangani:
-// 1. Koneksi Supabase
-// 2. Global state CRM
-// 3. Pagination
-// 4. Status lead
-// 5. Konstanta aplikasi
+// Fungsi:
+// 1. Supabase URL & Publishable Key
+// 2. Supabase client
+// 3. Global CRM state
+// 4. Lead status configuration
+// 5. Dashboard configuration
+// 6. Database table configuration
+// 7. Pagination configuration
+// 8. Global FSI CRM namespace
 //
-// Jangan letakkan logic login, dashboard, leads, atau sales
-// di file ini.
+// IMPORTANT:
+// - Auth/profile logic berada di auth.js
+// - Jangan menjalankan checkSession() dari file ini
+// - Nama kolom profile Supabase:
+//       auth_user-id
 // ============================================================
+
+"use strict";
 
 
 // ============================================================
@@ -22,27 +30,25 @@
 const SUPABASE_URL =
     "https://yoyszukutqwoxxdolzcg.supabase.co";
 
+
 const SUPABASE_PUBLISHABLE_KEY =
     "sb_publishable_QcPULwc5-Axry0HRzfmq1A_CeXgiAHL";
 
 
 // ============================================================
-// CREATE SUPABASE CLIENT
+// SUPABASE CLIENT
 // ============================================================
 
 let supabaseClient = null;
 
-try {
 
-    if (
-        typeof window.supabase === "undefined"
-    ) {
+if (
+    typeof window.supabase !== "undefined" &&
+    window.supabase &&
+    typeof window.supabase.createClient === "function"
+) {
 
-        console.error(
-            "FSI CRM ERROR: Supabase library belum dimuat."
-        );
-
-    } else {
+    try {
 
         supabaseClient =
             window.supabase.createClient(
@@ -50,23 +56,52 @@ try {
                 SUPABASE_PUBLISHABLE_KEY
             );
 
+
         console.log(
             "FSI CRM: Supabase client berhasil dibuat."
         );
+
+    } catch (error) {
+
+        console.error(
+            "FSI CRM: Gagal membuat Supabase client:",
+            error
+        );
+
+        supabaseClient = null;
     }
 
-} catch (error) {
+} else {
 
     console.error(
-        "FSI CRM: Gagal membuat Supabase client.",
-        error
+        "FSI CRM: Supabase CDN belum tersedia."
     );
 }
 
 
+// Expose supaya mudah dicek dari browser console.
+window.supabaseClient =
+    supabaseClient;
+
+
+window.FSI_SUPABASE_URL =
+    SUPABASE_URL;
+
+
+window.FSI_SUPABASE_PUBLISHABLE_KEY =
+    SUPABASE_PUBLISHABLE_KEY;
+
+
 // ============================================================
-// GLOBAL USER STATE
+// GLOBAL AUTH STATE
 // ============================================================
+//
+// Jangan menggunakan:
+// var currentUser
+// var currentProfile
+//
+// File auth.js menggunakan state ini.
+//
 
 let currentUser = null;
 
@@ -74,31 +109,16 @@ let currentProfile = null;
 
 
 // ============================================================
-// GLOBAL CRM DATA
+// GLOBAL CRM STATE
 // ============================================================
 
-// Data lead yang sedang ditampilkan
 let leadsData = [];
 
-
-// Data seluruh sales untuk lookup / assignment
 let salesUsersData = [];
 
-
-// ============================================================
-// CURRENT CUSTOMER STATE
-// ============================================================
-
-// Customer yang sedang dibuka pada halaman detail
 let currentCustomerId = null;
 
 let currentCustomer = null;
-
-
-// Simpan juga ke window agar bisa diakses file lain
-window.crmCurrentCustomerId = null;
-
-window.crmCurrentCustomer = null;
 
 
 // ============================================================
@@ -107,29 +127,18 @@ window.crmCurrentCustomer = null;
 
 let currentPage = 1;
 
+let pageSize = 20;
 
-// Jumlah data per halaman
-const pageSize = 20;
-
-
-// Total seluruh lead
 let totalLeadsCount = 0;
 
-
-// Total halaman
 let totalPages = 1;
 
 
 // ============================================================
-// SEARCH STATE
+// SEARCH / FILTER STATE
 // ============================================================
 
-let currentSearchTerm = "";
-
-
-// ============================================================
-// FILTER STATE
-// ============================================================
+let currentSearch = "";
 
 let currentStatusFilter = "";
 
@@ -139,67 +148,36 @@ let currentLocationFilter = "";
 
 let currentSalesFilter = "";
 
-
-// ============================================================
-// SORT STATE
-// ============================================================
-
 let currentSortColumn = "created_at";
 
-let currentSortAscending = false;
-
-
-// ============================================================
-// DEBOUNCE STATE
-// ============================================================
+let currentSortDirection = "desc";
 
 let searchDebounceTimer = null;
 
-
-// ============================================================
-// EDITING STATE
-// ============================================================
-
-// ID lead yang sedang diedit
 let editingLeadId = null;
 
-
-// ID sales yang sedang diedit
 let editingSalesId = null;
 
 
 // ============================================================
-// CRM LEAD STATUSES
-// ============================================================
-//
-// Gunakan status ini secara konsisten di seluruh CRM.
+// LEAD STATUS
 // ============================================================
 
 const LEAD_STATUSES = [
-
     "New",
-
     "Flyer Sent",
-
     "Interested",
-
     "Follow Up",
-
     "Appointment",
-
     "Site Survey",
-
     "Quotation",
-
     "Closing",
-
     "Not Interested"
-
 ];
 
 
 // ============================================================
-// STATUS LABEL INDONESIA
+// STATUS LABELS
 // ============================================================
 
 const LEAD_STATUS_LABELS = {
@@ -234,7 +212,7 @@ const LEAD_STATUS_LABELS = {
 
 
 // ============================================================
-// STATUS CSS CLASS
+// STATUS CSS CLASSES
 // ============================================================
 
 const LEAD_STATUS_CLASSES = {
@@ -269,64 +247,84 @@ const LEAD_STATUS_CLASSES = {
 
 
 // ============================================================
-// PIPELINE ORDER
+// PIPELINE STAGES
 // ============================================================
+//
+// SPK bukan status lead.
+// SPK adalah milestone / field.
+//
+// Jadi SPK TIDAK dimasukkan ke LEAD_STATUSES.
+//
 
 const PIPELINE_STAGES = [
 
     {
-        key: "New",
+        key: "new",
+        status: "New",
         label: "New",
-        icon: "user-plus"
+        className: "status-new"
     },
 
     {
-        key: "Flyer Sent",
+        key: "flyer_sent",
+        status: "Flyer Sent",
         label: "Flyer Sent",
-        icon: "send"
+        className: "status-flyer"
     },
 
     {
-        key: "Interested",
+        key: "interested",
+        status: "Interested",
         label: "Interested",
-        icon: "heart"
+        className: "status-interested"
     },
 
     {
-        key: "Follow Up",
+        key: "follow_up",
+        status: "Follow Up",
         label: "Follow Up",
-        icon: "phone-call"
+        className: "status-follow-up"
     },
 
     {
-        key: "Appointment",
+        key: "appointment",
+        status: "Appointment",
         label: "Appointment",
-        icon: "calendar"
+        className: "status-appointment"
     },
 
     {
-        key: "Site Survey",
+        key: "site_survey",
+        status: "Site Survey",
         label: "Site Survey",
-        icon: "map-pin"
+        className: "status-site-survey"
     },
 
     {
-        key: "Quotation",
+        key: "quotation",
+        status: "Quotation",
         label: "Quotation",
-        icon: "file-text"
+        className: "status-quotation"
     },
 
     {
-        key: "Closing",
+        key: "closing",
+        status: "Closing",
         label: "Closing",
-        icon: "check-circle"
-    }
+        className: "status-closing"
+    },
 
+    {
+        key: "not_interested",
+        status: "Not Interested",
+        label: "Not Interested",
+        className: "status-not-interested"
+    }
 ];
 
 
 // ============================================================
-// DASHBOARD STATISTIC IDS
+// DASHBOARD STAT KEYS
 // ============================================================
 
 const DASHBOARD_STAT_KEYS = [
@@ -334,6 +332,8 @@ const DASHBOARD_STAT_KEYS = [
     "total",
 
     "new",
+
+    "flyer_sent",
 
     "interested",
 
@@ -345,133 +345,136 @@ const DASHBOARD_STAT_KEYS = [
 
     "quotation",
 
-    "closing"
+    "spk",
 
+    "closing",
+
+    "not_interested"
 ];
 
 
 // ============================================================
-// CRM TABLE CONFIGURATION
+// ACTIVE STATUS VALUES
+// ============================================================
+
+const ACTIVE_STATUS_VALUES = [
+    "Active",
+    "active"
+];
+
+
+// ============================================================
+// DATABASE TABLES
 // ============================================================
 
 const CRM_TABLES = {
 
-    leads:
+    LEADS:
         "leads",
 
-    sales:
+    SALES_USERS:
         "sales_users",
 
-    activities:
+    ACTIVITIES:
         "activities"
 };
 
 
 // ============================================================
-// LEAD DATABASE FIELDS
+// SALES PROFILE COLUMN
 // ============================================================
 //
-// Nama field mengikuti struktur database CRM yang sudah kita
-// sepakati.
+// IMPORTANT:
+// Supabase menggunakan nama kolom:
+// auth_user-id
+//
+// Karena nama kolom mengandung tanda "-",
+// selalu gunakan string:
+//
+// "auth_user-id"
+//
+// Jangan gunakan:
+// "auth_user_id"
 // ============================================================
 
-const LEAD_FIELDS = {
+const SALES_PROFILE_AUTH_COLUMN =
+    "auth_user-id";
 
-    id:
-        "id",
 
-    customerName:
-        "customer_name",
+// ============================================================
+// LEADS FIELDS
+// ============================================================
 
-    phone:
-        "phone",
+const LEAD_FIELDS = [
 
-    business:
-        "business",
+    "id",
 
-    location:
-        "location",
+    "customer_name",
 
-    status:
-        "status",
+    "phone",
 
-    followUpDate:
-        "follow_up_date",
+    "business",
 
-    appointment:
-        "appointment",
+    "location",
 
-    siteSurvey:
-        "site_survey",
+    "status",
 
-    quotation:
-        "quotation",
+    "follow_up_date",
 
-    spk:
-        "spk",
+    "appointment",
 
-    closing:
-        "closing",
+    "site_survey",
 
-    notes:
-        "notes",
+    "quotation",
 
-    salesId:
-        "sales_id",
+    "spk",
 
-    createdBy:
-        "created_by",
+    "closing",
 
-    updatedBy:
-        "updated_by",
+    "notes",
 
-    createdAt:
-        "created_at",
+    "created_at",
 
-    updatedAt:
-        "updated_at"
-};
+    "sales_id",
+
+    "created_by",
+
+    "updated_by",
+
+    "updated_at"
+];
 
 
 // ============================================================
 // SALES USER FIELDS
 // ============================================================
 
-const SALES_FIELDS = {
+const SALES_USER_FIELDS = [
 
-    id:
-        "id",
+    "id",
 
-    authUserId:
-        "auth_user_id",
+    SALES_PROFILE_AUTH_COLUMN,
 
-    username:
-        "username",
+    "username",
 
-    name:
-        "name",
+    "name",
 
-    fullName:
-        "full_name",
+    "full_name",
 
-    email:
-        "email",
+    "email",
 
-    phone:
-        "phone",
+    "phone",
 
-    role:
-        "role",
+    "role",
 
-    status:
-        "status",
+    "status",
 
-    avatarUrl:
-        "avatar_url",
+    "avatar_url",
 
-    createdAt:
-        "created_at"
-};
+    "created_at",
+
+    "updated_at"
+];
 
 
 // ============================================================
@@ -481,33 +484,15 @@ const SALES_FIELDS = {
 const USER_ROLES = {
 
     ADMIN:
-        "Admin",
+        "admin",
 
     SALES:
-        "Sales",
-
-    OWNER:
-        "Owner"
+        "sales"
 };
 
 
 // ============================================================
-// ACTIVE STATUS VALUES
-// ============================================================
-
-const ACTIVE_STATUS_VALUES = [
-
-    "Active",
-
-    "active",
-
-    "ACTIVE"
-
-];
-
-
-// ============================================================
-// APPLICATION SETTINGS
+// CRM CONFIG
 // ============================================================
 
 const CRM_CONFIG = {
@@ -518,65 +503,135 @@ const CRM_CONFIG = {
     companyName:
         "FSI Consultant",
 
+    version:
+        "1.0.0",
+
     pageSize:
-        pageSize,
+        20,
 
     searchDebounce:
         400,
 
-    dateLocale:
-        "id-ID",
+    defaultPage:
+        1,
 
-    currency:
-        "IDR"
+    defaultSortColumn:
+        "created_at",
 
+    defaultSortDirection:
+        "desc",
+
+    supabaseUrl:
+        SUPABASE_URL,
+
+    tables:
+        CRM_TABLES,
+
+    profileAuthColumn:
+        SALES_PROFILE_AUTH_COLUMN
 };
 
 
 // ============================================================
-// MAKE IMPORTANT VALUES AVAILABLE GLOBALLY
-// ============================================================
-//
-// Beberapa file JS mungkin membutuhkan akses melalui window.
+// GLOBAL FSI CRM NAMESPACE
 // ============================================================
 
 window.FSI_CRM = {
 
-    SUPABASE_URL,
+    // --------------------------------------------------------
+    // VERSION / APP
+    // --------------------------------------------------------
 
-    SUPABASE_PUBLISHABLE_KEY,
+    version:
+        CRM_CONFIG.version,
 
-    CRM_CONFIG,
+    appName:
+        CRM_CONFIG.appName,
 
-    CRM_TABLES,
+    companyName:
+        CRM_CONFIG.companyName,
 
-    LEAD_FIELDS,
 
-    SALES_FIELDS,
+    // --------------------------------------------------------
+    // SUPABASE
+    // --------------------------------------------------------
 
-    LEAD_STATUSES,
+    supabase:
+        supabaseClient,
 
-    LEAD_STATUS_LABELS,
+    supabaseUrl:
+        SUPABASE_URL,
 
-    LEAD_STATUS_CLASSES,
 
-    PIPELINE_STAGES,
+    // --------------------------------------------------------
+    // DATABASE
+    // --------------------------------------------------------
 
-    USER_ROLES
+    tables:
+        CRM_TABLES,
 
+    leadFields:
+        LEAD_FIELDS,
+
+    salesUserFields:
+        SALES_USER_FIELDS,
+
+    salesProfileAuthColumn:
+        SALES_PROFILE_AUTH_COLUMN,
+
+
+    // --------------------------------------------------------
+    // STATUS
+    // --------------------------------------------------------
+
+    leadStatuses:
+        LEAD_STATUSES,
+
+    leadStatusLabels:
+        LEAD_STATUS_LABELS,
+
+    leadStatusClasses:
+        LEAD_STATUS_CLASSES,
+
+    pipelineStages:
+        PIPELINE_STAGES,
+
+    dashboardStatKeys:
+        DASHBOARD_STAT_KEYS,
+
+    activeStatusValues:
+        ACTIVE_STATUS_VALUES,
+
+
+    // --------------------------------------------------------
+    // ROLES
+    // --------------------------------------------------------
+
+    roles:
+        USER_ROLES,
+
+
+    // --------------------------------------------------------
+    // CONFIG
+    // --------------------------------------------------------
+
+    config:
+        CRM_CONFIG
 };
 
 
 // ============================================================
-// SUPABASE CONNECTION TEST
+// CONNECTION TEST
 // ============================================================
 
 async function testSupabaseConnection() {
 
-    if (!supabaseClient) {
+    if (
+        !supabaseClient
+    ) {
 
         console.error(
-            "FSI CRM: supabaseClient tidak tersedia."
+            "FSI CRM: Supabase client tidak tersedia."
         );
 
         return false;
@@ -585,12 +640,10 @@ async function testSupabaseConnection() {
 
     try {
 
-        // Kita hanya memastikan client bisa melakukan
-        // request. Query ringan terhadap sales_users.
         const {
             error
         } = await supabaseClient
-            .from("sales_users")
+            .from(CRM_TABLES.LEADS)
             .select("id")
             .limit(1);
 
@@ -598,7 +651,7 @@ async function testSupabaseConnection() {
         if (error) {
 
             console.error(
-                "FSI CRM: Supabase connection error:",
+                "FSI CRM: Supabase connection test gagal:",
                 error
             );
 
@@ -612,11 +665,10 @@ async function testSupabaseConnection() {
 
         return true;
 
-
     } catch (error) {
 
         console.error(
-            "FSI CRM: Supabase connection test failed:",
+            "FSI CRM: Supabase connection exception:",
             error
         );
 
@@ -631,13 +683,8 @@ async function testSupabaseConnection() {
 
 function normalizeRole(role) {
 
-    if (!role) {
-        return "";
-    }
-
-
     const value =
-        String(role)
+        String(role || "")
             .trim()
             .toLowerCase();
 
@@ -648,7 +695,7 @@ function normalizeRole(role) {
         value === "owner"
     ) {
 
-        return "Admin";
+        return "admin";
     }
 
 
@@ -658,11 +705,11 @@ function normalizeRole(role) {
         value === "sales person"
     ) {
 
-        return "Sales";
+        return "sales";
     }
 
 
-    return String(role).trim();
+    return value || "sales";
 }
 
 
@@ -672,25 +719,121 @@ function normalizeRole(role) {
 
 function normalizeLeadStatus(status) {
 
-    if (!status) {
-        return "New";
+    const raw =
+        String(status || "")
+            .trim();
+
+
+    if (!raw) {
+        return "";
     }
 
 
-    const value =
-        String(status)
-            .trim()
-            .toLowerCase();
+    const normalized =
+        raw.toLowerCase();
 
 
-    const matchingStatus =
+    const aliases = {
+
+        "baru":
+            "New",
+
+        "new":
+            "New",
+
+
+        "flyer":
+            "Flyer Sent",
+
+        "flyer sent":
+            "Flyer Sent",
+
+        "sudah kirim flyer":
+            "Flyer Sent",
+
+        "sudah dikirim flyer":
+            "Flyer Sent",
+
+
+        "tertarik":
+            "Interested",
+
+        "interested":
+            "Interested",
+
+
+        "follow up":
+            "Follow Up",
+
+        "follow-up":
+            "Follow Up",
+
+        "followup":
+            "Follow Up",
+
+
+        "appointment":
+            "Appointment",
+
+        "janji":
+            "Appointment",
+
+
+        "site survey":
+            "Site Survey",
+
+        "site-survey":
+            "Site Survey",
+
+        "survey":
+            "Site Survey",
+
+
+        "quotation":
+            "Quotation",
+
+        "quote":
+            "Quotation",
+
+        "penawaran":
+            "Quotation",
+
+
+        "closing":
+            "Closing",
+
+        "closed":
+            "Closing",
+
+
+        "tidak tertarik":
+            "Not Interested",
+
+        "not interested":
+            "Not Interested",
+
+        "tidak berminat":
+            "Not Interested"
+    };
+
+
+    if (
+        aliases[normalized]
+    ) {
+
+        return aliases[normalized];
+    }
+
+
+    const exact =
         LEAD_STATUSES.find(
             item =>
-                item.toLowerCase() === value
+                item.toLowerCase() ===
+                normalized
         );
 
 
-    return matchingStatus || "New";
+    return exact || raw;
 }
 
 
@@ -698,18 +841,35 @@ function normalizeLeadStatus(status) {
 // CALCULATE TOTAL PAGES
 // ============================================================
 
-function calculateTotalPages(total) {
+function calculateTotalPages(
+    total,
+    size = pageSize
+) {
 
-    const count =
-        Number(total) || 0;
+    const safeTotal =
+        Math.max(
+            0,
+            Number(total) || 0
+        );
+
+
+    const safeSize =
+        Math.max(
+            1,
+            Number(size) || 20
+        );
+
+
+    const pages =
+        Math.ceil(
+            safeTotal / safeSize
+        );
 
 
     totalPages =
         Math.max(
             1,
-            Math.ceil(
-                count / pageSize
-            )
+            pages
         );
 
 
@@ -723,11 +883,14 @@ function calculateTotalPages(total) {
 
 function resetPagination() {
 
-    currentPage = 1;
+    currentPage =
+        1;
 
-    totalLeadsCount = 0;
+    totalLeadsCount =
+        0;
 
-    totalPages = 1;
+    totalPages =
+        1;
 }
 
 
@@ -737,17 +900,41 @@ function resetPagination() {
 
 function resetLeadFilters() {
 
-    currentSearchTerm = "";
+    currentSearch =
+        "";
 
-    currentStatusFilter = "";
+    currentStatusFilter =
+        "";
 
-    currentBusinessFilter = "";
+    currentBusinessFilter =
+        "";
 
-    currentLocationFilter = "";
+    currentLocationFilter =
+        "";
 
-    currentSalesFilter = "";
+    currentSalesFilter =
+        "";
 
-    currentPage = 1;
+    currentSortColumn =
+        "created_at";
+
+    currentSortDirection =
+        "desc";
+
+    if (
+        searchDebounceTimer
+    ) {
+
+        clearTimeout(
+            searchDebounceTimer
+        );
+
+        searchDebounceTimer =
+            null;
+    }
+
+
+    resetPagination();
 }
 
 
@@ -757,42 +944,51 @@ function resetLeadFilters() {
 
 function resetCRMState() {
 
-    currentUser = null;
+    leadsData =
+        [];
 
-    currentProfile = null;
+    salesUsersData =
+        [];
 
-    leadsData = [];
+    currentCustomerId =
+        null;
 
-    salesUsersData = [];
+    currentCustomer =
+        null;
 
-    currentCustomerId = null;
+    currentPage =
+        1;
 
-    currentCustomer = null;
+    pageSize =
+        20;
 
-    currentPage = 1;
+    totalLeadsCount =
+        0;
 
-    totalLeadsCount = 0;
+    totalPages =
+        1;
 
-    totalPages = 1;
+    resetLeadFilters();
 
-    currentSearchTerm = "";
+    editingLeadId =
+        null;
 
-    currentStatusFilter = "";
+    editingSalesId =
+        null;
 
-    currentBusinessFilter = "";
 
-    currentLocationFilter = "";
+    currentUser =
+        null;
 
-    currentSalesFilter = "";
+    currentProfile =
+        null;
 
-    currentSortColumn = "created_at";
 
-    currentSortAscending = false;
+    window.currentUser =
+        null;
 
-    editingLeadId = null;
-
-    editingSalesId = null;
-
+    window.currentProfile =
+        null;
 
     window.crmCurrentCustomerId =
         null;
@@ -803,20 +999,81 @@ function resetCRMState() {
 
 
 // ============================================================
-// INITIALIZATION LOG
+// GLOBAL FUNCTION EXPORTS
 // ============================================================
-//
-// Jangan panggil checkSession() dari config.js.
-//
-// auth.js yang bertanggung jawab untuk authentication.
-// Ini penting supaya tidak terjadi:
-// config.js -> checkSession()
-// auth.js -> checkSession()
-// yang menyebabkan proses auth berjalan dua kali.
+
+window.testSupabaseConnection =
+    testSupabaseConnection;
+
+
+window.normalizeRole =
+    normalizeRole;
+
+
+window.normalizeLeadStatus =
+    normalizeLeadStatus;
+
+
+window.calculateTotalPages =
+    calculateTotalPages;
+
+
+window.resetPagination =
+    resetPagination;
+
+
+window.resetLeadFilters =
+    resetLeadFilters;
+
+
+window.resetCRMState =
+    resetCRMState;
+
+
+// ============================================================
+// GLOBAL CONFIG EXPORTS
+// ============================================================
+
+window.LEAD_STATUSES =
+    LEAD_STATUSES;
+
+window.LEAD_STATUS_LABELS =
+    LEAD_STATUS_LABELS;
+
+window.LEAD_STATUS_CLASSES =
+    LEAD_STATUS_CLASSES;
+
+window.PIPELINE_STAGES =
+    PIPELINE_STAGES;
+
+window.DASHBOARD_STAT_KEYS =
+    DASHBOARD_STAT_KEYS;
+
+window.CRM_TABLES =
+    CRM_TABLES;
+
+window.LEAD_FIELDS =
+    LEAD_FIELDS;
+
+window.SALES_USER_FIELDS =
+    SALES_USER_FIELDS;
+
+window.USER_ROLES =
+    USER_ROLES;
+
+window.CRM_CONFIG =
+    CRM_CONFIG;
+
+window.SALES_PROFILE_AUTH_COLUMN =
+    SALES_PROFILE_AUTH_COLUMN;
+
+
+// ============================================================
+// DEBUG INFORMATION
 // ============================================================
 
 console.log(
-    "=================================================="
+    "============================================"
 );
 
 console.log(
@@ -829,7 +1086,17 @@ console.log(
 );
 
 console.log(
-    "Page Size:",
+    "Supabase Client:",
+    !!supabaseClient
+);
+
+console.log(
+    "Profile Auth Column:",
+    SALES_PROFILE_AUTH_COLUMN
+);
+
+console.log(
+    "Lead Page Size:",
     pageSize
 );
 
@@ -839,5 +1106,5 @@ console.log(
 );
 
 console.log(
-    "=================================================="
+    "============================================"
 );
