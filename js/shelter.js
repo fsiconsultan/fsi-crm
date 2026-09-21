@@ -1,15 +1,17 @@
 // ============================================================
-// FSI CRM - CUSTOMER PROFILE & EDIT MODULE
+// FSI CRM - CUSTOMER PROFILE & ADD / EDIT CUSTOMER MODULE
 // ============================================================
-// File: Customer Profile Module
+// File: js/shelter.js
 //
 // Fungsi:
-// - Membuka detail customer
-// - Menampilkan customer profile
-// - Edit customer
+// - Add Customer
+// - Membuka Customer Profile
+// - Edit Customer
 // - Update customer ke Supabase
+// - Insert customer baru ke Supabase
 // - Assignment Sales
 // - Update pipeline
+// - Customer activity
 // - Cancel / Back
 // ============================================================
 
@@ -25,6 +27,9 @@ window.crmCurrentCustomerId =
 
 window.crmCurrentCustomer =
     window.crmCurrentCustomer || null;
+
+window.crmCustomerMode =
+    window.crmCustomerMode || "edit";
 
 
 // ============================================================
@@ -124,9 +129,6 @@ function crmGetCustomerLocation(customer) {
 // ============================================================
 // GET CUSTOMER EMAIL
 // ============================================================
-//
-// Email hanya digunakan jika memang ada di database.
-// ============================================================
 
 function crmGetCustomerEmail(customer) {
 
@@ -162,14 +164,13 @@ function crmGetCustomerPhone(customer) {
 
 function crmProfileIsAdmin() {
 
-    if (!window.currentProfile &&
-        typeof currentProfile === "undefined") {
-        return false;
-    }
-
     const profile =
         window.currentProfile ||
-        currentProfile;
+        (
+            typeof currentProfile !== "undefined"
+                ? currentProfile
+                : null
+        );
 
     if (!profile) {
         return false;
@@ -209,6 +210,189 @@ function crmGetCurrentProfile() {
 
 
 // ============================================================
+// GET SUPABASE CLIENT
+// ============================================================
+
+function crmGetSupabase() {
+
+    if (
+        window.supabaseClient
+    ) {
+        return window.supabaseClient;
+    }
+
+    if (
+        typeof supabaseClient !== "undefined" &&
+        supabaseClient
+    ) {
+        return supabaseClient;
+    }
+
+    return null;
+}
+
+
+// ============================================================
+// NAVIGATE TO CUSTOMER PROFILE PAGE
+// ============================================================
+
+function crmNavigateToCustomerProfile() {
+
+    if (
+        typeof window.crmNavigate ===
+        "function"
+    ) {
+
+        window.crmNavigate(
+            "customerProfile"
+        );
+
+        return;
+    }
+
+    crmShowProfilePageFallback();
+}
+
+
+// ============================================================
+// OPEN ADD CUSTOMER
+// ============================================================
+
+window.crmOpenAddCustomer =
+    function () {
+
+        const profile =
+            crmGetCurrentProfile();
+
+        if (!profile) {
+
+            alert(
+                "User profile belum siap."
+            );
+
+            return;
+        }
+
+        const supabase =
+            crmGetSupabase();
+
+        if (!supabase) {
+
+            alert(
+                "Supabase belum siap."
+            );
+
+            return;
+        }
+
+
+        // ----------------------------------------------------
+        // RESET CUSTOMER STATE
+        // ----------------------------------------------------
+
+        window.crmCurrentCustomerId =
+            null;
+
+        window.crmCustomerMode =
+            "add";
+
+
+        // ----------------------------------------------------
+        // CUSTOMER BARU
+        // ----------------------------------------------------
+
+        const newCustomer = {
+
+            id: null,
+
+            customer_name: "",
+
+            phone: "",
+
+            business: "",
+
+            location: "",
+
+            status: "New",
+
+            follow_up_date: null,
+
+            appointment: null,
+
+            site_survey: null,
+
+            quotation: null,
+
+            spk: null,
+
+            closing: null,
+
+            notes: "",
+
+            sales_id:
+                crmProfileIsAdmin()
+                    ? ""
+                    : (
+                        profile.id ||
+                        ""
+                    )
+        };
+
+
+        window.crmCurrentCustomer =
+            newCustomer;
+
+
+        // ----------------------------------------------------
+        // RENDER PROFILE KOSONG
+        // ----------------------------------------------------
+
+        crmRenderCustomerProfile(
+            newCustomer
+        );
+
+
+        // ----------------------------------------------------
+        // NAVIGATE
+        // ----------------------------------------------------
+
+        crmNavigateToCustomerProfile();
+
+
+        crmSetPageTitle(
+            "Add Customer"
+        );
+
+
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
+
+
+        // ----------------------------------------------------
+        // ICONS
+        // ----------------------------------------------------
+
+        setTimeout(
+            crmRefreshProfileIcons,
+            50
+        );
+    };
+
+
+// ============================================================
+// ALIASES ADD CUSTOMER
+// ============================================================
+
+window.addCustomer =
+    window.crmOpenAddCustomer;
+
+window.openAddCustomer =
+    window.crmOpenAddCustomer;
+
+
+// ============================================================
 // OPEN CUSTOMER PROFILE
 // ============================================================
 
@@ -225,10 +409,11 @@ window.crmOpenCustomerProfile =
         }
 
 
-        if (
-            typeof supabaseClient === "undefined" ||
-            !supabaseClient
-        ) {
+        const supabase =
+            crmGetSupabase();
+
+
+        if (!supabase) {
 
             alert(
                 "Supabase belum siap."
@@ -240,12 +425,12 @@ window.crmOpenCustomerProfile =
 
         try {
 
-            // ------------------------------------------------
-            // Ambil data dari cache terlebih dahulu
-            // ------------------------------------------------
-
             let customer = null;
 
+
+            // ------------------------------------------------
+            // Ambil dari cache
+            // ------------------------------------------------
 
             if (
                 typeof leadsData !== "undefined" &&
@@ -262,8 +447,8 @@ window.crmOpenCustomerProfile =
 
 
             // ------------------------------------------------
-            // Kalau tidak ada di cache,
-            // ambil langsung dari Supabase
+            // Kalau tidak ada di cache
+            // ambil dari Supabase
             // ------------------------------------------------
 
             if (!customer) {
@@ -271,7 +456,7 @@ window.crmOpenCustomerProfile =
                 const {
                     data,
                     error
-                } = await supabaseClient
+                } = await supabase
                     .from("leads")
                     .select("*")
                     .eq("id", id)
@@ -310,7 +495,7 @@ window.crmOpenCustomerProfile =
 
 
             // ------------------------------------------------
-            // Simpan customer aktif
+            // Simpan state
             // ------------------------------------------------
 
             window.crmCurrentCustomerId =
@@ -319,9 +504,12 @@ window.crmOpenCustomerProfile =
             window.crmCurrentCustomer =
                 customer;
 
+            window.crmCustomerMode =
+                "edit";
+
 
             // ------------------------------------------------
-            // Render profile
+            // Render
             // ------------------------------------------------
 
             crmRenderCustomerProfile(
@@ -333,19 +521,7 @@ window.crmOpenCustomerProfile =
             // Navigate
             // ------------------------------------------------
 
-            if (
-                typeof window.crmNavigate ===
-                "function"
-            ) {
-
-                window.crmNavigate(
-                    "customerProfile"
-                );
-
-            } else {
-
-                crmShowProfilePageFallback();
-            }
+            crmNavigateToCustomerProfile();
 
 
             crmSetPageTitle(
@@ -357,6 +533,12 @@ window.crmOpenCustomerProfile =
                 top: 0,
                 behavior: "smooth"
             });
+
+
+            setTimeout(
+                crmRefreshProfileIcons,
+                50
+            );
 
 
         } catch (error) {
@@ -376,7 +558,7 @@ window.crmOpenCustomerProfile =
 
 
 // ============================================================
-// BACK TO LEADS
+// BACK / CANCEL
 // ============================================================
 
 window.crmCancelCustomerEdit =
@@ -387,6 +569,9 @@ window.crmCancelCustomerEdit =
 
         window.crmCurrentCustomer =
             null;
+
+        window.crmCustomerMode =
+            "edit";
 
 
         if (
@@ -406,8 +591,8 @@ window.crmCancelCustomerEdit =
 
         crmSetPageTitle(
             crmProfileIsAdmin()
-                ? "All Leads"
-                : "My Leads"
+                ? "All Customers"
+                : "My Customers"
         );
 
 
@@ -417,7 +602,6 @@ window.crmCancelCustomerEdit =
         });
 
 
-        // Refresh data
         if (
             typeof window.loadLeads ===
             "function"
@@ -482,7 +666,7 @@ window.crmRenderCustomerProfile =
 
 
         window.crmCurrentCustomerId =
-            customer.id;
+            customer.id || null;
 
         window.crmCurrentCustomer =
             customer;
@@ -491,12 +675,11 @@ window.crmRenderCustomerProfile =
         const page =
             document.getElementById(
                 "customerProfilePage"
+            ) ||
+            document.getElementById(
+                "customer-profile-container"
             );
 
-
-        // ----------------------------------------------------
-        // Kalau halaman profile khusus tersedia
-        // ----------------------------------------------------
 
         if (page) {
 
@@ -507,27 +690,48 @@ window.crmRenderCustomerProfile =
 
 
             crmPopulateEditStatus(
-                customer.status
+                customer.status || "New"
             );
 
 
             crmPopulateEditSales(
-                customer.sales_id
+                customer.sales_id || ""
             );
 
 
-            crmLoadCustomerActivities(
-                customer.id
+            if (customer.id) {
+
+                crmLoadCustomerActivities(
+                    customer.id
+                );
+
+            } else {
+
+                const activityContainer =
+                    document.getElementById(
+                        "crmCustomerActivities"
+                    );
+
+                if (activityContainer) {
+
+                    activityContainer.innerHTML = `
+                        <div class="activity-empty">
+                            Activity akan tersedia setelah customer disimpan.
+                        </div>
+                    `;
+                }
+            }
+
+
+            setTimeout(
+                crmRefreshProfileIcons,
+                20
             );
 
 
             return;
         }
 
-
-        // ----------------------------------------------------
-        // Fallback ke elemen profile yang sudah ada
-        // ----------------------------------------------------
 
         crmRenderExistingProfileElements(
             customer
@@ -543,76 +747,86 @@ function crmBuildCustomerProfileHTML(
     customer
 ) {
 
+    const isAdd =
+        !customer.id ||
+        window.crmCustomerMode === "add";
+
+
     const customerName =
         crmGetCustomerName(
             customer
         );
-
 
     const phone =
         crmGetCustomerPhone(
             customer
         );
 
-
     const email =
         crmGetCustomerEmail(
             customer
         );
 
-
     const business =
         customer.business || "";
-
 
     const location =
         crmGetCustomerLocation(
             customer
         );
 
-
     const status =
         typeof normalizeLeadStatus ===
         "function"
             ? normalizeLeadStatus(
-                customer.status
+                customer.status || "New"
             )
             : (
                 customer.status ||
                 "New"
             );
 
-
     const salesId =
         customer.sales_id || "";
-
 
     const followUp =
         customer.follow_up_date || "";
 
-
     const appointment =
         customer.appointment || "";
-
 
     const siteSurvey =
         customer.site_survey || "";
 
-
     const quotation =
         customer.quotation || "";
-
 
     const spk =
         customer.spk || "";
 
-
     const closing =
         customer.closing || "";
 
-
     const notes =
         customer.notes || "";
+
+
+    const pageTitle =
+        isAdd
+            ? "Add Customer"
+            : "Customer Profile";
+
+
+    const pageDescription =
+        isAdd
+            ? "Create a new customer and start tracking the sales pipeline."
+            : "View and update customer information and sales progress.";
+
+
+    const saveLabel =
+        isAdd
+            ? "SAVE CUSTOMER"
+            : "SAVE CHANGES";
 
 
     return `
@@ -638,18 +852,19 @@ function crmBuildCustomerProfileHTML(
                 <div class="crm-edit-toolbar-title">
 
                     <span class="eyebrow">
-                        CUSTOMER PROFILE
+                        ${isAdd ? "NEW CUSTOMER" : "CUSTOMER PROFILE"}
                     </span>
 
                     <h2>
                         ${crmProfileEscapeHTML(
-                            customerName
+                            isAdd
+                                ? "Add Customer"
+                                : customerName
                         )}
                     </h2>
 
                     <p>
-                        View and update customer
-                        information and sales progress.
+                        ${pageDescription}
                     </p>
 
                 </div>
@@ -677,6 +892,22 @@ function crmBuildCustomerProfileHTML(
 
                     </div>
 
+                    ${
+                        isAdd
+                            ? `
+                                <div class="crm-profile-mode-badge">
+                                    <i data-lucide="user-plus"></i>
+                                    New Customer
+                                </div>
+                              `
+                            : `
+                                <div class="crm-profile-mode-badge">
+                                    <i data-lucide="user-round"></i>
+                                    Customer Profile
+                                </div>
+                              `
+                    }
+
                 </div>
 
 
@@ -689,15 +920,19 @@ function crmBuildCustomerProfileHTML(
 
                         <label>
                             Customer Name
+                            <span class="required">*</span>
                         </label>
 
                         <input
                             id="crmEditCustomerName"
                             type="text"
                             value="${crmProfileEscapeHTML(
-                                customerName
+                                customerName === "Customer"
+                                    ? ""
+                                    : customerName
                             )}"
                             placeholder="Customer name"
+                            autocomplete="off"
                         >
 
                     </div>
@@ -718,6 +953,7 @@ function crmBuildCustomerProfileHTML(
                                 phone
                             )}"
                             placeholder="Phone / WhatsApp"
+                            autocomplete="off"
                         >
 
                     </div>
@@ -738,6 +974,7 @@ function crmBuildCustomerProfileHTML(
                                 email
                             )}"
                             placeholder="Email"
+                            autocomplete="off"
                         >
 
                     </div>
@@ -757,7 +994,7 @@ function crmBuildCustomerProfileHTML(
                             value="${crmProfileEscapeHTML(
                                 business
                             )}"
-                            placeholder="Business"
+                            placeholder="Business / Company"
                         >
 
                     </div>
@@ -777,7 +1014,7 @@ function crmBuildCustomerProfileHTML(
                             value="${crmProfileEscapeHTML(
                                 location
                             )}"
-                            placeholder="Location"
+                            placeholder="Customer location"
                         >
 
                     </div>
@@ -993,7 +1230,7 @@ function crmBuildCustomerProfileHTML(
                     <textarea
                         id="crmEditNotes"
                         rows="7"
-                        placeholder="Customer notes..."
+                        placeholder="Write customer notes..."
                     >${crmProfileEscapeHTML(
                         notes
                     )}</textarea>
@@ -1030,9 +1267,19 @@ function crmBuildCustomerProfileHTML(
                     id="crmCustomerActivities"
                     class="activity-timeline"
                 >
-                    <div class="activity-empty">
-                        Loading activities...
-                    </div>
+                    ${
+                        isAdd
+                            ? `
+                                <div class="activity-empty">
+                                    Save the customer first to start adding activities.
+                                </div>
+                              `
+                            : `
+                                <div class="activity-empty">
+                                    Loading activities...
+                                </div>
+                              `
+                    }
                 </div>
 
 
@@ -1045,7 +1292,12 @@ function crmBuildCustomerProfileHTML(
                     <textarea
                         id="crmNewActivity"
                         rows="4"
-                        placeholder="Write customer activity..."
+                        placeholder="${
+                            isAdd
+                                ? "Save the customer first..."
+                                : "Write customer activity..."
+                        }"
+                        ${isAdd ? "disabled" : ""}
                     ></textarea>
 
 
@@ -1053,6 +1305,7 @@ function crmBuildCustomerProfileHTML(
                         type="button"
                         class="primary-btn"
                         onclick="crmAddCustomerActivity()"
+                        ${isAdd ? "disabled" : ""}
                     >
                         <i data-lucide="plus"></i>
                         Add Activity
@@ -1085,7 +1338,7 @@ function crmBuildCustomerProfileHTML(
                     onclick="crmSaveCustomerEdit()"
                 >
                     <i data-lucide="save"></i>
-                    SAVE CHANGES
+                    ${saveLabel}
                 </button>
 
             </div>
@@ -1108,24 +1361,20 @@ function crmRenderExistingProfileElements(
             customer
         );
 
-
     const phone =
         crmGetCustomerPhone(
             customer
         );
-
 
     const email =
         crmGetCustomerEmail(
             customer
         );
 
-
     const location =
         crmGetCustomerLocation(
             customer
         );
-
 
     const status =
         typeof normalizeLeadStatus ===
@@ -1137,7 +1386,6 @@ function crmRenderExistingProfileElements(
                 customer.status ||
                 "New"
             );
-
 
     const systemSize =
         customer.system_size ||
@@ -1232,7 +1480,7 @@ function crmUpdatePipelineUI(
 
 
     steps.forEach(
-        (step, index) => {
+        step => {
 
             const stepStatus =
                 String(
@@ -1309,7 +1557,7 @@ function crmPopulateEditStatus(
         typeof normalizeLeadStatus ===
         "function"
             ? normalizeLeadStatus(
-                selectedStatus
+                selectedStatus || "New"
             )
             : (
                 selectedStatus ||
@@ -1331,7 +1579,6 @@ function crmPopulateEditStatus(
 
             option.value =
                 status;
-
 
             option.textContent =
                 status;
@@ -1381,10 +1628,6 @@ function crmPopulateEditSales(
     select.innerHTML = "";
 
 
-    // --------------------------------------------------------
-    // Default option
-    // --------------------------------------------------------
-
     const defaultOption =
         document.createElement(
             "option"
@@ -1403,10 +1646,6 @@ function crmPopulateEditSales(
         defaultOption
     );
 
-
-    // --------------------------------------------------------
-    // Sales data
-    // --------------------------------------------------------
 
     const salesData =
         typeof salesUsersData !==
@@ -1427,9 +1666,22 @@ function crmPopulateEditSales(
                         .trim()
                         .toLowerCase();
 
+
+                const status =
+                    String(
+                        sales.status || "active"
+                    )
+                        .trim()
+                        .toLowerCase();
+
+
                 return (
-                    role === "sales" ||
-                    role === "salesperson"
+                    (
+                        role === "sales" ||
+                        role === "salesperson"
+                    ) &&
+                    status !== "inactive" &&
+                    status !== "disabled"
                 );
             }
         )
@@ -1472,7 +1724,7 @@ function crmPopulateEditSales(
 
 
     // --------------------------------------------------------
-    // SALES ROLE
+    // Sales biasa hanya boleh menggunakan dirinya sendiri
     // --------------------------------------------------------
 
     if (
@@ -1482,7 +1734,6 @@ function crmPopulateEditSales(
 
         select.value =
             profile.id || "";
-
 
         select.disabled =
             true;
@@ -1496,7 +1747,7 @@ function crmPopulateEditSales(
 
 
 // ============================================================
-// SAVE CUSTOMER EDIT
+// SAVE CUSTOMER
 // ============================================================
 
 window.crmSaveCustomerEdit =
@@ -1516,19 +1767,32 @@ window.crmSaveCustomerEdit =
         }
 
 
-        const id =
-            window.crmCurrentCustomerId;
+        const supabase =
+            crmGetSupabase();
 
 
-        if (!id) {
+        if (!supabase) {
 
             alert(
-                "Customer ID tidak ditemukan."
+                "Supabase belum siap."
             );
 
             return;
         }
 
+
+        const isAdd =
+            window.crmCustomerMode === "add" ||
+            !window.crmCurrentCustomerId;
+
+
+        const id =
+            window.crmCurrentCustomerId;
+
+
+        // =====================================================
+        // CUSTOMER NAME
+        // =====================================================
 
         const nameInput =
             document.getElementById(
@@ -1570,9 +1834,32 @@ window.crmSaveCustomerEdit =
                 saveButton.innerHTML =
                     `
                     <i data-lucide="loader-circle"></i>
-                    Saving...
+                    ${isAdd ? "Saving..." : "Saving..."}
                     `;
+
+
+                crmRefreshProfileIcons();
             }
+
+
+            // =================================================
+            // STATUS
+            // =================================================
+
+            const rawStatus =
+                document.getElementById(
+                    "crmEditStatus"
+                )?.value ||
+                "New";
+
+
+            const normalizedStatus =
+                typeof normalizeLeadStatus ===
+                "function"
+                    ? normalizeLeadStatus(
+                        rawStatus
+                    )
+                    : rawStatus;
 
 
             // =================================================
@@ -1603,20 +1890,7 @@ window.crmSaveCustomerEdit =
                         ?.trim() || "",
 
                 status:
-                    typeof normalizeLeadStatus ===
-                    "function"
-                        ? normalizeLeadStatus(
-                            document.getElementById(
-                                "crmEditStatus"
-                            )?.value ||
-                            "New"
-                        )
-                        : (
-                            document.getElementById(
-                                "crmEditStatus"
-                            )?.value ||
-                            "New"
-                        ),
+                    normalizedStatus,
 
                 follow_up_date:
                     document.getElementById(
@@ -1692,13 +1966,206 @@ window.crmSaveCustomerEdit =
 
 
             // =================================================
-            // UPDATE SUPABASE
+            // INSERT CUSTOMER BARU
             // =================================================
+
+            if (isAdd) {
+
+                payload.created_by =
+                    profile.id || null;
+
+
+                const {
+                    data,
+                    error
+                } = await supabase
+                    .from("leads")
+                    .insert([
+                        payload
+                    ])
+                    .select("*")
+                    .single();
+
+
+                if (error) {
+
+                    console.error(
+                        "Insert customer error:",
+                        error
+                    );
+
+
+                    alert(
+                        "Gagal menambahkan customer:\n\n" +
+                        error.message
+                    );
+
+
+                    return;
+                }
+
+
+                if (!data) {
+
+                    alert(
+                        "Customer berhasil disimpan tetapi data tidak dikembalikan oleh Supabase."
+                    );
+
+                    return;
+                }
+
+
+                // ------------------------------------------------
+                // UPDATE STATE
+                // ------------------------------------------------
+
+                window.crmCurrentCustomerId =
+                    data.id;
+
+                window.crmCurrentCustomer =
+                    data;
+
+                window.crmCustomerMode =
+                    "edit";
+
+
+                // ------------------------------------------------
+                // UPDATE LOCAL CACHE
+                // ------------------------------------------------
+
+                if (
+                    typeof leadsData !==
+                    "undefined" &&
+                    Array.isArray(leadsData)
+                ) {
+
+                    leadsData.unshift(
+                        data
+                    );
+                }
+
+
+                // ------------------------------------------------
+                // REFRESH FILTER OPTIONS
+                // ------------------------------------------------
+
+                if (
+                    typeof window.loadFilterOptions ===
+                    "function"
+                ) {
+
+                    try {
+
+                        await window.loadFilterOptions();
+
+                    } catch (error) {
+
+                        console.warn(
+                            "Filter refresh error:",
+                            error
+                        );
+                    }
+                }
+
+
+                // ------------------------------------------------
+                // REFRESH LEADS
+                // ------------------------------------------------
+
+                if (
+                    typeof window.loadLeads ===
+                    "function"
+                ) {
+
+                    try {
+
+                        await window.loadLeads(
+                            1
+                        );
+
+                    } catch (error) {
+
+                        console.warn(
+                            "Leads refresh error:",
+                            error
+                        );
+                    }
+                }
+
+
+                // ------------------------------------------------
+                // REFRESH DASHBOARD
+                // ------------------------------------------------
+
+                if (
+                    typeof window.updateDashboard ===
+                    "function"
+                ) {
+
+                    try {
+
+                        await window.updateDashboard();
+
+                    } catch (error) {
+
+                        console.warn(
+                            "Dashboard refresh error:",
+                            error
+                        );
+                    }
+                }
+
+
+                // ------------------------------------------------
+                // RENDER PROFILE SETELAH BERHASIL
+                // ------------------------------------------------
+
+                crmRenderCustomerProfile(
+                    data
+                );
+
+
+                crmNavigateToCustomerProfile();
+
+
+                crmSetPageTitle(
+                    "Customer Profile"
+                );
+
+
+                window.scrollTo({
+                    top: 0,
+                    behavior: "smooth"
+                });
+
+
+                alert(
+                    "Customer berhasil ditambahkan."
+                );
+
+
+                return;
+            }
+
+
+            // =================================================
+            // UPDATE CUSTOMER LAMA
+            // =================================================
+
+            if (!id) {
+
+                alert(
+                    "Customer ID tidak ditemukan."
+                );
+
+                return;
+            }
+
 
             const {
                 data,
                 error
-            } = await supabaseClient
+            } = await supabase
                 .from("leads")
                 .update(payload)
                 .eq("id", id)
@@ -1745,7 +2212,10 @@ window.crmSaveCustomerEdit =
                 data;
 
 
+            // ------------------------------------------------
             // Update item di leadsData
+            // ------------------------------------------------
+
             if (
                 typeof leadsData !==
                 "undefined" &&
@@ -1855,23 +2325,7 @@ window.crmSaveCustomerEdit =
             );
 
 
-            // =================================================
-            // KEEP CUSTOMER PROFILE OPEN
-            // =================================================
-
-            if (
-                typeof window.crmNavigate ===
-                "function"
-            ) {
-
-                window.crmNavigate(
-                    "customerProfile"
-                );
-
-            } else {
-
-                crmShowProfilePageFallback();
-            }
+            crmNavigateToCustomerProfile();
 
 
             crmSetPageTitle(
@@ -1911,21 +2365,23 @@ window.crmSaveCustomerEdit =
                 saveButton.disabled =
                     false;
 
+                const currentlyAdd =
+                    window.crmCustomerMode ===
+                    "add";
+
+
                 saveButton.innerHTML =
                     `
                     <i data-lucide="save"></i>
-                    SAVE CHANGES
+                    ${
+                        currentlyAdd
+                            ? "SAVE CUSTOMER"
+                            : "SAVE CHANGES"
+                    }
                     `;
 
 
-                if (
-                    window.lucide &&
-                    typeof window.lucide.createIcons ===
-                    "function"
-                ) {
-
-                    window.lucide.createIcons();
-                }
+                crmRefreshProfileIcons();
             }
         }
     };
@@ -1945,7 +2401,21 @@ window.crmAddCustomerActivity =
         if (!customerId) {
 
             alert(
-                "Customer ID tidak ditemukan."
+                "Simpan customer terlebih dahulu sebelum menambahkan activity."
+            );
+
+            return;
+        }
+
+
+        const supabase =
+            crmGetSupabase();
+
+
+        if (!supabase) {
+
+            alert(
+                "Supabase belum siap."
             );
 
             return;
@@ -1991,7 +2461,6 @@ window.crmAddCustomerActivity =
             };
 
 
-            // Hanya kirim created_by kalau profile tersedia
             if (
                 profile &&
                 profile.id
@@ -2004,7 +2473,7 @@ window.crmAddCustomerActivity =
 
             const {
                 error
-            } = await supabaseClient
+            } = await supabase
                 .from("activities")
                 .insert([
                     payload
@@ -2072,6 +2541,22 @@ async function crmLoadCustomerActivities(
     }
 
 
+    const supabase =
+        crmGetSupabase();
+
+
+    if (!supabase) {
+
+        container.innerHTML = `
+            <div class="activity-empty">
+                Supabase belum siap.
+            </div>
+        `;
+
+        return;
+    }
+
+
     container.innerHTML = `
         <div class="activity-empty">
             Loading activities...
@@ -2084,7 +2569,7 @@ async function crmLoadCustomerActivities(
         const {
             data,
             error
-        } = await supabaseClient
+        } = await supabase
             .from("activities")
             .select("*")
             .eq(
@@ -2198,9 +2683,6 @@ async function crmLoadCustomerActivities(
 // ============================================================
 // EXISTING EDIT FUNCTION
 // ============================================================
-//
-// Compatibility dengan kode lama.
-// ============================================================
 
 window.crmOpenEditModal =
     function () {
@@ -2238,7 +2720,6 @@ function crmShowProfilePageFallback() {
         "view-sales",
         "view-customer-profile",
 
-        // Legacy IDs
         "dashboardPage",
         "leadsPage",
         "salesPage",
@@ -2398,6 +2879,7 @@ function crmSetPageTitle(
 
 
 // Compatibility dengan setPageTitle lama
+
 if (
     typeof window.setPageTitle !==
     "function"
@@ -2414,6 +2896,96 @@ if (
 
 window.openCustomerProfile =
     window.crmOpenCustomerProfile;
+
+
+// ============================================================
+// INTERCEPT ADD CUSTOMER BUTTON
+// ============================================================
+//
+// Penting:
+// leads.js lama mungkin masih memiliki handler
+// #btn-add-lead yang membuka modal lama.
+//
+// Capture phase dipakai agar tombol Add Customer
+// langsung diarahkan ke Customer Profile.
+//
+
+function crmBindAddCustomerButtons() {
+
+    const buttonIds = [
+        "btn-add-lead",
+        "btn-add-customer"
+    ];
+
+
+    buttonIds.forEach(
+        id => {
+
+            const button =
+                document.getElementById(
+                    id
+                );
+
+
+            if (!button) {
+                return;
+            }
+
+
+            if (
+                button.dataset.crmAddCustomerBound ===
+                "true"
+            ) {
+                return;
+            }
+
+
+            button.dataset.crmAddCustomerBound =
+                "true";
+
+
+            button.addEventListener(
+                "click",
+                function (event) {
+
+                    event.preventDefault();
+
+                    event.stopImmediatePropagation();
+
+                    window.crmOpenAddCustomer();
+
+                },
+                true
+            );
+
+
+            // ------------------------------------------------
+            // Pastikan teks tombol
+            // ------------------------------------------------
+
+            const text =
+                button.textContent
+                    .trim()
+                    .toLowerCase();
+
+
+            if (
+                text === "add lead" ||
+                text === "add customer" ||
+                text.includes("add lead")
+            ) {
+
+                button.innerHTML = `
+                    <i data-lucide="user-plus"></i>
+                    Add Customer
+                `;
+            }
+        }
+    );
+
+
+    crmRefreshProfileIcons();
+}
 
 
 // ============================================================
@@ -2451,7 +3023,47 @@ document.addEventListener(
     "DOMContentLoaded",
     function () {
 
+        crmBindAddCustomerButtons();
+
         crmRefreshProfileIcons();
 
     }
+);
+
+
+// ============================================================
+// HANDLE DYNAMIC BUTTON
+// ============================================================
+
+document.addEventListener(
+    "click",
+    function (event) {
+
+        const target =
+            event.target?.closest?.(
+                "#btn-add-lead, #btn-add-customer"
+            );
+
+
+        if (!target) {
+            return;
+        }
+
+
+        if (
+            target.dataset.crmAddCustomerBound ===
+            "true"
+        ) {
+            return;
+        }
+
+
+        event.preventDefault();
+        event.stopImmediatePropagation();
+
+
+        window.crmOpenAddCustomer();
+
+    },
+    true
 );
