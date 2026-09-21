@@ -41,6 +41,7 @@
     return (parent || document).querySelector(selector);
   }
 
+
   function $$(selector, parent) {
     return Array.from(
       (parent || document).querySelectorAll(selector)
@@ -58,14 +59,17 @@
   // ==========================================================
 
   function getProfile() {
+
     if (window.currentProfile) {
       return window.currentProfile;
     }
 
     try {
+
       if (typeof currentProfile !== "undefined") {
         return currentProfile;
       }
+
     } catch (error) {
       // Ignore
     }
@@ -75,14 +79,17 @@
 
 
   function getCurrentUser() {
+
     if (window.currentUser) {
       return window.currentUser;
     }
 
     try {
+
       if (typeof currentUser !== "undefined") {
         return currentUser;
       }
+
     } catch (error) {
       // Ignore
     }
@@ -92,42 +99,50 @@
 
 
   function normalizeRole(role) {
+
     return String(role || "")
       .trim()
       .toLowerCase();
+
   }
 
 
   function isAdmin() {
+
     const profile = getProfile();
 
     if (!profile) {
       return false;
     }
 
-    const role = normalizeRole(profile.role);
+    const role =
+      normalizeRole(profile.role);
 
     return (
       role === "admin" ||
       role === "owner" ||
       role === "administrator"
     );
+
   }
 
 
   function isSales() {
+
     const profile = getProfile();
 
     if (!profile) {
       return false;
     }
 
-    const role = normalizeRole(profile.role);
+    const role =
+      normalizeRole(profile.role);
 
     return (
       role === "sales" ||
       role === "salesperson"
     );
+
   }
 
 
@@ -141,74 +156,112 @@
       return null;
     }
 
-    let value = String(target).trim();
+    let value =
+      String(target).trim();
 
     if (!value) {
       return null;
     }
 
     // Remove leading #
-    value = value.replace(/^#/, "");
+    value =
+      value.replace(/^#/, "");
+
 
     // Direct page ID
-    if (Object.values(PAGE_MAP).includes(value)) {
+    if (
+      Object.values(PAGE_MAP).includes(value)
+    ) {
 
-      return Object.keys(PAGE_MAP).find(
-        key => PAGE_MAP[key] === value
-      ) || null;
+      return (
+        Object.keys(PAGE_MAP).find(
+          key => PAGE_MAP[key] === value
+        ) || null
+      );
+
     }
 
+
     // Normalize
-    value = value
-      .replace(/_/g, "-")
-      .toLowerCase();
+    value =
+      value
+        .replace(/_/g, "-")
+        .toLowerCase();
+
 
     if (PAGE_MAP[value]) {
       return value;
     }
 
+
     // Common aliases
     const aliases = {
-      home: "dashboard",
-      dash: "dashboard",
-      customer: "customer-profile",
-      customers: "leads",
-      lead: "leads",
-      leadlist: "leads",
-      salesmanagement: "sales",
-      "sales-management": "sales",
-      "manage-sales": "sales"
+
+      home:
+        "dashboard",
+
+      dash:
+        "dashboard",
+
+      customer:
+        "customer-profile",
+
+      customers:
+        "leads",
+
+      lead:
+        "leads",
+
+      leadlist:
+        "leads",
+
+      salesmanagement:
+        "sales",
+
+      "sales-management":
+        "sales",
+
+      "manage-sales":
+        "sales"
+
     };
+
 
     if (aliases[value]) {
       return aliases[value];
     }
 
+
     return null;
+
   }
 
 
   function getPageElement(pageName) {
 
-    const normalized = normalizeTarget(pageName);
+    const normalized =
+      normalizeTarget(pageName);
 
     if (!normalized) {
       return null;
     }
 
-    const pageId = PAGE_MAP[normalized];
+    const pageId =
+      PAGE_MAP[normalized];
 
     if (!pageId) {
       return null;
     }
 
     return getElement(pageId);
+
   }
 
 
   function getAllPages() {
 
     return $$(".crm-page");
+
   }
 
 
@@ -223,41 +276,64 @@
       page.classList.remove("active");
       page.classList.add("hidden");
 
-      page.setAttribute("aria-hidden", "true");
+      page.setAttribute(
+        "aria-hidden",
+        "true"
+      );
 
     });
+
   }
 
 
   function showPage(pageName, options) {
 
-    options = options || {};
+    options =
+      options || {};
 
-    const normalized = normalizeTarget(pageName);
+
+    const normalized =
+      normalizeTarget(pageName);
+
 
     if (!normalized) {
+
       console.warn(
         "[FSI Navigation] Unknown page:",
         pageName
       );
 
       return false;
+
     }
 
-    // Sales page hanya untuk Admin
-    if (normalized === "sales" && !isAdmin()) {
 
-      if (typeof window.showToast === "function") {
+    // Sales page hanya untuk Admin
+    if (
+      normalized === "sales" &&
+      !isAdmin()
+    ) {
+
+      if (
+        typeof window.showToast ===
+        "function"
+      ) {
+
         window.showToast(
           "Hanya Admin yang dapat membuka Manage Sales.",
           "warning"
         );
+
       }
 
       return false;
+
     }
 
-    const page = getPageElement(normalized);
+
+    const page =
+      getPageElement(normalized);
+
 
     if (!page) {
 
@@ -267,22 +343,38 @@
       );
 
       return false;
+
     }
 
+
     hideAllPages();
+
 
     page.classList.remove("hidden");
     page.classList.add("active");
 
-    page.setAttribute("aria-hidden", "false");
+    page.setAttribute(
+      "aria-hidden",
+      "false"
+    );
 
-    currentPage = normalized;
 
-    setActiveNavigation(normalized);
-    setNavigationTitle(normalized);
+    currentPage =
+      normalized;
+
+
+    setActiveNavigation(
+      normalized
+    );
+
+    setNavigationTitle(
+      normalized
+    );
+
 
     closeAllDropdowns();
     closeMobileMenu();
+
 
     // Scroll ke atas
     if (!options.keepScroll) {
@@ -294,23 +386,29 @@
 
     }
 
+
     // Event untuk module lain
     try {
 
       window.dispatchEvent(
-        new CustomEvent("fsi:navigation-changed", {
-          detail: {
-            page: normalized,
-            element: page
+        new CustomEvent(
+          "fsi:navigation-changed",
+          {
+            detail: {
+              page: normalized,
+              element: page
+            }
           }
-        })
+        )
       );
 
     } catch (error) {
       // Ignore
     }
 
+
     return true;
+
   }
 
 
@@ -324,7 +422,9 @@
       return null;
     }
 
-    const dataset = element.dataset || {};
+    const dataset =
+      element.dataset || {};
+
 
     return (
       dataset.page ||
@@ -334,38 +434,56 @@
       dataset.target ||
       null
     );
+
   }
 
 
   function setActiveNavigation(pageName) {
 
-    const normalized = normalizeTarget(pageName);
+    const normalized =
+      normalizeTarget(pageName);
+
 
     if (!normalized) {
       return;
     }
 
-    const navElements = $$(
-      [
-        "[data-page]",
-        "[data-view]",
-        "[data-nav]",
-        "[data-crm-nav]"
-      ].join(",")
-    );
+
+    const navElements =
+      $$(
+        [
+          "[data-page]",
+          "[data-view]",
+          "[data-nav]",
+          "[data-crm-nav]"
+        ].join(",")
+      );
+
 
     navElements.forEach(function (element) {
 
-      const target = getNavigationTarget(element);
-      const normalizedTarget = normalizeTarget(target);
+      const target =
+        getNavigationTarget(element);
 
-      element.classList.remove("active");
+
+      const normalizedTarget =
+        normalizeTarget(target);
+
+
+      element.classList.remove(
+        "active"
+      );
+
 
       if (
         normalizedTarget &&
         normalizedTarget === normalized
       ) {
-        element.classList.add("active");
+
+        element.classList.add(
+          "active"
+        );
+
       }
 
     });
@@ -379,64 +497,119 @@
 
   function setNavigationTitle(pageName) {
 
-    const normalized = normalizeTarget(pageName);
+    const normalized =
+      normalizeTarget(pageName);
+
 
     const titles = {
+
       dashboard: {
         title: "Dashboard",
-        subtitle: "Overview CRM dan aktivitas customer."
+        subtitle:
+          "Overview CRM dan aktivitas customer."
       },
+
 
       leads: {
-        title: isAdmin()
-          ? "Customer & Leads"
-          : "My Customers",
 
-        subtitle: isAdmin()
-          ? "Kelola seluruh database customer dan leads."
-          : "Kelola database customer Anda."
+        title:
+          isAdmin()
+            ? "Customer & Leads"
+            : "My Customers",
+
+        subtitle:
+          isAdmin()
+            ? "Kelola seluruh database customer dan leads."
+            : "Kelola database customer Anda."
+
       },
+
 
       "customer-profile": {
-        title: "Customer Profile",
-        subtitle: "Detail informasi dan aktivitas customer."
+
+        title:
+          "Customer Profile",
+
+        subtitle:
+          "Detail informasi dan aktivitas customer."
+
       },
 
+
       sales: {
-        title: "Manage Sales",
-        subtitle: "Kelola akun, role, dan status Sales."
+
+        title:
+          "Manage Sales",
+
+        subtitle:
+          "Kelola akun, role, dan status Sales."
+
       }
+
     };
 
-    const config = titles[normalized];
+
+    const config =
+      titles[normalized];
+
 
     if (!config) {
       return;
     }
 
+
     const titleElements = [
-      getElement("current-page-title"),
-      getElement("page-title"),
-      getElement("pageTitle")
+
+      getElement(
+        "current-page-title"
+      ),
+
+      getElement(
+        "page-title"
+      ),
+
+      getElement(
+        "pageTitle"
+      )
+
     ].filter(Boolean);
 
-    titleElements.forEach(function (element) {
 
-      element.textContent = config.title;
+    titleElements.forEach(
+      function (element) {
 
-    });
+        element.textContent =
+          config.title;
+
+      }
+    );
+
 
     const subtitleElements = [
-      getElement("current-page-subtitle"),
-      getElement("page-subtitle"),
-      getElement("pageSubtitle")
+
+      getElement(
+        "current-page-subtitle"
+      ),
+
+      getElement(
+        "page-subtitle"
+      ),
+
+      getElement(
+        "pageSubtitle"
+      )
+
     ].filter(Boolean);
 
-    subtitleElements.forEach(function (element) {
 
-      element.textContent = config.subtitle;
+    subtitleElements.forEach(
+      function (element) {
 
-    });
+        element.textContent =
+          config.subtitle;
+
+      }
+    );
 
   }
 
@@ -447,39 +620,260 @@
 
   function updateAdminNavigation() {
 
-    const adminElements = $$(
-      ".admin-only, .admin-only-nav, [data-admin-only]"
-    );
+    const adminElements =
+      $$(
+        ".admin-only, .admin-only-nav, [data-admin-only]"
+      );
 
-    adminElements.forEach(function (element) {
 
-      if (isAdmin()) {
+    adminElements.forEach(
+      function (element) {
 
-        element.style.display = "";
+        if (isAdmin()) {
 
-        element.removeAttribute("aria-hidden");
+          element.style.display = "";
+          element.removeAttribute(
+            "aria-hidden"
+          );
 
-      } else {
+        } else {
 
-        element.style.display = "none";
+          element.style.display = "none";
 
-        element.setAttribute("aria-hidden", "true");
+          element.setAttribute(
+            "aria-hidden",
+            "true"
+          );
+
+        }
 
       }
-
-    });
+    );
 
   }
 
 
   // ==========================================================
-  // SALES HEADER DROPDOWN
+  // ROLE BASED HEADER NAVIGATION
   // ==========================================================
-  // KHUSUS TAMBAHAN:
-  // Menu "Sales" di header Admin sekarang berisi
-  // nama-nama Sales aktif.
   //
-  // Tidak mengubah menu lain.
+  // PENTING:
+  // Bagian ini HANYA mengatur tampilan menu header.
+  //
+  // Admin:
+  // Dashboard | My Leads | Sales ▼ | Manage Sales | User
+  //
+  // Sales:
+  // Dashboard | My Leads | User
+  //
+  // Tidak menghapus fungsi Sales dropdown.
+  // Tidak menghapus fungsi Manage Sales.
+  // Fungsi tersebut hanya disembunyikan untuk role Sales.
+  // ==========================================================
+
+  function updateRoleBasedHeaderNavigation() {
+
+    const salesDropdown =
+      findSalesHeaderDropdown();
+
+
+    // --------------------------------------------------------
+    // SALES DROPDOWN
+    // --------------------------------------------------------
+
+    if (salesDropdown) {
+
+      const container =
+        salesDropdown.container;
+
+
+      if (isAdmin()) {
+
+        // Admin tetap melihat Sales dropdown
+        container.style.display = "";
+        container.removeAttribute(
+          "aria-hidden"
+        );
+
+      } else {
+
+        // Sales tidak melihat Sales dropdown
+        container.style.display = "none";
+
+        container.setAttribute(
+          "aria-hidden",
+          "true"
+        );
+
+        // Pastikan dropdown tertutup
+        container.classList.remove(
+          "open"
+        );
+
+        if (salesDropdown.button) {
+
+          salesDropdown.button.setAttribute(
+            "aria-expanded",
+            "false"
+          );
+
+        }
+
+        if (salesDropdown.menu) {
+
+          salesDropdown.menu.classList.remove(
+            "open"
+          );
+
+        }
+
+      }
+
+    }
+
+
+    // --------------------------------------------------------
+    // MANAGE SALES
+    // --------------------------------------------------------
+    //
+    // Cari menu Manage Sales berdasarkan:
+    // data-page="manageSales"
+    // data-page="manage-sales"
+    // data-nav="manageSales"
+    // data-nav="manage-sales"
+    // data-view yang mengarah ke sales
+    // atau teks "Manage Sales"
+    // --------------------------------------------------------
+
+    const manageSalesElements =
+      getManageSalesNavigationElements();
+
+
+    manageSalesElements.forEach(
+      function (element) {
+
+        if (isAdmin()) {
+
+          element.style.display = "";
+
+          element.removeAttribute(
+            "aria-hidden"
+          );
+
+        } else {
+
+          element.style.display = "none";
+
+          element.setAttribute(
+            "aria-hidden",
+            "true"
+          );
+
+        }
+
+      }
+    );
+
+  }
+
+
+  // ==========================================================
+  // FIND MANAGE SALES NAVIGATION ELEMENTS
+  // ==========================================================
+
+  function getManageSalesNavigationElements() {
+
+    const elements =
+      new Set();
+
+
+    // --------------------------------------------------------
+    // Berdasarkan data attribute
+    // --------------------------------------------------------
+
+    const selectors = [
+
+      '[data-page="manageSales"]',
+      '[data-page="manage-sales"]',
+
+      '[data-nav="manageSales"]',
+      '[data-nav="manage-sales"]',
+
+      '[data-view="manageSales"]',
+      '[data-view="manage-sales"]',
+
+      '[data-crm-nav="manageSales"]',
+      '[data-crm-nav="manage-sales"]'
+
+    ];
+
+
+    selectors.forEach(
+      function (selector) {
+
+        $$(selector).forEach(
+          function (element) {
+
+            elements.add(element);
+
+          }
+        );
+
+      }
+    );
+
+
+    // --------------------------------------------------------
+    // Berdasarkan teks "Manage Sales"
+    // --------------------------------------------------------
+    //
+    // Hanya cek elemen navigasi, bukan seluruh halaman.
+    // --------------------------------------------------------
+
+    const navigationElements =
+      $$(
+        [
+          ".nav-link",
+          ".nav-item",
+          ".mobile-nav .nav-link",
+          ".mobile-nav .nav-item",
+          ".mobile-menu .nav-link",
+          ".mobile-menu .nav-item"
+        ].join(",")
+      );
+
+
+    navigationElements.forEach(
+      function (element) {
+
+        const text =
+          String(
+            element.textContent || ""
+          )
+            .trim()
+            .toLowerCase();
+
+
+        if (
+          text === "manage sales" ||
+          text.includes("manage sales")
+        ) {
+
+          elements.add(element);
+
+        }
+
+      }
+    );
+
+
+    return Array.from(elements);
+
+  }
+
+
+  // ==========================================================
+  // SUPABASE
   // ==========================================================
 
   function getSupabaseClient() {
@@ -488,26 +882,39 @@
       return window.supabaseClient;
     }
 
+
     try {
+
       if (
-        typeof supabaseClient !== "undefined" &&
+        typeof supabaseClient !==
+          "undefined" &&
         supabaseClient
       ) {
+
         return supabaseClient;
+
       }
+
     } catch (error) {
       // Ignore
     }
 
+
     return null;
+
   }
 
+
+  // ==========================================================
+  // SALES DISPLAY NAME
+  // ==========================================================
 
   function getSalesDisplayName(sales) {
 
     if (!sales) {
       return "Sales";
     }
+
 
     return (
       sales.name ||
@@ -516,14 +923,20 @@
       sales.email ||
       "Sales"
     );
+
   }
 
+
+  // ==========================================================
+  // SALES ID
+  // ==========================================================
 
   function getSalesId(sales) {
 
     if (!sales) {
       return null;
     }
+
 
     return (
       sales.id ||
@@ -532,8 +945,13 @@
       sales["auth_user-id"] ||
       null
     );
+
   }
 
+
+  // ==========================================================
+  // ACTIVE SALES
+  // ==========================================================
 
   function isActiveSales(sales) {
 
@@ -541,20 +959,28 @@
       return false;
     }
 
-    const role = normalizeRole(sales.role);
+
+    const role =
+      normalizeRole(sales.role);
+
 
     if (
       role !== "sales" &&
       role !== "salesperson"
     ) {
+
       return false;
+
     }
 
-    const status = String(
-      sales.status || "Active"
-    )
-      .trim()
-      .toLowerCase();
+
+    const status =
+      String(
+        sales.status || "Active"
+      )
+        .trim()
+        .toLowerCase();
+
 
     return (
       status === "active" ||
@@ -562,56 +988,84 @@
       status === "1" ||
       status === "true"
     );
+
   }
 
 
+  // ==========================================================
+  // FIND SALES HEADER DROPDOWN
+  // ==========================================================
+
   function findSalesHeaderDropdown() {
 
-    const dropdowns = $$(".nav-dropdown");
+    const dropdowns =
+      $$(".nav-dropdown");
 
-    for (const dropdown of dropdowns) {
 
-      const button = dropdown.querySelector(
-        ".nav-dropdown-btn, [aria-haspopup='true']"
-      );
+    for (
+      const dropdown of dropdowns
+    ) {
+
+      const button =
+        dropdown.querySelector(
+          ".nav-dropdown-btn, [aria-haspopup='true']"
+        );
+
 
       if (!button) {
         continue;
       }
 
-      const text = String(
-        button.textContent || ""
-      )
-        .trim()
-        .toLowerCase();
+
+      const text =
+        String(
+          button.textContent || ""
+        )
+          .trim()
+          .toLowerCase();
+
 
       /*
        * Cari tombol header yang benar-benar bernama Sales.
        *
-       * Tidak menggunakan data-page="sales" karena tombol
-       * Sales sekarang adalah dropdown nama Sales, bukan
-       * halaman Manage Sales.
+       * Tidak menggunakan data-page="sales"
+       * karena tombol Sales adalah dropdown nama
+       * Sales, bukan halaman Manage Sales.
        */
+
       if (
         text === "sales" ||
         text.includes("sales")
       ) {
 
         return {
-          container: dropdown,
-          button: button,
-          menu: dropdown.querySelector(
-            ".nav-dropdown-menu"
-          )
+
+          container:
+            dropdown,
+
+          button:
+            button,
+
+          menu:
+            dropdown.querySelector(
+              ".nav-dropdown-menu"
+            )
+
         };
 
       }
 
     }
 
+
     return null;
+
   }
 
+
+  // ==========================================================
+  // LOAD SALES HEADER DROPDOWN
+  // ==========================================================
 
   async function loadSalesHeaderDropdown() {
 
@@ -620,29 +1074,43 @@
       return;
     }
 
+
     const target =
       findSalesHeaderDropdown();
 
-    if (!target || !target.menu) {
+
+    if (
+      !target ||
+      !target.menu
+    ) {
+
       return;
+
     }
+
 
     const client =
       getSupabaseClient();
 
+
     if (!client) {
+
       console.warn(
         "[FSI Navigation] Supabase client belum tersedia."
       );
 
       return;
+
     }
+
 
     try {
 
-      const result = await client
-        .from("sales_users")
-        .select("*");
+      const result =
+        await client
+          .from("sales_users")
+          .select("*");
+
 
       if (result.error) {
 
@@ -652,27 +1120,34 @@
         );
 
         return;
+
       }
 
-      const rows = Array.isArray(result.data)
-        ? result.data
-        : [];
+
+      const rows =
+        Array.isArray(result.data)
+          ? result.data
+          : [];
+
 
       const activeSales =
         rows
           .filter(isActiveSales)
-          .sort(function (a, b) {
+          .sort(
+            function (a, b) {
 
-            return getSalesDisplayName(a)
-              .localeCompare(
-                getSalesDisplayName(b),
-                "id",
-                {
-                  sensitivity: "base"
-                }
-              );
+              return getSalesDisplayName(a)
+                .localeCompare(
+                  getSalesDisplayName(b),
+                  "id",
+                  {
+                    sensitivity:
+                      "base"
+                  }
+                );
 
-          });
+            }
+          );
 
 
       // Bersihkan isi dropdown lama.
@@ -684,18 +1159,24 @@
       // ------------------------------------------------------
 
       const headerItem =
-        document.createElement("div");
+        document.createElement(
+          "div"
+        );
+
 
       headerItem.className =
         "nav-dropdown-label";
 
+
       headerItem.textContent =
         "Pilih Sales";
+
 
       headerItem.style.cssText =
         "padding:8px 14px;font-size:11px;font-weight:700;" +
         "text-transform:uppercase;letter-spacing:.06em;" +
         "opacity:.6;cursor:default;";
+
 
       target.menu.appendChild(
         headerItem
@@ -707,17 +1188,25 @@
       // ------------------------------------------------------
 
       const allItem =
-        document.createElement("a");
+        document.createElement(
+          "a"
+        );
+
 
       allItem.href = "#";
+
 
       allItem.className =
         "nav-dropdown-item";
 
+
       allItem.textContent =
         "Semua Sales";
 
-      allItem.dataset.salesId = "";
+
+      allItem.dataset.salesId =
+        "";
+
 
       allItem.addEventListener(
         "click",
@@ -726,6 +1215,7 @@
           event.preventDefault();
           event.stopPropagation();
 
+
           selectSalesFromHeader(
             null,
             "Semua Sales"
@@ -733,6 +1223,7 @@
 
         }
       );
+
 
       target.menu.appendChild(
         allItem
@@ -746,16 +1237,26 @@
       if (!activeSales.length) {
 
         const emptyItem =
-          document.createElement("div");
+          document.createElement(
+            "div"
+          );
+
 
         emptyItem.className =
           "nav-dropdown-item disabled";
 
+
         emptyItem.textContent =
           "Belum ada Sales aktif";
 
-        emptyItem.style.opacity = "0.55";
-        emptyItem.style.cursor = "default";
+
+        emptyItem.style.opacity =
+          "0.55";
+
+
+        emptyItem.style.cursor =
+          "default";
+
 
         target.menu.appendChild(
           emptyItem
@@ -769,29 +1270,42 @@
             const salesId =
               getSalesId(sales);
 
+
             const salesName =
-              getSalesDisplayName(sales);
+              getSalesDisplayName(
+                sales
+              );
+
 
             if (!salesId) {
               return;
             }
 
+
             const item =
-              document.createElement("a");
+              document.createElement(
+                "a"
+              );
+
 
             item.href = "#";
+
 
             item.className =
               "nav-dropdown-item sales-header-item";
 
+
             item.textContent =
               salesName;
+
 
             item.dataset.salesId =
               salesId;
 
+
             item.dataset.salesName =
               salesName;
+
 
             item.addEventListener(
               "click",
@@ -800,6 +1314,7 @@
                 event.preventDefault();
                 event.stopPropagation();
 
+
                 selectSalesFromHeader(
                   salesId,
                   salesName
@@ -807,6 +1322,7 @@
 
               }
             );
+
 
             target.menu.appendChild(
               item
@@ -818,10 +1334,7 @@
       }
 
 
-      // ------------------------------------------------------
       // Refresh icon jika tersedia
-      // ------------------------------------------------------
-
       if (
         typeof window.refreshIcons ===
         "function"
@@ -853,11 +1366,13 @@
   ) {
 
     /*
-     * Simpan pilihan supaya module Leads bisa
-     * menggunakannya.
+     * Simpan pilihan supaya module Leads
+     * bisa menggunakannya.
      */
+
     window.crmSelectedSalesId =
       salesId || null;
+
 
     window.crmSelectedSalesName =
       salesName || "Semua Sales";
@@ -866,9 +1381,10 @@
     /*
      * Compatibility:
      *
-     * Jika leads.js / module lain memiliki fungsi
-     * selectSalesFilter(), gunakan fungsi tersebut.
+     * Jika leads.js / module lain memiliki
+     * fungsi selectSalesFilter(), gunakan.
      */
+
     if (
       typeof window.selectSalesFilter ===
       "function"
@@ -896,6 +1412,7 @@
     /*
      * Compatibility lain jika tersedia.
      */
+
     if (
       typeof window.setSalesFilter ===
       "function"
@@ -922,10 +1439,8 @@
 
     /*
      * Event khusus untuk Leads.
-     *
-     * leads.js dapat menangkap event ini dan
-     * melakukan query berdasarkan sales_id.
      */
+
     try {
 
       window.dispatchEvent(
@@ -933,11 +1448,14 @@
           "fsi:sales-selected",
           {
             detail: {
+
               salesId:
                 salesId || null,
 
               salesName:
-                salesName || "Semua Sales"
+                salesName ||
+                "Semua Sales"
+
             }
           }
         )
@@ -951,12 +1469,14 @@
     /*
      * Masuk ke halaman Leads / My Leads.
      */
+
     navigateLeads();
 
 
     /*
      * Tutup dropdown setelah memilih Sales.
      */
+
     closeAllDropdowns();
 
   }
@@ -971,6 +1491,7 @@
     if (!isAdmin()) {
       return;
     }
+
 
     loadSalesHeaderDropdown();
 
@@ -1005,64 +1526,120 @@
 
   function openMobileMenu() {
 
-    const menu = getMobileMenu();
-    const button = getMobileMenuButton();
+    const menu =
+      getMobileMenu();
+
+
+    const button =
+      getMobileMenuButton();
+
 
     if (!menu) {
       return;
     }
 
+
     menu.classList.add("open");
     menu.classList.add("active");
 
-    menu.setAttribute("aria-hidden", "false");
+
+    menu.setAttribute(
+      "aria-hidden",
+      "false"
+    );
+
 
     if (button) {
-      button.classList.add("active");
-      button.setAttribute("aria-expanded", "true");
+
+      button.classList.add(
+        "active"
+      );
+
+
+      button.setAttribute(
+        "aria-expanded",
+        "true"
+      );
+
     }
 
-    document.body.classList.add("mobile-menu-open");
+
+    document.body.classList.add(
+      "mobile-menu-open"
+    );
+
   }
 
 
   function closeMobileMenu() {
 
-    const menu = getMobileMenu();
-    const button = getMobileMenuButton();
+    const menu =
+      getMobileMenu();
+
+
+    const button =
+      getMobileMenuButton();
+
 
     if (menu) {
 
-      menu.classList.remove("open");
-      menu.classList.remove("active");
+      menu.classList.remove(
+        "open"
+      );
 
-      menu.setAttribute("aria-hidden", "true");
+      menu.classList.remove(
+        "active"
+      );
+
+
+      menu.setAttribute(
+        "aria-hidden",
+        "true"
+      );
 
     }
+
 
     if (button) {
 
-      button.classList.remove("active");
+      button.classList.remove(
+        "active"
+      );
 
-      button.setAttribute("aria-expanded", "false");
+
+      button.setAttribute(
+        "aria-expanded",
+        "false"
+      );
 
     }
 
-    document.body.classList.remove("mobile-menu-open");
+
+    document.body.classList.remove(
+      "mobile-menu-open"
+    );
+
   }
 
 
   function toggleMobileMenu() {
 
-    const menu = getMobileMenu();
+    const menu =
+      getMobileMenu();
+
 
     if (!menu) {
       return;
     }
 
+
     if (
-      menu.classList.contains("open") ||
-      menu.classList.contains("active")
+      menu.classList.contains(
+        "open"
+      ) ||
+      menu.classList.contains(
+        "active"
+      )
     ) {
 
       closeMobileMenu();
@@ -1082,62 +1659,107 @@
 
   function closeAllDropdowns(except) {
 
-    $$(".nav-dropdown").forEach(function (dropdown) {
+    $$(".nav-dropdown")
+      .forEach(
+        function (dropdown) {
 
-      if (except && dropdown === except) {
-        return;
-      }
+          if (
+            except &&
+            dropdown === except
+          ) {
+            return;
+          }
 
-      dropdown.classList.remove("open");
 
-      const button = dropdown.querySelector(
-        ".nav-dropdown-btn, [aria-haspopup='true']"
+          dropdown.classList.remove(
+            "open"
+          );
+
+
+          const button =
+            dropdown.querySelector(
+              ".nav-dropdown-btn, [aria-haspopup='true']"
+            );
+
+
+          const menu =
+            dropdown.querySelector(
+              ".nav-dropdown-menu"
+            );
+
+
+          if (button) {
+
+            button.setAttribute(
+              "aria-expanded",
+              "false"
+            );
+
+          }
+
+
+          if (menu) {
+
+            menu.classList.remove(
+              "open"
+            );
+
+          }
+
+        }
       );
-
-      const menu = dropdown.querySelector(
-        ".nav-dropdown-menu"
-      );
-
-      if (button) {
-        button.setAttribute("aria-expanded", "false");
-      }
-
-      if (menu) {
-        menu.classList.remove("open");
-      }
-
-    });
 
 
     // User dropdown
-    $$(".user-menu").forEach(function (menuContainer) {
+    $$(".user-menu")
+      .forEach(
+        function (menuContainer) {
 
-      if (
-        except &&
-        menuContainer === except
-      ) {
-        return;
-      }
+          if (
+            except &&
+            menuContainer === except
+          ) {
+            return;
+          }
 
-      menuContainer.classList.remove("open");
 
-      const button = menuContainer.querySelector(
-        ".user-menu-btn, [aria-haspopup='true']"
+          menuContainer.classList.remove(
+            "open"
+          );
+
+
+          const button =
+            menuContainer.querySelector(
+              ".user-menu-btn, [aria-haspopup='true']"
+            );
+
+
+          const dropdown =
+            menuContainer.querySelector(
+              ".user-menu-dropdown"
+            );
+
+
+          if (button) {
+
+            button.setAttribute(
+              "aria-expanded",
+              "false"
+            );
+
+          }
+
+
+          if (dropdown) {
+
+            dropdown.classList.remove(
+              "open"
+            );
+
+          }
+
+        }
       );
-
-      const dropdown = menuContainer.querySelector(
-        ".user-menu-dropdown"
-      );
-
-      if (button) {
-        button.setAttribute("aria-expanded", "false");
-      }
-
-      if (dropdown) {
-        dropdown.classList.remove("open");
-      }
-
-    });
 
   }
 
@@ -1148,37 +1770,70 @@
       return;
     }
 
-    const isOpen =
-      dropdown.classList.contains("open");
 
-    closeAllDropdowns(dropdown);
+    // Jangan buka Sales dropdown jika bukan Admin.
+    if (
+      dropdown ===
+        (
+          findSalesHeaderDropdown() || {}
+        ).container &&
+      !isAdmin()
+    ) {
 
-    if (isOpen) {
-
-      dropdown.classList.remove("open");
-
-    } else {
-
-      dropdown.classList.add("open");
+      return;
 
     }
 
-    const button = dropdown.querySelector(
-      ".nav-dropdown-btn, [aria-haspopup='true']"
+
+    const isOpen =
+      dropdown.classList.contains(
+        "open"
+      );
+
+
+    closeAllDropdowns(
+      dropdown
     );
 
-    const menu = dropdown.querySelector(
-      ".nav-dropdown-menu"
-    );
+
+    if (isOpen) {
+
+      dropdown.classList.remove(
+        "open"
+      );
+
+    } else {
+
+      dropdown.classList.add(
+        "open"
+      );
+
+    }
+
+
+    const button =
+      dropdown.querySelector(
+        ".nav-dropdown-btn, [aria-haspopup='true']"
+      );
+
+
+    const menu =
+      dropdown.querySelector(
+        ".nav-dropdown-menu"
+      );
+
 
     if (button) {
 
       button.setAttribute(
         "aria-expanded",
-        isOpen ? "false" : "true"
+        isOpen
+          ? "false"
+          : "true"
       );
 
     }
+
 
     if (menu) {
 
@@ -1194,35 +1849,50 @@
 
   function bindNavigationDropdowns() {
 
-    $$(".nav-dropdown").forEach(function (dropdown) {
+    $$(".nav-dropdown")
+      .forEach(
+        function (dropdown) {
 
-      const button = dropdown.querySelector(
-        ".nav-dropdown-btn, [aria-haspopup='true']"
-      );
+          const button =
+            dropdown.querySelector(
+              ".nav-dropdown-btn, [aria-haspopup='true']"
+            );
 
-      if (!button) {
-        return;
-      }
 
-      if (button.dataset.navigationBound === "true") {
-        return;
-      }
+          if (!button) {
+            return;
+          }
 
-      button.dataset.navigationBound = "true";
 
-      button.addEventListener(
-        "click",
-        function (event) {
+          if (
+            button.dataset.navigationBound ===
+            "true"
+          ) {
+            return;
+          }
 
-          event.preventDefault();
-          event.stopPropagation();
 
-          toggleDropdown(dropdown);
+          button.dataset.navigationBound =
+            "true";
+
+
+          button.addEventListener(
+            "click",
+            function (event) {
+
+              event.preventDefault();
+              event.stopPropagation();
+
+
+              toggleDropdown(
+                dropdown
+              );
+
+            }
+          );
 
         }
       );
-
-    });
 
   }
 
@@ -1233,62 +1903,86 @@
 
   function bindUserDropdown() {
 
-    $$(".user-menu").forEach(function (container) {
+    $$(".user-menu")
+      .forEach(
+        function (container) {
 
-      const button = container.querySelector(
-        ".user-menu-btn, [aria-haspopup='true']"
-      );
-
-      if (!button) {
-        return;
-      }
-
-      if (button.dataset.navigationBound === "true") {
-        return;
-      }
-
-      button.dataset.navigationBound = "true";
-
-      button.addEventListener(
-        "click",
-        function (event) {
-
-          event.preventDefault();
-          event.stopPropagation();
-
-          const isOpen =
-            container.classList.contains("open");
-
-          closeAllDropdowns(container);
-
-          container.classList.toggle(
-            "open",
-            !isOpen
-          );
-
-          button.setAttribute(
-            "aria-expanded",
-            !isOpen ? "true" : "false"
-          );
-
-          const dropdown =
+          const button =
             container.querySelector(
-              ".user-menu-dropdown"
+              ".user-menu-btn, [aria-haspopup='true']"
             );
 
-          if (dropdown) {
 
-            dropdown.classList.toggle(
-              "open",
-              !isOpen
-            );
-
+          if (!button) {
+            return;
           }
+
+
+          if (
+            button.dataset.navigationBound ===
+            "true"
+          ) {
+            return;
+          }
+
+
+          button.dataset.navigationBound =
+            "true";
+
+
+          button.addEventListener(
+            "click",
+            function (event) {
+
+              event.preventDefault();
+              event.stopPropagation();
+
+
+              const isOpen =
+                container.classList.contains(
+                  "open"
+                );
+
+
+              closeAllDropdowns(
+                container
+              );
+
+
+              container.classList.toggle(
+                "open",
+                !isOpen
+              );
+
+
+              button.setAttribute(
+                "aria-expanded",
+                !isOpen
+                  ? "true"
+                  : "false"
+              );
+
+
+              const dropdown =
+                container.querySelector(
+                  ".user-menu-dropdown"
+                );
+
+
+              if (dropdown) {
+
+                dropdown.classList.toggle(
+                  "open",
+                  !isOpen
+                );
+
+              }
+
+            }
+          );
 
         }
       );
-
-    });
 
   }
 
@@ -1301,14 +1995,21 @@
 
     if (
       window.FSIDashboard &&
-      typeof window.FSIDashboard.showDashboard === "function"
+      typeof window.FSIDashboard
+        .showDashboard ===
+        "function"
     ) {
 
-      return window.FSIDashboard.showDashboard();
+      return window.FSIDashboard
+        .showDashboard();
 
     }
 
-    return showPage("dashboard");
+
+    return showPage(
+      "dashboard"
+    );
+
   }
 
 
@@ -1316,14 +2017,21 @@
 
     if (
       window.FSIDashboard &&
-      typeof window.FSIDashboard.showLeads === "function"
+      typeof window.FSIDashboard
+        .showLeads ===
+        "function"
     ) {
 
-      return window.FSIDashboard.showLeads();
+      return window.FSIDashboard
+        .showLeads();
 
     }
 
-    return showPage("leads");
+
+    return showPage(
+      "leads"
+    );
+
   }
 
 
@@ -1331,7 +2039,10 @@
 
     if (!isAdmin()) {
 
-      if (typeof window.showToast === "function") {
+      if (
+        typeof window.showToast ===
+        "function"
+      ) {
 
         window.showToast(
           "Akses Manage Sales hanya untuk Admin.",
@@ -1341,26 +2052,38 @@
       }
 
       return false;
+
     }
+
 
     if (
       window.FSIDashboard &&
-      typeof window.FSIDashboard.showSales === "function"
+      typeof window.FSIDashboard
+        .showSales ===
+        "function"
     ) {
 
-      return window.FSIDashboard.showSales();
+      return window.FSIDashboard
+        .showSales();
 
     }
 
-    return showPage("sales");
+
+    return showPage(
+      "sales"
+    );
+
   }
 
 
-  function navigateCustomerProfile(customerId) {
+  function navigateCustomerProfile(
+    customerId
+  ) {
 
     if (
       window.crmOpenCustomerProfile &&
-      typeof window.crmOpenCustomerProfile === "function"
+      typeof window.crmOpenCustomerProfile ===
+        "function"
     ) {
 
       return window.crmOpenCustomerProfile(
@@ -1369,18 +2092,26 @@
 
     }
 
+
     if (
       window.FSIDashboard &&
-      typeof window.FSIDashboard.showCustomerProfile === "function"
+      typeof window.FSIDashboard
+        .showCustomerProfile ===
+        "function"
     ) {
 
-      return window.FSIDashboard.showCustomerProfile(
-        customerId
-      );
+      return window.FSIDashboard
+        .showCustomerProfile(
+          customerId
+        );
 
     }
 
-    return showPage("customer-profile");
+
+    return showPage(
+      "customer-profile"
+    );
+
   }
 
 
@@ -1388,9 +2119,14 @@
   // MAIN NAVIGATION FUNCTION
   // ==========================================================
 
-  function crmNavigate(target, data) {
+  function crmNavigate(
+    target,
+    data
+  ) {
 
-    const normalized = normalizeTarget(target);
+    const normalized =
+      normalizeTarget(target);
+
 
     if (!normalized) {
 
@@ -1400,30 +2136,45 @@
       );
 
       return false;
+
     }
+
 
     switch (normalized) {
 
       case "dashboard":
+
         return navigateDashboard();
 
+
       case "leads":
+
         return navigateLeads();
 
+
       case "sales":
+
         return navigateSales();
 
+
       case "customer-profile":
+
         return navigateCustomerProfile(
-          data && data.customerId
+          data &&
+          data.customerId
             ? data.customerId
-            : data && data.id
+            : data &&
+              data.id
               ? data.id
               : null
         );
 
+
       default:
-        return showPage(normalized);
+
+        return showPage(
+          normalized
+        );
 
     }
 
@@ -1434,50 +2185,68 @@
   // NAVIGATION CLICK HANDLER
   // ==========================================================
 
-  function handleNavigationClick(event) {
+  function handleNavigationClick(
+    event
+  ) {
 
     const element =
       event.currentTarget;
+
 
     if (!element) {
       return;
     }
 
+
     // Jangan proses dropdown toggle
     if (
-      element.classList.contains("nav-dropdown-btn") ||
-      element.getAttribute("aria-haspopup") === "true"
+      element.classList.contains(
+        "nav-dropdown-btn"
+      ) ||
+      element.getAttribute(
+        "aria-haspopup"
+      ) === "true"
     ) {
 
       return;
 
     }
 
+
     const target =
-      getNavigationTarget(element);
+      getNavigationTarget(
+        element
+      );
+
 
     if (!target) {
       return;
     }
 
+
     event.preventDefault();
+
 
     const normalized =
       normalizeTarget(target);
 
+
     if (!normalized) {
       return;
     }
+
 
     const customerId =
       element.dataset.customerId ||
       element.dataset.id ||
       null;
 
+
     crmNavigate(
       normalized,
       {
-        customerId: customerId
+        customerId:
+          customerId
       }
     );
 
@@ -1491,6 +2260,7 @@
   function bindNavigationLinks() {
 
     const selector = [
+
       ".nav-link[data-page]",
       ".nav-link[data-view]",
       ".nav-link[data-nav]",
@@ -1507,29 +2277,44 @@
       ".nav-dropdown-item[data-crm-nav]",
 
       "[data-crm-nav]"
+
     ].join(",");
 
-    $$(selector).forEach(function (element) {
 
-      if (element.dataset.navigationBound === "true") {
-        return;
-      }
+    $$(selector)
+      .forEach(
+        function (element) {
 
-      const target =
-        getNavigationTarget(element);
+          if (
+            element.dataset.navigationBound ===
+            "true"
+          ) {
+            return;
+          }
 
-      if (!target) {
-        return;
-      }
 
-      element.dataset.navigationBound = "true";
+          const target =
+            getNavigationTarget(
+              element
+            );
 
-      element.addEventListener(
-        "click",
-        handleNavigationClick
+
+          if (!target) {
+            return;
+          }
+
+
+          element.dataset.navigationBound =
+            "true";
+
+
+          element.addEventListener(
+            "click",
+            handleNavigationClick
+          );
+
+        }
       );
-
-    });
 
   }
 
@@ -1540,30 +2325,43 @@
 
   function bindHomeButtons() {
 
-    const elements = $$(
-      "[data-home]"
-    );
-
-    elements.forEach(function (element) {
-
-      if (element.dataset.navigationBound === "true") {
-        return;
-      }
-
-      element.dataset.navigationBound = "true";
-
-      element.addEventListener(
-        "click",
-        function (event) {
-
-          event.preventDefault();
-
-          crmNavigate("dashboard");
-
-        }
+    const elements =
+      $$(
+        "[data-home]"
       );
 
-    });
+
+    elements.forEach(
+      function (element) {
+
+        if (
+          element.dataset.navigationBound ===
+          "true"
+        ) {
+          return;
+        }
+
+
+        element.dataset.navigationBound =
+          "true";
+
+
+        element.addEventListener(
+          "click",
+          function (event) {
+
+            event.preventDefault();
+
+
+            crmNavigate(
+              "dashboard"
+            );
+
+          }
+        );
+
+      }
+    );
 
   }
 
@@ -1577,20 +2375,29 @@
     const button =
       getMobileMenuButton();
 
+
     if (!button) {
       return;
     }
 
-    if (button.dataset.navigationBound === "true") {
+
+    if (
+      button.dataset.navigationBound ===
+      "true"
+    ) {
       return;
     }
 
-    button.dataset.navigationBound = "true";
+
+    button.dataset.navigationBound =
+      "true";
+
 
     button.setAttribute(
       "aria-expanded",
       "false"
     );
+
 
     button.addEventListener(
       "click",
@@ -1598,6 +2405,7 @@
 
         event.preventDefault();
         event.stopPropagation();
+
 
         toggleMobileMenu();
 
@@ -1617,27 +2425,37 @@
       "click",
       function (event) {
 
-        const target = event.target;
+        const target =
+          event.target;
 
-        if (!(target instanceof Element)) {
+
+        if (
+          !(target instanceof Element)
+        ) {
+
           return;
+
         }
+
 
         const insideDropdown =
           target.closest(
             ".nav-dropdown, .user-menu"
           );
 
+
         const insideMobile =
           target.closest(
             "#mobileNav, .mobile-nav, #mobileMenuBtn, .mobile-menu-btn"
           );
+
 
         if (!insideDropdown) {
 
           closeAllDropdowns();
 
         }
+
 
         if (!insideMobile) {
 
@@ -1661,9 +2479,14 @@
       "keydown",
       function (event) {
 
-        if (event.key !== "Escape") {
+        if (
+          event.key !== "Escape"
+        ) {
+
           return;
+
         }
+
 
         closeAllDropdowns();
         closeMobileMenu();
@@ -1684,7 +2507,10 @@
       "resize",
       function () {
 
-        if (window.innerWidth > 1150) {
+        if (
+          window.innerWidth >
+          1150
+        ) {
 
           closeMobileMenu();
 
@@ -1705,19 +2531,24 @@
     const profile =
       getProfile();
 
+
     if (!profile) {
       return;
     }
 
+
     const pages =
       getAllPages();
+
 
     if (!pages.length) {
       return;
     }
 
+
     const activePage =
       $(".crm-page.active");
+
 
     if (activePage) {
 
@@ -1726,18 +2557,22 @@
           activePage.id
         );
 
+
       if (pageName) {
 
         currentPage =
           pageName;
 
+
         setActiveNavigation(
           pageName
         );
 
+
         setNavigationTitle(
           pageName
         );
+
 
         return;
 
@@ -1745,8 +2580,11 @@
 
     }
 
+
     // Default selalu Dashboard
-    showPage("dashboard");
+    showPage(
+      "dashboard"
+    );
 
   }
 
@@ -1757,17 +2595,27 @@
 
   function refreshNavigation() {
 
+    // Existing admin navigation
     updateAdminNavigation();
+
+
+    // NEW:
+    // Hanya mengatur tampilan header berdasarkan role.
+    // Tidak menghapus fungsi apa pun.
+    updateRoleBasedHeaderNavigation();
+
 
     setActiveNavigation(
       currentPage
     );
 
+
     setNavigationTitle(
       currentPage
     );
 
-    // Hanya tambahan untuk dropdown Sales Admin.
+
+    // Hanya Admin yang mengisi dropdown Sales.
     refreshSalesHeaderDropdown();
 
   }
@@ -1809,36 +2657,52 @@
       return;
     }
 
-    navigationInitialized = true;
+
+    navigationInitialized =
+      true;
+
 
     bindNavigationLinks();
+
     bindNavigationDropdowns();
+
     bindUserDropdown();
+
     bindHomeButtons();
+
     bindMobileMenu();
+
 
     if (!navigationEventsBound) {
 
-      navigationEventsBound = true;
+      navigationEventsBound =
+        true;
+
 
       bindDocumentClick();
+
       bindEscapeKey();
+
       bindResize();
+
 
       window.addEventListener(
         "fsi:app-ready",
         handleAppReady
       );
 
+
       window.addEventListener(
         "fsi:profile-ready",
         handleProfileReady
       );
 
+
       window.addEventListener(
         "fsi:auth-ready",
         handleProfileReady
       );
+
 
       window.addEventListener(
         "fsi:sales-changed",
@@ -1847,7 +2711,9 @@
 
     }
 
+
     refreshNavigation();
+
 
     console.log(
       "FSI Navigation initialized."
@@ -1861,7 +2727,8 @@
   // ==========================================================
 
   if (
-    document.readyState === "loading"
+    document.readyState ===
+    "loading"
   ) {
 
     document.addEventListener(
@@ -1882,17 +2749,23 @@
 
   window.FSINavigation = {
 
-    initialize: initializeNavigation,
+    initialize:
+      initializeNavigation,
 
-    showPage: showPage,
+    showPage:
+      showPage,
 
-    navigate: crmNavigate,
+    navigate:
+      crmNavigate,
 
-    navigateDashboard: navigateDashboard,
+    navigateDashboard:
+      navigateDashboard,
 
-    navigateLeads: navigateLeads,
+    navigateLeads:
+      navigateLeads,
 
-    navigateSales: navigateSales,
+    navigateSales:
+      navigateSales,
 
     navigateCustomerProfile:
       navigateCustomerProfile,
@@ -1918,9 +2791,10 @@
     openMobileMenu:
       openMobileMenu,
 
-    getCurrentPage: function () {
-      return currentPage;
-    },
+    getCurrentPage:
+      function () {
+        return currentPage;
+      },
 
     isAdmin:
       isAdmin,
@@ -1931,19 +2805,29 @@
   };
 
 
-  // Global compatibility
-  window.crmNavigate = crmNavigate;
+  // ==========================================================
+  // GLOBAL COMPATIBILITY
+  // ==========================================================
 
-  window.showCRMPage = showPage;
+  window.crmNavigate =
+    crmNavigate;
+
+
+  window.showCRMPage =
+    showPage;
+
 
   window.navigateDashboard =
     navigateDashboard;
 
+
   window.navigateLeads =
     navigateLeads;
 
+
   window.navigateSales =
     navigateSales;
+
 
   window.navigateCustomerProfile =
     navigateCustomerProfile;
