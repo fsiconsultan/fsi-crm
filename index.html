@@ -21,6 +21,7 @@
 
     <title>FSI CRM — Sales Management</title>
 
+
     <!-- =====================================================
          SECURITY / URL CLEANUP
     ====================================================== -->
@@ -110,6 +111,7 @@
 
 <body>
 
+
     <!-- =====================================================
          LOGIN PAGE
     ====================================================== -->
@@ -124,11 +126,14 @@
             <div class="login-card">
 
                 <div class="login-logo">
+
                     <img
                         src="logo-fsi.png"
                         alt="FSI Logo"
                     >
+
                 </div>
+
 
                 <div class="login-heading">
 
@@ -249,7 +254,10 @@
                 class="top-header"
             >
 
-                <!-- BRAND -->
+
+                <!-- =================================================
+                     BRAND
+                ================================================== -->
 
                 <div
                     class="brand"
@@ -284,7 +292,10 @@
                 </div>
 
 
-                <!-- MOBILE MENU -->
+
+                <!-- =================================================
+                     MOBILE MENU BUTTON
+                ================================================== -->
 
                 <button
                     id="mobileMenuBtn"
@@ -303,6 +314,7 @@
                 </button>
 
 
+
                 <!-- =================================================
                      DESKTOP NAVIGATION
                 ================================================== -->
@@ -313,7 +325,10 @@
                     aria-label="Main navigation"
                 >
 
-                    <!-- DASHBOARD -->
+
+                    <!-- =================================================
+                         DASHBOARD
+                    ================================================== -->
 
                     <button
                         type="button"
@@ -334,13 +349,18 @@
                     </button>
 
 
-                    <!-- LEADS -->
+
+                    <!-- =================================================
+                         CUSTOMER DATABASE
+                         Visible to Admin and Sales
+                    ================================================== -->
 
                     <button
                         type="button"
-                        class="nav-link"
+                        class="nav-link customer-navigation-item"
                         data-page="leads"
                         data-nav="leads"
+                        data-customer-navigation="true"
                     >
 
                         <i
@@ -348,14 +368,18 @@
                             aria-hidden="true"
                         ></i>
 
-                        <span>
-                            Leads
+                        <span class="customer-nav-label">
+                            Customers
                         </span>
 
                     </button>
 
 
-                    <!-- SALES DROPDOWN -->
+
+                    <!-- =================================================
+                         SALES DROPDOWN
+                         Admin controls this through navigation.js
+                    ================================================== -->
 
                     <div
                         class="nav-dropdown"
@@ -405,7 +429,7 @@
                                 ></i>
 
                                 <span>
-                                    My Leads
+                                    My Customers
                                 </span>
 
                             </button>
@@ -434,7 +458,11 @@
                     </div>
 
 
-                    <!-- MANAGE SALES -->
+
+                    <!-- =================================================
+                         MANAGE SALES
+                         ADMIN ONLY
+                    ================================================== -->
 
                     <button
                         type="button"
@@ -458,6 +486,7 @@
                 </nav>
 
 
+
                 <!-- =================================================
                      USER AREA
                 ================================================== -->
@@ -471,23 +500,21 @@
                         class="user-avatar"
                         id="user-avatar"
                     >
+
                         <span id="user-avatar-text">
                             F
                         </span>
+
                     </div>
 
 
                     <div class="user-details">
 
-                        <strong
-                            id="header-user-name"
-                        >
+                        <strong id="header-user-name">
                             User
                         </strong>
 
-                        <span
-                            id="header-user-role"
-                        >
+                        <span id="header-user-role">
                             Sales
                         </span>
 
@@ -525,6 +552,9 @@
                 aria-label="Mobile navigation"
             >
 
+
+                <!-- DASHBOARD -->
+
                 <button
                     type="button"
                     class="nav-link"
@@ -544,11 +574,15 @@
                 </button>
 
 
+
+                <!-- CUSTOMERS -->
+
                 <button
                     type="button"
-                    class="nav-link"
+                    class="nav-link customer-navigation-item"
                     data-page="leads"
                     data-nav="leads"
+                    data-customer-navigation="true"
                 >
 
                     <i
@@ -557,11 +591,14 @@
                     ></i>
 
                     <span>
-                        Leads
+                        Customers
                     </span>
 
                 </button>
 
+
+
+                <!-- CUSTOMER PROFILE -->
 
                 <button
                     type="button"
@@ -581,6 +618,9 @@
 
                 </button>
 
+
+
+                <!-- MANAGE SALES -->
 
                 <button
                     type="button"
@@ -633,9 +673,7 @@
                                 aria-hidden="true"
                             ></i>
 
-                            <span
-                                id="current-page-title"
-                            >
+                            <span id="current-page-title">
                                 Dashboard
                             </span>
 
@@ -667,8 +705,6 @@
                     data-page-view="dashboard"
                 >
 
-                    <!-- DASHBOARD ERROR -->
-
                     <div
                         id="dashboardError"
                         role="alert"
@@ -696,7 +732,7 @@
                             <div class="stat-details">
 
                                 <span>
-                                    Total Leads
+                                    Total Customers
                                 </span>
 
                                 <strong id="statTotal">
@@ -736,7 +772,7 @@
                                 </strong>
 
                                 <small>
-                                    New leads
+                                    New customers
                                 </small>
 
                             </div>
@@ -1044,7 +1080,7 @@
 
 
 
-                        <!-- RECENT LEADS -->
+                        <!-- RECENT CUSTOMERS -->
 
                         <section class="dashboard-card">
 
@@ -1053,7 +1089,7 @@
                                 <div>
 
                                     <h2>
-                                        Recent Leads
+                                        Recent Customers
                                     </h2>
 
                                     <p>
@@ -1096,7 +1132,7 @@
                                     ></i>
 
                                     <span>
-                                        Loading recent leads...
+                                        Loading recent customers...
                                     </span>
 
                                 </div>
@@ -1112,7 +1148,7 @@
 
 
                 <!-- =================================================
-                     LEADS PAGE
+                     CUSTOMER DATABASE PAGE
                 ================================================== -->
 
                 <section
@@ -1128,30 +1164,45 @@
 
                         <div>
 
+                            <div class="section-eyebrow">
+                                Customer Database
+                            </div>
+
                             <h2>
-                                Customer Leads
+                                Customers
                             </h2>
 
                             <p>
-                                Manage customer leads and sales pipeline.
+                                View and manage your customer pipeline.
                             </p>
 
                         </div>
 
 
+                        <!--
+                            IMPORTANT:
+                            This button remains compatible with leads.js
+                            through the existing ID.
+                            Sales can use it.
+                            Admin will have it hidden by role logic.
+                        -->
+
                         <button
                             id="btn-add-lead"
                             type="button"
-                            class="btn-primary primary-btn"
+                            class="btn-primary primary-btn sales-add-customer-btn"
+                            data-sales-only="true"
+                            data-action="add-customer"
+                            aria-label="Add Customer"
                         >
 
                             <i
-                                data-lucide="plus"
+                                data-lucide="user-plus"
                                 aria-hidden="true"
                             ></i>
 
                             <span>
-                                Add Lead
+                                Add Customer
                             </span>
 
                         </button>
@@ -1160,7 +1211,9 @@
 
 
 
-                    <!-- FILTERS -->
+                    <!-- =================================================
+                         FILTERS
+                    ================================================== -->
 
                     <div class="filter-panel">
 
@@ -1226,7 +1279,9 @@
                         </select>
 
 
-                        <!-- SALES -->
+                        <!-- SALES
+                             Admin only
+                        -->
 
                         <select
                             id="filter-sales"
@@ -1244,7 +1299,9 @@
 
 
 
-                    <!-- TABLE -->
+                    <!-- =================================================
+                         CUSTOMER TABLE
+                    ================================================== -->
 
                     <div
                         class="table-panel table-container"
@@ -1308,7 +1365,7 @@
                                         colspan="9"
                                         class="table-loading"
                                     >
-                                        Loading leads...
+                                        Loading customers...
                                     </td>
 
                                 </tr>
@@ -1321,7 +1378,9 @@
 
 
 
-                    <!-- PAGINATION -->
+                    <!-- =================================================
+                         PAGINATION
+                    ================================================== -->
 
                     <div class="pagination-wrapper">
 
@@ -1350,9 +1409,7 @@
                             </button>
 
 
-                            <span
-                                id="leads-page-number"
-                            >
+                            <span id="leads-page-number">
                                 1
                             </span>
 
@@ -1381,11 +1438,18 @@
 
                 <!-- =================================================
                      CUSTOMER PROFILE PAGE
+                     
+                     This page will be used for:
+                     1. View customer
+                     2. Edit customer
+                     3. Add customer
+                     
+                     shelter.js controls this page.
                 ================================================== -->
 
                 <section
                     id="view-customer-profile"
-                    class="crm-page"
+                    class="crm-page customer-profile-page"
                     data-page-view="customer-profile"
                 >
 
@@ -1394,16 +1458,24 @@
                         class="customer-profile-container"
                     >
 
-                        <div class="empty-state">
+                        <div class="customer-profile-empty empty-state">
 
                             <i
                                 data-lucide="contact"
                                 aria-hidden="true"
                             ></i>
 
-                            <span>
-                                Select a customer to view the profile.
-                            </span>
+                            <div>
+
+                                <strong>
+                                    Customer Profile
+                                </strong>
+
+                                <span>
+                                    Select a customer to view or edit the profile.
+                                </span>
+
+                            </div>
 
                         </div>
 
@@ -1415,6 +1487,7 @@
 
                 <!-- =================================================
                      MANAGE SALES PAGE
+                     ADMIN ONLY
                 ================================================== -->
 
                 <section
@@ -1429,6 +1502,10 @@
                     <div class="section-header">
 
                         <div>
+
+                            <div class="section-eyebrow">
+                                Administration
+                            </div>
 
                             <h2>
                                 Manage Sales
@@ -1592,7 +1669,11 @@
 
 
     <!-- =====================================================
-         LEAD MODAL
+         LEGACY LEAD MODAL
+         
+         Kept temporarily for compatibility with existing
+         leads.js. Sales Add Customer will be redirected to
+         Customer Profile by shelter.js.
     ====================================================== -->
 
     <div
@@ -1616,11 +1697,11 @@
                 <div>
 
                     <h3 id="lead-modal-title">
-                        Add Customer Lead
+                        Add Customer
                     </h3>
 
                     <p>
-                        Enter customer information and pipeline status.
+                        Customer form compatibility layer.
                     </p>
 
                 </div>
@@ -1945,9 +2026,7 @@
                         type="button"
                         class="btn-secondary secondary-btn"
                     >
-
                         Cancel
-
                     </button>
 
 
@@ -1963,7 +2042,7 @@
                         ></i>
 
                         <span>
-                            Save Lead
+                            Save Customer
                         </span>
 
                     </button>
@@ -2186,9 +2265,7 @@
                         type="button"
                         class="btn-secondary secondary-btn"
                     >
-
                         Cancel
-
                     </button>
 
 
@@ -2237,6 +2314,7 @@
     ></script>
 
 
+
     <!-- =====================================================
          CRM JAVASCRIPT
     ====================================================== -->
@@ -2264,6 +2342,7 @@
     ====================================================== -->
 
     <script>
+
         document.addEventListener(
             "DOMContentLoaded",
             function () {
@@ -2271,13 +2350,19 @@
                 try {
 
                     const loginPage =
-                        document.getElementById("login-page");
+                        document.getElementById(
+                            "login-page"
+                        );
 
                     const appShell =
-                        document.getElementById("app-shell");
+                        document.getElementById(
+                            "app-shell"
+                        );
 
                     const pages =
-                        document.querySelectorAll(".crm-page");
+                        document.querySelectorAll(
+                            ".crm-page"
+                        );
 
 
                     /*
@@ -2287,41 +2372,64 @@
                      */
 
                     if (loginPage) {
-                        loginPage.classList.remove("hidden");
+
+                        loginPage.classList.remove(
+                            "hidden"
+                        );
+
                         loginPage.hidden = false;
+
                     }
 
 
                     if (appShell) {
-                        appShell.classList.add("hidden");
+
+                        appShell.classList.add(
+                            "hidden"
+                        );
+
                         appShell.hidden = true;
+
                     }
 
 
                     /*
-                     * Only dashboard is prepared
-                     * as the default CRM page.
+                     * Hide all CRM pages initially.
                      */
 
-                    pages.forEach(function (page) {
+                    pages.forEach(
+                        function (page) {
 
-                        page.classList.remove("active");
+                            page.classList.remove(
+                                "active"
+                            );
 
-                        page.style.display = "none";
+                            page.style.display =
+                                "none";
 
-                    });
+                        }
+                    );
 
+
+                    /*
+                     * Dashboard is the default
+                     * CRM page.
+                     */
 
                     const dashboard =
                         document.getElementById(
                             "view-dashboard"
                         );
 
+
                     if (dashboard) {
 
-                        dashboard.classList.add("active");
+                        dashboard.classList.add(
+                            "active"
+                        );
 
-                        dashboard.style.display = "block";
+                        dashboard.style.display =
+                            "block";
 
                     }
 
@@ -2332,7 +2440,8 @@
 
                     if (
                         window.lucide &&
-                        typeof window.lucide.createIcons === "function"
+                        typeof window.lucide.createIcons ===
+                            "function"
                     ) {
 
                         window.lucide.createIcons();
@@ -2350,6 +2459,7 @@
 
             }
         );
+
     </script>
 
 </body>
