@@ -15,6 +15,7 @@
   let dashboardLoading = false;
 
   let dashboardData = [];
+
   let dashboardStats = {
     total: 0,
     new: 0,
@@ -41,12 +42,14 @@
     }
 
     try {
+
       if (
         typeof supabaseClient !== "undefined" &&
         supabaseClient
       ) {
         return supabaseClient;
       }
+
     } catch (error) {
       // Ignore
     }
@@ -62,12 +65,14 @@
     }
 
     try {
+
       if (
         typeof currentProfile !== "undefined" &&
         currentProfile
       ) {
         return currentProfile;
       }
+
     } catch (error) {
       // Ignore
     }
@@ -83,12 +88,14 @@
     }
 
     try {
+
       if (
         typeof currentUser !== "undefined" &&
         currentUser
       ) {
         return currentUser;
       }
+
     } catch (error) {
       // Ignore
     }
@@ -146,7 +153,9 @@
 
 
   function getPage(id) {
+
     return document.getElementById(id);
+
   }
 
 
@@ -172,16 +181,25 @@
 
 
     const pageMap = {
-      dashboard: "view-dashboard",
-      leads: "view-leads",
-      sales: "view-sales",
+
+      dashboard:
+        "view-dashboard",
+
+      leads:
+        "view-leads",
+
+      sales:
+        "view-sales",
+
       "customer-profile":
         "view-customer-profile"
+
     };
 
 
     const targetId =
       pageMap[pageName];
+
 
     if (!targetId) {
       return false;
@@ -206,6 +224,7 @@
     const target =
       getPage(targetId);
 
+
     if (!target) {
       return false;
     }
@@ -218,6 +237,7 @@
       "aria-hidden",
       "false"
     );
+
 
     return true;
 
@@ -233,12 +253,15 @@
     const profile =
       getProfile();
 
+
     if (profile) {
       return true;
     }
 
 
-    if (typeof window.showToast === "function") {
+    if (
+      typeof window.showToast === "function"
+    ) {
 
       window.showToast(
         "Session belum siap. Silakan login kembali.",
@@ -246,6 +269,7 @@
       );
 
     }
+
 
     return false;
 
@@ -301,24 +325,26 @@
     setLeadsTitle();
 
 
-    // Filter options dari leads.js
     if (
       typeof window.loadFilterOptions === "function"
     ) {
 
       try {
+
         await window.loadFilterOptions();
+
       } catch (error) {
+
         console.warn(
           "[Dashboard] loadFilterOptions:",
           error
         );
+
       }
 
     }
 
 
-    // Load leads dari leads.js
     if (
       typeof window.loadLeads === "function"
     ) {
@@ -327,6 +353,7 @@
 
         const currentPage =
           window.currentPage || 1;
+
 
         await window.loadLeads(
           currentPage
@@ -375,6 +402,7 @@
         );
 
       }
+
 
       return false;
 
@@ -621,9 +649,11 @@
     const element =
       document.getElementById(id);
 
+
     if (!element) {
       return;
     }
+
 
     element.textContent =
       value == null
@@ -642,10 +672,24 @@
     const client =
       getClient();
 
+
     if (!client) {
 
       throw new Error(
         "Supabase client belum tersedia."
+      );
+
+    }
+
+
+    const profile =
+      getProfile();
+
+
+    if (!profile) {
+
+      throw new Error(
+        "Profile user belum tersedia."
       );
 
     }
@@ -666,40 +710,81 @@
         from + batchSize - 1;
 
 
+      let query =
+        client
+          .from("leads")
+          .select(
+            [
+              "id",
+              "customer_name",
+              "phone",
+              "business",
+              "location",
+              "status",
+              "follow_up_date",
+              "appointment",
+              "site_survey",
+              "quotation",
+              "spk",
+              "closing",
+              "sales_id",
+              "created_at",
+              "updated_at"
+            ].join(",")
+          );
+
+
+      // ======================================================
+      // ACCESS CONTROL
+      // ======================================================
+      //
+      // ADMIN:
+      //   melihat seluruh customer.
+      //
+      // SALES:
+      //   hanya melihat customer miliknya sendiri.
+      //
+      // RLS Supabase tetap menjadi security layer utama.
+      // Filter ini hanya memastikan dashboard UI tidak
+      // mengambil data milik Sales lain.
+      //
+      // ======================================================
+
+      if (isSales()) {
+
+        if (!profile.id) {
+
+          throw new Error(
+            "Sales profile ID tidak ditemukan."
+          );
+
+        }
+
+
+        query =
+          query.eq(
+            "sales_id",
+            profile.id
+          );
+
+      }
+
+
       const {
         data,
         error
-      } = await client
-        .from("leads")
-        .select(
-          [
-            "id",
-            "customer_name",
-            "phone",
-            "business",
-            "location",
-            "status",
-            "follow_up_date",
-            "appointment",
-            "site_survey",
-            "quotation",
-            "spk",
-            "closing",
-            "sales_id",
+      } =
+        await query
+          .order(
             "created_at",
-            "updated_at"
-          ].join(",")
-        )
-        .order(
-          "created_at",
-          {
-            ascending: false
-          }
-        )
-        .range(
-          from,
-          to
-        );
+            {
+              ascending: false
+            }
+          )
+          .range(
+            from,
+            to
+          );
 
 
       if (error) {
@@ -733,8 +818,7 @@
       }
 
 
-      // Safety limit agar dashboard
-      // tidak melakukan loop tidak terbatas.
+      // Safety limit
       if (
         from > 100000
       ) {
@@ -793,14 +877,18 @@
     if (
       typeof value === "boolean"
     ) {
+
       return value;
+
     }
 
 
     if (
       typeof value === "number"
     ) {
+
       return value > 0;
+
     }
 
 
@@ -839,6 +927,7 @@
   ) {
 
     const stats = {
+
       total: 0,
       new: 0,
       flyerSent: 0,
@@ -850,6 +939,7 @@
       spk: 0,
       closing: 0,
       notInterested: 0
+
     };
 
 
@@ -873,49 +963,77 @@
       switch (status) {
 
         case "new":
+
           stats.new++;
+
           break;
+
 
         case "flyer sent":
         case "flyer":
+
           stats.flyerSent++;
+
           break;
 
+
         case "interested":
+
           stats.interested++;
+
           break;
+
 
         case "follow up":
         case "follow-up":
         case "followup":
+
           stats.followUp++;
+
           break;
 
+
         case "appointment":
+
           stats.appointment++;
+
           break;
+
 
         case "site survey":
         case "site-survey":
         case "survey":
+
           stats.siteSurvey++;
+
           break;
+
 
         case "quotation":
         case "quote":
+
           stats.quotation++;
+
           break;
 
+
         case "closing":
+
           stats.closing++;
+
           break;
+
 
         case "not interested":
         case "not-interested":
+
           stats.notInterested++;
+
           break;
 
+
         default:
+
           break;
 
       }
@@ -923,6 +1041,7 @@
 
       // SPK adalah milestone,
       // bukan status utama.
+
       if (
         hasValue(lead.spk)
       ) {
@@ -996,9 +1115,11 @@
         const element =
           document.getElementById(id);
 
+
         if (!element) {
           return;
         }
+
 
         element.textContent =
           formatNumber(
@@ -1008,7 +1129,6 @@
       });
 
 
-    // Support alternate IDs
     setNumberIfExists(
       [
         "dashboardTotal",
@@ -1016,6 +1136,7 @@
       ],
       stats.total
     );
+
 
     setNumberIfExists(
       [
@@ -1025,6 +1146,7 @@
       stats.new
     );
 
+
     setNumberIfExists(
       [
         "dashboardInterested",
@@ -1032,6 +1154,7 @@
       ],
       stats.interested
     );
+
 
     setNumberIfExists(
       [
@@ -1041,6 +1164,7 @@
       stats.followUp
     );
 
+
     setNumberIfExists(
       [
         "dashboardAppointment",
@@ -1048,6 +1172,7 @@
       ],
       stats.appointment
     );
+
 
     setNumberIfExists(
       [
@@ -1057,6 +1182,7 @@
       stats.siteSurvey
     );
 
+
     setNumberIfExists(
       [
         "dashboardQuotation",
@@ -1064,6 +1190,7 @@
       ],
       stats.quotation
     );
+
 
     setNumberIfExists(
       [
@@ -1073,6 +1200,7 @@
       stats.spk
     );
 
+
     setNumberIfExists(
       [
         "dashboardClosing",
@@ -1080,6 +1208,7 @@
       ],
       stats.closing
     );
+
 
     setNumberIfExists(
       [
@@ -1102,9 +1231,11 @@
       const element =
         document.getElementById(id);
 
+
       if (!element) {
         return;
       }
+
 
       element.textContent =
         formatNumber(value);
@@ -1120,6 +1251,7 @@
 
     const number =
       Number(value) || 0;
+
 
     try {
 
@@ -1225,14 +1357,21 @@
             class="pipeline-item"
             data-stage="${escapeHTML(stage.key)}"
           >
+
             <div class="pipeline-item-label">
+
               <span class="pipeline-dot"></span>
-              <span>${escapeHTML(stage.label)}</span>
+
+              <span>
+                ${escapeHTML(stage.label)}
+              </span>
+
             </div>
 
             <strong class="pipeline-item-value">
               ${formatNumber(stage.value)}
             </strong>
+
           </div>
         `;
 
@@ -1276,19 +1415,25 @@
 
       container.innerHTML = `
         <div class="empty-state">
+
           <div class="empty-state-icon">
             <i data-lucide="inbox"></i>
           </div>
 
-          <h4>Belum ada data</h4>
+          <h4>
+            Belum ada data
+          </h4>
 
           <p>
             Belum ada customer yang tersedia.
           </p>
+
         </div>
       `;
 
+
       refreshIcons();
+
 
       return;
 
@@ -1343,7 +1488,9 @@
               ${
                 typeof window.getStatusBadge ===
                 "function"
+
                   ? window.getStatusBadge(status)
+
                   : `
                     <span class="status-badge">
                       ${escapeHTML(status)}
@@ -1384,7 +1531,9 @@
         .filter(Boolean);
 
 
-    if (words.length === 1) {
+    if (
+      words.length === 1
+    ) {
 
       return words[0]
         .substring(0, 2)
@@ -1426,11 +1575,26 @@
         ? ""
         : value
     )
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
+      .replace(
+        /&/g,
+        "&amp;"
+      )
+      .replace(
+        /</g,
+        "&lt;"
+      )
+      .replace(
+        />/g,
+        "&gt;"
+      )
+      .replace(
+        /"/g,
+        "&quot;"
+      )
+      .replace(
+        /'/g,
+        "&#039;"
+      );
 
   }
 
@@ -1448,9 +1612,7 @@
 
 
     if (dashboardLoading) {
-
       return dashboardStats;
-
     }
 
 
@@ -1464,12 +1626,14 @@
         "Supabase belum terhubung."
       );
 
+
       return null;
 
     }
 
 
     dashboardLoading = true;
+
 
     setDashboardLoading(
       true
@@ -1564,10 +1728,13 @@
             "fsi:dashboard-updated",
             {
               detail: {
+
                 stats:
                   dashboardStats,
+
                 rows:
                   dashboardData
+
               }
             }
           )
@@ -1594,7 +1761,11 @@
       const message =
         typeof window.getSupabaseErrorMessage ===
         "function"
-          ? window.getSupabaseErrorMessage(error)
+
+          ? window.getSupabaseErrorMessage(
+              error
+            )
+
           : (
               error &&
               error.message
@@ -1612,6 +1783,7 @@
     } finally {
 
       dashboardLoading = false;
+
 
       setDashboardLoading(
         false
@@ -1689,6 +1861,7 @@
           "view-dashboard"
         );
 
+
       if (!dashboard) {
         return;
       }
@@ -1707,11 +1880,14 @@
             "div"
           );
 
+
         generated.className =
           "dashboard-error";
 
+
         generated.id =
           "dashboard-error";
+
 
         dashboard.prepend(
           generated
@@ -1726,6 +1902,7 @@
         </div>
 
         <div class="dashboard-error-content">
+
           <strong>
             Dashboard tidak dapat dimuat
           </strong>
@@ -1733,6 +1910,7 @@
           <span>
             ${escapeHTML(message)}
           </span>
+
         </div>
 
         <button
@@ -1740,8 +1918,11 @@
           class="btn btn-secondary"
           data-dashboard-retry
         >
+
           <i data-lucide="refresh-cw"></i>
+
           Coba Lagi
+
         </button>
       `;
 
@@ -1753,6 +1934,7 @@
 
       refreshIcons();
 
+
       return;
 
     }
@@ -1760,6 +1942,7 @@
 
     errorElement.innerHTML = `
       <div class="dashboard-error-content">
+
         <strong>
           Dashboard tidak dapat dimuat
         </strong>
@@ -1767,6 +1950,7 @@
         <span>
           ${escapeHTML(message)}
         </span>
+
       </div>
     `;
 
@@ -1780,9 +1964,19 @@
   function hideDashboardError() {
 
     const elements = [
-      getPage("dashboard-error"),
-      getPage("dashboardError"),
-      $(".dashboard-error")
+
+      getPage(
+        "dashboard-error"
+      ),
+
+      getPage(
+        "dashboardError"
+      ),
+
+      document.querySelector(
+        ".dashboard-error"
+      )
+
     ].filter(Boolean);
 
 
@@ -1847,10 +2041,13 @@
     ) {
 
       try {
+
         window.refreshIcons();
+
       } catch (error) {
         // Ignore
       }
+
 
       return;
 
@@ -1864,7 +2061,9 @@
     ) {
 
       try {
+
         window.lucide.createIcons();
+
       } catch (error) {
         // Ignore
       }
@@ -1900,7 +2099,10 @@
       true;
 
 
+    // --------------------------------------------------------
     // App siap
+    // --------------------------------------------------------
+
     window.addEventListener(
       "fsi:app-ready",
       function () {
@@ -1917,7 +2119,10 @@
     );
 
 
-    // Profile sudah tersedia
+    // --------------------------------------------------------
+    // Profile tersedia
+    // --------------------------------------------------------
+
     window.addEventListener(
       "fsi:profile-ready",
       function () {
@@ -1928,7 +2133,10 @@
     );
 
 
-    // Auth sudah siap
+    // --------------------------------------------------------
+    // Auth siap
+    // --------------------------------------------------------
+
     window.addEventListener(
       "fsi:auth-ready",
       function () {
@@ -1939,7 +2147,10 @@
     );
 
 
+    // --------------------------------------------------------
     // Lead berubah
+    // --------------------------------------------------------
+
     window.addEventListener(
       "fsi:lead-changed",
       function () {
@@ -1956,7 +2167,10 @@
     );
 
 
+    // --------------------------------------------------------
     // Sales berubah
+    // --------------------------------------------------------
+
     window.addEventListener(
       "fsi:sales-changed",
       function () {
@@ -1973,7 +2187,10 @@
     );
 
 
+    // --------------------------------------------------------
     // Navigation berubah
+    // --------------------------------------------------------
+
     window.addEventListener(
       "fsi:navigation-changed",
       function (event) {
@@ -1991,11 +2208,11 @@
           "dashboard"
         ) {
 
-          // Sedikit delay agar
-          // DOM sudah siap.
           setTimeout(
             function () {
+
               updateDashboard();
+
             },
             50
           );
@@ -2050,6 +2267,7 @@
   function initializeDashboard() {
 
     bindDashboardEvents();
+
 
     console.log(
       "FSI Dashboard initialized."
@@ -2119,16 +2337,20 @@
 
     getStats:
       function () {
+
         return {
           ...dashboardStats
         };
+
       },
 
     getData:
       function () {
+
         return [
           ...dashboardData
         ];
+
       }
 
   };
@@ -2141,16 +2363,21 @@
   window.showDashboard =
     showDashboard;
 
+
   window.showLeads =
     showLeads;
+
 
   window.showSales =
     showSales;
 
+
   window.showCustomerProfile =
     showCustomerProfile;
 
+
   window.updateDashboard =
     updateDashboard;
+
 
 })();
