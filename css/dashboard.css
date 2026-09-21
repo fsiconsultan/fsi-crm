@@ -2,9 +2,8 @@
    FSI CRM — DASHBOARD STYLES
    File: css/dashboard.css
 
-   IMPORTANT:
-   This file works together with css/style.css.
-   Do not redefine the main CRM components here.
+   Dashboard-specific styling only.
+   Main CRM components are handled by css/style.css.
 ========================================================= */
 
 
@@ -14,6 +13,7 @@
 
 #view-dashboard {
   width: 100%;
+  min-width: 0;
 }
 
 #view-dashboard.hidden {
@@ -22,18 +22,23 @@
 
 
 /* =========================================================
-   DASHBOARD STATS
-   Main stat-card styling is handled by style.css.
-   Only dashboard-specific refinements are placed here.
+   DASHBOARD STATS GRID
 ========================================================= */
 
 #view-dashboard .stats-grid {
   width: 100%;
+  min-width: 0;
 }
 
 #view-dashboard .stat-card {
   position: relative;
   overflow: hidden;
+  isolation: isolate;
+  min-width: 0;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
 }
 
 #view-dashboard .stat-card::after {
@@ -41,17 +46,19 @@
 
   position: absolute;
 
-  width: 90px;
-  height: 90px;
+  width: 110px;
+  height: 110px;
 
-  right: -35px;
-  bottom: -35px;
+  right: -48px;
+  bottom: -48px;
 
-  border-radius: 50%;
+  border-radius: 999px;
 
   background: rgba(37, 99, 235, 0.035);
 
   pointer-events: none;
+
+  z-index: -1;
 }
 
 #view-dashboard .stat-card:hover {
@@ -60,7 +67,7 @@
 
 
 /* =========================================================
-   STAT ICON VARIANTS
+   STAT ICON COLORS
 ========================================================= */
 
 #view-dashboard .stat-icon.bg-blue {
@@ -98,6 +105,11 @@
   background: var(--success-soft);
 }
 
+#view-dashboard .stat-icon.bg-red {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
 
 /* =========================================================
    DASHBOARD CONTENT GRID
@@ -105,6 +117,7 @@
 
 #view-dashboard .dashboard-grid {
   width: 100%;
+  min-width: 0;
 }
 
 
@@ -115,6 +128,7 @@
 #view-dashboard .dashboard-card {
   position: relative;
   overflow: hidden;
+  min-width: 0;
 }
 
 #view-dashboard .dashboard-card::before {
@@ -136,6 +150,8 @@
     );
 
   opacity: 0.8;
+
+  pointer-events: none;
 }
 
 
@@ -150,20 +166,24 @@
 
 #view-dashboard .card-header h2,
 #view-dashboard .card-header h3 {
+  margin: 0;
+
   letter-spacing: -0.2px;
 }
 
 
 /* =========================================================
-   PIPELINE SUMMARY
+   DASHBOARD PIPELINE
 ========================================================= */
 
 #dashboard-pipeline {
   width: 100%;
+  min-width: 0;
 }
 
 .pipeline-summary {
   width: 100%;
+  min-width: 0;
 }
 
 .pipeline-summary-item {
@@ -171,6 +191,8 @@
 }
 
 .pipeline-summary-item .pipeline-label {
+  min-width: 0;
+
   overflow: hidden;
 
   text-overflow: ellipsis;
@@ -180,7 +202,10 @@
 
 .pipeline-summary-item .pipeline-bar {
   position: relative;
+
   overflow: hidden;
+
+  min-width: 0;
 }
 
 .pipeline-summary-item .pipeline-progress {
@@ -195,8 +220,9 @@
    PIPELINE STATUS COLORS
 ========================================================= */
 
-.pipeline-summary-item:nth-child(1)
-.pipeline-progress {
+/* New */
+
+.pipeline-summary-item:nth-child(1) .pipeline-progress {
   background:
     linear-gradient(
       90deg,
@@ -205,8 +231,10 @@
     );
 }
 
-.pipeline-summary-item:nth-child(2)
-.pipeline-progress {
+
+/* Interested */
+
+.pipeline-summary-item:nth-child(2) .pipeline-progress {
   background:
     linear-gradient(
       90deg,
@@ -215,8 +243,10 @@
     );
 }
 
-.pipeline-summary-item:nth-child(3)
-.pipeline-progress {
+
+/* Follow Up */
+
+.pipeline-summary-item:nth-child(3) .pipeline-progress {
   background:
     linear-gradient(
       90deg,
@@ -225,8 +255,10 @@
     );
 }
 
-.pipeline-summary-item:nth-child(4)
-.pipeline-progress {
+
+/* Appointment */
+
+.pipeline-summary-item:nth-child(4) .pipeline-progress {
   background:
     linear-gradient(
       90deg,
@@ -235,8 +267,10 @@
     );
 }
 
-.pipeline-summary-item:nth-child(5)
-.pipeline-progress {
+
+/* Site Survey */
+
+.pipeline-summary-item:nth-child(5) .pipeline-progress {
   background:
     linear-gradient(
       90deg,
@@ -245,8 +279,10 @@
     );
 }
 
-.pipeline-summary-item:nth-child(6)
-.pipeline-progress {
+
+/* Quotation */
+
+.pipeline-summary-item:nth-child(6) .pipeline-progress {
   background:
     linear-gradient(
       90deg,
@@ -255,8 +291,10 @@
     );
 }
 
-.pipeline-summary-item:nth-child(7)
-.pipeline-progress {
+
+/* Closing */
+
+.pipeline-summary-item:nth-child(7) .pipeline-progress {
   background:
     linear-gradient(
       90deg,
@@ -265,8 +303,10 @@
     );
 }
 
-.pipeline-summary-item:nth-child(8)
-.pipeline-progress {
+
+/* SPK */
+
+.pipeline-summary-item:nth-child(8) .pipeline-progress {
   background:
     linear-gradient(
       90deg,
@@ -275,8 +315,117 @@
     );
 }
 
-.pipeline-summary-item:nth-child(9)
-.pipeline-progress {
+
+/* Not Interested */
+
+.pipeline-summary-item:nth-child(9) .pipeline-progress {
+  background:
+    linear-gradient(
+      90deg,
+      #dc2626,
+      #ef4444
+    );
+}
+
+
+/* =========================================================
+   ALTERNATIVE PIPELINE STRUCTURE
+   Supports dashboard markup using .pipeline-row
+========================================================= */
+
+.pipeline-row {
+  min-width: 0;
+}
+
+.pipeline-row .pipeline-fill {
+  min-width: 2px;
+
+  transition:
+    width 350ms ease;
+}
+
+.pipeline-new .pipeline-fill,
+.pipeline-fill.status-new {
+  background:
+    linear-gradient(
+      90deg,
+      #2563eb,
+      #3b82f6
+    );
+}
+
+.pipeline-interested .pipeline-fill,
+.pipeline-fill.status-interested {
+  background:
+    linear-gradient(
+      90deg,
+      #16a34a,
+      #22c55e
+    );
+}
+
+.pipeline-follow-up .pipeline-fill,
+.pipeline-fill.status-follow-up {
+  background:
+    linear-gradient(
+      90deg,
+      #ea580c,
+      #f97316
+    );
+}
+
+.pipeline-appointment .pipeline-fill,
+.pipeline-fill.status-appointment {
+  background:
+    linear-gradient(
+      90deg,
+      #7c3aed,
+      #8b5cf6
+    );
+}
+
+.pipeline-site-survey .pipeline-fill,
+.pipeline-fill.status-site-survey {
+  background:
+    linear-gradient(
+      90deg,
+      #0891b2,
+      #06b6d4
+    );
+}
+
+.pipeline-quotation .pipeline-fill,
+.pipeline-fill.status-quotation {
+  background:
+    linear-gradient(
+      90deg,
+      #ca8a04,
+      #eab308
+    );
+}
+
+.pipeline-closing .pipeline-fill,
+.pipeline-fill.status-closing {
+  background:
+    linear-gradient(
+      90deg,
+      #15803d,
+      #22c55e
+    );
+}
+
+.pipeline-spk .pipeline-fill,
+.pipeline-fill.status-spk {
+  background:
+    linear-gradient(
+      90deg,
+      #4f46e5,
+      #6366f1
+    );
+}
+
+.pipeline-not-interested .pipeline-fill,
+.pipeline-fill.status-not-interested {
   background:
     linear-gradient(
       90deg,
@@ -292,16 +441,20 @@
 
 #dashboard-activities {
   width: 100%;
+  min-width: 0;
 }
 
 .recent-activities {
   width: 100%;
+  min-width: 0;
 }
 
 .recent-activity-item {
+  min-width: 0;
+
   transition:
-    background var(--transition),
-    transform var(--transition);
+    background 180ms ease,
+    transform 180ms ease;
 }
 
 .recent-activity-item:hover {
@@ -317,10 +470,26 @@
 
 
 /* =========================================================
+   RECENT LEADS
+========================================================= */
+
+#dashboard-recent-leads {
+  width: 100%;
+  min-width: 0;
+}
+
+.recent-leads {
+  width: 100%;
+  min-width: 0;
+}
+
+
+/* =========================================================
    DASHBOARD LOADING
 ========================================================= */
 
 .dashboard-loading {
+  width: 100%;
   min-height: 180px;
 
   display: flex;
@@ -336,6 +505,8 @@
 
   font-size: 12px;
   font-weight: 600;
+
+  text-align: center;
 }
 
 
@@ -344,6 +515,7 @@
 ========================================================= */
 
 .dashboard-error {
+  width: 100%;
   min-height: 120px;
 
   display: flex;
@@ -369,6 +541,8 @@
 
   font-weight: 600;
 
+  line-height: 1.6;
+
   text-align: center;
 }
 
@@ -378,6 +552,7 @@
 ========================================================= */
 
 .dashboard-empty {
+  width: 100%;
   min-height: 120px;
 
   display: flex;
@@ -385,11 +560,59 @@
   align-items: center;
   justify-content: center;
 
+  padding: 20px;
+
   color: var(--slate-400);
 
   font-size: 11px;
 
+  line-height: 1.6;
+
   text-align: center;
+}
+
+
+/* =========================================================
+   DASHBOARD SPINNER
+========================================================= */
+
+.dashboard-spinner {
+  width: 24px;
+  height: 24px;
+
+  border:
+    2px solid rgba(37, 99, 235, 0.15);
+
+  border-top-color:
+    var(--primary);
+
+  border-radius: 50%;
+
+  animation:
+    dashboardSpin 700ms linear infinite;
+}
+
+@keyframes dashboardSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+/* =========================================================
+   DASHBOARD NUMBER ANIMATION
+========================================================= */
+
+#view-dashboard .stat-details strong {
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+#view-dashboard .stat-card.is-loading .stat-details strong {
+  opacity: 0.45;
+
+  transform: translateY(2px);
 }
 
 
@@ -418,11 +641,40 @@
 @media (max-width: 700px) {
 
   #view-dashboard .dashboard-card {
-    min-height: 200px;
+    min-height: 180px;
   }
 
   .pipeline-summary-item .pipeline-label {
     width: 90px;
+  }
+
+  .recent-activity-item:hover {
+    transform: none;
+  }
+
+}
+
+
+@media (max-width: 560px) {
+
+  #view-dashboard .dashboard-card {
+    min-height: 160px;
+  }
+
+  .pipeline-summary-item {
+    gap: 7px;
+  }
+
+  .pipeline-summary-item .pipeline-label {
+    width: 82px;
+
+    font-size: 10px;
+  }
+
+  .pipeline-summary-item .pipeline-count {
+    width: 28px;
+
+    font-size: 10px;
   }
 
 }
@@ -431,11 +683,11 @@
 @media (max-width: 420px) {
 
   .pipeline-summary-item {
-    gap: 7px;
+    gap: 6px;
   }
 
   .pipeline-summary-item .pipeline-label {
-    width: 75px;
+    width: 72px;
 
     font-size: 9px;
   }
@@ -444,6 +696,27 @@
     width: 25px;
 
     font-size: 10px;
+  }
+
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+  #view-dashboard .stat-card,
+  .recent-activity-item,
+  .pipeline-summary-item .pipeline-progress,
+  .pipeline-row .pipeline-fill,
+  #view-dashboard .stat-details strong {
+    transition: none;
+  }
+
+  .dashboard-spinner {
+    animation: none;
   }
 
 }
