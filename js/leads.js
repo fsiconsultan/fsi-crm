@@ -1,7 +1,17 @@
-```javascript
 // ============================================================
 // FSI CRM - LEADS MANAGEMENT
 // File: js/leads.js
+// ============================================================
+//
+// Fungsi:
+// - Load leads dari Supabase
+// - Search & filter
+// - Pagination
+// - Add lead
+// - Delete lead
+// - Sales assignment
+// - Admin / Sales access
+// - Integrasi Customer Profile / shelter.js
 // ============================================================
 
 "use strict";
@@ -16,221 +26,743 @@
     let leadsLoading = false;
     let searchTimer = null;
 
+
     // ========================================================
     // DOM HELPERS
     // ========================================================
 
     function leadElement(...ids) {
+
         for (const id of ids) {
-            const element = document.getElementById(id);
-            if (element) return element;
+
+            if (!id) {
+                continue;
+            }
+
+            const element =
+                document.getElementById(id);
+
+            if (element) {
+                return element;
+            }
         }
+
         return null;
     }
 
-    function leadGetProfile() {
-        return window.currentProfile || null;
+
+    function leadGetSupabase() {
+
+        if (
+            typeof window.supabaseClient !== "undefined" &&
+            window.supabaseClient
+        ) {
+            return window.supabaseClient;
+        }
+
+        if (
+            typeof supabaseClient !== "undefined" &&
+            supabaseClient
+        ) {
+            return supabaseClient;
+        }
+
+        return null;
     }
+
+
+    function leadGetProfile() {
+
+        if (
+            typeof window.currentProfile !== "undefined" &&
+            window.currentProfile
+        ) {
+            return window.currentProfile;
+        }
+
+        if (
+            typeof currentProfile !== "undefined" &&
+            currentProfile
+        ) {
+            return currentProfile;
+        }
+
+        return null;
+    }
+
 
     function leadIsAdmin() {
-        const profile = leadGetProfile();
 
-        if (typeof window.isAdminRole === "function") {
-            return window.isAdminRole(profile);
+        const profile =
+            leadGetProfile();
+
+        if (!profile) {
+            return false;
         }
 
+
+        if (
+            typeof window.isAdminRole ===
+            "function"
+        ) {
+
+            return window.isAdminRole(
+                profile
+            );
+        }
+
+
+        const role =
+            String(
+                profile.role || ""
+            )
+                .trim()
+                .toLowerCase();
+
+
         return (
-            profile &&
-            String(profile.role || "").toLowerCase() === "admin"
+            role === "admin" ||
+            role === "owner" ||
+            role === "administrator"
         );
     }
+
 
     function leadIsSales() {
-        const profile = leadGetProfile();
 
-        if (typeof window.isSalesRole === "function") {
-            return window.isSalesRole(profile);
+        const profile =
+            leadGetProfile();
+
+        if (!profile) {
+            return false;
         }
 
+
+        if (
+            typeof window.isSalesRole ===
+            "function"
+        ) {
+
+            return window.isSalesRole(
+                profile
+            );
+        }
+
+
+        const role =
+            String(
+                profile.role || ""
+            )
+                .trim()
+                .toLowerCase();
+
+
         return (
-            profile &&
-            String(profile.role || "").toLowerCase() === "sales"
+            role === "sales" ||
+            role === "salesperson"
         );
     }
+
 
     function leadGetPageSize() {
-        return Number(window.pageSize) > 0
-            ? Number(window.pageSize)
-            : 20;
+
+        const configuredSize =
+            Number(
+                window.pageSize
+            );
+
+
+        if (
+            Number.isFinite(
+                configuredSize
+            ) &&
+            configuredSize > 0
+        ) {
+            return configuredSize;
+        }
+
+
+        if (
+            window.FSI_CRM &&
+            window.FSI_CRM.config &&
+            Number(
+                window.FSI_CRM.config.pageSize
+            ) > 0
+        ) {
+
+            return Number(
+                window.FSI_CRM.config.pageSize
+            );
+        }
+
+
+        return 20;
     }
+
 
     function leadGetCurrentPage() {
+
         return Math.max(
             1,
-            Number(window.currentPage) || 1
+            Number(
+                window.currentPage
+            ) || 1
         );
     }
 
-    function leadSetCurrentPage(page) {
-        window.currentPage = Math.max(
-            1,
-            Number(page) || 1
-        );
+
+    function leadSetCurrentPage(
+        page
+    ) {
+
+        const numericPage =
+            Number(page);
+
+
+        window.currentPage =
+            Math.max(
+                1,
+                Number.isFinite(
+                    numericPage
+                )
+                    ? numericPage
+                    : 1
+            );
     }
+
 
     function leadGetSalesData() {
-        return Array.isArray(window.salesUsersData)
+
+        return Array.isArray(
+            window.salesUsersData
+        )
             ? window.salesUsersData
             : [];
     }
+
+
+    // ========================================================
+    // TEXT / HTML HELPERS
+    // ========================================================
+
+    function leadEscapeHTML(
+        value
+    ) {
+
+        if (
+            typeof window.escapeHTML ===
+            "function"
+        ) {
+
+            return window.escapeHTML(
+                value
+            );
+        }
+
+
+        return String(
+            value ?? ""
+        )
+            .replace(
+                /&/g,
+                "&amp;"
+            )
+            .replace(
+                /</g,
+                "&lt;"
+            )
+            .replace(
+                />/g,
+                "&gt;"
+            )
+            .replace(
+                /"/g,
+                "&quot;"
+            )
+            .replace(
+                /'/g,
+                "&#039;"
+            );
+    }
+
+
+    function leadGetValue(
+        value
+    ) {
+
+        return String(
+            value ?? ""
+        ).trim();
+    }
+
 
     // ========================================================
     // FILTER OPTIONS
     // ========================================================
 
     async function loadFilterOptions() {
-        if (!window.supabaseClient) {
-            console.error("Supabase client is not ready.");
+
+        const client =
+            leadGetSupabase();
+
+
+        if (!client) {
+
+            console.error(
+                "FSI CRM: Supabase client is not ready."
+            );
+
             return;
         }
 
+
         try {
-            const { data, error } = await window.supabaseClient
+
+            // ------------------------------------------------
+            // Load Sales lookup first
+            // ------------------------------------------------
+
+            if (
+                typeof window.loadSalesLookup ===
+                "function"
+            ) {
+
+                try {
+
+                    await window.loadSalesLookup();
+
+                } catch (error) {
+
+                    console.warn(
+                        "FSI CRM: Sales lookup failed:",
+                        error
+                    );
+                }
+            }
+
+
+            // ------------------------------------------------
+            // Load business & location
+            // ------------------------------------------------
+
+            const {
+                data,
+                error
+            } = await client
                 .from("leads")
-                .select("business, location");
+                .select(
+                    "business,location"
+                );
+
 
             if (error) {
+
                 console.error(
-                    "Load filter options error:",
+                    "FSI CRM: load filter options error:",
                     error
                 );
+
                 return;
             }
 
-            const leads = Array.isArray(data)
-                ? data
-                : [];
 
-            const businesses = [
-                ...new Set(
-                    leads
-                        .map(lead =>
-                            typeof window.getValue === "function"
-                                ? window.getValue(lead.business).trim()
-                                : String(lead.business || "").trim()
-                        )
-                        .filter(Boolean)
-                )
-            ].sort((a, b) =>
-                a.localeCompare(b, undefined, {
-                    sensitivity: "base"
-                })
-            );
+            const leads =
+                Array.isArray(data)
+                    ? data
+                    : [];
 
-            const locations = [
-                ...new Set(
-                    leads
-                        .map(lead =>
-                            typeof window.getValue === "function"
-                                ? window.getValue(lead.location).trim()
-                                : String(lead.location || "").trim()
-                        )
-                        .filter(Boolean)
-                )
-            ].sort((a, b) =>
-                a.localeCompare(b, undefined, {
-                    sensitivity: "base"
-                })
-            );
+
+            const businesses =
+                uniqueSortedValues(
+                    leads.map(
+                        lead =>
+                            leadGetValue(
+                                lead.business
+                            )
+                    )
+                );
+
+
+            const locations =
+                uniqueSortedValues(
+                    leads.map(
+                        lead =>
+                            leadGetValue(
+                                lead.location
+                            )
+                    )
+                );
+
+
+            // ------------------------------------------------
+            // IMPORTANT:
+            // Latest index.html IDs:
+            //
+            // filter-business
+            // filter-location
+            //
+            // Legacy IDs are also supported.
+            // ------------------------------------------------
 
             populateFilter(
-                "businessFilter",
+                [
+                    "filter-business",
+                    "businessFilter"
+                ],
                 businesses,
                 "All Business"
             );
 
+
             populateFilter(
-                "locationFilter",
+                [
+                    "filter-location",
+                    "locationFilter"
+                ],
                 locations,
                 "All Location"
             );
 
-            if (typeof window.populateSalesDropdowns === "function") {
+
+            if (
+                typeof window.populateSalesDropdowns ===
+                "function"
+            ) {
+
                 window.populateSalesDropdowns();
             }
 
+
         } catch (error) {
+
             console.error(
-                "loadFilterOptions error:",
+                "FSI CRM: loadFilterOptions error:",
                 error
             );
         }
     }
 
-    function populateFilter(id, values, defaultText) {
-        const select = leadElement(id);
 
-        if (!select) return;
+    function uniqueSortedValues(
+        values
+    ) {
 
-        const currentValue = select.value;
+        return [
+            ...new Set(
+                (
+                    Array.isArray(values)
+                        ? values
+                        : []
+                )
+                    .map(
+                        value =>
+                            String(
+                                value ?? ""
+                            ).trim()
+                    )
+                    .filter(Boolean)
+            )
+        ].sort(
+            (
+                a,
+                b
+            ) =>
+                a.localeCompare(
+                    b,
+                    undefined,
+                    {
+                        sensitivity: "base"
+                    }
+                )
+        );
+    }
 
-        select.innerHTML = "";
+
+    function populateFilter(
+        ids,
+        values,
+        defaultText
+    ) {
+
+        const idList =
+            Array.isArray(ids)
+                ? ids
+                : [ids];
+
+
+        let select =
+            null;
+
+
+        for (
+            const id of idList
+        ) {
+
+            select =
+                document.getElementById(
+                    id
+                );
+
+            if (select) {
+                break;
+            }
+        }
+
+
+        if (!select) {
+            return;
+        }
+
+
+        const currentValue =
+            select.value;
+
+
+        select.innerHTML =
+            "";
+
 
         const defaultOption =
-            document.createElement("option");
+            document.createElement(
+                "option"
+            );
 
-        defaultOption.value = "";
-        defaultOption.textContent = defaultText;
 
-        select.appendChild(defaultOption);
+        defaultOption.value =
+            "";
 
-        (Array.isArray(values) ? values : []).forEach(value => {
-            const option =
-                document.createElement("option");
 
-            option.value = value;
-            option.textContent = value;
+        defaultOption.textContent =
+            defaultText;
 
-            select.appendChild(option);
-        });
+
+        select.appendChild(
+            defaultOption
+        );
+
+
+        const safeValues =
+            Array.isArray(values)
+                ? values
+                : [];
+
+
+        safeValues.forEach(
+            value => {
+
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                option.value =
+                    value;
+
+
+                option.textContent =
+                    value;
+
+
+                select.appendChild(
+                    option
+                );
+            }
+        );
+
 
         if (
-            values.includes(currentValue)
+            safeValues.includes(
+                currentValue
+            )
         ) {
-            select.value = currentValue;
+
+            select.value =
+                currentValue;
+
         } else {
-            select.value = "";
+
+            select.value =
+                "";
         }
     }
+
+
+    // ========================================================
+    // GET FILTER VALUES
+    // ========================================================
+
+    function getLeadFilters() {
+
+        const searchInput =
+            leadElement(
+                "lead-search",
+                "leadSearch",
+                "leadsSearch"
+            );
+
+
+        const statusInput =
+            leadElement(
+                "filter-status",
+                "statusFilter",
+                "leadStatusFilter"
+            );
+
+
+        const businessInput =
+            leadElement(
+                "filter-business",
+                "businessFilter"
+            );
+
+
+        const locationInput =
+            leadElement(
+                "filter-location",
+                "locationFilter"
+            );
+
+
+        const salesInput =
+            leadElement(
+                "salesFilter"
+            );
+
+
+        return {
+
+            search:
+                searchInput?.value?.trim() ||
+                "",
+
+            status:
+                statusInput?.value ||
+                "",
+
+            business:
+                businessInput?.value ||
+                "",
+
+            location:
+                locationInput?.value ||
+                "",
+
+            salesFilter:
+                salesInput?.value ||
+                ""
+        };
+    }
+
+
+    // ========================================================
+    // BUILD SEARCH CONDITION
+    // ========================================================
+    //
+    // We intentionally use only fields that are part of the
+    // confirmed lead structure.
+    //
+    // Email is NOT included because current CRM schema does
+    // not guarantee an email column.
+    // ========================================================
+
+    function buildSearchQuery(
+        query,
+        search
+    ) {
+
+        if (!search) {
+            return query;
+        }
+
+
+        const safeSearch =
+            search
+                .replace(
+                    /\\/g,
+                    "\\\\"
+                )
+                .replace(
+                    /%/g,
+                    "\\%"
+                )
+                .replace(
+                    /_/g,
+                    "\\_"
+                )
+                .replace(
+                    /,/g,
+                    "\\,"
+                );
+
+
+        const searchConditions = [
+
+            `customer_name.ilike.%${safeSearch}%`,
+
+            `phone.ilike.%${safeSearch}%`,
+
+            `business.ilike.%${safeSearch}%`,
+
+            `location.ilike.%${safeSearch}%`
+        ];
+
+
+        return query.or(
+            searchConditions.join(",")
+        );
+    }
+
 
     // ========================================================
     // LOAD LEADS
     // ========================================================
 
-    async function loadLeads(page = 1) {
+    async function loadLeads(
+        page = 1
+    ) {
 
-        if (!window.supabaseClient) {
-            console.error("Supabase client is not ready.");
+        const client =
+            leadGetSupabase();
+
+
+        if (!client) {
+
+            console.error(
+                "FSI CRM: Supabase client is not ready."
+            );
+
             return;
         }
+
 
         if (!leadGetProfile()) {
+
             console.warn(
-                "Cannot load leads: profile is not ready."
+                "FSI CRM: Cannot load leads - profile is not ready."
             );
+
             return;
         }
+
 
         if (leadsLoading) {
             return;
         }
 
-        leadsLoading = true;
 
-        leadSetCurrentPage(page);
+        leadsLoading =
+            true;
+
+
+        leadSetCurrentPage(
+            page
+        );
+
 
         const pageNumber =
             leadGetCurrentPage();
+
 
         try {
 
@@ -239,137 +771,137 @@
             // ------------------------------------------------
 
             if (
-                (!Array.isArray(window.salesUsersData) ||
-                    window.salesUsersData.length === 0) &&
-                typeof window.loadSalesLookup === "function"
+                (
+                    !Array.isArray(
+                        window.salesUsersData
+                    ) ||
+                    window.salesUsersData.length ===
+                    0
+                ) &&
+                typeof window.loadSalesLookup ===
+                "function"
             ) {
-                await window.loadSalesLookup();
+
+                try {
+
+                    await window.loadSalesLookup();
+
+                } catch (error) {
+
+                    console.warn(
+                        "FSI CRM: unable to load Sales lookup:",
+                        error
+                    );
+                }
             }
+
 
             // ------------------------------------------------
             // FILTER VALUES
             // ------------------------------------------------
 
-            const searchInput =
-                leadElement("leadSearch", "leadsSearch");
+            const filters =
+                getLeadFilters();
 
-            const statusInput =
-                leadElement("statusFilter", "leadStatusFilter");
-
-            const businessInput =
-                leadElement("businessFilter");
-
-            const locationInput =
-                leadElement("locationFilter");
-
-            const salesInput =
-                leadElement("salesFilter");
-
-            const search =
-                searchInput?.value?.trim() || "";
-
-            const status =
-                statusInput?.value || "";
-
-            const business =
-                businessInput?.value || "";
-
-            const location =
-                locationInput?.value || "";
-
-            const salesFilter =
-                salesInput?.value || "";
 
             // ------------------------------------------------
             // QUERY
             // ------------------------------------------------
 
             let query =
-                window.supabaseClient
+                client
                     .from("leads")
-                    .select("*", {
-                        count: "exact"
-                    });
+                    .select(
+                        "*",
+                        {
+                            count: "exact"
+                        }
+                    );
+
 
             // ------------------------------------------------
             // SEARCH
             // ------------------------------------------------
 
-            if (search) {
-
-                const safeSearch =
-                    search
-                        .replace(/\\/g, "\\\\")
-                        .replace(/%/g, "\\%")
-                        .replace(/_/g, "\\_")
-                        .replace(/,/g, "\\,");
-
-                const searchConditions = [
-                    `customer_name.ilike.%${safeSearch}%`,
-                    `phone.ilike.%${safeSearch}%`,
-                    `email.ilike.%${safeSearch}%`,
-                    `business.ilike.%${safeSearch}%`,
-                    `location.ilike.%${safeSearch}%`
-                ];
-
-                query = query.or(
-                    searchConditions.join(",")
+            query =
+                buildSearchQuery(
+                    query,
+                    filters.search
                 );
+
+
+            // ------------------------------------------------
+            // STATUS
+            // ------------------------------------------------
+
+            if (
+                filters.status
+            ) {
+
+                query =
+                    query.eq(
+                        "status",
+                        filters.status
+                    );
             }
 
+
             // ------------------------------------------------
-            // STATUS FILTER
+            // BUSINESS
             // ------------------------------------------------
 
-            if (status) {
-                query = query.eq(
-                    "status",
-                    status
-                );
+            if (
+                filters.business
+            ) {
+
+                query =
+                    query.eq(
+                        "business",
+                        filters.business
+                    );
             }
 
+
             // ------------------------------------------------
-            // BUSINESS FILTER
+            // LOCATION
             // ------------------------------------------------
 
-            if (business) {
-                query = query.eq(
-                    "business",
-                    business
-                );
+            if (
+                filters.location
+            ) {
+
+                query =
+                    query.eq(
+                        "location",
+                        filters.location
+                    );
             }
 
-            // ------------------------------------------------
-            // LOCATION FILTER
-            // ------------------------------------------------
-
-            if (location) {
-                query = query.eq(
-                    "location",
-                    location
-                );
-            }
 
             // ------------------------------------------------
             // SALES FILTER
+            // ------------------------------------------------
             //
             // Admin:
-            //   Can choose a specific Sales.
+            //   Can filter by Sales.
             //
             // Sales:
-            //   Do not trust browser-side filter.
-            //   Supabase RLS should enforce ownership.
+            //   Browser MUST NOT be trusted.
+            //   RLS remains the security layer.
             // ------------------------------------------------
 
             if (
                 leadIsAdmin() &&
-                salesFilter
+                filters.salesFilter
             ) {
-                query = query.eq(
-                    "sales_id",
-                    salesFilter
-                );
+
+                query =
+                    query.eq(
+                        "sales_id",
+                        filters.salesFilter
+                    );
             }
+
 
             // ------------------------------------------------
             // PAGINATION
@@ -378,23 +910,34 @@
             const pageSize =
                 leadGetPageSize();
 
+
             const from =
-                (pageNumber - 1) *
+                (
+                    pageNumber -
+                    1
+                ) *
                 pageSize;
+
 
             const to =
                 from +
                 pageSize -
                 1;
 
-            query = query
-                .order(
-                    "created_at",
-                    {
-                        ascending: false
-                    }
-                )
-                .range(from, to);
+
+            query =
+                query
+                    .order(
+                        "created_at",
+                        {
+                            ascending: false
+                        }
+                    )
+                    .range(
+                        from,
+                        to
+                    );
+
 
             // ------------------------------------------------
             // EXECUTE
@@ -406,77 +949,209 @@
                 count
             } = await query;
 
+
             if (error) {
 
                 console.error(
-                    "Load leads error:",
+                    "FSI CRM: load leads error:",
                     error
                 );
 
-                window.leadsData = [];
-                window.totalLeadsCount = 0;
 
-                renderLeads([]);
+                window.leadsData =
+                    [];
+
+
+                window.totalLeadsCount =
+                    0;
+
+
+                renderLeads(
+                    []
+                );
+
 
                 updatePagination();
 
-                if (
-                    typeof window.showToast === "function"
-                ) {
-                    window.showToast(
-                        error.message ||
-                        "Failed to load leads.",
-                        "error"
-                    );
-                }
+
+                showLeadError(
+                    error,
+                    "Failed to load leads."
+                );
+
 
                 return;
             }
+
 
             window.leadsData =
                 Array.isArray(data)
                     ? data
                     : [];
 
+
             window.totalLeadsCount =
-                Number(count) || 0;
+                Number(
+                    count
+                ) || 0;
+
+
+            // ------------------------------------------------
+            // FIX PAGE IF CURRENT PAGE IS TOO HIGH
+            // ------------------------------------------------
+
+            const totalPages =
+                Math.max(
+                    1,
+                    Math.ceil(
+                        (
+                            Number(
+                                window.totalLeadsCount
+                            ) || 0
+                        ) /
+                        pageSize
+                    )
+                );
+
+
+            if (
+                pageNumber >
+                totalPages
+            ) {
+
+                leadSetCurrentPage(
+                    totalPages
+                );
+
+
+                await loadLeads(
+                    totalPages
+                );
+
+
+                return;
+            }
+
+
+            // ------------------------------------------------
+            // RENDER
+            // ------------------------------------------------
 
             renderLeads(
                 window.leadsData
             );
 
+
             updatePagination();
+
+
+            // ------------------------------------------------
+            // SAVE CURRENT FILTER STATE
+            // ------------------------------------------------
+
+            window.currentSearch =
+                filters.search;
+
+
+            window.currentStatusFilter =
+                filters.status;
+
+
+            window.currentBusinessFilter =
+                filters.business;
+
+
+            window.currentLocationFilter =
+                filters.location;
+
+
+            window.currentSalesFilter =
+                filters.salesFilter;
+
 
         } catch (error) {
 
             console.error(
-                "loadLeads error:",
+                "FSI CRM: loadLeads error:",
                 error
             );
 
-            renderLeads([]);
 
-            if (
-                typeof window.showToast === "function"
-            ) {
-                window.showToast(
-                    error.message ||
-                    "An error occurred while loading leads.",
-                    "error"
-                );
-            }
+            window.leadsData =
+                [];
+
+
+            renderLeads(
+                []
+            );
+
+
+            updatePagination();
+
+
+            showLeadError(
+                error,
+                "An error occurred while loading leads."
+            );
+
 
         } finally {
 
-            leadsLoading = false;
+            leadsLoading =
+                false;
+
 
             if (
-                typeof window.refreshIcons === "function"
+                typeof window.refreshIcons ===
+                "function"
             ) {
+
                 window.refreshIcons();
             }
         }
     }
+
+
+    // ========================================================
+    // ERROR MESSAGE
+    // ========================================================
+
+    function showLeadError(
+        error,
+        fallback
+    ) {
+
+        const message =
+            typeof window.getSupabaseErrorMessage ===
+            "function"
+                ? window.getSupabaseErrorMessage(
+                    error,
+                    fallback
+                )
+                : (
+                    error?.message ||
+                    fallback
+                );
+
+
+        if (
+            typeof window.showToast ===
+            "function"
+        ) {
+
+            window.showToast(
+                message,
+                "error"
+            );
+
+        } else {
+
+            console.error(
+                message
+            );
+        }
+    }
+
 
     // ========================================================
     // PAGINATION
@@ -485,25 +1160,45 @@
     function updatePagination() {
 
         const paginationInfo =
-            leadElement("paginationInfo");
+            leadElement(
+                "leads-pagination-info",
+                "paginationInfo"
+            );
+
 
         const pageIndicator =
-            leadElement("pageIndicator");
+            leadElement(
+                "pageIndicator"
+            );
+
 
         const prevBtn =
-            leadElement("prevBtn");
+            leadElement(
+                "btn-prev-page",
+                "prevBtn"
+            );
+
 
         const nextBtn =
-            leadElement("nextBtn");
+            leadElement(
+                "btn-next-page",
+                "nextBtn"
+            );
+
 
         const pageSize =
             leadGetPageSize();
 
+
         const totalLeads =
-            Number(window.totalLeadsCount) || 0;
+            Number(
+                window.totalLeadsCount
+            ) || 0;
+
 
         const currentPage =
             leadGetCurrentPage();
+
 
         const totalPages =
             Math.max(
@@ -514,55 +1209,113 @@
                 )
             );
 
+
         const start =
             totalLeads === 0
                 ? 0
                 : (
-                    (currentPage - 1) *
+                    (
+                        currentPage -
+                        1
+                    ) *
                     pageSize
-                ) + 1;
+                ) +
+                1;
+
 
         const end =
             Math.min(
-                currentPage * pageSize,
+                currentPage *
+                pageSize,
                 totalLeads
             );
 
+
         if (paginationInfo) {
+
             paginationInfo.textContent =
-                `${start}-${end} of ${totalLeads} leads`;
+                totalLeads === 0
+                    ? "0 leads"
+                    : `${start}-${end} of ${totalLeads} leads`;
         }
 
+
         if (pageIndicator) {
+
             pageIndicator.textContent =
                 `Page ${currentPage} / ${totalPages}`;
         }
 
+
         if (prevBtn) {
-            prevBtn.disabled =
+
+            const disabled =
                 currentPage <= 1;
+
+
+            prevBtn.disabled =
+                disabled;
+
 
             prevBtn.setAttribute(
                 "aria-disabled",
-                String(currentPage <= 1)
+                String(
+                    disabled
+                )
             );
         }
 
+
         if (nextBtn) {
-            nextBtn.disabled =
+
+            const disabled =
                 currentPage >= totalPages;
+
+
+            nextBtn.disabled =
+                disabled;
+
 
             nextBtn.setAttribute(
                 "aria-disabled",
-                String(currentPage >= totalPages)
+                String(
+                    disabled
+                )
             );
         }
+
+
+        // ----------------------------------------------------
+        // Alternative pagination labels
+        // ----------------------------------------------------
+
+        const pageInfo =
+            leadElement(
+                "pagination-page-info"
+            );
+
+
+        if (pageInfo) {
+
+            pageInfo.textContent =
+                `Page ${currentPage} / ${totalPages}`;
+        }
+
+
+        window.totalPages =
+            totalPages;
     }
 
-    function changePage(direction) {
+
+    function changePage(
+        direction
+    ) {
 
         const numericDirection =
-            Number(direction);
+            Number(
+                direction
+            );
+
 
         if (
             !Number.isFinite(
@@ -572,11 +1325,16 @@
             return;
         }
 
+
         const pageSize =
             leadGetPageSize();
 
+
         const totalLeads =
-            Number(window.totalLeadsCount) || 0;
+            Number(
+                window.totalLeadsCount
+            ) || 0;
+
 
         const totalPages =
             Math.max(
@@ -587,12 +1345,15 @@
                 )
             );
 
+
         const currentPage =
             leadGetCurrentPage();
+
 
         const newPage =
             currentPage +
             numericDirection;
+
 
         if (
             newPage < 1 ||
@@ -601,52 +1362,84 @@
             return;
         }
 
-        loadLeads(newPage);
+
+        loadLeads(
+            newPage
+        );
     }
+
 
     function nextLeadPage() {
-        changePage(1);
+
+        changePage(
+            1
+        );
     }
 
+
     function previousLeadPage() {
-        changePage(-1);
+
+        changePage(
+            -1
+        );
     }
+
 
     // ========================================================
     // RENDER LEADS TABLE
     // ========================================================
 
-    function renderLeads(data) {
+    function renderLeads(
+        data
+    ) {
+
+        // Latest index.html:
+        // id="leads-table-body"
 
         const table =
-            leadElement("leadsTable");
+            leadElement(
+                "leads-table-body",
+                "leadsTable"
+            );
+
 
         if (!table) {
+
             console.warn(
-                "Leads table not found."
+                "FSI CRM: leads table body not found."
             );
+
             return;
         }
 
-        table.innerHTML = "";
+
+        table.innerHTML =
+            "";
+
 
         const leads =
             Array.isArray(data)
                 ? data
                 : [];
 
-        if (leads.length === 0) {
+
+        if (
+            leads.length ===
+            0
+        ) {
 
             table.innerHTML = `
                 <tr class="empty-row">
-                    <td colspan="10">
+                    <td colspan="9">
                         <div class="empty-state">
                             <div class="empty-state-icon">
-                                <span>📋</span>
+                                <i data-lucide="inbox"></i>
                             </div>
+
                             <div class="empty-state-title">
                                 No leads found
                             </div>
+
                             <div class="empty-state-text">
                                 Try changing your search or filter.
                             </div>
@@ -655,339 +1448,457 @@
                 </tr>
             `;
 
+
+            if (
+                typeof window.refreshIcons ===
+                "function"
+            ) {
+
+                window.refreshIcons();
+            }
+
+
             return;
         }
 
-        leads.forEach(lead => {
 
-            const tr =
-                document.createElement("tr");
+        leads.forEach(
+            lead => {
 
-            const salesName =
-                typeof window.getSalesName === "function"
-                    ? window.getSalesName(
-                        lead.sales_id
-                    )
-                    : "-";
-
-            const displayStatus =
-                typeof window.normalizeLeadStatus === "function"
-                    ? window.normalizeLeadStatus(
-                        lead.status
-                    )
-                    : (
-                        lead.status ||
-                        "New"
+                const tr =
+                    document.createElement(
+                        "tr"
                     );
 
-            const statusCSS =
-                typeof window.statusClass === "function"
-                    ? window.statusClass(
-                        displayStatus
-                    )
-                    : "status-new";
 
-            const customerName =
-                typeof window.getValue === "function"
-                    ? window.getValue(
+                const salesName =
+                    typeof window.getSalesName ===
+                    "function"
+                        ? window.getSalesName(
+                            lead.sales_id
+                        )
+                        : "-";
+
+
+                const displayStatus =
+                    typeof window.normalizeLeadStatus ===
+                    "function"
+                        ? window.normalizeLeadStatus(
+                            lead.status
+                        )
+                        : (
+                            lead.status ||
+                            "New"
+                        );
+
+
+                const statusCSS =
+                    typeof window.getStatusClass ===
+                    "function"
+                        ? window.getStatusClass(
+                            displayStatus
+                        )
+                        : (
+                            typeof window.statusClass ===
+                            "function"
+                                ? window.statusClass(
+                                    displayStatus
+                                )
+                                : "status-new"
+                        );
+
+
+                const customerName =
+                    leadGetValue(
                         lead.customer_name
-                    )
-                    : String(
-                        lead.customer_name || ""
                     );
 
-            const phone =
-                typeof window.getValue === "function"
-                    ? window.getValue(
+
+                const phone =
+                    leadGetValue(
                         lead.phone
-                    )
-                    : String(
-                        lead.phone || ""
                     );
 
-            const email =
-                typeof window.getValue === "function"
-                    ? window.getValue(
-                        lead.email
-                    )
-                    : String(
-                        lead.email || ""
-                    );
 
-            const business =
-                typeof window.getValue === "function"
-                    ? window.getValue(
+                const business =
+                    leadGetValue(
                         lead.business
-                    )
-                    : String(
-                        lead.business || ""
                     );
 
-            const location =
-                typeof window.getValue === "function"
-                    ? window.getValue(
+
+                const location =
+                    leadGetValue(
                         lead.location
-                    )
-                    : String(
-                        lead.location || ""
                     );
 
-            const escapedCustomer =
-                typeof window.escapeHTML === "function"
-                    ? window.escapeHTML(
+
+                const escapedCustomer =
+                    leadEscapeHTML(
                         customerName
-                    )
-                    : customerName;
-
-            const escapedPhone =
-                typeof window.escapeHTML === "function"
-                    ? window.escapeHTML(phone)
-                    : phone;
-
-            const escapedEmail =
-                typeof window.escapeHTML === "function"
-                    ? window.escapeHTML(email)
-                    : email;
-
-            const escapedBusiness =
-                typeof window.escapeHTML === "function"
-                    ? window.escapeHTML(business)
-                    : business;
-
-            const escapedLocation =
-                typeof window.escapeHTML === "function"
-                    ? window.escapeHTML(location)
-                    : location;
-
-            const escapedSales =
-                typeof window.escapeHTML === "function"
-                    ? window.escapeHTML(
-                        salesName || "-"
-                    )
-                    : (
-                        salesName || "-"
                     );
 
-            let whatsappHTML = "-";
 
-            if (phone) {
-
-                const waURL =
-                    typeof window.whatsappLink === "function"
-                        ? window.whatsappLink(phone)
-                        : "#";
-
-                whatsappHTML = `
-                    <a
-                        href="${waURL}"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="wa-link"
-                        title="Open WhatsApp"
-                    >
-                        ${escapedPhone}
-                    </a>
-                `;
-            }
-
-            let emailHTML = "-";
-
-            if (email) {
-
-                const mailURL =
-                    `mailto:${encodeURIComponent(email)}`;
-
-                emailHTML = `
-                    <a
-                        href="${mailURL}"
-                        class="crm-email-link"
-                    >
-                        ${escapedEmail}
-                    </a>
-                `;
-            }
-
-            const formattedFollowUp =
-                typeof window.formatDate === "function"
-                    ? window.formatDate(
-                        lead.follow_up_date
-                    )
-                    : (
-                        lead.follow_up_date || "-"
+                const escapedPhone =
+                    leadEscapeHTML(
+                        phone
                     );
 
-            const formattedAppointment =
-                typeof window.formatDate === "function"
-                    ? window.formatDate(
-                        lead.appointment
-                    )
-                    : (
-                        lead.appointment || "-"
+
+                const escapedBusiness =
+                    leadEscapeHTML(
+                        business
                     );
 
-            const safeFollowUp =
-                typeof window.escapeHTML === "function"
-                    ? window.escapeHTML(
-                        formattedFollowUp
-                    )
-                    : formattedFollowUp;
 
-            const safeAppointment =
-                typeof window.escapeHTML === "function"
-                    ? window.escapeHTML(
-                        formattedAppointment
-                    )
-                    : formattedAppointment;
+                const escapedLocation =
+                    leadEscapeHTML(
+                        location
+                    );
 
-            const safeStatus =
-                typeof window.escapeHTML === "function"
-                    ? window.escapeHTML(
+
+                const escapedSales =
+                    leadEscapeHTML(
+                        salesName ||
+                        "-"
+                    );
+
+
+                const safeStatus =
+                    leadEscapeHTML(
                         displayStatus
-                    )
-                    : displayStatus;
+                    );
 
-            const leadId =
-                String(
-                    lead.id || ""
+
+                // ------------------------------------------------
+                // WhatsApp
+                // ------------------------------------------------
+
+                let whatsappHTML =
+                    "-";
+
+
+                if (phone) {
+
+                    const waURL =
+                        typeof window.whatsappLink ===
+                        "function"
+                            ? window.whatsappLink(
+                                phone
+                            )
+                            : "#";
+
+
+                    if (
+                        waURL &&
+                        waURL !== "#"
+                    ) {
+
+                        whatsappHTML = `
+                            <a
+                                href="${leadEscapeHTML(waURL)}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="wa-link"
+                                title="Open WhatsApp"
+                            >
+                                ${escapedPhone}
+                            </a>
+                        `;
+
+                    } else {
+
+                        whatsappHTML =
+                            escapedPhone;
+                    }
+                }
+
+
+                // ------------------------------------------------
+                // Dates
+                // ------------------------------------------------
+
+                const formattedFollowUp =
+                    typeof window.formatDate ===
+                    "function"
+                        ? window.formatDate(
+                            lead.follow_up_date
+                        )
+                        : (
+                            lead.follow_up_date ||
+                            "-"
+                        );
+
+
+                const formattedAppointment =
+                    typeof window.formatDate ===
+                    "function"
+                        ? window.formatDate(
+                            lead.appointment
+                        )
+                        : (
+                            lead.appointment ||
+                            "-"
+                        );
+
+
+                const safeFollowUp =
+                    leadEscapeHTML(
+                        formattedFollowUp
+                    );
+
+
+                const safeAppointment =
+                    leadEscapeHTML(
+                        formattedAppointment
+                    );
+
+
+                // ------------------------------------------------
+                // Lead ID
+                // ------------------------------------------------
+
+                const leadId =
+                    String(
+                        lead.id || ""
+                    );
+
+
+                const escapedId =
+                    leadId
+                        .replace(
+                            /\\/g,
+                            "\\\\"
+                        )
+                        .replace(
+                            /'/g,
+                            "\\'"
+                        );
+
+
+                // ------------------------------------------------
+                // Table
+                // ------------------------------------------------
+                //
+                // Latest index.html columns:
+                //
+                // Customer
+                // Contact
+                // Business
+                // Location
+                // Sales
+                // Status
+                // Follow Up
+                // Appointment
+                // Action
+                //
+                // Total = 9 columns
+                // ------------------------------------------------
+
+                tr.innerHTML = `
+                    <td>
+                        <div class="lead-customer-cell">
+
+                            <button
+                                type="button"
+                                class="lead-name-btn"
+                                onclick="crmOpenCustomerProfile('${escapedId}')"
+                                title="Open customer profile"
+                            >
+                                ${escapedCustomer || "-"}
+                            </button>
+
+                        </div>
+                    </td>
+
+
+                    <td>
+                        ${whatsappHTML}
+                    </td>
+
+
+                    <td>
+                        ${escapedBusiness || "-"}
+                    </td>
+
+
+                    <td>
+                        ${escapedLocation || "-"}
+                    </td>
+
+
+                    <td>
+                        ${escapedSales || "-"}
+                    </td>
+
+
+                    <td>
+                        <span
+                            class="status-badge ${leadEscapeHTML(statusCSS)}"
+                        >
+                            ${safeStatus}
+                        </span>
+                    </td>
+
+
+                    <td>
+                        ${safeFollowUp}
+                    </td>
+
+
+                    <td>
+                        ${safeAppointment}
+                    </td>
+
+
+                    <td>
+                        <div class="crm-lead-actions">
+
+                            <button
+                                type="button"
+                                class="primary-btn small-btn"
+                                onclick="crmOpenCustomerProfile('${escapedId}')"
+                                title="Open customer profile"
+                            >
+                                <i data-lucide="user-round"></i>
+                                Profile
+                            </button>
+
+
+                            <button
+                                type="button"
+                                class="secondary-btn small-btn"
+                                onclick="deleteLead('${escapedId}')"
+                                title="Delete lead"
+                            >
+                                <i data-lucide="trash-2"></i>
+                                Delete
+                            </button>
+
+                        </div>
+                    </td>
+                `;
+
+
+                table.appendChild(
+                    tr
                 );
+            }
+        );
 
-            const escapedId =
-                leadId.replace(
-                    /'/g,
-                    "\\'"
-                );
-
-            tr.innerHTML = `
-                <td>
-                    <div class="lead-customer-cell">
-                        <button
-                            type="button"
-                            class="lead-name-btn"
-                            onclick="crmOpenCustomerProfile('${escapedId}')"
-                            title="Open customer profile"
-                        >
-                            ${escapedCustomer || "-"}
-                        </button>
-                    </div>
-                </td>
-
-                <td>
-                    ${whatsappHTML}
-                </td>
-
-                <td>
-                    ${emailHTML}
-                </td>
-
-                <td>
-                    ${escapedBusiness || "-"}
-                </td>
-
-                <td>
-                    ${escapedLocation || "-"}
-                </td>
-
-                <td>
-                    ${escapedSales || "-"}
-                </td>
-
-                <td>
-                    <span
-                        class="status-badge ${statusCSS}"
-                    >
-                        ${safeStatus}
-                    </span>
-                </td>
-
-                <td>
-                    ${safeFollowUp}
-                </td>
-
-                <td>
-                    ${safeAppointment}
-                </td>
-
-                <td>
-                    <div class="crm-lead-actions">
-
-                        <button
-                            type="button"
-                            class="primary-btn small-btn"
-                            onclick="crmOpenCustomerProfile('${escapedId}')"
-                        >
-                            Profile
-                        </button>
-
-                        <button
-                            type="button"
-                            class="secondary-btn small-btn"
-                            onclick="deleteLead('${escapedId}')"
-                        >
-                            Delete
-                        </button>
-
-                    </div>
-                </td>
-            `;
-
-            table.appendChild(tr);
-        });
 
         if (
-            typeof window.refreshIcons === "function"
+            typeof window.refreshIcons ===
+            "function"
         ) {
+
             window.refreshIcons();
         }
     }
+
 
     // ========================================================
     // FILTER / SEARCH
     // ========================================================
 
     function filterLeads() {
-        leadSetCurrentPage(1);
-        loadLeads(1);
+
+        leadSetCurrentPage(
+            1
+        );
+
+
+        loadLeads(
+            1
+        );
     }
+
 
     function onSearchInput() {
 
-        clearTimeout(searchTimer);
-
-        searchTimer = setTimeout(
-            function () {
-                leadSetCurrentPage(1);
-                loadLeads(1);
-            },
-            400
+        clearTimeout(
+            searchTimer
         );
+
+
+        searchTimer =
+            setTimeout(
+                function () {
+
+                    leadSetCurrentPage(
+                        1
+                    );
+
+
+                    loadLeads(
+                        1
+                    );
+
+                },
+                400
+            );
     }
+
 
     function clearLeadFilters() {
 
         const fields = [
-            "leadSearch",
-            "leadsSearch",
-            "statusFilter",
-            "leadStatusFilter",
-            "businessFilter",
-            "locationFilter",
-            "salesFilter"
+
+            [
+                "lead-search",
+                "leadSearch",
+                "leadsSearch"
+            ],
+
+            [
+                "filter-status",
+                "statusFilter",
+                "leadStatusFilter"
+            ],
+
+            [
+                "filter-business",
+                "businessFilter"
+            ],
+
+            [
+                "filter-location",
+                "locationFilter"
+            ],
+
+            [
+                "salesFilter"
+            ]
         ];
 
-        fields.forEach(id => {
 
-            const element =
-                document.getElementById(id);
+        fields.forEach(
+            ids => {
 
-            if (element) {
-                element.value = "";
+                const element =
+                    leadElement(
+                        ...ids
+                    );
+
+
+                if (element) {
+
+                    element.value =
+                        "";
+                }
             }
-        });
+        );
 
-        leadSetCurrentPage(1);
 
-        loadLeads(1);
+        leadSetCurrentPage(
+            1
+        );
+
+
+        loadLeads(
+            1
+        );
     }
+
 
     // ========================================================
     // LEAD MODAL
@@ -996,56 +1907,76 @@
     function openLeadModal() {
 
         const modal =
-            leadElement("leadModal");
+            leadElement(
+                "leadModal"
+            );
+
 
         if (!modal) {
 
             console.error(
-                "Lead modal not found."
+                "FSI CRM: Lead modal not found."
             );
 
+
             if (
-                typeof window.showToast === "function"
+                typeof window.showToast ===
+                "function"
             ) {
+
                 window.showToast(
                     "Lead modal not found.",
                     "error"
                 );
             }
 
+
             return;
         }
 
+
         clearLeadForm();
+
 
         const title =
             leadElement(
                 "leadModalTitle"
             );
 
+
         if (title) {
+
             title.textContent =
                 "Add Lead";
         }
 
-        modal.classList.add("show");
+
+        modal.classList.add(
+            "show"
+        );
+
 
         modal.style.display =
             "flex";
 
+
         document.body.classList.add(
             "modal-open"
         );
+
 
         setTimeout(
             function () {
 
                 const customerInput =
                     leadElement(
+                        "leadCustomerName",
                         "leadCustomer"
                     );
 
+
                 if (customerInput) {
+
                     customerInput.focus();
                 }
 
@@ -1054,24 +1985,34 @@
         );
     }
 
+
     function closeLeadModal() {
 
         const modal =
-            leadElement("leadModal");
+            leadElement(
+                "leadModal"
+            );
 
-        if (!modal) return;
+
+        if (!modal) {
+            return;
+        }
+
 
         modal.classList.remove(
             "show"
         );
 
+
         modal.style.display =
             "none";
+
 
         document.body.classList.remove(
             "modal-open"
         );
     }
+
 
     // ========================================================
     // CLEAR FORM
@@ -1080,150 +2021,241 @@
     function clearLeadForm() {
 
         setLeadValue(
-            "leadId",
+            [
+                "leadId"
+            ],
             ""
         );
 
+
         setLeadValue(
-            "leadCustomer",
+            [
+                "leadCustomerName",
+                "leadCustomer"
+            ],
             ""
         );
 
+
         setLeadValue(
-            "leadPhone",
+            [
+                "leadPhone"
+            ],
             ""
         );
 
+
         setLeadValue(
-            "leadEmail",
+            [
+                "leadEmail"
+            ],
             ""
         );
 
+
         setLeadValue(
-            "leadBusiness",
+            [
+                "leadBusiness"
+            ],
             ""
         );
 
+
         setLeadValue(
-            "leadLocation",
+            [
+                "leadLocation"
+            ],
             ""
         );
 
+
         setLeadValue(
-            "leadStatus",
+            [
+                "leadStatus"
+            ],
             "New"
         );
+
 
         const profile =
             leadGetProfile();
 
+
         setLeadValue(
-            "leadSalesAssign",
+            [
+                "leadSalesAssign"
+            ],
             leadIsSales()
                 ? (
-                    profile?.id || ""
+                    profile?.id ||
+                    ""
                 )
                 : ""
         );
 
+
         setLeadValue(
-            "leadFollowUp",
+            [
+                "leadFollowUp"
+            ],
             ""
         );
 
+
         setLeadValue(
-            "leadAppointment",
+            [
+                "leadAppointment"
+            ],
             ""
         );
 
+
         setLeadValue(
-            "leadSiteSurvey",
+            [
+                "leadSiteSurvey"
+            ],
             ""
         );
 
+
         setLeadValue(
-            "leadQuotation",
+            [
+                "leadQuotation"
+            ],
             ""
         );
 
+
         setLeadValue(
-            "leadSPK",
+            [
+                "leadSpk",
+                "leadSPK"
+            ],
             ""
         );
 
+
         setLeadValue(
-            "leadClosing",
+            [
+                "leadClosing"
+            ],
             ""
         );
 
+
         setLeadValue(
-            "leadNotes",
+            [
+                "leadNotes"
+            ],
             ""
         );
+
 
         if (
             typeof window.setupSalesAssignmentAccess ===
             "function"
         ) {
+
             window.setupSalesAssignmentAccess();
         }
     }
 
+
     function setLeadValue(
-        id,
+        ids,
         value
     ) {
+
+        const idList =
+            Array.isArray(ids)
+                ? ids
+                : [ids];
+
+
+        let element =
+            null;
+
+
+        for (
+            const id of idList
+        ) {
+
+            element =
+                document.getElementById(
+                    id
+                );
+
+            if (element) {
+                break;
+            }
+        }
+
+
+        if (!element) {
+            return;
+        }
+
 
         if (
             typeof window.setValue ===
             "function"
         ) {
+
             window.setValue(
-                id,
+                element.id,
                 value
             );
-            return;
-        }
 
-        const element =
-            document.getElementById(id);
+        } else {
 
-        if (element) {
             element.value =
                 value ?? "";
         }
     }
 
+
     // ========================================================
     // EDIT LEAD
     // ========================================================
     //
-    // Main edit flow is handled by shelter.js.
-    // This compatibility function opens the customer profile.
+    // Editing customer is handled by shelter.js.
     // ========================================================
 
-    async function openEditLead(id) {
+    async function openEditLead(
+        id
+    ) {
 
         if (
             typeof window.crmOpenCustomerProfile ===
             "function"
         ) {
-            await window.crmOpenCustomerProfile(id);
+
+            await window.crmOpenCustomerProfile(
+                id
+            );
+
             return;
         }
+
 
         if (
             typeof window.editLead ===
             "function"
         ) {
-            await window.editLead(id);
+
+            await window.editLead(
+                id
+            );
+
             return;
         }
 
+
         console.warn(
-            "Customer profile editor is not available."
+            "FSI CRM: Customer profile editor is not available."
         );
     }
+
 
     // ========================================================
     // SAVE LEAD
@@ -1234,89 +2266,125 @@
         const profile =
             leadGetProfile();
 
+
         if (!profile) {
 
-            if (
-                typeof window.showToast === "function"
-            ) {
-                window.showToast(
-                    "User profile is not ready.",
-                    "error"
-                );
-            }
+            showLeadError(
+                new Error(
+                    "User profile is not ready."
+                ),
+                "User profile is not ready."
+            );
 
             return;
         }
 
-        if (!window.supabaseClient) {
 
-            if (
-                typeof window.showToast === "function"
-            ) {
-                window.showToast(
-                    "Supabase is not connected.",
-                    "error"
-                );
-            }
+        const client =
+            leadGetSupabase();
+
+
+        if (!client) {
+
+            showLeadError(
+                new Error(
+                    "Supabase is not connected."
+                ),
+                "Supabase is not connected."
+            );
 
             return;
         }
+
 
         const customerElement =
             leadElement(
+                "leadCustomerName",
                 "leadCustomer"
             );
 
+
         const customer =
-            customerElement?.value?.trim() || "";
+            customerElement?.value?.trim() ||
+            "";
+
 
         if (!customer) {
 
             if (
-                typeof window.showToast === "function"
+                typeof window.showToast ===
+                "function"
             ) {
+
                 window.showToast(
                     "Customer name is required.",
                     "error"
                 );
+
             } else {
+
                 alert(
                     "Customer name is required."
                 );
             }
 
+
             customerElement?.focus();
+
 
             return;
         }
 
+
         const leadId =
             leadElement(
                 "leadId"
-            )?.value || "";
+            )?.value ||
+            "";
+
 
         const getFormValue =
-            function (id) {
+            function (...ids) {
+
+                const element =
+                    leadElement(
+                        ...ids
+                    );
+
+
                 return (
-                    leadElement(id)?.value?.trim() ||
+                    element?.value?.trim() ||
                     ""
                 );
             };
+
 
         const statusValue =
             getFormValue(
                 "leadStatus"
             );
 
+
         const normalizedStatus =
             typeof window.normalizeLeadStatus ===
             "function"
                 ? window.normalizeLeadStatus(
-                    statusValue || "New"
+                    statusValue ||
+                    "New"
                 )
                 : (
-                    statusValue || "New"
+                    statusValue ||
+                    "New"
                 );
+
+
+        // ----------------------------------------------------
+        // PAYLOAD
+        // ----------------------------------------------------
+        //
+        // Do NOT send email because current confirmed
+        // leads schema does not require email.
+        // ----------------------------------------------------
 
         const payload = {
 
@@ -1326,11 +2394,6 @@
             phone:
                 getFormValue(
                     "leadPhone"
-                ),
-
-            email:
-                getFormValue(
-                    "leadEmail"
                 ),
 
             business:
@@ -1349,38 +2412,46 @@
             follow_up_date:
                 leadElement(
                     "leadFollowUp"
-                )?.value || null,
+                )?.value ||
+                null,
 
             appointment:
                 leadElement(
                     "leadAppointment"
-                )?.value || null,
+                )?.value ||
+                null,
 
             site_survey:
                 leadElement(
                     "leadSiteSurvey"
-                )?.value || null,
+                )?.value ||
+                null,
 
             quotation:
                 leadElement(
                     "leadQuotation"
-                )?.value || null,
+                )?.value ||
+                null,
 
             spk:
                 leadElement(
+                    "leadSpk",
                     "leadSPK"
-                )?.value || null,
+                )?.value ||
+                null,
 
             closing:
                 leadElement(
                     "leadClosing"
-                )?.value || null,
+                )?.value ||
+                null,
 
             notes:
                 getFormValue(
                     "leadNotes"
                 )
         };
+
 
         // ----------------------------------------------------
         // SALES ASSIGNMENT
@@ -1391,196 +2462,213 @@
                 "leadSalesAssign"
             );
 
-        const selectedSales =
-            salesAssignment?.value || "";
 
-        if (leadIsAdmin()) {
+        const selectedSales =
+            salesAssignment?.value ||
+            "";
+
+
+        if (
+            leadIsAdmin()
+        ) {
 
             payload.sales_id =
                 selectedSales ||
                 null;
 
-        } else {
+        } else if (
+            leadIsSales()
+        ) {
 
-            // Sales can only assign the lead
-            // to their own profile.
             payload.sales_id =
                 profile.id;
+
+        } else {
+
+            payload.sales_id =
+                null;
         }
+
+
+        // ----------------------------------------------------
+        // SAVE
+        // ----------------------------------------------------
 
         try {
 
-            // ------------------------------------------------
+            // =================================================
             // UPDATE
-            // ------------------------------------------------
+            // =================================================
 
             if (leadId) {
 
                 payload.updated_by =
                     profile.id;
 
+
                 const {
                     error
                 } =
-                    await window.supabaseClient
+                    await client
                         .from("leads")
-                        .update(payload)
+                        .update(
+                            payload
+                        )
                         .eq(
                             "id",
                             leadId
                         );
 
+
                 if (error) {
 
                     console.error(
-                        "Update lead error:",
+                        "FSI CRM: update lead error:",
                         error
                     );
 
-                    if (
-                        typeof window.showToast ===
-                        "function"
-                    ) {
-                        window.showToast(
-                            error.message ||
-                            "Failed to update lead.",
-                            "error"
-                        );
-                    }
+
+                    showLeadError(
+                        error,
+                        "Failed to update lead."
+                    );
+
 
                     return;
                 }
+
 
                 if (
                     typeof window.showToast ===
                     "function"
                 ) {
+
                     window.showToast(
                         "Lead updated successfully.",
                         "success"
                     );
-                } else {
-                    alert(
-                        "Lead updated successfully."
-                    );
                 }
+
 
             } else {
 
-                // ------------------------------------------------
+                // =============================================
                 // INSERT
-                // ------------------------------------------------
+                // =============================================
 
                 payload.created_by =
                     profile.id;
 
+
                 payload.updated_by =
                     profile.id;
+
 
                 const {
                     error
                 } =
-                    await window.supabaseClient
+                    await client
                         .from("leads")
                         .insert([
                             payload
                         ]);
 
+
                 if (error) {
 
                     console.error(
-                        "Insert lead error:",
+                        "FSI CRM: insert lead error:",
                         error
                     );
 
-                    if (
-                        typeof window.showToast ===
-                        "function"
-                    ) {
-                        window.showToast(
-                            error.message ||
-                            "Failed to add lead.",
-                            "error"
-                        );
-                    }
+
+                    showLeadError(
+                        error,
+                        "Failed to add lead."
+                    );
+
 
                     return;
                 }
+
 
                 if (
                     typeof window.showToast ===
                     "function"
                 ) {
+
                     window.showToast(
                         "Lead added successfully.",
                         "success"
                     );
-                } else {
-                    alert(
-                        "Lead added successfully."
-                    );
                 }
             }
 
-            closeLeadModal();
 
             // ------------------------------------------------
-            // REFRESH DATA
+            // CLOSE MODAL
+            // ------------------------------------------------
+
+            closeLeadModal();
+
+
+            // ------------------------------------------------
+            // REFRESH FILTERS
             // ------------------------------------------------
 
             await loadFilterOptions();
+
+
+            // ------------------------------------------------
+            // REFRESH CURRENT PAGE
+            // ------------------------------------------------
 
             await loadLeads(
                 leadGetCurrentPage()
             );
 
+
+            // ------------------------------------------------
+            // REFRESH DASHBOARD
+            // ------------------------------------------------
+
             if (
                 typeof window.updateDashboard ===
                 "function"
             ) {
+
                 await window.updateDashboard();
             }
 
-            if (
-                typeof window.refreshDashboard ===
-                "function"
-            ) {
-                // Do not await again if updateDashboard
-                // has already completed.
-            }
 
         } catch (error) {
 
             console.error(
-                "saveLead error:",
+                "FSI CRM: saveLead error:",
                 error
             );
 
-            if (
-                typeof window.showToast ===
-                "function"
-            ) {
-                window.showToast(
-                    error.message ||
-                    "An error occurred while saving the lead.",
-                    "error"
-                );
-            } else {
-                alert(
-                    "An error occurred:\n" +
-                    error.message
-                );
-            }
+
+            showLeadError(
+                error,
+                "An error occurred while saving the lead."
+            );
         }
     }
+
 
     // ========================================================
     // DELETE LEAD
     // ========================================================
 
-    async function deleteLead(id) {
+    async function deleteLead(
+        id
+    ) {
 
-        if (!id) return;
+        if (!id) {
+            return;
+        }
+
 
         const confirmed =
             typeof window.confirmAction ===
@@ -1592,31 +2680,35 @@
                     "Delete this lead?"
                 );
 
+
         if (!confirmed) {
             return;
         }
 
-        if (!window.supabaseClient) {
 
-            if (
-                typeof window.showToast ===
-                "function"
-            ) {
-                window.showToast(
-                    "Supabase is not connected.",
-                    "error"
-                );
-            }
+        const client =
+            leadGetSupabase();
+
+
+        if (!client) {
+
+            showLeadError(
+                new Error(
+                    "Supabase is not connected."
+                ),
+                "Supabase is not connected."
+            );
 
             return;
         }
+
 
         try {
 
             const {
                 error
             } =
-                await window.supabaseClient
+                await client
                     .from("leads")
                     .delete()
                     .eq(
@@ -1624,31 +2716,24 @@
                         id
                     );
 
+
             if (error) {
 
                 console.error(
-                    "Delete lead error:",
+                    "FSI CRM: delete lead error:",
                     error
                 );
 
-                if (
-                    typeof window.showToast ===
-                    "function"
-                ) {
-                    window.showToast(
-                        error.message ||
-                        "Failed to delete lead.",
-                        "error"
-                    );
-                } else {
-                    alert(
-                        "Failed to delete lead:\n" +
-                        error.message
-                    );
-                }
+
+                showLeadError(
+                    error,
+                    "Failed to delete lead."
+                );
+
 
                 return;
             }
+
 
             // ------------------------------------------------
             // CLEAR CUSTOMER PROFILE CACHE
@@ -1657,8 +2742,10 @@
             if (
                 String(
                     window.crmCurrentCustomerId
-                ) === String(id)
+                ) ===
+                String(id)
             ) {
+
                 window.crmCurrentCustomerId =
                     null;
 
@@ -1666,24 +2753,34 @@
                     null;
             }
 
+
             // ------------------------------------------------
-            // REFRESH
+            // REFRESH FILTERS
             // ------------------------------------------------
 
             await loadFilterOptions();
 
+
+            // ------------------------------------------------
+            // CALCULATE CORRECT PAGE
+            // ------------------------------------------------
+
+            const oldTotal =
+                Number(
+                    window.totalLeadsCount
+                ) || 0;
+
+
             const totalAfterDelete =
                 Math.max(
                     0,
-                    (
-                        Number(
-                            window.totalLeadsCount
-                        ) || 1
-                    ) - 1
+                    oldTotal - 1
                 );
+
 
             const pageSize =
                 leadGetPageSize();
+
 
             const maxPage =
                 Math.max(
@@ -1694,56 +2791,63 @@
                     )
                 );
 
+
             const pageAfterDelete =
                 Math.min(
                     leadGetCurrentPage(),
                     maxPage
                 );
 
+
+            // ------------------------------------------------
+            // LOAD
+            // ------------------------------------------------
+
             await loadLeads(
                 pageAfterDelete
             );
+
+
+            // ------------------------------------------------
+            // DASHBOARD
+            // ------------------------------------------------
 
             if (
                 typeof window.updateDashboard ===
                 "function"
             ) {
+
                 await window.updateDashboard();
             }
+
 
             if (
                 typeof window.showToast ===
                 "function"
             ) {
+
                 window.showToast(
                     "Lead deleted successfully.",
                     "success"
                 );
             }
 
+
         } catch (error) {
 
             console.error(
-                "deleteLead error:",
+                "FSI CRM: deleteLead error:",
                 error
             );
 
-            if (
-                typeof window.showToast ===
-                "function"
-            ) {
-                window.showToast(
-                    error.message ||
-                    "An error occurred while deleting the lead.",
-                    "error"
-                );
-            } else {
-                alert(
-                    error.message
-                );
-            }
+
+            showLeadError(
+                error,
+                "An error occurred while deleting the lead."
+            );
         }
     }
+
 
     // ========================================================
     // SALES ASSIGNMENT ACCESS
@@ -1756,50 +2860,79 @@
                 "leadSalesAssign"
             );
 
-        if (!select) return;
+
+        if (!select) {
+            return;
+        }
+
 
         const profile =
             leadGetProfile();
 
-        if (!profile) return;
+
+        if (!profile) {
+
+            select.disabled =
+                true;
+
+            return;
+        }
+
 
         const isAdmin =
             leadIsAdmin();
 
+
         const isSales =
             leadIsSales();
+
 
         if (isAdmin) {
 
             select.disabled =
                 false;
 
+
             select.removeAttribute(
                 "aria-disabled"
             );
 
+
             return;
         }
+
 
         if (isSales) {
 
             select.value =
-                profile.id || "";
+                profile.id ||
+                "";
+
 
             select.disabled =
                 true;
+
 
             select.setAttribute(
                 "aria-disabled",
                 "true"
             );
 
+
             return;
         }
 
+
         select.disabled =
             true;
+
+
+        select.setAttribute(
+            "aria-disabled",
+            "true"
+        );
     }
+
 
     // ========================================================
     // INITIALIZE EVENTS
@@ -1811,7 +2944,10 @@
             return;
         }
 
-        leadsInitialized = true;
+
+        leadsInitialized =
+            true;
+
 
         // ----------------------------------------------------
         // Search
@@ -1819,9 +2955,11 @@
 
         const searchInput =
             leadElement(
+                "lead-search",
                 "leadSearch",
                 "leadsSearch"
             );
+
 
         if (searchInput) {
 
@@ -1831,62 +2969,122 @@
             );
         }
 
+
         // ----------------------------------------------------
         // Filters
         // ----------------------------------------------------
 
         [
-            "statusFilter",
-            "leadStatusFilter",
-            "businessFilter",
-            "locationFilter",
-            "salesFilter"
-        ].forEach(id => {
+            [
+                "filter-status",
+                "statusFilter",
+                "leadStatusFilter"
+            ],
 
-            const element =
-                document.getElementById(id);
+            [
+                "filter-business",
+                "businessFilter"
+            ],
 
-            if (!element) return;
+            [
+                "filter-location",
+                "locationFilter"
+            ],
 
-            element.addEventListener(
-                "change",
-                filterLeads
-            );
-        });
+            [
+                "salesFilter"
+            ]
+        ].forEach(
+            ids => {
+
+                const element =
+                    leadElement(
+                        ...ids
+                    );
+
+
+                if (!element) {
+                    return;
+                }
+
+
+                element.addEventListener(
+                    "change",
+                    filterLeads
+                );
+            }
+        );
+
 
         // ----------------------------------------------------
-        // Previous / Next
+        // Previous
         // ----------------------------------------------------
 
         const prevBtn =
             leadElement(
+                "btn-prev-page",
                 "prevBtn"
             );
+
 
         if (prevBtn) {
 
             prevBtn.addEventListener(
                 "click",
                 function () {
-                    changePage(-1);
+
+                    changePage(
+                        -1
+                    );
                 }
             );
         }
 
+
+        // ----------------------------------------------------
+        // Next
+        // ----------------------------------------------------
+
         const nextBtn =
             leadElement(
+                "btn-next-page",
                 "nextBtn"
             );
+
 
         if (nextBtn) {
 
             nextBtn.addEventListener(
                 "click",
                 function () {
-                    changePage(1);
+
+                    changePage(
+                        1
+                    );
                 }
             );
         }
+
+
+        // ----------------------------------------------------
+        // Clear filter button
+        // ----------------------------------------------------
+
+        const clearFilterBtn =
+            leadElement(
+                "btn-clear-filters",
+                "clearLeadFilters"
+            );
+
+
+        if (clearFilterBtn) {
+
+            clearFilterBtn.addEventListener(
+                "click",
+                clearLeadFilters
+            );
+        }
+
 
         // ----------------------------------------------------
         // ESC closes modal
@@ -1897,15 +3095,18 @@
             function (event) {
 
                 if (
-                    event.key !== "Escape"
+                    event.key !==
+                    "Escape"
                 ) {
                     return;
                 }
+
 
                 const modal =
                     leadElement(
                         "leadModal"
                     );
+
 
                 if (
                     modal &&
@@ -1913,10 +3114,12 @@
                         "show"
                     )
                 ) {
+
                     closeLeadModal();
                 }
             }
         );
+
 
         // ----------------------------------------------------
         // Click outside modal
@@ -1926,6 +3129,7 @@
             leadElement(
                 "leadModal"
             );
+
 
         if (modal) {
 
@@ -1937,14 +3141,27 @@
                         event.target ===
                         modal
                     ) {
+
                         closeLeadModal();
                     }
                 }
             );
         }
 
+
         setupSalesAssignmentAccess();
     }
+
+
+    // ========================================================
+    // PROFILE READY
+    // ========================================================
+
+    function handleProfileReady() {
+
+        setupSalesAssignmentAccess();
+    }
+
 
     // ========================================================
     // EXPORT TO WINDOW
@@ -1953,78 +3170,118 @@
     window.loadFilterOptions =
         loadFilterOptions;
 
+
     window.populateFilter =
         populateFilter;
+
 
     window.loadLeads =
         loadLeads;
 
+
     window.updatePagination =
         updatePagination;
+
 
     window.changePage =
         changePage;
 
+
     window.nextLeadPage =
         nextLeadPage;
+
 
     window.previousLeadPage =
         previousLeadPage;
 
+
     window.renderLeads =
         renderLeads;
+
 
     window.filterLeads =
         filterLeads;
 
+
     window.onSearchInput =
         onSearchInput;
+
 
     window.clearLeadFilters =
         clearLeadFilters;
 
+
     window.openLeadModal =
         openLeadModal;
+
 
     window.closeLeadModal =
         closeLeadModal;
 
+
     window.clearLeadForm =
         clearLeadForm;
+
 
     window.openEditLead =
         openEditLead;
 
+
     window.saveLead =
         saveLead;
+
 
     window.deleteLead =
         deleteLead;
 
+
     window.setupSalesAssignmentAccess =
         setupSalesAssignmentAccess;
 
-    // Namespace
+
+    // ========================================================
+    // NAMESPACE
+    // ========================================================
+
     window.FSILeads = {
+
         loadFilterOptions,
+
         populateFilter,
+
         loadLeads,
+
         updatePagination,
+
         changePage,
+
         nextLeadPage,
+
         previousLeadPage,
+
         renderLeads,
+
         filterLeads,
+
         onSearchInput,
+
         clearLeadFilters,
+
         openLeadModal,
+
         closeLeadModal,
+
         clearLeadForm,
+
         openEditLead,
+
         saveLead,
+
         deleteLead,
+
         setupSalesAssignmentAccess
     };
+
 
     // ========================================================
     // DOM READY
@@ -2033,13 +3290,40 @@
     document.addEventListener(
         "DOMContentLoaded",
         function () {
+
             initializeLeads();
 
+
             console.log(
-                "FSI CRM: Leads module loaded."
+                "FSI CRM: Leads module loaded successfully."
             );
         }
     );
 
+
+    // ========================================================
+    // PROFILE READY EVENT
+    // ========================================================
+
+    document.addEventListener(
+        "fsi:profile-ready",
+        function () {
+
+            handleProfileReady();
+        }
+    );
+
+
+    // ========================================================
+    // APP READY EVENT
+    // ========================================================
+
+    document.addEventListener(
+        "fsi:app-ready",
+        function () {
+
+            setupSalesAssignmentAccess();
+        }
+    );
+
 })();
-```
