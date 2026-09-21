@@ -14,6 +14,7 @@
 // - Integrasi Customer Profile / shelter.js
 // - Sales header selection
 // - Empty state tanpa stuck loading
+// - Role-based Add Customer visibility
 // ============================================================
 
 "use strict";
@@ -42,7 +43,8 @@
                 continue;
             }
 
-            const element = document.getElementById(id);
+            const element =
+                document.getElementById(id);
 
             if (element) {
                 return element;
@@ -107,7 +109,8 @@
 
     function leadIsAdmin() {
 
-        const profile = leadGetProfile();
+        const profile =
+            leadGetProfile();
 
         if (!profile) {
             return false;
@@ -118,11 +121,15 @@
             "function"
         ) {
 
-            return window.isAdminRole(profile);
+            return window.isAdminRole(
+                profile
+            );
         }
 
         const role =
-            String(profile.role || "")
+            String(
+                profile.role || ""
+            )
                 .trim()
                 .toLowerCase();
 
@@ -136,7 +143,8 @@
 
     function leadIsSales() {
 
-        const profile = leadGetProfile();
+        const profile =
+            leadGetProfile();
 
         if (!profile) {
             return false;
@@ -147,11 +155,15 @@
             "function"
         ) {
 
-            return window.isSalesRole(profile);
+            return window.isSalesRole(
+                profile
+            );
         }
 
         const role =
-            String(profile.role || "")
+            String(
+                profile.role || ""
+            )
                 .trim()
                 .toLowerCase();
 
@@ -162,22 +174,262 @@
     }
 
 
+    // ========================================================
+    // ROLE-BASED ADD CUSTOMER
+    // ========================================================
+    //
+    // RULE:
+    //
+    // ADMIN
+    // - Tidak boleh melihat tombol Add Customer
+    //
+    // SALES
+    // - Tetap melihat tombol Add Customer
+    //
+    // Customer / My Customers menu TIDAK disentuh.
+    //
+    // ========================================================
+
+    function updateAddCustomerVisibility() {
+
+        const profile =
+            leadGetProfile();
+
+        if (!profile) {
+            return;
+        }
+
+
+        const isAdmin =
+            leadIsAdmin();
+
+        const isSales =
+            leadIsSales();
+
+
+        // Kemungkinan ID tombol Add Customer
+        // dari berbagai versi index.html.
+
+        const selectors = [
+
+            "#addCustomerBtn",
+
+            "#btn-add-customer",
+
+            "#btnAddCustomer",
+
+            "#add-customer-btn",
+
+            "#addCustomer",
+
+            "#btnAddCustomer",
+
+            "#addLeadBtn",
+
+            "#btn-add-lead",
+
+            "#btnAddLead",
+
+            "#add-lead-btn",
+
+            "#addLead"
+
+        ];
+
+
+        const elements = [];
+
+
+        selectors.forEach(
+            selector => {
+
+                document
+                    .querySelectorAll(
+                        selector
+                    )
+                    .forEach(
+                        element => {
+
+                            if (
+                                !elements.includes(
+                                    element
+                                )
+                            ) {
+
+                                elements.push(
+                                    element
+                                );
+                            }
+                        }
+                    );
+            }
+        );
+
+
+        // ----------------------------------------------------
+        // Cari tombol berdasarkan teks jika ID berbeda.
+        // ----------------------------------------------------
+
+        document
+            .querySelectorAll(
+                "button, a, [role='button']"
+            )
+            .forEach(
+                element => {
+
+                    const text =
+                        String(
+                            element.textContent ||
+                            ""
+                        )
+                            .trim()
+                            .toLowerCase();
+
+
+                    const normalized =
+                        text.replace(
+                            /\s+/g,
+                            " "
+                        );
+
+
+                    if (
+                        normalized ===
+                            "add customer" ||
+                        normalized ===
+                            "add customer +" ||
+                        normalized.includes(
+                            "add customer"
+                        )
+                    ) {
+
+                        if (
+                            !elements.includes(
+                                element
+                            )
+                        ) {
+
+                            elements.push(
+                                element
+                            );
+                        }
+                    }
+                }
+            );
+
+
+        // ----------------------------------------------------
+        // Apply role.
+        // ----------------------------------------------------
+
+        elements.forEach(
+            element => {
+
+                if (isAdmin) {
+
+                    element.style.display =
+                        "none";
+
+                    element.setAttribute(
+                        "aria-hidden",
+                        "true"
+                    );
+
+                    element.setAttribute(
+                        "data-admin-hidden",
+                        "true"
+                    );
+
+
+                } else if (isSales) {
+
+                    element.style.display =
+                        "";
+
+                    element.removeAttribute(
+                        "aria-hidden"
+                    );
+
+                    element.removeAttribute(
+                        "data-admin-hidden"
+                    );
+                }
+            }
+        );
+
+
+        // ----------------------------------------------------
+        // Jika user bukan Admin/Sales,
+        // jangan menampilkan tombol secara paksa.
+        // ----------------------------------------------------
+
+        if (
+            !isAdmin &&
+            !isSales
+        ) {
+            return;
+        }
+    }
+
+
+    function refreshAddCustomerVisibility() {
+
+        // Jalankan langsung.
+
+        updateAddCustomerVisibility();
+
+
+        // Jalankan ulang sedikit setelah UI selesai
+        // dirender oleh navigation/auth.
+
+        setTimeout(
+            function () {
+
+                updateAddCustomerVisibility();
+
+            },
+            50
+        );
+
+
+        setTimeout(
+            function () {
+
+                updateAddCustomerVisibility();
+
+            },
+            300
+        );
+    }
+
+
+    // ========================================================
+    // PAGE SIZE
+    // ========================================================
+
     function leadGetPageSize() {
 
         const configuredSize =
-            Number(window.pageSize);
+            Number(
+                window.pageSize
+            );
 
         if (
-            Number.isFinite(configuredSize) &&
+            Number.isFinite(
+                configuredSize
+            ) &&
             configuredSize > 0
         ) {
+
             return configuredSize;
         }
 
         if (
             window.FSI_CRM &&
             window.FSI_CRM.config &&
-            Number(window.FSI_CRM.config.pageSize) > 0
+            Number(
+                window.FSI_CRM.config.pageSize
+            ) > 0
         ) {
 
             return Number(
@@ -193,7 +445,9 @@
 
         return Math.max(
             1,
-            Number(window.currentPage) || 1
+            Number(
+                window.currentPage
+            ) || 1
         );
     }
 
@@ -206,7 +460,9 @@
         window.currentPage =
             Math.max(
                 1,
-                Number.isFinite(numericPage)
+                Number.isFinite(
+                    numericPage
+                )
                     ? numericPage
                     : 1
             );
@@ -234,39 +490,47 @@
             "function"
         ) {
 
-            return window.escapeHTML(value);
+            return window.escapeHTML(
+                value
+            );
         }
 
-        return String(value ?? "")
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
+        return String(
+            value ?? ""
+        )
+            .replace(
+                /&/g,
+                "&amp;"
+            )
+            .replace(
+                /</g,
+                "&lt;"
+            )
+            .replace(
+                />/g,
+                "&gt;"
+            )
+            .replace(
+                /"/g,
+                "&quot;"
+            )
+            .replace(
+                /'/g,
+                "&#039;"
+            );
     }
 
 
     function leadGetValue(value) {
 
-        return String(value ?? "").trim();
+        return String(
+            value ?? ""
+        ).trim();
     }
 
 
     // ========================================================
     // SELECTED SALES
-    // ========================================================
-    //
-    // Admin dapat memilih Sales dari header.
-    //
-    // navigation.js menyimpan:
-    //
-    // window.crmSelectedSalesId
-    // window.crmSelectedSalesName
-    //
-    // dan juga mengirim:
-    //
-    // fsi:sales-selected
-    //
     // ========================================================
 
     function getSelectedSalesId() {
@@ -282,10 +546,13 @@
             value === null ||
             value === undefined
         ) {
+
             return "";
         }
 
-        return String(value).trim();
+        return String(
+            value
+        ).trim();
     }
 
 
@@ -298,17 +565,22 @@
             value === null ||
             value === undefined
         ) {
+
             return "";
         }
 
-        return String(value).trim();
+        return String(
+            value
+        ).trim();
     }
 
 
     function applySelectedSalesFilter() {
 
         const salesSelect =
-            leadElement("salesFilter");
+            leadElement(
+                "salesFilter"
+            );
 
         const selectedSalesId =
             getSelectedSalesId();
@@ -346,10 +618,6 @@
 
         try {
 
-            // ------------------------------------------------
-            // Sales lookup
-            // ------------------------------------------------
-
             if (
                 typeof window.loadSalesLookup ===
                 "function"
@@ -369,16 +637,14 @@
             }
 
 
-            // ------------------------------------------------
-            // Business & location
-            // ------------------------------------------------
-
             const {
                 data,
                 error
             } = await client
                 .from("leads")
-                .select("business,location");
+                .select(
+                    "business,location"
+                );
 
 
             if (error) {
@@ -446,8 +712,11 @@
             ) {
 
                 try {
+
                     window.populateSalesDropdowns();
+
                 } catch (error) {
+
                     console.warn(
                         "FSI CRM: populateSalesDropdowns failed:",
                         error
@@ -455,9 +724,6 @@
                 }
             }
 
-
-            // Restore selected Sales after
-            // rebuilding dropdowns.
 
             applySelectedSalesFilter();
 
@@ -477,23 +743,33 @@
         return [
             ...new Set(
                 (
-                    Array.isArray(values)
+                    Array.isArray(
+                        values
+                    )
                         ? values
                         : []
                 )
                     .map(
                         value =>
-                            String(value ?? "").trim()
+                            String(
+                                value ?? ""
+                            ).trim()
                     )
-                    .filter(Boolean)
+                    .filter(
+                        Boolean
+                    )
             )
         ].sort(
-            (a, b) =>
+            (
+                a,
+                b
+            ) =>
                 a.localeCompare(
                     b,
                     undefined,
                     {
-                        sensitivity: "base"
+                        sensitivity:
+                            "base"
                     }
                 )
         );
@@ -513,51 +789,81 @@
 
         let select = null;
 
-        for (const id of idList) {
+
+        for (
+            const id of idList
+        ) {
 
             select =
-                document.getElementById(id);
+                document.getElementById(
+                    id
+                );
 
             if (select) {
                 break;
             }
         }
 
+
         if (!select) {
             return;
         }
 
+
         const currentValue =
             select.value;
 
-        select.innerHTML = "";
+
+        select.innerHTML =
+            "";
+
 
         const defaultOption =
-            document.createElement("option");
+            document.createElement(
+                "option"
+            );
 
-        defaultOption.value = "";
+
+        defaultOption.value =
+            "";
+
         defaultOption.textContent =
             defaultText;
+
 
         select.appendChild(
             defaultOption
         );
 
+
         const safeValues =
-            Array.isArray(values)
+            Array.isArray(
+                values
+            )
                 ? values
                 : [];
 
-        safeValues.forEach(value => {
 
-            const option =
-                document.createElement("option");
+        safeValues.forEach(
+            value => {
 
-            option.value = value;
-            option.textContent = value;
+                const option =
+                    document.createElement(
+                        "option"
+                    );
 
-            select.appendChild(option);
-        });
+                option.value =
+                    value;
+
+                option.textContent =
+                    value;
+
+                select.appendChild(
+                    option
+                );
+            }
+        );
+
 
         if (
             safeValues.includes(
@@ -570,7 +876,8 @@
 
         } else {
 
-            select.value = "";
+            select.value =
+                "";
         }
     }
 
@@ -588,6 +895,7 @@
                 "leadsSearch"
             );
 
+
         const statusInput =
             leadElement(
                 "filter-status",
@@ -595,17 +903,20 @@
                 "leadStatusFilter"
             );
 
+
         const businessInput =
             leadElement(
                 "filter-business",
                 "businessFilter"
             );
 
+
         const locationInput =
             leadElement(
                 "filter-location",
                 "locationFilter"
             );
+
 
         const salesInput =
             leadElement(
@@ -618,8 +929,6 @@
             "";
 
 
-        // Admin header selection has priority.
-
         if (leadIsAdmin()) {
 
             const headerSalesId =
@@ -628,6 +937,7 @@
             if (
                 headerSalesId !== ""
             ) {
+
                 salesFilter =
                     headerSalesId;
             }
@@ -671,12 +981,25 @@
             return query;
         }
 
+
         const safeSearch =
             String(search)
-                .replace(/\\/g, "\\\\")
-                .replace(/%/g, "\\%")
-                .replace(/_/g, "\\_")
-                .replace(/,/g, "\\,");
+                .replace(
+                    /\\/g,
+                    "\\\\"
+                )
+                .replace(
+                    /%/g,
+                    "\\%"
+                )
+                .replace(
+                    /_/g,
+                    "\\_"
+                )
+                .replace(
+                    /,/g,
+                    "\\,"
+                );
 
 
         const searchConditions = [
@@ -710,17 +1033,21 @@
                 "leadsTable"
             );
 
+
         if (!table) {
             return;
         }
+
 
         table.innerHTML = `
             <tr class="loading-row">
                 <td colspan="9">
                     <div class="empty-state loading-state">
                         <div class="empty-state-icon">
-                            <i data-lucide="loader-circle"
-                               class="spin"></i>
+                            <i
+                                data-lucide="loader-circle"
+                                class="spin"
+                            ></i>
                         </div>
 
                         <div class="empty-state-title">
@@ -735,10 +1062,12 @@
             </tr>
         `;
 
+
         if (
             typeof window.refreshIcons ===
             "function"
         ) {
+
             window.refreshIcons();
         }
     }
@@ -756,12 +1085,15 @@
                 "leadsTable"
             );
 
+
         if (!table) {
             return;
         }
 
+
         const selectedSalesId =
             getSelectedSalesId();
+
 
         const selectedSalesName =
             getSelectedSalesName();
@@ -873,9 +1205,11 @@
                 "leadsTable"
             );
 
+
         if (!table) {
             return;
         }
+
 
         table.innerHTML = `
             <tr class="error-row">
@@ -940,9 +1274,11 @@
                 "FSI CRM: Supabase client is not ready."
             );
 
+
             renderLeadsErrorState(
                 "Supabase belum terhubung."
             );
+
 
             updatePagination();
 
@@ -956,9 +1292,11 @@
                 "FSI CRM: Cannot load leads - profile is not ready."
             );
 
+
             renderLeadsErrorState(
                 "Profile user belum siap. Silakan tunggu sebentar."
             );
+
 
             updatePagination();
 
@@ -966,23 +1304,22 @@
         }
 
 
-        // ----------------------------------------------------
-        // Prevent duplicate simultaneous request.
-        // ----------------------------------------------------
-
         if (leadsLoading) {
             return;
         }
 
 
-        leadsLoading = true;
+        leadsLoading =
+            true;
 
 
         const requestId =
             ++activeRequestId;
 
 
-        leadSetCurrentPage(page);
+        leadSetCurrentPage(
+            page
+        );
 
 
         const pageNumber =
@@ -993,10 +1330,6 @@
 
 
         try {
-
-            // ------------------------------------------------
-            // SALES LOOKUP
-            // ------------------------------------------------
 
             if (
                 (
@@ -1023,24 +1356,12 @@
             }
 
 
-            // ------------------------------------------------
-            // APPLY HEADER SALES
-            // ------------------------------------------------
-
             applySelectedSalesFilter();
 
-
-            // ------------------------------------------------
-            // FILTER VALUES
-            // ------------------------------------------------
 
             const filters =
                 getLeadFilters();
 
-
-            // ------------------------------------------------
-            // SAVE FILTER STATE
-            // ------------------------------------------------
 
             window.currentSearch =
                 filters.search;
@@ -1058,24 +1379,17 @@
                 filters.salesFilter;
 
 
-            // ------------------------------------------------
-            // QUERY
-            // ------------------------------------------------
-
             let query =
                 client
                     .from("leads")
                     .select(
                         "*",
                         {
-                            count: "exact"
+                            count:
+                                "exact"
                         }
                     );
 
-
-            // ------------------------------------------------
-            // SEARCH
-            // ------------------------------------------------
 
             query =
                 buildSearchQuery(
@@ -1083,10 +1397,6 @@
                     filters.search
                 );
 
-
-            // ------------------------------------------------
-            // STATUS
-            // ------------------------------------------------
 
             if (filters.status) {
 
@@ -1098,10 +1408,6 @@
             }
 
 
-            // ------------------------------------------------
-            // BUSINESS
-            // ------------------------------------------------
-
             if (filters.business) {
 
                 query =
@@ -1111,10 +1417,6 @@
                     );
             }
 
-
-            // ------------------------------------------------
-            // LOCATION
-            // ------------------------------------------------
 
             if (filters.location) {
 
@@ -1126,22 +1428,11 @@
             }
 
 
-            // ------------------------------------------------
-            // SALES FILTER
-            // ------------------------------------------------
-            //
-            // Admin:
-            //   Filter according to selected Sales.
-            //
-            // Sales:
-            //   Always force profile.id.
-            //
-            // RLS remains the actual security layer.
-            // ------------------------------------------------
-
             if (leadIsAdmin()) {
 
-                if (filters.salesFilter) {
+                if (
+                    filters.salesFilter
+                ) {
 
                     query =
                         query.eq(
@@ -1150,7 +1441,9 @@
                         );
                 }
 
-            } else if (leadIsSales()) {
+            } else if (
+                leadIsSales()
+            ) {
 
                 const profile =
                     leadGetProfile();
@@ -1166,10 +1459,6 @@
                 }
             }
 
-
-            // ------------------------------------------------
-            // PAGINATION
-            // ------------------------------------------------
 
             const pageSize =
                 leadGetPageSize();
@@ -1193,7 +1482,8 @@
                     .order(
                         "created_at",
                         {
-                            ascending: false
+                            ascending:
+                                false
                         }
                     )
                     .range(
@@ -1202,10 +1492,6 @@
                     );
 
 
-            // ------------------------------------------------
-            // EXECUTE
-            // ------------------------------------------------
-
             const {
                 data,
                 error,
@@ -1213,20 +1499,14 @@
             } = await query;
 
 
-            // If another request somehow superseded this one,
-            // do not overwrite newer UI.
-
             if (
                 requestId !==
                 activeRequestId
             ) {
+
                 return;
             }
 
-
-            // ------------------------------------------------
-            // ERROR
-            // ------------------------------------------------
 
             if (error) {
 
@@ -1271,10 +1551,6 @@
             }
 
 
-            // ------------------------------------------------
-            // NORMALIZE RESULT
-            // ------------------------------------------------
-
             const leads =
                 Array.isArray(data)
                     ? data
@@ -1300,10 +1576,6 @@
                 );
 
 
-            // ------------------------------------------------
-            // PAGE CORRECTION
-            // ------------------------------------------------
-
             const totalPages =
                 Math.max(
                     1,
@@ -1328,10 +1600,8 @@
                 );
 
 
-                // Important:
-                // unlock first before retrying.
-
-                leadsLoading = false;
+                leadsLoading =
+                    false;
 
 
                 await loadLeads(
@@ -1343,37 +1613,19 @@
             }
 
 
-            // ------------------------------------------------
-            // EMPTY RESULT
-            // ------------------------------------------------
-            //
-            // IMPORTANT:
-            // data=[] + count=0 + error=null
-            // is NOT an error.
-            //
-            // This is the case when Sales DC has no leads.
-            // ------------------------------------------------
-
             if (
                 leads.length === 0
             ) {
 
                 renderEmptyLeadsState();
 
-
                 updatePagination();
 
-
                 updateLeadsContext();
-
 
                 return;
             }
 
-
-            // ------------------------------------------------
-            // NORMAL DATA
-            // ------------------------------------------------
 
             renderLeads(
                 leads
@@ -1381,7 +1633,6 @@
 
 
             updatePagination();
-
 
             updateLeadsContext();
 
@@ -1445,15 +1696,12 @@
     // ========================================================
     // LEADS CONTEXT
     // ========================================================
-    //
-    // Menampilkan informasi Sales yang sedang dipilih
-    // jika tersedia di halaman.
-    // ========================================================
 
     function updateLeadsContext() {
 
         const selectedSalesId =
             getSelectedSalesId();
+
 
         const selectedSalesName =
             getSelectedSalesName();
@@ -1540,7 +1788,9 @@
 
         } else {
 
-            console.error(message);
+            console.error(
+                message
+            );
         }
     }
 
@@ -1694,7 +1944,9 @@
     }
 
 
-    function changePage(direction) {
+    function changePage(
+        direction
+    ) {
 
         const numericDirection =
             Number(direction);
@@ -1778,7 +2030,9 @@
     // RENDER LEADS TABLE
     // ========================================================
 
-    function renderLeads(data) {
+    function renderLeads(
+        data
+    ) {
 
         const table =
             leadElement(
@@ -1797,7 +2051,8 @@
         }
 
 
-        table.innerHTML = "";
+        table.innerHTML =
+            "";
 
 
         const leads =
@@ -1816,315 +2071,282 @@
         }
 
 
-        leads.forEach(lead => {
+        leads.forEach(
+            lead => {
 
-            const tr =
-                document.createElement("tr");
-
-
-            const salesName =
-                typeof window.getSalesName ===
-                "function"
-                    ? window.getSalesName(
-                        lead.sales_id
-                    )
-                    : "-";
-
-
-            const displayStatus =
-                typeof window.normalizeLeadStatus ===
-                "function"
-                    ? window.normalizeLeadStatus(
-                        lead.status
-                    )
-                    : (
-                        lead.status ||
-                        "New"
+                const tr =
+                    document.createElement(
+                        "tr"
                     );
 
 
-            const statusCSS =
-                typeof window.getStatusClass ===
-                "function"
-                    ? window.getStatusClass(
-                        displayStatus
-                    )
-                    : (
-                        typeof window.statusClass ===
-                        "function"
-                            ? window.statusClass(
-                                displayStatus
-                            )
-                            : "status-new"
-                    );
-
-
-            const customerName =
-                leadGetValue(
-                    lead.customer_name
-                );
-
-
-            const phone =
-                leadGetValue(
-                    lead.phone
-                );
-
-
-            const business =
-                leadGetValue(
-                    lead.business
-                );
-
-
-            const location =
-                leadGetValue(
-                    lead.location
-                );
-
-
-            const escapedCustomer =
-                leadEscapeHTML(
-                    customerName
-                );
-
-
-            const escapedPhone =
-                leadEscapeHTML(
-                    phone
-                );
-
-
-            const escapedBusiness =
-                leadEscapeHTML(
-                    business
-                );
-
-
-            const escapedLocation =
-                leadEscapeHTML(
-                    location
-                );
-
-
-            const escapedSales =
-                leadEscapeHTML(
-                    salesName || "-"
-                );
-
-
-            const safeStatus =
-                leadEscapeHTML(
-                    displayStatus
-                );
-
-
-            // ------------------------------------------------
-            // WhatsApp
-            // ------------------------------------------------
-
-            let whatsappHTML = "-";
-
-
-            if (phone) {
-
-                const waURL =
-                    typeof window.whatsappLink ===
+                const salesName =
+                    typeof window.getSalesName ===
                     "function"
-                        ? window.whatsappLink(
-                            phone
+                        ? window.getSalesName(
+                            lead.sales_id
                         )
-                        : "#";
+                        : "-";
 
 
-                if (
-                    waURL &&
-                    waURL !== "#"
-                ) {
+                const displayStatus =
+                    typeof window.normalizeLeadStatus ===
+                    "function"
+                        ? window.normalizeLeadStatus(
+                            lead.status
+                        )
+                        : (
+                            lead.status ||
+                            "New"
+                        );
 
-                    whatsappHTML = `
-                        <a
-                            href="${leadEscapeHTML(waURL)}"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            class="wa-link"
-                            title="Open WhatsApp"
-                        >
-                            ${escapedPhone}
-                        </a>
-                    `;
 
-                } else {
+                const statusCSS =
+                    typeof window.getStatusClass ===
+                    "function"
+                        ? window.getStatusClass(
+                            displayStatus
+                        )
+                        : (
+                            typeof window.statusClass ===
+                            "function"
+                                ? window.statusClass(
+                                    displayStatus
+                                )
+                                : "status-new"
+                        );
 
-                    whatsappHTML =
-                        escapedPhone;
+
+                const customerName =
+                    leadGetValue(
+                        lead.customer_name
+                    );
+
+
+                const phone =
+                    leadGetValue(
+                        lead.phone
+                    );
+
+
+                const business =
+                    leadGetValue(
+                        lead.business
+                    );
+
+
+                const location =
+                    leadGetValue(
+                        lead.location
+                    );
+
+
+                const escapedCustomer =
+                    leadEscapeHTML(
+                        customerName
+                    );
+
+
+                const escapedPhone =
+                    leadEscapeHTML(
+                        phone
+                    );
+
+
+                const escapedBusiness =
+                    leadEscapeHTML(
+                        business
+                    );
+
+
+                const escapedLocation =
+                    leadEscapeHTML(
+                        location
+                    );
+
+
+                const escapedSales =
+                    leadEscapeHTML(
+                        salesName || "-"
+                    );
+
+
+                const safeStatus =
+                    leadEscapeHTML(
+                        displayStatus
+                    );
+
+
+                let whatsappHTML =
+                    "-";
+
+
+                if (phone) {
+
+                    const waURL =
+                        typeof window.whatsappLink ===
+                        "function"
+                            ? window.whatsappLink(
+                                phone
+                            )
+                            : "#";
+
+
+                    if (
+                        waURL &&
+                        waURL !== "#"
+                    ) {
+
+                        whatsappHTML = `
+                            <a
+                                href="${leadEscapeHTML(waURL)}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="wa-link"
+                                title="Open WhatsApp"
+                            >
+                                ${escapedPhone}
+                            </a>
+                        `;
+
+                    } else {
+
+                        whatsappHTML =
+                            escapedPhone;
+                    }
                 }
+
+
+                const formattedFollowUp =
+                    typeof window.formatDate ===
+                    "function"
+                        ? window.formatDate(
+                            lead.follow_up_date
+                        )
+                        : (
+                            lead.follow_up_date ||
+                            "-"
+                        );
+
+
+                const formattedAppointment =
+                    typeof window.formatDate ===
+                    "function"
+                        ? window.formatDate(
+                            lead.appointment
+                        )
+                        : (
+                            lead.appointment ||
+                            "-"
+                        );
+
+
+                const safeFollowUp =
+                    leadEscapeHTML(
+                        formattedFollowUp
+                    );
+
+
+                const safeAppointment =
+                    leadEscapeHTML(
+                        formattedAppointment
+                    );
+
+
+                const leadId =
+                    String(
+                        lead.id || ""
+                    );
+
+
+                tr.dataset.leadId =
+                    leadId;
+
+
+                tr.innerHTML = `
+                    <td>
+                        <div class="lead-customer-cell">
+
+                            <button
+                                type="button"
+                                class="lead-name-btn"
+                                data-action="profile"
+                                data-lead-id="${leadEscapeHTML(leadId)}"
+                                title="Open customer profile"
+                            >
+                                ${escapedCustomer || "-"}
+                            </button>
+
+                        </div>
+                    </td>
+
+                    <td>
+                        ${whatsappHTML}
+                    </td>
+
+                    <td>
+                        ${escapedBusiness || "-"}
+                    </td>
+
+                    <td>
+                        ${escapedLocation || "-"}
+                    </td>
+
+                    <td>
+                        ${escapedSales || "-"}
+                    </td>
+
+                    <td>
+                        <span
+                            class="status-badge ${leadEscapeHTML(statusCSS)}"
+                        >
+                            ${safeStatus}
+                        </span>
+                    </td>
+
+                    <td>
+                        ${safeFollowUp}
+                    </td>
+
+                    <td>
+                        ${safeAppointment}
+                    </td>
+
+                    <td>
+                        <div class="crm-lead-actions">
+
+                            <button
+                                type="button"
+                                class="primary-btn small-btn"
+                                data-action="profile"
+                                data-lead-id="${leadEscapeHTML(leadId)}"
+                                title="Open customer profile"
+                            >
+                                <i data-lucide="user-round"></i>
+                                Profile
+                            </button>
+
+                            <button
+                                type="button"
+                                class="secondary-btn small-btn"
+                                data-action="delete"
+                                data-lead-id="${leadEscapeHTML(leadId)}"
+                                title="Delete lead"
+                            >
+                                <i data-lucide="trash-2"></i>
+                                Delete
+                            </button>
+
+                        </div>
+                    </td>
+                `;
+
+
+                table.appendChild(
+                    tr
+                );
             }
-
-
-            // ------------------------------------------------
-            // Dates
-            // ------------------------------------------------
-
-            const formattedFollowUp =
-                typeof window.formatDate ===
-                "function"
-                    ? window.formatDate(
-                        lead.follow_up_date
-                    )
-                    : (
-                        lead.follow_up_date ||
-                        "-"
-                    );
-
-
-            const formattedAppointment =
-                typeof window.formatDate ===
-                "function"
-                    ? window.formatDate(
-                        lead.appointment
-                    )
-                    : (
-                        lead.appointment ||
-                        "-"
-                    );
-
-
-            const safeFollowUp =
-                leadEscapeHTML(
-                    formattedFollowUp
-                );
-
-
-            const safeAppointment =
-                leadEscapeHTML(
-                    formattedAppointment
-                );
-
-
-            const leadId =
-                String(
-                    lead.id || ""
-                );
-
-
-            // ------------------------------------------------
-            // DATA ATTRIBUTES
-            // ------------------------------------------------
-
-            tr.dataset.leadId =
-                leadId;
-
-
-            // ------------------------------------------------
-            // TABLE
-            // ------------------------------------------------
-            //
-            // 9 columns:
-            //
-            // Customer
-            // Contact
-            // Business
-            // Location
-            // Sales
-            // Status
-            // Follow Up
-            // Appointment
-            // Action
-            //
-            // ------------------------------------------------
-
-            tr.innerHTML = `
-                <td>
-                    <div class="lead-customer-cell">
-
-                        <button
-                            type="button"
-                            class="lead-name-btn"
-                            data-action="profile"
-                            data-lead-id="${leadEscapeHTML(leadId)}"
-                            title="Open customer profile"
-                        >
-                            ${escapedCustomer || "-"}
-                        </button>
-
-                    </div>
-                </td>
-
-
-                <td>
-                    ${whatsappHTML}
-                </td>
-
-
-                <td>
-                    ${escapedBusiness || "-"}
-                </td>
-
-
-                <td>
-                    ${escapedLocation || "-"}
-                </td>
-
-
-                <td>
-                    ${escapedSales || "-"}
-                </td>
-
-
-                <td>
-                    <span
-                        class="status-badge ${leadEscapeHTML(statusCSS)}"
-                    >
-                        ${safeStatus}
-                    </span>
-                </td>
-
-
-                <td>
-                    ${safeFollowUp}
-                </td>
-
-
-                <td>
-                    ${safeAppointment}
-                </td>
-
-
-                <td>
-                    <div class="crm-lead-actions">
-
-                        <button
-                            type="button"
-                            class="primary-btn small-btn"
-                            data-action="profile"
-                            data-lead-id="${leadEscapeHTML(leadId)}"
-                            title="Open customer profile"
-                        >
-                            <i data-lucide="user-round"></i>
-                            Profile
-                        </button>
-
-
-                        <button
-                            type="button"
-                            class="secondary-btn small-btn"
-                            data-action="delete"
-                            data-lead-id="${leadEscapeHTML(leadId)}"
-                            title="Delete lead"
-                        >
-                            <i data-lucide="trash-2"></i>
-                            Delete
-                        </button>
-
-                    </div>
-                </td>
-            `;
-
-
-            table.appendChild(tr);
-
-        });
+        );
 
 
         if (
@@ -2143,24 +2365,34 @@
 
     function filterLeads() {
 
-        leadSetCurrentPage(1);
+        leadSetCurrentPage(
+            1
+        );
 
-        loadLeads(1);
+        loadLeads(
+            1
+        );
     }
 
 
     function onSearchInput() {
 
-        clearTimeout(searchTimer);
+        clearTimeout(
+            searchTimer
+        );
 
 
         searchTimer =
             setTimeout(
                 function () {
 
-                    leadSetCurrentPage(1);
+                    leadSetCurrentPage(
+                        1
+                    );
 
-                    loadLeads(1);
+                    loadLeads(
+                        1
+                    );
 
                 },
                 400
@@ -2197,22 +2429,28 @@
         ];
 
 
-        fields.forEach(ids => {
+        fields.forEach(
+            ids => {
 
-            const element =
-                leadElement(...ids);
+                const element =
+                    leadElement(
+                        ...ids
+                    );
 
 
-            if (element) {
-                element.value = "";
+                if (element) {
+                    element.value =
+                        "";
+                }
             }
-        });
+        );
 
 
-        // Clear Sales header selection.
+        window.crmSelectedSalesId =
+            "";
 
-        window.crmSelectedSalesId = "";
-        window.crmSelectedSalesName = "";
+        window.crmSelectedSalesName =
+            "";
 
 
         const salesSelect =
@@ -2222,21 +2460,29 @@
 
 
         if (salesSelect) {
-            salesSelect.value = "";
+            salesSelect.value =
+                "";
         }
 
 
-        leadSetCurrentPage(1);
+        leadSetCurrentPage(
+            1
+        );
 
 
-        loadLeads(1);
+        loadLeads(
+            1
+        );
     }
 
 
     function clearSalesHeaderFilter() {
 
-        window.crmSelectedSalesId = "";
-        window.crmSelectedSalesName = "";
+        window.crmSelectedSalesId =
+            "";
+
+        window.crmSelectedSalesName =
+            "";
 
 
         const salesSelect =
@@ -2246,20 +2492,26 @@
 
 
         if (salesSelect) {
-            salesSelect.value = "";
+            salesSelect.value =
+                "";
         }
 
 
-        window.currentSalesFilter = "";
+        window.currentSalesFilter =
+            "";
 
 
-        leadSetCurrentPage(1);
+        leadSetCurrentPage(
+            1
+        );
 
 
         updateLeadsContext();
 
 
-        loadLeads(1);
+        loadLeads(
+            1
+        );
     }
 
 
@@ -2268,6 +2520,27 @@
     // ========================================================
 
     function openLeadModal() {
+
+        // ----------------------------------------------------
+        // ADMIN TIDAK BOLEH ADD CUSTOMER
+        // ----------------------------------------------------
+
+        if (leadIsAdmin()) {
+
+            if (
+                typeof window.showToast ===
+                "function"
+            ) {
+
+                window.showToast(
+                    "Admin tidak dapat menambahkan customer.",
+                    "error"
+                );
+            }
+
+            return;
+        }
+
 
         const modal =
             leadElement(
@@ -2308,13 +2581,19 @@
 
 
         if (title) {
-            title.textContent = "Add Lead";
+
+            title.textContent =
+                "Add Customer";
         }
 
 
-        modal.classList.add("show");
+        modal.classList.add(
+            "show"
+        );
 
-        modal.style.display = "flex";
+
+        modal.style.display =
+            "flex";
 
 
         document.body.classList.add(
@@ -2355,9 +2634,13 @@
         }
 
 
-        modal.classList.remove("show");
+        modal.classList.remove(
+            "show"
+        );
 
-        modal.style.display = "none";
+
+        modal.style.display =
+            "none";
 
 
         document.body.classList.remove(
@@ -2391,10 +2674,6 @@
             ["leadPhone"],
             ""
         );
-
-
-        // Email intentionally ignored.
-        // Current lead schema does not guarantee email.
 
 
         setLeadValue(
@@ -2499,13 +2778,18 @@
                 : [ids];
 
 
-        let element = null;
+        let element =
+            null;
 
 
-        for (const id of idList) {
+        for (
+            const id of idList
+        ) {
 
             element =
-                document.getElementById(id);
+                document.getElementById(
+                    id
+                );
 
 
             if (element) {
@@ -2541,14 +2825,18 @@
     // EDIT LEAD
     // ========================================================
 
-    async function openEditLead(id) {
+    async function openEditLead(
+        id
+    ) {
 
         if (
             typeof window.crmOpenCustomerProfile ===
             "function"
         ) {
 
-            await window.crmOpenCustomerProfile(id);
+            await window.crmOpenCustomerProfile(
+                id
+            );
 
             return;
         }
@@ -2559,7 +2847,9 @@
             "function"
         ) {
 
-            await window.editLead(id);
+            await window.editLead(
+                id
+            );
 
             return;
         }
@@ -2593,6 +2883,10 @@
             return;
         }
 
+
+        // Admin tidak boleh membuat customer baru.
+        // Update melalui profile tetap bisa ditangani
+        // oleh shelter.js sesuai role/security.
 
         const client =
             leadGetSupabase();
@@ -2660,7 +2954,9 @@
             function (...ids) {
 
                 const element =
-                    leadElement(...ids);
+                    leadElement(
+                        ...ids
+                    );
 
 
                 return (
@@ -2680,16 +2976,14 @@
             typeof window.normalizeLeadStatus ===
             "function"
                 ? window.normalizeLeadStatus(
-                    statusValue || "New"
+                    statusValue ||
+                    "New"
                 )
                 : (
-                    statusValue || "New"
+                    statusValue ||
+                    "New"
                 );
 
-
-        // ----------------------------------------------------
-        // PAYLOAD
-        // ----------------------------------------------------
 
         const payload = {
 
@@ -2758,10 +3052,6 @@
         };
 
 
-        // ----------------------------------------------------
-        // SALES ASSIGNMENT
-        // ----------------------------------------------------
-
         const salesAssignment =
             leadElement(
                 "leadSalesAssign"
@@ -2775,11 +3065,37 @@
 
         if (leadIsAdmin()) {
 
+            // Admin tidak membuat customer baru.
+            if (!leadId) {
+
+                if (
+                    typeof window.showToast ===
+                    "function"
+                ) {
+
+                    window.showToast(
+                        "Admin tidak dapat menambahkan customer baru.",
+                        "error"
+                    );
+                }
+
+                return;
+            }
+
+
+            // Jika Admin melakukan update,
+            // pertahankan sales assignment yang dipilih.
+
             payload.sales_id =
                 selectedSales ||
                 null;
 
-        } else if (leadIsSales()) {
+        } else if (
+            leadIsSales()
+        ) {
+
+            // Sales selalu memiliki customer
+            // miliknya sendiri.
 
             payload.sales_id =
                 profile.id;
@@ -2790,10 +3106,6 @@
                 null;
         }
 
-
-        // ----------------------------------------------------
-        // SAVE
-        // ----------------------------------------------------
 
         try {
 
@@ -2812,7 +3124,9 @@
                 } =
                     await client
                         .from("leads")
-                        .update(payload)
+                        .update(
+                            payload
+                        )
                         .eq(
                             "id",
                             leadId
@@ -2843,7 +3157,7 @@
                 ) {
 
                     window.showToast(
-                        "Lead updated successfully.",
+                        "Customer updated successfully.",
                         "success"
                     );
                 }
@@ -2854,6 +3168,26 @@
                 // =============================================
                 // INSERT
                 // =============================================
+
+                // Hanya Sales yang boleh membuat
+                // customer baru.
+
+                if (!leadIsSales()) {
+
+                    if (
+                        typeof window.showToast ===
+                        "function"
+                    ) {
+
+                        window.showToast(
+                            "Hanya Sales yang dapat menambahkan customer.",
+                            "error"
+                        );
+                    }
+
+                    return;
+                }
+
 
                 payload.created_by =
                     profile.id;
@@ -2883,7 +3217,7 @@
 
                     showLeadError(
                         error,
-                        "Failed to add lead."
+                        "Failed to add customer."
                     );
 
 
@@ -2897,39 +3231,23 @@
                 ) {
 
                     window.showToast(
-                        "Lead added successfully.",
+                        "Customer added successfully.",
                         "success"
                     );
                 }
             }
 
 
-            // ------------------------------------------------
-            // CLOSE
-            // ------------------------------------------------
-
             closeLeadModal();
 
 
-            // ------------------------------------------------
-            // REFRESH FILTERS
-            // ------------------------------------------------
-
             await loadFilterOptions();
 
-
-            // ------------------------------------------------
-            // REFRESH LEADS
-            // ------------------------------------------------
 
             await loadLeads(
                 leadGetCurrentPage()
             );
 
-
-            // ------------------------------------------------
-            // DASHBOARD
-            // ------------------------------------------------
 
             if (
                 typeof window.updateDashboard ===
@@ -2937,8 +3255,11 @@
             ) {
 
                 try {
+
                     await window.updateDashboard();
+
                 } catch (error) {
+
                     console.warn(
                         "FSI CRM: dashboard refresh failed:",
                         error
@@ -2946,10 +3267,6 @@
                 }
             }
 
-
-            // ------------------------------------------------
-            // EVENT
-            // ------------------------------------------------
 
             document.dispatchEvent(
                 new CustomEvent(
@@ -2976,7 +3293,7 @@
 
             showLeadError(
                 error,
-                "An error occurred while saving the lead."
+                "An error occurred while saving the customer."
             );
         }
     }
@@ -2986,7 +3303,9 @@
     // DELETE LEAD
     // ========================================================
 
-    async function deleteLead(id) {
+    async function deleteLead(
+        id
+    ) {
 
         if (!id) {
             return;
@@ -3058,10 +3377,6 @@
             }
 
 
-            // ------------------------------------------------
-            // CLEAR CUSTOMER PROFILE CACHE
-            // ------------------------------------------------
-
             if (
                 String(
                     window.crmCurrentCustomerId
@@ -3077,16 +3392,8 @@
             }
 
 
-            // ------------------------------------------------
-            // FILTERS
-            // ------------------------------------------------
-
             await loadFilterOptions();
 
-
-            // ------------------------------------------------
-            // CORRECT PAGE
-            // ------------------------------------------------
 
             const oldTotal =
                 Number(
@@ -3127,18 +3434,10 @@
             );
 
 
-            // ------------------------------------------------
-            // LOAD
-            // ------------------------------------------------
-
             await loadLeads(
                 pageAfterDelete
             );
 
-
-            // ------------------------------------------------
-            // DASHBOARD
-            // ------------------------------------------------
 
             if (
                 typeof window.updateDashboard ===
@@ -3146,8 +3445,11 @@
             ) {
 
                 try {
+
                     await window.updateDashboard();
+
                 } catch (error) {
+
                     console.warn(
                         "FSI CRM: dashboard refresh failed:",
                         error
@@ -3156,17 +3458,15 @@
             }
 
 
-            // ------------------------------------------------
-            // EVENT
-            // ------------------------------------------------
-
             document.dispatchEvent(
                 new CustomEvent(
                     "fsi:lead-changed",
                     {
                         detail: {
-                            action: "deleted",
-                            id: id
+                            action:
+                                "deleted",
+                            id:
+                                id
                         }
                     }
                 )
@@ -3258,13 +3558,16 @@
                 profile.id ||
                 "";
 
+
             select.disabled =
                 true;
+
 
             select.setAttribute(
                 "aria-disabled",
                 "true"
             );
+
 
             return;
         }
@@ -3272,6 +3575,7 @@
 
         select.disabled =
             true;
+
 
         select.setAttribute(
             "aria-disabled",
@@ -3389,9 +3693,15 @@
                     "retry-leads"
                 ) {
 
-                    leadSetCurrentPage(1);
+                    leadSetCurrentPage(
+                        1
+                    );
 
-                    await loadLeads(1);
+
+                    await loadLeads(
+                        1
+                    );
+
 
                     return;
                 }
@@ -3472,62 +3782,64 @@
                 "salesFilter"
             ]
 
-        ].forEach(ids => {
+        ].forEach(
+            ids => {
 
-            const element =
-                leadElement(...ids);
-
-
-            if (!element) {
-                return;
-            }
+                const element =
+                    leadElement(
+                        ...ids
+                    );
 
 
-            element.addEventListener(
-                "change",
-                function () {
-
-                    // Manual Sales filter changes
-                    // must update global state.
-
-                    if (
-                        element.id ===
-                        "salesFilter"
-                    ) {
-
-                        window.crmSelectedSalesId =
-                            element.value || "";
-
-
-                        const selected =
-                            leadGetSalesData()
-                                .find(
-                                    sales =>
-                                        String(
-                                            sales.id
-                                        ) ===
-                                        String(
-                                            element.value
-                                        )
-                                );
-
-
-                        window.crmSelectedSalesName =
-                            selected
-                                ? (
-                                    selected.name ||
-                                    selected.full_name ||
-                                    selected.username ||
-                                    ""
-                                )
-                                : "";
-                    }
-
-
-                    filterLeads();
+                if (!element) {
+                    return;
                 }
-            );
-        });
+
+
+                element.addEventListener(
+                    "change",
+                    function () {
+
+                        if (
+                            element.id ===
+                            "salesFilter"
+                        ) {
+
+                            window.crmSelectedSalesId =
+                                element.value ||
+                                "";
+
+
+                            const selected =
+                                leadGetSalesData()
+                                    .find(
+                                        sales =>
+                                            String(
+                                                sales.id
+                                            ) ===
+                                            String(
+                                                element.value
+                                            )
+                                    );
+
+
+                            window.crmSelectedSalesName =
+                                selected
+                                    ? (
+                                        selected.name ||
+                                        selected.full_name ||
+                                        selected.username ||
+                                        ""
+                                    )
+                                    : "";
+                        }
+
+
+                        filterLeads();
+                    }
+                );
+            }
+        );
 
 
         // ----------------------------------------------------
@@ -3547,7 +3859,9 @@
                 "click",
                 function () {
 
-                    changePage(-1);
+                    changePage(
+                        -1
+                    );
                 }
             );
         }
@@ -3570,7 +3884,9 @@
                 "click",
                 function () {
 
-                    changePage(1);
+                    changePage(
+                        1
+                    );
                 }
             );
         }
@@ -3604,7 +3920,7 @@
 
 
         // ----------------------------------------------------
-        // ESC closes modal
+        // ESC
         // ----------------------------------------------------
 
         document.addEventListener(
@@ -3667,6 +3983,13 @@
 
 
         setupSalesAssignmentAccess();
+
+
+        // ----------------------------------------------------
+        // ROLE-BASED ADD CUSTOMER
+        // ----------------------------------------------------
+
+        refreshAddCustomerVisibility();
     }
 
 
@@ -3677,22 +4000,18 @@
     function handleProfileReady() {
 
         setupSalesAssignmentAccess();
+
+        refreshAddCustomerVisibility();
     }
 
 
     // ========================================================
     // SALES SELECTED FROM HEADER
     // ========================================================
-    //
-    // Dipanggil oleh navigation.js:
-    //
-    // document.dispatchEvent(
-    //     new CustomEvent("fsi:sales-selected")
-    // );
-    //
-    // ========================================================
 
-    function handleSalesSelected(event) {
+    function handleSalesSelected(
+        event
+    ) {
 
         if (!leadIsAdmin()) {
             return;
@@ -3711,7 +4030,8 @@
         ) {
 
             window.crmSelectedSalesId =
-                detail.salesId || "";
+                detail.salesId ||
+                "";
         }
 
 
@@ -3723,7 +4043,8 @@
         ) {
 
             window.crmSelectedSalesName =
-                detail.salesName || "";
+                detail.salesName ||
+                "";
         }
 
 
@@ -3741,19 +4062,17 @@
         }
 
 
-        leadSetCurrentPage(1);
+        leadSetCurrentPage(
+            1
+        );
 
 
         updateLeadsContext();
 
 
-        // If Leads page is not active yet,
-        // navigation.js will open it.
-        //
-        // We still load the data here so that
-        // the selected Sales result is ready.
-
-        loadLeads(1);
+        loadLeads(
+            1
+        );
     }
 
 
@@ -3767,10 +4086,7 @@
 
         updateLeadsContext();
 
-
-        // Do not force-load leads here if profile
-        // is not ready or if another module handles
-        // the initial navigation.
+        refreshAddCustomerVisibility();
     }
 
 
@@ -3854,6 +4170,10 @@
         clearSalesHeaderFilter;
 
 
+    window.updateAddCustomerVisibility =
+        updateAddCustomerVisibility;
+
+
     window.FSILeads = {
 
         loadFilterOptions,
@@ -3892,7 +4212,9 @@
 
         setupSalesAssignmentAccess,
 
-        clearSalesHeaderFilter
+        clearSalesHeaderFilter,
+
+        updateAddCustomerVisibility
     };
 
 
@@ -3963,10 +4285,8 @@
         "fsi:lead-changed",
         function () {
 
-            // Do not immediately reload here because
-            // save/delete already refresh the table.
-            //
-            // This listener is intentionally lightweight.
+            // Save/delete already refreshes
+            // the table, so no reload here.
         }
     );
 
