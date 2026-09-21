@@ -369,6 +369,7 @@
       }
 
     });
+
   }
 
 
@@ -467,6 +468,511 @@
       }
 
     });
+
+  }
+
+
+  // ==========================================================
+  // SALES HEADER DROPDOWN
+  // ==========================================================
+  // KHUSUS TAMBAHAN:
+  // Menu "Sales" di header Admin sekarang berisi
+  // nama-nama Sales aktif.
+  //
+  // Tidak mengubah menu lain.
+  // ==========================================================
+
+  function getSupabaseClient() {
+
+    if (window.supabaseClient) {
+      return window.supabaseClient;
+    }
+
+    try {
+      if (
+        typeof supabaseClient !== "undefined" &&
+        supabaseClient
+      ) {
+        return supabaseClient;
+      }
+    } catch (error) {
+      // Ignore
+    }
+
+    return null;
+  }
+
+
+  function getSalesDisplayName(sales) {
+
+    if (!sales) {
+      return "Sales";
+    }
+
+    return (
+      sales.name ||
+      sales.full_name ||
+      sales.username ||
+      sales.email ||
+      "Sales"
+    );
+  }
+
+
+  function getSalesId(sales) {
+
+    if (!sales) {
+      return null;
+    }
+
+    return (
+      sales.id ||
+      sales.user_id ||
+      sales.auth_user_id ||
+      sales["auth_user-id"] ||
+      null
+    );
+  }
+
+
+  function isActiveSales(sales) {
+
+    if (!sales) {
+      return false;
+    }
+
+    const role = normalizeRole(sales.role);
+
+    if (
+      role !== "sales" &&
+      role !== "salesperson"
+    ) {
+      return false;
+    }
+
+    const status = String(
+      sales.status || "Active"
+    )
+      .trim()
+      .toLowerCase();
+
+    return (
+      status === "active" ||
+      status === "aktif" ||
+      status === "1" ||
+      status === "true"
+    );
+  }
+
+
+  function findSalesHeaderDropdown() {
+
+    const dropdowns = $$(".nav-dropdown");
+
+    for (const dropdown of dropdowns) {
+
+      const button = dropdown.querySelector(
+        ".nav-dropdown-btn, [aria-haspopup='true']"
+      );
+
+      if (!button) {
+        continue;
+      }
+
+      const text = String(
+        button.textContent || ""
+      )
+        .trim()
+        .toLowerCase();
+
+      /*
+       * Cari tombol header yang benar-benar bernama Sales.
+       *
+       * Tidak menggunakan data-page="sales" karena tombol
+       * Sales sekarang adalah dropdown nama Sales, bukan
+       * halaman Manage Sales.
+       */
+      if (
+        text === "sales" ||
+        text.includes("sales")
+      ) {
+
+        return {
+          container: dropdown,
+          button: button,
+          menu: dropdown.querySelector(
+            ".nav-dropdown-menu"
+          )
+        };
+
+      }
+
+    }
+
+    return null;
+  }
+
+
+  async function loadSalesHeaderDropdown() {
+
+    // Hanya Admin yang mendapatkan daftar Sales.
+    if (!isAdmin()) {
+      return;
+    }
+
+    const target =
+      findSalesHeaderDropdown();
+
+    if (!target || !target.menu) {
+      return;
+    }
+
+    const client =
+      getSupabaseClient();
+
+    if (!client) {
+      console.warn(
+        "[FSI Navigation] Supabase client belum tersedia."
+      );
+
+      return;
+    }
+
+    try {
+
+      const result = await client
+        .from("sales_users")
+        .select("*");
+
+      if (result.error) {
+
+        console.error(
+          "[FSI Navigation] Gagal mengambil Sales:",
+          result.error
+        );
+
+        return;
+      }
+
+      const rows = Array.isArray(result.data)
+        ? result.data
+        : [];
+
+      const activeSales =
+        rows
+          .filter(isActiveSales)
+          .sort(function (a, b) {
+
+            return getSalesDisplayName(a)
+              .localeCompare(
+                getSalesDisplayName(b),
+                "id",
+                {
+                  sensitivity: "base"
+                }
+              );
+
+          });
+
+
+      // Bersihkan isi dropdown lama.
+      target.menu.innerHTML = "";
+
+
+      // ------------------------------------------------------
+      // HEADER DROPDOWN
+      // ------------------------------------------------------
+
+      const headerItem =
+        document.createElement("div");
+
+      headerItem.className =
+        "nav-dropdown-label";
+
+      headerItem.textContent =
+        "Pilih Sales";
+
+      headerItem.style.cssText =
+        "padding:8px 14px;font-size:11px;font-weight:700;" +
+        "text-transform:uppercase;letter-spacing:.06em;" +
+        "opacity:.6;cursor:default;";
+
+      target.menu.appendChild(
+        headerItem
+      );
+
+
+      // ------------------------------------------------------
+      // SEMUA SALES
+      // ------------------------------------------------------
+
+      const allItem =
+        document.createElement("a");
+
+      allItem.href = "#";
+
+      allItem.className =
+        "nav-dropdown-item";
+
+      allItem.textContent =
+        "Semua Sales";
+
+      allItem.dataset.salesId = "";
+
+      allItem.addEventListener(
+        "click",
+        function (event) {
+
+          event.preventDefault();
+          event.stopPropagation();
+
+          selectSalesFromHeader(
+            null,
+            "Semua Sales"
+          );
+
+        }
+      );
+
+      target.menu.appendChild(
+        allItem
+      );
+
+
+      // ------------------------------------------------------
+      // NAMA SALES
+      // ------------------------------------------------------
+
+      if (!activeSales.length) {
+
+        const emptyItem =
+          document.createElement("div");
+
+        emptyItem.className =
+          "nav-dropdown-item disabled";
+
+        emptyItem.textContent =
+          "Belum ada Sales aktif";
+
+        emptyItem.style.opacity = "0.55";
+        emptyItem.style.cursor = "default";
+
+        target.menu.appendChild(
+          emptyItem
+        );
+
+      } else {
+
+        activeSales.forEach(
+          function (sales) {
+
+            const salesId =
+              getSalesId(sales);
+
+            const salesName =
+              getSalesDisplayName(sales);
+
+            if (!salesId) {
+              return;
+            }
+
+            const item =
+              document.createElement("a");
+
+            item.href = "#";
+
+            item.className =
+              "nav-dropdown-item sales-header-item";
+
+            item.textContent =
+              salesName;
+
+            item.dataset.salesId =
+              salesId;
+
+            item.dataset.salesName =
+              salesName;
+
+            item.addEventListener(
+              "click",
+              function (event) {
+
+                event.preventDefault();
+                event.stopPropagation();
+
+                selectSalesFromHeader(
+                  salesId,
+                  salesName
+                );
+
+              }
+            );
+
+            target.menu.appendChild(
+              item
+            );
+
+          }
+        );
+
+      }
+
+
+      // ------------------------------------------------------
+      // Refresh icon jika tersedia
+      // ------------------------------------------------------
+
+      if (
+        typeof window.refreshIcons ===
+        "function"
+      ) {
+
+        window.refreshIcons();
+
+      }
+
+    } catch (error) {
+
+      console.error(
+        "[FSI Navigation] Error load Sales dropdown:",
+        error
+      );
+
+    }
+
+  }
+
+
+  // ==========================================================
+  // SELECT SALES FROM HEADER
+  // ==========================================================
+
+  function selectSalesFromHeader(
+    salesId,
+    salesName
+  ) {
+
+    /*
+     * Simpan pilihan supaya module Leads bisa
+     * menggunakannya.
+     */
+    window.crmSelectedSalesId =
+      salesId || null;
+
+    window.crmSelectedSalesName =
+      salesName || "Semua Sales";
+
+
+    /*
+     * Compatibility:
+     *
+     * Jika leads.js / module lain memiliki fungsi
+     * selectSalesFilter(), gunakan fungsi tersebut.
+     */
+    if (
+      typeof window.selectSalesFilter ===
+      "function"
+    ) {
+
+      try {
+
+        window.selectSalesFilter(
+          salesId || "",
+          salesName || "Semua Sales"
+        );
+
+      } catch (error) {
+
+        console.warn(
+          "[FSI Navigation] selectSalesFilter error:",
+          error
+        );
+
+      }
+
+    }
+
+
+    /*
+     * Compatibility lain jika tersedia.
+     */
+    if (
+      typeof window.setSalesFilter ===
+      "function"
+    ) {
+
+      try {
+
+        window.setSalesFilter(
+          salesId || "",
+          salesName || "Semua Sales"
+        );
+
+      } catch (error) {
+
+        console.warn(
+          "[FSI Navigation] setSalesFilter error:",
+          error
+        );
+
+      }
+
+    }
+
+
+    /*
+     * Event khusus untuk Leads.
+     *
+     * leads.js dapat menangkap event ini dan
+     * melakukan query berdasarkan sales_id.
+     */
+    try {
+
+      window.dispatchEvent(
+        new CustomEvent(
+          "fsi:sales-selected",
+          {
+            detail: {
+              salesId:
+                salesId || null,
+
+              salesName:
+                salesName || "Semua Sales"
+            }
+          }
+        )
+      );
+
+    } catch (error) {
+      // Ignore
+    }
+
+
+    /*
+     * Masuk ke halaman Leads / My Leads.
+     */
+    navigateLeads();
+
+
+    /*
+     * Tutup dropdown setelah memilih Sales.
+     */
+    closeAllDropdowns();
+
+  }
+
+
+  // ==========================================================
+  // REFRESH SALES HEADER
+  // ==========================================================
+
+  function refreshSalesHeaderDropdown() {
+
+    if (!isAdmin()) {
+      return;
+    }
+
+    loadSalesHeaderDropdown();
 
   }
 
@@ -1261,6 +1767,9 @@
       currentPage
     );
 
+    // Hanya tambahan untuk dropdown Sales Admin.
+    refreshSalesHeaderDropdown();
+
   }
 
 
@@ -1393,6 +1902,12 @@
 
     refresh:
       refreshNavigation,
+
+    refreshSales:
+      refreshSalesHeaderDropdown,
+
+    selectSales:
+      selectSalesFromHeader,
 
     closeDropdowns:
       closeAllDropdowns,
