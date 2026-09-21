@@ -1,4 +1,3 @@
-```javascript
 // ============================================================
 // FSI CRM - NAVIGATION MANAGEMENT
 // File: js/navigation.js
@@ -13,14 +12,20 @@
     // ========================================================
 
     let navigationInitialized = false;
+    let documentClickBound = false;
+    let escapeKeyBound = false;
+    let resizeBound = false;
 
     // ========================================================
     // DOM HELPERS
     // ========================================================
 
     function navElement(...ids) {
+
         for (const id of ids) {
-            const element = document.getElementById(id);
+
+            const element =
+                document.getElementById(id);
 
             if (element) {
                 return element;
@@ -31,22 +36,44 @@
     }
 
     function getProfile() {
+
         return window.currentProfile || null;
     }
 
+    function getCurrentUser() {
+
+        return window.currentUser || null;
+    }
+
+    function hasProfile() {
+
+        return !!getProfile();
+    }
+
     function isAdmin() {
-        const profile = getProfile();
+
+        const profile =
+            getProfile();
 
         if (!profile) {
             return false;
         }
 
-        if (typeof window.isAdminRole === "function") {
-            return window.isAdminRole(profile);
+        if (
+            typeof window.isAdminRole ===
+            "function"
+        ) {
+            return window.isAdminRole(
+                profile
+            );
         }
 
         return (
-            String(profile.role || "").toLowerCase() ===
+            String(
+                profile.role || ""
+            )
+                .trim()
+                .toLowerCase() ===
             "admin"
         );
     }
@@ -60,31 +87,32 @@
         const pages = {
 
             dashboard: [
+                "view-dashboard",
                 "dashboardPage",
-                "dashboard-page",
-                "view-dashboard"
+                "dashboard-page"
             ],
 
             leads: [
+                "view-leads",
                 "leadsPage",
-                "leads-page",
-                "view-leads"
+                "leads-page"
             ],
 
             sales: [
+                "view-sales",
                 "salesPage",
-                "sales-page",
-                "view-sales"
+                "sales-page"
             ],
 
             customerProfile: [
+                "view-customer-profile",
                 "customerProfilePage",
-                "customer-profile-page",
-                "view-customer-profile"
+                "customer-profile-page"
             ]
         };
 
-        const ids = pages[type] || [];
+        const ids =
+            pages[type] || [];
 
         for (const id of ids) {
 
@@ -100,35 +128,39 @@
     }
 
     // ========================================================
+    // GET ALL CRM PAGES
+    // ========================================================
+
+    function getAllPages() {
+
+        return [
+            getPage("dashboard"),
+            getPage("leads"),
+            getPage("sales"),
+            getPage("customerProfile")
+        ].filter(Boolean);
+    }
+
+    // ========================================================
     // HIDE ALL PAGES
     // ========================================================
 
     function hideAllPages() {
 
-        [
-            "dashboard",
-            "leads",
-            "sales",
-            "customerProfile"
-        ].forEach(
-            type => {
+        getAllPages().forEach(
+            page => {
 
-                const page =
-                    getPage(type);
+                page.style.display =
+                    "none";
 
-                if (page) {
-                    page.style.display =
-                        "none";
+                page.classList.remove(
+                    "active"
+                );
 
-                    page.classList.remove(
-                        "active"
-                    );
-
-                    page.setAttribute(
-                        "aria-hidden",
-                        "true"
-                    );
-                }
+                page.setAttribute(
+                    "aria-hidden",
+                    "true"
+                );
             }
         );
     }
@@ -139,13 +171,16 @@
 
     function showPage(type) {
 
+        const normalized =
+            normalizeTarget(type);
+
         const page =
-            getPage(type);
+            getPage(normalized);
 
         if (!page) {
 
             console.warn(
-                `FSI CRM: Page "${type}" not found.`
+                `FSI CRM: Page "${normalized}" not found.`
             );
 
             return false;
@@ -154,9 +189,7 @@
         hideAllPages();
 
         page.style.display =
-            type === "dashboard"
-                ? "block"
-                : "block";
+            "block";
 
         page.classList.add(
             "active"
@@ -171,12 +204,108 @@
     }
 
     // ========================================================
+    // NORMALIZE NAV TARGET
+    // ========================================================
+
+    function normalizeTarget(target) {
+
+        const value =
+            String(
+                target || ""
+            )
+                .trim()
+                .toLowerCase();
+
+        // Dashboard
+        if (
+            value === "home" ||
+            value === "dashboard" ||
+            value === "dashboardpage" ||
+            value === "dashboard-page" ||
+            value === "view-dashboard"
+        ) {
+            return "dashboard";
+        }
+
+        // Leads
+        if (
+            value === "lead" ||
+            value === "leads" ||
+            value === "leadspage" ||
+            value === "leads-page" ||
+            value === "view-leads"
+        ) {
+            return "leads";
+        }
+
+        // Sales
+        if (
+            value === "sales" ||
+            value === "salespage" ||
+            value === "sales-page" ||
+            value === "view-sales"
+        ) {
+            return "sales";
+        }
+
+        // Customer profile
+        if (
+            value === "customer" ||
+            value === "customerprofile" ||
+            value === "customer-profile" ||
+            value === "customerprofilepage" ||
+            value === "customer-profile-page" ||
+            value === "view-customer-profile"
+        ) {
+            return "customerProfile";
+        }
+
+        return value;
+    }
+
+    // ========================================================
+    // PAGE TITLE
+    // ========================================================
+
+    function setNavigationTitle(title) {
+
+        if (
+            typeof window.setPageTitle ===
+            "function"
+        ) {
+
+            window.setPageTitle(
+                title
+            );
+
+            return;
+        }
+
+        const ids = [
+            "current-page-title",
+            "pageTitle",
+            "page-title"
+        ];
+
+        ids.forEach(
+            id => {
+
+                const element =
+                    document.getElementById(id);
+
+                if (element) {
+                    element.textContent =
+                        title;
+                }
+            }
+        );
+    }
+
+    // ========================================================
     // ACTIVE NAVIGATION
     // ========================================================
 
-    function setActiveNavigation(
-        target
-    ) {
+    function setActiveNavigation(target) {
 
         const normalizedTarget =
             normalizeTarget(
@@ -184,11 +313,13 @@
             );
 
         const selectors = [
-            ".nav-link",
-            ".nav-dropdown-item",
-            "[data-page]",
-            "[data-view]",
-            "[data-nav]"
+            ".nav-link[data-page]",
+            ".nav-link[data-view]",
+            ".nav-link[data-nav]",
+            ".nav-dropdown-item[data-page]",
+            ".nav-dropdown-item[data-view]",
+            ".nav-dropdown-item[data-nav]",
+            "[data-crm-nav]"
         ];
 
         const elements =
@@ -203,6 +334,7 @@
                     element.dataset.page ||
                     element.dataset.view ||
                     element.dataset.nav ||
+                    element.dataset.crmNav ||
                     "";
 
                 const normalizedElement =
@@ -237,104 +369,7 @@
     }
 
     // ========================================================
-    // NORMALIZE NAV TARGET
-    // ========================================================
-
-    function normalizeTarget(
-        target
-    ) {
-
-        const value =
-            String(
-                target || ""
-            )
-                .trim()
-                .toLowerCase();
-
-        if (
-            value === "home" ||
-            value === "dashboard" ||
-            value === "dashboardpage" ||
-            value === "dashboard-page" ||
-            value === "view-dashboard"
-        ) {
-            return "dashboard";
-        }
-
-        if (
-            value === "lead" ||
-            value === "leads" ||
-            value === "leadspage" ||
-            value === "leads-page" ||
-            value === "view-leads"
-        ) {
-            return "leads";
-        }
-
-        if (
-            value === "sales" ||
-            value === "salespage" ||
-            value === "sales-page" ||
-            value === "view-sales"
-        ) {
-            return "sales";
-        }
-
-        if (
-            value === "customer" ||
-            value === "customerprofile" ||
-            value === "customer-profile" ||
-            value === "customerprofilepage" ||
-            value === "customer-profile-page" ||
-            value === "view-customer-profile"
-        ) {
-            return "customerProfile";
-        }
-
-        return value;
-    }
-
-    // ========================================================
-    // PAGE TITLE
-    // ========================================================
-
-    function setNavigationTitle(
-        title
-    ) {
-
-        if (
-            typeof window.setPageTitle ===
-            "function"
-        ) {
-            window.setPageTitle(
-                title
-            );
-
-            return;
-        }
-
-        const ids = [
-            "current-page-title",
-            "pageTitle",
-            "page-title"
-        ];
-
-        ids.forEach(
-            id => {
-
-                const element =
-                    document.getElementById(id);
-
-                if (element) {
-                    element.textContent =
-                        title;
-                }
-            }
-        );
-    }
-
-    // ========================================================
-    // CLOSE MOBILE MENU
+    // MOBILE MENU
     // ========================================================
 
     function closeMobileMenu() {
@@ -384,10 +419,6 @@
         );
     }
 
-    // ========================================================
-    // OPEN MOBILE MENU
-    // ========================================================
-
     function openMobileMenu() {
 
         const mobileNav =
@@ -436,10 +467,6 @@
         );
     }
 
-    // ========================================================
-    // TOGGLE MOBILE MENU
-    // ========================================================
-
     function toggleMobileMenu() {
 
         const mobileNav =
@@ -470,12 +497,38 @@
     }
 
     // ========================================================
-    // NAVIGATION DROPDOWNS
+    // DROPDOWN HELPERS
     // ========================================================
 
-    function closeAllDropdowns(
-        except = null
-    ) {
+    function getDropdownButton(dropdown) {
+
+        if (!dropdown) {
+            return null;
+        }
+
+        return dropdown.querySelector(
+            ".nav-dropdown-btn, " +
+            ".nav-dropdown-toggle, " +
+            "[aria-haspopup='true']"
+        );
+    }
+
+    function getDropdownMenu(dropdown) {
+
+        if (!dropdown) {
+            return null;
+        }
+
+        return dropdown.querySelector(
+            ".nav-dropdown-menu"
+        );
+    }
+
+    // ========================================================
+    // CLOSE DROPDOWNS
+    // ========================================================
+
+    function closeAllDropdowns(except = null) {
 
         const dropdowns =
             document.querySelectorAll(
@@ -497,23 +550,30 @@
                 );
 
                 const menu =
-                    dropdown.querySelector(
-                        ".nav-dropdown-menu"
+                    getDropdownMenu(
+                        dropdown
                     );
 
                 if (menu) {
+
                     menu.classList.remove(
                         "show",
                         "open"
                     );
+
+                    menu.setAttribute(
+                        "aria-hidden",
+                        "true"
+                    );
                 }
 
                 const button =
-                    dropdown.querySelector(
-                        ".nav-dropdown-btn, [aria-haspopup='true']"
+                    getDropdownButton(
+                        dropdown
                     );
 
                 if (button) {
+
                     button.setAttribute(
                         "aria-expanded",
                         "false"
@@ -523,9 +583,11 @@
         );
     }
 
-    function toggleDropdown(
-        dropdown
-    ) {
+    // ========================================================
+    // TOGGLE DROPDOWN
+    // ========================================================
+
+    function toggleDropdown(dropdown) {
 
         if (!dropdown) {
             return;
@@ -536,78 +598,50 @@
                 "open"
             );
 
+        if (isOpen) {
+
+            closeAllDropdowns();
+
+            return;
+        }
+
         closeAllDropdowns(
-            isOpen
-                ? null
-                : dropdown
+            dropdown
         );
 
-        if (!isOpen) {
+        dropdown.classList.add(
+            "open"
+        );
 
-            dropdown.classList.add(
+        const menu =
+            getDropdownMenu(
+                dropdown
+            );
+
+        if (menu) {
+
+            menu.classList.add(
+                "show",
                 "open"
             );
 
-            const menu =
-                dropdown.querySelector(
-                    ".nav-dropdown-menu"
-                );
+            menu.setAttribute(
+                "aria-hidden",
+                "false"
+            );
+        }
 
-            if (menu) {
-
-                menu.classList.add(
-                    "show"
-                );
-
-                menu.classList.add(
-                    "open"
-                );
-            }
-
-            const button =
-                dropdown.querySelector(
-                    ".nav-dropdown-btn, [aria-haspopup='true']"
-                );
-
-            if (button) {
-
-                button.setAttribute(
-                    "aria-expanded",
-                    "true"
-                );
-            }
-
-        } else {
-
-            dropdown.classList.remove(
-                "open"
+        const button =
+            getDropdownButton(
+                dropdown
             );
 
-            const menu =
-                dropdown.querySelector(
-                    ".nav-dropdown-menu"
-                );
+        if (button) {
 
-            if (menu) {
-
-                menu.classList.remove(
-                    "show",
-                    "open"
-                );
-            }
-
-            const button =
-                dropdown.querySelector(
-                    ".nav-dropdown-btn, [aria-haspopup='true']"
-                );
-
-            if (button) {
-
-                button.setAttribute(
-                    "aria-expanded",
-                    "false"
-                );
-            }
+            button.setAttribute(
+                "aria-expanded",
+                "true"
+            );
         }
     }
 
@@ -617,12 +651,16 @@
 
     function updateAdminNavigation() {
 
+        const allowed =
+            isAdmin();
+
         const adminOnlySelectors = [
             "[data-admin-only]",
             ".admin-only",
             "#salesNavLink",
             "#salesNavItem",
-            "#salesManagementNav"
+            "#salesManagementNav",
+            "#salesDropdown"
         ];
 
         const elements =
@@ -633,38 +671,50 @@
         elements.forEach(
             element => {
 
-                const allowed =
-                    isAdmin();
+                if (allowed) {
 
-                element.style.display =
-                    allowed
-                        ? ""
-                        : "none";
+                    element.style.display =
+                        "";
 
-                element.setAttribute(
-                    "aria-hidden",
-                    String(!allowed)
-                );
+                    element.setAttribute(
+                        "aria-hidden",
+                        "false"
+                    );
+
+                } else {
+
+                    element.style.display =
+                        "none";
+
+                    element.setAttribute(
+                        "aria-hidden",
+                        "true"
+                    );
+                }
             }
         );
 
-        // Sales management dropdown
-        const salesDropdown =
-            navElement(
-                "salesDropdown"
-            );
+        // Additional protection:
+        // hide Manage Sales page for non-admin
+        const salesPage =
+            getPage("sales");
 
         if (
-            salesDropdown &&
-            !isAdmin()
+            salesPage &&
+            !allowed
         ) {
-            salesDropdown.style.display =
+
+            salesPage.style.display =
                 "none";
+
+            salesPage.classList.remove(
+                "active"
+            );
         }
     }
 
     // ========================================================
-    // SHOW DASHBOARD
+    // NAVIGATE DASHBOARD
     // ========================================================
 
     async function navigateDashboard() {
@@ -677,6 +727,7 @@
             typeof window.showDashboard ===
             "function"
         ) {
+
             await window.showDashboard();
 
         } else {
@@ -696,7 +747,7 @@
     }
 
     // ========================================================
-    // SHOW LEADS
+    // NAVIGATE LEADS
     // ========================================================
 
     async function navigateLeads() {
@@ -709,6 +760,7 @@
             typeof window.showLeads ===
             "function"
         ) {
+
             await window.showLeads();
 
         } else {
@@ -730,10 +782,26 @@
     }
 
     // ========================================================
-    // SHOW SALES
+    // NAVIGATE SALES
     // ========================================================
 
     async function navigateSales() {
+
+        if (!hasProfile()) {
+
+            if (
+                typeof window.showToast ===
+                "function"
+            ) {
+
+                window.showToast(
+                    "Please login first.",
+                    "error"
+                );
+            }
+
+            return;
+        }
 
         if (!isAdmin()) {
 
@@ -741,6 +809,7 @@
                 typeof window.showToast ===
                 "function"
             ) {
+
                 window.showToast(
                     "Access denied. Admin only.",
                     "error"
@@ -758,6 +827,7 @@
             typeof window.showSales ===
             "function"
         ) {
+
             await window.showSales();
 
         } else {
@@ -774,6 +844,7 @@
                 typeof window.loadSalesUsers ===
                 "function"
             ) {
+
                 await window.loadSalesUsers();
             }
         }
@@ -784,7 +855,7 @@
     }
 
     // ========================================================
-    // SHOW CUSTOMER PROFILE
+    // NAVIGATE CUSTOMER PROFILE
     // ========================================================
 
     async function navigateCustomerProfile(
@@ -853,20 +924,24 @@
                 target
             );
 
-        switch (
-            normalized
-        ) {
+        switch (normalized) {
 
             case "dashboard":
+
                 await navigateDashboard();
+
                 break;
 
             case "leads":
+
                 await navigateLeads();
+
                 break;
 
             case "sales":
+
                 await navigateSales();
+
                 break;
 
             case "customerProfile":
@@ -884,6 +959,7 @@
                 );
 
                 await navigateDashboard();
+
                 break;
         }
     }
@@ -892,9 +968,7 @@
     // DATA ATTRIBUTE NAVIGATION
     // ========================================================
 
-    function handleNavigationClick(
-        event
-    ) {
+    function handleNavigationClick(event) {
 
         const element =
             event.currentTarget;
@@ -906,7 +980,9 @@
         const target =
             element.dataset.page ||
             element.dataset.view ||
-            element.dataset.nav;
+            element.dataset.nav ||
+            element.dataset.crmNav ||
+            "";
 
         if (!target) {
             return;
@@ -917,12 +993,25 @@
                 target
             );
 
+        // Sales = Admin only
         if (
-            normalized ===
-            "sales" &&
+            normalized === "sales" &&
             !isAdmin()
         ) {
+
             event.preventDefault();
+
+            if (
+                typeof window.showToast ===
+                "function"
+            ) {
+
+                window.showToast(
+                    "Access denied. Admin only.",
+                    "error"
+                );
+            }
+
             return;
         }
 
@@ -941,13 +1030,15 @@
 
         const links =
             document.querySelectorAll(
-                ".nav-link[data-page]," +
-                ".nav-link[data-view]," +
-                ".nav-link[data-nav]," +
-                ".nav-dropdown-item[data-page]," +
-                ".nav-dropdown-item[data-view]," +
-                ".nav-dropdown-item[data-nav]," +
-                "[data-crm-nav]"
+                [
+                    ".nav-link[data-page]",
+                    ".nav-link[data-view]",
+                    ".nav-link[data-nav]",
+                    ".nav-dropdown-item[data-page]",
+                    ".nav-dropdown-item[data-view]",
+                    ".nav-dropdown-item[data-nav]",
+                    "[data-crm-nav]"
+                ].join(",")
             );
 
         links.forEach(
@@ -956,6 +1047,19 @@
                 if (
                     link.dataset.navigationBound ===
                     "true"
+                ) {
+                    return;
+                }
+
+                // IMPORTANT:
+                // Dropdown toggle itself is NOT a page link.
+                if (
+                    link.classList.contains(
+                        "nav-dropdown-toggle"
+                    ) ||
+                    link.classList.contains(
+                        "nav-dropdown-btn"
+                    )
                 ) {
                     return;
                 }
@@ -986,10 +1090,8 @@
             dropdown => {
 
                 const button =
-                    dropdown.querySelector(
-                        ".nav-dropdown-btn, " +
-                        "[aria-haspopup='true'], " +
-                        ".nav-link"
+                    getDropdownButton(
+                        dropdown
                     );
 
                 if (!button) {
@@ -1005,6 +1107,16 @@
 
                 button.dataset.dropdownBound =
                     "true";
+
+                button.setAttribute(
+                    "aria-haspopup",
+                    "true"
+                );
+
+                button.setAttribute(
+                    "aria-expanded",
+                    "false"
+                );
 
                 button.addEventListener(
                     "click",
@@ -1053,6 +1165,11 @@
             "false"
         );
 
+        button.setAttribute(
+            "aria-controls",
+            "mobileNav"
+        );
+
         button.addEventListener(
             "click",
             function (event) {
@@ -1067,10 +1184,17 @@
     }
 
     // ========================================================
-    // DOCUMENT CLICK
+    // BIND DOCUMENT CLICK
     // ========================================================
 
     function bindDocumentClick() {
+
+        if (documentClickBound) {
+            return;
+        }
+
+        documentClickBound =
+            true;
 
         document.addEventListener(
             "click",
@@ -1079,14 +1203,19 @@
                 const target =
                     event.target;
 
-                // Don't close if clicking inside
-                // navigation dropdown.
                 if (
-                    target.closest(
-                        ".nav-dropdown"
-                    )
+                    target &&
+                    typeof target.closest ===
+                    "function"
                 ) {
-                    return;
+
+                    if (
+                        target.closest(
+                            ".nav-dropdown"
+                        )
+                    ) {
+                        return;
+                    }
                 }
 
                 closeAllDropdowns();
@@ -1095,10 +1224,17 @@
     }
 
     // ========================================================
-    // ESC KEY
+    // BIND ESCAPE KEY
     // ========================================================
 
     function bindEscapeKey() {
+
+        if (escapeKeyBound) {
+            return;
+        }
+
+        escapeKeyBound =
+            true;
 
         document.addEventListener(
             "keydown",
@@ -1119,10 +1255,17 @@
     }
 
     // ========================================================
-    // RESIZE
+    // BIND RESIZE
     // ========================================================
 
     function bindResize() {
+
+        if (resizeBound) {
+            return;
+        }
+
+        resizeBound =
+            true;
 
         window.addEventListener(
             "resize",
@@ -1132,6 +1275,7 @@
                     window.innerWidth >
                     900
                 ) {
+
                     closeMobileMenu();
                 }
             }
@@ -1139,7 +1283,7 @@
     }
 
     // ========================================================
-    // LOGO CLICK
+    // BIND LOGO
     // ========================================================
 
     function bindLogo() {
@@ -1166,21 +1310,11 @@
                     "click",
                     function (event) {
 
-                        // Only intercept if explicitly
-                        // marked as navigation/home.
-                        if (
-                            logo.dataset.home !==
-                            undefined ||
-                            logo.classList.contains(
-                                "brand"
-                            )
-                        ) {
-                            event.preventDefault();
+                        event.preventDefault();
 
-                            crmNavigate(
-                                "dashboard"
-                            );
-                        }
+                        crmNavigate(
+                            "dashboard"
+                        );
                     }
                 );
             }
@@ -1202,43 +1336,21 @@
 
         updateAdminNavigation();
 
-        // If one page is already visible,
-        // preserve it.
-        const dashboard =
-            getPage(
-                "dashboard"
-            );
-
-        const leads =
-            getPage(
-                "leads"
-            );
-
-        const sales =
-            getPage(
-                "sales"
-            );
-
-        const customerProfile =
-            getPage(
-                "customerProfile"
-            );
+        const pages =
+            getAllPages();
 
         const visiblePage =
-            [
-                dashboard,
-                leads,
-                sales,
-                customerProfile
-            ].find(
+            pages.find(
                 page =>
                     page &&
                     window.getComputedStyle(
                         page
-                    ).display !== "none"
+                    ).display !==
+                    "none"
             );
 
         if (visiblePage) {
+
             return;
         }
 
@@ -1260,6 +1372,8 @@
         bindMobileMenu();
 
         bindLogo();
+
+        initializeDefaultPage();
     }
 
     // ========================================================
@@ -1311,6 +1425,9 @@
     window.refreshNavigation =
         refreshNavigation;
 
+    window.normalizeNavigationTarget =
+        normalizeTarget;
+
     window.FSINavigation = {
 
         crmNavigate,
@@ -1341,7 +1458,9 @@
 
         closeAllDropdowns,
 
-        refreshNavigation
+        refreshNavigation,
+
+        normalizeTarget
     };
 
     // ========================================================
@@ -1384,11 +1503,7 @@
     );
 
     // ========================================================
-    // AUTH / APP READY SUPPORT
-    // ========================================================
-    //
-    // auth.js may finish login after DOMContentLoaded.
-    // This event allows navigation to refresh after login.
+    // APP READY
     // ========================================================
 
     window.addEventListener(
@@ -1401,6 +1516,10 @@
         }
     );
 
+    // ========================================================
+    // PROFILE READY
+    // ========================================================
+
     window.addEventListener(
         "fsi:profile-ready",
         function () {
@@ -1411,5 +1530,36 @@
         }
     );
 
+    // ========================================================
+    // AUTH STATE SUPPORT
+    // ========================================================
+
+    window.addEventListener(
+        "fsi:logged-out",
+        function () {
+
+            closeAllDropdowns();
+
+            closeMobileMenu();
+
+            hideAllPages();
+
+            const loginPage =
+                document.getElementById(
+                    "login-page"
+                );
+
+            if (loginPage) {
+
+                loginPage.style.display =
+                    "flex";
+
+                loginPage.setAttribute(
+                    "aria-hidden",
+                    "false"
+                );
+            }
+        }
+    );
+
 })();
-```
