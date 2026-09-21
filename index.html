@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
 
     <meta charset="UTF-8">
@@ -23,19 +24,7 @@
 
 
     <!-- =====================================================
-         REMOVE LOGIN CREDENTIALS FROM URL
-         =====================================================
-
-         Jika seseorang membuka:
-
-         ?username=Rist&password=xxxxx
-
-         parameter tersebut langsung dihapus dari address bar
-         sebelum module CRM dijalankan.
-
-         CATATAN:
-         Login tetap dilakukan melalui form.
-         Password TIDAK digunakan dari URL.
+         REMOVE SENSITIVE URL PARAMETERS
     ====================================================== -->
 
     <script>
@@ -43,39 +32,48 @@
 
         try {
 
-            const url =
-                new URL(
-                    window.location.href
-                );
+            const url = new URL(
+                window.location.href
+            );
 
-            const params =
-                url.searchParams;
+            const params = url.searchParams;
 
-            const hasSensitiveParams =
-                params.has("username") ||
-                params.has("password") ||
-                params.has("email") ||
-                params.has("token") ||
-                params.has("access_token") ||
-                params.has("refresh_token");
+            const sensitiveParams = [
+                "username",
+                "password",
+                "email",
+                "token",
+                "access_token",
+                "refresh_token"
+            ];
 
-            if (hasSensitiveParams) {
+            let changed = false;
 
-                params.delete("username");
-                params.delete("password");
-                params.delete("email");
-                params.delete("token");
-                params.delete("access_token");
-                params.delete("refresh_token");
+            sensitiveParams.forEach(function (key) {
+
+                if (params.has(key)) {
+
+                    params.delete(key);
+
+                    changed = true;
+
+                }
+
+            });
+
+
+            if (changed) {
 
                 const cleanQuery =
                     params.toString();
 
                 const cleanUrl =
                     url.pathname +
-                    (cleanQuery
-                        ? "?" + cleanQuery
-                        : "") +
+                    (
+                        cleanQuery
+                            ? "?" + cleanQuery
+                            : ""
+                    ) +
                     url.hash;
 
                 window.history.replaceState(
@@ -83,6 +81,7 @@
                     document.title,
                     cleanUrl
                 );
+
             }
 
         } catch (error) {
@@ -150,8 +149,6 @@
 
     <div class="login-card">
 
-        <!-- BRAND -->
-
         <div class="login-brand">
 
             <img
@@ -175,8 +172,6 @@
 
         </div>
 
-
-        <!-- LOGIN CONTENT -->
 
         <div class="login-form-wrapper">
 
@@ -203,8 +198,6 @@
                 autocomplete="on"
             >
 
-                <!-- USERNAME -->
-
                 <div class="form-group">
 
                     <label for="loginUsername">
@@ -222,8 +215,6 @@
 
                 </div>
 
-
-                <!-- PASSWORD -->
 
                 <div class="form-group">
 
@@ -243,12 +234,10 @@
                 </div>
 
 
-                <!-- LOGIN BUTTON -->
-
                 <button
                     type="submit"
                     id="login-btn"
-                    class="login-btn"
+                    class="login-btn btn-primary"
                 >
 
                     <span>
@@ -261,8 +250,6 @@
 
                 </button>
 
-
-                <!-- LOGIN MESSAGE -->
 
                 <div
                     id="login-message"
@@ -286,7 +273,7 @@
 
 <div
     id="app-shell"
-    class="app-shell"
+    class="app-shell app-container"
     style="display:none;"
 >
 
@@ -296,7 +283,7 @@
     ====================================================== -->
 
     <header
-        class="top-header"
+        class="top-header topbar"
         id="top-header"
     >
 
@@ -309,21 +296,25 @@
 
             <button
                 type="button"
-                class="brand"
+                class="brand brand-area"
                 id="crm-brand"
                 data-page="dashboard"
                 data-view="dashboard"
                 aria-label="FSI CRM Dashboard"
             >
 
-                <img
-                    src="logo-fsi.png"
-                    alt="FSI Logo"
-                    class="brand-logo"
-                    onerror="this.style.display='none'"
-                >
+                <span class="brand-logo">
 
-                <div class="brand-text">
+                    <img
+                        src="logo-fsi.png"
+                        alt="FSI Logo"
+                        onerror="this.style.display='none'"
+                    >
+
+                </span>
+
+
+                <span class="brand-text">
 
                     <strong>
                         FSI CRM
@@ -333,7 +324,7 @@
                         Sales Management
                     </span>
 
-                </div>
+                </span>
 
             </button>
 
@@ -364,15 +355,16 @@
 
             <nav
                 id="mainNav"
-                class="main-nav"
+                class="main-nav main-navigation"
                 aria-label="Main navigation"
             >
+
 
                 <!-- DASHBOARD -->
 
                 <button
                     type="button"
-                    class="nav-link active"
+                    class="nav-link nav-item active"
                     data-page="dashboard"
                     data-view="dashboard"
                 >
@@ -392,7 +384,7 @@
 
                 <button
                     type="button"
-                    class="nav-link"
+                    class="nav-link nav-item"
                     data-page="leads"
                     data-view="leads"
                 >
@@ -410,7 +402,6 @@
 
                 <!-- =================================================
                      SALES DROPDOWN
-                     ADMIN ONLY
                 ================================================== -->
 
                 <div
@@ -422,7 +413,7 @@
                     <button
                         type="button"
                         id="salesDropdownBtn"
-                        class="nav-link nav-dropdown-toggle"
+                        class="nav-link nav-item nav-dropdown-toggle"
                         data-page="sales"
                         aria-haspopup="true"
                         aria-expanded="false"
@@ -475,7 +466,7 @@
 
                 <button
                     type="button"
-                    class="nav-link admin-only"
+                    class="nav-link nav-item admin-only"
                     data-admin-only
                     data-page="sales"
                     data-view="sales"
@@ -498,7 +489,9 @@
                  USER AREA
             ================================================== -->
 
-            <div class="header-user-area">
+            <div
+                class="header-user-area topbar-user"
+            >
 
                 <div
                     class="user-menu"
@@ -522,7 +515,7 @@
                         </span>
 
 
-                        <span class="user-menu-info">
+                        <span class="user-menu-info user-details">
 
                             <strong id="user-display-name">
                                 Admin FSI
@@ -575,7 +568,7 @@
                         <button
                             type="button"
                             id="btn-logout"
-                            class="user-dropdown-item danger"
+                            class="user-dropdown-item danger logout-button"
                         >
 
                             <i
@@ -608,7 +601,7 @@
 
             <button
                 type="button"
-                class="nav-link"
+                class="nav-link nav-item"
                 data-page="dashboard"
                 data-view="dashboard"
             >
@@ -626,7 +619,7 @@
 
             <button
                 type="button"
-                class="nav-link"
+                class="nav-link nav-item"
                 data-page="leads"
                 data-view="leads"
             >
@@ -644,7 +637,7 @@
 
             <button
                 type="button"
-                class="nav-link admin-only"
+                class="nav-link nav-item admin-only"
                 data-admin-only
                 data-page="sales"
                 data-view="sales"
@@ -679,13 +672,28 @@
              PAGE HEADING
         ================================================== -->
 
-        <div class="page-heading">
+        <div
+            class="page-heading page-header"
+        >
 
             <div>
 
-                <span class="eyebrow">
-                    FSI CRM
-                </span>
+                <div class="page-breadcrumb">
+
+                    <span>
+                        FSI CRM
+                    </span>
+
+                    <span>
+                        /
+                    </span>
+
+                    <span id="page-breadcrumb-current">
+                        Dashboard
+                    </span>
+
+                </div>
+
 
                 <h1 id="current-page-title">
                     Dashboard
@@ -706,9 +714,10 @@
 
         <section
             id="view-dashboard"
-            class="crm-page"
+            class="crm-page crm-section"
             data-crm-page="dashboard"
         >
+
 
             <!-- =================================================
                  STATISTICS
@@ -721,10 +730,12 @@
 
                 <div class="stat-card">
 
-                    <div class="stat-icon">
+                    <div class="stat-icon bg-blue">
+
                         <i
                             data-lucide="users"
                         ></i>
+
                     </div>
 
                     <div class="stat-details">
@@ -750,10 +761,12 @@
 
                 <div class="stat-card">
 
-                    <div class="stat-icon">
+                    <div class="stat-icon bg-cyan">
+
                         <i
                             data-lucide="user-plus"
                         ></i>
+
                     </div>
 
                     <div class="stat-details">
@@ -779,10 +792,12 @@
 
                 <div class="stat-card">
 
-                    <div class="stat-icon">
+                    <div class="stat-icon bg-green">
+
                         <i
                             data-lucide="heart-handshake"
                         ></i>
+
                     </div>
 
                     <div class="stat-details">
@@ -808,10 +823,12 @@
 
                 <div class="stat-card">
 
-                    <div class="stat-icon">
+                    <div class="stat-icon bg-orange">
+
                         <i
                             data-lucide="phone-call"
                         ></i>
+
                     </div>
 
                     <div class="stat-details">
@@ -837,10 +854,12 @@
 
                 <div class="stat-card">
 
-                    <div class="stat-icon">
+                    <div class="stat-icon bg-purple">
+
                         <i
                             data-lucide="calendar-check"
                         ></i>
+
                     </div>
 
                     <div class="stat-details">
@@ -866,10 +885,12 @@
 
                 <div class="stat-card">
 
-                    <div class="stat-icon">
+                    <div class="stat-icon bg-cyan">
+
                         <i
                             data-lucide="map-pin"
                         ></i>
+
                     </div>
 
                     <div class="stat-details">
@@ -895,10 +916,12 @@
 
                 <div class="stat-card">
 
-                    <div class="stat-icon">
+                    <div class="stat-icon bg-yellow">
+
                         <i
                             data-lucide="file-text"
                         ></i>
+
                     </div>
 
                     <div class="stat-details">
@@ -924,10 +947,12 @@
 
                 <div class="stat-card">
 
-                    <div class="stat-icon">
+                    <div class="stat-icon bg-indigo">
+
                         <i
                             data-lucide="file-check-2"
                         ></i>
+
                     </div>
 
                     <div class="stat-details">
@@ -953,10 +978,12 @@
 
                 <div class="stat-card">
 
-                    <div class="stat-icon">
+                    <div class="stat-icon bg-green">
+
                         <i
                             data-lucide="badge-check"
                         ></i>
+
                     </div>
 
                     <div class="stat-details">
@@ -982,10 +1009,12 @@
 
                 <div class="stat-card">
 
-                    <div class="stat-icon">
+                    <div class="stat-icon bg-orange">
+
                         <i
                             data-lucide="user-x"
                         ></i>
+
                     </div>
 
                     <div class="stat-details">
@@ -1018,9 +1047,11 @@
 
                 <!-- PIPELINE -->
 
-                <div class="panel dashboard-panel">
+                <div
+                    class="panel dashboard-panel dashboard-card"
+                >
 
-                    <div class="panel-header">
+                    <div class="panel-header card-header">
 
                         <div>
 
@@ -1047,9 +1078,11 @@
 
                 <!-- RECENT ACTIVITIES -->
 
-                <div class="panel dashboard-panel">
+                <div
+                    class="panel dashboard-panel dashboard-card"
+                >
 
-                    <div class="panel-header">
+                    <div class="panel-header card-header">
 
                         <div>
 
@@ -1098,12 +1131,14 @@
 
         <section
             id="view-leads"
-            class="crm-page"
+            class="crm-page crm-section"
             data-crm-page="leads"
             style="display:none;"
         >
 
-            <div class="page-header-row">
+            <div
+                class="page-header-row section-header"
+            >
 
                 <div>
 
@@ -1125,7 +1160,7 @@
                 <button
                     type="button"
                     id="btn-add-lead"
-                    class="primary-btn"
+                    class="primary-btn btn-primary"
                 >
 
                     <i
@@ -1145,7 +1180,10 @@
                  FILTERS
             ================================================== -->
 
-            <div class="panel filters-bar">
+            <div
+                class="panel filters-bar filter-panel"
+            >
+
 
                 <!-- SEARCH -->
 
@@ -1265,12 +1303,14 @@
                  LEADS TABLE
             ================================================== -->
 
-            <div class="panel table-panel">
+            <div
+                class="panel table-panel table-container"
+            >
 
                 <div class="table-wrap">
 
                     <table
-                        class="crm-table"
+                        class="crm-table data-table"
                         id="leads-table"
                     >
 
@@ -1343,7 +1383,7 @@
                      PAGINATION
                 ================================================== -->
 
-                <div class="pagination-bar">
+                <div class="pagination-bar pagination-wrapper">
 
                     <div
                         id="leads-pagination-info"
@@ -1358,7 +1398,7 @@
                         <button
                             type="button"
                             id="btn-prev-page"
-                            class="secondary-btn"
+                            class="secondary-btn btn-secondary"
                             aria-label="Halaman sebelumnya"
                         >
 
@@ -1384,7 +1424,7 @@
                         <button
                             type="button"
                             id="btn-next-page"
-                            class="secondary-btn"
+                            class="secondary-btn btn-secondary"
                             aria-label="Halaman berikutnya"
                         >
 
@@ -1413,7 +1453,7 @@
 
         <section
             id="view-customer-profile"
-            class="crm-page"
+            class="crm-page crm-section"
             data-crm-page="customerProfile"
             style="display:none;"
         >
@@ -1423,7 +1463,7 @@
                 class="customer-profile-page"
             >
 
-                <div class="panel">
+                <div class="panel profile-card">
 
                     <div class="empty-state">
 
@@ -1450,12 +1490,14 @@
 
         <section
             id="view-sales"
-            class="crm-page"
+            class="crm-page crm-section"
             data-crm-page="sales"
             style="display:none;"
         >
 
-            <div class="page-header-row">
+            <div
+                class="page-header-row section-header"
+            >
 
                 <div>
 
@@ -1477,7 +1519,7 @@
                 <button
                     type="button"
                     id="btn-add-sales"
-                    class="primary-btn"
+                    class="primary-btn btn-primary"
                 >
 
                     <i
@@ -1493,12 +1535,14 @@
             </div>
 
 
-            <div class="panel table-panel">
+            <div
+                class="panel table-panel table-container"
+            >
 
                 <div class="table-wrap">
 
                     <table
-                        class="crm-table sales-table"
+                        class="crm-table data-table sales-table"
                         id="sales-table"
                     >
 
@@ -1569,14 +1613,16 @@
 
 <div
     id="leadModal"
-    class="modal-overlay"
+    class="modal-overlay modal-backdrop"
     style="display:none;"
     role="dialog"
     aria-modal="true"
     aria-labelledby="leadModalTitle"
 >
 
-    <div class="modal-card modal-lg">
+    <div
+        class="modal-card modal-box large-modal"
+    >
 
         <div class="modal-header">
 
@@ -1599,7 +1645,7 @@
 
             <button
                 type="button"
-                class="modal-close"
+                class="modal-close btn-close"
                 id="leadModalClose"
                 aria-label="Tutup"
             >
@@ -1906,18 +1952,16 @@
                 <button
                     type="button"
                     id="btn-cancel-lead"
-                    class="secondary-btn"
+                    class="secondary-btn btn-secondary"
                 >
-
                     Batal
-
                 </button>
 
 
                 <button
                     type="submit"
                     id="btn-save-lead"
-                    class="primary-btn"
+                    class="primary-btn btn-primary"
                 >
 
                     <i
@@ -1945,14 +1989,16 @@
 
 <div
     id="salesModal"
-    class="modal-overlay"
+    class="modal-overlay modal-backdrop"
     style="display:none;"
     role="dialog"
     aria-modal="true"
     aria-labelledby="salesModalTitle"
 >
 
-    <div class="modal-card modal-sm">
+    <div
+        class="modal-card modal-box"
+    >
 
         <div class="modal-header">
 
@@ -1975,7 +2021,7 @@
 
             <button
                 type="button"
-                class="modal-close"
+                class="modal-close btn-close"
                 id="salesModalClose"
                 aria-label="Tutup"
             >
@@ -2062,7 +2108,7 @@
                 <button
                     type="button"
                     id="btn-cancel-sales"
-                    class="secondary-btn"
+                    class="secondary-btn btn-secondary"
                 >
                     Batal
                 </button>
@@ -2071,7 +2117,7 @@
                 <button
                     type="submit"
                     id="btn-save-sales"
-                    class="primary-btn"
+                    class="primary-btn btn-primary"
                 >
 
                     <i
@@ -2103,7 +2149,7 @@
 
 
 <!-- =========================================================
-     LUCIDE ICONS
+     LUCIDE
 ========================================================= -->
 
 <script
@@ -2113,17 +2159,6 @@
 
 <!-- =========================================================
      CRM MODULES
-     
-     LOAD ORDER:
-
-     1. config
-     2. helpers
-     3. navigation
-     4. dashboard
-     5. leads
-     6. sales
-     7. shelter
-     8. auth
 ========================================================= -->
 
 <script src="js/config.js"></script>
@@ -2193,11 +2228,8 @@
 
 
         /*
-         * IMPORTANT:
-         *
-         * Jangan tampilkan application
-         * sebelum auth.js menentukan
-         * apakah session masih valid.
+         * Application jangan ditampilkan
+         * sebelum auth selesai.
          */
 
         if (appShell) {
@@ -2209,8 +2241,7 @@
 
 
         /*
-         * Login ditampilkan sebagai
-         * default state.
+         * Login menjadi default screen.
          */
 
         if (loginPage) {
@@ -2238,9 +2269,6 @@
 
     /*
      * AUTH READY
-     *
-     * Dipanggil oleh auth.js
-     * setelah session/profile siap.
      */
 
     window.addEventListener(
@@ -2252,6 +2280,10 @@
         }
     );
 
+
+    /*
+     * PROFILE READY
+     */
 
     window.addEventListener(
         "fsi:profile-ready",
