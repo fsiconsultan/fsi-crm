@@ -1,2836 +1,2457 @@
 // ============================================================
-// FSI CRM - NAVIGATION SYSTEM
-// File: js/navigation.js
+// FSI CRM - CUSTOMER PROFILE & EDIT MODULE
+// ============================================================
+// File: Customer Profile Module
+//
+// Fungsi:
+// - Membuka detail customer
+// - Menampilkan customer profile
+// - Edit customer
+// - Update customer ke Supabase
+// - Assignment Sales
+// - Update pipeline
+// - Cancel / Back
 // ============================================================
 
 "use strict";
 
-(function () {
 
-  // ==========================================================
-  // STATE
-  // ==========================================================
+// ============================================================
+// GLOBAL CUSTOMER STATE
+// ============================================================
 
-  let navigationInitialized = false;
-  let navigationEventsBound = false;
-  let currentPage = "dashboard";
+window.crmCurrentCustomerId =
+    window.crmCurrentCustomerId || null;
 
-
-  // ==========================================================
-  // PAGE MAP
-  // ==========================================================
-
-  const PAGE_MAP = {
-    dashboard: "view-dashboard",
-    leads: "view-leads",
-    customers: "view-leads",
-    customer: "view-customer-profile",
-    "customer-profile": "view-customer-profile",
-    profile: "view-customer-profile",
-    sales: "view-sales",
-    manageSales: "view-sales",
-    "manage-sales": "view-sales"
-  };
+window.crmCurrentCustomer =
+    window.crmCurrentCustomer || null;
 
 
-  // ==========================================================
-  // DOM HELPERS
-  // ==========================================================
+// ============================================================
+// HELPER: GET ELEMENT
+// ============================================================
 
-  function $(selector, parent) {
-    return (parent || document).querySelector(selector);
-  }
-
-
-  function $$(selector, parent) {
-    return Array.from(
-      (parent || document).querySelectorAll(selector)
-    );
-  }
-
-
-  function getElement(id) {
+function crmProfileElement(id) {
     return document.getElementById(id);
-  }
+}
 
 
-  // ==========================================================
-  // PROFILE / ROLE
-  // ==========================================================
+// ============================================================
+// HELPER: GET VALUE
+// ============================================================
 
-  function getProfile() {
+function crmProfileValue(value, fallback = "") {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+        return fallback;
+    }
+
+    return String(value);
+}
+
+
+// ============================================================
+// HELPER: ESCAPE HTML
+// ============================================================
+
+function crmProfileEscapeHTML(value) {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+        return "";
+    }
+
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+
+// Gunakan escapeHTML dari helpers.js jika tersedia
+if (
+    typeof window.escapeHTML !== "function"
+) {
+    window.escapeHTML =
+        crmProfileEscapeHTML;
+}
+
+
+// ============================================================
+// GET CUSTOMER NAME
+// ============================================================
+
+function crmGetCustomerName(customer) {
+
+    if (!customer) {
+        return "";
+    }
+
+    return (
+        customer.customer_name ||
+        customer.name ||
+        customer.full_name ||
+        "Customer"
+    );
+}
+
+
+// ============================================================
+// GET CUSTOMER LOCATION
+// ============================================================
+
+function crmGetCustomerLocation(customer) {
+
+    if (!customer) {
+        return "";
+    }
+
+    return (
+        customer.location ||
+        customer.address ||
+        ""
+    );
+}
+
+
+// ============================================================
+// GET CUSTOMER EMAIL
+// ============================================================
+//
+// Email hanya digunakan jika memang ada di database.
+// ============================================================
+
+function crmGetCustomerEmail(customer) {
+
+    if (!customer) {
+        return "";
+    }
+
+    return customer.email || "";
+}
+
+
+// ============================================================
+// GET CUSTOMER PHONE
+// ============================================================
+
+function crmGetCustomerPhone(customer) {
+
+    if (!customer) {
+        return "";
+    }
+
+    return (
+        customer.phone ||
+        customer.whatsapp ||
+        ""
+    );
+}
+
+
+// ============================================================
+// GET CURRENT USER ROLE
+// ============================================================
+
+function crmProfileIsAdmin() {
+
+    if (!window.currentProfile &&
+        typeof currentProfile === "undefined") {
+        return false;
+    }
+
+    const profile =
+        window.currentProfile ||
+        currentProfile;
+
+    if (!profile) {
+        return false;
+    }
+
+    const role =
+        String(profile.role || "")
+            .trim()
+            .toLowerCase();
+
+    return (
+        role === "admin" ||
+        role === "owner" ||
+        role === "administrator"
+    );
+}
+
+
+// ============================================================
+// GET CURRENT PROFILE
+// ============================================================
+
+function crmGetCurrentProfile() {
 
     if (window.currentProfile) {
-      return window.currentProfile;
+        return window.currentProfile;
     }
 
-    try {
-
-      if (typeof currentProfile !== "undefined") {
+    if (
+        typeof currentProfile !== "undefined"
+    ) {
         return currentProfile;
-      }
-
-    } catch (error) {
-      // Ignore
     }
 
     return null;
-  }
+}
 
 
-  function getCurrentUser() {
+// ============================================================
+// OPEN CUSTOMER PROFILE
+// ============================================================
 
-    if (window.currentUser) {
-      return window.currentUser;
-    }
+window.crmOpenCustomerProfile =
+    async function (id) {
 
-    try {
+        if (!id) {
 
-      if (typeof currentUser !== "undefined") {
-        return currentUser;
-      }
+            alert(
+                "Customer ID tidak ditemukan."
+            );
 
-    } catch (error) {
-      // Ignore
-    }
+            return;
+        }
 
-    return null;
-  }
 
+        if (
+            typeof supabaseClient === "undefined" ||
+            !supabaseClient
+        ) {
 
-  function normalizeRole(role) {
+            alert(
+                "Supabase belum siap."
+            );
 
-    return String(role || "")
-      .trim()
-      .toLowerCase();
+            return;
+        }
 
-  }
 
+        try {
 
-  function isAdmin() {
+            // ------------------------------------------------
+            // Ambil data dari cache terlebih dahulu
+            // ------------------------------------------------
 
-    const profile = getProfile();
+            let customer = null;
 
-    if (!profile) {
-      return false;
-    }
 
-    const role =
-      normalizeRole(profile.role);
+            if (
+                typeof leadsData !== "undefined" &&
+                Array.isArray(leadsData)
+            ) {
 
-    return (
-      role === "admin" ||
-      role === "owner" ||
-      role === "administrator"
-    );
-
-  }
-
-
-  function isSales() {
-
-    const profile = getProfile();
-
-    if (!profile) {
-      return false;
-    }
-
-    const role =
-      normalizeRole(profile.role);
-
-    return (
-      role === "sales" ||
-      role === "salesperson"
-    );
-
-  }
-
-
-  // ==========================================================
-  // PAGE RESOLUTION
-  // ==========================================================
-
-  function normalizeTarget(target) {
-
-    if (!target) {
-      return null;
-    }
-
-    let value =
-      String(target).trim();
-
-    if (!value) {
-      return null;
-    }
-
-    // Remove leading #
-    value =
-      value.replace(/^#/, "");
-
-
-    // Direct page ID
-    if (
-      Object.values(PAGE_MAP).includes(value)
-    ) {
-
-      return (
-        Object.keys(PAGE_MAP).find(
-          key => PAGE_MAP[key] === value
-        ) || null
-      );
-
-    }
-
-
-    // Normalize
-    value =
-      value
-        .replace(/_/g, "-")
-        .toLowerCase();
-
-
-    if (PAGE_MAP[value]) {
-      return value;
-    }
-
-
-    // Common aliases
-    const aliases = {
-
-      home:
-        "dashboard",
-
-      dash:
-        "dashboard",
-
-      customer:
-        "customer-profile",
-
-      customers:
-        "leads",
-
-      lead:
-        "leads",
-
-      leadlist:
-        "leads",
-
-      salesmanagement:
-        "sales",
-
-      "sales-management":
-        "sales",
-
-      "manage-sales":
-        "sales"
-
-    };
-
-
-    if (aliases[value]) {
-      return aliases[value];
-    }
-
-
-    return null;
-
-  }
-
-
-  function getPageElement(pageName) {
-
-    const normalized =
-      normalizeTarget(pageName);
-
-    if (!normalized) {
-      return null;
-    }
-
-    const pageId =
-      PAGE_MAP[normalized];
-
-    if (!pageId) {
-      return null;
-    }
-
-    return getElement(pageId);
-
-  }
-
-
-  function getAllPages() {
-
-    return $$(".crm-page");
-
-  }
-
-
-  // ==========================================================
-  // PAGE VISIBILITY
-  // ==========================================================
-
-  function hideAllPages() {
-
-    getAllPages().forEach(function (page) {
-
-      page.classList.remove("active");
-      page.classList.add("hidden");
-
-      page.setAttribute(
-        "aria-hidden",
-        "true"
-      );
-
-    });
-
-  }
-
-
-  function showPage(pageName, options) {
-
-    options =
-      options || {};
-
-
-    const normalized =
-      normalizeTarget(pageName);
-
-
-    if (!normalized) {
-
-      console.warn(
-        "[FSI Navigation] Unknown page:",
-        pageName
-      );
-
-      return false;
-
-    }
-
-
-    // Sales page hanya untuk Admin
-    if (
-      normalized === "sales" &&
-      !isAdmin()
-    ) {
-
-      if (
-        typeof window.showToast ===
-        "function"
-      ) {
-
-        window.showToast(
-          "Hanya Admin yang dapat membuka Manage Sales.",
-          "warning"
-        );
-
-      }
-
-      return false;
-
-    }
-
-
-    const page =
-      getPageElement(normalized);
-
-
-    if (!page) {
-
-      console.warn(
-        "[FSI Navigation] Page element tidak ditemukan:",
-        normalized
-      );
-
-      return false;
-
-    }
-
-
-    hideAllPages();
-
-
-    page.classList.remove("hidden");
-    page.classList.add("active");
-
-    page.setAttribute(
-      "aria-hidden",
-      "false"
-    );
-
-
-    currentPage =
-      normalized;
-
-
-    setActiveNavigation(
-      normalized
-    );
-
-    setNavigationTitle(
-      normalized
-    );
-
-
-    closeAllDropdowns();
-    closeMobileMenu();
-
-
-    // Scroll ke atas
-    if (!options.keepScroll) {
-
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-      });
-
-    }
-
-
-    // Event untuk module lain
-    try {
-
-      window.dispatchEvent(
-        new CustomEvent(
-          "fsi:navigation-changed",
-          {
-            detail: {
-              page: normalized,
-              element: page
+                customer =
+                    leadsData.find(
+                        item =>
+                            String(item.id) ===
+                            String(id)
+                    );
             }
-          }
-        )
-      );
-
-    } catch (error) {
-      // Ignore
-    }
 
 
-    return true;
+            // ------------------------------------------------
+            // Kalau tidak ada di cache,
+            // ambil langsung dari Supabase
+            // ------------------------------------------------
 
-  }
+            if (!customer) {
 
-
-  // ==========================================================
-  // ACTIVE NAVIGATION
-  // ==========================================================
-
-  function getNavigationTarget(element) {
-
-    if (!element) {
-      return null;
-    }
-
-    const dataset =
-      element.dataset || {};
+                const {
+                    data,
+                    error
+                } = await supabaseClient
+                    .from("leads")
+                    .select("*")
+                    .eq("id", id)
+                    .maybeSingle();
 
 
-    return (
-      dataset.page ||
-      dataset.view ||
-      dataset.nav ||
-      dataset.crmNav ||
-      dataset.target ||
-      null
-    );
+                if (error) {
 
-  }
+                    console.error(
+                        "Customer profile error:",
+                        error
+                    );
 
 
-  function setActiveNavigation(pageName) {
+                    alert(
+                        "Gagal mengambil data customer:\n\n" +
+                        error.message
+                    );
 
-    const normalized =
-      normalizeTarget(pageName);
-
-
-    if (!normalized) {
-      return;
-    }
+                    return;
+                }
 
 
-    const navElements =
-      $$(
-        [
-          "[data-page]",
-          "[data-view]",
-          "[data-nav]",
-          "[data-crm-nav]"
-        ].join(",")
-      );
+                if (!data) {
+
+                    alert(
+                        "Customer tidak ditemukan."
+                    );
+
+                    return;
+                }
 
 
-    navElements.forEach(function (element) {
-
-      const target =
-        getNavigationTarget(element);
+                customer = data;
+            }
 
 
-      const normalizedTarget =
-        normalizeTarget(target);
+            // ------------------------------------------------
+            // Simpan customer aktif
+            // ------------------------------------------------
+
+            window.crmCurrentCustomerId =
+                customer.id;
+
+            window.crmCurrentCustomer =
+                customer;
 
 
-      element.classList.remove(
-        "active"
-      );
+            // ------------------------------------------------
+            // Render profile
+            // ------------------------------------------------
+
+            crmRenderCustomerProfile(
+                customer
+            );
 
 
-      if (
-        normalizedTarget &&
-        normalizedTarget === normalized
-      ) {
+            // ------------------------------------------------
+            // Navigate
+            // ------------------------------------------------
 
-        element.classList.add(
-          "active"
-        );
+            if (
+                typeof window.crmNavigate ===
+                "function"
+            ) {
 
-      }
+                window.crmNavigate(
+                    "customerProfile"
+                );
 
-    });
+            } else {
 
-  }
-
-
-  // ==========================================================
-  // PAGE TITLE
-  // ==========================================================
-
-  function setNavigationTitle(pageName) {
-
-    const normalized =
-      normalizeTarget(pageName);
+                crmShowProfilePageFallback();
+            }
 
 
-    const titles = {
-
-      dashboard: {
-        title: "Dashboard",
-        subtitle:
-          "Overview CRM dan aktivitas customer."
-      },
+            crmSetPageTitle(
+                "Customer Profile"
+            );
 
 
-      leads: {
-
-        title:
-          isAdmin()
-            ? "Customer & Leads"
-            : "My Customers",
-
-        subtitle:
-          isAdmin()
-            ? "Kelola seluruh database customer dan leads."
-            : "Kelola database customer Anda."
-
-      },
+            window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+            });
 
 
-      "customer-profile": {
+        } catch (error) {
 
-        title:
-          "Customer Profile",
-
-        subtitle:
-          "Detail informasi dan aktivitas customer."
-
-      },
+            console.error(
+                "crmOpenCustomerProfile error:",
+                error
+            );
 
 
-      sales: {
-
-        title:
-          "Manage Sales",
-
-        subtitle:
-          "Kelola akun, role, dan status Sales."
-
-      }
-
+            alert(
+                "Terjadi kesalahan:\n\n" +
+                error.message
+            );
+        }
     };
 
 
-    const config =
-      titles[normalized];
+// ============================================================
+// BACK TO LEADS
+// ============================================================
+
+window.crmCancelCustomerEdit =
+    async function () {
+
+        window.crmCurrentCustomerId =
+            null;
+
+        window.crmCurrentCustomer =
+            null;
 
 
-    if (!config) {
-      return;
-    }
+        if (
+            typeof window.crmNavigate ===
+            "function"
+        ) {
 
-
-    const titleElements = [
-
-      getElement(
-        "current-page-title"
-      ),
-
-      getElement(
-        "page-title"
-      ),
-
-      getElement(
-        "pageTitle"
-      )
-
-    ].filter(Boolean);
-
-
-    titleElements.forEach(
-      function (element) {
-
-        element.textContent =
-          config.title;
-
-      }
-    );
-
-
-    const subtitleElements = [
-
-      getElement(
-        "current-page-subtitle"
-      ),
-
-      getElement(
-        "page-subtitle"
-      ),
-
-      getElement(
-        "pageSubtitle"
-      )
-
-    ].filter(Boolean);
-
-
-    subtitleElements.forEach(
-      function (element) {
-
-        element.textContent =
-          config.subtitle;
-
-      }
-    );
-
-  }
-
-
-  // ==========================================================
-  // ADMIN NAVIGATION
-  // ==========================================================
-
-  function updateAdminNavigation() {
-
-    const adminElements =
-      $$(
-        ".admin-only, .admin-only-nav, [data-admin-only]"
-      );
-
-
-    adminElements.forEach(
-      function (element) {
-
-        if (isAdmin()) {
-
-          element.style.display = "";
-          element.removeAttribute(
-            "aria-hidden"
-          );
+            window.crmNavigate(
+                "leads"
+            );
 
         } else {
 
-          element.style.display = "none";
-
-          element.setAttribute(
-            "aria-hidden",
-            "true"
-          );
-
+            crmShowLeadsPageFallback();
         }
 
-      }
+
+        crmSetPageTitle(
+            crmProfileIsAdmin()
+                ? "All Leads"
+                : "My Leads"
+        );
+
+
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
+
+
+        // Refresh data
+        if (
+            typeof window.loadLeads ===
+            "function"
+        ) {
+
+            try {
+
+                const page =
+                    typeof currentPage !==
+                    "undefined"
+                        ? currentPage
+                        : 1;
+
+                await window.loadLeads(
+                    page
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "Refresh leads error:",
+                    error
+                );
+            }
+        }
+    };
+
+
+// ============================================================
+// EDIT LEAD
+// ============================================================
+
+window.editLead =
+    async function (id) {
+
+        if (!id) {
+
+            alert(
+                "Customer ID tidak ditemukan."
+            );
+
+            return;
+        }
+
+
+        await window.crmOpenCustomerProfile(
+            id
+        );
+    };
+
+
+// ============================================================
+// RENDER CUSTOMER PROFILE
+// ============================================================
+
+window.crmRenderCustomerProfile =
+    function (customer) {
+
+        if (!customer) {
+            return;
+        }
+
+
+        window.crmCurrentCustomerId =
+            customer.id;
+
+        window.crmCurrentCustomer =
+            customer;
+
+
+        const page =
+            document.getElementById(
+                "customerProfilePage"
+            );
+
+
+        // ----------------------------------------------------
+        // Kalau halaman profile khusus tersedia
+        // ----------------------------------------------------
+
+        if (page) {
+
+            page.innerHTML =
+                crmBuildCustomerProfileHTML(
+                    customer
+                );
+
+
+            crmPopulateEditStatus(
+                customer.status
+            );
+
+
+            crmPopulateEditSales(
+                customer.sales_id
+            );
+
+
+            crmLoadCustomerActivities(
+                customer.id
+            );
+
+
+            return;
+        }
+
+
+        // ----------------------------------------------------
+        // Fallback ke elemen profile yang sudah ada
+        // ----------------------------------------------------
+
+        crmRenderExistingProfileElements(
+            customer
+        );
+    };
+
+
+// ============================================================
+// BUILD CUSTOMER PROFILE HTML
+// ============================================================
+
+function crmBuildCustomerProfileHTML(
+    customer
+) {
+
+    const customerName =
+        crmGetCustomerName(
+            customer
+        );
+
+
+    const phone =
+        crmGetCustomerPhone(
+            customer
+        );
+
+
+    const email =
+        crmGetCustomerEmail(
+            customer
+        );
+
+
+    const business =
+        customer.business || "";
+
+
+    const location =
+        crmGetCustomerLocation(
+            customer
+        );
+
+
+    const status =
+        typeof normalizeLeadStatus ===
+        "function"
+            ? normalizeLeadStatus(
+                customer.status
+            )
+            : (
+                customer.status ||
+                "New"
+            );
+
+
+    const salesId =
+        customer.sales_id || "";
+
+
+    const followUp =
+        customer.follow_up_date || "";
+
+
+    const appointment =
+        customer.appointment || "";
+
+
+    const siteSurvey =
+        customer.site_survey || "";
+
+
+    const quotation =
+        customer.quotation || "";
+
+
+    const spk =
+        customer.spk || "";
+
+
+    const closing =
+        customer.closing || "";
+
+
+    const notes =
+        customer.notes || "";
+
+
+    return `
+
+        <div class="crm-full-edit-page">
+
+            <!-- =========================================
+                 TOOLBAR
+            ========================================== -->
+
+            <div class="crm-edit-toolbar">
+
+                <button
+                    type="button"
+                    class="secondary-btn"
+                    onclick="crmCancelCustomerEdit()"
+                >
+                    <i data-lucide="arrow-left"></i>
+                    Back to Customers
+                </button>
+
+
+                <div class="crm-edit-toolbar-title">
+
+                    <span class="eyebrow">
+                        CUSTOMER PROFILE
+                    </span>
+
+                    <h2>
+                        ${crmProfileEscapeHTML(
+                            customerName
+                        )}
+                    </h2>
+
+                    <p>
+                        View and update customer
+                        information and sales progress.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- =========================================
+                 BASIC INFORMATION
+            ========================================== -->
+
+            <div class="panel crm-edit-card">
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <div class="eyebrow">
+                            CUSTOMER INFORMATION
+                        </div>
+
+                        <h3 class="panel-title">
+                            Basic Information
+                        </h3>
+
+                    </div>
+
+                </div>
+
+
+                <div class="crm-edit-grid">
+
+
+                    <!-- CUSTOMER NAME -->
+
+                    <div class="crm-edit-field">
+
+                        <label>
+                            Customer Name
+                        </label>
+
+                        <input
+                            id="crmEditCustomerName"
+                            type="text"
+                            value="${crmProfileEscapeHTML(
+                                customerName
+                            )}"
+                            placeholder="Customer name"
+                        >
+
+                    </div>
+
+
+                    <!-- PHONE -->
+
+                    <div class="crm-edit-field">
+
+                        <label>
+                            Phone / WhatsApp
+                        </label>
+
+                        <input
+                            id="crmEditPhone"
+                            type="text"
+                            value="${crmProfileEscapeHTML(
+                                phone
+                            )}"
+                            placeholder="Phone / WhatsApp"
+                        >
+
+                    </div>
+
+
+                    <!-- EMAIL -->
+
+                    <div class="crm-edit-field">
+
+                        <label>
+                            Email
+                        </label>
+
+                        <input
+                            id="crmEditEmail"
+                            type="email"
+                            value="${crmProfileEscapeHTML(
+                                email
+                            )}"
+                            placeholder="Email"
+                        >
+
+                    </div>
+
+
+                    <!-- BUSINESS -->
+
+                    <div class="crm-edit-field">
+
+                        <label>
+                            Business
+                        </label>
+
+                        <input
+                            id="crmEditBusiness"
+                            type="text"
+                            value="${crmProfileEscapeHTML(
+                                business
+                            )}"
+                            placeholder="Business"
+                        >
+
+                    </div>
+
+
+                    <!-- LOCATION -->
+
+                    <div class="crm-edit-field">
+
+                        <label>
+                            Location
+                        </label>
+
+                        <input
+                            id="crmEditLocation"
+                            type="text"
+                            value="${crmProfileEscapeHTML(
+                                location
+                            )}"
+                            placeholder="Location"
+                        >
+
+                    </div>
+
+
+                    <!-- STATUS -->
+
+                    <div class="crm-edit-field">
+
+                        <label>
+                            Status
+                        </label>
+
+                        <select
+                            id="crmEditStatus"
+                        ></select>
+
+                    </div>
+
+
+                    <!-- SALES -->
+
+                    <div class="crm-edit-field">
+
+                        <label>
+                            Sales
+                        </label>
+
+                        <select
+                            id="crmEditSales"
+                        ></select>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =========================================
+                 SALES PIPELINE
+            ========================================== -->
+
+            <div class="panel crm-edit-card">
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <div class="eyebrow">
+                            SALES PIPELINE
+                        </div>
+
+                        <h3 class="panel-title">
+                            Customer Progress
+                        </h3>
+
+                    </div>
+
+                </div>
+
+
+                <div class="crm-edit-grid">
+
+
+                    <!-- FOLLOW UP -->
+
+                    <div class="crm-edit-field">
+
+                        <label>
+                            Follow Up
+                        </label>
+
+                        <input
+                            id="crmEditFollowUp"
+                            type="date"
+                            value="${crmProfileEscapeHTML(
+                                followUp
+                            )}"
+                        >
+
+                    </div>
+
+
+                    <!-- APPOINTMENT -->
+
+                    <div class="crm-edit-field">
+
+                        <label>
+                            Appointment
+                        </label>
+
+                        <input
+                            id="crmEditAppointment"
+                            type="date"
+                            value="${crmProfileEscapeHTML(
+                                appointment
+                            )}"
+                        >
+
+                    </div>
+
+
+                    <!-- SITE SURVEY -->
+
+                    <div class="crm-edit-field">
+
+                        <label>
+                            Site Survey
+                        </label>
+
+                        <input
+                            id="crmEditSiteSurvey"
+                            type="date"
+                            value="${crmProfileEscapeHTML(
+                                siteSurvey
+                            )}"
+                        >
+
+                    </div>
+
+
+                    <!-- QUOTATION -->
+
+                    <div class="crm-edit-field">
+
+                        <label>
+                            Quotation
+                        </label>
+
+                        <input
+                            id="crmEditQuotation"
+                            type="date"
+                            value="${crmProfileEscapeHTML(
+                                quotation
+                            )}"
+                        >
+
+                    </div>
+
+
+                    <!-- SPK -->
+
+                    <div class="crm-edit-field">
+
+                        <label>
+                            SPK
+                        </label>
+
+                        <input
+                            id="crmEditSPK"
+                            type="date"
+                            value="${crmProfileEscapeHTML(
+                                spk
+                            )}"
+                        >
+
+                    </div>
+
+
+                    <!-- CLOSING -->
+
+                    <div class="crm-edit-field">
+
+                        <label>
+                            Closing
+                        </label>
+
+                        <input
+                            id="crmEditClosing"
+                            type="date"
+                            value="${crmProfileEscapeHTML(
+                                closing
+                            )}"
+                        >
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =========================================
+                 NOTES
+            ========================================== -->
+
+            <div class="panel crm-edit-card">
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <div class="eyebrow">
+                            NOTES
+                        </div>
+
+                        <h3 class="panel-title">
+                            Customer Notes
+                        </h3>
+
+                    </div>
+
+                </div>
+
+
+                <div class="crm-edit-field">
+
+                    <label>
+                        Notes
+                    </label>
+
+                    <textarea
+                        id="crmEditNotes"
+                        rows="7"
+                        placeholder="Customer notes..."
+                    >${crmProfileEscapeHTML(
+                        notes
+                    )}</textarea>
+
+                </div>
+
+            </div>
+
+
+            <!-- =========================================
+                 ACTIVITY
+            ========================================== -->
+
+            <div class="panel crm-edit-card">
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <div class="eyebrow">
+                            ACTIVITY
+                        </div>
+
+                        <h3 class="panel-title">
+                            Customer Activity
+                        </h3>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    id="crmCustomerActivities"
+                    class="activity-timeline"
+                >
+                    <div class="activity-empty">
+                        Loading activities...
+                    </div>
+                </div>
+
+
+                <div class="crm-edit-field crm-activity-form">
+
+                    <label>
+                        Add Activity Note
+                    </label>
+
+                    <textarea
+                        id="crmNewActivity"
+                        rows="4"
+                        placeholder="Write customer activity..."
+                    ></textarea>
+
+
+                    <button
+                        type="button"
+                        class="primary-btn"
+                        onclick="crmAddCustomerActivity()"
+                    >
+                        <i data-lucide="plus"></i>
+                        Add Activity
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- =========================================
+                 ACTIONS
+            ========================================== -->
+
+            <div class="crm-edit-actions">
+
+                <button
+                    type="button"
+                    class="secondary-btn"
+                    onclick="crmCancelCustomerEdit()"
+                >
+                    CANCEL
+                </button>
+
+
+                <button
+                    type="button"
+                    id="crmEditSaveButton"
+                    class="primary-btn"
+                    onclick="crmSaveCustomerEdit()"
+                >
+                    <i data-lucide="save"></i>
+                    SAVE CHANGES
+                </button>
+
+            </div>
+
+        </div>
+    `;
+}
+
+
+// ============================================================
+// RENDER EXISTING PROFILE ELEMENTS
+// ============================================================
+
+function crmRenderExistingProfileElements(
+    customer
+) {
+
+    const name =
+        crmGetCustomerName(
+            customer
+        );
+
+
+    const phone =
+        crmGetCustomerPhone(
+            customer
+        );
+
+
+    const email =
+        crmGetCustomerEmail(
+            customer
+        );
+
+
+    const location =
+        crmGetCustomerLocation(
+            customer
+        );
+
+
+    const status =
+        typeof normalizeLeadStatus ===
+        "function"
+            ? normalizeLeadStatus(
+                customer.status
+            )
+            : (
+                customer.status ||
+                "New"
+            );
+
+
+    const systemSize =
+        customer.system_size ||
+        customer.capacity_kwp ||
+        customer.kwp ||
+        customer.system_size_kwp ||
+        "";
+
+
+    const fields = {
+
+        "cp-name":
+            name,
+
+        "cp-phone":
+            phone,
+
+        "cp-email":
+            email,
+
+        "cp-address":
+            location,
+
+        "cp-system-size":
+            systemSize || "-",
+
+        "cp-status-badge":
+            status
+    };
+
+
+    Object.entries(fields)
+        .forEach(
+            ([id, value]) => {
+
+                const element =
+                    document.getElementById(
+                        id
+                    );
+
+                if (element) {
+                    element.textContent =
+                        value;
+                }
+            }
+        );
+
+
+    crmUpdatePipelineUI(
+        status
     );
 
-  }
 
-
-  // ==========================================================
-  // ROLE BASED HEADER NAVIGATION
-  // ==========================================================
-  //
-  // PENTING:
-  // Bagian ini HANYA mengatur tampilan menu header.
-  //
-  // Admin:
-  // Dashboard | My Leads | Sales ▼ | Manage Sales | User
-  //
-  // Sales:
-  // Dashboard | My Leads | User
-  //
-  // Tidak menghapus fungsi Sales dropdown.
-  // Tidak menghapus fungsi Manage Sales.
-  // Fungsi tersebut hanya disembunyikan untuk role Sales.
-  // ==========================================================
-
-  function updateRoleBasedHeaderNavigation() {
-
-    const salesDropdown =
-      findSalesHeaderDropdown();
-
-
-    // --------------------------------------------------------
-    // SALES DROPDOWN
-    // --------------------------------------------------------
-
-    if (salesDropdown) {
-
-      const container =
-        salesDropdown.container;
-
-
-      if (isAdmin()) {
-
-        // Admin tetap melihat Sales dropdown
-        container.style.display = "";
-        container.removeAttribute(
-          "aria-hidden"
+    const editStatus =
+        document.getElementById(
+            "edit-cust-status"
         );
 
-      } else {
 
-        // Sales tidak melihat Sales dropdown
-        container.style.display = "none";
+    if (editStatus) {
+        editStatus.value =
+            status;
+    }
+}
 
-        container.setAttribute(
-          "aria-hidden",
-          "true"
+
+// ============================================================
+// UPDATE PIPELINE UI
+// ============================================================
+
+function crmUpdatePipelineUI(
+    currentStatus
+) {
+
+    const steps =
+        document.querySelectorAll(
+            ".pipeline-step"
         );
 
-        // Pastikan dropdown tertutup
-        container.classList.remove(
-          "open"
-        );
 
-        if (salesDropdown.button) {
-
-          salesDropdown.button.setAttribute(
-            "aria-expanded",
-            "false"
-          );
-
-        }
-
-        if (salesDropdown.menu) {
-
-          salesDropdown.menu.classList.remove(
-            "open"
-          );
-
-        }
-
-      }
-
+    if (!steps.length) {
+        return;
     }
 
 
-    // --------------------------------------------------------
-    // MANAGE SALES
-    // --------------------------------------------------------
-    //
-    // Cari menu Manage Sales berdasarkan:
-    // data-page="manageSales"
-    // data-page="manage-sales"
-    // data-nav="manageSales"
-    // data-nav="manage-sales"
-    // data-view yang mengarah ke sales
-    // atau teks "Manage Sales"
-    // --------------------------------------------------------
-
-    const manageSalesElements =
-      getManageSalesNavigationElements();
-
-
-    manageSalesElements.forEach(
-      function (element) {
-
-        if (isAdmin()) {
-
-          element.style.display = "";
-
-          element.removeAttribute(
-            "aria-hidden"
-          );
-
-        } else {
-
-          element.style.display = "none";
-
-          element.setAttribute(
-            "aria-hidden",
-            "true"
-          );
-
-        }
-
-      }
-    );
-
-  }
-
-
-  // ==========================================================
-  // FIND MANAGE SALES NAVIGATION ELEMENTS
-  // ==========================================================
-
-  function getManageSalesNavigationElements() {
-
-    const elements =
-      new Set();
-
-
-    // --------------------------------------------------------
-    // Berdasarkan data attribute
-    // --------------------------------------------------------
-
-    const selectors = [
-
-      '[data-page="manageSales"]',
-      '[data-page="manage-sales"]',
-
-      '[data-nav="manageSales"]',
-      '[data-nav="manage-sales"]',
-
-      '[data-view="manageSales"]',
-      '[data-view="manage-sales"]',
-
-      '[data-crm-nav="manageSales"]',
-      '[data-crm-nav="manage-sales"]'
-
-    ];
-
-
-    selectors.forEach(
-      function (selector) {
-
-        $$(selector).forEach(
-          function (element) {
-
-            elements.add(element);
-
-          }
-        );
-
-      }
-    );
-
-
-    // --------------------------------------------------------
-    // Berdasarkan teks "Manage Sales"
-    // --------------------------------------------------------
-    //
-    // Hanya cek elemen navigasi, bukan seluruh halaman.
-    // --------------------------------------------------------
-
-    const navigationElements =
-      $$(
-        [
-          ".nav-link",
-          ".nav-item",
-          ".mobile-nav .nav-link",
-          ".mobile-nav .nav-item",
-          ".mobile-menu .nav-link",
-          ".mobile-menu .nav-item"
-        ].join(",")
-      );
-
-
-    navigationElements.forEach(
-      function (element) {
-
-        const text =
-          String(
-            element.textContent || ""
-          )
+    const normalized =
+        String(
+            currentStatus || ""
+        )
             .trim()
             .toLowerCase();
 
 
-        if (
-          text === "manage sales" ||
-          text.includes("manage sales")
-        ) {
+    steps.forEach(
+        (step, index) => {
 
-          elements.add(element);
+            const stepStatus =
+                String(
+                    step.dataset.step ||
+                    ""
+                )
+                    .trim()
+                    .toLowerCase();
 
+
+            step.classList.remove(
+                "active",
+                "completed"
+            );
+
+
+            if (
+                stepStatus ===
+                normalized
+            ) {
+
+                step.classList.add(
+                    "active"
+                );
+            }
         }
-
-      }
     );
+}
 
 
-    return Array.from(elements);
+// ============================================================
+// POPULATE STATUS
+// ============================================================
 
-  }
+function crmPopulateEditStatus(
+    selectedStatus
+) {
 
-
-  // ==========================================================
-  // SUPABASE
-  // ==========================================================
-
-  function getSupabaseClient() {
-
-    if (window.supabaseClient) {
-      return window.supabaseClient;
-    }
-
-
-    try {
-
-      if (
-        typeof supabaseClient !==
-          "undefined" &&
-        supabaseClient
-      ) {
-
-        return supabaseClient;
-
-      }
-
-    } catch (error) {
-      // Ignore
-    }
-
-
-    return null;
-
-  }
-
-
-  // ==========================================================
-  // SALES DISPLAY NAME
-  // ==========================================================
-
-  function getSalesDisplayName(sales) {
-
-    if (!sales) {
-      return "Sales";
-    }
-
-
-    return (
-      sales.name ||
-      sales.full_name ||
-      sales.username ||
-      sales.email ||
-      "Sales"
-    );
-
-  }
-
-
-  // ==========================================================
-  // SALES ID
-  // ==========================================================
-
-  function getSalesId(sales) {
-
-    if (!sales) {
-      return null;
-    }
-
-
-    return (
-      sales.id ||
-      sales.user_id ||
-      sales.auth_user_id ||
-      sales["auth_user-id"] ||
-      null
-    );
-
-  }
-
-
-  // ==========================================================
-  // ACTIVE SALES
-  // ==========================================================
-
-  function isActiveSales(sales) {
-
-    if (!sales) {
-      return false;
-    }
-
-
-    const role =
-      normalizeRole(sales.role);
-
-
-    if (
-      role !== "sales" &&
-      role !== "salesperson"
-    ) {
-
-      return false;
-
-    }
-
-
-    const status =
-      String(
-        sales.status || "Active"
-      )
-        .trim()
-        .toLowerCase();
-
-
-    return (
-      status === "active" ||
-      status === "aktif" ||
-      status === "1" ||
-      status === "true"
-    );
-
-  }
-
-
-  // ==========================================================
-  // FIND SALES HEADER DROPDOWN
-  // ==========================================================
-
-  function findSalesHeaderDropdown() {
-
-    const dropdowns =
-      $$(".nav-dropdown");
-
-
-    for (
-      const dropdown of dropdowns
-    ) {
-
-      const button =
-        dropdown.querySelector(
-          ".nav-dropdown-btn, [aria-haspopup='true']"
+    const select =
+        document.getElementById(
+            "crmEditStatus"
         );
 
 
-      if (!button) {
-        continue;
-      }
-
-
-      const text =
-        String(
-          button.textContent || ""
-        )
-          .trim()
-          .toLowerCase();
-
-
-      /*
-       * Cari tombol header yang benar-benar bernama Sales.
-       *
-       * Tidak menggunakan data-page="sales"
-       * karena tombol Sales adalah dropdown nama
-       * Sales, bukan halaman Manage Sales.
-       */
-
-      if (
-        text === "sales" ||
-        text.includes("sales")
-      ) {
-
-        return {
-
-          container:
-            dropdown,
-
-          button:
-            button,
-
-          menu:
-            dropdown.querySelector(
-              ".nav-dropdown-menu"
-            )
-
-        };
-
-      }
-
-    }
-
-
-    return null;
-
-  }
-
-
-  // ==========================================================
-  // LOAD SALES HEADER DROPDOWN
-  // ==========================================================
-
-  async function loadSalesHeaderDropdown() {
-
-    // Hanya Admin yang mendapatkan daftar Sales.
-    if (!isAdmin()) {
-      return;
-    }
-
-
-    const target =
-      findSalesHeaderDropdown();
-
-
-    if (
-      !target ||
-      !target.menu
-    ) {
-
-      return;
-
-    }
-
-
-    const client =
-      getSupabaseClient();
-
-
-    if (!client) {
-
-      console.warn(
-        "[FSI Navigation] Supabase client belum tersedia."
-      );
-
-      return;
-
-    }
-
-
-    try {
-
-      const result =
-        await client
-          .from("sales_users")
-          .select("*");
-
-
-      if (result.error) {
-
-        console.error(
-          "[FSI Navigation] Gagal mengambil Sales:",
-          result.error
-        );
-
+    if (!select) {
         return;
-
-      }
-
-
-      const rows =
-        Array.isArray(result.data)
-          ? result.data
-          : [];
+    }
 
 
-      const activeSales =
-        rows
-          .filter(isActiveSales)
-          .sort(
-            function (a, b) {
+    const statuses =
+        Array.isArray(
+            window.FSI_CRM?.LEAD_STATUSES
+        )
+            ? window.FSI_CRM.LEAD_STATUSES
+            : (
+                typeof LEAD_STATUSES !==
+                "undefined"
+                    ? LEAD_STATUSES
+                    : [
+                        "New",
+                        "Flyer Sent",
+                        "Interested",
+                        "Follow Up",
+                        "Appointment",
+                        "Site Survey",
+                        "Quotation",
+                        "Closing",
+                        "Not Interested"
+                    ]
+            );
 
-              return getSalesDisplayName(a)
-                .localeCompare(
-                  getSalesDisplayName(b),
-                  "id",
-                  {
-                    sensitivity:
-                      "base"
-                  }
+
+    const normalizedSelected =
+        typeof normalizeLeadStatus ===
+        "function"
+            ? normalizeLeadStatus(
+                selectedStatus
+            )
+            : (
+                selectedStatus ||
+                "New"
+            );
+
+
+    select.innerHTML = "";
+
+
+    statuses.forEach(
+        status => {
+
+            const option =
+                document.createElement(
+                    "option"
                 );
 
+
+            option.value =
+                status;
+
+
+            option.textContent =
+                status;
+
+
+            if (
+                String(status) ===
+                String(normalizedSelected)
+            ) {
+
+                option.selected =
+                    true;
             }
-          );
 
 
-      // Bersihkan isi dropdown lama.
-      target.menu.innerHTML = "";
+            select.appendChild(
+                option
+            );
+        }
+    );
+}
 
 
-      // ------------------------------------------------------
-      // HEADER DROPDOWN
-      // ------------------------------------------------------
+// ============================================================
+// POPULATE SALES
+// ============================================================
 
-      const headerItem =
-        document.createElement(
-          "div"
+function crmPopulateEditSales(
+    selectedSalesId
+) {
+
+    const select =
+        document.getElementById(
+            "crmEditSales"
         );
 
 
-      headerItem.className =
-        "nav-dropdown-label";
+    if (!select) {
+        return;
+    }
 
 
-      headerItem.textContent =
-        "Pilih Sales";
+    const profile =
+        crmGetCurrentProfile();
 
 
-      headerItem.style.cssText =
-        "padding:8px 14px;font-size:11px;font-weight:700;" +
-        "text-transform:uppercase;letter-spacing:.06em;" +
-        "opacity:.6;cursor:default;";
+    select.innerHTML = "";
 
 
-      target.menu.appendChild(
-        headerItem
-      );
+    // --------------------------------------------------------
+    // Default option
+    // --------------------------------------------------------
 
-
-      // ------------------------------------------------------
-      // SEMUA SALES
-      // ------------------------------------------------------
-
-      const allItem =
+    const defaultOption =
         document.createElement(
-          "a"
+            "option"
         );
 
 
-      allItem.href = "#";
-
-
-      allItem.className =
-        "nav-dropdown-item";
-
-
-      allItem.textContent =
-        "Semua Sales";
-
-
-      allItem.dataset.salesId =
+    defaultOption.value =
         "";
 
 
-      allItem.addEventListener(
-        "click",
-        function (event) {
-
-          event.preventDefault();
-          event.stopPropagation();
+    defaultOption.textContent =
+        "Select Sales";
 
 
-          selectSalesFromHeader(
-            null,
-            "Semua Sales"
-          );
-
-        }
-      );
+    select.appendChild(
+        defaultOption
+    );
 
 
-      target.menu.appendChild(
-        allItem
-      );
+    // --------------------------------------------------------
+    // Sales data
+    // --------------------------------------------------------
+
+    const salesData =
+        typeof salesUsersData !==
+        "undefined" &&
+        Array.isArray(salesUsersData)
+            ? salesUsersData
+            : [];
 
 
-      // ------------------------------------------------------
-      // NAMA SALES
-      // ------------------------------------------------------
+    salesData
+        .filter(
+            sales => {
 
-      if (!activeSales.length) {
+                const role =
+                    String(
+                        sales.role || ""
+                    )
+                        .trim()
+                        .toLowerCase();
 
-        const emptyItem =
-          document.createElement(
-            "div"
-          );
+                return (
+                    role === "sales" ||
+                    role === "salesperson"
+                );
+            }
+        )
+        .forEach(
+            sales => {
 
-
-        emptyItem.className =
-          "nav-dropdown-item disabled";
-
-
-        emptyItem.textContent =
-          "Belum ada Sales aktif";
-
-
-        emptyItem.style.opacity =
-          "0.55";
-
-
-        emptyItem.style.cursor =
-          "default";
+                const option =
+                    document.createElement(
+                        "option"
+                    );
 
 
-        target.menu.appendChild(
-          emptyItem
+                option.value =
+                    sales.id;
+
+
+                option.textContent =
+                    sales.name ||
+                    sales.full_name ||
+                    sales.username ||
+                    sales.email ||
+                    "Sales";
+
+
+                if (
+                    String(sales.id) ===
+                    String(selectedSalesId)
+                ) {
+
+                    option.selected =
+                        true;
+                }
+
+
+                select.appendChild(
+                    option
+                );
+            }
         );
 
-      } else {
 
-        activeSales.forEach(
-          function (sales) {
+    // --------------------------------------------------------
+    // SALES ROLE
+    // --------------------------------------------------------
 
-            const salesId =
-              getSalesId(sales);
+    if (
+        profile &&
+        !crmProfileIsAdmin()
+    ) {
+
+        select.value =
+            profile.id || "";
 
 
-            const salesName =
-              getSalesDisplayName(
-                sales
-              );
+        select.disabled =
+            true;
+
+    } else {
+
+        select.disabled =
+            false;
+    }
+}
 
 
-            if (!salesId) {
-              return;
+// ============================================================
+// SAVE CUSTOMER EDIT
+// ============================================================
+
+window.crmSaveCustomerEdit =
+    async function () {
+
+        const profile =
+            crmGetCurrentProfile();
+
+
+        if (!profile) {
+
+            alert(
+                "User profile belum siap."
+            );
+
+            return;
+        }
+
+
+        const id =
+            window.crmCurrentCustomerId;
+
+
+        if (!id) {
+
+            alert(
+                "Customer ID tidak ditemukan."
+            );
+
+            return;
+        }
+
+
+        const nameInput =
+            document.getElementById(
+                "crmEditCustomerName"
+            );
+
+
+        const customerName =
+            nameInput?.value
+                ?.trim() || "";
+
+
+        if (!customerName) {
+
+            alert(
+                "Customer name wajib diisi."
+            );
+
+
+            nameInput?.focus();
+
+            return;
+        }
+
+
+        const saveButton =
+            document.getElementById(
+                "crmEditSaveButton"
+            );
+
+
+        try {
+
+            if (saveButton) {
+
+                saveButton.disabled =
+                    true;
+
+                saveButton.innerHTML =
+                    `
+                    <i data-lucide="loader-circle"></i>
+                    Saving...
+                    `;
             }
 
 
-            const item =
-              document.createElement(
-                "a"
-              );
+            // =================================================
+            // BUILD PAYLOAD
+            // =================================================
+
+            const payload = {
+
+                customer_name:
+                    customerName,
+
+                phone:
+                    document.getElementById(
+                        "crmEditPhone"
+                    )?.value
+                        ?.trim() || "",
+
+                business:
+                    document.getElementById(
+                        "crmEditBusiness"
+                    )?.value
+                        ?.trim() || "",
+
+                location:
+                    document.getElementById(
+                        "crmEditLocation"
+                    )?.value
+                        ?.trim() || "",
+
+                status:
+                    typeof normalizeLeadStatus ===
+                    "function"
+                        ? normalizeLeadStatus(
+                            document.getElementById(
+                                "crmEditStatus"
+                            )?.value ||
+                            "New"
+                        )
+                        : (
+                            document.getElementById(
+                                "crmEditStatus"
+                            )?.value ||
+                            "New"
+                        ),
+
+                follow_up_date:
+                    document.getElementById(
+                        "crmEditFollowUp"
+                    )?.value ||
+                    null,
+
+                appointment:
+                    document.getElementById(
+                        "crmEditAppointment"
+                    )?.value ||
+                    null,
+
+                site_survey:
+                    document.getElementById(
+                        "crmEditSiteSurvey"
+                    )?.value ||
+                    null,
+
+                quotation:
+                    document.getElementById(
+                        "crmEditQuotation"
+                    )?.value ||
+                    null,
+
+                spk:
+                    document.getElementById(
+                        "crmEditSPK"
+                    )?.value ||
+                    null,
+
+                closing:
+                    document.getElementById(
+                        "crmEditClosing"
+                    )?.value ||
+                    null,
+
+                notes:
+                    document.getElementById(
+                        "crmEditNotes"
+                    )?.value
+                        ?.trim() || "",
+
+                updated_by:
+                    profile.id || null
+            };
 
 
-            item.href = "#";
+            // =================================================
+            // SALES ASSIGNMENT
+            // =================================================
 
-
-            item.className =
-              "nav-dropdown-item sales-header-item";
-
-
-            item.textContent =
-              salesName;
-
-
-            item.dataset.salesId =
-              salesId;
-
-
-            item.dataset.salesName =
-              salesName;
-
-
-            item.addEventListener(
-              "click",
-              function (event) {
-
-                event.preventDefault();
-                event.stopPropagation();
-
-
-                selectSalesFromHeader(
-                  salesId,
-                  salesName
+            const salesSelect =
+                document.getElementById(
+                    "crmEditSales"
                 );
 
-              }
+
+            if (
+                crmProfileIsAdmin()
+            ) {
+
+                payload.sales_id =
+                    salesSelect?.value ||
+                    null;
+
+            } else {
+
+                payload.sales_id =
+                    profile.id ||
+                    null;
+            }
+
+
+            // =================================================
+            // UPDATE SUPABASE
+            // =================================================
+
+            const {
+                data,
+                error
+            } = await supabaseClient
+                .from("leads")
+                .update(payload)
+                .eq("id", id)
+                .select("*")
+                .single();
+
+
+            if (error) {
+
+                console.error(
+                    "Update customer error:",
+                    error
+                );
+
+
+                alert(
+                    "Gagal mengupdate customer:\n\n" +
+                    error.message
+                );
+
+
+                return;
+            }
+
+
+            if (!data) {
+
+                alert(
+                    "Data customer tidak dikembalikan oleh Supabase."
+                );
+
+                return;
+            }
+
+
+            // =================================================
+            // UPDATE LOCAL STATE
+            // =================================================
+
+            window.crmCurrentCustomerId =
+                data.id;
+
+            window.crmCurrentCustomer =
+                data;
+
+
+            // Update item di leadsData
+            if (
+                typeof leadsData !==
+                "undefined" &&
+                Array.isArray(leadsData)
+            ) {
+
+                const index =
+                    leadsData.findIndex(
+                        item =>
+                            String(item.id) ===
+                            String(data.id)
+                    );
+
+
+                if (index !== -1) {
+
+                    leadsData[index] =
+                        data;
+                }
+            }
+
+
+            // =================================================
+            // REFRESH FILTER OPTIONS
+            // =================================================
+
+            if (
+                typeof window.loadFilterOptions ===
+                "function"
+            ) {
+
+                try {
+
+                    await window.loadFilterOptions();
+
+                } catch (error) {
+
+                    console.warn(
+                        "Filter refresh error:",
+                        error
+                    );
+                }
+            }
+
+
+            // =================================================
+            // REFRESH LEADS
+            // =================================================
+
+            if (
+                typeof window.loadLeads ===
+                "function"
+            ) {
+
+                try {
+
+                    const page =
+                        typeof currentPage !==
+                        "undefined"
+                            ? currentPage
+                            : 1;
+
+
+                    await window.loadLeads(
+                        page
+                    );
+
+                } catch (error) {
+
+                    console.warn(
+                        "Leads refresh error:",
+                        error
+                    );
+                }
+            }
+
+
+            // =================================================
+            // REFRESH DASHBOARD
+            // =================================================
+
+            if (
+                typeof window.updateDashboard ===
+                "function"
+            ) {
+
+                try {
+
+                    await window.updateDashboard();
+
+                } catch (error) {
+
+                    console.warn(
+                        "Dashboard refresh error:",
+                        error
+                    );
+                }
+            }
+
+
+            // =================================================
+            // RENDER UPDATED PROFILE
+            // =================================================
+
+            crmRenderCustomerProfile(
+                data
             );
 
 
-            target.menu.appendChild(
-              item
+            // =================================================
+            // KEEP CUSTOMER PROFILE OPEN
+            // =================================================
+
+            if (
+                typeof window.crmNavigate ===
+                "function"
+            ) {
+
+                window.crmNavigate(
+                    "customerProfile"
+                );
+
+            } else {
+
+                crmShowProfilePageFallback();
+            }
+
+
+            crmSetPageTitle(
+                "Customer Profile"
             );
 
-          }
+
+            window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+            });
+
+
+            alert(
+                "Customer berhasil diperbarui."
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                "crmSaveCustomerEdit error:",
+                error
+            );
+
+
+            alert(
+                "Terjadi kesalahan:\n\n" +
+                error.message
+            );
+
+
+        } finally {
+
+            if (saveButton) {
+
+                saveButton.disabled =
+                    false;
+
+                saveButton.innerHTML =
+                    `
+                    <i data-lucide="save"></i>
+                    SAVE CHANGES
+                    `;
+
+
+                if (
+                    window.lucide &&
+                    typeof window.lucide.createIcons ===
+                    "function"
+                ) {
+
+                    window.lucide.createIcons();
+                }
+            }
+        }
+    };
+
+
+// ============================================================
+// ADD CUSTOMER ACTIVITY
+// ============================================================
+
+window.crmAddCustomerActivity =
+    async function () {
+
+        const customerId =
+            window.crmCurrentCustomerId;
+
+
+        if (!customerId) {
+
+            alert(
+                "Customer ID tidak ditemukan."
+            );
+
+            return;
+        }
+
+
+        const textarea =
+            document.getElementById(
+                "crmNewActivity"
+            );
+
+
+        const content =
+            textarea?.value
+                ?.trim() || "";
+
+
+        if (!content) {
+
+            alert(
+                "Isi activity terlebih dahulu."
+            );
+
+            textarea?.focus();
+
+            return;
+        }
+
+
+        try {
+
+            const profile =
+                crmGetCurrentProfile();
+
+
+            const payload = {
+
+                lead_id:
+                    customerId,
+
+                content:
+                    content
+            };
+
+
+            // Hanya kirim created_by kalau profile tersedia
+            if (
+                profile &&
+                profile.id
+            ) {
+
+                payload.created_by =
+                    profile.id;
+            }
+
+
+            const {
+                error
+            } = await supabaseClient
+                .from("activities")
+                .insert([
+                    payload
+                ]);
+
+
+            if (error) {
+
+                console.error(
+                    "Add activity error:",
+                    error
+                );
+
+
+                alert(
+                    "Gagal menambahkan activity:\n\n" +
+                    error.message
+                );
+
+                return;
+            }
+
+
+            textarea.value =
+                "";
+
+
+            await crmLoadCustomerActivities(
+                customerId
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                "crmAddCustomerActivity error:",
+                error
+            );
+
+
+            alert(
+                "Terjadi kesalahan:\n\n" +
+                error.message
+            );
+        }
+    };
+
+
+// ============================================================
+// LOAD CUSTOMER ACTIVITIES
+// ============================================================
+
+async function crmLoadCustomerActivities(
+    customerId
+) {
+
+    const container =
+        document.getElementById(
+            "crmCustomerActivities"
         );
 
-      }
 
-
-      // Refresh icon jika tersedia
-      if (
-        typeof window.refreshIcons ===
-        "function"
-      ) {
-
-        window.refreshIcons();
-
-      }
-
-    } catch (error) {
-
-      console.error(
-        "[FSI Navigation] Error load Sales dropdown:",
-        error
-      );
-
+    if (!container) {
+        return;
     }
 
-  }
 
+    container.innerHTML = `
+        <div class="activity-empty">
+            Loading activities...
+        </div>
+    `;
 
-  // ==========================================================
-  // SELECT SALES FROM HEADER
-  // ==========================================================
-
-  function selectSalesFromHeader(
-    salesId,
-    salesName
-  ) {
-
-    /*
-     * Simpan pilihan supaya module Leads
-     * bisa menggunakannya.
-     */
-
-    window.crmSelectedSalesId =
-      salesId || null;
-
-
-    window.crmSelectedSalesName =
-      salesName || "Semua Sales";
-
-
-    /*
-     * Compatibility:
-     *
-     * Jika leads.js / module lain memiliki
-     * fungsi selectSalesFilter(), gunakan.
-     */
-
-    if (
-      typeof window.selectSalesFilter ===
-      "function"
-    ) {
-
-      try {
-
-        window.selectSalesFilter(
-          salesId || "",
-          salesName || "Semua Sales"
-        );
-
-      } catch (error) {
-
-        console.warn(
-          "[FSI Navigation] selectSalesFilter error:",
-          error
-        );
-
-      }
-
-    }
-
-
-    /*
-     * Compatibility lain jika tersedia.
-     */
-
-    if (
-      typeof window.setSalesFilter ===
-      "function"
-    ) {
-
-      try {
-
-        window.setSalesFilter(
-          salesId || "",
-          salesName || "Semua Sales"
-        );
-
-      } catch (error) {
-
-        console.warn(
-          "[FSI Navigation] setSalesFilter error:",
-          error
-        );
-
-      }
-
-    }
-
-
-    /*
-     * Event khusus untuk Leads.
-     */
 
     try {
 
-      window.dispatchEvent(
-        new CustomEvent(
-          "fsi:sales-selected",
-          {
-            detail: {
+        const {
+            data,
+            error
+        } = await supabaseClient
+            .from("activities")
+            .select("*")
+            .eq(
+                "lead_id",
+                customerId
+            )
+            .order(
+                "created_at",
+                {
+                    ascending: false
+                }
+            );
 
-              salesId:
-                salesId || null,
 
-              salesName:
-                salesName ||
-                "Semua Sales"
+        if (error) {
 
-            }
-          }
-        )
-      );
+            console.error(
+                "Load activities error:",
+                error
+            );
+
+
+            container.innerHTML = `
+                <div class="activity-empty">
+                    Gagal memuat activity.
+                </div>
+            `;
+
+            return;
+        }
+
+
+        if (
+            !data ||
+            data.length === 0
+        ) {
+
+            container.innerHTML = `
+                <div class="activity-empty">
+                    Belum ada activity untuk customer ini.
+                </div>
+            `;
+
+            return;
+        }
+
+
+        container.innerHTML =
+            data.map(
+                activity => {
+
+                    const content =
+                        crmProfileEscapeHTML(
+                            activity.content ||
+                            ""
+                        );
+
+
+                    const createdAt =
+                        activity.created_at
+                            ? new Date(
+                                activity.created_at
+                            ).toLocaleString(
+                                "id-ID"
+                            )
+                            : "";
+
+
+                    return `
+
+                        <div class="activity-item">
+
+                            <div class="activity-item-content">
+
+                                <p>
+                                    ${content}
+                                </p>
+
+                                <small>
+                                    ${crmProfileEscapeHTML(
+                                        createdAt
+                                    )}
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                    `;
+                }
+            ).join("");
+
 
     } catch (error) {
-      // Ignore
+
+        console.error(
+            "crmLoadCustomerActivities error:",
+            error
+        );
+
+
+        container.innerHTML = `
+            <div class="activity-empty">
+                Gagal memuat activity.
+            </div>
+        `;
     }
+}
 
 
-    /*
-     * Masuk ke halaman Leads / My Leads.
-     */
+// ============================================================
+// EXISTING EDIT FUNCTION
+// ============================================================
+//
+// Compatibility dengan kode lama.
+// ============================================================
 
-    navigateLeads();
+window.crmOpenEditModal =
+    function () {
 
+        const id =
+            window.crmCurrentCustomerId;
 
-    /*
-     * Tutup dropdown setelah memilih Sales.
-     */
 
-    closeAllDropdowns();
+        if (!id) {
 
-  }
+            alert(
+                "Customer ID tidak ditemukan."
+            );
 
-
-  // ==========================================================
-  // REFRESH SALES HEADER
-  // ==========================================================
-
-  function refreshSalesHeaderDropdown() {
-
-    if (!isAdmin()) {
-      return;
-    }
-
-
-    loadSalesHeaderDropdown();
-
-  }
-
-
-  // ==========================================================
-  // MOBILE MENU
-  // ==========================================================
-
-  function getMobileMenu() {
-
-    return (
-      getElement("mobileNav") ||
-      getElement("mobile-menu") ||
-      $(".mobile-nav")
-    );
-
-  }
-
-
-  function getMobileMenuButton() {
-
-    return (
-      getElement("mobileMenuBtn") ||
-      getElement("mobile-menu-btn") ||
-      $(".mobile-menu-btn")
-    );
-
-  }
-
-
-  function openMobileMenu() {
-
-    const menu =
-      getMobileMenu();
-
-
-    const button =
-      getMobileMenuButton();
-
-
-    if (!menu) {
-      return;
-    }
-
-
-    menu.classList.add("open");
-    menu.classList.add("active");
-
-
-    menu.setAttribute(
-      "aria-hidden",
-      "false"
-    );
-
-
-    if (button) {
-
-      button.classList.add(
-        "active"
-      );
-
-
-      button.setAttribute(
-        "aria-expanded",
-        "true"
-      );
-
-    }
-
-
-    document.body.classList.add(
-      "mobile-menu-open"
-    );
-
-  }
-
-
-  function closeMobileMenu() {
-
-    const menu =
-      getMobileMenu();
-
-
-    const button =
-      getMobileMenuButton();
-
-
-    if (menu) {
-
-      menu.classList.remove(
-        "open"
-      );
-
-      menu.classList.remove(
-        "active"
-      );
-
-
-      menu.setAttribute(
-        "aria-hidden",
-        "true"
-      );
-
-    }
-
-
-    if (button) {
-
-      button.classList.remove(
-        "active"
-      );
-
-
-      button.setAttribute(
-        "aria-expanded",
-        "false"
-      );
-
-    }
-
-
-    document.body.classList.remove(
-      "mobile-menu-open"
-    );
-
-  }
-
-
-  function toggleMobileMenu() {
-
-    const menu =
-      getMobileMenu();
-
-
-    if (!menu) {
-      return;
-    }
-
-
-    if (
-      menu.classList.contains(
-        "open"
-      ) ||
-      menu.classList.contains(
-        "active"
-      )
-    ) {
-
-      closeMobileMenu();
-
-    } else {
-
-      openMobileMenu();
-
-    }
-
-  }
-
-
-  // ==========================================================
-  // DROPDOWNS
-  // ==========================================================
-
-  function closeAllDropdowns(except) {
-
-    $$(".nav-dropdown")
-      .forEach(
-        function (dropdown) {
-
-          if (
-            except &&
-            dropdown === except
-          ) {
             return;
-          }
-
-
-          dropdown.classList.remove(
-            "open"
-          );
-
-
-          const button =
-            dropdown.querySelector(
-              ".nav-dropdown-btn, [aria-haspopup='true']"
-            );
-
-
-          const menu =
-            dropdown.querySelector(
-              ".nav-dropdown-menu"
-            );
-
-
-          if (button) {
-
-            button.setAttribute(
-              "aria-expanded",
-              "false"
-            );
-
-          }
-
-
-          if (menu) {
-
-            menu.classList.remove(
-              "open"
-            );
-
-          }
-
         }
-      );
 
 
-    // User dropdown
-    $$(".user-menu")
-      .forEach(
-        function (menuContainer) {
+        window.crmOpenCustomerProfile(
+            id
+        );
+    };
 
-          if (
-            except &&
-            menuContainer === except
-          ) {
-            return;
-          }
 
+// ============================================================
+// FALLBACK PROFILE PAGE
+// ============================================================
 
-          menuContainer.classList.remove(
-            "open"
-          );
+function crmShowProfilePageFallback() {
 
+    const pageIds = [
 
-          const button =
-            menuContainer.querySelector(
-              ".user-menu-btn, [aria-haspopup='true']"
-            );
+        "view-dashboard",
+        "view-leads",
+        "view-sales",
+        "view-customer-profile",
 
+        // Legacy IDs
+        "dashboardPage",
+        "leadsPage",
+        "salesPage",
+        "customerProfilePage"
+    ];
 
-          const dropdown =
-            menuContainer.querySelector(
-              ".user-menu-dropdown"
-            );
 
+    pageIds.forEach(
+        id => {
 
-          if (button) {
+            const page =
+                document.getElementById(
+                    id
+                );
 
-            button.setAttribute(
-              "aria-expanded",
-              "false"
-            );
 
-          }
-
-
-          if (dropdown) {
-
-            dropdown.classList.remove(
-              "open"
-            );
-
-          }
-
-        }
-      );
-
-  }
-
-
-  function toggleDropdown(dropdown) {
-
-    if (!dropdown) {
-      return;
-    }
-
-
-    // Jangan buka Sales dropdown jika bukan Admin.
-    if (
-      dropdown ===
-        (
-          findSalesHeaderDropdown() || {}
-        ).container &&
-      !isAdmin()
-    ) {
-
-      return;
-
-    }
-
-
-    const isOpen =
-      dropdown.classList.contains(
-        "open"
-      );
-
-
-    closeAllDropdowns(
-      dropdown
-    );
-
-
-    if (isOpen) {
-
-      dropdown.classList.remove(
-        "open"
-      );
-
-    } else {
-
-      dropdown.classList.add(
-        "open"
-      );
-
-    }
-
-
-    const button =
-      dropdown.querySelector(
-        ".nav-dropdown-btn, [aria-haspopup='true']"
-      );
-
-
-    const menu =
-      dropdown.querySelector(
-        ".nav-dropdown-menu"
-      );
-
-
-    if (button) {
-
-      button.setAttribute(
-        "aria-expanded",
-        isOpen
-          ? "false"
-          : "true"
-      );
-
-    }
-
-
-    if (menu) {
-
-      menu.classList.toggle(
-        "open",
-        !isOpen
-      );
-
-    }
-
-  }
-
-
-  function bindNavigationDropdowns() {
-
-    $$(".nav-dropdown")
-      .forEach(
-        function (dropdown) {
-
-          const button =
-            dropdown.querySelector(
-              ".nav-dropdown-btn, [aria-haspopup='true']"
-            );
-
-
-          if (!button) {
-            return;
-          }
-
-
-          if (
-            button.dataset.navigationBound ===
-            "true"
-          ) {
-            return;
-          }
-
-
-          button.dataset.navigationBound =
-            "true";
-
-
-          button.addEventListener(
-            "click",
-            function (event) {
-
-              event.preventDefault();
-              event.stopPropagation();
-
-
-              toggleDropdown(
-                dropdown
-              );
-
+            if (!page) {
+                return;
             }
-          );
-
-        }
-      );
-
-  }
 
 
-  // ==========================================================
-  // USER DROPDOWN
-  // ==========================================================
-
-  function bindUserDropdown() {
-
-    $$(".user-menu")
-      .forEach(
-        function (container) {
-
-          const button =
-            container.querySelector(
-              ".user-menu-btn, [aria-haspopup='true']"
+            page.classList.add(
+                "hidden"
             );
 
 
-          if (!button) {
-            return;
-          }
+            page.style.display =
+                "none";
+        }
+    );
 
 
-          if (
-            button.dataset.navigationBound ===
-            "true"
-          ) {
-            return;
-          }
+    const profilePage =
+        document.getElementById(
+            "view-customer-profile"
+        ) ||
+        document.getElementById(
+            "customerProfilePage"
+        );
 
 
-          button.dataset.navigationBound =
-            "true";
+    if (profilePage) {
+
+        profilePage.classList.remove(
+            "hidden"
+        );
 
 
-          button.addEventListener(
-            "click",
-            function (event) {
-
-              event.preventDefault();
-              event.stopPropagation();
+        profilePage.style.display =
+            "";
+    }
+}
 
 
-              const isOpen =
-                container.classList.contains(
-                  "open"
+// ============================================================
+// FALLBACK LEADS PAGE
+// ============================================================
+
+function crmShowLeadsPageFallback() {
+
+    const pageIds = [
+
+        "view-dashboard",
+        "view-leads",
+        "view-sales",
+        "view-customer-profile",
+
+        "dashboardPage",
+        "leadsPage",
+        "salesPage",
+        "customerProfilePage"
+    ];
+
+
+    pageIds.forEach(
+        id => {
+
+            const page =
+                document.getElementById(
+                    id
                 );
 
 
-              closeAllDropdowns(
-                container
-              );
-
-
-              container.classList.toggle(
-                "open",
-                !isOpen
-              );
-
-
-              button.setAttribute(
-                "aria-expanded",
-                !isOpen
-                  ? "true"
-                  : "false"
-              );
-
-
-              const dropdown =
-                container.querySelector(
-                  ".user-menu-dropdown"
-                );
-
-
-              if (dropdown) {
-
-                dropdown.classList.toggle(
-                  "open",
-                  !isOpen
-                );
-
-              }
-
+            if (!page) {
+                return;
             }
-          );
 
-        }
-      );
 
-  }
-
-
-  // ==========================================================
-  // NAVIGATION ACTIONS
-  // ==========================================================
-
-  function navigateDashboard() {
-
-    if (
-      window.FSIDashboard &&
-      typeof window.FSIDashboard
-        .showDashboard ===
-        "function"
-    ) {
-
-      return window.FSIDashboard
-        .showDashboard();
-
-    }
-
-
-    return showPage(
-      "dashboard"
-    );
-
-  }
-
-
-  function navigateLeads() {
-
-    if (
-      window.FSIDashboard &&
-      typeof window.FSIDashboard
-        .showLeads ===
-        "function"
-    ) {
-
-      return window.FSIDashboard
-        .showLeads();
-
-    }
-
-
-    return showPage(
-      "leads"
-    );
-
-  }
-
-
-  function navigateSales() {
-
-    if (!isAdmin()) {
-
-      if (
-        typeof window.showToast ===
-        "function"
-      ) {
-
-        window.showToast(
-          "Akses Manage Sales hanya untuk Admin.",
-          "warning"
-        );
-
-      }
-
-      return false;
-
-    }
-
-
-    if (
-      window.FSIDashboard &&
-      typeof window.FSIDashboard
-        .showSales ===
-        "function"
-    ) {
-
-      return window.FSIDashboard
-        .showSales();
-
-    }
-
-
-    return showPage(
-      "sales"
-    );
-
-  }
-
-
-  function navigateCustomerProfile(
-    customerId
-  ) {
-
-    if (
-      window.crmOpenCustomerProfile &&
-      typeof window.crmOpenCustomerProfile ===
-        "function"
-    ) {
-
-      return window.crmOpenCustomerProfile(
-        customerId
-      );
-
-    }
-
-
-    if (
-      window.FSIDashboard &&
-      typeof window.FSIDashboard
-        .showCustomerProfile ===
-        "function"
-    ) {
-
-      return window.FSIDashboard
-        .showCustomerProfile(
-          customerId
-        );
-
-    }
-
-
-    return showPage(
-      "customer-profile"
-    );
-
-  }
-
-
-  // ==========================================================
-  // MAIN NAVIGATION FUNCTION
-  // ==========================================================
-
-  function crmNavigate(
-    target,
-    data
-  ) {
-
-    const normalized =
-      normalizeTarget(target);
-
-
-    if (!normalized) {
-
-      console.warn(
-        "[FSI Navigation] Target tidak dikenal:",
-        target
-      );
-
-      return false;
-
-    }
-
-
-    switch (normalized) {
-
-      case "dashboard":
-
-        return navigateDashboard();
-
-
-      case "leads":
-
-        return navigateLeads();
-
-
-      case "sales":
-
-        return navigateSales();
-
-
-      case "customer-profile":
-
-        return navigateCustomerProfile(
-          data &&
-          data.customerId
-            ? data.customerId
-            : data &&
-              data.id
-              ? data.id
-              : null
-        );
-
-
-      default:
-
-        return showPage(
-          normalized
-        );
-
-    }
-
-  }
-
-
-  // ==========================================================
-  // NAVIGATION CLICK HANDLER
-  // ==========================================================
-
-  function handleNavigationClick(
-    event
-  ) {
-
-    const element =
-      event.currentTarget;
-
-
-    if (!element) {
-      return;
-    }
-
-
-    // Jangan proses dropdown toggle
-    if (
-      element.classList.contains(
-        "nav-dropdown-btn"
-      ) ||
-      element.getAttribute(
-        "aria-haspopup"
-      ) === "true"
-    ) {
-
-      return;
-
-    }
-
-
-    const target =
-      getNavigationTarget(
-        element
-      );
-
-
-    if (!target) {
-      return;
-    }
-
-
-    event.preventDefault();
-
-
-    const normalized =
-      normalizeTarget(target);
-
-
-    if (!normalized) {
-      return;
-    }
-
-
-    const customerId =
-      element.dataset.customerId ||
-      element.dataset.id ||
-      null;
-
-
-    crmNavigate(
-      normalized,
-      {
-        customerId:
-          customerId
-      }
-    );
-
-  }
-
-
-  // ==========================================================
-  // BIND NAVIGATION LINKS
-  // ==========================================================
-
-  function bindNavigationLinks() {
-
-    const selector = [
-
-      ".nav-link[data-page]",
-      ".nav-link[data-view]",
-      ".nav-link[data-nav]",
-      ".nav-link[data-crm-nav]",
-
-      ".nav-item[data-page]",
-      ".nav-item[data-view]",
-      ".nav-item[data-nav]",
-      ".nav-item[data-crm-nav]",
-
-      ".nav-dropdown-item[data-page]",
-      ".nav-dropdown-item[data-view]",
-      ".nav-dropdown-item[data-nav]",
-      ".nav-dropdown-item[data-crm-nav]",
-
-      "[data-crm-nav]"
-
-    ].join(",");
-
-
-    $$(selector)
-      .forEach(
-        function (element) {
-
-          if (
-            element.dataset.navigationBound ===
-            "true"
-          ) {
-            return;
-          }
-
-
-          const target =
-            getNavigationTarget(
-              element
+            page.classList.add(
+                "hidden"
             );
 
 
-          if (!target) {
-            return;
-          }
-
-
-          element.dataset.navigationBound =
-            "true";
-
-
-          element.addEventListener(
-            "click",
-            handleNavigationClick
-          );
-
+            page.style.display =
+                "none";
         }
-      );
-
-  }
+    );
 
 
-  // ==========================================================
-  // LOGO / HOME
-  // ==========================================================
+    const leadsPage =
+        document.getElementById(
+            "view-leads"
+        ) ||
+        document.getElementById(
+            "leadsPage"
+        );
 
-  function bindHomeButtons() {
 
-    const elements =
-      $$(
-        "[data-home]"
-      );
+    if (leadsPage) {
+
+        leadsPage.classList.remove(
+            "hidden"
+        );
+
+
+        leadsPage.style.display =
+            "";
+    }
+}
+
+
+// ============================================================
+// PAGE TITLE
+// ============================================================
+
+function crmSetPageTitle(
+    title
+) {
+
+    const elements = [
+
+        "current-page-title",
+
+        "page-title",
+
+        "pageTitle"
+    ];
 
 
     elements.forEach(
-      function (element) {
+        id => {
+
+            const element =
+                document.getElementById(
+                    id
+                );
+
+
+            if (element) {
+
+                element.textContent =
+                    title;
+            }
+        }
+    );
+}
+
+
+// Compatibility dengan setPageTitle lama
+if (
+    typeof window.setPageTitle !==
+    "function"
+) {
+
+    window.setPageTitle =
+        crmSetPageTitle;
+}
+
+
+// ============================================================
+// COMPATIBILITY FUNCTION
+// ============================================================
+
+window.openCustomerProfile =
+    window.crmOpenCustomerProfile;
+
+
+// ============================================================
+// INITIALIZE ICONS
+// ============================================================
+
+function crmRefreshProfileIcons() {
+
+    try {
 
         if (
-          element.dataset.navigationBound ===
-          "true"
-        ) {
-          return;
-        }
-
-
-        element.dataset.navigationBound =
-          "true";
-
-
-        element.addEventListener(
-          "click",
-          function (event) {
-
-            event.preventDefault();
-
-
-            crmNavigate(
-              "dashboard"
-            );
-
-          }
-        );
-
-      }
-    );
-
-  }
-
-
-  // ==========================================================
-  // MOBILE BUTTON BINDING
-  // ==========================================================
-
-  function bindMobileMenu() {
-
-    const button =
-      getMobileMenuButton();
-
-
-    if (!button) {
-      return;
-    }
-
-
-    if (
-      button.dataset.navigationBound ===
-      "true"
-    ) {
-      return;
-    }
-
-
-    button.dataset.navigationBound =
-      "true";
-
-
-    button.setAttribute(
-      "aria-expanded",
-      "false"
-    );
-
-
-    button.addEventListener(
-      "click",
-      function (event) {
-
-        event.preventDefault();
-        event.stopPropagation();
-
-
-        toggleMobileMenu();
-
-      }
-    );
-
-  }
-
-
-  // ==========================================================
-  // OUTSIDE CLICK
-  // ==========================================================
-
-  function bindDocumentClick() {
-
-    document.addEventListener(
-      "click",
-      function (event) {
-
-        const target =
-          event.target;
-
-
-        if (
-          !(target instanceof Element)
+            window.lucide &&
+            typeof window.lucide.createIcons ===
+            "function"
         ) {
 
-          return;
-
+            window.lucide.createIcons();
         }
 
+    } catch (error) {
 
-        const insideDropdown =
-          target.closest(
-            ".nav-dropdown, .user-menu"
-          );
-
-
-        const insideMobile =
-          target.closest(
-            "#mobileNav, .mobile-nav, #mobileMenuBtn, .mobile-menu-btn"
-          );
-
-
-        if (!insideDropdown) {
-
-          closeAllDropdowns();
-
-        }
-
-
-        if (!insideMobile) {
-
-          closeMobileMenu();
-
-        }
-
-      }
-    );
-
-  }
-
-
-  // ==========================================================
-  // ESCAPE KEY
-  // ==========================================================
-
-  function bindEscapeKey() {
-
-    document.addEventListener(
-      "keydown",
-      function (event) {
-
-        if (
-          event.key !== "Escape"
-        ) {
-
-          return;
-
-        }
-
-
-        closeAllDropdowns();
-        closeMobileMenu();
-
-      }
-    );
-
-  }
-
-
-  // ==========================================================
-  // WINDOW RESIZE
-  // ==========================================================
-
-  function bindResize() {
-
-    window.addEventListener(
-      "resize",
-      function () {
-
-        if (
-          window.innerWidth >
-          1150
-        ) {
-
-          closeMobileMenu();
-
-        }
-
-      }
-    );
-
-  }
-
-
-  // ==========================================================
-  // DEFAULT PAGE
-  // ==========================================================
-
-  function initializeDefaultPage() {
-
-    const profile =
-      getProfile();
-
-
-    if (!profile) {
-      return;
-    }
-
-
-    const pages =
-      getAllPages();
-
-
-    if (!pages.length) {
-      return;
-    }
-
-
-    const activePage =
-      $(".crm-page.active");
-
-
-    if (activePage) {
-
-      const pageName =
-        normalizeTarget(
-          activePage.id
+        console.warn(
+            "Lucide profile refresh error:",
+            error
         );
+    }
+}
 
 
-      if (pageName) {
+// ============================================================
+// INITIALIZATION
+// ============================================================
 
-        currentPage =
-          pageName;
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
 
-
-        setActiveNavigation(
-          pageName
-        );
-
-
-        setNavigationTitle(
-          pageName
-        );
-
-
-        return;
-
-      }
+        crmRefreshProfileIcons();
 
     }
-
-
-    // Default selalu Dashboard
-    showPage(
-      "dashboard"
-    );
-
-  }
-
-
-  // ==========================================================
-  // REFRESH NAVIGATION
-  // ==========================================================
-
-  function refreshNavigation() {
-
-    // Existing admin navigation
-    updateAdminNavigation();
-
-
-    // NEW:
-    // Hanya mengatur tampilan header berdasarkan role.
-    // Tidak menghapus fungsi apa pun.
-    updateRoleBasedHeaderNavigation();
-
-
-    setActiveNavigation(
-      currentPage
-    );
-
-
-    setNavigationTitle(
-      currentPage
-    );
-
-
-    // Hanya Admin yang mengisi dropdown Sales.
-    refreshSalesHeaderDropdown();
-
-  }
-
-
-  // ==========================================================
-  // APP READY
-  // ==========================================================
-
-  function handleAppReady() {
-
-    refreshNavigation();
-
-    initializeDefaultPage();
-
-  }
-
-
-  // ==========================================================
-  // PROFILE READY
-  // ==========================================================
-
-  function handleProfileReady() {
-
-    refreshNavigation();
-
-    initializeDefaultPage();
-
-  }
-
-
-  // ==========================================================
-  // INITIALIZE
-  // ==========================================================
-
-  function initializeNavigation() {
-
-    if (navigationInitialized) {
-      return;
-    }
-
-
-    navigationInitialized =
-      true;
-
-
-    bindNavigationLinks();
-
-    bindNavigationDropdowns();
-
-    bindUserDropdown();
-
-    bindHomeButtons();
-
-    bindMobileMenu();
-
-
-    if (!navigationEventsBound) {
-
-      navigationEventsBound =
-        true;
-
-
-      bindDocumentClick();
-
-      bindEscapeKey();
-
-      bindResize();
-
-
-      window.addEventListener(
-        "fsi:app-ready",
-        handleAppReady
-      );
-
-
-      window.addEventListener(
-        "fsi:profile-ready",
-        handleProfileReady
-      );
-
-
-      window.addEventListener(
-        "fsi:auth-ready",
-        handleProfileReady
-      );
-
-
-      window.addEventListener(
-        "fsi:sales-changed",
-        refreshNavigation
-      );
-
-    }
-
-
-    refreshNavigation();
-
-
-    console.log(
-      "FSI Navigation initialized."
-    );
-
-  }
-
-
-  // ==========================================================
-  // DOM READY
-  // ==========================================================
-
-  if (
-    document.readyState ===
-    "loading"
-  ) {
-
-    document.addEventListener(
-      "DOMContentLoaded",
-      initializeNavigation
-    );
-
-  } else {
-
-    initializeNavigation();
-
-  }
-
-
-  // ==========================================================
-  // PUBLIC API
-  // ==========================================================
-
-  window.FSINavigation = {
-
-    initialize:
-      initializeNavigation,
-
-    showPage:
-      showPage,
-
-    navigate:
-      crmNavigate,
-
-    navigateDashboard:
-      navigateDashboard,
-
-    navigateLeads:
-      navigateLeads,
-
-    navigateSales:
-      navigateSales,
-
-    navigateCustomerProfile:
-      navigateCustomerProfile,
-
-    setActiveNavigation:
-      setActiveNavigation,
-
-    refresh:
-      refreshNavigation,
-
-    refreshSales:
-      refreshSalesHeaderDropdown,
-
-    selectSales:
-      selectSalesFromHeader,
-
-    closeDropdowns:
-      closeAllDropdowns,
-
-    closeMobileMenu:
-      closeMobileMenu,
-
-    openMobileMenu:
-      openMobileMenu,
-
-    getCurrentPage:
-      function () {
-        return currentPage;
-      },
-
-    isAdmin:
-      isAdmin,
-
-    isSales:
-      isSales
-
-  };
-
-
-  // ==========================================================
-  // GLOBAL COMPATIBILITY
-  // ==========================================================
-
-  window.crmNavigate =
-    crmNavigate;
-
-
-  window.showCRMPage =
-    showPage;
-
-
-  window.navigateDashboard =
-    navigateDashboard;
-
-
-  window.navigateLeads =
-    navigateLeads;
-
-
-  window.navigateSales =
-    navigateSales;
-
-
-  window.navigateCustomerProfile =
-    navigateCustomerProfile;
-
-
-})();
+);
