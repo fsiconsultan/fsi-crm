@@ -1,1172 +1,395 @@
 /* =========================================================
-   FSI CRM - DASHBOARD STYLESHEET
+   FSI CRM — DASHBOARD STYLES
    File: css/dashboard.css
 
-   Dashboard:
-   - Statistics cards
-   - Pipeline
-   - Recent activities
-   - Responsive layout
-   ========================================================= */
+   IMPORTANT:
+   This file works together with css/style.css.
+   Do not redefine the main CRM components here.
+========================================================= */
 
 
 /* =========================================================
-   DASHBOARD PAGE
-   ========================================================= */
+   DASHBOARD VIEW
+========================================================= */
 
 #view-dashboard {
-    width: 100%;
-    min-width: 0;
+  width: 100%;
+}
+
+#view-dashboard.hidden {
+  display: none !important;
 }
 
 
 /* =========================================================
-   STATISTICS GRID
-   ========================================================= */
+   DASHBOARD STATS
+   Main stat-card styling is handled by style.css.
+   Only dashboard-specific refinements are placed here.
+========================================================= */
 
-.stats-grid {
+#view-dashboard .stats-grid {
+  width: 100%;
+}
 
-    display: grid;
+#view-dashboard .stat-card {
+  position: relative;
+  overflow: hidden;
+}
 
-    grid-template-columns:
-        repeat(
-            5,
-            minmax(0, 1fr)
-        );
+#view-dashboard .stat-card::after {
+  content: "";
 
-    gap: 18px;
+  position: absolute;
 
-    width: 100%;
+  width: 90px;
+  height: 90px;
 
-    margin: 0 0 24px;
+  right: -35px;
+  bottom: -35px;
 
+  border-radius: 50%;
+
+  background: rgba(37, 99, 235, 0.035);
+
+  pointer-events: none;
+}
+
+#view-dashboard .stat-card:hover {
+  transform: translateY(-3px);
 }
 
 
 /* =========================================================
-   STAT CARD
-   ========================================================= */
+   STAT ICON VARIANTS
+========================================================= */
 
-.stat-card {
-
-    position: relative;
-
-    min-width: 0;
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 14px;
-
-    padding: 18px;
-
-    background:
-        linear-gradient(
-            145deg,
-            rgba(255,255,255,0.98),
-            rgba(248,250,252,0.98)
-        );
-
-    border:
-        1px solid
-        rgba(226,232,240,0.95);
-
-    border-radius: 16px;
-
-    box-shadow:
-        0 4px 16px
-        rgba(15,23,42,0.045);
-
-    overflow: hidden;
-
-    transition:
-        transform 0.22s ease,
-        box-shadow 0.22s ease,
-        border-color 0.22s ease;
-
+#view-dashboard .stat-icon.bg-blue {
+  color: var(--primary);
+  background: var(--primary-soft);
 }
 
-
-/*
- * Subtle decorative glow
- */
-
-.stat-card::before {
-
-    content: "";
-
-    position: absolute;
-
-    width: 90px;
-    height: 90px;
-
-    right: -35px;
-    top: -35px;
-
-    border-radius: 50%;
-
-    background:
-        radial-gradient(
-            circle,
-            rgba(37,99,235,0.08),
-            transparent 70%
-        );
-
-    pointer-events: none;
-
+#view-dashboard .stat-icon.bg-cyan {
+  color: var(--cyan);
+  background: var(--cyan-soft);
 }
 
+#view-dashboard .stat-icon.bg-orange {
+  color: var(--orange);
+  background: var(--orange-soft);
+}
 
-.stat-card:hover {
+#view-dashboard .stat-icon.bg-purple {
+  color: var(--violet);
+  background: var(--violet-soft);
+}
 
-    transform:
-        translateY(-3px);
+#view-dashboard .stat-icon.bg-indigo {
+  color: var(--indigo);
+  background: var(--indigo-soft);
+}
 
-    border-color:
-        rgba(148,163,184,0.75);
+#view-dashboard .stat-icon.bg-yellow {
+  color: var(--warning-dark);
+  background: var(--warning-soft);
+}
 
-    box-shadow:
-        0 10px 28px
-        rgba(15,23,42,0.08);
-
+#view-dashboard .stat-icon.bg-green {
+  color: var(--success);
+  background: var(--success-soft);
 }
 
 
 /* =========================================================
-   STAT ICON
-   ========================================================= */
+   DASHBOARD CONTENT GRID
+========================================================= */
 
-.stat-icon {
-
-    position: relative;
-
-    z-index: 1;
-
-    width: 48px;
-    height: 48px;
-
-    min-width: 48px;
-
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-
-    border-radius: 13px;
-
-    background:
-        linear-gradient(
-            145deg,
-            #eff6ff,
-            #dbeafe
-        );
-
-    color: #2563eb;
-
-    box-shadow:
-        inset 0 0 0 1px
-        rgba(37,99,235,0.08);
-
-}
-
-
-.stat-icon svg {
-
-    width: 22px;
-    height: 22px;
-
-    stroke-width: 2;
-
+#view-dashboard .dashboard-grid {
+  width: 100%;
 }
 
 
 /* =========================================================
-   DIFFERENT STAT ICON COLORS
-   Works automatically when dashboard.js
-   assigns these classes.
-   ========================================================= */
+   DASHBOARD CARD
+========================================================= */
 
-.stat-card:nth-child(1)
-.stat-icon {
-
-    background:
-        linear-gradient(
-            145deg,
-            #eff6ff,
-            #dbeafe
-        );
-
-    color: #2563eb;
-
+#view-dashboard .dashboard-card {
+  position: relative;
+  overflow: hidden;
 }
 
+#view-dashboard .dashboard-card::before {
+  content: "";
 
-.stat-card:nth-child(2)
-.stat-icon {
+  position: absolute;
 
-    background:
-        linear-gradient(
-            145deg,
-            #f0fdf4,
-            #dcfce7
-        );
+  top: 0;
+  left: 0;
 
-    color: #16a34a;
+  width: 100%;
+  height: 2px;
 
-}
+  background:
+    linear-gradient(
+      90deg,
+      var(--primary),
+      var(--violet)
+    );
 
-
-.stat-card:nth-child(3)
-.stat-icon {
-
-    background:
-        linear-gradient(
-            145deg,
-            #fff7ed,
-            #ffedd5
-        );
-
-    color: #ea580c;
-
-}
-
-
-.stat-card:nth-child(4)
-.stat-icon {
-
-    background:
-        linear-gradient(
-            145deg,
-            #fefce8,
-            #fef3c7
-        );
-
-    color: #ca8a04;
-
-}
-
-
-.stat-card:nth-child(5)
-.stat-icon {
-
-    background:
-        linear-gradient(
-            145deg,
-            #faf5ff,
-            #f3e8ff
-        );
-
-    color: #9333ea;
-
-}
-
-
-.stat-card:nth-child(6)
-.stat-icon {
-
-    background:
-        linear-gradient(
-            145deg,
-            #ecfeff,
-            #cffafe
-        );
-
-    color: #0891b2;
-
-}
-
-
-.stat-card:nth-child(7)
-.stat-icon {
-
-    background:
-        linear-gradient(
-            145deg,
-            #eff6ff,
-            #dbeafe
-        );
-
-    color: #1d4ed8;
-
-}
-
-
-.stat-card:nth-child(8)
-.stat-icon {
-
-    background:
-        linear-gradient(
-            145deg,
-            #fff7ed,
-            #fed7aa
-        );
-
-    color: #c2410c;
-
-}
-
-
-.stat-card:nth-child(9)
-.stat-icon {
-
-    background:
-        linear-gradient(
-            145deg,
-            #f0fdf4,
-            #bbf7d0
-        );
-
-    color: #15803d;
-
-}
-
-
-.stat-card:nth-child(10)
-.stat-icon {
-
-    background:
-        linear-gradient(
-            145deg,
-            #fef2f2,
-            #fee2e2
-        );
-
-    color: #dc2626;
-
+  opacity: 0.8;
 }
 
 
 /* =========================================================
-   STAT DETAILS
-   ========================================================= */
+   CARD HEADER
+========================================================= */
 
-.stat-details {
-
-    position: relative;
-
-    z-index: 1;
-
-    min-width: 0;
-
-    display: flex;
-
-    flex-direction: column;
-
-    gap: 2px;
-
+#view-dashboard .card-header {
+  position: relative;
+  z-index: 1;
 }
 
-
-.stat-details span {
-
-    display: block;
-
-    color:
-        #64748b;
-
-    font-size:
-        0.76rem;
-
-    line-height:
-        1.3;
-
-    font-weight:
-        600;
-
-    white-space:
-        nowrap;
-
-    overflow:
-        hidden;
-
-    text-overflow:
-        ellipsis;
-
-}
-
-
-.stat-details strong {
-
-    display: block;
-
-    color:
-        #0f172a;
-
-    font-size:
-        1.65rem;
-
-    line-height:
-        1.15;
-
-    font-weight:
-        800;
-
-    letter-spacing:
-        -0.04em;
-
-}
-
-
-.stat-details small {
-
-    display: block;
-
-    color:
-        #94a3b8;
-
-    font-size:
-        0.68rem;
-
-    line-height:
-        1.35;
-
-    font-weight:
-        500;
-
-}
-
-
-/*
- * Compatibility with older dashboard markup
- */
-
-.stat-details h3 {
-
-    margin: 0;
-
-    color:
-        #64748b;
-
-    font-size:
-        0.76rem;
-
-    font-weight:
-        600;
-
-}
-
-
-.stat-details .stat-number {
-
-    display: block;
-
-    margin: 0;
-
-    color:
-        #0f172a;
-
-    font-size:
-        1.65rem;
-
-    line-height:
-        1.15;
-
-    font-weight:
-        800;
-
-}
-
-
-/* =========================================================
-   DASHBOARD GRID
-   ========================================================= */
-
-.dashboard-grid {
-
-    display: grid;
-
-    grid-template-columns:
-        minmax(0, 1.15fr)
-        minmax(0, 0.85fr);
-
-    gap: 20px;
-
-    width: 100%;
-
-    min-width: 0;
-
-}
-
-
-/* =========================================================
-   DASHBOARD PANEL
-   ========================================================= */
-
-.dashboard-panel {
-
-    min-width: 0;
-
-    min-height:
-        320px;
-
-    overflow:
-        hidden;
-
-}
-
-
-/* =========================================================
-   PANEL HEADER
-   ========================================================= */
-
-.dashboard-panel .panel-header {
-
-    display: flex;
-
-    align-items: flex-start;
-
-    justify-content: space-between;
-
-    gap: 16px;
-
-    padding-bottom:
-        16px;
-
-    margin-bottom:
-        8px;
-
-    border-bottom:
-        1px solid
-        rgba(226,232,240,0.75);
-
-}
-
-
-.dashboard-panel .panel-title {
-
-    margin: 0;
-
-    color:
-        #0f172a;
-
-    font-size:
-        1rem;
-
-    line-height:
-        1.4;
-
-    font-weight:
-        750;
-
-}
-
-
-.dashboard-panel .panel-header p {
-
-    margin:
-        4px 0 0;
-
-    color:
-        #94a3b8;
-
-    font-size:
-        0.78rem;
-
-    line-height:
-        1.45;
-
+#view-dashboard .card-header h2,
+#view-dashboard .card-header h3 {
+  letter-spacing: -0.2px;
 }
 
 
 /* =========================================================
    PIPELINE SUMMARY
-   ========================================================= */
+========================================================= */
+
+#dashboard-pipeline {
+  width: 100%;
+}
 
 .pipeline-summary {
-
-    display: flex;
-
-    flex-direction: column;
-
-    gap: 13px;
-
-    width: 100%;
-
+  width: 100%;
 }
 
-
-/*
- * Pipeline item
- *
- * dashboard.js may generate:
- *
- * .pipeline-item
- * .pipeline-row
- * .pipeline-bar
- * .pipeline-progress
- *
- * We support all common variants.
- */
-
-.pipeline-item,
-.pipeline-row {
-
-    width: 100%;
-
-    display: flex;
-
-    flex-direction: column;
-
-    gap: 7px;
-
+.pipeline-summary-item {
+  min-width: 0;
 }
 
+.pipeline-summary-item .pipeline-label {
+  overflow: hidden;
 
-.pipeline-item-header,
-.pipeline-row-header {
+  text-overflow: ellipsis;
 
-    display: flex;
-
-    align-items: center;
-
-    justify-content: space-between;
-
-    gap: 12px;
-
+  white-space: nowrap;
 }
 
-
-.pipeline-label {
-
-    color:
-        #475569;
-
-    font-size:
-        0.78rem;
-
-    font-weight:
-        600;
-
+.pipeline-summary-item .pipeline-bar {
+  position: relative;
+  overflow: hidden;
 }
 
+.pipeline-summary-item .pipeline-progress {
+  min-width: 2px;
 
-.pipeline-count {
-
-    color:
-        #0f172a;
-
-    font-size:
-        0.78rem;
-
-    font-weight:
-        750;
-
-}
-
-
-/* =========================================================
-   PIPELINE BAR
-   ========================================================= */
-
-.pipeline-bar {
-
-    width: 100%;
-
-    height: 8px;
-
-    overflow: hidden;
-
-    border-radius:
-        999px;
-
-    background:
-        #f1f5f9;
-
-}
-
-
-.pipeline-progress {
-
-    height: 100%;
-
-    min-width: 2px;
-
-    border-radius:
-        inherit;
-
-    background:
-        linear-gradient(
-            90deg,
-            #2563eb,
-            #60a5fa
-        );
-
-    transition:
-        width 0.35s ease;
-
-}
-
-
-/* Alternative class names */
-
-.pipeline-track {
-
-    width: 100%;
-
-    height: 8px;
-
-    overflow: hidden;
-
-    border-radius:
-        999px;
-
-    background:
-        #f1f5f9;
-
-}
-
-
-.pipeline-fill {
-
-    height: 100%;
-
-    border-radius:
-        inherit;
-
-    background:
-        linear-gradient(
-            90deg,
-            #2563eb,
-            #60a5fa
-        );
-
+  transition:
+    width 350ms ease;
 }
 
 
 /* =========================================================
    PIPELINE STATUS COLORS
-   ========================================================= */
+========================================================= */
 
-.pipeline-new
-.pipeline-fill,
-.pipeline-fill.status-new {
-
-    background:
-        linear-gradient(
-            90deg,
-            #2563eb,
-            #60a5fa
-        );
-
+.pipeline-summary-item:nth-child(1)
+.pipeline-progress {
+  background:
+    linear-gradient(
+      90deg,
+      #2563eb,
+      #3b82f6
+    );
 }
 
-
-.pipeline-interested
-.pipeline-fill,
-.pipeline-fill.status-interested {
-
-    background:
-        linear-gradient(
-            90deg,
-            #16a34a,
-            #4ade80
-        );
-
+.pipeline-summary-item:nth-child(2)
+.pipeline-progress {
+  background:
+    linear-gradient(
+      90deg,
+      #16a34a,
+      #22c55e
+    );
 }
 
-
-.pipeline-follow-up
-.pipeline-fill,
-.pipeline-fill.status-follow-up {
-
-    background:
-        linear-gradient(
-            90deg,
-            #ea580c,
-            #fb923c
-        );
-
+.pipeline-summary-item:nth-child(3)
+.pipeline-progress {
+  background:
+    linear-gradient(
+      90deg,
+      #ea580c,
+      #f97316
+    );
 }
 
-
-.pipeline-appointment
-.pipeline-fill,
-.pipeline-fill.status-appointment {
-
-    background:
-        linear-gradient(
-            90deg,
-            #9333ea,
-            #c084fc
-        );
-
+.pipeline-summary-item:nth-child(4)
+.pipeline-progress {
+  background:
+    linear-gradient(
+      90deg,
+      #7c3aed,
+      #8b5cf6
+    );
 }
 
-
-.pipeline-site-survey
-.pipeline-fill,
-.pipeline-fill.status-site-survey {
-
-    background:
-        linear-gradient(
-            90deg,
-            #0891b2,
-            #22d3ee
-        );
-
+.pipeline-summary-item:nth-child(5)
+.pipeline-progress {
+  background:
+    linear-gradient(
+      90deg,
+      #0891b2,
+      #06b6d4
+    );
 }
 
-
-.pipeline-quotation
-.pipeline-fill,
-.pipeline-fill.status-quotation {
-
-    background:
-        linear-gradient(
-            90deg,
-            #1d4ed8,
-            #60a5fa
-        );
-
+.pipeline-summary-item:nth-child(6)
+.pipeline-progress {
+  background:
+    linear-gradient(
+      90deg,
+      #ca8a04,
+      #eab308
+    );
 }
 
-
-.pipeline-closing
-.pipeline-fill,
-.pipeline-fill.status-closing {
-
-    background:
-        linear-gradient(
-            90deg,
-            #15803d,
-            #4ade80
-        );
-
+.pipeline-summary-item:nth-child(7)
+.pipeline-progress {
+  background:
+    linear-gradient(
+      90deg,
+      #15803d,
+      #22c55e
+    );
 }
 
+.pipeline-summary-item:nth-child(8)
+.pipeline-progress {
+  background:
+    linear-gradient(
+      90deg,
+      #4f46e5,
+      #6366f1
+    );
+}
 
-.pipeline-not-interested
-.pipeline-fill,
-.pipeline-fill.status-not-interested {
-
-    background:
-        linear-gradient(
-            90deg,
-            #dc2626,
-            #f87171
-        );
-
+.pipeline-summary-item:nth-child(9)
+.pipeline-progress {
+  background:
+    linear-gradient(
+      90deg,
+      #dc2626,
+      #ef4444
+    );
 }
 
 
 /* =========================================================
    RECENT ACTIVITIES
-   ========================================================= */
+========================================================= */
+
+#dashboard-activities {
+  width: 100%;
+}
 
 .recent-activities {
-
-    display: flex;
-
-    flex-direction: column;
-
-    width: 100%;
-
-    max-height:
-        330px;
-
-    overflow-y:
-        auto;
-
-    scrollbar-width:
-        thin;
-
+  width: 100%;
 }
 
-
-.recent-activities::-webkit-scrollbar {
-
-    width: 5px;
-
+.recent-activity-item {
+  transition:
+    background var(--transition),
+    transform var(--transition);
 }
 
+.recent-activity-item:hover {
+  background: #f1f5f9;
 
-.recent-activities::-webkit-scrollbar-track {
-
-    background:
-        transparent;
-
+  transform:
+    translateX(2px);
 }
 
-
-.recent-activities::-webkit-scrollbar-thumb {
-
-    background:
-        #cbd5e1;
-
-    border-radius:
-        999px;
-
+.recent-activity-icon {
+  flex-shrink: 0;
 }
 
 
 /* =========================================================
-   ACTIVITY ITEM
-   ========================================================= */
+   DASHBOARD LOADING
+========================================================= */
 
-.activity-item {
+.dashboard-loading {
+  min-height: 180px;
 
-    display: flex;
+  display: flex;
 
-    align-items: flex-start;
+  align-items: center;
+  justify-content: center;
 
-    gap: 12px;
+  flex-direction: column;
 
-    padding:
-        12px 0;
+  gap: 10px;
 
-    border-bottom:
-        1px solid
-        rgba(226,232,240,0.7);
+  color: var(--slate-400);
 
-}
-
-
-.activity-item:last-child {
-
-    border-bottom:
-        none;
-
-}
-
-
-.activity-icon {
-
-    width: 36px;
-    height: 36px;
-
-    min-width: 36px;
-
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-
-    border-radius:
-        10px;
-
-    background:
-        #eff6ff;
-
-    color:
-        #2563eb;
-
-}
-
-
-.activity-icon svg {
-
-    width: 17px;
-    height: 17px;
-
-}
-
-
-.activity-content {
-
-    min-width: 0;
-
-    flex: 1;
-
-}
-
-
-.activity-content strong {
-
-    display: block;
-
-    margin-bottom:
-        2px;
-
-    color:
-        #334155;
-
-    font-size:
-        0.8rem;
-
-    font-weight:
-        650;
-
-}
-
-
-.activity-content p {
-
-    margin: 0;
-
-    color:
-        #64748b;
-
-    font-size:
-        0.75rem;
-
-    line-height:
-        1.45;
-
-}
-
-
-.activity-content small {
-
-    display: block;
-
-    margin-top:
-        4px;
-
-    color:
-        #94a3b8;
-
-    font-size:
-        0.68rem;
-
-}
-
-
-/* =========================================================
-   EMPTY STATE
-   ========================================================= */
-
-.dashboard-panel .empty-state {
-
-    min-height:
-        220px;
-
-    display: flex;
-
-    flex-direction: column;
-
-    align-items: center;
-
-    justify-content: center;
-
-    gap: 10px;
-
-    color:
-        #94a3b8;
-
-    text-align:
-        center;
-
-}
-
-
-.dashboard-panel .empty-state svg {
-
-    width: 34px;
-    height: 34px;
-
-    stroke-width:
-        1.6;
-
-    opacity:
-        0.65;
-
-}
-
-
-.dashboard-panel .empty-state span {
-
-    font-size:
-        0.8rem;
-
+  font-size: 12px;
+  font-weight: 600;
 }
 
 
 /* =========================================================
    DASHBOARD ERROR
-   ========================================================= */
+========================================================= */
 
 .dashboard-error {
+  min-height: 120px;
 
-    padding:
-        14px 16px;
+  display: flex;
 
-    border:
-        1px solid
-        #fecaca;
+  align-items: center;
+  justify-content: center;
 
-    border-radius:
-        12px;
+  padding: 20px;
 
-    background:
-        #fef2f2;
+  border:
+    1px solid #fecaca;
 
-    color:
-        #b91c1c;
+  border-radius:
+    var(--radius-lg);
 
-    font-size:
-        0.8rem;
+  color:
+    var(--danger);
 
-    line-height:
-        1.5;
+  background:
+    var(--danger-soft);
 
+  font-size: 12px;
+
+  font-weight: 600;
+
+  text-align: center;
 }
 
 
 /* =========================================================
-   LOADING STATE
-   ========================================================= */
+   DASHBOARD EMPTY
+========================================================= */
 
-.dashboard-loading {
+.dashboard-empty {
+  min-height: 120px;
 
-    position:
-        relative;
+  display: flex;
 
-    pointer-events:
-        none;
+  align-items: center;
+  justify-content: center;
 
-}
+  color: var(--slate-400);
 
+  font-size: 11px;
 
-.dashboard-loading::after {
-
-    content:
-        "";
-
-    position:
-        absolute;
-
-    left:
-        0;
-
-    bottom:
-        0;
-
-    width:
-        100%;
-
-    height:
-        2px;
-
-    background:
-        linear-gradient(
-            90deg,
-            transparent,
-            #2563eb,
-            transparent
-        );
-
-    animation:
-        dashboardLoading
-        1.2s
-        linear
-        infinite;
-
-}
-
-
-@keyframes dashboardLoading {
-
-    from {
-        transform:
-            translateX(-100%);
-    }
-
-    to {
-        transform:
-            translateX(100%);
-    }
-
+  text-align: center;
 }
 
 
@@ -1174,314 +397,53 @@
    DASHBOARD RESPONSIVE
 ========================================================= */
 
+@media (max-width: 1200px) {
 
-/* ---------------------------------------------------------
-   LARGE DESKTOP
---------------------------------------------------------- */
-
-@media (max-width: 1400px) {
-
-    .stats-grid {
-
-        grid-template-columns:
-            repeat(
-                4,
-                minmax(0, 1fr)
-            );
-
-    }
+  #view-dashboard .stats-grid {
+    width: 100%;
+  }
 
 }
 
 
-/* ---------------------------------------------------------
-   TABLET / SMALL LAPTOP
---------------------------------------------------------- */
+@media (max-width: 950px) {
 
-@media (max-width: 1100px) {
-
-    .stats-grid {
-
-        grid-template-columns:
-            repeat(
-                3,
-                minmax(0, 1fr)
-            );
-
-    }
-
-
-    .dashboard-grid {
-
-        grid-template-columns:
-            1fr;
-
-    }
-
-
-    .dashboard-panel {
-
-        min-height:
-            280px;
-
-    }
+  #view-dashboard .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
 
 }
 
 
-/* ---------------------------------------------------------
-   TABLET
---------------------------------------------------------- */
+@media (max-width: 700px) {
 
-@media (max-width: 800px) {
+  #view-dashboard .dashboard-card {
+    min-height: 200px;
+  }
 
-    .stats-grid {
-
-        grid-template-columns:
-            repeat(
-                2,
-                minmax(0, 1fr)
-            );
-
-        gap:
-            14px;
-
-    }
-
-
-    .stat-card {
-
-        padding:
-            15px;
-
-        border-radius:
-            14px;
-
-    }
-
-
-    .stat-icon {
-
-        width:
-            44px;
-
-        height:
-            44px;
-
-        min-width:
-            44px;
-
-        border-radius:
-            11px;
-
-    }
-
-
-    .stat-icon svg {
-
-        width:
-            20px;
-
-        height:
-            20px;
-
-    }
-
-
-    .stat-details strong {
-
-        font-size:
-            1.45rem;
-
-    }
-
-
-    .dashboard-grid {
-
-        gap:
-            16px;
-
-    }
+  .pipeline-summary-item .pipeline-label {
+    width: 90px;
+  }
 
 }
 
 
-/* ---------------------------------------------------------
-   MOBILE
---------------------------------------------------------- */
+@media (max-width: 420px) {
 
-@media (max-width: 560px) {
+  .pipeline-summary-item {
+    gap: 7px;
+  }
 
-    .stats-grid {
+  .pipeline-summary-item .pipeline-label {
+    width: 75px;
 
-        grid-template-columns:
-            1fr;
+    font-size: 9px;
+  }
 
-        gap:
-            12px;
+  .pipeline-summary-item .pipeline-count {
+    width: 25px;
 
-    }
-
-
-    .stat-card {
-
-        padding:
-            15px;
-
-    }
-
-
-    .stat-details span {
-
-        font-size:
-            0.74rem;
-
-    }
-
-
-    .stat-details strong {
-
-        font-size:
-            1.5rem;
-
-    }
-
-
-    .dashboard-panel {
-
-        min-height:
-            auto;
-
-    }
-
-
-    .dashboard-panel .panel-header {
-
-        padding-bottom:
-            13px;
-
-    }
-
-
-    .dashboard-panel .panel-title {
-
-        font-size:
-            0.95rem;
-
-    }
-
-
-    .dashboard-panel .panel-header p {
-
-        font-size:
-            0.72rem;
-
-    }
-
-
-    .pipeline-summary {
-
-        gap:
-            11px;
-
-    }
-
-
-    .recent-activities {
-
-        max-height:
-            280px;
-
-    }
-
-
-    .activity-item {
-
-        gap:
-            9px;
-
-        padding:
-            10px 0;
-
-    }
-
-
-    .activity-icon {
-
-        width:
-            32px;
-
-        height:
-            32px;
-
-        min-width:
-            32px;
-
-    }
-
-
-    .activity-content strong {
-
-        font-size:
-            0.76rem;
-
-    }
-
-
-    .activity-content p {
-
-        font-size:
-            0.72rem;
-
-    }
-
-}
-
-
-/* ---------------------------------------------------------
-   VERY SMALL MOBILE
---------------------------------------------------------- */
-
-@media (max-width: 380px) {
-
-    .stat-card {
-
-        gap:
-            11px;
-
-    }
-
-
-    .stat-icon {
-
-        width:
-            40px;
-
-        height:
-            40px;
-
-        min-width:
-            40px;
-
-    }
-
-
-    .stat-icon svg {
-
-        width:
-            18px;
-
-        height:
-            18px;
-
-    }
-
-
-    .stat-details strong {
-
-        font-size:
-            1.35rem;
-
-    }
+    font-size: 10px;
+  }
 
 }
