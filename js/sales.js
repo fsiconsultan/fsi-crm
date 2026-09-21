@@ -1,7 +1,7 @@
 // ============================================================
 // FSI CRM - SALES MANAGEMENT
 // File: js/sales.js
-// Version: 2026.09
+// Version: 2026.09.21
 // ============================================================
 
 "use strict";
@@ -15,16 +15,22 @@
     let salesLoading = false;
     let salesInitialized = false;
     let salesEventsBound = false;
+    let salesCreateLoading = false;
 
     // ========================================================
     // DOM HELPER
     // ========================================================
 
     function salesElement(...ids) {
-        for (const id of ids) {
-            if (!id) continue;
 
-            const element = document.getElementById(id);
+        for (const id of ids) {
+
+            if (!id) {
+                continue;
+            }
+
+            const element =
+                document.getElementById(id);
 
             if (element) {
                 return element;
@@ -34,54 +40,157 @@
         return null;
     }
 
+    function salesElements(selector) {
+
+        try {
+            return Array.from(
+                document.querySelectorAll(selector)
+            );
+        } catch (error) {
+
+            console.error(
+                "FSI CRM: Invalid selector:",
+                selector,
+                error
+            );
+
+            return [];
+        }
+    }
+
     // ========================================================
     // SUPABASE
     // ========================================================
 
     function getSupabase() {
-        return window.supabaseClient || null;
+
+        if (
+            window.supabaseClient
+        ) {
+            return window.supabaseClient;
+        }
+
+        try {
+
+            if (
+                typeof supabaseClient !==
+                "undefined" &&
+                supabaseClient
+            ) {
+                return supabaseClient;
+            }
+
+        } catch (error) {
+            // Ignore lexical global lookup error.
+        }
+
+        return null;
     }
 
     // ========================================================
-    // PROFILE / ROLE
+    // PROFILE
     // ========================================================
 
     function salesGetProfile() {
-        return window.currentProfile || null;
+
+        if (
+            window.currentProfile
+        ) {
+            return window.currentProfile;
+        }
+
+        try {
+
+            if (
+                typeof currentProfile !==
+                "undefined" &&
+                currentProfile
+            ) {
+                return currentProfile;
+            }
+
+        } catch (error) {
+            // Ignore.
+        }
+
+        return null;
+    }
+
+    function getCurrentUser() {
+
+        if (
+            window.currentUser
+        ) {
+            return window.currentUser;
+        }
+
+        try {
+
+            if (
+                typeof currentUser !==
+                "undefined" &&
+                currentUser
+            ) {
+                return currentUser;
+            }
+
+        } catch (error) {
+            // Ignore.
+        }
+
+        return null;
     }
 
     function getProfileId() {
-        const profile = salesGetProfile();
+
+        const profile =
+            salesGetProfile();
 
         if (!profile) {
             return "";
         }
 
-        return (
+        return String(
             profile.id ||
             profile.sales_id ||
             ""
         );
     }
 
+    // ========================================================
+    // ROLE
+    // ========================================================
+
     function normalizeRole(role) {
+
         return String(role || "")
             .trim()
             .toLowerCase();
     }
 
     function salesIsAdmin() {
-        const profile = salesGetProfile();
+
+        const profile =
+            salesGetProfile();
 
         if (!profile) {
             return false;
         }
 
-        if (typeof window.isAdminRole === "function") {
-            return window.isAdminRole(profile);
+        if (
+            typeof window.isAdminRole ===
+            "function"
+        ) {
+
+            return window.isAdminRole(
+                profile
+            );
         }
 
-        const role = normalizeRole(profile.role);
+        const role =
+            normalizeRole(
+                profile.role
+            );
 
         return (
             role === "admin" ||
@@ -90,24 +199,39 @@
     }
 
     function salesIsSales() {
-        const profile = salesGetProfile();
+
+        const profile =
+            salesGetProfile();
 
         if (!profile) {
             return false;
         }
 
-        if (typeof window.isSalesRole === "function") {
-            return window.isSalesRole(profile);
+        if (
+            typeof window.isSalesRole ===
+            "function"
+        ) {
+
+            return window.isSalesRole(
+                profile
+            );
         }
 
-        return normalizeRole(profile.role) === "sales";
+        return (
+            normalizeRole(
+                profile.role
+            ) === "sales"
+        );
     }
 
     // ========================================================
-    // SALES DISPLAY NAME
+    // SALES NAME
     // ========================================================
 
-    function getSalesDisplayName(sales) {
+    function getSalesDisplayName(
+        sales
+    ) {
+
         if (!sales) {
             return "Sales";
         }
@@ -120,18 +244,26 @@
         );
     }
 
-    function getSalesInitial(name) {
-        const value = String(name || "S").trim();
+    function getSalesInitial(
+        name
+    ) {
+
+        const value =
+            String(
+                name || "S"
+            ).trim();
 
         if (!value) {
             return "S";
         }
 
-        const parts = value
-            .split(/\s+/)
-            .filter(Boolean);
+        const parts =
+            value
+                .split(/\s+/)
+                .filter(Boolean);
 
         if (parts.length === 1) {
+
             return parts[0]
                 .substring(0, 2)
                 .toUpperCase();
@@ -139,68 +271,177 @@
 
         return (
             parts[0].charAt(0) +
-            parts[parts.length - 1].charAt(0)
+            parts[
+                parts.length - 1
+            ].charAt(0)
         ).toUpperCase();
     }
 
-    function getSalesName(id) {
+    function getSalesName(
+        id
+    ) {
+
         if (!id) {
             return "-";
         }
 
         const salesList =
-            Array.isArray(window.salesUsersData)
+            Array.isArray(
+                window.salesUsersData
+            )
                 ? window.salesUsersData
                 : [];
 
-        const sales = salesList.find(function (user) {
-            return String(user.id) === String(id);
-        });
+        const sales =
+            salesList.find(
+                function (user) {
+
+                    return String(
+                        user.id
+                    ) === String(id);
+                }
+            );
 
         if (!sales) {
             return "-";
         }
 
-        return getSalesDisplayName(sales);
+        return getSalesDisplayName(
+            sales
+        );
     }
 
     // ========================================================
-    // ESCAPE HTML
+    // HTML ESCAPE
     // ========================================================
 
-    function escapeSalesHTML(value) {
-        if (typeof window.escapeHTML === "function") {
-            return window.escapeHTML(value);
+    function escapeSalesHTML(
+        value
+    ) {
+
+        if (
+            typeof window.escapeHTML ===
+            "function"
+        ) {
+
+            return window.escapeHTML(
+                value
+            );
         }
 
-        return String(value ?? "")
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
+        return String(
+            value ?? ""
+        )
+            .replace(
+                /&/g,
+                "&amp;"
+            )
+            .replace(
+                /</g,
+                "&lt;"
+            )
+            .replace(
+                />/g,
+                "&gt;"
+            )
+            .replace(
+                /"/g,
+                "&quot;"
+            )
+            .replace(
+                /'/g,
+                "&#039;"
+            );
     }
 
     // ========================================================
-    // STATUS HELPERS
+    // STATUS
     // ========================================================
 
-    function normalizeSalesStatus(status) {
-        const value = String(status || "")
-            .trim()
-            .toLowerCase();
+    function normalizeSalesStatus(
+        status
+    ) {
 
-        if (value === "active") {
+        const value =
+            String(
+                status || ""
+            )
+                .trim()
+                .toLowerCase();
+
+        if (
+            value === "active" ||
+            value === "aktif"
+        ) {
             return "Active";
         }
 
         return "Inactive";
     }
 
-    function getSalesStatusClass(status) {
-        return normalizeSalesStatus(status) === "Active"
+    function getSalesStatusClass(
+        status
+    ) {
+
+        return (
+            normalizeSalesStatus(
+                status
+            ) === "Active"
+        )
             ? "status-active"
             : "status-inactive";
+    }
+
+    // ========================================================
+    // GET ACTIVE SALES
+    // ========================================================
+
+    function getActiveSales() {
+
+        const salesList =
+            Array.isArray(
+                window.salesUsersData
+            )
+                ? window.salesUsersData
+                : [];
+
+        return salesList
+            .filter(
+                function (sales) {
+
+                    const role =
+                        normalizeRole(
+                            sales.role
+                        );
+
+                    const status =
+                        normalizeSalesStatus(
+                            sales.status
+                        );
+
+                    return (
+                        role === "sales" &&
+                        status === "Active"
+                    );
+                }
+            )
+            .sort(
+                function (a, b) {
+
+                    return getSalesDisplayName(
+                        a
+                    ).localeCompare(
+                        getSalesDisplayName(
+                            b
+                        ),
+                        undefined,
+                        {
+                            sensitivity:
+                                "base"
+                        }
+                    );
+                }
+            );
     }
 
     // ========================================================
@@ -209,55 +450,55 @@
 
     async function loadSalesLookup() {
 
-        const supabase = getSupabase();
+        const supabase =
+            getSupabase();
 
         if (!supabase) {
+
             console.error(
                 "FSI CRM: Supabase client is not ready."
             );
+
             return [];
         }
 
         try {
 
-            /*
-             * IMPORTANT:
-             * Database column is exactly:
-             *
-             * auth_user-id
-             *
-             * We intentionally use select("*") here.
-             * This avoids PostgREST problems with the hyphenated
-             * column name inside a select string.
-             */
+            const response =
+                await supabase
+                    .from("sales_users")
+                    .select("*")
+                    .order(
+                        "name",
+                        {
+                            ascending:
+                                true
+                        }
+                    );
 
-            const response = await supabase
-                .from("sales_users")
-                .select("*")
-                .order("name", {
-                    ascending: true
-                });
+            if (response.error) {
 
-            const data = response.data;
-            const error = response.error;
-
-            if (error) {
                 console.error(
-                    "FSI CRM: Load sales lookup error:",
-                    error
+                    "FSI CRM: Load Sales lookup error:",
+                    response.error
                 );
 
                 return [];
             }
 
-            window.salesUsersData =
-                Array.isArray(data)
-                    ? data
+            const data =
+                Array.isArray(
+                    response.data
+                )
+                    ? response.data
                     : [];
+
+            window.salesUsersData =
+                data;
 
             populateSalesDropdowns();
 
-            return window.salesUsersData;
+            return data;
 
         } catch (error) {
 
@@ -271,55 +512,20 @@
     }
 
     // ========================================================
-    // GET ACTIVE SALES
+    // POPULATE LEAD SALES FILTER
     // ========================================================
 
-    function getActiveSales() {
+    function populateLeadSalesFilter(
+        activeSales
+    ) {
 
-        const salesList =
-            Array.isArray(window.salesUsersData)
-                ? window.salesUsersData
-                : [];
-
-        return salesList
-            .filter(function (sales) {
-
-                const role =
-                    normalizeRole(sales.role);
-
-                const status =
-                    normalizeSalesStatus(
-                        sales.status
-                    );
-
-                return (
-                    role === "sales" &&
-                    status === "Active"
-                );
-            })
-            .sort(function (a, b) {
-
-                return getSalesDisplayName(a)
-                    .localeCompare(
-                        getSalesDisplayName(b),
-                        undefined,
-                        {
-                            sensitivity: "base"
-                        }
-                    );
-            });
-    }
-
-    // ========================================================
-    // POPULATE SALES FILTER
-    // ========================================================
-
-    function populateLeadSalesFilter(activeSales) {
-
-        const salesFilter = salesElement(
-            "salesFilter",
-            "leadSalesFilter"
-        );
+        const salesFilter =
+            salesElement(
+                "salesFilter",
+                "leadSalesFilter",
+                "filter-sales",
+                "filterSales"
+            );
 
         if (!salesFilter) {
             return;
@@ -331,32 +537,51 @@
         salesFilter.innerHTML = "";
 
         const allOption =
-            document.createElement("option");
+            document.createElement(
+                "option"
+            );
 
         allOption.value = "";
-        allOption.textContent = "All Sales";
+        allOption.textContent =
+            "All Sales";
 
-        salesFilter.appendChild(allOption);
+        salesFilter.appendChild(
+            allOption
+        );
 
-        activeSales.forEach(function (sales) {
-
-            const option =
-                document.createElement("option");
-
-            option.value = sales.id || "";
-
-            option.textContent =
-                getSalesDisplayName(sales);
-
-            salesFilter.appendChild(option);
-        });
-
-        const exists = activeSales.some(
+        activeSales.forEach(
             function (sales) {
-                return String(sales.id) ===
-                    String(currentValue);
+
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+                option.value =
+                    sales.id || "";
+
+                option.textContent =
+                    getSalesDisplayName(
+                        sales
+                    );
+
+                salesFilter.appendChild(
+                    option
+                );
             }
         );
+
+        const exists =
+            activeSales.some(
+                function (sales) {
+
+                    return String(
+                        sales.id
+                    ) === String(
+                        currentValue
+                    );
+                }
+            );
 
         salesFilter.value =
             exists
@@ -368,11 +593,15 @@
     // POPULATE TOP SALES DROPDOWN
     // ========================================================
 
-    function populateTopSalesDropdown(activeSales) {
+    function populateTopSalesDropdown(
+        activeSales
+    ) {
 
-        const menu = salesElement(
-            "salesDropdownMenu"
-        );
+        const menu =
+            salesElement(
+                "salesDropdownMenu",
+                "sales-dropdown-menu"
+            );
 
         if (!menu) {
             return;
@@ -385,12 +614,20 @@
         // ----------------------------------------------------
 
         const allButton =
-            document.createElement("button");
+            document.createElement(
+                "button"
+            );
 
         allButton.type = "button";
-        allButton.className = "nav-dropdown-item";
-        allButton.dataset.salesId = "";
-        allButton.textContent = "All Sales";
+
+        allButton.className =
+            "nav-dropdown-item";
+
+        allButton.dataset.salesId =
+            "";
+
+        allButton.textContent =
+            "All Sales";
 
         allButton.addEventListener(
             "click",
@@ -406,55 +643,73 @@
             }
         );
 
-        menu.appendChild(allButton);
+        menu.appendChild(
+            allButton
+        );
 
         // ----------------------------------------------------
         // ACTIVE SALES
         // ----------------------------------------------------
 
-        activeSales.forEach(function (sales) {
+        activeSales.forEach(
+            function (sales) {
 
-            const button =
-                document.createElement("button");
-
-            button.type = "button";
-            button.className =
-                "nav-dropdown-item";
-
-            button.dataset.salesId =
-                sales.id || "";
-
-            button.textContent =
-                getSalesDisplayName(sales);
-
-            button.addEventListener(
-                "click",
-                function (event) {
-
-                    event.preventDefault();
-                    event.stopPropagation();
-
-                    selectSalesFilter(
-                        sales.id,
-                        getSalesDisplayName(sales)
+                const button =
+                    document.createElement(
+                        "button"
                     );
-                }
-            );
 
-            menu.appendChild(button);
-        });
+                button.type = "button";
+
+                button.className =
+                    "nav-dropdown-item";
+
+                button.dataset.salesId =
+                    sales.id || "";
+
+                button.textContent =
+                    getSalesDisplayName(
+                        sales
+                    );
+
+                button.addEventListener(
+                    "click",
+                    function (event) {
+
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                        selectSalesFilter(
+                            sales.id,
+                            getSalesDisplayName(
+                                sales
+                            )
+                        );
+                    }
+                );
+
+                menu.appendChild(
+                    button
+                );
+            }
+        );
     }
 
     // ========================================================
     // POPULATE LEAD ASSIGNMENT
     // ========================================================
 
-    function populateLeadAssignment(activeSales) {
+    function populateLeadAssignment(
+        activeSales
+    ) {
 
-        const select = salesElement(
-            "leadSalesAssign",
-            "lead-sales-assign"
-        );
+        const select =
+            salesElement(
+                "leadSalesAssign",
+                "lead-sales-assign",
+                "leadSales",
+                "salesAssignment"
+            );
 
         if (!select) {
             return;
@@ -466,44 +721,96 @@
         select.innerHTML = "";
 
         const emptyOption =
-            document.createElement("option");
+            document.createElement(
+                "option"
+            );
 
         emptyOption.value = "";
+
         emptyOption.textContent =
             "Select Sales";
 
-        select.appendChild(emptyOption);
+        select.appendChild(
+            emptyOption
+        );
 
-        activeSales.forEach(function (sales) {
-
-            const option =
-                document.createElement("option");
-
-            option.value =
-                sales.id || "";
-
-            option.textContent =
-                getSalesDisplayName(sales);
-
-            select.appendChild(option);
-        });
-
-        const exists = activeSales.some(
+        activeSales.forEach(
             function (sales) {
-                return String(sales.id) ===
-                    String(currentValue);
+
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+                option.value =
+                    sales.id || "";
+
+                option.textContent =
+                    getSalesDisplayName(
+                        sales
+                    );
+
+                select.appendChild(
+                    option
+                );
             }
         );
 
-        if (exists) {
-            select.value = currentValue;
+        const profile =
+            salesGetProfile();
+
+        if (
+            profile &&
+            salesIsSales()
+        ) {
+
+            const profileId =
+                getProfileId();
+
+            const ownSales =
+                activeSales.find(
+                    function (sales) {
+
+                        return String(
+                            sales.id
+                        ) === String(
+                            profileId
+                        );
+                    }
+                );
+
+            if (ownSales) {
+
+                select.value =
+                    ownSales.id;
+            }
+
+        } else {
+
+            const exists =
+                activeSales.some(
+                    function (sales) {
+
+                        return String(
+                            sales.id
+                        ) === String(
+                            currentValue
+                        );
+                    }
+                );
+
+            if (exists) {
+
+                select.value =
+                    currentValue;
+            }
         }
 
         setupSalesAssignmentAccess();
     }
 
     // ========================================================
-    // POPULATE ALL DROPDOWNS
+    // POPULATE ALL SALES DROPDOWNS
     // ========================================================
 
     function populateSalesDropdowns() {
@@ -522,6 +829,8 @@
         populateLeadAssignment(
             activeSales
         );
+
+        updateSalesDropdownButtonFromFilter();
     }
 
     // ========================================================
@@ -530,10 +839,13 @@
 
     function setupSalesAssignmentAccess() {
 
-        const select = salesElement(
-            "leadSalesAssign",
-            "lead-sales-assign"
-        );
+        const select =
+            salesElement(
+                "leadSalesAssign",
+                "lead-sales-assign",
+                "leadSales",
+                "salesAssignment"
+            );
 
         if (!select) {
             return;
@@ -543,7 +855,10 @@
             salesGetProfile();
 
         if (!profile) {
-            select.disabled = true;
+
+            select.disabled =
+                true;
+
             return;
         }
 
@@ -553,7 +868,8 @@
 
         if (salesIsAdmin()) {
 
-            select.disabled = false;
+            select.disabled =
+                false;
 
             select.removeAttribute(
                 "aria-disabled"
@@ -572,10 +888,31 @@
                 getProfileId();
 
             if (profileId) {
-                select.value = profileId;
+
+                const activeSales =
+                    getActiveSales();
+
+                const exists =
+                    activeSales.some(
+                        function (sales) {
+
+                            return String(
+                                sales.id
+                            ) === String(
+                                profileId
+                            );
+                        }
+                    );
+
+                if (exists) {
+
+                    select.value =
+                        profileId;
+                }
             }
 
-            select.disabled = true;
+            select.disabled =
+                true;
 
             select.setAttribute(
                 "aria-disabled",
@@ -596,10 +933,6 @@
 
         if (!salesIsAdmin()) {
 
-            console.warn(
-                "FSI CRM: Only Admin can load Sales management."
-            );
-
             return [];
         }
 
@@ -608,8 +941,9 @@
 
         if (!supabase) {
 
-            console.error(
-                "FSI CRM: Supabase client is not ready."
+            showSalesMessage(
+                "Supabase is not connected.",
+                "error"
             );
 
             return [];
@@ -621,33 +955,33 @@
 
         salesLoading = true;
 
+        renderSalesLoading();
+
         try {
 
             const response =
                 await supabase
                     .from("sales_users")
                     .select("*")
-                    .order("created_at", {
-                        ascending: true
-                    });
+                    .order(
+                        "created_at",
+                        {
+                            ascending:
+                                false
+                        }
+                    );
 
-            const data =
-                response.data;
-
-            const error =
-                response.error;
-
-            if (error) {
+            if (response.error) {
 
                 console.error(
                     "FSI CRM: Load Sales users error:",
-                    error
+                    response.error
                 );
 
                 renderSalesUsers([]);
 
                 showSalesMessage(
-                    error.message ||
+                    response.error.message ||
                     "Failed to load Sales.",
                     "error"
                 );
@@ -655,32 +989,23 @@
                 return [];
             }
 
-            window.salesUsersData =
-                Array.isArray(data)
-                    ? data
+            const data =
+                Array.isArray(
+                    response.data
+                )
+                    ? response.data
                     : [];
 
-            window.salesUsersData.sort(
-                function (a, b) {
-
-                    return getSalesDisplayName(a)
-                        .localeCompare(
-                            getSalesDisplayName(b),
-                            undefined,
-                            {
-                                sensitivity: "base"
-                            }
-                        );
-                }
-            );
+            window.salesUsersData =
+                data;
 
             renderSalesUsers(
-                window.salesUsersData
+                data
             );
 
             populateSalesDropdowns();
 
-            return window.salesUsersData;
+            return data;
 
         } catch (error) {
 
@@ -701,33 +1026,100 @@
 
         } finally {
 
-            salesLoading = false;
+            salesLoading =
+                false;
 
             if (
                 typeof window.refreshIcons ===
                 "function"
             ) {
+
                 window.refreshIcons();
             }
         }
     }
 
     // ========================================================
-    // RENDER SALES USERS
+    // RENDER SALES LOADING
     // ========================================================
 
-    function renderSalesUsers(data) {
+    function renderSalesLoading() {
 
-        const table = salesElement(
-            "salesTable",
-            "salesTableBody"
-        );
+        const tableBody =
+            salesElement(
+                "salesTableBody",
+                "sales-table-body",
+                "salesTable"
+            );
 
-        if (!table) {
+        if (!tableBody) {
             return;
         }
 
-        table.innerHTML = "";
+        tableBody.innerHTML = "";
+
+        const tr =
+            document.createElement(
+                "tr"
+            );
+
+        const td =
+            document.createElement(
+                "td"
+            );
+
+        td.colSpan = 6;
+
+        td.innerHTML =
+            '<div class="loading-state">' +
+                '<div class="loading-spinner"></div>' +
+                '<div>Loading Sales...</div>' +
+            '</div>';
+
+        tr.appendChild(td);
+
+        tableBody.appendChild(tr);
+    }
+
+    // ========================================================
+    // RENDER SALES USERS
+    // ========================================================
+
+    function renderSalesUsers(
+        data
+    ) {
+
+        const tableBody =
+            salesElement(
+                "salesTableBody",
+                "sales-table-body"
+            );
+
+        let table =
+            salesElement(
+                "salesTable"
+            );
+
+        /*
+         * If salesTable itself is a tbody,
+         * use it directly.
+         */
+        if (
+            table &&
+            table.tagName &&
+            table.tagName.toLowerCase() ===
+            "tbody"
+        ) {
+
+            tableBody =
+                table;
+        }
+
+        if (!tableBody) {
+            return;
+        }
+
+        tableBody.innerHTML = "";
 
         const salesList =
             Array.isArray(data)
@@ -735,41 +1127,42 @@
                 : [];
 
         // ----------------------------------------------------
-        // EMPTY STATE
+        // EMPTY
         // ----------------------------------------------------
 
-        if (salesList.length === 0) {
+        if (
+            salesList.length === 0
+        ) {
 
             const tr =
-                document.createElement("tr");
+                document.createElement(
+                    "tr"
+                );
 
-            tr.className = "empty-row";
+            tr.className =
+                "empty-row";
 
             const td =
-                document.createElement("td");
+                document.createElement(
+                    "td"
+                );
 
             td.colSpan = 6;
 
-            const wrapper =
-                document.createElement("div");
-
-            wrapper.className =
-                "empty-state";
-
-            wrapper.innerHTML =
-                '<div class="empty-state-icon">' +
-                    '<span>👥</span>' +
-                '</div>' +
-                '<div class="empty-state-title">' +
-                    'No Sales found' +
-                '</div>' +
-                '<div class="empty-state-text">' +
-                    'Create a Sales account to start managing your team.' +
+            td.innerHTML =
+                '<div class="empty-state">' +
+                    '<div class="empty-state-icon">👥</div>' +
+                    '<div class="empty-state-title">' +
+                        'No Sales Found' +
+                    '</div>' +
+                    '<div class="empty-state-text">' +
+                        'Belum ada akun Sales yang terdaftar.' +
+                    '</div>' +
                 '</div>';
 
-            td.appendChild(wrapper);
             tr.appendChild(td);
-            table.appendChild(tr);
+
+            tableBody.appendChild(tr);
 
             return;
         }
@@ -778,184 +1171,268 @@
         // ROWS
         // ----------------------------------------------------
 
-        salesList.forEach(function (sales) {
+        salesList.forEach(
+            function (sales) {
 
-            const tr =
-                document.createElement("tr");
-
-            const name =
-                getSalesDisplayName(sales);
-
-            const username =
-                sales.username ||
-                "-";
-
-            const role =
-                sales.role ||
-                "Sales";
-
-            const status =
-                normalizeSalesStatus(
-                    sales.status
-                );
-
-            const isActive =
-                status === "Active";
-
-            const formattedDate =
-                sales.created_at &&
-                typeof window.formatDateTime ===
-                "function"
-                    ? window.formatDateTime(
-                        sales.created_at
-                    )
-                    : (
-                        sales.created_at ||
-                        "-"
+                const tr =
+                    document.createElement(
+                        "tr"
                     );
 
-            // ------------------------------------------------
-            // NAME
-            // ------------------------------------------------
+                tr.dataset.salesId =
+                    sales.id || "";
 
-            const nameTd =
-                document.createElement("td");
+                const name =
+                    getSalesDisplayName(
+                        sales
+                    );
 
-            const userCell =
-                document.createElement("div");
+                const username =
+                    sales.username ||
+                    "-";
 
-            userCell.className =
-                "sales-user-cell";
+                const role =
+                    sales.role ||
+                    "Sales";
 
-            const avatar =
-                document.createElement("div");
+                const status =
+                    normalizeSalesStatus(
+                        sales.status
+                    );
 
-            avatar.className =
-                "sales-user-avatar";
+                const isActive =
+                    status === "Active";
 
-            avatar.textContent =
-                getSalesInitial(name);
+                let formattedDate =
+                    sales.created_at ||
+                    "-";
 
-            const info =
-                document.createElement("div");
+                if (
+                    sales.created_at &&
+                    typeof window.formatDateTime ===
+                    "function"
+                ) {
 
-            info.className =
-                "sales-user-info";
+                    formattedDate =
+                        window.formatDateTime(
+                            sales.created_at
+                        );
+                }
 
-            const strong =
-                document.createElement("strong");
+                // ------------------------------------------------
+                // NAME
+                // ------------------------------------------------
 
-            strong.textContent = name;
+                const nameTd =
+                    document.createElement(
+                        "td"
+                    );
 
-            info.appendChild(strong);
+                const userCell =
+                    document.createElement(
+                        "div"
+                    );
 
-            userCell.appendChild(avatar);
-            userCell.appendChild(info);
+                userCell.className =
+                    "sales-user-cell";
 
-            nameTd.appendChild(userCell);
+                const avatar =
+                    document.createElement(
+                        "div"
+                    );
 
-            // ------------------------------------------------
-            // USERNAME
-            // ------------------------------------------------
+                avatar.className =
+                    "sales-user-avatar";
 
-            const usernameTd =
-                document.createElement("td");
+                avatar.textContent =
+                    getSalesInitial(
+                        name
+                    );
 
-            usernameTd.textContent =
-                username;
+                const info =
+                    document.createElement(
+                        "div"
+                    );
 
-            // ------------------------------------------------
-            // ROLE
-            // ------------------------------------------------
+                info.className =
+                    "sales-user-info";
 
-            const roleTd =
-                document.createElement("td");
+                const strong =
+                    document.createElement(
+                        "strong"
+                    );
 
-            roleTd.textContent =
-                role;
+                strong.textContent =
+                    name;
 
-            // ------------------------------------------------
-            // STATUS
-            // ------------------------------------------------
+                info.appendChild(
+                    strong
+                );
 
-            const statusTd =
-                document.createElement("td");
+                userCell.appendChild(
+                    avatar
+                );
 
-            const statusBadge =
-                document.createElement("span");
+                userCell.appendChild(
+                    info
+                );
 
-            statusBadge.className =
-                "status-badge " +
-                getSalesStatusClass(status);
+                nameTd.appendChild(
+                    userCell
+                );
 
-            statusBadge.textContent =
-                status;
+                // ------------------------------------------------
+                // USERNAME
+                // ------------------------------------------------
 
-            statusTd.appendChild(
-                statusBadge
-            );
+                const usernameTd =
+                    document.createElement(
+                        "td"
+                    );
 
-            // ------------------------------------------------
-            // CREATED DATE
-            // ------------------------------------------------
+                usernameTd.textContent =
+                    username;
 
-            const dateTd =
-                document.createElement("td");
+                // ------------------------------------------------
+                // ROLE
+                // ------------------------------------------------
 
-            dateTd.textContent =
-                formattedDate;
+                const roleTd =
+                    document.createElement(
+                        "td"
+                    );
 
-            // ------------------------------------------------
-            // ACTION
-            // ------------------------------------------------
+                roleTd.textContent =
+                    role;
 
-            const actionTd =
-                document.createElement("td");
+                // ------------------------------------------------
+                // STATUS
+                // ------------------------------------------------
 
-            const actionButton =
-                document.createElement("button");
+                const statusTd =
+                    document.createElement(
+                        "td"
+                    );
 
-            actionButton.type = "button";
+                const statusBadge =
+                    document.createElement(
+                        "span"
+                    );
 
-            actionButton.className =
-                "secondary-btn small-btn";
+                statusBadge.className =
+                    "status-badge " +
+                    getSalesStatusClass(
+                        status
+                    );
 
-            actionButton.dataset.action =
-                "toggle-sales-status";
+                statusBadge.textContent =
+                    status;
 
-            actionButton.dataset.salesId =
-                sales.id || "";
+                statusTd.appendChild(
+                    statusBadge
+                );
 
-            actionButton.dataset.currentStatus =
-                status;
+                // ------------------------------------------------
+                // CREATED
+                // ------------------------------------------------
 
-            actionButton.textContent =
-                isActive
-                    ? "Deactivate"
-                    : "Activate";
+                const dateTd =
+                    document.createElement(
+                        "td"
+                    );
 
-            actionTd.appendChild(
-                actionButton
-            );
+                dateTd.textContent =
+                    formattedDate;
 
-            // ------------------------------------------------
-            // APPEND
-            // ------------------------------------------------
+                // ------------------------------------------------
+                // ACTION
+                // ------------------------------------------------
 
-            tr.appendChild(nameTd);
-            tr.appendChild(usernameTd);
-            tr.appendChild(roleTd);
-            tr.appendChild(statusTd);
-            tr.appendChild(dateTd);
-            tr.appendChild(actionTd);
+                const actionTd =
+                    document.createElement(
+                        "td"
+                    );
 
-            table.appendChild(tr);
-        });
+                const actionWrapper =
+                    document.createElement(
+                        "div"
+                    );
+
+                actionWrapper.className =
+                    "sales-actions";
+
+                const statusButton =
+                    document.createElement(
+                        "button"
+                    );
+
+                statusButton.type =
+                    "button";
+
+                statusButton.className =
+                    "secondary-btn small-btn";
+
+                statusButton.dataset.action =
+                    "toggle-sales-status";
+
+                statusButton.dataset.salesId =
+                    sales.id || "";
+
+                statusButton.dataset.currentStatus =
+                    status;
+
+                statusButton.textContent =
+                    isActive
+                        ? "Deactivate"
+                        : "Activate";
+
+                actionWrapper.appendChild(
+                    statusButton
+                );
+
+                actionTd.appendChild(
+                    actionWrapper
+                );
+
+                // ------------------------------------------------
+                // APPEND
+                // ------------------------------------------------
+
+                tr.appendChild(
+                    nameTd
+                );
+
+                tr.appendChild(
+                    usernameTd
+                );
+
+                tr.appendChild(
+                    roleTd
+                );
+
+                tr.appendChild(
+                    statusTd
+                );
+
+                tr.appendChild(
+                    dateTd
+                );
+
+                tr.appendChild(
+                    actionTd
+                );
+
+                tableBody.appendChild(
+                    tr
+                );
+            }
+        );
 
         if (
             typeof window.refreshIcons ===
             "function"
         ) {
+
             window.refreshIcons();
         }
     }
@@ -966,16 +1443,27 @@
 
     function bindSalesTableEvents() {
 
-        const table = salesElement(
-            "salesTable",
-            "salesTableBody"
-        );
+        const tableBody =
+            salesElement(
+                "salesTableBody",
+                "sales-table-body"
+            );
 
-        if (!table) {
+        if (!tableBody) {
             return;
         }
 
-        table.addEventListener(
+        if (
+            tableBody.dataset.salesTableBound ===
+            "true"
+        ) {
+            return;
+        }
+
+        tableBody.dataset.salesTableBound =
+            "true";
+
+        tableBody.addEventListener(
             "click",
             async function (event) {
 
@@ -991,7 +1479,8 @@
                 event.preventDefault();
 
                 const salesId =
-                    button.dataset.salesId || "";
+                    button.dataset.salesId ||
+                    "";
 
                 const currentStatus =
                     button.dataset.currentStatus ||
@@ -1006,7 +1495,7 @@
     }
 
     // ========================================================
-    // SALES MODAL
+    // OPEN SALES MODAL
     // ========================================================
 
     function openSalesModal() {
@@ -1023,7 +1512,8 @@
 
         const modal =
             salesElement(
-                "salesModal"
+                "salesModal",
+                "sales-modal"
             );
 
         if (!modal) {
@@ -1033,7 +1523,7 @@
             );
 
             showSalesMessage(
-                "Sales modal not found.",
+                "Sales modal not found in index.html.",
                 "error"
             );
 
@@ -1044,33 +1534,57 @@
 
         const title =
             salesElement(
-                "salesModalTitle"
+                "salesModalTitle",
+                "sales-modal-title"
             );
 
         if (title) {
+
             title.textContent =
                 "Add New Sales";
         }
 
-        modal.classList.add("show");
-        modal.style.display = "flex";
+        modal.classList.add(
+            "show"
+        );
+
+        modal.classList.remove(
+            "hidden"
+        );
+
+        modal.removeAttribute(
+            "hidden"
+        );
+
+        modal.style.display =
+            "flex";
+
+        modal.style.visibility =
+            "visible";
+
+        modal.style.opacity =
+            "1";
 
         document.body.classList.add(
             "modal-open"
         );
 
-        setTimeout(function () {
+        setTimeout(
+            function () {
 
-            const nameInput =
-                salesElement(
-                    "salesName"
-                );
+                const nameInput =
+                    salesElement(
+                        "salesName",
+                        "sales-name"
+                    );
 
-            if (nameInput) {
-                nameInput.focus();
-            }
+                if (nameInput) {
+                    nameInput.focus();
+                }
 
-        }, 80);
+            },
+            80
+        );
     }
 
     // ========================================================
@@ -1081,15 +1595,23 @@
 
         const modal =
             salesElement(
-                "salesModal"
+                "salesModal",
+                "sales-modal"
             );
 
         if (!modal) {
             return;
         }
 
-        modal.classList.remove("show");
-        modal.style.display = "none";
+        modal.classList.remove(
+            "show"
+        );
+
+        modal.style.display =
+            "none";
+
+        modal.style.visibility =
+            "hidden";
 
         document.body.classList.remove(
             "modal-open"
@@ -1097,7 +1619,7 @@
     }
 
     // ========================================================
-    // CLEAR SALES FORM
+    // CLEAR FORM
     // ========================================================
 
     function clearSalesForm() {
@@ -1124,21 +1646,27 @@
 
         if (message) {
 
-            message.textContent = "";
+            message.textContent =
+                "";
 
             message.style.display =
                 "none";
 
-            message.dataset.type = "";
+            message.dataset.type =
+                "";
         }
     }
 
-    function setSalesValue(id, value) {
+    function setSalesValue(
+        id,
+        value
+    ) {
 
         if (
             typeof window.setValue ===
             "function"
         ) {
+
             window.setValue(
                 id,
                 value
@@ -1148,9 +1676,12 @@
         }
 
         const element =
-            document.getElementById(id);
+            document.getElementById(
+                id
+            );
 
         if (element) {
+
             element.value =
                 value ?? "";
         }
@@ -1160,7 +1691,17 @@
     // CREATE SALES
     // ========================================================
 
-    async function createSales() {
+    async function createSales(
+        event
+    ) {
+
+        if (event) {
+            event.preventDefault();
+        }
+
+        if (salesCreateLoading) {
+            return;
+        }
 
         if (!salesIsAdmin()) {
 
@@ -1187,17 +1728,20 @@
 
         const nameInput =
             salesElement(
-                "salesName"
+                "salesName",
+                "sales-name"
             );
 
         const usernameInput =
             salesElement(
-                "salesUsername"
+                "salesUsername",
+                "sales-username"
             );
 
         const passwordInput =
             salesElement(
-                "salesPassword"
+                "salesPassword",
+                "sales-password"
             );
 
         const name =
@@ -1230,16 +1774,16 @@
             return;
         }
 
-        if (password.length < 6) {
+        if (
+            password.length < 6
+        ) {
 
             showSalesMessage(
                 "Password must be at least 6 characters.",
                 "error"
             );
 
-            if (passwordInput) {
-                passwordInput.focus();
-            }
+            passwordInput?.focus();
 
             return;
         }
@@ -1255,12 +1799,14 @@
                 "error"
             );
 
-            if (usernameInput) {
-                usernameInput.focus();
-            }
+            usernameInput?.focus();
 
             return;
         }
+
+        // ----------------------------------------------------
+        // CONFIRM
+        // ----------------------------------------------------
 
         const confirmText =
             'Create Sales account "' +
@@ -1275,11 +1821,14 @@
             typeof window.confirmAction ===
             "function"
         ) {
+
             confirmed =
                 await window.confirmAction(
                     confirmText
                 );
+
         } else {
+
             confirmed =
                 window.confirm(
                     confirmText
@@ -1290,8 +1839,15 @@
             return;
         }
 
+        // ----------------------------------------------------
+        // BUTTON
+        // ----------------------------------------------------
+
         const createButton =
             document.querySelector(
+                "#salesModal [data-action='create-sales'], " +
+                "#salesModal #btn-create-sales, " +
+                "#salesModal #createSalesBtn, " +
                 "#salesModal .primary-btn, " +
                 "#salesModal .btn-primary"
             );
@@ -1300,6 +1856,9 @@
             createButton
                 ? createButton.textContent
                 : "";
+
+        salesCreateLoading =
+            true;
 
         try {
 
@@ -1312,19 +1871,32 @@
                     "CREATING...";
             }
 
-            /*
-             * Sales account creation is performed
-             * by the Supabase Edge Function.
-             */
+            showSalesMessage(
+                "Creating Sales account...",
+                "info"
+            );
+
+            // ------------------------------------------------
+            // IMPORTANT
+            // ------------------------------------------------
+            // Auth user creation must happen through a
+            // secure Edge Function. Do NOT use
+            // supabase.auth.signUp() here because that would
+            // create the Sales user under the Admin's browser
+            // authentication context.
+            // ------------------------------------------------
 
             const response =
                 await supabase.functions.invoke(
                     "create-sales",
                     {
                         body: {
-                            name,
-                            username,
-                            password
+                            name:
+                                name,
+                            username:
+                                username,
+                            password:
+                                password
                         }
                     }
                 );
@@ -1338,85 +1910,93 @@
             if (error) {
 
                 console.error(
-                    "FSI CRM: Create Sales error:",
+                    "FSI CRM: create-sales Edge Function error:",
                     error
                 );
 
-                showSalesMessage(
+                let message =
                     error.message ||
-                    "Failed to create Sales.",
+                    "Failed to create Sales.";
+
+                if (
+                    error.context &&
+                    typeof error.context ===
+                    "object"
+                ) {
+
+                    try {
+
+                        if (
+                            error.context.body
+                        ) {
+
+                            message +=
+                                " " +
+                                String(
+                                    error.context.body
+                                );
+                        }
+
+                    } catch (contextError) {
+                        // Ignore.
+                    }
+                }
+
+                showSalesMessage(
+                    message,
                     "error"
                 );
 
                 return;
             }
+
+            // ------------------------------------------------
+            // EDGE FUNCTION RETURNED ERROR
+            // ------------------------------------------------
 
             if (
                 data &&
-                data.error
+                (
+                    data.error ||
+                    data.success === false
+                )
             ) {
 
-                const detail =
-                    data.detail
-                        ? "\n\n" +
-                          String(data.detail)
-                        : "";
+                let message =
+                    data.error ||
+                    data.message ||
+                    "Failed to create Sales.";
+
+                if (data.detail) {
+
+                    message +=
+                        " " +
+                        String(
+                            data.detail
+                        );
+                }
 
                 showSalesMessage(
-                    String(data.error) +
-                    detail,
+                    message,
                     "error"
                 );
 
                 return;
             }
 
-            showSalesMessage(
-                "Sales account created successfully.",
-                "success"
-            );
-
-            clearSalesForm();
+            // ------------------------------------------------
+            // SUCCESS
+            // ------------------------------------------------
 
             closeSalesModal();
 
-            // ------------------------------------------------
-            // REFRESH SALES
-            // ------------------------------------------------
-
-            await loadSalesLookup();
-
-            if (salesIsAdmin()) {
-                await loadSalesUsers();
-            }
-
-            if (
-                typeof window.loadFilterOptions ===
-                "function"
-            ) {
-                await window.loadFilterOptions();
-            }
-
-            if (
-                typeof window.loadLeads ===
-                "function"
-            ) {
-                await window.loadLeads(
-                    window.currentPage || 1
-                );
-            }
-
-            if (
-                typeof window.updateDashboard ===
-                "function"
-            ) {
-                await window.updateDashboard();
-            }
+            clearSalesForm();
 
             if (
                 typeof window.showToast ===
                 "function"
             ) {
+
                 window.showToast(
                     'Sales "' +
                     name +
@@ -1424,6 +2004,44 @@
                     "success"
                 );
             }
+
+            // ------------------------------------------------
+            // REFRESH SALES DATA
+            // ------------------------------------------------
+
+            await refreshSalesData();
+
+            // ------------------------------------------------
+            // REFRESH DASHBOARD
+            // ------------------------------------------------
+
+            if (
+                typeof window.updateDashboard ===
+                "function"
+            ) {
+
+                try {
+
+                    await window.updateDashboard();
+
+                } catch (dashboardError) {
+
+                    console.warn(
+                        "FSI CRM: Dashboard refresh after Sales creation failed:",
+                        dashboardError
+                    );
+                }
+            }
+
+            // ------------------------------------------------
+            // EVENT
+            // ------------------------------------------------
+
+            document.dispatchEvent(
+                new CustomEvent(
+                    "fsi:sales-changed"
+                )
+            );
 
         } catch (error) {
 
@@ -1439,6 +2057,9 @@
             );
 
         } finally {
+
+            salesCreateLoading =
+                false;
 
             if (createButton) {
 
@@ -1494,7 +2115,8 @@
             );
 
         const newStatus =
-            normalizedCurrent === "Active"
+            normalizedCurrent ===
+            "Active"
                 ? "Inactive"
                 : "Active";
 
@@ -1514,11 +2136,14 @@
             typeof window.confirmAction ===
             "function"
         ) {
+
             confirmed =
                 await window.confirmAction(
                     confirmText
                 );
+
         } else {
+
             confirmed =
                 window.confirm(
                     confirmText
@@ -1535,22 +2160,23 @@
                 await supabase
                     .from("sales_users")
                     .update({
-                        status: newStatus
+                        status:
+                            newStatus
                     })
-                    .eq("id", id);
+                    .eq(
+                        "id",
+                        id
+                    );
 
-            const error =
-                response.error;
-
-            if (error) {
+            if (response.error) {
 
                 console.error(
                     "FSI CRM: Toggle Sales status error:",
-                    error
+                    response.error
                 );
 
                 showSalesMessage(
-                    error.message ||
+                    response.error.message ||
                     "Failed to update Sales status.",
                     "error"
                 );
@@ -1558,43 +2184,11 @@
                 return;
             }
 
-            // ------------------------------------------------
-            // REFRESH
-            // ------------------------------------------------
-
-            await loadSalesLookup();
-
-            if (salesIsAdmin()) {
-                await loadSalesUsers();
-            }
-
-            if (
-                typeof window.loadFilterOptions ===
-                "function"
-            ) {
-                await window.loadFilterOptions();
-            }
-
-            if (
-                typeof window.loadLeads ===
-                "function"
-            ) {
-                await window.loadLeads(
-                    window.currentPage || 1
-                );
-            }
-
-            if (
-                typeof window.updateDashboard ===
-                "function"
-            ) {
-                await window.updateDashboard();
-            }
-
             if (
                 typeof window.showToast ===
                 "function"
             ) {
+
                 window.showToast(
                     salesName +
                     " is now " +
@@ -1603,6 +2197,14 @@
                     "success"
                 );
             }
+
+            await refreshSalesData();
+
+            document.dispatchEvent(
+                new CustomEvent(
+                    "fsi:sales-changed"
+                )
+            );
 
         } catch (error) {
 
@@ -1630,19 +2232,26 @@
         const salesFilter =
             salesElement(
                 "salesFilter",
-                "leadSalesFilter"
+                "leadSalesFilter",
+                "filter-sales",
+                "filterSales"
             );
 
         if (salesFilter) {
+
             salesFilter.value =
                 salesId || "";
         }
+
+        updateSalesDropdownButtonFromFilter();
 
         if (
             typeof window.showLeads ===
             "function"
         ) {
+
             window.showLeads();
+
             return;
         }
 
@@ -1650,6 +2259,7 @@
             typeof window.loadLeads ===
             "function"
         ) {
+
             window.loadLeads(1);
         }
     }
@@ -1666,7 +2276,9 @@
         const salesFilter =
             salesElement(
                 "salesFilter",
-                "leadSalesFilter"
+                "leadSalesFilter",
+                "filter-sales",
+                "filterSales"
             );
 
         if (salesFilter) {
@@ -1703,6 +2315,61 @@
     }
 
     // ========================================================
+    // UPDATE TOP DROPDOWN FROM CURRENT FILTER
+    // ========================================================
+
+    function updateSalesDropdownButtonFromFilter() {
+
+        const salesFilter =
+            salesElement(
+                "salesFilter",
+                "leadSalesFilter",
+                "filter-sales",
+                "filterSales"
+            );
+
+        if (!salesFilter) {
+            return;
+        }
+
+        const value =
+            salesFilter.value || "";
+
+        if (!value) {
+
+            updateSalesDropdownButton(
+                "All Sales"
+            );
+
+            return;
+        }
+
+        const sales =
+            (
+                Array.isArray(
+                    window.salesUsersData
+                )
+                    ? window.salesUsersData
+                    : []
+            ).find(
+                function (item) {
+
+                    return String(
+                        item.id
+                    ) === String(value);
+                }
+            );
+
+        updateSalesDropdownButton(
+            sales
+                ? getSalesDisplayName(
+                    sales
+                )
+                : "Sales"
+        );
+    }
+
+    // ========================================================
     // CLOSE SALES DROPDOWN
     // ========================================================
 
@@ -1726,6 +2393,7 @@
                     );
 
                 if (button) {
+
                     button.setAttribute(
                         "aria-expanded",
                         "false"
@@ -1741,6 +2409,7 @@
 
         menus.forEach(
             function (menu) {
+
                 menu.classList.remove(
                     "show"
                 );
@@ -1758,26 +2427,17 @@
 
         const button =
             salesElement(
-                "salesDropdownBtn"
+                "salesDropdownBtn",
+                "sales-dropdown-btn"
             );
 
         if (!button) {
             return;
         }
 
-        const text =
-            button.querySelector(
-                "span"
-            );
-
-        if (text) {
-
-            text.textContent =
-                salesName ||
-                "Sales";
-
-            return;
-        }
+        const value =
+            salesName ||
+            "Sales";
 
         const label =
             button.querySelector(
@@ -1787,65 +2447,60 @@
         if (label) {
 
             label.textContent =
-                salesName ||
-                "Sales";
+                value;
 
             return;
         }
 
-        // ----------------------------------------------------
-        // Preserve icon
-        // ----------------------------------------------------
-
-        const icon =
+        const span =
             button.querySelector(
-                "svg, i"
+                "span"
             );
 
-        if (icon) {
+        if (span) {
 
-            let textNode = null;
-
-            button.childNodes.forEach(
-                function (node) {
-
-                    if (
-                        node.nodeType ===
-                        Node.TEXT_NODE
-                    ) {
-                        textNode = node;
-                    }
-                }
-            );
-
-            if (textNode) {
-
-                textNode.textContent =
-                    " " +
-                    (
-                        salesName ||
-                        "Sales"
-                    );
-
-            } else {
-
-                button.appendChild(
-                    document.createTextNode(
-                        " " +
-                        (
-                            salesName ||
-                            "Sales"
-                        )
-                    )
-                );
-            }
+            span.textContent =
+                value;
 
             return;
         }
 
-        button.textContent =
-            salesName ||
-            "Sales";
+        const textNodes = [];
+
+        button.childNodes.forEach(
+            function (node) {
+
+                if (
+                    node.nodeType ===
+                    Node.TEXT_NODE
+                ) {
+
+                    textNodes.push(
+                        node
+                    );
+                }
+            }
+        );
+
+        if (
+            textNodes.length > 0
+        ) {
+
+            textNodes[
+                textNodes.length - 1
+            ].textContent =
+                " " +
+                value;
+
+            return;
+        }
+
+        button.appendChild(
+            document.createTextNode(
+                " " +
+                value
+            )
+        );
     }
 
     // ========================================================
@@ -1900,38 +2555,81 @@
 
     async function refreshSalesData() {
 
-        await loadSalesLookup();
+        /*
+         * Always refresh the lookup first.
+         * This is what makes newly created Sales
+         * appear inside dropdowns.
+         */
 
-        if (salesIsAdmin()) {
+        const lookup =
+            await loadSalesLookup();
+
+        if (
+            salesIsAdmin()
+        ) {
+
             await loadSalesUsers();
+        } else {
+
+            /*
+             * If Sales page is not available to
+             * non-admin, at least refresh dropdowns.
+             */
+            populateSalesDropdowns();
         }
 
         if (
             typeof window.loadFilterOptions ===
             "function"
         ) {
-            await window.loadFilterOptions();
+
+            try {
+
+                await window.loadFilterOptions();
+
+            } catch (error) {
+
+                console.warn(
+                    "FSI CRM: loadFilterOptions refresh failed:",
+                    error
+                );
+            }
         }
 
         if (
             typeof window.loadLeads ===
             "function"
         ) {
-            await window.loadLeads(
-                window.currentPage || 1
-            );
+
+            try {
+
+                await window.loadLeads(
+                    window.currentPage ||
+                    1
+                );
+
+            } catch (error) {
+
+                console.warn(
+                    "FSI CRM: lead refresh after Sales change failed:",
+                    error
+                );
+            }
         }
+
+        return lookup;
     }
 
     // ========================================================
-    // BIND SALES MODAL EVENTS
+    // BIND SALES MODAL
     // ========================================================
 
     function bindSalesModalEvents() {
 
         const modal =
             salesElement(
-                "salesModal"
+                "salesModal",
+                "sales-modal"
             );
 
         if (!modal) {
@@ -1956,6 +2654,7 @@
                     event.target ===
                     modal
                 ) {
+
                     closeSalesModal();
                 }
             }
@@ -1963,14 +2662,18 @@
     }
 
     // ========================================================
-    // BIND CREATE SALES BUTTON
+    // BIND ADD SALES BUTTON
     // ========================================================
 
     function bindCreateSalesButton() {
 
         const buttons =
-            document.querySelectorAll(
-                '[data-action="create-sales"], ' +
+            salesElements(
+                '[data-action="open-sales-modal"], ' +
+                '[data-action="add-sales"], ' +
+                '[data-action="create-sales-modal"], ' +
+                '#btn-add-sales, ' +
+                '#addSalesBtn, ' +
                 '#btn-create-sales, ' +
                 '#createSalesBtn'
             );
@@ -1979,13 +2682,13 @@
             function (button) {
 
                 if (
-                    button.dataset.salesCreateBound ===
+                    button.dataset.salesOpenBound ===
                     "true"
                 ) {
                     return;
                 }
 
-                button.dataset.salesCreateBound =
+                button.dataset.salesOpenBound =
                     "true";
 
                 button.addEventListener(
@@ -1994,8 +2697,111 @@
 
                         event.preventDefault();
 
-                        createSales();
+                        openSalesModal();
                     }
+                );
+            }
+        );
+
+        /*
+         * Some HTML versions use a button with
+         * text "Add Sales" but no ID/data-action.
+         * We only bind it when it is clearly inside
+         * the Sales management section.
+         */
+
+        const salesPage =
+            salesElement(
+                "view-sales",
+                "view-manage-sales"
+            );
+
+        if (salesPage) {
+
+            const textButtons =
+                salesPage.querySelectorAll(
+                    "button"
+                );
+
+            textButtons.forEach(
+                function (button) {
+
+                    if (
+                        button.dataset.salesOpenBound ===
+                        "true"
+                    ) {
+                        return;
+                    }
+
+                    const text =
+                        String(
+                            button.textContent ||
+                            ""
+                        )
+                            .trim()
+                            .toLowerCase();
+
+                    if (
+                        text === "add sales" ||
+                        text === "add new sales" ||
+                        text.includes(
+                            "add sales"
+                        )
+                    ) {
+
+                        button.dataset.salesOpenBound =
+                            "true";
+
+                        button.addEventListener(
+                            "click",
+                            function (event) {
+
+                                event.preventDefault();
+
+                                openSalesModal();
+                            }
+                        );
+                    }
+                }
+            );
+        }
+    }
+
+    // ========================================================
+    // BIND CREATE FORM
+    // ========================================================
+
+    function bindSalesForm() {
+
+        const form =
+            salesElement(
+                "salesForm",
+                "sales-form",
+                "addSalesForm"
+            );
+
+        if (!form) {
+            return;
+        }
+
+        if (
+            form.dataset.salesSubmitBound ===
+            "true"
+        ) {
+            return;
+        }
+
+        form.dataset.salesSubmitBound =
+            "true";
+
+        form.addEventListener(
+            "submit",
+            function (event) {
+
+                event.preventDefault();
+
+                createSales(
+                    event
                 );
             }
         );
@@ -2008,10 +2814,12 @@
     function bindSalesCloseButtons() {
 
         const buttons =
-            document.querySelectorAll(
+            salesElements(
                 '[data-action="close-sales-modal"], ' +
                 '#closeSalesModal, ' +
-                '#cancelSalesBtn'
+                '#cancelSalesBtn, ' +
+                '#salesModalClose, ' +
+                '#sales-modal-close'
             );
 
         buttons.forEach(
@@ -2041,7 +2849,7 @@
     }
 
     // ========================================================
-    // GLOBAL SALES EVENTS
+    // GLOBAL EVENTS
     // ========================================================
 
     function bindGlobalSalesEvents() {
@@ -2051,6 +2859,10 @@
         }
 
         salesEventsBound = true;
+
+        // ----------------------------------------------------
+        // ESC
+        // ----------------------------------------------------
 
         document.addEventListener(
             "keydown",
@@ -2065,54 +2877,130 @@
 
                 const modal =
                     salesElement(
-                        "salesModal"
+                        "salesModal",
+                        "sales-modal"
                     );
 
                 if (
                     modal &&
-                    modal.classList.contains(
-                        "show"
+                    (
+                        modal.classList.contains(
+                            "show"
+                        ) ||
+                        modal.style.display ===
+                            "flex"
                     )
                 ) {
+
                     closeSalesModal();
                 }
             }
         );
 
+        // ----------------------------------------------------
+        // PROFILE READY
+        // ----------------------------------------------------
+
         document.addEventListener(
             "fsi:profile-ready",
-            function () {
+            async function () {
 
                 setupSalesAssignmentAccess();
 
-                populateSalesDropdowns();
+                /*
+                 * Important:
+                 * Once profile is ready, reload Sales
+                 * list so Admin gets actual names.
+                 */
+
+                if (salesIsAdmin()) {
+
+                    await loadSalesLookup();
+
+                    await loadSalesUsers();
+
+                } else {
+
+                    await loadSalesLookup();
+                }
             }
         );
+
+        // ----------------------------------------------------
+        // AUTH READY
+        // ----------------------------------------------------
 
         document.addEventListener(
             "fsi:auth-ready",
-            function () {
+            async function () {
 
                 setupSalesAssignmentAccess();
 
-                populateSalesDropdowns();
+                if (salesIsAdmin()) {
+
+                    await loadSalesLookup();
+
+                    await loadSalesUsers();
+
+                } else {
+
+                    await loadSalesLookup();
+                }
             }
         );
 
+        // ----------------------------------------------------
+        // SALES CHANGED
+        // ----------------------------------------------------
+
         document.addEventListener(
             "fsi:sales-changed",
-            function () {
+            async function () {
 
-                refreshSalesData();
+                /*
+                 * Prevent excessive duplicate work
+                 * when this event is triggered after
+                 * an internal refresh.
+                 */
+
+                await refreshSalesData();
+            }
+        );
+
+        // ----------------------------------------------------
+        // NAVIGATION CHANGED
+        // ----------------------------------------------------
+
+        document.addEventListener(
+            "fsi:navigation-changed",
+            function (event) {
+
+                const page =
+                    event.detail?.page ||
+                    "";
+
+                if (
+                    page === "sales" ||
+                    page === "manage-sales" ||
+                    page === "manageSales"
+                ) {
+
+                    if (
+                        salesIsAdmin()
+                    ) {
+
+                        loadSalesUsers();
+                    }
+                }
             }
         );
     }
 
     // ========================================================
-    // INITIALIZE SALES MODULE
+    // INITIALIZE
     // ========================================================
 
-    function initializeSales() {
+    async function initializeSales() {
 
         if (salesInitialized) {
             return;
@@ -2121,15 +3009,56 @@
         salesInitialized = true;
 
         bindGlobalSalesEvents();
+
         bindSalesTableEvents();
+
         bindSalesModalEvents();
+
         bindCreateSalesButton();
+
+        bindSalesForm();
+
         bindSalesCloseButtons();
 
         setupSalesAssignmentAccess();
 
+        /*
+         * Do not block page initialization.
+         * Profile/auth may still be loading.
+         */
+
+        setTimeout(
+            async function () {
+
+                try {
+
+                    if (
+                        salesIsAdmin()
+                    ) {
+
+                        await loadSalesLookup();
+
+                        await loadSalesUsers();
+
+                    } else {
+
+                        await loadSalesLookup();
+                    }
+
+                } catch (error) {
+
+                    console.warn(
+                        "FSI CRM: Initial Sales loading failed:",
+                        error
+                    );
+                }
+
+            },
+            300
+        );
+
         console.log(
-            "FSI CRM: Sales module loaded successfully."
+            "FSI CRM: Sales Management module loaded successfully."
         );
     }
 
@@ -2140,8 +3069,20 @@
     window.loadSalesLookup =
         loadSalesLookup;
 
+    window.getActiveSales =
+        getActiveSales;
+
     window.populateSalesDropdowns =
         populateSalesDropdowns;
+
+    window.populateLeadSalesFilter =
+        populateLeadSalesFilter;
+
+    window.populateTopSalesDropdown =
+        populateTopSalesDropdown;
+
+    window.populateLeadAssignment =
+        populateLeadAssignment;
 
     window.getSalesName =
         getSalesName;
@@ -2192,22 +3133,44 @@
     window.FSISales = {
 
         loadSalesLookup,
-        populateSalesDropdowns,
-        getSalesName,
-        getSalesDisplayName,
-        loadSalesUsers,
-        renderSalesUsers,
-        openSalesModal,
-        closeSalesModal,
-        clearSalesForm,
-        createSales,
-        toggleSalesStatus,
-        applyTopSalesFilter,
-        selectSalesFilter,
-        updateSalesDropdownButton,
-        setupSalesAssignmentAccess,
-        refreshSalesData
 
+        getActiveSales,
+
+        populateSalesDropdowns,
+
+        populateLeadSalesFilter,
+
+        populateTopSalesDropdown,
+
+        populateLeadAssignment,
+
+        getSalesName,
+
+        getSalesDisplayName,
+
+        loadSalesUsers,
+
+        renderSalesUsers,
+
+        openSalesModal,
+
+        closeSalesModal,
+
+        clearSalesForm,
+
+        createSales,
+
+        toggleSalesStatus,
+
+        applyTopSalesFilter,
+
+        selectSalesFilter,
+
+        updateSalesDropdownButton,
+
+        setupSalesAssignmentAccess,
+
+        refreshSalesData
     };
 
     // ========================================================
