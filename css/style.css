@@ -1,7 +1,7 @@
 /* =========================================================
    FSI CRM
    MAIN APPLICATION STYLES
-   Version: 2026.09
+   Version: 2026.09.1
 ========================================================= */
 
 
@@ -838,6 +838,15 @@ svg:last-child {
    PAGE VISIBILITY
 ========================================================= */
 
+/*
+   IMPORTANT:
+   .crm-page is the application page container.
+   We keep normal hidden behavior here.
+
+   Customer Profile gets its own stronger rules below
+   so it cannot accidentally inherit modal-like behavior.
+*/
+
 .crm-page {
     display: none;
     width: 100%;
@@ -848,7 +857,181 @@ svg:last-child {
 }
 
 .crm-page.hidden {
-    display: none;
+    display: none !important;
+}
+
+
+/*
+   Customer profile page:
+   never use fixed positioning,
+   never behave like a modal.
+*/
+
+#view-customer-profile {
+    position: relative;
+
+    width: 100%;
+    min-height: 1px;
+
+    overflow: visible;
+}
+
+#view-customer-profile.active {
+    display: block !important;
+}
+
+#view-customer-profile.hidden {
+    display: none !important;
+}
+
+#customer-profile-container {
+    position: relative;
+
+    width: 100%;
+    min-height: 1px;
+
+    display: block;
+}
+
+#customerProfilePage {
+    position: relative;
+
+    width: 100%;
+    min-height: 1px;
+
+    display: block;
+}
+
+
+/* =========================================================
+   CUSTOMER FULL EDIT PAGE
+========================================================= */
+
+/*
+   These rules are intentionally independent from modal CSS.
+   Add Customer and Edit Customer both use this layout.
+*/
+
+.crm-full-edit-page {
+    position: relative;
+
+    width: 100%;
+    max-width: none;
+
+    display: block;
+
+    margin: 0;
+    padding: 0;
+
+    overflow: visible;
+
+    opacity: 1;
+    visibility: visible;
+}
+
+.crm-full-edit-page *,
+.crm-full-edit-page *::before,
+.crm-full-edit-page *::after {
+    box-sizing: border-box;
+}
+
+.crm-full-edit-page .crm-edit-toolbar {
+    position: relative;
+
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    margin-bottom: 18px;
+
+    padding: 15px 17px;
+
+    background: rgba(255, 255, 255, 0.96);
+
+    border: 1px solid var(--border);
+
+    border-radius: var(--radius-lg);
+
+    box-shadow: var(--shadow-xs);
+}
+
+.crm-full-edit-page .crm-edit-content {
+    width: 100%;
+
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1.25fr)
+        minmax(320px, 0.75fr);
+
+    gap: 18px;
+
+    align-items: start;
+}
+
+.crm-full-edit-page .crm-edit-card {
+    width: 100%;
+
+    background: #ffffff;
+
+    border: 1px solid var(--border);
+
+    border-radius: var(--radius-lg);
+
+    box-shadow: var(--shadow-xs);
+
+    overflow: hidden;
+}
+
+.crm-full-edit-page .crm-edit-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 12px;
+
+    padding: 17px 19px;
+
+    border-bottom: 1px solid var(--slate-100);
+}
+
+.crm-full-edit-page .crm-edit-card-header h3 {
+    margin: 0;
+
+    color: var(--slate-900);
+
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.crm-full-edit-page .crm-edit-card-header p {
+    margin: 4px 0 0;
+
+    color: var(--slate-400);
+
+    font-size: 10px;
+}
+
+.crm-full-edit-page .crm-edit-card-body {
+    padding: 19px;
+}
+
+.crm-full-edit-page .crm-edit-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 8px;
+
+    margin-top: 18px;
+
+    padding-top: 16px;
+
+    border-top: 1px solid var(--slate-100);
 }
 
 
@@ -2032,7 +2215,7 @@ svg:last-child {
 }
 
 .modal-overlay.hidden {
-    display: none;
+    display: none !important;
 }
 
 .modal-card {
@@ -2353,6 +2536,31 @@ svg:last-child {
     .dashboard-grid {
         grid-template-columns: 1fr;
     }
+
+    /*
+       Customer profile remains a normal page even when
+       DevTools reduces the viewport width.
+    */
+
+    #view-customer-profile.active {
+        display: block !important;
+    }
+
+    #customer-profile-container,
+    #customerProfilePage,
+    .crm-full-edit-page {
+        width: 100%;
+        max-width: none;
+
+        display: block;
+
+        visibility: visible;
+        opacity: 1;
+    }
+
+    .crm-full-edit-page .crm-edit-content {
+        grid-template-columns: 1fr;
+    }
 }
 
 
@@ -2393,6 +2601,16 @@ svg:last-child {
 
     .profile-details {
         grid-template-columns: 1fr;
+    }
+
+    .crm-full-edit-page .crm-edit-content {
+        grid-template-columns: 1fr;
+    }
+
+    .crm-full-edit-page .crm-edit-toolbar {
+        align-items: flex-start;
+
+        flex-direction: column;
     }
 }
 
@@ -2535,6 +2753,36 @@ svg:last-child {
 
     .modal-footer button {
         width: 100%;
+    }
+
+    /*
+       Customer Profile / Add Customer
+       remains fully visible on mobile.
+    */
+
+    #view-customer-profile.active {
+        display: block !important;
+    }
+
+    #customer-profile-container,
+    #customerProfilePage,
+    .crm-full-edit-page {
+        width: 100%;
+
+        display: block;
+
+        visibility: visible;
+        opacity: 1;
+
+        overflow: visible;
+    }
+
+    .crm-full-edit-page .crm-edit-card-body {
+        padding: 15px;
+    }
+
+    .crm-full-edit-page .crm-edit-toolbar {
+        padding: 13px;
     }
 }
 
