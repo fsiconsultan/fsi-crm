@@ -2,6 +2,7 @@
 // FSI CRM - AUTHENTICATION & USER PROFILE
 // ============================================================
 // File : js/auth.js
+// Version : 2026.09
 //
 // Fungsi:
 // 1. Check Supabase session
@@ -10,13 +11,13 @@
 // 4. Load profile dari sales_users
 // 5. Role Admin / Sales
 // 6. Role-based access
-// 7. Load CRM data
-// 8. Logout
-// 9. Supabase auth listener
+// 7. Show / hide Login dan CRM App
+// 8. Load CRM data
+// 9. Logout
+// 10. Supabase auth listener
 // ============================================================
 
 "use strict";
-
 
 // ============================================================
 // DOM HELPERS
@@ -26,12 +27,12 @@ function authElement(id) {
     return document.getElementById(id);
 }
 
-
 function authFirstElement(ids = []) {
 
     for (const id of ids) {
 
-        const element = document.getElementById(id);
+        const element =
+            document.getElementById(id);
 
         if (element) {
             return element;
@@ -41,18 +42,21 @@ function authFirstElement(ids = []) {
     return null;
 }
 
-
 function authSetText(ids, value) {
 
-    const list = Array.isArray(ids) ? ids : [ids];
+    const list =
+        Array.isArray(ids)
+            ? ids
+            : [ids];
 
-    const element = authFirstElement(list);
+    const element =
+        authFirstElement(list);
 
     if (element) {
-        element.textContent = value ?? "";
+        element.textContent =
+            value ?? "";
     }
 }
-
 
 function authShowElement(element) {
 
@@ -61,9 +65,11 @@ function authShowElement(element) {
     }
 
     element.classList.remove("hidden");
+
+    element.removeAttribute("hidden");
+
     element.style.display = "";
 }
-
 
 function authHideElement(element) {
 
@@ -72,9 +78,9 @@ function authHideElement(element) {
     }
 
     element.classList.add("hidden");
+
     element.style.display = "none";
 }
-
 
 // ============================================================
 // AUTH STATE HELPERS
@@ -84,73 +90,75 @@ function authSetCurrentUser(user) {
 
     try {
 
-        if (typeof currentUser !== "undefined") {
+        if (
+            typeof currentUser !==
+            "undefined"
+        ) {
             currentUser = user;
         }
 
     } catch (error) {
-
-        console.warn(
-            "FSI CRM: currentUser state tidak dapat di-set:",
-            error
-        );
+        // Ignore lexical state errors.
     }
 
-    window.currentUser = user || null;
+    window.currentUser =
+        user || null;
 }
-
 
 function authSetCurrentProfile(profile) {
 
     try {
 
-        if (typeof currentProfile !== "undefined") {
+        if (
+            typeof currentProfile !==
+            "undefined"
+        ) {
             currentProfile = profile;
         }
 
     } catch (error) {
-
-        console.warn(
-            "FSI CRM: currentProfile state tidak dapat di-set:",
-            error
-        );
+        // Ignore lexical state errors.
     }
 
-    window.currentProfile = profile || null;
+    window.currentProfile =
+        profile || null;
 }
-
 
 function authGetCurrentUser() {
 
     try {
 
-        if (typeof currentUser !== "undefined") {
+        if (
+            typeof currentUser !==
+            "undefined"
+        ) {
             return currentUser;
         }
 
     } catch (error) {
-        // ignore
+        // Ignore.
     }
 
     return window.currentUser || null;
 }
 
-
 function authGetCurrentProfile() {
 
     try {
 
-        if (typeof currentProfile !== "undefined") {
+        if (
+            typeof currentProfile !==
+            "undefined"
+        ) {
             return currentProfile;
         }
 
     } catch (error) {
-        // ignore
+        // Ignore.
     }
 
     return window.currentProfile || null;
 }
-
 
 // ============================================================
 // SAFE HTML
@@ -173,26 +181,54 @@ function authEscapeHTML(value) {
         .replace(/'/g, "&#039;");
 }
 
-
-if (typeof window.escapeHTML !== "function") {
-    window.escapeHTML = authEscapeHTML;
+if (
+    typeof window.escapeHTML !==
+    "function"
+) {
+    window.escapeHTML =
+        authEscapeHTML;
 }
-
 
 // ============================================================
 // SUPABASE READY
 // ============================================================
 
-function authSupabaseReady() {
+function authGetSupabase() {
 
     if (
-        typeof supabaseClient === "undefined" ||
-        !supabaseClient ||
-        !supabaseClient.auth
+        window.supabaseClient &&
+        window.supabaseClient.auth
     ) {
+        return window.supabaseClient;
+    }
+
+    try {
+
+        if (
+            typeof supabaseClient !==
+            "undefined" &&
+            supabaseClient &&
+            supabaseClient.auth
+        ) {
+            return supabaseClient;
+        }
+
+    } catch (error) {
+        // Ignore.
+    }
+
+    return null;
+}
+
+function authSupabaseReady() {
+
+    const client =
+        authGetSupabase();
+
+    if (!client) {
 
         console.error(
-            "FSI CRM: supabaseClient belum tersedia."
+            "FSI CRM: Supabase client belum tersedia."
         );
 
         return false;
@@ -201,16 +237,16 @@ function authSupabaseReady() {
     return true;
 }
 
-
 // ============================================================
 // ROLE HELPERS
 // ============================================================
 
 function authNormalizeRole(role) {
 
-    const value = String(role || "")
-        .trim()
-        .toLowerCase();
+    const value =
+        String(role || "")
+            .trim()
+            .toLowerCase();
 
     if (
         value === "admin" ||
@@ -223,34 +259,37 @@ function authNormalizeRole(role) {
     return "sales";
 }
 
-
 function authIsAdmin() {
 
-    const profile = authGetCurrentProfile();
+    const profile =
+        authGetCurrentProfile();
 
     if (!profile) {
         return false;
     }
 
     return (
-        authNormalizeRole(profile.role) === "admin"
+        authNormalizeRole(
+            profile.role
+        ) === "admin"
     );
 }
-
 
 function authIsSales() {
 
-    const profile = authGetCurrentProfile();
+    const profile =
+        authGetCurrentProfile();
 
     if (!profile) {
         return false;
     }
 
     return (
-        authNormalizeRole(profile.role) === "sales"
+        authNormalizeRole(
+            profile.role
+        ) === "sales"
     );
 }
-
 
 // ============================================================
 // CHECK SESSION
@@ -258,7 +297,10 @@ function authIsSales() {
 
 async function checkSession() {
 
-    if (!authSupabaseReady()) {
+    const supabase =
+        authGetSupabase();
+
+    if (!supabase) {
 
         showLogin();
 
@@ -267,11 +309,14 @@ async function checkSession() {
 
     try {
 
-        const {
-            data,
-            error
-        } = await supabaseClient.auth.getSession();
+        const response =
+            await supabase.auth.getSession();
 
+        const data =
+            response.data;
+
+        const error =
+            response.error;
 
         if (error) {
 
@@ -288,9 +333,8 @@ async function checkSession() {
             return false;
         }
 
-
-        const session = data?.session;
-
+        const session =
+            data?.session;
 
         // ----------------------------------------------------
         // NO SESSION
@@ -306,12 +350,13 @@ async function checkSession() {
             return false;
         }
 
-
         // ----------------------------------------------------
         // SESSION EXISTS
         // ----------------------------------------------------
 
-        authSetCurrentUser(session.user);
+        authSetCurrentUser(
+            session.user
+        );
 
         return await loadProfile();
 
@@ -331,7 +376,6 @@ async function checkSession() {
     }
 }
 
-
 // ============================================================
 // LOGIN
 // ============================================================
@@ -342,8 +386,10 @@ async function login(event) {
         event.preventDefault();
     }
 
+    const supabase =
+        authGetSupabase();
 
-    if (!authSupabaseReady()) {
+    if (!supabase) {
 
         setLoginMessage(
             "Supabase belum terhubung.",
@@ -353,42 +399,44 @@ async function login(event) {
         return false;
     }
 
-
     // --------------------------------------------------------
-    // INPUT USERNAME
-    // --------------------------------------------------------
-
-    const usernameInput = authFirstElement([
-        "loginUsername",
-        "login-username",
-        "username",
-        "login-username-input"
-    ]);
-
-
-    // --------------------------------------------------------
-    // INPUT PASSWORD
+    // USERNAME
     // --------------------------------------------------------
 
-    const passwordInput = authFirstElement([
-        "loginPassword",
-        "login-password",
-        "password",
-        "login-password-input"
-    ]);
+    const usernameInput =
+        authFirstElement([
+            "loginUsername",
+            "login-username",
+            "username",
+            "login-username-input"
+        ]);
 
+    // --------------------------------------------------------
+    // PASSWORD
+    // --------------------------------------------------------
 
-    const username = usernameInput
-        ? usernameInput.value.trim()
-        : "";
+    const passwordInput =
+        authFirstElement([
+            "loginPassword",
+            "login-password",
+            "password",
+            "login-password-input"
+        ]);
 
+    const username =
+        usernameInput
+            ? usernameInput.value.trim()
+            : "";
 
-    const password = passwordInput
-        ? passwordInput.value
-        : "";
+    const password =
+        passwordInput
+            ? passwordInput.value
+            : "";
 
-
-    if (!username || !password) {
+    if (
+        !username ||
+        !password
+    ) {
 
         setLoginMessage(
             "Username dan password wajib diisi.",
@@ -398,41 +446,37 @@ async function login(event) {
         return false;
     }
 
-
     // --------------------------------------------------------
     // LOGIN BUTTON
     // --------------------------------------------------------
 
-    const loginButton = authFirstElement([
-        "login-btn",
-        "loginBtn",
-        "login-button",
-        "login-submit",
-        "btn-login"
-    ]);
-
+    const loginButton =
+        authFirstElement([
+            "login-btn",
+            "loginBtn",
+            "login-button",
+            "login-submit",
+            "btn-login"
+        ]);
 
     const originalButtonHTML =
         loginButton
             ? loginButton.innerHTML
             : "";
 
-
     if (loginButton) {
 
-        loginButton.disabled = true;
+        loginButton.disabled =
+            true;
 
-        loginButton.innerHTML = `
-            <span>Memproses...</span>
-        `;
+        loginButton.innerHTML =
+            "<span>Memproses...</span>";
     }
-
 
     setLoginMessage(
         "Memeriksa akun...",
         false
     );
-
 
     try {
 
@@ -441,16 +485,20 @@ async function login(event) {
         // USERNAME -> EMAIL
         // ====================================================
 
-        const {
-            data: email,
-            error: emailError
-        } = await supabaseClient.rpc(
-            "get_login_email",
-            {
-                p_username: username
-            }
-        );
+        const rpcResponse =
+            await supabase.rpc(
+                "get_login_email",
+                {
+                    p_username:
+                        username
+                }
+            );
 
+        const email =
+            rpcResponse.data;
+
+        const emailError =
+            rpcResponse.error;
 
         if (emailError) {
 
@@ -468,7 +516,6 @@ async function login(event) {
             return false;
         }
 
-
         if (!email) {
 
             setLoginMessage(
@@ -479,10 +526,9 @@ async function login(event) {
             return false;
         }
 
-
         // ====================================================
         // STEP 2
-        // SUPABASE AUTH LOGIN
+        // SUPABASE AUTH
         // ====================================================
 
         setLoginMessage(
@@ -490,33 +536,36 @@ async function login(event) {
             false
         );
 
+        const loginResponse =
+            await supabase.auth.signInWithPassword({
+                email: email,
+                password: password
+            });
 
-        const {
-            data,
-            error
-        } = await supabaseClient.auth.signInWithPassword({
-            email: email,
-            password: password
-        });
+        const authData =
+            loginResponse.data;
 
+        const authError =
+            loginResponse.error;
 
-        if (error) {
+        if (authError) {
 
             console.error(
                 "FSI CRM - signInWithPassword error:",
-                error
+                authError
             );
 
             setLoginMessage(
-                translateAuthError(error),
+                translateAuthError(
+                    authError
+                ),
                 true
             );
 
             return false;
         }
 
-
-        if (!data?.user) {
+        if (!authData?.user) {
 
             setLoginMessage(
                 "Login gagal. User tidak ditemukan.",
@@ -526,33 +575,31 @@ async function login(event) {
             return false;
         }
 
-
         // ====================================================
         // STEP 3
         // SAVE AUTH USER
         // ====================================================
 
-        authSetCurrentUser(data.user);
-
+        authSetCurrentUser(
+            authData.user
+        );
 
         setLoginMessage(
             "Login berhasil. Memuat CRM...",
             false
         );
 
-
         // ====================================================
         // STEP 4
         // LOAD PROFILE
         // ====================================================
 
-        const profileLoaded = await loadProfile();
-
+        const profileLoaded =
+            await loadProfile();
 
         if (!profileLoaded) {
             return false;
         }
-
 
         return true;
 
@@ -575,15 +622,15 @@ async function login(event) {
 
         if (loginButton) {
 
-            loginButton.disabled = false;
+            loginButton.disabled =
+                false;
 
             loginButton.innerHTML =
                 originalButtonHTML ||
-                `<span>Login</span>`;
+                "<span>Login</span>";
         }
     }
 }
-
 
 // ============================================================
 // LOGIN MESSAGE
@@ -594,13 +641,13 @@ function setLoginMessage(
     isError = false
 ) {
 
-    const element = authFirstElement([
-        "login-message",
-        "loginMessage",
-        "loginError",
-        "login-error"
-    ]);
-
+    const element =
+        authFirstElement([
+            "login-message",
+            "loginMessage",
+            "loginError",
+            "login-error"
+        ]);
 
     if (!element) {
 
@@ -615,9 +662,8 @@ function setLoginMessage(
         return;
     }
 
-
-    element.textContent = message || "";
-
+    element.textContent =
+        message || "";
 
     element.classList.remove(
         "error",
@@ -625,22 +671,23 @@ function setLoginMessage(
         "warning"
     );
 
-
     if (!message) {
         return;
     }
 
-
     if (isError) {
 
-        element.classList.add("error");
+        element.classList.add(
+            "error"
+        );
 
     } else {
 
-        element.classList.add("success");
+        element.classList.add(
+            "success"
+        );
     }
 }
-
 
 // ============================================================
 // AUTH ERROR TRANSLATION
@@ -652,31 +699,36 @@ function translateAuthError(error) {
         return "Login gagal.";
     }
 
-
-    const message = String(
-        error.message || ""
-    ).toLowerCase();
-
+    const message =
+        String(
+            error.message || ""
+        ).toLowerCase();
 
     if (
-        message.includes("invalid login credentials") ||
-        message.includes("invalid credentials")
+        message.includes(
+            "invalid login credentials"
+        ) ||
+        message.includes(
+            "invalid credentials"
+        )
     ) {
 
         return "Username atau password salah.";
     }
 
-
     if (
-        message.includes("email not confirmed")
+        message.includes(
+            "email not confirmed"
+        )
     ) {
 
         return "Akun belum dikonfirmasi.";
     }
 
-
     if (
-        message.includes("too many requests")
+        message.includes(
+            "too many requests"
+        )
     ) {
 
         return (
@@ -685,13 +737,11 @@ function translateAuthError(error) {
         );
     }
 
-
     return (
         error.message ||
         "Login gagal. Silakan coba lagi."
     );
 }
-
 
 // ============================================================
 // LOAD USER PROFILE
@@ -699,16 +749,18 @@ function translateAuthError(error) {
 
 async function loadProfile() {
 
-    if (!authSupabaseReady()) {
+    const supabase =
+        authGetSupabase();
+
+    if (!supabase) {
 
         showLogin();
 
         return false;
     }
 
-
-    const user = authGetCurrentUser();
-
+    const user =
+        authGetCurrentUser();
 
     if (!user) {
 
@@ -717,7 +769,6 @@ async function loadProfile() {
         return false;
     }
 
-
     try {
 
         console.log(
@@ -725,32 +776,31 @@ async function loadProfile() {
             user.id
         );
 
-
         // ====================================================
         // IMPORTANT
-        // Nama kolom Supabase:
+        //
+        // DATABASE COLUMN:
         //
         // auth_user-id
         //
-        // BUKAN:
-        // auth_user_id
-        //
-        // BUKAN:
-        // auth-user-id
+        // TETAP PERSIS SEPERTI INI.
         // ====================================================
 
-        const {
-            data,
-            error
-        } = await supabaseClient
-            .from("sales_users")
-            .select("*")
-            .eq(
-                "auth_user-id",
-                user.id
-            )
-            .maybeSingle();
+        const profileResponse =
+            await supabase
+                .from("sales_users")
+                .select("*")
+                .eq(
+                    "auth_user-id",
+                    user.id
+                )
+                .maybeSingle();
 
+        const data =
+            profileResponse.data;
+
+        const error =
+            profileResponse.error;
 
         if (error) {
 
@@ -768,14 +818,12 @@ async function loadProfile() {
                 true
             );
 
-
             authSetCurrentProfile(null);
 
             showLogin();
 
             return false;
         }
-
 
         if (!data) {
 
@@ -793,20 +841,21 @@ async function loadProfile() {
 
             await safeSignOut();
 
+            showLogin();
+
             return false;
         }
 
-
         // ====================================================
-        // CHECK STATUS
+        // STATUS
         // ====================================================
 
-        const status = String(
-            data.status || "Active"
-        )
-            .trim()
-            .toLowerCase();
-
+        const status =
+            String(
+                data.status || "Active"
+            )
+                .trim()
+                .toLowerCase();
 
         if (
             status === "inactive" ||
@@ -819,33 +868,32 @@ async function loadProfile() {
                 data
             );
 
-
             setLoginMessage(
                 "Akun Anda tidak aktif. Hubungi Admin.",
                 true
             );
 
-
             authSetCurrentProfile(null);
 
             await safeSignOut();
 
+            showLogin();
+
             return false;
         }
-
 
         // ====================================================
         // SAVE PROFILE
         // ====================================================
 
-        authSetCurrentProfile(data);
-
+        authSetCurrentProfile(
+            data
+        );
 
         console.log(
             "FSI CRM - Profile loaded:",
             data
         );
-
 
         // ====================================================
         // UPDATE UI
@@ -855,8 +903,11 @@ async function loadProfile() {
 
         setupRoleAccess();
 
-        showApp();
+        // ====================================================
+        // SHOW APP
+        // ====================================================
 
+        showApp();
 
         // ====================================================
         // EVENTS
@@ -867,33 +918,34 @@ async function loadProfile() {
                 "fsi:profile-ready",
                 {
                     detail: {
-                        user: user,
-                        profile: data
+                        user:
+                            user,
+                        profile:
+                            data
                     }
                 }
             )
         );
-
 
         window.dispatchEvent(
             new CustomEvent(
                 "fsi:app-ready",
                 {
                     detail: {
-                        user: user,
-                        profile: data
+                        user:
+                            user,
+                        profile:
+                            data
                     }
                 }
             )
         );
-
 
         // ====================================================
         // LOAD CRM DATA
         // ====================================================
 
         await loadCRMDataAfterLogin();
-
 
         return true;
 
@@ -904,9 +956,9 @@ async function loadProfile() {
             error
         );
 
-
-        authSetCurrentProfile(null);
-
+        authSetCurrentProfile(
+            null
+        );
 
         setLoginMessage(
             error?.message ||
@@ -914,13 +966,11 @@ async function loadProfile() {
             true
         );
 
-
         showLogin();
 
         return false;
     }
 }
-
 
 // ============================================================
 // SAFE SIGN OUT
@@ -930,9 +980,11 @@ async function safeSignOut() {
 
     try {
 
-        if (authSupabaseReady()) {
+        const supabase =
+            authGetSupabase();
 
-            await supabaseClient.auth.signOut();
+        if (supabase) {
+            await supabase.auth.signOut();
         }
 
     } catch (error) {
@@ -944,7 +996,6 @@ async function safeSignOut() {
     }
 }
 
-
 // ============================================================
 // LOAD CRM DATA AFTER LOGIN
 // ============================================================
@@ -954,7 +1005,6 @@ async function loadCRMDataAfterLogin() {
     console.log(
         "FSI CRM - Loading CRM data..."
     );
-
 
     // --------------------------------------------------------
     // SALES LOOKUP
@@ -978,7 +1028,6 @@ async function loadCRMDataAfterLogin() {
         }
     }
 
-
     // --------------------------------------------------------
     // FILTER OPTIONS
     // --------------------------------------------------------
@@ -1000,7 +1049,6 @@ async function loadCRMDataAfterLogin() {
             );
         }
     }
-
 
     // --------------------------------------------------------
     // LEADS
@@ -1024,7 +1072,6 @@ async function loadCRMDataAfterLogin() {
         }
     }
 
-
     // --------------------------------------------------------
     // DASHBOARD
     // --------------------------------------------------------
@@ -1046,7 +1093,6 @@ async function loadCRMDataAfterLogin() {
             );
         }
     }
-
 
     // --------------------------------------------------------
     // SALES MANAGEMENT
@@ -1071,7 +1117,6 @@ async function loadCRMDataAfterLogin() {
         }
     }
 
-
     // --------------------------------------------------------
     // NAVIGATION
     // --------------------------------------------------------
@@ -1094,15 +1139,12 @@ async function loadCRMDataAfterLogin() {
         }
     }
 
-
     refreshLucideIcons();
-
 
     console.log(
         "FSI CRM - CRM data loading completed."
     );
 }
-
 
 // ============================================================
 // SHOW LOGIN
@@ -1110,35 +1152,51 @@ async function loadCRMDataAfterLogin() {
 
 function showLogin() {
 
-    const loginPage = authFirstElement([
-        "login-page",
-        "loginPage",
-        "login-screen"
-    ]);
+    const loginPage =
+        authFirstElement([
+            "login-page",
+            "loginPage",
+            "login-screen"
+        ]);
 
+    const app =
+        authFirstElement([
+            "app-shell",
+            "app",
+            "crm-app"
+        ]);
 
-    const app = authFirstElement([
-        "app-shell",
-        "app",
-        "crm-app"
-    ]);
-
+    // --------------------------------------------------------
+    // SHOW LOGIN
+    // --------------------------------------------------------
 
     if (loginPage) {
 
-        loginPage.classList.remove("hidden");
+        loginPage.classList.remove(
+            "hidden"
+        );
 
-        loginPage.style.display = "flex";
+        loginPage.removeAttribute(
+            "hidden"
+        );
+
+        loginPage.style.display =
+            "flex";
     }
 
+    // --------------------------------------------------------
+    // HIDE APP
+    // --------------------------------------------------------
 
     if (app) {
 
-        app.classList.add("hidden");
+        app.classList.add(
+            "hidden"
+        );
 
-        app.style.display = "none";
+        app.style.display =
+            "none";
     }
-
 
     if (
         typeof window.closeMobileNav ===
@@ -1148,10 +1206,9 @@ function showLogin() {
         try {
             window.closeMobileNav();
         } catch (error) {
-            // ignore
+            // Ignore.
         }
     }
-
 
     setTimeout(
         function () {
@@ -1163,16 +1220,16 @@ function showLogin() {
                     "username"
                 ]);
 
-
             if (
                 usernameInput &&
-                document.visibilityState !== "hidden"
+                document.visibilityState !==
+                "hidden"
             ) {
 
                 try {
                     usernameInput.focus();
                 } catch (error) {
-                    // ignore
+                    // Ignore.
                 }
             }
 
@@ -1181,82 +1238,154 @@ function showLogin() {
     );
 }
 
-
 // ============================================================
 // SHOW APP
 // ============================================================
 
 function showApp() {
 
-    const loginPage = authFirstElement([
-        "login-page",
-        "loginPage",
-        "login-screen"
-    ]);
+    const loginPage =
+        authFirstElement([
+            "login-page",
+            "loginPage",
+            "login-screen"
+        ]);
 
+    const app =
+        authFirstElement([
+            "app-shell",
+            "app",
+            "crm-app"
+        ]);
 
-    const app = authFirstElement([
-        "app-shell",
-        "app",
-        "crm-app"
-    ]);
+    console.log(
+        "FSI CRM - showApp()",
+        {
+            loginFound:
+                !!loginPage,
+            appFound:
+                !!app
+        }
+    );
 
+    // --------------------------------------------------------
+    // HIDE LOGIN
+    // --------------------------------------------------------
 
     if (loginPage) {
 
-        loginPage.classList.add("hidden");
+        loginPage.classList.add(
+            "hidden"
+        );
 
-        loginPage.style.display = "none";
+        loginPage.style.display =
+            "none";
     }
 
+    // --------------------------------------------------------
+    // SHOW CRM APP
+    // --------------------------------------------------------
 
     if (app) {
 
-        app.classList.remove("hidden");
+        /*
+         * IMPORTANT:
+         *
+         * Jangan menggunakan:
+         *
+         * app.style.display = "";
+         *
+         * karena CSS bisa kembali memberikan
+         * display:none.
+         *
+         * Kita paksa app-shell menjadi visible.
+         */
 
-        app.style.display = "";
-    }
-
-
-    // ========================================================
-    // OPEN DASHBOARD
-    // ========================================================
-
-    try {
-
-        if (
-            typeof window.crmNavigate ===
-            "function"
-        ) {
-
-            window.crmNavigate("dashboard");
-
-        } else if (
-            typeof window.showDashboard ===
-            "function"
-        ) {
-
-            window.showDashboard();
-
-        } else {
-
-            showDashboardFallback();
-        }
-
-    } catch (error) {
-
-        console.error(
-            "FSI CRM - Dashboard navigation error:",
-            error
+        app.classList.remove(
+            "hidden"
         );
 
-        showDashboardFallback();
+        app.removeAttribute(
+            "hidden"
+        );
+
+        app.style.display =
+            "block";
+
+        app.style.visibility =
+            "visible";
+
+        app.style.opacity =
+            "1";
+    } else {
+
+        console.error(
+            "FSI CRM: #app-shell tidak ditemukan."
+        );
     }
 
+    // ========================================================
+    // SHOW DASHBOARD
+    // ========================================================
+
+    setTimeout(
+        function () {
+
+            try {
+
+                if (
+                    typeof window.crmNavigate ===
+                    "function"
+                ) {
+
+                    window.crmNavigate(
+                        "dashboard"
+                    );
+
+                    return;
+                }
+
+                if (
+                    window.FSINavigation &&
+                    typeof window.FSINavigation.showPage ===
+                    "function"
+                ) {
+
+                    window.FSINavigation.showPage(
+                        "dashboard"
+                    );
+
+                    return;
+                }
+
+                if (
+                    typeof window.showDashboard ===
+                    "function"
+                ) {
+
+                    window.showDashboard();
+
+                    return;
+                }
+
+                showDashboardFallback();
+
+            } catch (error) {
+
+                console.error(
+                    "FSI CRM - Dashboard navigation error:",
+                    error
+                );
+
+                showDashboardFallback();
+            }
+
+        },
+        50
+    );
 
     refreshLucideIcons();
 }
-
 
 // ============================================================
 // DASHBOARD FALLBACK
@@ -1264,38 +1393,55 @@ function showApp() {
 
 function showDashboardFallback() {
 
-    const pages = document.querySelectorAll(
-        ".crm-page, " +
-        ".crm-section, " +
-        ".view-section"
-    );
-
+    const pages =
+        document.querySelectorAll(
+            ".crm-page, " +
+            ".crm-section, " +
+            ".view-section"
+        );
 
     pages.forEach(
-        page => {
+        function (page) {
 
-            page.style.display = "none";
+            page.classList.remove(
+                "active"
+            );
 
-            page.classList.add("hidden");
+            page.classList.add(
+                "hidden"
+            );
+
+            page.style.display =
+                "none";
         }
     );
 
-
-    const dashboard = authFirstElement([
-        "view-dashboard",
-        "dashboardView",
-        "dashboard-section"
-    ]);
-
+    const dashboard =
+        authFirstElement([
+            "view-dashboard",
+            "dashboardView",
+            "dashboard-section"
+        ]);
 
     if (dashboard) {
 
-        dashboard.classList.remove("hidden");
+        dashboard.classList.remove(
+            "hidden"
+        );
 
-        dashboard.style.display = "";
+        dashboard.classList.add(
+            "active"
+        );
+
+        dashboard.style.display =
+            "block";
+
+        dashboard.setAttribute(
+            "aria-hidden",
+            "false"
+        );
     }
 }
-
 
 // ============================================================
 // UPDATE USER INFO
@@ -1306,15 +1452,12 @@ function updateUserInfo() {
     const profile =
         authGetCurrentProfile();
 
-
     const user =
         authGetCurrentUser();
-
 
     if (!profile) {
         return;
     }
-
 
     const name =
         profile.name ||
@@ -1323,21 +1466,18 @@ function updateUserInfo() {
         user?.email ||
         "User";
 
-
     const role =
         profile.role ||
         "Sales";
-
 
     const avatarUrl =
         profile.avatar_url ||
         profile.avatar ||
         "";
 
-
-    // ========================================================
+    // --------------------------------------------------------
     // HEADER
-    // ========================================================
+    // --------------------------------------------------------
 
     authSetText(
         [
@@ -1349,7 +1489,6 @@ function updateUserInfo() {
         name
     );
 
-
     authSetText(
         [
             "user-display-role",
@@ -1360,10 +1499,9 @@ function updateUserInfo() {
         role
     );
 
-
-    // ========================================================
+    // --------------------------------------------------------
     // DROPDOWN
-    // ========================================================
+    // --------------------------------------------------------
 
     authSetText(
         [
@@ -1372,7 +1510,6 @@ function updateUserInfo() {
         name
     );
 
-
     authSetText(
         [
             "dropdown-user-role"
@@ -1380,36 +1517,36 @@ function updateUserInfo() {
         role
     );
 
-
-    // ========================================================
+    // --------------------------------------------------------
     // LEGACY
-    // ========================================================
+    // --------------------------------------------------------
 
     authSetText(
         "currentUser",
-        `${name} (${role})`
+        name +
+        " (" +
+        role +
+        ")"
     );
 
-
-    // ========================================================
+    // --------------------------------------------------------
     // AVATAR
-    // ========================================================
+    // --------------------------------------------------------
 
     const initials =
         getInitials(name);
-
 
     const avatarElements =
         document.querySelectorAll(
             ".user-avatar, .avatar"
         );
 
-
     avatarElements.forEach(
-        element => {
+        function (element) {
 
             if (
-                element.tagName === "IMG"
+                element.tagName ===
+                "IMG"
             ) {
 
                 if (avatarUrl) {
@@ -1424,64 +1561,82 @@ function updateUserInfo() {
                 return;
             }
 
-
             element.textContent =
                 initials;
         }
     );
 
-
-    // ========================================================
+    // --------------------------------------------------------
     // LEGACY USER INFO
-    // ========================================================
+    // --------------------------------------------------------
 
     const userInfo =
-        authElement("userInfo");
+        authElement(
+            "userInfo"
+        );
 
+    if (!userInfo) {
+        return;
+    }
 
-    if (userInfo) {
+    if (avatarUrl) {
 
-        if (avatarUrl) {
+        userInfo.innerHTML =
+            '<img ' +
+                'src="' +
+                authEscapeHTML(
+                    avatarUrl
+                ) +
+                '" ' +
+                'alt="' +
+                authEscapeHTML(
+                    name
+                ) +
+                '" ' +
+                'class="user-avatar">' +
 
-            userInfo.innerHTML = `
-                <img
-                    src="${authEscapeHTML(avatarUrl)}"
-                    alt="${authEscapeHTML(name)}"
-                    class="user-avatar"
-                >
+            '<div class="user-info-text">' +
 
-                <div class="user-info-text">
-                    <strong>
-                        ${authEscapeHTML(name)}
-                    </strong>
+                '<strong>' +
+                    authEscapeHTML(
+                        name
+                    ) +
+                '</strong>' +
 
-                    <small>
-                        ${authEscapeHTML(role)}
-                    </small>
-                </div>
-            `;
+                '<small>' +
+                    authEscapeHTML(
+                        role
+                    ) +
+                '</small>' +
 
-        } else {
+            '</div>';
 
-            userInfo.innerHTML = `
-                <div class="user-avatar avatar">
-                    ${authEscapeHTML(initials)}
-                </div>
+    } else {
 
-                <div class="user-info-text">
-                    <strong>
-                        ${authEscapeHTML(name)}
-                    </strong>
+        userInfo.innerHTML =
+            '<div class="user-avatar avatar">' +
+                authEscapeHTML(
+                    initials
+                ) +
+            '</div>' +
 
-                    <small>
-                        ${authEscapeHTML(role)}
-                    </small>
-                </div>
-            `;
-        }
+            '<div class="user-info-text">' +
+
+                '<strong>' +
+                    authEscapeHTML(
+                        name
+                    ) +
+                '</strong>' +
+
+                '<small>' +
+                    authEscapeHTML(
+                        role
+                    ) +
+                '</small>' +
+
+            '</div>';
     }
 }
-
 
 // ============================================================
 // INITIALS
@@ -1493,18 +1648,15 @@ function getInitials(name) {
         return "U";
     }
 
-
     const parts =
         String(name)
             .trim()
             .split(/\s+/)
             .filter(Boolean);
 
-
     if (!parts.length) {
         return "U";
     }
-
 
     if (parts.length === 1) {
 
@@ -1513,13 +1665,11 @@ function getInitials(name) {
             .toUpperCase();
     }
 
-
     return (
         parts[0][0] +
         parts[parts.length - 1][0]
     ).toUpperCase();
 }
-
 
 // ============================================================
 // ROLE ACCESS
@@ -1530,25 +1680,22 @@ function setupRoleAccess() {
     const profile =
         authGetCurrentProfile();
 
-
     if (!profile) {
         return;
     }
-
 
     const normalizedRole =
         authNormalizeRole(
             profile.role
         );
 
-
     const isAdmin =
-        normalizedRole === "admin";
-
+        normalizedRole ===
+        "admin";
 
     const isSales =
-        normalizedRole === "sales";
-
+        normalizedRole ===
+        "sales";
 
     console.log(
         "FSI CRM Role:",
@@ -1557,19 +1704,17 @@ function setupRoleAccess() {
         normalizedRole
     );
 
-
-    // ========================================================
+    // --------------------------------------------------------
     // ADMIN ONLY
-    // ========================================================
+    // --------------------------------------------------------
 
     const adminElements =
         document.querySelectorAll(
             "[data-admin-only]"
         );
 
-
     adminElements.forEach(
-        element => {
+        function (element) {
 
             if (isAdmin) {
 
@@ -1577,7 +1722,8 @@ function setupRoleAccess() {
                     "hidden"
                 );
 
-                element.style.display = "";
+                element.style.display =
+                    "";
 
             } else {
 
@@ -1591,10 +1737,9 @@ function setupRoleAccess() {
         }
     );
 
-
-    // ========================================================
+    // --------------------------------------------------------
     // SALES FILTER
-    // ========================================================
+    // --------------------------------------------------------
 
     const salesFilter =
         authFirstElement([
@@ -1602,17 +1747,17 @@ function setupRoleAccess() {
             "sales-filter"
         ]);
 
-
     if (salesFilter) {
 
         salesFilter.style.display =
-            isAdmin ? "" : "none";
+            isAdmin
+                ? ""
+                : "none";
     }
 
-
-    // ========================================================
+    // --------------------------------------------------------
     // SALES DROPDOWN
-    // ========================================================
+    // --------------------------------------------------------
 
     const salesDropdown =
         authFirstElement([
@@ -1621,36 +1766,36 @@ function setupRoleAccess() {
             "sales-dropdown-container"
         ]);
 
-
     if (salesDropdown) {
 
         salesDropdown.style.display =
-            isAdmin ? "" : "none";
+            isAdmin
+                ? ""
+                : "none";
     }
 
-
-    // ========================================================
+    // --------------------------------------------------------
     // SALES ASSIGNMENT
-    // ========================================================
+    // --------------------------------------------------------
 
     setupSalesAssignmentAccess();
 
+    // --------------------------------------------------------
+    // GLOBAL FLAGS
+    // --------------------------------------------------------
 
-    // ========================================================
-    // GLOBAL ROLE FLAGS
-    // ========================================================
+    window.isAdmin =
+        isAdmin;
 
-    window.isAdmin = isAdmin;
-
-    window.isSales = isSales;
+    window.isSales =
+        isSales;
 
     window.crmUserRole =
         normalizedRole;
 
-
-    // ========================================================
+    // --------------------------------------------------------
     // NAVIGATION
-    // ========================================================
+    // --------------------------------------------------------
 
     if (
         typeof window.updateAdminNavigation ===
@@ -1671,7 +1816,6 @@ function setupRoleAccess() {
     }
 }
 
-
 // ============================================================
 // SALES ASSIGNMENT ACCESS
 // ============================================================
@@ -1686,10 +1830,8 @@ function setupSalesAssignmentAccess() {
             "sales_id"
         ]);
 
-
     const profile =
         authGetCurrentProfile();
-
 
     if (
         !field ||
@@ -1698,10 +1840,8 @@ function setupSalesAssignmentAccess() {
         return;
     }
 
-
     const isAdmin =
         authIsAdmin();
-
 
     // --------------------------------------------------------
     // ADMIN
@@ -1709,25 +1849,37 @@ function setupSalesAssignmentAccess() {
 
     if (isAdmin) {
 
-        field.disabled = false;
+        field.disabled =
+            false;
 
-        field.style.display = "";
+        field.style.display =
+            "";
+
+        field.removeAttribute(
+            "aria-disabled"
+        );
 
         return;
     }
-
 
     // --------------------------------------------------------
     // SALES
     // --------------------------------------------------------
 
-    field.disabled = true;
+    field.disabled =
+        true;
 
-    field.style.display = "";
+    field.style.display =
+        "";
 
+    field.setAttribute(
+        "aria-disabled",
+        "true"
+    );
 
     if (
-        field.tagName === "SELECT" &&
+        field.tagName ===
+        "SELECT" &&
         profile.id
     ) {
 
@@ -1735,7 +1887,6 @@ function setupSalesAssignmentAccess() {
             profile.id;
     }
 }
-
 
 // ============================================================
 // LOGOUT
@@ -1747,24 +1898,21 @@ async function logout() {
         "FSI CRM - Logging out..."
     );
 
-
     try {
 
-        if (authSupabaseReady()) {
+        const supabase =
+            authGetSupabase();
 
-            const {
-                error
-            } =
-                await supabaseClient
-                    .auth
-                    .signOut();
+        if (supabase) {
 
+            const response =
+                await supabase.auth.signOut();
 
-            if (error) {
+            if (response.error) {
 
                 console.error(
                     "Supabase logout error:",
-                    error
+                    response.error
                 );
             }
         }
@@ -1778,25 +1926,18 @@ async function logout() {
 
     } finally {
 
-        // ====================================================
-        // CLEAR AUTH STATE
-        // ====================================================
-
         authSetCurrentUser(null);
 
         authSetCurrentProfile(null);
 
+        window.isAdmin =
+            false;
 
-        window.isAdmin = false;
+        window.isSales =
+            false;
 
-        window.isSales = false;
-
-        window.crmUserRole = null;
-
-
-        // ====================================================
-        // CLEAR CRM STATE
-        // ====================================================
+        window.crmUserRole =
+            null;
 
         try {
 
@@ -1809,36 +1950,38 @@ async function logout() {
 
             } else {
 
-                if (
-                    typeof leadsData !==
-                    "undefined"
-                ) {
-                    leadsData = [];
-                }
+                try {
 
+                    if (
+                        typeof leadsData !==
+                        "undefined"
+                    ) {
+                        leadsData = [];
+                    }
 
-                if (
-                    typeof salesUsersData !==
-                    "undefined"
-                ) {
-                    salesUsersData = [];
-                }
+                } catch (error) {}
 
+                try {
 
-                if (
-                    typeof currentPage !==
-                    "undefined"
-                ) {
-                    currentPage = 1;
-                }
+                    if (
+                        typeof salesUsersData !==
+                        "undefined"
+                    ) {
+                        salesUsersData = [];
+                    }
 
+                } catch (error) {}
 
-                if (
-                    typeof totalLeadsCount !==
-                    "undefined"
-                ) {
-                    totalLeadsCount = 0;
-                }
+                try {
+
+                    if (
+                        typeof currentPage !==
+                        "undefined"
+                    ) {
+                        currentPage = 1;
+                    }
+
+                } catch (error) {}
             }
 
         } catch (error) {
@@ -1849,36 +1992,26 @@ async function logout() {
             );
         }
 
-
         window.crmCurrentCustomerId =
             null;
 
         window.crmCurrentCustomer =
             null;
 
-
-        // ====================================================
-        // SHOW LOGIN
-        // ====================================================
-
         showLogin();
-
 
         setLoginMessage(
             "",
             false
         );
 
-
         refreshLucideIcons();
-
 
         console.log(
             "FSI CRM - Logout selesai."
         );
     }
 }
-
 
 // ============================================================
 // LOGOUT BUTTON EVENTS
@@ -1894,9 +2027,8 @@ function setupLogoutButtons() {
             "[data-action='logout']"
         );
 
-
     logoutButtons.forEach(
-        button => {
+        function (button) {
 
             if (
                 button.dataset.authLogoutBound ===
@@ -1905,14 +2037,12 @@ function setupLogoutButtons() {
                 return;
             }
 
-
             button.dataset.authLogoutBound =
                 "true";
 
-
             button.addEventListener(
                 "click",
-                async event => {
+                async function (event) {
 
                     event.preventDefault();
 
@@ -1922,7 +2052,6 @@ function setupLogoutButtons() {
         }
     );
 }
-
 
 // ============================================================
 // LOGIN FORM EVENTS
@@ -1936,7 +2065,6 @@ function setupLoginForm() {
             "loginForm"
         ]);
 
-
     if (!loginForm) {
 
         console.warn(
@@ -1946,7 +2074,6 @@ function setupLoginForm() {
         return;
     }
 
-
     if (
         loginForm.dataset.authBound ===
         "true"
@@ -1954,10 +2081,8 @@ function setupLoginForm() {
         return;
     }
 
-
     loginForm.dataset.authBound =
         "true";
-
 
     loginForm.addEventListener(
         "submit",
@@ -1965,34 +2090,35 @@ function setupLoginForm() {
     );
 }
 
-
 // ============================================================
 // SUPABASE AUTH LISTENER
 // ============================================================
 
 function setupAuthListener() {
 
-    if (!authSupabaseReady()) {
+    const supabase =
+        authGetSupabase();
+
+    if (!supabase) {
         return;
     }
 
-
-    if (window.fsiAuthListenerReady) {
+    if (
+        window.fsiAuthListenerReady
+    ) {
         return;
     }
 
+    window.fsiAuthListenerReady =
+        true;
 
-    window.fsiAuthListenerReady = true;
-
-
-    supabaseClient.auth.onAuthStateChange(
-        (event, session) => {
+    supabase.auth.onAuthStateChange(
+        function (event, session) {
 
             console.log(
                 "FSI CRM Auth Event:",
                 event
             );
-
 
             // ------------------------------------------------
             // SIGNED OUT
@@ -2018,7 +2144,6 @@ function setupAuthListener() {
                 return;
             }
 
-
             // ------------------------------------------------
             // AUTHENTICATED
             // ------------------------------------------------
@@ -2029,17 +2154,14 @@ function setupAuthListener() {
                     session.user
                 );
 
-
                 setTimeout(
-                    async () => {
+                    async function () {
 
                         const currentUser =
                             authGetCurrentUser();
 
-
                         const profile =
                             authGetCurrentProfile();
-
 
                         if (
                             currentUser?.id !==
@@ -2047,7 +2169,6 @@ function setupAuthListener() {
                         ) {
                             return;
                         }
-
 
                         if (!profile) {
 
@@ -2061,7 +2182,6 @@ function setupAuthListener() {
         }
     );
 }
-
 
 // ============================================================
 // LUCIDE
@@ -2089,7 +2209,6 @@ function refreshLucideIcons() {
     }
 }
 
-
 // ============================================================
 // INITIALIZE AUTH
 // ============================================================
@@ -2100,25 +2219,21 @@ async function initializeAuth() {
         "FSI CRM - Initializing authentication..."
     );
 
-
     if (!authSupabaseReady()) {
 
         console.error(
             "FSI CRM - Supabase belum siap."
         );
 
-
         setLoginMessage(
             "Supabase belum siap. Periksa config.js.",
             true
         );
 
-
         showLogin();
 
         return;
     }
-
 
     // --------------------------------------------------------
     // EVENTS
@@ -2130,22 +2245,18 @@ async function initializeAuth() {
 
     setupAuthListener();
 
-
     // --------------------------------------------------------
     // SESSION
     // --------------------------------------------------------
 
     await checkSession();
 
-
     refreshLucideIcons();
-
 
     console.log(
         "FSI CRM - Authentication initialized."
     );
 }
-
 
 // ============================================================
 // EXPORT GLOBAL FUNCTIONS
@@ -2196,13 +2307,13 @@ window.authGetCurrentProfile =
 window.authNormalizeRole =
     authNormalizeRole;
 
-
 // ============================================================
 // DOM READY
 // ============================================================
 
 if (
-    document.readyState === "loading"
+    document.readyState ===
+    "loading"
 ) {
 
     document.addEventListener(
