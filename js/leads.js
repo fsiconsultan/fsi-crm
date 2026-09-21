@@ -7,14 +7,15 @@
 // - Load leads dari Supabase
 // - Search & filter
 // - Pagination
-// - Add lead
-// - Delete lead
+// - Add Customer
+// - Delete customer
 // - Sales assignment
 // - Admin / Sales access
 // - Integrasi Customer Profile / shelter.js
 // - Sales header selection
 // - Empty state tanpa stuck loading
-// - Role-based Add Customer visibility
+// - Add Customer tersedia untuk Admin & Sales
+// - Profile selalu menggunakan Customer ID yang benar
 // ============================================================
 
 "use strict";
@@ -175,18 +176,16 @@
 
 
     // ========================================================
-    // ROLE-BASED ADD CUSTOMER
+    // ADD CUSTOMER VISIBILITY
     // ========================================================
     //
-    // RULE:
+    // ADMIN:
+    // - BOLEH Add Customer
     //
-    // ADMIN
-    // - Tidak boleh melihat tombol Add Customer
+    // SALES:
+    // - BOLEH Add Customer
     //
-    // SALES
-    // - Tetap melihat tombol Add Customer
-    //
-    // Customer / My Customers menu TIDAK disentuh.
+    // Customer / My Customers menu tidak disentuh.
     //
     // ========================================================
 
@@ -199,7 +198,6 @@
             return;
         }
 
-
         const isAdmin =
             leadIsAdmin();
 
@@ -207,31 +205,17 @@
             leadIsSales();
 
 
-        // Kemungkinan ID tombol Add Customer
-        // dari berbagai versi index.html.
-
         const selectors = [
 
             "#addCustomerBtn",
-
             "#btn-add-customer",
-
             "#btnAddCustomer",
-
             "#add-customer-btn",
-
             "#addCustomer",
-
-            "#btnAddCustomer",
-
             "#addLeadBtn",
-
             "#btn-add-lead",
-
             "#btnAddLead",
-
             "#add-lead-btn",
-
             "#addLead"
 
         ];
@@ -244,21 +228,15 @@
             selector => {
 
                 document
-                    .querySelectorAll(
-                        selector
-                    )
+                    .querySelectorAll(selector)
                     .forEach(
                         element => {
 
                             if (
-                                !elements.includes(
-                                    element
-                                )
+                                !elements.includes(element)
                             ) {
 
-                                elements.push(
-                                    element
-                                );
+                                elements.push(element);
                             }
                         }
                     );
@@ -266,10 +244,7 @@
         );
 
 
-        // ----------------------------------------------------
-        // Cari tombol berdasarkan teks jika ID berbeda.
-        // ----------------------------------------------------
-
+        // Cari berdasarkan teks.
         document
             .querySelectorAll(
                 "button, a, [role='button']"
@@ -279,8 +254,7 @@
 
                     const text =
                         String(
-                            element.textContent ||
-                            ""
+                            element.textContent || ""
                         )
                             .trim()
                             .toLowerCase();
@@ -294,24 +268,16 @@
 
 
                     if (
-                        normalized ===
-                            "add customer" ||
-                        normalized ===
-                            "add customer +" ||
                         normalized.includes(
                             "add customer"
                         )
                     ) {
 
                         if (
-                            !elements.includes(
-                                element
-                            )
+                            !elements.includes(element)
                         ) {
 
-                            elements.push(
-                                element
-                            );
+                            elements.push(element);
                         }
                     }
                 }
@@ -319,32 +285,18 @@
 
 
         // ----------------------------------------------------
-        // Apply role.
+        // Admin & Sales sama-sama boleh Add Customer.
         // ----------------------------------------------------
 
-        elements.forEach(
-            element => {
+        if (
+            isAdmin ||
+            isSales
+        ) {
 
-                if (isAdmin) {
+            elements.forEach(
+                element => {
 
-                    element.style.display =
-                        "none";
-
-                    element.setAttribute(
-                        "aria-hidden",
-                        "true"
-                    );
-
-                    element.setAttribute(
-                        "data-admin-hidden",
-                        "true"
-                    );
-
-
-                } else if (isSales) {
-
-                    element.style.display =
-                        "";
+                    element.style.display = "";
 
                     element.removeAttribute(
                         "aria-hidden"
@@ -353,34 +305,18 @@
                     element.removeAttribute(
                         "data-admin-hidden"
                     );
+
+                    element.disabled = false;
                 }
-            }
-        );
-
-
-        // ----------------------------------------------------
-        // Jika user bukan Admin/Sales,
-        // jangan menampilkan tombol secara paksa.
-        // ----------------------------------------------------
-
-        if (
-            !isAdmin &&
-            !isSales
-        ) {
-            return;
+            );
         }
     }
 
 
     function refreshAddCustomerVisibility() {
 
-        // Jalankan langsung.
-
         updateAddCustomerVisibility();
 
-
-        // Jalankan ulang sedikit setelah UI selesai
-        // dirender oleh navigation/auth.
 
         setTimeout(
             function () {
@@ -400,6 +336,147 @@
             },
             300
         );
+    }
+
+
+    // ========================================================
+    // ADD CUSTOMER BUTTON
+    // ========================================================
+    //
+    // PENTING:
+    // Add Customer TIDAK BOLEH memanggil
+    // crmOpenCustomerProfile(id).
+    //
+    // Add Customer harus memanggil:
+    // crmOpenAddCustomer()
+    //
+    // sehingga TIDAK membutuhkan Customer ID.
+    // ========================================================
+
+    function handleAddCustomerButton(
+        event
+    ) {
+
+        const target =
+            event.target?.closest(
+                "#addCustomerBtn, #btn-add-customer, #btnAddCustomer, #add-customer-btn, #addCustomer, #addLeadBtn, #btn-add-lead, #btnAddLead, #add-lead-btn, #addLead"
+            );
+
+
+        if (!target) {
+            return false;
+        }
+
+
+        const profile =
+            leadGetProfile();
+
+
+        if (!profile) {
+
+            if (
+                typeof window.showToast ===
+                "function"
+            ) {
+
+                window.showToast(
+                    "Profile user belum siap.",
+                    "error"
+                );
+            }
+
+            return true;
+        }
+
+
+        // ----------------------------------------------------
+        // STOP handler lama.
+        // ----------------------------------------------------
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (
+            typeof event.stopImmediatePropagation ===
+            "function"
+        ) {
+
+            event.stopImmediatePropagation();
+        }
+
+
+        // ----------------------------------------------------
+        // Utamakan Customer Profile.
+        // ----------------------------------------------------
+
+        if (
+            typeof window.crmOpenAddCustomer ===
+            "function"
+        ) {
+
+            window.crmOpenAddCustomer();
+
+            return true;
+        }
+
+
+        // ----------------------------------------------------
+        // Fallback hanya jika shelter.js belum siap.
+        // ----------------------------------------------------
+
+        if (
+            typeof window.openLeadModal ===
+            "function"
+        ) {
+
+            window.openLeadModal();
+
+            return true;
+        }
+
+
+        if (
+            typeof window.showToast ===
+            "function"
+        ) {
+
+            window.showToast(
+                "Customer Profile belum siap.",
+                "error"
+            );
+        }
+
+
+        return true;
+    }
+
+
+    function bindAddCustomerButtons() {
+
+        if (
+            document.documentElement.dataset
+                .fsiAddCustomerHandler === "true"
+        ) {
+            return;
+        }
+
+
+        document.documentElement.dataset
+            .fsiAddCustomerHandler = "true";
+
+
+        // Capture phase supaya handler lama
+        // tidak sempat menjalankan open profile
+        // tanpa ID.
+
+        document.addEventListener(
+            "click",
+            handleAddCustomerButton,
+            true
+        );
+
+
+        refreshAddCustomerVisibility();
     }
 
 
@@ -424,6 +501,7 @@
             return configuredSize;
         }
 
+
         if (
             window.FSI_CRM &&
             window.FSI_CRM.config &&
@@ -436,6 +514,7 @@
                 window.FSI_CRM.config.pageSize
             );
         }
+
 
         return 20;
     }
@@ -456,6 +535,7 @@
 
         const numericPage =
             Number(page);
+
 
         window.currentPage =
             Math.max(
@@ -494,6 +574,7 @@
                 value
             );
         }
+
 
         return String(
             value ?? ""
@@ -539,8 +620,10 @@
             return "";
         }
 
+
         const value =
             window.crmSelectedSalesId;
+
 
         if (
             value === null ||
@@ -549,6 +632,7 @@
 
             return "";
         }
+
 
         return String(
             value
@@ -561,6 +645,7 @@
         const value =
             window.crmSelectedSalesName;
 
+
         if (
             value === null ||
             value === undefined
@@ -568,6 +653,7 @@
 
             return "";
         }
+
 
         return String(
             value
@@ -582,8 +668,10 @@
                 "salesFilter"
             );
 
+
         const selectedSalesId =
             getSelectedSalesId();
+
 
         if (salesSelect) {
 
@@ -591,8 +679,10 @@
                 selectedSalesId || "";
         }
 
+
         window.currentSalesFilter =
             selectedSalesId || "";
+
 
         return selectedSalesId;
     }
@@ -607,6 +697,7 @@
         const client =
             leadGetSupabase();
 
+
         if (!client) {
 
             console.error(
@@ -615,6 +706,7 @@
 
             return;
         }
+
 
         try {
 
@@ -640,11 +732,12 @@
             const {
                 data,
                 error
-            } = await client
-                .from("leads")
-                .select(
-                    "business,location"
-                );
+            } =
+                await client
+                    .from("leads")
+                    .select(
+                        "business,location"
+                    );
 
 
             if (error) {
@@ -743,9 +836,7 @@
         return [
             ...new Set(
                 (
-                    Array.isArray(
-                        values
-                    )
+                    Array.isArray(values)
                         ? values
                         : []
                 )
@@ -787,7 +878,9 @@
                 ? ids
                 : [ids];
 
-        let select = null;
+
+        let select =
+            null;
 
 
         for (
@@ -798,6 +891,7 @@
                 document.getElementById(
                     id
                 );
+
 
             if (select) {
                 break;
@@ -827,6 +921,7 @@
         defaultOption.value =
             "";
 
+
         defaultOption.textContent =
             defaultText;
 
@@ -837,9 +932,7 @@
 
 
         const safeValues =
-            Array.isArray(
-                values
-            )
+            Array.isArray(values)
                 ? values
                 : [];
 
@@ -852,11 +945,14 @@
                         "option"
                     );
 
+
                 option.value =
                     value;
 
+
                 option.textContent =
                     value;
+
 
                 select.appendChild(
                     option
@@ -934,6 +1030,7 @@
             const headerSalesId =
                 getSelectedSalesId();
 
+
             if (
                 headerSalesId !== ""
             ) {
@@ -1005,11 +1102,8 @@
         const searchConditions = [
 
             `customer_name.ilike.%${safeSearch}%`,
-
             `phone.ilike.%${safeSearch}%`,
-
             `business.ilike.%${safeSearch}%`,
-
             `location.ilike.%${safeSearch}%`
 
         ];
@@ -1043,6 +1137,7 @@
             <tr class="loading-row">
                 <td colspan="9">
                     <div class="empty-state loading-state">
+
                         <div class="empty-state-icon">
                             <i
                                 data-lucide="loader-circle"
@@ -1057,6 +1152,7 @@
                         <div class="empty-state-text">
                             Please wait while the lead data is loaded.
                         </div>
+
                     </div>
                 </td>
             </tr>
@@ -1111,10 +1207,6 @@
             selectedSalesId
         ) {
 
-            title =
-                "Belum Ada Leads";
-
-
             message =
                 selectedSalesName
                     ? `Sales ${selectedSalesName} belum memiliki data lead.`
@@ -1146,6 +1238,7 @@
         table.innerHTML = `
             <tr class="empty-row">
                 <td colspan="9">
+
                     <div class="empty-state leads-empty-state">
 
                         <div class="empty-state-icon">
@@ -1176,6 +1269,7 @@
                         }
 
                     </div>
+
                 </td>
             </tr>
         `;
@@ -1214,6 +1308,7 @@
         table.innerHTML = `
             <tr class="error-row">
                 <td colspan="9">
+
                     <div class="empty-state leads-error-state">
 
                         <div class="empty-state-icon">
@@ -1241,6 +1336,7 @@
                         </button>
 
                     </div>
+
                 </td>
             </tr>
         `;
@@ -1366,14 +1462,18 @@
             window.currentSearch =
                 filters.search;
 
+
             window.currentStatusFilter =
                 filters.status;
+
 
             window.currentBusinessFilter =
                 filters.business;
 
+
             window.currentLocationFilter =
                 filters.location;
+
 
             window.currentSalesFilter =
                 filters.salesFilter;
@@ -1428,6 +1528,10 @@
             }
 
 
+            // ------------------------------------------------
+            // ADMIN
+            // ------------------------------------------------
+
             if (leadIsAdmin()) {
 
                 if (
@@ -1440,8 +1544,14 @@
                             filters.salesFilter
                         );
                 }
+            }
 
-            } else if (
+
+            // ------------------------------------------------
+            // SALES
+            // ------------------------------------------------
+
+            else if (
                 leadIsSales()
             ) {
 
@@ -1496,7 +1606,8 @@
                 data,
                 error,
                 count
-            } = await query;
+            } =
+                await query;
 
 
             if (
@@ -1736,6 +1847,7 @@
                             ? `Sales: ${selectedSalesName}`
                             : "Sales terpilih";
 
+
                     element.classList.add(
                         "active"
                     );
@@ -1744,6 +1856,7 @@
 
                     element.textContent =
                         "Semua Sales";
+
 
                     element.classList.remove(
                         "active"
@@ -2253,10 +2366,14 @@
                     );
 
 
+                // ------------------------------------------------
+                // INI ID CUSTOMER YANG AKAN DIPAKAI PROFILE.
+                // ------------------------------------------------
+
                 const leadId =
                     String(
-                        lead.id || ""
-                    );
+                        lead.id ?? ""
+                    ).trim();
 
 
                 tr.dataset.leadId =
@@ -2265,6 +2382,7 @@
 
                 tr.innerHTML = `
                     <td>
+
                         <div class="lead-customer-cell">
 
                             <button
@@ -2278,6 +2396,7 @@
                             </button>
 
                         </div>
+
                     </td>
 
                     <td>
@@ -2297,11 +2416,13 @@
                     </td>
 
                     <td>
+
                         <span
                             class="status-badge ${leadEscapeHTML(statusCSS)}"
                         >
                             ${safeStatus}
                         </span>
+
                     </td>
 
                     <td>
@@ -2313,6 +2434,7 @@
                     </td>
 
                     <td>
+
                         <div class="crm-lead-actions">
 
                             <button
@@ -2331,13 +2453,14 @@
                                 class="secondary-btn small-btn"
                                 data-action="delete"
                                 data-lead-id="${leadEscapeHTML(leadId)}"
-                                title="Delete lead"
+                                title="Delete customer"
                             >
                                 <i data-lucide="trash-2"></i>
                                 Delete
                             </button>
 
                         </div>
+
                     </td>
                 `;
 
@@ -2369,6 +2492,7 @@
             1
         );
 
+
         loadLeads(
             1
         );
@@ -2389,6 +2513,7 @@
                     leadSetCurrentPage(
                         1
                     );
+
 
                     loadLeads(
                         1
@@ -2439,6 +2564,7 @@
 
 
                 if (element) {
+
                     element.value =
                         "";
                 }
@@ -2448,6 +2574,7 @@
 
         window.crmSelectedSalesId =
             "";
+
 
         window.crmSelectedSalesName =
             "";
@@ -2460,6 +2587,7 @@
 
 
         if (salesSelect) {
+
             salesSelect.value =
                 "";
         }
@@ -2481,6 +2609,7 @@
         window.crmSelectedSalesId =
             "";
 
+
         window.crmSelectedSalesName =
             "";
 
@@ -2492,6 +2621,7 @@
 
 
         if (salesSelect) {
+
             salesSelect.value =
                 "";
         }
@@ -2516,31 +2646,18 @@
 
 
     // ========================================================
-    // LEAD MODAL
+    // LEGACY LEAD MODAL
+    // ========================================================
+    //
+    // Tetap dipertahankan untuk compatibility.
+    //
+    // Tombol Add Customer UTAMA tidak lagi diarahkan
+    // ke modal ini. Tombol Add Customer diarahkan
+    // ke crmOpenAddCustomer() dari shelter.js.
+    //
     // ========================================================
 
     function openLeadModal() {
-
-        // ----------------------------------------------------
-        // ADMIN TIDAK BOLEH ADD CUSTOMER
-        // ----------------------------------------------------
-
-        if (leadIsAdmin()) {
-
-            if (
-                typeof window.showToast ===
-                "function"
-            ) {
-
-                window.showToast(
-                    "Admin tidak dapat menambahkan customer.",
-                    "error"
-                );
-            }
-
-            return;
-        }
-
 
         const modal =
             leadElement(
@@ -2612,6 +2729,7 @@
 
 
                 if (customerInput) {
+
                     customerInput.focus();
                 }
 
@@ -2822,12 +2940,45 @@
 
 
     // ========================================================
-    // EDIT LEAD
+    // OPEN EDIT / CUSTOMER PROFILE
     // ========================================================
 
     async function openEditLead(
         id
     ) {
+
+        const customerId =
+            String(
+                id ?? ""
+            ).trim();
+
+
+        // ----------------------------------------------------
+        // EDIT / PROFILE WAJIB punya ID.
+        // ----------------------------------------------------
+
+        if (!customerId) {
+
+            console.error(
+                "FSI CRM: openEditLead called without customer ID."
+            );
+
+
+            if (
+                typeof window.showToast ===
+                "function"
+            ) {
+
+                window.showToast(
+                    "Customer ID tidak ditemukan.",
+                    "error"
+                );
+            }
+
+
+            return;
+        }
+
 
         if (
             typeof window.crmOpenCustomerProfile ===
@@ -2835,8 +2986,9 @@
         ) {
 
             await window.crmOpenCustomerProfile(
-                id
+                customerId
             );
+
 
             return;
         }
@@ -2848,8 +3000,9 @@
         ) {
 
             await window.editLead(
-                id
+                customerId
             );
+
 
             return;
         }
@@ -2858,6 +3011,18 @@
         console.warn(
             "FSI CRM: Customer profile editor is not available."
         );
+
+
+        if (
+            typeof window.showToast ===
+            "function"
+        ) {
+
+            window.showToast(
+                "Customer Profile belum tersedia.",
+                "error"
+            );
+        }
     }
 
 
@@ -2880,13 +3045,10 @@
                 "User profile is not ready."
             );
 
+
             return;
         }
 
-
-        // Admin tidak boleh membuat customer baru.
-        // Update melalui profile tetap bisa ditangani
-        // oleh shelter.js sesuai role/security.
 
         const client =
             leadGetSupabase();
@@ -2900,6 +3062,7 @@
                 ),
                 "Supabase is not connected."
             );
+
 
             return;
         }
@@ -2938,6 +3101,7 @@
 
 
             customerElement?.focus();
+
 
             return;
         }
@@ -3063,44 +3227,40 @@
             "";
 
 
+        // ----------------------------------------------------
+        // ADMIN
+        // ----------------------------------------------------
+
         if (leadIsAdmin()) {
 
-            // Admin tidak membuat customer baru.
-            if (!leadId) {
-
-                if (
-                    typeof window.showToast ===
-                    "function"
-                ) {
-
-                    window.showToast(
-                        "Admin tidak dapat menambahkan customer baru.",
-                        "error"
-                    );
-                }
-
-                return;
-            }
-
-
-            // Jika Admin melakukan update,
-            // pertahankan sales assignment yang dipilih.
-
+            // Admin boleh membuat customer.
             payload.sales_id =
                 selectedSales ||
                 null;
+        }
 
-        } else if (
+
+        // ----------------------------------------------------
+        // SALES
+        // ----------------------------------------------------
+
+        else if (
             leadIsSales()
         ) {
 
-            // Sales selalu memiliki customer
+            // Sales hanya dapat membuat customer
             // miliknya sendiri.
 
             payload.sales_id =
                 profile.id;
+        }
 
-        } else {
+
+        // ----------------------------------------------------
+        // ROLE LAIN
+        // ----------------------------------------------------
+
+        else {
 
             payload.sales_id =
                 null;
@@ -3162,32 +3322,16 @@
                     );
                 }
 
+            }
 
-            } else {
+            // =================================================
+            // INSERT
+            // =================================================
 
-                // =============================================
-                // INSERT
-                // =============================================
+            else {
 
-                // Hanya Sales yang boleh membuat
+                // Admin maupun Sales boleh membuat
                 // customer baru.
-
-                if (!leadIsSales()) {
-
-                    if (
-                        typeof window.showToast ===
-                        "function"
-                    ) {
-
-                        window.showToast(
-                            "Hanya Sales yang dapat menambahkan customer.",
-                            "error"
-                        );
-                    }
-
-                    return;
-                }
-
 
                 payload.created_by =
                     profile.id;
@@ -3307,7 +3451,13 @@
         id
     ) {
 
-        if (!id) {
+        const customerId =
+            String(
+                id ?? ""
+            ).trim();
+
+
+        if (!customerId) {
             return;
         }
 
@@ -3316,10 +3466,10 @@
             typeof window.confirmAction ===
             "function"
                 ? await window.confirmAction(
-                    "Delete this lead?"
+                    "Delete this customer?"
                 )
                 : confirm(
-                    "Delete this lead?"
+                    "Delete this customer?"
                 );
 
 
@@ -3341,6 +3491,7 @@
                 "Supabase is not connected."
             );
 
+
             return;
         }
 
@@ -3355,7 +3506,7 @@
                     .delete()
                     .eq(
                         "id",
-                        id
+                        customerId
                     );
 
 
@@ -3369,7 +3520,7 @@
 
                 showLeadError(
                     error,
-                    "Failed to delete lead."
+                    "Failed to delete customer."
                 );
 
 
@@ -3381,11 +3532,12 @@
                 String(
                     window.crmCurrentCustomerId
                 ) ===
-                String(id)
+                customerId
             ) {
 
                 window.crmCurrentCustomerId =
                     null;
+
 
                 window.crmCurrentCustomer =
                     null;
@@ -3465,8 +3617,9 @@
                         detail: {
                             action:
                                 "deleted",
+
                             id:
-                                id
+                                customerId
                         }
                     }
                 )
@@ -3479,7 +3632,7 @@
             ) {
 
                 window.showToast(
-                    "Lead deleted successfully.",
+                    "Customer deleted successfully.",
                     "success"
                 );
             }
@@ -3495,7 +3648,7 @@
 
             showLeadError(
                 error,
-                "An error occurred while deleting the lead."
+                "An error occurred while deleting the customer."
             );
         }
     }
@@ -3539,18 +3692,28 @@
             leadIsSales();
 
 
+        // ----------------------------------------------------
+        // ADMIN
+        // ----------------------------------------------------
+
         if (isAdmin) {
 
             select.disabled =
                 false;
 
+
             select.removeAttribute(
                 "aria-disabled"
             );
 
+
             return;
         }
 
+
+        // ----------------------------------------------------
+        // SALES
+        // ----------------------------------------------------
 
         if (isSales) {
 
@@ -3634,9 +3797,15 @@
 
 
                 const leadId =
-                    actionButton.dataset.leadId ||
-                    "";
+                    String(
+                        actionButton.dataset.leadId ||
+                        ""
+                    ).trim();
 
+
+                // ------------------------------------------------
+                // PROFILE
+                // ------------------------------------------------
 
                 if (
                     action ===
@@ -3644,8 +3813,30 @@
                 ) {
 
                     if (!leadId) {
+
+                        console.error(
+                            "FSI CRM: Profile button has no customer ID.",
+                            actionButton
+                        );
+
+
+                        if (
+                            typeof window.showToast ===
+                            "function"
+                        ) {
+
+                            window.showToast(
+                                "Customer ID tidak ditemukan.",
+                                "error"
+                            );
+                        }
+
+
                         return;
                     }
+
+
+                    event.preventDefault();
 
 
                     if (
@@ -3669,6 +3860,10 @@
                 }
 
 
+                // ------------------------------------------------
+                // DELETE
+                // ------------------------------------------------
+
                 if (
                     action ===
                     "delete"
@@ -3688,6 +3883,10 @@
                 }
 
 
+                // ------------------------------------------------
+                // RETRY
+                // ------------------------------------------------
+
                 if (
                     action ===
                     "retry-leads"
@@ -3706,6 +3905,10 @@
                     return;
                 }
 
+
+                // ------------------------------------------------
+                // CLEAR SALES FILTER
+                // ------------------------------------------------
 
                 if (
                     action ===
@@ -3737,6 +3940,13 @@
 
 
         // ----------------------------------------------------
+        // Add Customer
+        // ----------------------------------------------------
+
+        bindAddCustomerButtons();
+
+
+        // ----------------------------------------------------
         // Search
         // ----------------------------------------------------
 
@@ -3762,6 +3972,7 @@
         // ----------------------------------------------------
 
         [
+
             [
                 "filter-status",
                 "statusFilter",
@@ -3955,7 +4166,7 @@
 
 
         // ----------------------------------------------------
-        // Click outside modal
+        // Click outside legacy modal
         // ----------------------------------------------------
 
         const modal =
@@ -3985,10 +4196,6 @@
         setupSalesAssignmentAccess();
 
 
-        // ----------------------------------------------------
-        // ROLE-BASED ADD CUSTOMER
-        // ----------------------------------------------------
-
         refreshAddCustomerVisibility();
     }
 
@@ -4002,6 +4209,8 @@
         setupSalesAssignmentAccess();
 
         refreshAddCustomerVisibility();
+
+        bindAddCustomerButtons();
     }
 
 
@@ -4087,6 +4296,8 @@
         updateLeadsContext();
 
         refreshAddCustomerVisibility();
+
+        bindAddCustomerButtons();
     }
 
 
@@ -4174,6 +4385,10 @@
         updateAddCustomerVisibility;
 
 
+    window.bindAddCustomerButtons =
+        bindAddCustomerButtons;
+
+
     window.FSILeads = {
 
         loadFilterOptions,
@@ -4214,7 +4429,9 @@
 
         clearSalesHeaderFilter,
 
-        updateAddCustomerVisibility
+        updateAddCustomerVisibility,
+
+        bindAddCustomerButtons
     };
 
 
@@ -4285,9 +4502,10 @@
         "fsi:lead-changed",
         function () {
 
-            // Save/delete already refreshes
-            // the table, so no reload here.
+            // Save/delete sudah melakukan refresh
+            // sendiri.
         }
     );
+
 
 })();
