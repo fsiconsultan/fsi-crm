@@ -720,7 +720,13 @@
             // ------------------------------------------------
             //
             // Location sudah tidak digunakan sebagai filter.
-            // Kita hanya mengambil Business dari leads.
+            //
+            // Business sekarang menggunakan:
+            // 1. Pilihan standar CRM
+            // 2. Business yang memang ada di Supabase
+            //
+            // Dengan begitu dropdown Business tetap memiliki
+            // pilihan walaupun data tertentu belum ada di leads.
             //
             // ------------------------------------------------
 
@@ -742,39 +748,31 @@
                     error
                 );
 
-                return;
-            }
+                // Jangan membuat dropdown kosong.
+                // Gunakan pilihan Business standar.
+                populateBusinessFilter([]);
+
+            } else {
+
+                const leads =
+                    Array.isArray(data)
+                        ? data
+                        : [];
 
 
-            const leads =
-                Array.isArray(data)
-                    ? data
-                    : [];
-
-
-            const businesses =
-                uniqueSortedValues(
+                const databaseBusinesses =
                     leads.map(
                         lead =>
                             leadGetValue(
                                 lead.business
                             )
-                    )
+                    );
+
+
+                populateBusinessFilter(
+                    databaseBusinesses
                 );
-
-
-            // ------------------------------------------------
-            // BUSINESS FILTER
-            // ------------------------------------------------
-
-            populateFilter(
-                [
-                    "filter-business",
-                    "businessFilter"
-                ],
-                businesses,
-                "All Business"
-            );
+            }
 
 
             // ------------------------------------------------
@@ -809,7 +807,72 @@
                 "FSI CRM: loadFilterOptions error:",
                 error
             );
+
+            // Pastikan Business tetap memiliki dropdown
+            // walaupun terjadi error pada lookup.
+            populateBusinessFilter([]);
         }
+    }
+
+
+    // ========================================================
+    // STANDARD BUSINESS OPTIONS
+    // ========================================================
+
+    function getStandardBusinessOptions() {
+
+        return [
+
+            "Residential",
+            "Villa",
+            "Hotel",
+            "Restaurant",
+            "Office",
+            "Factory",
+            "Commercial",
+            "Other"
+
+        ];
+    }
+
+
+    // ========================================================
+    // POPULATE BUSINESS FILTER
+    // ========================================================
+
+    function populateBusinessFilter(
+        databaseValues
+    ) {
+
+        const standardValues =
+            getStandardBusinessOptions();
+
+
+        const combinedValues = [
+
+            ...standardValues,
+
+            ...(Array.isArray(databaseValues)
+                ? databaseValues
+                : [])
+
+        ];
+
+
+        const businesses =
+            uniqueSortedValues(
+                combinedValues
+            );
+
+
+        populateFilter(
+            [
+                "filter-business",
+                "businessFilter"
+            ],
+            businesses,
+            "All Business"
+        );
     }
 
 
