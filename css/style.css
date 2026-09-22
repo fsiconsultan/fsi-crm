@@ -1,7 +1,7 @@
 /* =========================================================
    FSI CRM
    MAIN APPLICATION STYLES
-   Version: 2026.09.2
+   Version: 2026.09.3
 ========================================================= */
 
 
@@ -836,20 +836,28 @@ svg:last-child {
 
 /* =========================================================
    PAGE VISIBILITY
+   IMPORTANT:
+   CRM pages are hidden by default.
+   ONLY .active pages are displayed.
 ========================================================= */
 
 .crm-page {
-    display: none;
+    display: none !important;
     width: 100%;
 }
 
 .crm-page.active {
-    display: block;
+    display: block !important;
 }
 
 .crm-page.hidden {
     display: none !important;
 }
+
+
+/* ---------------------------------------------------------
+   CUSTOMER PROFILE PAGE VISIBILITY
+--------------------------------------------------------- */
 
 #view-customer-profile {
     position: relative;
@@ -862,6 +870,9 @@ svg:last-child {
 
 #view-customer-profile.active {
     display: block !important;
+
+    visibility: visible;
+    opacity: 1;
 }
 
 #view-customer-profile.hidden {
@@ -872,9 +883,13 @@ svg:last-child {
     position: relative;
 
     width: 100%;
+    min-width: 0;
     min-height: 1px;
 
     display: block;
+
+    visibility: visible;
+    opacity: 1;
 }
 
 #customerProfilePage {
@@ -882,8 +897,6 @@ svg:last-child {
 
     width: 100%;
     min-height: 1px;
-
-    display: block;
 }
 
 
@@ -908,7 +921,7 @@ svg:last-child {
     visibility: visible;
 }
 
-.crm-full-edit-page *,
+.crm-full-edit-page * ,
 .crm-full-edit-page *::before,
 .crm-full-edit-page *::after {
     box-sizing: border-box;
@@ -2032,6 +2045,7 @@ svg:last-child {
 
 .customer-profile-container {
     width: 100%;
+    min-width: 0;
 }
 
 
@@ -2041,6 +2055,7 @@ svg:last-child {
 
 .customer-profile {
     width: 100%;
+    min-width: 0;
 
     display: flex;
     flex-direction: column;
@@ -2461,6 +2476,7 @@ svg:last-child {
 
 .profile-card {
     width: 100%;
+    min-width: 0;
 
     background: #ffffff;
 
@@ -3267,12 +3283,28 @@ svg:last-child {
         grid-template-columns: 1fr;
     }
 
+    /* IMPORTANT:
+       Do not force CRM pages visible here.
+       Visibility is controlled by .crm-page.active.
+    */
+
     #view-customer-profile.active {
         display: block !important;
+
+        visibility: visible;
+        opacity: 1;
     }
 
-    #customer-profile-container,
-    #customerProfilePage,
+    #customer-profile-container {
+        width: 100%;
+        max-width: none;
+
+        display: block;
+
+        visibility: visible;
+        opacity: 1;
+    }
+
     .crm-full-edit-page {
         width: 100%;
         max-width: none;
@@ -3565,10 +3597,22 @@ svg:last-child {
 
     #view-customer-profile.active {
         display: block !important;
+
+        visibility: visible;
+        opacity: 1;
     }
 
-    #customer-profile-container,
-    #customerProfilePage,
+    #customer-profile-container {
+        width: 100%;
+
+        display: block;
+
+        visibility: visible;
+        opacity: 1;
+
+        overflow: visible;
+    }
+
     .crm-full-edit-page {
         width: 100%;
 
@@ -3653,7 +3697,9 @@ svg:last-child {
 
         display: grid;
 
-        grid-template-columns: auto minmax(0, 1fr);
+        grid-template-columns:
+            auto
+            minmax(0, 1fr);
 
         gap: 12px;
 
@@ -3751,7 +3797,9 @@ svg:last-child {
 
         display: grid;
 
-        grid-template-columns: 34px minmax(0, 1fr);
+        grid-template-columns:
+            34px
+            minmax(0, 1fr);
 
         column-gap: 10px;
 
