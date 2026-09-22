@@ -115,9 +115,6 @@
 
     <!-- =====================================================
          LOGIN PAGE
-         SPLIT SCREEN
-         LEFT  : HERO IMAGE
-         RIGHT : LOGIN FORM
     ====================================================== -->
 
     <section
@@ -129,276 +126,105 @@
 
             <div class="login-card">
 
+                <div class="login-logo">
 
-                <!-- =================================================
-                     LEFT SIDE
-                     LOGIN HERO
-                ================================================== -->
-
-                <div class="login-hero">
-
-                    <!-- HERO IMAGE -->
-
-                    <div class="login-hero-image"></div>
-
-
-                    <!-- HERO OVERLAY -->
-
-                    <div class="login-hero-overlay"></div>
-
-
-                    <!-- HERO GRID -->
-
-                    <div class="login-hero-grid"></div>
-
-
-                    <!-- HERO CONTENT -->
-
-                    <div class="login-hero-content">
-
-
-                        <!-- HERO BRAND -->
-
-                        <div class="login-hero-brand">
-
-                            <div class="login-hero-brand-mark">
-
-                                <img
-                                    src="logo-fsi.png"
-                                    alt="FSI Logo"
-                                >
-
-                            </div>
-
-
-                            <div class="login-hero-brand-text">
-
-                                <strong>
-                                    FSI CRM
-                                </strong>
-
-                                <span>
-                                    Sales Management
-                                </span>
-
-                            </div>
-
-                        </div>
-
-
-
-                        <!-- HERO COPY -->
-
-                        <div class="login-hero-copy">
-
-                            <span class="login-hero-eyebrow">
-                                SALES MANAGEMENT SYSTEM
-                            </span>
-
-
-                            <h1 class="login-hero-title">
-                                Manage Sales,
-                                Leads & Customers
-                                <span>in One Place.</span>
-                            </h1>
-
-
-                            <p class="login-hero-description">
-                                A professional workspace for managing
-                                customer relationships, sales activities,
-                                leads, and your complete sales pipeline.
-                            </p>
-
-                        </div>
-
-
-
-                        <!-- HERO BADGE -->
-
-                        <div class="login-hero-badge">
-
-                            <span class="login-hero-badge-dot"></span>
-
-                            <span>
-                                FSI Consultant
-                            </span>
-
-                        </div>
-
-                    </div>
+                    <img
+                        src="logo-fsi.png"
+                        alt="FSI Logo"
+                    >
 
                 </div>
 
 
+                <div class="login-heading">
 
-                <!-- =================================================
-                     RIGHT SIDE
-                     LOGIN FORM
-                ================================================== -->
+                    <h1 class="login-title">
+                        FSI CRM
+                    </h1>
 
-                <div class="login-form-panel">
+                    <p class="login-subtitle">
+                        Sales Management System
+                    </p>
 
-                    <div class="login-form-wrapper">
-
-
-                        <!-- FORM LOGO -->
-
-                        <div class="login-logo">
-
-                            <img
-                                src="logo-fsi.png"
-                                alt="FSI Logo"
-                            >
-
-                        </div>
+                </div>
 
 
+                <form
+                    id="login-form"
+                    class="login-form"
+                    autocomplete="on"
+                >
 
-                        <!-- FORM HEADING -->
+                    <div class="form-group">
 
-                        <div class="login-heading">
+                        <label for="login-username">
+                            Username
+                        </label>
 
-                            <span class="login-welcome-label">
-                                WELCOME BACK
-                            </span>
-
-
-                            <h1 class="login-title">
-                                Welcome Back
-                            </h1>
-
-
-                            <p class="login-subtitle">
-                                Sign in to your FSI CRM account.
-                            </p>
-
-                        </div>
-
-
-
-                        <!-- LOGIN FORM -->
-
-                        <form
-                            id="login-form"
-                            class="login-form"
-                            autocomplete="on"
+                        <input
+                            id="login-username"
+                            name="username"
+                            type="text"
+                            autocomplete="username"
+                            placeholder="Enter username"
+                            required
                         >
 
-
-                            <!-- USERNAME -->
-
-                            <div class="form-group">
-
-                                <label for="login-username">
-                                    Username
-                                </label>
+                    </div>
 
 
-                                <div class="login-input-wrapper">
+                    <div class="form-group">
 
-                                    <i
-                                        data-lucide="user"
-                                        aria-hidden="true"
-                                    ></i>
+                        <label for="login-password">
+                            Password
+                        </label>
 
-
-                                    <input
-                                        id="login-username"
-                                        name="username"
-                                        type="text"
-                                        autocomplete="username"
-                                        placeholder="Enter username"
-                                        required
-                                    >
-
-                                </div>
-
-                            </div>
-
-
-
-                            <!-- PASSWORD -->
-
-                            <div class="form-group">
-
-                                <label for="login-password">
-                                    Password
-                                </label>
-
-
-                                <div class="login-input-wrapper">
-
-                                    <i
-                                        data-lucide="lock-keyhole"
-                                        aria-hidden="true"
-                                    ></i>
-
-
-                                    <input
-                                        id="login-password"
-                                        name="password"
-                                        type="password"
-                                        autocomplete="current-password"
-                                        placeholder="Enter password"
-                                        required
-                                    >
-
-                                </div>
-
-                            </div>
-
-
-
-                            <!-- LOGIN ERROR -->
-
-                            <div
-                                id="login-error"
-                                class="login-error"
-                                role="alert"
-                            ></div>
-
-
-
-                            <!-- SIGN IN BUTTON -->
-
-                            <button
-                                id="login-button"
-                                class="btn-primary primary-btn login-submit-btn"
-                                type="submit"
-                            >
-
-                                <span>
-                                    Sign In
-                                </span>
-
-
-                                <i
-                                    data-lucide="arrow-right"
-                                    aria-hidden="true"
-                                ></i>
-
-                            </button>
-
-
-                        </form>
-
-
-
-                        <!-- LOGIN FOOTER -->
-
-                        <div class="login-footer">
-
-                            <span>
-                                FSI Consultant
-                            </span>
-
-                        </div>
-
+                        <input
+                            id="login-password"
+                            name="password"
+                            type="password"
+                            autocomplete="current-password"
+                            placeholder="Enter password"
+                            required
+                        >
 
                     </div>
 
-                </div>
 
+                    <div
+                        id="login-error"
+                        class="login-error"
+                        role="alert"
+                    ></div>
+
+
+                    <button
+                        id="login-button"
+                        class="btn-primary primary-btn"
+                        type="submit"
+                    >
+
+                        <i
+                            data-lucide="log-in"
+                            aria-hidden="true"
+                        ></i>
+
+                        <span>
+                            Sign In
+                        </span>
+
+                    </button>
+
+                </form>
+
+
+                <div class="login-footer">
+
+                    <span>
+                        FSI Consultant
+                    </span>
+
+                </div>
 
             </div>
 
@@ -1309,6 +1135,8 @@
 
                     <!-- =================================================
                          FILTERS
+                         Location filter removed.
+                         Status + Business remain.
                     ================================================== -->
 
                     <div class="filter-panel">
@@ -1414,6 +1242,7 @@
 
                     <!-- =================================================
                          LEADS TABLE
+                         10 COLUMNS
                     ================================================== -->
 
                     <div
@@ -1856,7 +1685,9 @@
                     </div>
 
 
-                    <!-- BUSINESS DROPDOWN -->
+                    <!-- =================================================
+                         BUSINESS DROPDOWN
+                    ================================================== -->
 
                     <div class="form-group">
 
@@ -1910,7 +1741,7 @@
                     </div>
 
 
-                    <!-- LOCATION -->
+                    <!-- LOCATION REMAINS NORMAL INPUT -->
 
                     <div class="form-group">
 
@@ -1928,7 +1759,7 @@
                     </div>
 
 
-                    <!-- STATUS -->
+                    <!-- STATUS DROPDOWN -->
 
                     <div class="form-group">
 
