@@ -13,6 +13,8 @@
 // - Recent leads / activities
 // - Pagination data Supabase > 1000 rows
 // - Modern + legacy page ID compatibility
+// - Dashboard panel ID compatibility
+// - View All -> Leads
 // ============================================================
 
 "use strict";
@@ -42,13 +44,13 @@ function dashboardGetSupabase() {
 
         if (
             window.supabaseClient &&
-            typeof window.supabaseClient
-                .from === "function"
+            typeof window.supabaseClient.from === "function"
         ) {
             return window.supabaseClient;
         }
 
     } catch (error) {
+
         console.warn(
             "FSI CRM: window.supabaseClient error:",
             error
@@ -67,6 +69,7 @@ function dashboardGetSupabase() {
         }
 
     } catch (error) {
+
         console.warn(
             "FSI CRM: supabaseClient error:",
             error
@@ -161,30 +164,22 @@ function dashboardGetUser() {
 function dashboardNormalizeRole(role) {
 
     if (
-        typeof window.authNormalizeRole ===
-        "function"
+        typeof window.authNormalizeRole === "function"
     ) {
 
-        return window.authNormalizeRole(
-            role
-        );
+        return window.authNormalizeRole(role);
     }
 
 
     if (
-        typeof window.normalizeRole ===
-        "function"
+        typeof window.normalizeRole === "function"
     ) {
 
-        return window.normalizeRole(
-            role
-        );
+        return window.normalizeRole(role);
     }
 
 
-    return String(
-        role || ""
-    )
+    return String(role || "")
         .trim()
         .toLowerCase();
 }
@@ -420,13 +415,10 @@ function dashboardShowPage(type) {
 function dashboardSetPageTitle(title) {
 
     if (
-        typeof window.setPageTitle ===
-        "function"
+        typeof window.setPageTitle === "function"
     ) {
 
-        window.setPageTitle(
-            title
-        );
+        window.setPageTitle(title);
 
         return;
     }
@@ -675,8 +667,7 @@ async function showLeads() {
 
 
     if (
-        typeof window.loadFilterOptions ===
-        "function"
+        typeof window.loadFilterOptions === "function"
     ) {
 
         try {
@@ -694,15 +685,12 @@ async function showLeads() {
 
 
     if (
-        typeof window.loadLeads ===
-        "function"
+        typeof window.loadLeads === "function"
     ) {
 
         try {
 
-            await window.loadLeads(
-                1
-            );
+            await window.loadLeads(1);
 
         } catch (error) {
 
@@ -727,8 +715,7 @@ async function showSales() {
     if (!dashboardIsAdmin()) {
 
         if (
-            typeof window.showToast ===
-            "function"
+            typeof window.showToast === "function"
         ) {
 
             window.showToast(
@@ -774,8 +761,7 @@ async function showSales() {
 
 
     if (
-        typeof window.loadSalesUsers ===
-        "function"
+        typeof window.loadSalesUsers === "function"
     ) {
 
         try {
@@ -1077,8 +1063,7 @@ async function dashboardFetchLeads() {
 function dashboardNormalizeStatus(status) {
 
     if (
-        typeof window.normalizeLeadStatus ===
-        "function"
+        typeof window.normalizeLeadStatus === "function"
     ) {
 
         return window.normalizeLeadStatus(
@@ -1087,9 +1072,7 @@ function dashboardNormalizeStatus(status) {
     }
 
 
-    return String(
-        status || ""
-    )
+    return String(status || "")
         .trim();
 }
 
@@ -1130,8 +1113,7 @@ function dashboardCountStatus(
 ) {
 
     if (
-        typeof window.countNormalizedStatus ===
-        "function"
+        typeof window.countNormalizedStatus === "function"
     ) {
 
         return window.countNormalizedStatus(
@@ -1160,8 +1142,7 @@ function dashboardCountDateField(
 ) {
 
     if (
-        typeof window.countDateField ===
-        "function"
+        typeof window.countDateField === "function"
     ) {
 
         return window.countDateField(
@@ -1189,8 +1170,7 @@ function dashboardCountClosing(
 ) {
 
     if (
-        typeof window.countClosing ===
-        "function"
+        typeof window.countClosing === "function"
     ) {
 
         return window.countClosing(
@@ -1391,18 +1371,10 @@ function renderDashboardStats(
         ([id, value]) => {
 
             if (
-                typeof window.setText ===
-                "function"
+                typeof window.setText === "function"
             ) {
 
                 window.setText(
-                    id,
-                    value
-                );
-
-            } else {
-
-                dashboardSetElementText(
                     id,
                     value
                 );
@@ -1410,8 +1382,7 @@ function renderDashboardStats(
 
 
             /*
-             * Pastikan juga langsung set jika helper
-             * tidak bekerja karena ID berbeda.
+             * Pastikan langsung di-set juga.
              */
 
             dashboardSetElementText(
@@ -1480,6 +1451,51 @@ function renderDashboardStats(
 
 
 // ============================================================
+// FIND PIPELINE CONTAINER
+// ============================================================
+//
+// index.html terbaru menggunakan:
+//     pipeline-summary
+//
+// Versi lama menggunakan:
+//     dashboard-pipeline
+//
+// Kita support keduanya agar tidak merusak versi lama.
+// ============================================================
+
+function dashboardFindPipelineContainer() {
+
+    const ids = [
+
+        "pipeline-summary",
+
+        "dashboard-pipeline",
+
+        "pipeline-summary-container",
+
+        "sales-pipeline"
+    ];
+
+
+    for (
+        const id of ids
+    ) {
+
+        const element =
+            document.getElementById(id);
+
+
+        if (element) {
+            return element;
+        }
+    }
+
+
+    return null;
+}
+
+
+// ============================================================
 // RENDER PIPELINE
 // ============================================================
 
@@ -1488,12 +1504,15 @@ function renderDashboardPipeline(
 ) {
 
     const container =
-        document.getElementById(
-            "dashboard-pipeline"
-        );
+        dashboardFindPipelineContainer();
 
 
     if (!container) {
+
+        console.warn(
+            "FSI CRM: Pipeline container tidak ditemukan."
+        );
+
         return;
     }
 
@@ -1503,6 +1522,21 @@ function renderDashboardPipeline(
             ? data
             : [];
 
+
+    /*
+     * Pipeline dibuat mengikuti alur CRM:
+     *
+     * New
+     * Flyer Sent
+     * Interested
+     * Follow Up
+     * Appointment
+     * Site Survey
+     * Quotation
+     * SPK
+     * Closing
+     * Not Interested
+     */
 
     const stages = [
 
@@ -1542,6 +1576,11 @@ function renderDashboardPipeline(
         },
 
         {
+            label: "SPK",
+            className: "status-spk"
+        },
+
+        {
             label: "Closing",
             className: "status-closing"
         },
@@ -1561,8 +1600,7 @@ function renderDashboardPipeline(
 
 
                 if (
-                    stage.label ===
-                    "Appointment"
+                    stage.label === "Appointment"
                 ) {
 
                     count =
@@ -1572,8 +1610,7 @@ function renderDashboardPipeline(
                         );
 
                 } else if (
-                    stage.label ===
-                    "Site Survey"
+                    stage.label === "Site Survey"
                 ) {
 
                     count =
@@ -1583,8 +1620,7 @@ function renderDashboardPipeline(
                         );
 
                 } else if (
-                    stage.label ===
-                    "Quotation"
+                    stage.label === "Quotation"
                 ) {
 
                     count =
@@ -1594,8 +1630,17 @@ function renderDashboardPipeline(
                         );
 
                 } else if (
-                    stage.label ===
-                    "Closing"
+                    stage.label === "SPK"
+                ) {
+
+                    count =
+                        dashboardCountDateField(
+                            list,
+                            "spk"
+                        );
+
+                } else if (
+                    stage.label === "Closing"
                 ) {
 
                     count =
@@ -1639,12 +1684,56 @@ function renderDashboardPipeline(
 
 
     if (
-        typeof window.refreshIcons ===
-        "function"
+        typeof window.refreshIcons === "function"
     ) {
 
         window.refreshIcons();
     }
+}
+
+
+// ============================================================
+// FIND RECENT LEADS CONTAINER
+// ============================================================
+//
+// index.html terbaru menggunakan:
+//     recent-leads
+//
+// Versi lama menggunakan:
+//     dashboard-activities
+//
+// Kita support keduanya.
+// ============================================================
+
+function dashboardFindRecentLeadsContainer() {
+
+    const ids = [
+
+        "recent-leads",
+
+        "dashboard-activities",
+
+        "recent-leads-container",
+
+        "dashboard-recent-leads"
+    ];
+
+
+    for (
+        const id of ids
+    ) {
+
+        const element =
+            document.getElementById(id);
+
+
+        if (element) {
+            return element;
+        }
+    }
+
+
+    return null;
 }
 
 
@@ -1657,12 +1746,15 @@ function renderDashboardRecentLeads(
 ) {
 
     const container =
-        document.getElementById(
-            "dashboard-activities"
-        );
+        dashboardFindRecentLeadsContainer();
 
 
     if (!container) {
+
+        console.warn(
+            "FSI CRM: Recent Leads container tidak ditemukan."
+        );
+
         return;
     }
 
@@ -1725,8 +1817,7 @@ function renderDashboardRecentLeads(
 
 
         if (
-            typeof window.refreshIcons ===
-            "function"
+            typeof window.refreshIcons === "function"
         ) {
 
             window.refreshIcons();
@@ -1754,8 +1845,7 @@ function renderDashboardRecentLeads(
 
 
                 const statusClass =
-                    typeof window.getStatusClass ===
-                    "function"
+                    typeof window.getStatusClass === "function"
 
                         ? window.getStatusClass(
                             status
@@ -1765,8 +1855,7 @@ function renderDashboardRecentLeads(
 
 
                 const date =
-                    typeof window.formatDateTime ===
-                    "function"
+                    typeof window.formatDateTime === "function"
 
                         ? window.formatDateTime(
                             lead.created_at
@@ -1798,7 +1887,7 @@ function renderDashboardRecentLeads(
 
                             <div class="activity-meta">
 
-                                <span class="status-badge ${statusClass}">
+                                <span class="status-badge ${dashboardEscapeHTML(statusClass)}">
                                     ${dashboardEscapeHTML(status)}
                                 </span>
 
@@ -1817,8 +1906,7 @@ function renderDashboardRecentLeads(
 
 
     if (
-        typeof window.refreshIcons ===
-        "function"
+        typeof window.refreshIcons === "function"
     ) {
 
         window.refreshIcons();
@@ -1835,8 +1923,7 @@ function dashboardEscapeHTML(
 ) {
 
     if (
-        typeof window.escapeHTML ===
-        "function"
+        typeof window.escapeHTML === "function"
     ) {
 
         return window.escapeHTML(
@@ -1999,7 +2086,7 @@ async function updateDashboard() {
 
 
         /*
-         * Render kartu.
+         * Render kartu statistik.
          */
 
         renderDashboardStats(
@@ -2030,8 +2117,7 @@ async function updateDashboard() {
          */
 
         if (
-            typeof window.renderDashboardCharts ===
-            "function"
+            typeof window.renderDashboardCharts === "function"
         ) {
 
             try {
@@ -2090,8 +2176,7 @@ async function updateDashboard() {
 
 
         const message =
-            typeof window.getSupabaseErrorMessage ===
-            "function"
+            typeof window.getSupabaseErrorMessage === "function"
 
                 ? window.getSupabaseErrorMessage(
                     error,
@@ -2139,9 +2224,13 @@ async function updateDashboard() {
         );
 
 
+        renderDashboardRecentLeads(
+            []
+        );
+
+
         if (
-            typeof window.showToast ===
-            "function"
+            typeof window.showToast === "function"
         ) {
 
             window.showToast(
@@ -2161,8 +2250,7 @@ async function updateDashboard() {
 
 
         if (
-            typeof window.refreshIcons ===
-            "function"
+            typeof window.refreshIcons === "function"
         ) {
 
             window.refreshIcons();
@@ -2203,8 +2291,7 @@ async function dashboardOpenSales() {
     if (!dashboardIsAdmin()) {
 
         if (
-            typeof window.showToast ===
-            "function"
+            typeof window.showToast === "function"
         ) {
 
             window.showToast(
@@ -2250,6 +2337,107 @@ function getDashboardStats() {
 
 
 // ============================================================
+// VIEW ALL BUTTON
+// ============================================================
+//
+// index.html terbaru:
+//
+// <button
+//     type="button"
+//     class="btn-outline"
+//     data-page="leads"
+// >
+//     <span>View All</span>
+//     ...
+// </button>
+//
+// Kita tetap support navigation.js, tetapi dashboard juga
+// menangani tombol ini sebagai fallback.
+//
+// Dengan begitu tombol View All tetap bekerja walaupun
+// navigation.js belum melakukan binding ke button tersebut.
+// ============================================================
+
+let dashboardViewAllBound = false;
+
+
+function dashboardBindViewAllButton() {
+
+    if (dashboardViewAllBound) {
+        return;
+    }
+
+
+    const buttons =
+        document.querySelectorAll(
+            'button[data-page="leads"]'
+        );
+
+
+    if (!buttons.length) {
+        return;
+    }
+
+
+    buttons.forEach(
+        button => {
+
+            if (
+                button.dataset.dashboardViewAllBound ===
+                "true"
+            ) {
+                return;
+            }
+
+
+            button.dataset.dashboardViewAllBound =
+                "true";
+
+
+            button.addEventListener(
+                "click",
+                async function (event) {
+
+                    /*
+                     * Jika navigation.js sudah bekerja,
+                     * event tetap aman.
+                     *
+                     * Kita gunakan preventDefault hanya
+                     * untuk mencegah submit pada button
+                     * jika berada di dalam form.
+                     */
+
+                    event.preventDefault();
+
+
+                    try {
+
+                        await showLeads();
+
+                    } catch (error) {
+
+                        console.error(
+                            "FSI CRM: View All -> Leads error:",
+                            error
+                        );
+                    }
+                }
+            );
+        }
+    );
+
+
+    dashboardViewAllBound =
+        true;
+
+
+    console.log(
+        "FSI CRM: View All button bound."
+    );
+}
+
+
+// ============================================================
 // LISTEN FOR LEAD CHANGES
 // ============================================================
 
@@ -2274,12 +2462,8 @@ document.addEventListener(
 
 
         const isVisible =
-            page.classList.contains(
-                "active"
-            ) &&
-            !page.classList.contains(
-                "hidden"
-            );
+            page.classList.contains("active") &&
+            !page.classList.contains("hidden");
 
 
         if (
@@ -2367,9 +2551,15 @@ document.addEventListener(
                         updateDashboard();
                     }
 
+
+                    dashboardBindViewAllButton();
+
                 },
                 100
             );
+        } else {
+
+            dashboardBindViewAllButton();
         }
     }
 );
@@ -2393,6 +2583,28 @@ document.addEventListener(
 
         dashboardStats =
             null;
+
+
+        /*
+         * Bind tombol View All.
+         */
+
+        dashboardBindViewAllButton();
+
+
+        /*
+         * Jika navigation/auth selesai setelah DOM ready,
+         * coba bind sekali lagi sebentar kemudian.
+         */
+
+        setTimeout(
+            function () {
+
+                dashboardBindViewAllButton();
+
+            },
+            300
+        );
 
 
         console.log(
@@ -2460,6 +2672,12 @@ window.renderDashboardPipeline =
 window.renderDashboardRecentLeads =
     renderDashboardRecentLeads;
 
+window.dashboardFindPipelineContainer =
+    dashboardFindPipelineContainer;
+
+window.dashboardFindRecentLeadsContainer =
+    dashboardFindRecentLeadsContainer;
+
 window.dashboardGetProfile =
     dashboardGetProfile;
 
@@ -2483,6 +2701,9 @@ window.getDashboardData =
 
 window.getDashboardStats =
     getDashboardStats;
+
+window.dashboardBindViewAllButton =
+    dashboardBindViewAllButton;
 
 
 // ============================================================
@@ -2529,6 +2750,10 @@ Object.assign(
 
         renderDashboardRecentLeads,
 
+        dashboardFindPipelineContainer,
+
+        dashboardFindRecentLeadsContainer,
+
         dashboardGetProfile,
 
         dashboardGetUser,
@@ -2543,7 +2768,9 @@ Object.assign(
 
         getDashboardData,
 
-        getDashboardStats
+        getDashboardStats,
+
+        dashboardBindViewAllButton
     }
 );
 
