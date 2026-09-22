@@ -1,7 +1,7 @@
 /* =========================================================
    FSI CRM
    MAIN APPLICATION STYLES
-   Version: 2026.09.3
+   Version: 2026.09.4
 ========================================================= */
 
 
@@ -855,17 +855,29 @@ svg:last-child {
 }
 
 
-/* ---------------------------------------------------------
+/* =========================================================
    CUSTOMER PROFILE PAGE VISIBILITY
---------------------------------------------------------- */
+   IMPORTANT:
+   The profile page is controlled ONLY by .active.
+   Responsive breakpoints must NEVER force it visible.
+========================================================= */
 
 #view-customer-profile {
     position: relative;
 
     width: 100%;
+    min-width: 0;
     min-height: 1px;
 
     overflow: visible;
+
+    box-sizing: border-box;
+}
+
+#view-customer-profile:not(.active) {
+    display: none !important;
+
+    visibility: hidden;
 }
 
 #view-customer-profile.active {
@@ -877,6 +889,8 @@ svg:last-child {
 
 #view-customer-profile.hidden {
     display: none !important;
+
+    visibility: hidden;
 }
 
 #customer-profile-container {
@@ -888,15 +902,17 @@ svg:last-child {
 
     display: block;
 
-    visibility: visible;
-    opacity: 1;
+    box-sizing: border-box;
 }
 
 #customerProfilePage {
     position: relative;
 
     width: 100%;
+    min-width: 0;
     min-height: 1px;
+
+    box-sizing: border-box;
 }
 
 
@@ -921,7 +937,7 @@ svg:last-child {
     visibility: visible;
 }
 
-.crm-full-edit-page * ,
+.crm-full-edit-page *,
 .crm-full-edit-page *::before,
 .crm-full-edit-page *::after {
     box-sizing: border-box;
@@ -2040,18 +2056,12 @@ svg:last-child {
 
 /* =========================================================
    CUSTOMER PROFILE
-   Modern Customer Detail / CRM Profile
 ========================================================= */
 
 .customer-profile-container {
     width: 100%;
     min-width: 0;
 }
-
-
-/* ---------------------------------------------------------
-   MAIN PROFILE WRAPPER
---------------------------------------------------------- */
 
 .customer-profile {
     width: 100%;
@@ -2064,9 +2074,9 @@ svg:last-child {
 }
 
 
-/* ---------------------------------------------------------
+/* =========================================================
    PROFILE HEADER
---------------------------------------------------------- */
+========================================================= */
 
 .customer-profile-header {
     position: relative;
@@ -2178,9 +2188,9 @@ svg:last-child {
 }
 
 
-/* ---------------------------------------------------------
+/* =========================================================
    CUSTOMER IDENTITY
---------------------------------------------------------- */
+========================================================= */
 
 .customer-identity {
     min-width: 0;
@@ -2261,11 +2271,6 @@ svg:last-child {
     margin-top: 7px;
 }
 
-
-/* ---------------------------------------------------------
-   STATUS BADGE INSIDE PROFILE
---------------------------------------------------------- */
-
 .customer-profile .status-badge {
     min-height: 27px;
 
@@ -2277,9 +2282,9 @@ svg:last-child {
 }
 
 
-/* ---------------------------------------------------------
+/* =========================================================
    FOLLOW UP HIGHLIGHT
---------------------------------------------------------- */
+========================================================= */
 
 .profile-followup-card {
     position: relative;
@@ -2405,9 +2410,9 @@ svg:last-child {
 }
 
 
-/* ---------------------------------------------------------
+/* =========================================================
    FOLLOW UP STATES
---------------------------------------------------------- */
+========================================================= */
 
 .followup-badge {
     position: relative;
@@ -2470,9 +2475,9 @@ svg:last-child {
 }
 
 
-/* ---------------------------------------------------------
+/* =========================================================
    PROFILE CARD
---------------------------------------------------------- */
+========================================================= */
 
 .profile-card {
     width: 100%;
@@ -2500,9 +2505,9 @@ svg:last-child {
 }
 
 
-/* ---------------------------------------------------------
+/* =========================================================
    PROFILE CARD HEADER
---------------------------------------------------------- */
+========================================================= */
 
 .profile-card-header {
     display: flex;
@@ -2551,9 +2556,9 @@ svg:last-child {
 }
 
 
-/* ---------------------------------------------------------
+/* =========================================================
    PROFILE INFORMATION GRID
---------------------------------------------------------- */
+========================================================= */
 
 .profile-info-grid {
     display: grid;
@@ -2632,9 +2637,9 @@ svg:last-child {
 }
 
 
-/* ---------------------------------------------------------
+/* =========================================================
    PROFILE PIPELINE
---------------------------------------------------------- */
+========================================================= */
 
 .profile-pipeline-grid {
     display: grid;
@@ -2764,9 +2769,9 @@ svg:last-child {
 }
 
 
-/* ---------------------------------------------------------
+/* =========================================================
    PROFILE NOTES
---------------------------------------------------------- */
+========================================================= */
 
 .profile-notes {
     margin: 0 19px 19px;
@@ -2800,9 +2805,9 @@ svg:last-child {
 }
 
 
-/* ---------------------------------------------------------
-   PROFILE META / RECORD INFORMATION
---------------------------------------------------------- */
+/* =========================================================
+   PROFILE META
+========================================================= */
 
 .profile-meta-card {
     width: 100%;
@@ -2857,9 +2862,9 @@ svg:last-child {
 }
 
 
-/* ---------------------------------------------------------
-   PROFILE EMPTY STATE
---------------------------------------------------------- */
+/* =========================================================
+   PROFILE STATES
+========================================================= */
 
 .customer-profile-container > .empty-state {
     min-height: 360px;
@@ -2873,11 +2878,6 @@ svg:last-child {
     box-shadow: var(--shadow-xs);
 }
 
-
-/* ---------------------------------------------------------
-   PROFILE LOADING STATE
---------------------------------------------------------- */
-
 .customer-profile-container .loading-state {
     min-height: 360px;
 
@@ -2889,11 +2889,6 @@ svg:last-child {
 
     box-shadow: var(--shadow-xs);
 }
-
-
-/* ---------------------------------------------------------
-   PROFILE ERROR STATE
---------------------------------------------------------- */
 
 .customer-profile-container .error-state {
     margin: 0;
@@ -3283,36 +3278,25 @@ svg:last-child {
         grid-template-columns: 1fr;
     }
 
-    /* IMPORTANT:
-       Do not force CRM pages visible here.
-       Visibility is controlled by .crm-page.active.
+    /*
+       IMPORTANT:
+       Customer Profile visibility is NOT controlled here.
+       The parent .crm-page.active rule controls visibility.
     */
-
-    #view-customer-profile.active {
-        display: block !important;
-
-        visibility: visible;
-        opacity: 1;
-    }
 
     #customer-profile-container {
         width: 100%;
         max-width: none;
+    }
 
-        display: block;
-
-        visibility: visible;
-        opacity: 1;
+    #customerProfilePage {
+        width: 100%;
+        max-width: none;
     }
 
     .crm-full-edit-page {
         width: 100%;
         max-width: none;
-
-        display: block;
-
-        visibility: visible;
-        opacity: 1;
     }
 
     .crm-full-edit-page .crm-edit-content {
@@ -3593,34 +3577,21 @@ svg:last-child {
 
     /* -----------------------------------------------------
        CUSTOMER PROFILE — MOBILE
+       No display/visibility forcing here.
+       Parent .crm-page controls page visibility.
     ----------------------------------------------------- */
-
-    #view-customer-profile.active {
-        display: block !important;
-
-        visibility: visible;
-        opacity: 1;
-    }
 
     #customer-profile-container {
         width: 100%;
-
-        display: block;
-
-        visibility: visible;
-        opacity: 1;
-
         overflow: visible;
+    }
+
+    #customerProfilePage {
+        width: 100%;
     }
 
     .crm-full-edit-page {
         width: 100%;
-
-        display: block;
-
-        visibility: visible;
-        opacity: 1;
-
         overflow: visible;
     }
 
