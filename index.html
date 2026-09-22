@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
@@ -107,6 +107,561 @@
         href="css/dashboard.css"
     >
 
+
+    <!-- =====================================================
+         LOGIN PAGE ONLY
+         Additional styling for split-screen login.
+         Does not affect CRM pages.
+    ====================================================== -->
+
+    <style>
+
+        /* =====================================================
+           LOGIN SPLIT SCREEN
+        ====================================================== */
+
+        .login-page {
+            min-height: 100vh;
+            width: 100%;
+            background: #f5f7fb;
+        }
+
+
+        .login-container {
+            min-height: 100vh;
+            width: 100%;
+            display: flex;
+            align-items: stretch;
+            justify-content: center;
+            padding: 0;
+        }
+
+
+        .login-card {
+            width: 100%;
+            max-width: none;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            border: 0;
+            border-radius: 0;
+            background: #ffffff;
+            box-shadow: none;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(420px, 1fr);
+            overflow: hidden;
+        }
+
+
+        /* =====================================================
+           HERO PANEL
+        ====================================================== */
+
+        .login-hero {
+            position: relative;
+            min-height: 100vh;
+            width: 100%;
+            overflow: hidden;
+            background-image:
+                linear-gradient(
+                    135deg,
+                    rgba(15, 23, 42, 0.18),
+                    rgba(15, 23, 42, 0.72)
+                ),
+                url("login-hero.jpg");
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            display: flex;
+            align-items: flex-end;
+        }
+
+
+        .login-hero::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(
+                    to top,
+                    rgba(2, 6, 23, 0.82) 0%,
+                    rgba(2, 6, 23, 0.38) 42%,
+                    rgba(2, 6, 23, 0.05) 75%,
+                    rgba(2, 6, 23, 0.08) 100%
+                );
+            pointer-events: none;
+        }
+
+
+        .login-hero-content {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            padding: 56px;
+            color: #ffffff;
+        }
+
+
+        .login-hero-brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 22px;
+        }
+
+
+        .login-hero-brand-mark {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.26);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            overflow: hidden;
+        }
+
+
+        .login-hero-brand-mark img {
+            width: 34px;
+            height: 34px;
+            object-fit: contain;
+        }
+
+
+        .login-hero-brand-name {
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+
+        .login-hero-title {
+            margin: 0;
+            max-width: 650px;
+            font-size: clamp(38px, 4vw, 64px);
+            line-height: 1.04;
+            font-weight: 800;
+            letter-spacing: -0.045em;
+            color: #ffffff;
+        }
+
+
+        .login-hero-description {
+            margin: 20px 0 0;
+            max-width: 590px;
+            font-size: 17px;
+            line-height: 1.7;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.88);
+        }
+
+
+        .login-hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 28px;
+            padding: 9px 14px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            color: rgba(255, 255, 255, 0.94);
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+
+
+        .login-hero-badge-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #60a5fa;
+            box-shadow: 0 0 12px rgba(96, 165, 250, 0.9);
+        }
+
+
+        /* =====================================================
+           LOGIN FORM PANEL
+        ====================================================== */
+
+        .login-form-panel {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 48px;
+            background:
+                radial-gradient(
+                    circle at top right,
+                    rgba(37, 99, 235, 0.07),
+                    transparent 35%
+                ),
+                #ffffff;
+        }
+
+
+        .login-form-wrapper {
+            width: 100%;
+            max-width: 430px;
+        }
+
+
+        .login-logo {
+            width: 58px;
+            height: 58px;
+            margin: 0 0 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+
+        .login-logo img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+
+        .login-heading {
+            margin-bottom: 34px;
+        }
+
+
+        .login-title {
+            margin: 0;
+            font-size: 32px;
+            line-height: 1.15;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: #111827;
+        }
+
+
+        .login-subtitle {
+            margin: 9px 0 0;
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+
+        .login-form {
+            width: 100%;
+        }
+
+
+        .login-form .form-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+
+        .login-form .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #374151;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+
+        .login-form .form-group input {
+            width: 100%;
+            min-height: 50px;
+            box-sizing: border-box;
+            border: 1px solid #dbe1ea;
+            border-radius: 12px;
+            padding: 0 15px;
+            background: #ffffff;
+            color: #111827;
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+            transition:
+                border-color 0.2s ease,
+                box-shadow 0.2s ease,
+                background 0.2s ease;
+        }
+
+
+        .login-form .form-group input::placeholder {
+            color: #9ca3af;
+        }
+
+
+        .login-form .form-group input:hover {
+            border-color: #c7ced9;
+        }
+
+
+        .login-form .form-group input:focus {
+            border-color: #2563eb;
+            box-shadow:
+                0 0 0 4px rgba(37, 99, 235, 0.10);
+            background: #ffffff;
+        }
+
+
+        /* =====================================================
+           PASSWORD FIELD
+        ====================================================== */
+
+        .password-field {
+            position: relative;
+        }
+
+
+        .password-field input {
+            padding-right: 50px !important;
+        }
+
+
+        .password-toggle {
+            position: absolute;
+            right: 7px;
+            bottom: 7px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            border: 0;
+            border-radius: 9px;
+            background: transparent;
+            color: #6b7280;
+            cursor: pointer;
+            transition:
+                background 0.2s ease,
+                color 0.2s ease;
+        }
+
+
+        .password-toggle:hover {
+            background: #f3f4f6;
+            color: #2563eb;
+        }
+
+
+        .password-toggle:focus-visible {
+            outline: 2px solid #2563eb;
+            outline-offset: 2px;
+        }
+
+
+        .password-toggle svg {
+            width: 18px;
+            height: 18px;
+        }
+
+
+        /* =====================================================
+           LOGIN ERROR
+        ====================================================== */
+
+        .login-error {
+            min-height: 0;
+            margin: 0 0 14px;
+            color: #dc2626;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+
+        /* =====================================================
+           LOGIN BUTTON
+        ====================================================== */
+
+        .login-form .primary-btn {
+            width: 100%;
+            min-height: 50px;
+            justify-content: center;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+
+        .login-form .primary-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+
+        /* =====================================================
+           LOGIN FOOTER
+        ====================================================== */
+
+        .login-footer {
+            margin-top: 30px;
+            padding-top: 22px;
+            border-top: 1px solid #edf0f4;
+            text-align: center;
+            color: #9ca3af;
+            font-size: 12px;
+        }
+
+
+        /* =====================================================
+           RESPONSIVE
+        ====================================================== */
+
+        @media (max-width: 960px) {
+
+            .login-card {
+                grid-template-columns: minmax(0, 0.9fr) minmax(390px, 1.1fr);
+            }
+
+
+            .login-hero-content {
+                padding: 42px;
+            }
+
+
+            .login-form-panel {
+                padding: 38px;
+            }
+
+
+            .login-hero-title {
+                font-size: 42px;
+            }
+
+        }
+
+
+        @media (max-width: 760px) {
+
+            .login-card {
+                display: flex;
+                flex-direction: column;
+                min-height: 100vh;
+            }
+
+
+            .login-hero {
+                min-height: 320px;
+                height: 42vh;
+                max-height: 430px;
+                flex: 0 0 auto;
+                align-items: flex-end;
+            }
+
+
+            .login-hero-content {
+                padding: 30px 26px;
+            }
+
+
+            .login-hero-brand {
+                margin-bottom: 14px;
+            }
+
+
+            .login-hero-brand-mark {
+                width: 40px;
+                height: 40px;
+                border-radius: 11px;
+            }
+
+
+            .login-hero-brand-mark img {
+                width: 28px;
+                height: 28px;
+            }
+
+
+            .login-hero-title {
+                font-size: 34px;
+            }
+
+
+            .login-hero-description {
+                margin-top: 12px;
+                font-size: 14px;
+                line-height: 1.55;
+            }
+
+
+            .login-hero-badge {
+                margin-top: 18px;
+                padding: 7px 11px;
+                font-size: 11px;
+            }
+
+
+            .login-form-panel {
+                min-height: auto;
+                flex: 1;
+                padding: 36px 26px 30px;
+                align-items: flex-start;
+            }
+
+
+            .login-form-wrapper {
+                max-width: none;
+            }
+
+
+            .login-logo {
+                width: 48px;
+                height: 48px;
+                margin-bottom: 20px;
+            }
+
+
+            .login-heading {
+                margin-bottom: 26px;
+            }
+
+
+            .login-title {
+                font-size: 27px;
+            }
+
+        }
+
+
+        @media (max-width: 420px) {
+
+            .login-hero {
+                min-height: 290px;
+                height: 38vh;
+            }
+
+
+            .login-hero-content {
+                padding: 24px 20px;
+            }
+
+
+            .login-hero-title {
+                font-size: 29px;
+            }
+
+
+            .login-hero-description {
+                font-size: 13px;
+            }
+
+
+            .login-form-panel {
+                padding: 30px 20px 24px;
+            }
+
+        }
+
+    </style>
+
 </head>
 
 
@@ -126,103 +681,188 @@
 
             <div class="login-card">
 
-                <div class="login-logo">
 
-                    <img
-                        src="logo-fsi.png"
-                        alt="FSI Logo"
-                    >
+                <!-- =================================================
+                     LOGIN HERO
+                ================================================== -->
+
+                <div class="login-hero">
+
+                    <div class="login-hero-content">
+
+                        <div class="login-hero-brand">
+
+                            <div class="login-hero-brand-mark">
+
+                                <img
+                                    src="logo-fsi.png"
+                                    alt="FSI Logo"
+                                >
+
+                            </div>
+
+
+                            <span class="login-hero-brand-name">
+                                FSI CRM
+                            </span>
+
+                        </div>
+
+
+                        <h1 class="login-hero-title">
+                            Manage Sales, Leads, Customers, and Sales in One Place.
+                        </h1>
+
+
+                        <p class="login-hero-description">
+                            A professional sales management workspace for managing
+                            customers, leads, sales activities, and your complete
+                            sales pipeline.
+                        </p>
+
+
+                        <div class="login-hero-badge">
+
+                            <span class="login-hero-badge-dot"></span>
+
+                            <span>
+                                Sales Management System
+                            </span>
+
+                        </div>
+
+                    </div>
 
                 </div>
 
 
-                <div class="login-heading">
 
-                    <h1 class="login-title">
-                        FSI CRM
-                    </h1>
+                <!-- =================================================
+                     LOGIN FORM
+                ================================================== -->
 
-                    <p class="login-subtitle">
-                        Sales Management System
-                    </p>
+                <div class="login-form-panel">
 
-                </div>
+                    <div class="login-form-wrapper">
 
 
-                <form
-                    id="login-form"
-                    class="login-form"
-                    autocomplete="on"
-                >
+                        <div class="login-logo">
 
-                    <div class="form-group">
+                            <img
+                                src="logo-fsi.png"
+                                alt="FSI Logo"
+                            >
 
-                        <label for="login-username">
-                            Username
-                        </label>
+                        </div>
 
-                        <input
-                            id="login-username"
-                            name="username"
-                            type="text"
-                            autocomplete="username"
-                            placeholder="Enter username"
-                            required
+
+                        <div class="login-heading">
+
+                            <h1 class="login-title">
+                                Welcome Back
+                            </h1>
+
+                            <p class="login-subtitle">
+                                Sign in to your FSI CRM account.
+                            </p>
+
+                        </div>
+
+
+                        <form
+                            id="login-form"
+                            class="login-form"
+                            autocomplete="on"
                         >
 
+                            <div class="form-group">
+
+                                <label for="login-username">
+                                    Username
+                                </label>
+
+                                <input
+                                    id="login-username"
+                                    name="username"
+                                    type="text"
+                                    autocomplete="username"
+                                    placeholder="Enter username"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="form-group password-field">
+
+                                <label for="login-password">
+                                    Password
+                                </label>
+
+                                <input
+                                    id="login-password"
+                                    name="password"
+                                    type="password"
+                                    autocomplete="current-password"
+                                    placeholder="Enter password"
+                                    required
+                                >
+
+
+                                <button
+                                    id="password-toggle"
+                                    class="password-toggle"
+                                    type="button"
+                                    aria-label="Show password"
+                                    title="Show password"
+                                >
+
+                                    <i
+                                        data-lucide="eye"
+                                        aria-hidden="true"
+                                    ></i>
+
+                                </button>
+
+                            </div>
+
+
+                            <div
+                                id="login-error"
+                                class="login-error"
+                                role="alert"
+                            ></div>
+
+
+                            <button
+                                id="login-button"
+                                class="btn-primary primary-btn"
+                                type="submit"
+                            >
+
+                                <i
+                                    data-lucide="log-in"
+                                    aria-hidden="true"
+                                ></i>
+
+                                <span>
+                                    Sign In
+                                </span>
+
+                            </button>
+
+                        </form>
+
+
+                        <div class="login-footer">
+
+                            <span>
+                                FSI Consultant
+                            </span>
+
+                        </div>
+
                     </div>
-
-
-                    <div class="form-group">
-
-                        <label for="login-password">
-                            Password
-                        </label>
-
-                        <input
-                            id="login-password"
-                            name="password"
-                            type="password"
-                            autocomplete="current-password"
-                            placeholder="Enter password"
-                            required
-                        >
-
-                    </div>
-
-
-                    <div
-                        id="login-error"
-                        class="login-error"
-                        role="alert"
-                    ></div>
-
-
-                    <button
-                        id="login-button"
-                        class="btn-primary primary-btn"
-                        type="submit"
-                    >
-
-                        <i
-                            data-lucide="log-in"
-                            aria-hidden="true"
-                        ></i>
-
-                        <span>
-                            Sign In
-                        </span>
-
-                    </button>
-
-                </form>
-
-
-                <div class="login-footer">
-
-                    <span>
-                        FSI Consultant
-                    </span>
 
                 </div>
 
@@ -254,8 +894,6 @@
                 id="top-header"
                 class="top-header"
             >
-
-                <!-- BRAND -->
 
                 <div
                     class="brand"
@@ -290,9 +928,6 @@
                 </div>
 
 
-
-                <!-- MOBILE MENU -->
-
                 <button
                     id="mobileMenuBtn"
                     class="mobile-menu-btn"
@@ -310,18 +945,11 @@
                 </button>
 
 
-
-                <!-- =================================================
-                     DESKTOP NAVIGATION
-                ================================================== -->
-
                 <nav
                     id="main-navigation"
                     class="main-navigation"
                     aria-label="Main navigation"
                 >
-
-                    <!-- DASHBOARD -->
 
                     <button
                         type="button"
@@ -342,9 +970,6 @@
                     </button>
 
 
-
-                    <!-- LEADS -->
-
                     <button
                         type="button"
                         class="nav-link"
@@ -363,9 +988,6 @@
 
                     </button>
 
-
-
-                    <!-- SALES DROPDOWN -->
 
                     <div
                         class="nav-dropdown"
@@ -444,9 +1066,6 @@
                     </div>
 
 
-
-                    <!-- MANAGE SALES -->
-
                     <button
                         type="button"
                         id="manage-sales-nav"
@@ -468,11 +1087,6 @@
 
                 </nav>
 
-
-
-                <!-- =================================================
-                     USER AREA
-                ================================================== -->
 
                 <div
                     id="topbar-user"
@@ -622,11 +1236,6 @@
                 id="main-content"
                 class="main-content"
             >
-
-
-                <!-- =================================================
-                     PAGE HEADER
-                ================================================== -->
 
                 <div class="page-header">
 
@@ -1132,13 +1741,6 @@
                     </div>
 
 
-
-                    <!-- =================================================
-                         FILTERS
-                         Location filter removed.
-                         Status + Business remain.
-                    ================================================== -->
-
                     <div class="filter-panel">
 
                         <div class="search-box">
@@ -1157,8 +1759,6 @@
 
                         </div>
 
-
-                        <!-- STATUS DROPDOWN -->
 
                         <select
                             id="filter-status"
@@ -1208,8 +1808,6 @@
                         </select>
 
 
-                        <!-- BUSINESS DROPDOWN -->
-
                         <select
                             id="filter-business"
                             aria-label="Filter business"
@@ -1221,8 +1819,6 @@
 
                         </select>
 
-
-                        <!-- SALES FILTER - ADMIN ONLY -->
 
                         <select
                             id="filter-sales"
@@ -1239,12 +1835,6 @@
                     </div>
 
 
-
-                    <!-- =================================================
-                         LEADS TABLE
-                         10 COLUMNS
-                    ================================================== -->
-
                     <div
                         class="table-panel table-container"
                     >
@@ -1258,45 +1848,25 @@
 
                                 <tr>
 
-                                    <th>
-                                        Customer
-                                    </th>
+                                    <th>Customer</th>
 
-                                    <th>
-                                        WhatsApp
-                                    </th>
+                                    <th>WhatsApp</th>
 
-                                    <th>
-                                        Email
-                                    </th>
+                                    <th>Email</th>
 
-                                    <th>
-                                        Business
-                                    </th>
+                                    <th>Business</th>
 
-                                    <th>
-                                        Sales
-                                    </th>
+                                    <th>Sales</th>
 
-                                    <th>
-                                        Status
-                                    </th>
+                                    <th>Status</th>
 
-                                    <th>
-                                        Last Update
-                                    </th>
+                                    <th>Last Update</th>
 
-                                    <th>
-                                        Progress
-                                    </th>
+                                    <th>Progress</th>
 
-                                    <th>
-                                        Note
-                                    </th>
+                                    <th>Note</th>
 
-                                    <th>
-                                        Actions
-                                    </th>
+                                    <th>Actions</th>
 
                                 </tr>
 
@@ -1322,11 +1892,6 @@
 
                     </div>
 
-
-
-                    <!-- =================================================
-                         PAGINATION
-                    ================================================== -->
 
                     <div class="pagination-wrapper">
 
@@ -1461,7 +2026,6 @@
                     </div>
 
 
-
                     <div
                         class="table-panel table-container"
                     >
@@ -1475,33 +2039,19 @@
 
                                 <tr>
 
-                                    <th>
-                                        Sales
-                                    </th>
+                                    <th>Sales</th>
 
-                                    <th>
-                                        Username
-                                    </th>
+                                    <th>Username</th>
 
-                                    <th>
-                                        Phone
-                                    </th>
+                                    <th>Phone</th>
 
-                                    <th>
-                                        Role
-                                    </th>
+                                    <th>Role</th>
 
-                                    <th>
-                                        Status
-                                    </th>
+                                    <th>Status</th>
 
-                                    <th>
-                                        Created
-                                    </th>
+                                    <th>Created</th>
 
-                                    <th>
-                                        Action
-                                    </th>
+                                    <th>Action</th>
 
                                 </tr>
 
@@ -1526,7 +2076,6 @@
                         </table>
 
                     </div>
-
 
 
                     <div class="pagination-wrapper">
@@ -1636,7 +2185,6 @@
             </div>
 
 
-
             <form
                 id="lead-form"
                 class="modal-body"
@@ -1684,10 +2232,6 @@
 
                     </div>
 
-
-                    <!-- =================================================
-                         BUSINESS DROPDOWN
-                    ================================================== -->
 
                     <div class="form-group">
 
@@ -1741,8 +2285,6 @@
                     </div>
 
 
-                    <!-- LOCATION REMAINS NORMAL INPUT -->
-
                     <div class="form-group">
 
                         <label for="leadLocation">
@@ -1758,8 +2300,6 @@
 
                     </div>
 
-
-                    <!-- STATUS DROPDOWN -->
 
                     <div class="form-group">
 
@@ -1943,7 +2483,6 @@
                 </div>
 
 
-
                 <div class="modal-footer">
 
                     <button
@@ -2029,7 +2568,6 @@
                 </button>
 
             </div>
-
 
 
             <form
@@ -2160,7 +2698,6 @@
                     </div>
 
                 </div>
-
 
 
                 <div class="modal-footer">
@@ -2342,6 +2879,95 @@
                     );
 
                 }
+
+            }
+        );
+    </script>
+
+
+
+    <!-- =====================================================
+         PASSWORD SHOW / HIDE
+         Login UI only.
+    ====================================================== -->
+
+    <script>
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
+
+                const passwordInput =
+                    document.getElementById("login-password");
+
+                const passwordToggle =
+                    document.getElementById("password-toggle");
+
+
+                if (
+                    !passwordInput ||
+                    !passwordToggle
+                ) {
+                    return;
+                }
+
+
+                passwordToggle.addEventListener(
+                    "click",
+                    function () {
+
+                        const isPassword =
+                            passwordInput.type === "password";
+
+
+                        passwordInput.type =
+                            isPassword
+                                ? "text"
+                                : "password";
+
+
+                        passwordToggle.setAttribute(
+                            "aria-label",
+                            isPassword
+                                ? "Hide password"
+                                : "Show password"
+                        );
+
+
+                        passwordToggle.setAttribute(
+                            "title",
+                            isPassword
+                                ? "Hide password"
+                                : "Show password"
+                        );
+
+
+                        passwordToggle.innerHTML =
+                            isPassword
+                                ? `
+                                    <i
+                                        data-lucide="eye-off"
+                                        aria-hidden="true"
+                                    ></i>
+                                  `
+                                : `
+                                    <i
+                                        data-lucide="eye"
+                                        aria-hidden="true"
+                                    ></i>
+                                  `;
+
+
+                        if (
+                            window.lucide &&
+                            typeof window.lucide.createIcons === "function"
+                        ) {
+
+                            window.lucide.createIcons();
+
+                        }
+
+                    }
+                );
 
             }
         );
