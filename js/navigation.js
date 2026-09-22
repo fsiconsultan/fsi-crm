@@ -1,6 +1,7 @@
 // ============================================================
 // FSI CRM - NAVIGATION SYSTEM
 // File: js/navigation.js
+// Version: 2026.09.4
 // ============================================================
 
 "use strict";
@@ -33,6 +34,31 @@
     sales: "view-sales",
     manageSales: "view-sales",
     "manage-sales": "view-sales"
+  };
+
+
+  // ==========================================================
+  // CANONICAL PAGE MAP
+  // ==========================================================
+  //
+  // IMPORTANT:
+  // Satu element ID hanya boleh memiliki satu nama halaman
+  // utama/canonical.
+  //
+  // Ini mencegah:
+  //
+  // view-customer-profile
+  //
+  // terbaca sebagai "customer" dan bukan
+  // "customer-profile".
+  //
+  // ==========================================================
+
+  const CANONICAL_PAGE_BY_ID = {
+    "view-dashboard": "dashboard",
+    "view-leads": "leads",
+    "view-customer-profile": "customer-profile",
+    "view-sales": "sales"
   };
 
 
@@ -159,8 +185,10 @@
       return null;
     }
 
+
     let value =
       String(target).trim();
+
 
     if (!value) {
       return null;
@@ -176,19 +204,26 @@
 
 
     // --------------------------------------------------------
-    // Direct page ID
+    // DIRECT PAGE ID
+    // --------------------------------------------------------
+    //
+    // IMPORTANT:
+    // Jangan mencari reverse dari PAGE_MAP karena:
+    //
+    // customer
+    // customer-profile
+    // profile
+    //
+    // semuanya memiliki ID yang sama.
+    //
+    // Kita gunakan canonical mapping.
+    //
     // --------------------------------------------------------
 
-    const directPageKey =
-      Object.keys(PAGE_MAP).find(
-        function (key) {
-          return PAGE_MAP[key] === value;
-        }
-      );
+    if (CANONICAL_PAGE_BY_ID[value]) {
 
+      return CANONICAL_PAGE_BY_ID[value];
 
-    if (directPageKey) {
-      return directPageKey;
     }
 
 
@@ -202,8 +237,52 @@
         .toLowerCase();
 
 
-    if (PAGE_MAP[value]) {
+    // --------------------------------------------------------
+    // Exact canonical targets
+    // --------------------------------------------------------
+
+    if (
+      value === "dashboard" ||
+      value === "leads" ||
+      value === "customers" ||
+      value === "customer" ||
+      value === "customer-profile" ||
+      value === "profile" ||
+      value === "sales" ||
+      value === "managesales" ||
+      value === "manage-sales"
+    ) {
+
+      // ------------------------------------------------------
+      // Canonicalize aliases
+      // ------------------------------------------------------
+
+      if (
+        value === "customers"
+      ) {
+        return "leads";
+      }
+
+
+      if (
+        value === "customer" ||
+        value === "profile" ||
+        value === "customer-profile"
+      ) {
+        return "customer-profile";
+      }
+
+
+      if (
+        value === "managesales" ||
+        value === "manage-sales"
+      ) {
+        return "sales";
+      }
+
+
       return value;
+
     }
 
 
@@ -258,6 +337,7 @@
     const normalized =
       normalizeTarget(pageName);
 
+
     if (!normalized) {
       return null;
     }
@@ -265,6 +345,7 @@
 
     const pageId =
       PAGE_MAP[normalized];
+
 
     if (!pageId) {
       return null;
@@ -278,20 +359,6 @@
 
   // ==========================================================
   // GET ALL CRM PAGES
-  // ==========================================================
-  //
-  // IMPORTANT:
-  // Versi sebelumnya hanya mencari ".crm-page".
-  //
-  // Index.html kita menggunakan ".app-page".
-  //
-  // Sekarang kita dukung:
-  //   .crm-page
-  //   .app-page
-  //   [id^="view-"]
-  //
-  // Dengan ini Dashboard, Leads, Customer Profile,
-  // dan Manage Sales semuanya ikut dikontrol navigation.
   // ==========================================================
 
   function getAllPages() {
@@ -334,21 +401,100 @@
       page.classList.remove("active");
       page.classList.add("hidden");
 
+
       page.setAttribute(
         "aria-hidden",
         "true"
       );
 
 
-      // IMPORTANT:
-      // Jangan biarkan inline display:none
-      // mengalahkan class "active".
+      // Keep existing behavior.
+      // Active page will be restored immediately by showPage().
       page.style.display = "none";
 
     });
 
   }
 
+
+  // ==========================================================
+  // FORCE PAGE ACTIVE
+  // ==========================================================
+  //
+  // Centralized function khusus untuk memastikan page aktif.
+  //
+  // Ini penting karena CSS memakai:
+  //
+  // .crm-page {
+  //   display:none !important;
+  // }
+  //
+  // .crm-page.active {
+  //   display:block !important;
+  // }
+  //
+  // Jadi class "active" harus selalu dipasang pada page,
+  // bukan hanya mengandalkan inline style.
+  //
+  // ==========================================================
+
+  function activatePageElement(page) {
+
+    if (!page) {
+      return false;
+    }
+
+
+    page.classList.remove("hidden");
+    page.classList.add("active");
+
+
+    page.setAttribute(
+      "aria-hidden",
+      "false"
+    );
+
+
+    // --------------------------------------------------------
+    // Remove stale inline display value.
+    // CSS .active menjadi authority utama.
+    // --------------------------------------------------------
+
+    page.style.removeProperty(
+      "display"
+    );
+
+
+    // --------------------------------------------------------
+    // Safety fallback.
+    // --------------------------------------------------------
+
+    const computedStyle =
+      window.getComputedStyle(page);
+
+
+    if (
+      computedStyle.display === "none"
+    ) {
+
+      // Do NOT leave a normal inline display value
+      // as the primary mechanism.
+      //
+      // Re-apply active class first.
+      page.classList.remove("hidden");
+      page.classList.add("active");
+
+    }
+
+
+    return true;
+
+  }
+
+
+  // ==========================================================
+  // SHOW PAGE
+  // ==========================================================
 
   function showPage(pageName, options) {
 
@@ -426,41 +572,12 @@
     // SHOW PAGE YANG DIPILIH
     // --------------------------------------------------------
 
-    page.classList.remove("hidden");
-    page.classList.add("active");
-
-    page.setAttribute(
-      "aria-hidden",
-      "false"
-    );
-
-
-    // IMPORTANT:
-    // Ini yang memastikan page benar-benar terlihat,
-    // walaupun sebelumnya mempunyai:
-    //
-    // display:none;
-    //
-    // di HTML atau CSS.
-    page.style.display = "";
+    activatePageElement(page);
 
 
     // --------------------------------------------------------
-    // Fallback untuk CSS yang memakai block
+    // Simpan canonical page name
     // --------------------------------------------------------
-
-    const computedStyle =
-      window.getComputedStyle(page);
-
-
-    if (
-      computedStyle.display === "none"
-    ) {
-
-      page.style.display = "block";
-
-    }
-
 
     currentPage =
       normalized;
@@ -540,6 +657,52 @@
 
     } catch (error) {
       // Ignore
+    }
+
+
+    // --------------------------------------------------------
+    // FINAL PROFILE SAFETY
+    // --------------------------------------------------------
+    //
+    // Khusus Customer Profile:
+    // Pastikan parent page tetap active setelah semua event.
+    //
+    // Ini tidak merender ulang profile.
+    // Hanya memastikan visibility page.
+    //
+    // --------------------------------------------------------
+
+    if (
+      normalized ===
+      "customer-profile"
+    ) {
+
+      requestAnimationFrame(
+        function () {
+
+          if (
+            page &&
+            document.body.contains(page)
+          ) {
+
+            page.classList.remove(
+              "hidden"
+            );
+
+            page.classList.add(
+              "active"
+            );
+
+            page.setAttribute(
+              "aria-hidden",
+              "false"
+            );
+
+          }
+
+        }
+      );
+
     }
 
 
@@ -1289,11 +1452,14 @@
 
       allItem.href = "#";
 
+
       allItem.className =
         "nav-dropdown-item";
 
+
       allItem.textContent =
         "Semua Sales";
+
 
       allItem.dataset.salesId =
         "";
@@ -1336,11 +1502,14 @@
         emptyItem.className =
           "nav-dropdown-item disabled";
 
+
         emptyItem.textContent =
           "Belum ada Sales aktif";
 
+
         emptyItem.style.opacity =
           "0.55";
+
 
         emptyItem.style.cursor =
           "default";
@@ -1378,14 +1547,18 @@
 
             item.href = "#";
 
+
             item.className =
               "nav-dropdown-item sales-header-item";
+
 
             item.textContent =
               salesName;
 
+
             item.dataset.salesId =
               salesId;
+
 
             item.dataset.salesName =
               salesName;
@@ -2132,6 +2305,18 @@
   // ==========================================================
   // NAVIGATE CUSTOMER PROFILE
   // ==========================================================
+  //
+  // IMPORTANT:
+  //
+  // Urutan baru:
+  //
+  // 1. Pastikan halaman Customer Profile aktif.
+  // 2. Baru minta shelter.js membuka customer.
+  //
+  // Jadi shelter.js tidak perlu menjadi pihak pertama
+  // yang menentukan visibility page.
+  //
+  // ==========================================================
 
   function navigateCustomerProfile(
     customerId
@@ -2144,54 +2329,6 @@
         : "";
 
 
-    // --------------------------------------------------------
-    // Kalau ada ID → buka customer yang dipilih
-    // --------------------------------------------------------
-
-    if (id) {
-
-      if (
-        window.crmOpenCustomerProfile &&
-        typeof window.crmOpenCustomerProfile ===
-          "function"
-      ) {
-
-        return window.crmOpenCustomerProfile(
-          id
-        );
-
-      }
-
-
-      if (
-        window.FSIDashboard &&
-        typeof window.FSIDashboard
-          .showCustomerProfile ===
-          "function"
-      ) {
-
-        return window.FSIDashboard
-          .showCustomerProfile(
-            id
-          );
-
-      }
-
-    }
-
-
-    // --------------------------------------------------------
-    // Kalau tidak ada ID:
-    //
-    // Jangan panggil crmOpenCustomerProfile(null)
-    // karena itu menyebabkan:
-    //
-    // "Customer ID tidak ditemukan."
-    //
-    // Cukup tampilkan halaman Customer Profile.
-    // shelter.js dapat menangani halaman kosong.
-    // --------------------------------------------------------
-
     const page =
       getPageElement(
         "customer-profile"
@@ -2201,7 +2338,8 @@
     if (!page) {
 
       console.warn(
-        "[FSI Navigation] Customer Profile page tidak ditemukan."
+        "[FSI Navigation] Customer Profile page tidak ditemukan:",
+        "view-customer-profile"
       );
 
       return false;
@@ -2209,9 +2347,201 @@
     }
 
 
-    return showPage(
-      "customer-profile"
-    );
+    // --------------------------------------------------------
+    // STEP 1
+    // Aktifkan Customer Profile terlebih dahulu.
+    // --------------------------------------------------------
+
+    const pageActivated =
+      showPage(
+        "customer-profile",
+        {
+          keepScroll: false
+        }
+      );
+
+
+    if (!pageActivated) {
+      return false;
+    }
+
+
+    // --------------------------------------------------------
+    // STEP 2
+    // Kalau tidak ada ID, cukup tampilkan halaman kosong.
+    // --------------------------------------------------------
+
+    if (!id) {
+
+      return true;
+
+    }
+
+
+    // --------------------------------------------------------
+    // STEP 3
+    // Kalau ada shelter.js, biarkan module profile
+    // melakukan loading/render customer.
+    // --------------------------------------------------------
+
+    if (
+      window.crmOpenCustomerProfile &&
+      typeof window.crmOpenCustomerProfile ===
+        "function"
+    ) {
+
+      try {
+
+        const result =
+          window.crmOpenCustomerProfile(
+            id
+          );
+
+
+        // ----------------------------------------------------
+        // Pastikan parent page tetap aktif setelah
+        // shelter.js selesai melakukan navigasi/render.
+        // ----------------------------------------------------
+
+        if (
+          result &&
+          typeof result.then ===
+            "function"
+        ) {
+
+          return result.then(
+            function (value) {
+
+              requestAnimationFrame(
+                function () {
+
+                  const profilePage =
+                    getPageElement(
+                      "customer-profile"
+                    );
+
+
+                  if (profilePage) {
+
+                    profilePage.classList.remove(
+                      "hidden"
+                    );
+
+                    profilePage.classList.add(
+                      "active"
+                    );
+
+                    profilePage.setAttribute(
+                      "aria-hidden",
+                      "false"
+                    );
+
+                    profilePage.style.removeProperty(
+                      "display"
+                    );
+
+                  }
+
+                }
+              );
+
+
+              return value;
+
+            }
+          );
+
+        }
+
+
+        requestAnimationFrame(
+          function () {
+
+            const profilePage =
+              getPageElement(
+                "customer-profile"
+              );
+
+
+            if (profilePage) {
+
+              profilePage.classList.remove(
+                "hidden"
+              );
+
+              profilePage.classList.add(
+                "active"
+              );
+
+              profilePage.setAttribute(
+                "aria-hidden",
+                "false"
+              );
+
+              profilePage.style.removeProperty(
+                "display"
+              );
+
+            }
+
+          }
+        );
+
+
+        return result;
+
+      } catch (error) {
+
+        console.error(
+          "[FSI Navigation] Error membuka Customer Profile:",
+          error
+        );
+
+        return false;
+
+      }
+
+    }
+
+
+    // --------------------------------------------------------
+    // FALLBACK DASHBOARD MODULE
+    // --------------------------------------------------------
+
+    if (
+      window.FSIDashboard &&
+      typeof window.FSIDashboard
+        .showCustomerProfile ===
+        "function"
+    ) {
+
+      try {
+
+        return window.FSIDashboard
+          .showCustomerProfile(
+            id
+          );
+
+      } catch (error) {
+
+        console.error(
+          "[FSI Navigation] Error dashboard Customer Profile:",
+          error
+        );
+
+        return false;
+
+      }
+
+    }
+
+
+    // --------------------------------------------------------
+    // Tidak ada module loader.
+    // Page tetap ditampilkan.
+    // --------------------------------------------------------
+
+    return true;
 
   }
 
@@ -2616,6 +2946,38 @@
 
         }
 
+
+        // ----------------------------------------------------
+        // IMPORTANT:
+        // Resize tidak lagi mengubah visibility page.
+        //
+        // Ini mencegah Customer Profile baru muncul/hilang
+        // karena resize/F12.
+        // ----------------------------------------------------
+
+        const activePage =
+          $(".crm-page.active") ||
+          $(".app-page.active") ||
+          $('[id^="view-"].active');
+
+
+        if (activePage) {
+
+          activePage.classList.remove(
+            "hidden"
+          );
+
+          activePage.classList.add(
+            "active"
+          );
+
+          activePage.setAttribute(
+            "aria-hidden",
+            "false"
+          );
+
+        }
+
       }
     );
 
@@ -2676,24 +3038,13 @@
         );
 
 
-        // Pastikan active page benar-benar terlihat.
-        activePage.classList.remove(
-          "hidden"
+        // ----------------------------------------------------
+        // Ensure active page is visible.
+        // ----------------------------------------------------
+
+        activatePageElement(
+          activePage
         );
-
-        activePage.style.display =
-          "";
-
-        if (
-          window.getComputedStyle(
-            activePage
-          ).display === "none"
-        ) {
-
-          activePage.style.display =
-            "block";
-
-        }
 
 
         return;
@@ -2703,7 +3054,10 @@
     }
 
 
+    // --------------------------------------------------------
     // Default selalu Dashboard
+    // --------------------------------------------------------
+
     showPage(
       "dashboard"
     );
