@@ -1,4909 +1,2046 @@
 // ============================================================
-// FSI CRM - LEADS MANAGEMENT
-// File: js/leads.js
+// FSI CRM - CUSTOMER PROFILE
+// File: js/shelter.js
 // ============================================================
 //
 // Fungsi:
-// - Load leads dari Supabase
-// - Search & filter
-// - Pagination
-// - Add Customer
-// - Delete customer
-// - Sales assignment
-// - Admin / Sales access
-// - Integrasi Customer Profile / shelter.js
-// - Sales header selection
-// - Empty state tanpa stuck loading
-// - Add Customer tersedia untuk Admin & Sales
-// - Profile selalu menggunakan Customer ID yang benar
-// - FIX: Add Customer tidak lagi dianggap sebagai Profile
-// - FIX: Profile mengambil ID langsung dari tombol/baris customer
+// 1. Menampilkan Customer Profile
+// 2. Mengambil data customer dari tabel "leads"
+// 3. Mengambil nama Sales dari tabel "sales_users"
+// 4. Menampilkan Follow Up Date
+// 5. Menghitung selisih Follow Up berdasarkan TANGGAL KALENDER
+// 6. Tidak menangani Add Customer
+// 7. Tidak menangani Edit Customer
+//
+// Add / Edit Customer ditangani oleh:
+//     js/customer-form.js
+//
+// Daftar Leads ditangani oleh:
+//     js/leads.js
+//
 // ============================================================
-
-"use strict";
 
 (function () {
 
-    // ========================================================
-    // INTERNAL STATE
-    // ========================================================
-
-    let leadsInitialized = false;
-    let leadsLoading = false;
-    let searchTimer = null;
-    let activeRequestId = 0;
+    "use strict";
 
 
     // ========================================================
-    // DOM HELPERS
+    // STATE
     // ========================================================
 
-    function leadElement(...ids) {
+    let currentCustomerId = null;
+    let profileLoading = false;
 
-        for (const id of ids) {
 
-            if (!id) {
-                continue;
-            }
+    // ========================================================
+    // DOM HELPER
+    // ========================================================
 
-            const element =
-                document.getElementById(id);
+    function shelterElement() {
+
+        for (let i = 0; i < arguments.length; i++) {
+
+            const id = arguments[i];
+
+            if (!id) continue;
+
+            const element = document.getElementById(id);
 
             if (element) {
                 return element;
             }
+
         }
 
         return null;
     }
 
 
-    function leadGetSupabase() {
+    // ========================================================
+    // SUPABASE HELPER
+    // ========================================================
+
+    function getSupabaseClient() {
 
         if (
-            typeof window.supabaseClient !== "undefined" &&
-            window.supabaseClient
+            window.supabaseClient &&
+            typeof window.supabaseClient
+                .from === "function"
         ) {
             return window.supabaseClient;
         }
 
-        try {
 
-            if (
-                typeof supabaseClient !== "undefined" &&
-                supabaseClient
-            ) {
-                return supabaseClient;
-            }
-
-        } catch (error) {
-            // Ignore lexical lookup error.
+        if (
+            window.supabase &&
+            typeof window.supabase.from === "function"
+        ) {
+            return window.supabase;
         }
+
+
+        console.error(
+            "FSI CRM: Supabase client is not available."
+        );
 
         return null;
     }
 
 
-    function leadGetProfile() {
+    // ========================================================
+    // HTML ESCAPE
+    // ========================================================
+
+    function escapeHTML(value) {
 
         if (
-            typeof window.currentProfile !== "undefined" &&
-            window.currentProfile
+            value === null ||
+            value === undefined
         ) {
-            return window.currentProfile;
+            return "";
         }
 
-        try {
+        return String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+
+    // ========================================================
+    // TEXT HELPER
+    // ========================================================
+
+    function displayValue(value, fallback) {
+
+        const text =
+            value === null ||
+            value === undefined
+                ? ""
+                : String(value).trim();
+
+        if (!text) {
+            return fallback || "—";
+        }
+
+        return text;
+    }
+
+
+    // ========================================================
+    // DATE PARSER
+    // ========================================================
+    //
+    // IMPORTANT:
+    // Date "YYYY-MM-DD" dibuat sebagai tanggal LOCAL,
+    // bukan UTC.
+    //
+    // Ini mencegah masalah timezone ketika menghitung
+    // selisih tanggal Follow Up.
+    //
+    // ========================================================
+
+    function parseCalendarDate(value) {
+
+        if (
+            value === null ||
+            value === undefined
+        ) {
+            return null;
+        }
+
+
+        const raw =
+            String(value).trim();
+
+
+        if (!raw) {
+            return null;
+        }
+
+
+        // ----------------------------------------------------
+        // Format database utama:
+        // YYYY-MM-DD
+        // ----------------------------------------------------
+
+        const match =
+            raw.match(
+                /^(\d{4})-(\d{2})-(\d{2})/
+            );
+
+
+        if (match) {
+
+            const year =
+                Number(match[1]);
+
+            const month =
+                Number(match[2]);
+
+            const day =
+                Number(match[3]);
+
+
+            const date =
+                new Date(
+                    year,
+                    month - 1,
+                    day
+                );
+
 
             if (
-                typeof currentProfile !== "undefined" &&
-                currentProfile
+                date.getFullYear() === year &&
+                date.getMonth() === month - 1 &&
+                date.getDate() === day
             ) {
-                return currentProfile;
+
+                return date;
+
             }
 
-        } catch (error) {
-            // Ignore lexical lookup error.
         }
+
+
+        // ----------------------------------------------------
+        // Fallback untuk format tanggal lain
+        // ----------------------------------------------------
+
+        const fallback =
+            new Date(raw);
+
+
+        if (
+            !Number.isNaN(
+                fallback.getTime()
+            )
+        ) {
+
+            return new Date(
+                fallback.getFullYear(),
+                fallback.getMonth(),
+                fallback.getDate()
+            );
+
+        }
+
 
         return null;
     }
 
 
-    function leadIsAdmin() {
+    // ========================================================
+    // START OF DAY
+    // ========================================================
 
-        const profile =
-            leadGetProfile();
+    function startOfCalendarDay(date) {
 
-        if (!profile) {
-            return false;
-        }
-
-        if (
-            typeof window.isAdminRole ===
-            "function"
-        ) {
-
-            return window.isAdminRole(
-                profile
-            );
-        }
-
-        const role =
-            String(
-                profile.role || ""
-            )
-                .trim()
-                .toLowerCase();
-
-        return (
-            role === "admin" ||
-            role === "owner" ||
-            role === "administrator"
-        );
-    }
-
-
-    function leadIsSales() {
-
-        const profile =
-            leadGetProfile();
-
-        if (!profile) {
-            return false;
-        }
-
-        if (
-            typeof window.isSalesRole ===
-            "function"
-        ) {
-
-            return window.isSalesRole(
-                profile
-            );
-        }
-
-        const role =
-            String(
-                profile.role || ""
-            )
-                .trim()
-                .toLowerCase();
-
-        return (
-            role === "sales" ||
-            role === "salesperson"
+        return new Date(
+            date.getFullYear(),
+            date.getMonth(),
+            date.getDate()
         );
     }
 
 
     // ========================================================
-    // ADD CUSTOMER VISIBILITY
+    // DATE DIFFERENCE
+    // ========================================================
+    //
+    // Hasil:
+    //
+    // follow-up kemarin:
+    //     +1
+    //
+    // follow-up hari ini:
+    //      0
+    //
+    // follow-up besok:
+    //     -1
+    //
+    // Jadi hasil positif = sudah lewat.
+    //
     // ========================================================
 
-    function updateAddCustomerVisibility() {
-
-        const profile =
-            leadGetProfile();
-
-        if (!profile) {
-            return;
-        }
-
-        const isAdmin =
-            leadIsAdmin();
-
-        const isSales =
-            leadIsSales();
-
-
-        const selectors = [
-
-            "#addCustomerBtn",
-            "#btn-add-customer",
-            "#btnAddCustomer",
-            "#add-customer-btn",
-            "#addCustomer",
-            "#addLeadBtn",
-            "#btn-add-lead",
-            "#btnAddLead",
-            "#add-lead-btn",
-            "#addLead"
-
-        ];
-
-
-        const elements = [];
-
-
-        selectors.forEach(
-            selector => {
-
-                document
-                    .querySelectorAll(selector)
-                    .forEach(
-                        element => {
-
-                            if (
-                                !elements.includes(element)
-                            ) {
-
-                                elements.push(element);
-                            }
-                        }
-                    );
-            }
-        );
-
-
-        // Cari berdasarkan teks.
-        document
-            .querySelectorAll(
-                "button, a, [role='button']"
-            )
-            .forEach(
-                element => {
-
-                    const text =
-                        String(
-                            element.textContent || ""
-                        )
-                            .trim()
-                            .toLowerCase();
-
-
-                    const normalized =
-                        text.replace(
-                            /\s+/g,
-                            " "
-                        );
-
-
-                    if (
-                        normalized.includes(
-                            "add customer"
-                        )
-                    ) {
-
-                        if (
-                            !elements.includes(element)
-                        ) {
-
-                            elements.push(element);
-                        }
-                    }
-                }
-            );
-
-
-        // ----------------------------------------------------
-        // Admin & Sales sama-sama boleh Add Customer.
-        // ----------------------------------------------------
-
-        if (
-            isAdmin ||
-            isSales
-        ) {
-
-            elements.forEach(
-                element => {
-
-                    element.style.display = "";
-
-                    element.removeAttribute(
-                        "aria-hidden"
-                    );
-
-                    element.removeAttribute(
-                        "data-admin-hidden"
-                    );
-
-                    element.disabled = false;
-                }
-            );
-        }
-    }
-
-
-    function refreshAddCustomerVisibility() {
-
-        updateAddCustomerVisibility();
-
-
-        setTimeout(
-            function () {
-
-                updateAddCustomerVisibility();
-
-            },
-            50
-        );
-
-
-        setTimeout(
-            function () {
-
-                updateAddCustomerVisibility();
-
-            },
-            300
-        );
-    }
-
-
-    // ========================================================
-    // IDENTIFY ADD CUSTOMER BUTTON
-    // ========================================================
-
-    function getAddCustomerButton(
-        target
+    function getCalendarDayDifference(
+        followUpDate,
+        today
     ) {
 
-        if (!target) {
-            return null;
-        }
+        const followDate =
+            startOfCalendarDay(
+                followUpDate
+            );
 
-
-        if (
-            typeof target.closest !==
-            "function"
-        ) {
-            return null;
-        }
-
-
-        return target.closest(
-            [
-                "#addCustomerBtn",
-                "#btn-add-customer",
-                "#btnAddCustomer",
-                "#add-customer-btn",
-                "#addCustomer",
-                "#addLeadBtn",
-                "#btn-add-lead",
-                "#btnAddLead",
-                "#add-lead-btn",
-                "#addLead"
-            ].join(", ")
-        );
-    }
-
-
-    // ========================================================
-    // IDENTIFY PROFILE BUTTON
-    // ========================================================
-
-    function getProfileButton(
-        target
-    ) {
-
-        if (!target) {
-            return null;
-        }
-
-
-        if (
-            typeof target.closest !==
-            "function"
-        ) {
-            return null;
-        }
-
-
-        return target.closest(
-            [
-                "[data-action='profile']",
-                ".lead-name-btn",
-                ".customer-profile-btn",
-                ".open-customer-profile",
-                "[data-profile='true']"
-            ].join(", ")
-        );
-    }
-
-
-    // ========================================================
-    // GET CUSTOMER ID FROM PROFILE BUTTON
-    // ========================================================
-
-    function getCustomerIdFromElement(
-        element
-    ) {
-
-        if (!element) {
-            return "";
-        }
-
-
-        const directId =
-            element.getAttribute(
-                "data-lead-id"
+        const todayDate =
+            startOfCalendarDay(
+                today
             );
 
 
-        if (
-            directId !== null &&
-            String(directId).trim() !== ""
-        ) {
+        const millisecondsPerDay =
+            24 * 60 * 60 * 1000;
 
-            return String(
-                directId
-            ).trim();
-        }
 
-
-        const customerId =
-            element.getAttribute(
-                "data-customer-id"
-            );
-
-
-        if (
-            customerId !== null &&
-            String(customerId).trim() !== ""
-        ) {
-
-            return String(
-                customerId
-            ).trim();
-        }
-
-
-        const genericId =
-            element.getAttribute(
-                "data-id"
-            );
-
-
-        if (
-            genericId !== null &&
-            String(genericId).trim() !== ""
-        ) {
-
-            return String(
-                genericId
-            ).trim();
-        }
-
-
-        const dataset =
-            element.dataset || {};
-
-
-        if (
-            dataset.leadId
-        ) {
-
-            return String(
-                dataset.leadId
-            ).trim();
-        }
-
-
-        if (
-            dataset.customerId
-        ) {
-
-            return String(
-                dataset.customerId
-            ).trim();
-        }
-
-
-        if (
-            dataset.id
-        ) {
-
-            return String(
-                dataset.id
-            ).trim();
-        }
-
-
-        // Jika tombol berada di dalam row.
-        const row =
-            element.closest(
-                "tr[data-lead-id], [data-lead-id]"
-            );
-
-
-        if (row) {
-
-            const rowId =
-                row.getAttribute(
-                    "data-lead-id"
-                );
-
-
-            if (
-                rowId !== null &&
-                String(rowId).trim() !== ""
-            ) {
-
-                return String(
-                    rowId
-                ).trim();
-            }
-
-
-            if (
-                row.dataset &&
-                row.dataset.leadId
-            ) {
-
-                return String(
-                    row.dataset.leadId
-                ).trim();
-            }
-        }
-
-
-        return "";
-    }
-
-
-    // ========================================================
-    // OPEN ADD CUSTOMER
-    // ========================================================
-
-    function openAddCustomer() {
-
-        // ----------------------------------------------------
-        // WAJIB menggunakan Customer Profile.
-        // Tidak ada ID yang dibutuhkan.
-        // ----------------------------------------------------
-
-        if (
-            typeof window.crmOpenAddCustomer ===
-            "function"
-        ) {
-
-            window.crmOpenAddCustomer();
-
-            return true;
-        }
-
-
-        // ----------------------------------------------------
-        // Fallback compatibility.
-        // ----------------------------------------------------
-
-        if (
-            typeof window.openLeadModal ===
-            "function"
-        ) {
-
-            window.openLeadModal();
-
-            return true;
-        }
-
-
-        if (
-            typeof window.showToast ===
-            "function"
-        ) {
-
-            window.showToast(
-                "Customer Profile belum tersedia.",
-                "error"
-            );
-
-        } else {
-
-            console.error(
-                "FSI CRM: crmOpenAddCustomer() is not available."
-            );
-        }
-
-
-        return false;
-    }
-
-
-    // ========================================================
-    // ADD CUSTOMER BUTTON HANDLER
-    // ========================================================
-    //
-    // PENTING:
-    //
-    // Add Customer TIDAK BOLEH memanggil:
-    // crmOpenCustomerProfile(id)
-    //
-    // Add Customer selalu:
-    // crmOpenAddCustomer()
-    //
-    // ========================================================
-
-    function handleAddCustomerButton(
-        event
-    ) {
-
-        const target =
-            getAddCustomerButton(
-                event.target
-            );
-
-
-        if (!target) {
-            return false;
-        }
-
-
-        const profile =
-            leadGetProfile();
-
-
-        if (!profile) {
-
-            event.preventDefault();
-            event.stopPropagation();
-
-            if (
-                typeof event.stopImmediatePropagation ===
-                "function"
-            ) {
-
-                event.stopImmediatePropagation();
-            }
-
-
-            if (
-                typeof window.showToast ===
-                "function"
-            ) {
-
-                window.showToast(
-                    "Profile user belum siap.",
-                    "error"
-                );
-            }
-
-
-            return true;
-        }
-
-
-        // ----------------------------------------------------
-        // STOP seluruh handler lama.
-        // ----------------------------------------------------
-
-        event.preventDefault();
-        event.stopPropagation();
-
-        if (
-            typeof event.stopImmediatePropagation ===
-            "function"
-        ) {
-
-            event.stopImmediatePropagation();
-        }
-
-
-        // ----------------------------------------------------
-        // Add Customer = NEW customer.
-        // Tidak boleh mencari ID.
-        // ----------------------------------------------------
-
-        openAddCustomer();
-
-
-        return true;
-    }
-
-
-    // ========================================================
-    // PROFILE BUTTON HANDLER
-    // ========================================================
-    //
-    // Profile selalu membutuhkan ID customer.
-    //
-    // ID diambil dari:
-    // 1. data-lead-id
-    // 2. data-customer-id
-    // 3. data-id
-    // 4. parent row data-lead-id
-    //
-    // ========================================================
-
-    async function handleProfileButton(
-        event
-    ) {
-
-        const target =
-            getProfileButton(
-                event.target
-            );
-
-
-        if (!target) {
-            return false;
-        }
-
-
-        const customerId =
-            getCustomerIdFromElement(
-                target
-            );
-
-
-        // ----------------------------------------------------
-        // Jangan biarkan handler lain menjalankan profile
-        // dengan ID kosong.
-        // ----------------------------------------------------
-
-        event.preventDefault();
-        event.stopPropagation();
-
-        if (
-            typeof event.stopImmediatePropagation ===
-            "function"
-        ) {
-
-            event.stopImmediatePropagation();
-        }
-
-
-        if (!customerId) {
-
-            console.error(
-                "FSI CRM: Profile button has no customer ID.",
-                target
-            );
-
-
-            if (
-                typeof window.showToast ===
-                "function"
-            ) {
-
-                window.showToast(
-                    "Customer ID tidak ditemukan.",
-                    "error"
-                );
-
-            } else {
-
-                alert(
-                    "Customer ID tidak ditemukan."
-                );
-            }
-
-
-            return true;
-        }
-
-
-        // ----------------------------------------------------
-        // Simpan current customer ID.
-        // ----------------------------------------------------
-
-        window.crmCurrentCustomerId =
-            customerId;
-
-
-        // ----------------------------------------------------
-        // Customer Profile utama.
-        // ----------------------------------------------------
-
-        if (
-            typeof window.crmOpenCustomerProfile ===
-            "function"
-        ) {
-
-            await window.crmOpenCustomerProfile(
-                customerId
-            );
-
-            return true;
-        }
-
-
-        // ----------------------------------------------------
-        // Fallback legacy.
-        // ----------------------------------------------------
-
-        if (
-            typeof window.openEditLead ===
-            "function"
-        ) {
-
-            await window.openEditLead(
-                customerId
-            );
-
-            return true;
-        }
-
-
-        if (
-            typeof window.editLead ===
-            "function"
-        ) {
-
-            await window.editLead(
-                customerId
-            );
-
-            return true;
-        }
-
-
-        if (
-            typeof window.showToast ===
-            "function"
-        ) {
-
-            window.showToast(
-                "Customer Profile belum tersedia.",
-                "error"
-            );
-        }
-
-
-        return true;
-    }
-
-
-    // ========================================================
-    // GLOBAL CLICK HANDLER
-    // ========================================================
-    //
-    // SATU handler untuk:
-    // - Add Customer
-    // - Profile
-    //
-    // Menggunakan capture phase.
-    // ========================================================
-
-    function handleLeadsGlobalClick(
-        event
-    ) {
-
-        // ----------------------------------------------------
-        // ADD CUSTOMER harus dicek lebih dahulu.
-        // ----------------------------------------------------
-
-        const addButton =
-            getAddCustomerButton(
-                event.target
-            );
-
-
-        if (addButton) {
-
-            handleAddCustomerButton(
-                event
-            );
-
-            return;
-        }
-
-
-        // ----------------------------------------------------
-        // PROFILE
-        // ----------------------------------------------------
-
-        const profileButton =
-            getProfileButton(
-                event.target
-            );
-
-
-        if (profileButton) {
-
-            handleProfileButton(
-                event
-            );
-
-            return;
-        }
-    }
-
-
-    function bindLeadsGlobalClickHandler() {
-
-        if (
-            document.documentElement.dataset
-                .fsiLeadsGlobalClickHandler ===
-            "true"
-        ) {
-
-            return;
-        }
-
-
-        document.documentElement.dataset
-            .fsiLeadsGlobalClickHandler =
-            "true";
-
-
-        document.addEventListener(
-            "click",
-            handleLeadsGlobalClick,
-            true
-        );
-
-
-        refreshAddCustomerVisibility();
-    }
-
-
-    // ========================================================
-    // LEGACY ADD CUSTOMER BIND
-    // ========================================================
-    //
-    // Dipertahankan supaya fungsi lama tetap kompatibel.
-    //
-    // ========================================================
-
-    function bindAddCustomerButtons() {
-
-        bindLeadsGlobalClickHandler();
-
-        refreshAddCustomerVisibility();
-    }
-
-
-    // ========================================================
-    // PAGE SIZE
-    // ========================================================
-
-    function leadGetPageSize() {
-
-        const configuredSize =
-            Number(
-                window.pageSize
-            );
-
-
-        if (
-            Number.isFinite(
-                configuredSize
-            ) &&
-            configuredSize > 0
-        ) {
-
-            return configuredSize;
-        }
-
-
-        if (
-            window.FSI_CRM &&
-            window.FSI_CRM.config &&
-            Number(
-                window.FSI_CRM.config.pageSize
-            ) > 0
-        ) {
-
-            return Number(
-                window.FSI_CRM.config.pageSize
-            );
-        }
-
-
-        return 20;
-    }
-
-
-    function leadGetCurrentPage() {
-
-        return Math.max(
-            1,
-            Number(
-                window.currentPage
-            ) || 1
-        );
-    }
-
-
-    function leadSetCurrentPage(page) {
-
-        const numericPage =
-            Number(page);
-
-
-        window.currentPage =
-            Math.max(
-                1,
-                Number.isFinite(
-                    numericPage
-                )
-                    ? numericPage
-                    : 1
-            );
-    }
-
-
-    function leadGetSalesData() {
-
-        return Array.isArray(
-            window.salesUsersData
-        )
-            ? window.salesUsersData
-            : [];
-    }
-
-
-    // ========================================================
-    // TEXT / HTML HELPERS
-    // ========================================================
-
-    function leadEscapeHTML(value) {
-
-        if (
-            typeof window.escapeHTML ===
-            "function"
-        ) {
-
-            return window.escapeHTML(
-                value
-            );
-        }
-
-
-        return String(
-            value ?? ""
-        )
-            .replace(
-                /&/g,
-                "&amp;"
-            )
-            .replace(
-                /</g,
-                "&lt;"
-            )
-            .replace(
-                />/g,
-                "&gt;"
-            )
-            .replace(
-                /"/g,
-                "&quot;"
-            )
-            .replace(
-                /'/g,
-                "&#039;"
-            );
-    }
-
-
-    function leadGetValue(value) {
-
-        return String(
-            value ?? ""
-        ).trim();
-    }
-
-
-    // ========================================================
-    // SELECTED SALES
-    // ========================================================
-
-    function getSelectedSalesId() {
-
-        if (!leadIsAdmin()) {
-            return "";
-        }
-
-
-        const value =
-            window.crmSelectedSalesId;
-
-
-        if (
-            value === null ||
-            value === undefined
-        ) {
-
-            return "";
-        }
-
-
-        return String(
-            value
-        ).trim();
-    }
-
-
-    function getSelectedSalesName() {
-
-        const value =
-            window.crmSelectedSalesName;
-
-
-        if (
-            value === null ||
-            value === undefined
-        ) {
-
-            return "";
-        }
-
-
-        return String(
-            value
-        ).trim();
-    }
-
-
-    function applySelectedSalesFilter() {
-
-        const salesSelect =
-            leadElement(
-                "salesFilter"
-            );
-
-
-        const selectedSalesId =
-            getSelectedSalesId();
-
-
-        if (salesSelect) {
-
-            salesSelect.value =
-                selectedSalesId || "";
-        }
-
-
-        window.currentSalesFilter =
-            selectedSalesId || "";
-
-
-        return selectedSalesId;
-    }
-
-
-    // ========================================================
-    // FILTER OPTIONS
-    // ========================================================
-
-    async function loadFilterOptions() {
-
-        const client =
-            leadGetSupabase();
-
-
-        if (!client) {
-
-            console.error(
-                "FSI CRM: Supabase client is not ready."
-            );
-
-            return;
-        }
-
-
-        try {
-
-            if (
-                typeof window.loadSalesLookup ===
-                "function"
-            ) {
-
-                try {
-
-                    await window.loadSalesLookup();
-
-                } catch (error) {
-
-                    console.warn(
-                        "FSI CRM: Sales lookup failed:",
-                        error
-                    );
-                }
-            }
-
-
-            const {
-                data,
-                error
-            } =
-                await client
-                    .from("leads")
-                    .select(
-                        "business,location"
-                    );
-
-
-            if (error) {
-
-                console.error(
-                    "FSI CRM: load filter options error:",
-                    error
-                );
-
-                return;
-            }
-
-
-            const leads =
-                Array.isArray(data)
-                    ? data
-                    : [];
-
-
-            const businesses =
-                uniqueSortedValues(
-                    leads.map(
-                        lead =>
-                            leadGetValue(
-                                lead.business
-                            )
-                    )
-                );
-
-
-            const locations =
-                uniqueSortedValues(
-                    leads.map(
-                        lead =>
-                            leadGetValue(
-                                lead.location
-                            )
-                    )
-                );
-
-
-            populateFilter(
-                [
-                    "filter-business",
-                    "businessFilter"
-                ],
-                businesses,
-                "All Business"
-            );
-
-
-            populateFilter(
-                [
-                    "filter-location",
-                    "locationFilter"
-                ],
-                locations,
-                "All Location"
-            );
-
-
-            if (
-                typeof window.populateSalesDropdowns ===
-                "function"
-            ) {
-
-                try {
-
-                    window.populateSalesDropdowns();
-
-                } catch (error) {
-
-                    console.warn(
-                        "FSI CRM: populateSalesDropdowns failed:",
-                        error
-                    );
-                }
-            }
-
-
-            applySelectedSalesFilter();
-
-
-        } catch (error) {
-
-            console.error(
-                "FSI CRM: loadFilterOptions error:",
-                error
-            );
-        }
-    }
-
-
-    function uniqueSortedValues(values) {
-
-        return [
-            ...new Set(
-                (
-                    Array.isArray(values)
-                        ? values
-                        : []
-                )
-                    .map(
-                        value =>
-                            String(
-                                value ?? ""
-                            ).trim()
-                    )
-                    .filter(
-                        Boolean
-                    )
-            )
-        ].sort(
+        return Math.round(
             (
-                a,
-                b
-            ) =>
-                a.localeCompare(
-                    b,
-                    undefined,
-                    {
-                        sensitivity:
-                            "base"
-                    }
-                )
+                todayDate.getTime() -
+                followDate.getTime()
+            ) /
+            millisecondsPerDay
         );
     }
 
 
-    function populateFilter(
-        ids,
-        values,
-        defaultText
-    ) {
+    // ========================================================
+    // FORMAT DATE
+    // ========================================================
 
-        const idList =
-            Array.isArray(ids)
-                ? ids
-                : [ids];
+    function formatDate(value) {
+
+        const date =
+            parseCalendarDate(value);
 
 
-        let select =
-            null;
+        if (!date) {
+            return "—";
+        }
 
 
-        for (
-            const id of idList
+        return new Intl.DateTimeFormat(
+            "id-ID",
+            {
+                day: "2-digit",
+                month: "short",
+                year: "numeric"
+            }
+        ).format(date);
+    }
+
+
+    // ========================================================
+    // FORMAT DATETIME
+    // ========================================================
+
+    function formatDateTime(value) {
+
+        if (
+            value === null ||
+            value === undefined ||
+            String(value).trim() === ""
         ) {
-
-            select =
-                document.getElementById(
-                    id
-                );
-
-
-            if (select) {
-                break;
-            }
+            return "—";
         }
 
 
-        if (!select) {
-            return;
-        }
-
-
-        const currentValue =
-            select.value;
-
-
-        select.innerHTML =
-            "";
-
-
-        const defaultOption =
-            document.createElement(
-                "option"
-            );
-
-
-        defaultOption.value =
-            "";
-
-
-        defaultOption.textContent =
-            defaultText;
-
-
-        select.appendChild(
-            defaultOption
-        );
-
-
-        const safeValues =
-            Array.isArray(values)
-                ? values
-                : [];
-
-
-        safeValues.forEach(
-            value => {
-
-                const option =
-                    document.createElement(
-                        "option"
-                    );
-
-
-                option.value =
-                    value;
-
-
-                option.textContent =
-                    value;
-
-
-                select.appendChild(
-                    option
-                );
-            }
-        );
+        const date =
+            new Date(value);
 
 
         if (
-            safeValues.includes(
-                currentValue
+            Number.isNaN(
+                date.getTime()
             )
         ) {
 
-            select.value =
-                currentValue;
+            return displayValue(
+                value,
+                "—"
+            );
 
-        } else {
-
-            select.value =
-                "";
         }
+
+
+        return new Intl.DateTimeFormat(
+            "id-ID",
+            {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit"
+            }
+        ).format(date);
     }
 
 
     // ========================================================
-    // GET FILTER VALUES
+    // FOLLOW UP CALCULATION
     // ========================================================
 
-    function getLeadFilters() {
+    function getFollowUpInfo(
+        followUpValue
+    ) {
 
-        const searchInput =
-            leadElement(
-                "lead-search",
-                "leadSearch",
-                "leadsSearch"
+        const followUpDate =
+            parseCalendarDate(
+                followUpValue
             );
 
 
-        const statusInput =
-            leadElement(
-                "filter-status",
-                "statusFilter",
-                "leadStatusFilter"
-            );
+        if (!followUpDate) {
 
+            return {
+                exists: false,
+                label: "No follow-up date",
+                detail: "No follow-up date has been set.",
+                className: "followup-none",
+                days: null
+            };
 
-        const businessInput =
-            leadElement(
-                "filter-business",
-                "businessFilter"
-            );
-
-
-        const locationInput =
-            leadElement(
-                "filter-location",
-                "locationFilter"
-            );
-
-
-        const salesInput =
-            leadElement(
-                "salesFilter"
-            );
-
-
-        let salesFilter =
-            salesInput?.value ||
-            "";
-
-
-        if (leadIsAdmin()) {
-
-            const headerSalesId =
-                getSelectedSalesId();
-
-
-            if (
-                headerSalesId !== ""
-            ) {
-
-                salesFilter =
-                    headerSalesId;
-            }
         }
+
+
+        const today =
+            new Date();
+
+
+        const difference =
+            getCalendarDayDifference(
+                followUpDate,
+                today
+            );
+
+
+        // ----------------------------------------------------
+        // HARI INI
+        // ----------------------------------------------------
+
+        if (difference === 0) {
+
+            return {
+                exists: true,
+                label: "Today",
+                detail: "Follow-up is due today.",
+                className: "followup-today",
+                days: 0
+            };
+
+        }
+
+
+        // ----------------------------------------------------
+        // SUDAH LEWAT
+        // ----------------------------------------------------
+
+        if (difference > 0) {
+
+            return {
+                exists: true,
+                label:
+                    difference === 1
+                        ? "1 day overdue"
+                        : `${difference} days overdue`,
+                detail:
+                    `Follow-up date was ${difference} ` +
+                    `${difference === 1 ? "day" : "days"} ago.`,
+                className: "followup-overdue",
+                days: difference
+            };
+
+        }
+
+
+        // ----------------------------------------------------
+        // BELUM TIBA
+        // ----------------------------------------------------
+
+        const daysUntil =
+            Math.abs(difference);
 
 
         return {
-
-            search:
-                searchInput?.value?.trim() ||
-                "",
-
-            status:
-                statusInput?.value ||
-                "",
-
-            business:
-                businessInput?.value ||
-                "",
-
-            location:
-                locationInput?.value ||
-                "",
-
-            salesFilter:
-                salesFilter
+            exists: true,
+            label:
+                daysUntil === 1
+                    ? "In 1 day"
+                    : `In ${daysUntil} days`,
+            detail:
+                `Follow-up is scheduled in ${daysUntil} ` +
+                `${daysUntil === 1 ? "day" : "days"}.`,
+            className: "followup-upcoming",
+            days: difference
         };
     }
 
 
     // ========================================================
-    // BUILD SEARCH CONDITION
+    // STATUS CLASS
     // ========================================================
 
-    function buildSearchQuery(
-        query,
-        search
-    ) {
+    function getStatusClass(status) {
 
-        if (!search) {
-            return query;
-        }
+        const normalized =
+            String(status || "")
+                .trim()
+                .toLowerCase();
 
 
-        const safeSearch =
-            String(search)
-                .replace(
-                    /\\/g,
-                    "\\\\"
-                )
-                .replace(
-                    /%/g,
-                    "\\%"
-                )
-                .replace(
-                    /_/g,
-                    "\\_"
-                )
-                .replace(
-                    /,/g,
-                    "\\,"
-                );
+        const map = {
+
+            "new":
+                "status-new",
+
+            "flyer sent":
+                "status-flyer",
+
+            "interested":
+                "status-interested",
+
+            "follow up":
+                "status-follow-up",
+
+            "appointment":
+                "status-appointment",
+
+            "site survey":
+                "status-site-survey",
+
+            "quotation":
+                "status-quotation",
+
+            "closing":
+                "status-closing",
+
+            "not interested":
+                "status-not-interested"
+
+        };
 
 
-        const searchConditions = [
-
-            `customer_name.ilike.%${safeSearch}%`,
-            `phone.ilike.%${safeSearch}%`,
-            `business.ilike.%${safeSearch}%`,
-            `location.ilike.%${safeSearch}%`
-
-        ];
-
-
-        return query.or(
-            searchConditions.join(",")
+        return (
+            map[normalized] ||
+            "status-default"
         );
     }
 
 
     // ========================================================
-    // LOADING STATE
+    // PROFILE CONTAINER
     // ========================================================
 
-    function showLeadsLoading() {
+    function getProfileContainer() {
 
-        const table =
-            leadElement(
-                "leads-table-body",
-                "leadsTable"
-            );
-
-
-        if (!table) {
-            return;
-        }
-
-
-        table.innerHTML = `
-            <tr class="loading-row">
-                <td colspan="9">
-                    <div class="empty-state loading-state">
-
-                        <div class="empty-state-icon">
-                            <i
-                                data-lucide="loader-circle"
-                                class="spin"
-                            ></i>
-                        </div>
-
-                        <div class="empty-state-title">
-                            Loading Leads...
-                        </div>
-
-                        <div class="empty-state-text">
-                            Please wait while the lead data is loaded.
-                        </div>
-
-                    </div>
-                </td>
-            </tr>
-        `;
-
-
-        if (
-            typeof window.refreshIcons ===
-            "function"
-        ) {
-
-            window.refreshIcons();
-        }
+        return shelterElement(
+            "customer-profile-container"
+        );
     }
 
 
     // ========================================================
-    // EMPTY STATE
+    // SHOW PROFILE LOADING
     // ========================================================
 
-    function renderEmptyLeadsState() {
+    function showProfileLoading() {
 
-        const table =
-            leadElement(
-                "leads-table-body",
-                "leadsTable"
-            );
+        const container =
+            getProfileContainer();
 
 
-        if (!table) {
+        if (!container) {
             return;
         }
 
 
-        const selectedSalesId =
-            getSelectedSalesId();
+        container.innerHTML = `
 
+            <div class="customer-profile-loading">
 
-        const selectedSalesName =
-            getSelectedSalesName();
+                <div class="profile-loading-icon">
+                    <i data-lucide="loader-circle"></i>
+                </div>
 
+                <h3>
+                    Loading Customer Profile
+                </h3>
 
-        let title =
-            "Belum Ada Leads";
+                <p>
+                    Please wait while customer data is loaded.
+                </p>
 
+            </div>
 
-        let message =
-            "Belum ada data lead yang sesuai dengan filter saat ini.";
-
-
-        if (
-            selectedSalesId
-        ) {
-
-            message =
-                selectedSalesName
-                    ? `Sales ${selectedSalesName} belum memiliki data lead.`
-                    : "Sales yang dipilih belum memiliki data lead.";
-
-        } else {
-
-            const filters =
-                getLeadFilters();
-
-
-            if (
-                filters.search ||
-                filters.status ||
-                filters.business ||
-                filters.location
-            ) {
-
-                title =
-                    "Tidak Ada Leads";
-
-
-                message =
-                    "Tidak ada lead yang cocok dengan pencarian atau filter yang dipilih.";
-            }
-        }
-
-
-        table.innerHTML = `
-            <tr class="empty-row">
-                <td colspan="9">
-
-                    <div class="empty-state leads-empty-state">
-
-                        <div class="empty-state-icon">
-                            <i data-lucide="inbox"></i>
-                        </div>
-
-                        <div class="empty-state-title">
-                            ${leadEscapeHTML(title)}
-                        </div>
-
-                        <div class="empty-state-text">
-                            ${leadEscapeHTML(message)}
-                        </div>
-
-                        ${
-                            selectedSalesId
-                                ? `
-                                    <button
-                                        type="button"
-                                        class="secondary-btn small-btn"
-                                        data-action="clear-sales-filter"
-                                    >
-                                        <i data-lucide="users"></i>
-                                        Lihat Semua Sales
-                                    </button>
-                                  `
-                                : ""
-                        }
-
-                    </div>
-
-                </td>
-            </tr>
         `;
 
 
-        if (
-            typeof window.refreshIcons ===
-            "function"
-        ) {
-
-            window.refreshIcons();
-        }
+        refreshIcons();
     }
 
 
     // ========================================================
-    // ERROR STATE
+    // SHOW PROFILE EMPTY
     // ========================================================
 
-    function renderLeadsErrorState(
+    function showProfileEmpty(
         message
     ) {
 
-        const table =
-            leadElement(
-                "leads-table-body",
-                "leadsTable"
-            );
+        const container =
+            getProfileContainer();
 
 
-        if (!table) {
+        if (!container) {
             return;
         }
 
 
-        table.innerHTML = `
-            <tr class="error-row">
-                <td colspan="9">
+        container.innerHTML = `
 
-                    <div class="empty-state leads-error-state">
+            <div class="empty-state customer-profile-empty">
 
-                        <div class="empty-state-icon">
-                            <i data-lucide="circle-alert"></i>
-                        </div>
+                <i
+                    data-lucide="contact"
+                    aria-hidden="true"
+                ></i>
 
-                        <div class="empty-state-title">
-                            Gagal Memuat Leads
-                        </div>
+                <span>
+                    ${escapeHTML(
+                        message ||
+                        "Select a customer to view the profile."
+                    )}
+                </span>
 
-                        <div class="empty-state-text">
-                            ${leadEscapeHTML(
-                                message ||
-                                "Terjadi kesalahan saat memuat data."
-                            )}
-                        </div>
+            </div>
 
-                        <button
-                            type="button"
-                            class="primary-btn small-btn"
-                            data-action="retry-leads"
-                        >
-                            <i data-lucide="refresh-cw"></i>
-                            Coba Lagi
-                        </button>
-
-                    </div>
-
-                </td>
-            </tr>
         `;
 
 
-        if (
-            typeof window.refreshIcons ===
-            "function"
-        ) {
-
-            window.refreshIcons();
-        }
+        refreshIcons();
     }
 
 
     // ========================================================
-    // LOAD LEADS
+    // SHOW PROFILE ERROR
     // ========================================================
 
-    async function loadLeads(
-        page = 1
+    function showProfileError(
+        message
     ) {
 
-        const client =
-            leadGetSupabase();
+        const container =
+            getProfileContainer();
 
 
-        if (!client) {
-
-            console.error(
-                "FSI CRM: Supabase client is not ready."
-            );
-
-
-            renderLeadsErrorState(
-                "Supabase belum terhubung."
-            );
-
-
-            updatePagination();
-
+        if (!container) {
             return;
         }
 
 
-        if (!leadGetProfile()) {
+        container.innerHTML = `
+
+            <div class="empty-state customer-profile-error">
+
+                <i
+                    data-lucide="circle-alert"
+                    aria-hidden="true"
+                ></i>
+
+                <strong>
+                    Unable to load customer
+                </strong>
+
+                <span>
+                    ${escapeHTML(
+                        message ||
+                        "Customer profile could not be loaded."
+                    )}
+                </span>
+
+                <button
+                    type="button"
+                    class="secondary-btn small-btn"
+                    data-shelter-action="back"
+                >
+                    <i data-lucide="arrow-left"></i>
+                    Back to Leads
+                </button>
+
+            </div>
+
+        `;
+
+
+        refreshIcons();
+    }
+
+
+    // ========================================================
+    // RENDER PROFILE
+    // ========================================================
+
+    function renderCustomerProfile(
+        customer,
+        sales
+    ) {
+
+        const container =
+            getProfileContainer();
+
+
+        if (!container) {
 
             console.warn(
-                "FSI CRM: Cannot load leads - profile is not ready."
+                "FSI CRM: customer-profile-container not found."
             );
-
-
-            renderLeadsErrorState(
-                "Profile user belum siap. Silakan tunggu sebentar."
-            );
-
-
-            updatePagination();
 
             return;
         }
 
 
-        if (leadsLoading) {
-            return;
+        const customerName =
+            displayValue(
+                customer.customer_name,
+                "Unnamed Customer"
+            );
+
+
+        const phone =
+            displayValue(
+                customer.phone
+            );
+
+
+        const business =
+            displayValue(
+                customer.business
+            );
+
+
+        const location =
+            displayValue(
+                customer.location
+            );
+
+
+        const status =
+            displayValue(
+                customer.status,
+                "New"
+            );
+
+
+        const salesName =
+            sales
+                ? displayValue(
+                    sales.full_name ||
+                    sales.name ||
+                    sales.username,
+                    "Unassigned"
+                )
+                : "Unassigned";
+
+
+        const followUpInfo =
+            getFollowUpInfo(
+                customer.follow_up_date
+            );
+
+
+        const avatarLetter =
+            customerName
+                .charAt(0)
+                .toUpperCase();
+
+
+        const createdAt =
+            formatDateTime(
+                customer.created_at
+            );
+
+
+        const updatedAt =
+            formatDateTime(
+                customer.updated_at
+            );
+
+
+        // ----------------------------------------------------
+        // FOLLOW UP VISUAL
+        // ----------------------------------------------------
+
+        let followUpBadge = "";
+
+
+        if (followUpInfo.exists) {
+
+            followUpBadge = `
+
+                <span
+                    class="followup-badge ${escapeHTML(
+                        followUpInfo.className
+                    )}"
+                >
+
+                    <i data-lucide="clock-3"></i>
+
+                    ${escapeHTML(
+                        followUpInfo.label
+                    )}
+
+                </span>
+
+            `;
+
+        } else {
+
+            followUpBadge = `
+
+                <span
+                    class="followup-badge followup-none"
+                >
+
+                    <i data-lucide="calendar-x-2"></i>
+
+                    No follow-up date
+
+                </span>
+
+            `;
+
         }
 
 
-        leadsLoading =
-            true;
+        // ----------------------------------------------------
+        // DAYS TEXT
+        // ----------------------------------------------------
+
+        let followUpDaysText =
+            "No follow-up date";
 
 
-        const requestId =
-            ++activeRequestId;
+        if (followUpInfo.exists) {
+
+            if (
+                followUpInfo.days === 0
+            ) {
+
+                followUpDaysText =
+                    "Today";
+
+            } else if (
+                followUpInfo.days > 0
+            ) {
+
+                followUpDaysText =
+                    `${followUpInfo.days} ${
+                        followUpInfo.days === 1
+                            ? "day"
+                            : "days"
+                    } overdue`;
+
+            } else {
+
+                const daysUntil =
+                    Math.abs(
+                        followUpInfo.days
+                    );
 
 
-        leadSetCurrentPage(
-            page
-        );
+                followUpDaysText =
+                    `In ${daysUntil} ${
+                        daysUntil === 1
+                            ? "day"
+                            : "days"
+                    }`;
+
+            }
+
+        }
 
 
-        const pageNumber =
-            leadGetCurrentPage();
+        // ----------------------------------------------------
+        // PIPELINE DATE DATA
+        // ----------------------------------------------------
+
+        const appointment =
+            formatDate(
+                customer.appointment
+            );
 
 
-        showLeadsLoading();
+        const siteSurvey =
+            formatDate(
+                customer.site_survey
+            );
+
+
+        const quotation =
+            formatDate(
+                customer.quotation
+            );
+
+
+        const spk =
+            formatDate(
+                customer.spk
+            );
+
+
+        const closing =
+            formatDate(
+                customer.closing
+            );
+
+
+        const notes =
+            displayValue(
+                customer.notes,
+                "No notes available."
+            );
+
+
+        // ----------------------------------------------------
+        // RENDER
+        // ----------------------------------------------------
+
+        container.innerHTML = `
+
+            <div class="customer-profile">
+
+                <!-- =========================================
+                     PROFILE HEADER
+                ========================================== -->
+
+                <div class="customer-profile-header">
+
+                    <div class="customer-profile-heading">
+
+                        <button
+                            type="button"
+                            class="secondary-btn small-btn customer-profile-back"
+                            data-shelter-action="back"
+                        >
+
+                            <i data-lucide="arrow-left"></i>
+
+                            Back to Leads
+
+                        </button>
+
+
+                        <div class="customer-identity">
+
+                            <div class="customer-profile-avatar">
+
+                                ${escapeHTML(
+                                    avatarLetter
+                                )}
+
+                            </div>
+
+
+                            <div class="customer-profile-name">
+
+                                <h2>
+                                    ${escapeHTML(
+                                        customerName
+                                    )}
+                                </h2>
+
+                                <p>
+                                    Customer Profile
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="customer-profile-status">
+
+                        <span
+                            class="status-badge ${escapeHTML(
+                                getStatusClass(status)
+                            )}"
+                        >
+
+                            ${escapeHTML(
+                                status
+                            )}
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- =========================================
+                     FOLLOW UP HIGHLIGHT
+                ========================================== -->
+
+                <section
+                    class="profile-followup-card ${escapeHTML(
+                        followUpInfo.className
+                    )}"
+                >
+
+                    <div class="profile-followup-icon">
+
+                        <i data-lucide="calendar-clock"></i>
+
+                    </div>
+
+
+                    <div class="profile-followup-content">
+
+                        <span class="profile-followup-label">
+                            Follow Up
+                        </span>
+
+                        <strong>
+                            ${escapeHTML(
+                                customer.follow_up_date
+                                    ? formatDate(
+                                        customer.follow_up_date
+                                    )
+                                    : "No date set"
+                            )}
+                        </strong>
+
+                        <small>
+                            ${escapeHTML(
+                                followUpInfo.detail
+                            )}
+                        </small>
+
+                    </div>
+
+
+                    <div class="profile-followup-days">
+
+                        ${followUpBadge}
+
+                        <span class="followup-days-text">
+                            ${escapeHTML(
+                                followUpDaysText
+                            )}
+                        </span>
+
+                    </div>
+
+                </section>
+
+
+
+                <!-- =========================================
+                     CUSTOMER INFORMATION
+                ========================================== -->
+
+                <section class="profile-card">
+
+                    <div class="profile-card-header">
+
+                        <div>
+
+                            <h3>
+                                Customer Information
+                            </h3>
+
+                            <p>
+                                Basic customer details
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="profile-info-grid">
+
+                        <div class="profile-info-item">
+
+                            <span class="profile-info-label">
+                                <i data-lucide="user-round"></i>
+                                Customer Name
+                            </span>
+
+                            <strong>
+                                ${escapeHTML(
+                                    customerName
+                                )}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="profile-info-item">
+
+                            <span class="profile-info-label">
+                                <i data-lucide="phone"></i>
+                                Phone
+                            </span>
+
+                            <strong>
+                                ${escapeHTML(
+                                    phone
+                                )}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="profile-info-item">
+
+                            <span class="profile-info-label">
+                                <i data-lucide="building-2"></i>
+                                Business
+                            </span>
+
+                            <strong>
+                                ${escapeHTML(
+                                    business
+                                )}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="profile-info-item">
+
+                            <span class="profile-info-label">
+                                <i data-lucide="map-pin"></i>
+                                Location
+                            </span>
+
+                            <strong>
+                                ${escapeHTML(
+                                    location
+                                )}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="profile-info-item">
+
+                            <span class="profile-info-label">
+                                <i data-lucide="briefcase-business"></i>
+                                Sales
+                            </span>
+
+                            <strong>
+                                ${escapeHTML(
+                                    salesName
+                                )}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="profile-info-item">
+
+                            <span class="profile-info-label">
+                                <i data-lucide="calendar-check"></i>
+                                Follow Up Date
+                            </span>
+
+                            <strong>
+                                ${escapeHTML(
+                                    customer.follow_up_date
+                                        ? formatDate(
+                                            customer.follow_up_date
+                                        )
+                                        : "Not scheduled"
+                                )}
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+
+                <!-- =========================================
+                     PIPELINE
+                ========================================== -->
+
+                <section class="profile-card">
+
+                    <div class="profile-card-header">
+
+                        <div>
+
+                            <h3>
+                                Sales Pipeline
+                            </h3>
+
+                            <p>
+                                Customer progress and important dates
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="profile-pipeline-grid">
+
+                        <div class="pipeline-date-item">
+
+                            <div class="pipeline-date-icon">
+                                <i data-lucide="phone-call"></i>
+                            </div>
+
+                            <div>
+
+                                <span>
+                                    Follow Up
+                                </span>
+
+                                <strong>
+                                    ${escapeHTML(
+                                        customer.follow_up_date
+                                            ? formatDate(
+                                                customer.follow_up_date
+                                            )
+                                            : "—"
+                                    )}
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="pipeline-date-item">
+
+                            <div class="pipeline-date-icon">
+                                <i data-lucide="calendar-check"></i>
+                            </div>
+
+                            <div>
+
+                                <span>
+                                    Appointment
+                                </span>
+
+                                <strong>
+                                    ${escapeHTML(
+                                        appointment
+                                    )}
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="pipeline-date-item">
+
+                            <div class="pipeline-date-icon">
+                                <i data-lucide="map-pin"></i>
+                            </div>
+
+                            <div>
+
+                                <span>
+                                    Site Survey
+                                </span>
+
+                                <strong>
+                                    ${escapeHTML(
+                                        siteSurvey
+                                    )}
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="pipeline-date-item">
+
+                            <div class="pipeline-date-icon">
+                                <i data-lucide="file-text"></i>
+                            </div>
+
+                            <div>
+
+                                <span>
+                                    Quotation
+                                </span>
+
+                                <strong>
+                                    ${escapeHTML(
+                                        quotation
+                                    )}
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="pipeline-date-item">
+
+                            <div class="pipeline-date-icon">
+                                <i data-lucide="file-check-2"></i>
+                            </div>
+
+                            <div>
+
+                                <span>
+                                    SPK
+                                </span>
+
+                                <strong>
+                                    ${escapeHTML(
+                                        spk
+                                    )}
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="pipeline-date-item">
+
+                            <div class="pipeline-date-icon">
+                                <i data-lucide="badge-check"></i>
+                            </div>
+
+                            <div>
+
+                                <span>
+                                    Closing
+                                </span>
+
+                                <strong>
+                                    ${escapeHTML(
+                                        closing
+                                    )}
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+
+                <!-- =========================================
+                     NOTES
+                ========================================== -->
+
+                <section class="profile-card">
+
+                    <div class="profile-card-header">
+
+                        <div>
+
+                            <h3>
+                                Notes
+                            </h3>
+
+                            <p>
+                                Customer notes and information
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="profile-notes">
+
+                        <i data-lucide="notebook-pen"></i>
+
+                        <p>
+                            ${escapeHTML(
+                                notes
+                            )}
+                        </p>
+
+                    </div>
+
+                </section>
+
+
+
+                <!-- =========================================
+                     RECORD INFORMATION
+                ========================================== -->
+
+                <section class="profile-card profile-meta-card">
+
+                    <div class="profile-card-header">
+
+                        <div>
+
+                            <h3>
+                                Record Information
+                            </h3>
+
+                            <p>
+                                CRM record details
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="profile-info-grid">
+
+                        <div class="profile-info-item">
+
+                            <span class="profile-info-label">
+                                <i data-lucide="calendar-plus"></i>
+                                Created
+                            </span>
+
+                            <strong>
+                                ${escapeHTML(
+                                    createdAt
+                                )}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="profile-info-item">
+
+                            <span class="profile-info-label">
+                                <i data-lucide="refresh-cw"></i>
+                                Last Updated
+                            </span>
+
+                            <strong>
+                                ${escapeHTML(
+                                    updatedAt
+                                )}
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+        `;
+
+
+        refreshIcons();
+    }
+
+
+    // ========================================================
+    // LOAD SALES
+    // ========================================================
+
+    async function loadSales(
+        salesId
+    ) {
+
+        if (
+            !salesId ||
+            String(salesId).trim() === ""
+        ) {
+            return null;
+        }
+
+
+        const supabase =
+            getSupabaseClient();
+
+
+        if (!supabase) {
+            return null;
+        }
 
 
         try {
 
-            if (
-                (
-                    !Array.isArray(
-                        window.salesUsersData
-                    ) ||
-                    window.salesUsersData.length === 0
-                ) &&
-                typeof window.loadSalesLookup ===
-                "function"
-            ) {
-
-                try {
-
-                    await window.loadSalesLookup();
-
-                } catch (error) {
-
-                    console.warn(
-                        "FSI CRM: unable to load Sales lookup:",
-                        error
-                    );
-                }
-            }
+            const {
+                data,
+                error
+            } = await supabase
+                .from("sales_users")
+                .select("*")
+                .eq(
+                    "id",
+                    salesId
+                )
+                .maybeSingle();
 
 
-            applySelectedSalesFilter();
+            if (error) {
 
-
-            const filters =
-                getLeadFilters();
-
-
-            window.currentSearch =
-                filters.search;
-
-
-            window.currentStatusFilter =
-                filters.status;
-
-
-            window.currentBusinessFilter =
-                filters.business;
-
-
-            window.currentLocationFilter =
-                filters.location;
-
-
-            window.currentSalesFilter =
-                filters.salesFilter;
-
-
-            let query =
-                client
-                    .from("leads")
-                    .select(
-                        "*",
-                        {
-                            count:
-                                "exact"
-                        }
-                    );
-
-
-            query =
-                buildSearchQuery(
-                    query,
-                    filters.search
+                console.warn(
+                    "FSI CRM: Unable to load sales profile.",
+                    error
                 );
 
-
-            if (filters.status) {
-
-                query =
-                    query.eq(
-                        "status",
-                        filters.status
-                    );
+                return null;
             }
 
 
-            if (filters.business) {
+            return data || null;
 
-                query =
-                    query.eq(
-                        "business",
-                        filters.business
-                    );
-            }
+        } catch (error) {
 
+            console.warn(
+                "FSI CRM: Sales profile request failed.",
+                error
+            );
 
-            if (filters.location) {
-
-                query =
-                    query.eq(
-                        "location",
-                        filters.location
-                    );
-            }
+            return null;
+        }
+    }
 
 
-            // ------------------------------------------------
-            // ADMIN
-            // ------------------------------------------------
+    // ========================================================
+    // LOAD CUSTOMER
+    // ========================================================
 
-            if (leadIsAdmin()) {
+    async function loadCustomer(
+        customerId
+    ) {
 
-                if (
-                    filters.salesFilter
-                ) {
-
-                    query =
-                        query.eq(
-                            "sales_id",
-                            filters.salesFilter
-                        );
-                }
-            }
+        const supabase =
+            getSupabaseClient();
 
 
-            // ------------------------------------------------
-            // SALES
-            // ------------------------------------------------
+        if (!supabase) {
 
-            else if (
-                leadIsSales()
-            ) {
+            showProfileError(
+                "Supabase connection is not available."
+            );
 
-                const profile =
-                    leadGetProfile();
+            return null;
+        }
 
 
-                if (profile?.id) {
-
-                    query =
-                        query.eq(
-                            "sales_id",
-                            profile.id
-                        );
-                }
-            }
+        const id =
+            String(
+                customerId ?? ""
+            ).trim();
 
 
-            const pageSize =
-                leadGetPageSize();
+        if (!id) {
+
+            showProfileEmpty(
+                "Select a customer to view the profile."
+            );
+
+            return null;
+        }
 
 
-            const from =
-                (
-                    pageNumber - 1
-                ) *
-                pageSize;
-
-
-            const to =
-                from +
-                pageSize -
-                1;
-
-
-            query =
-                query
-                    .order(
-                        "created_at",
-                        {
-                            ascending:
-                                false
-                        }
-                    )
-                    .range(
-                        from,
-                        to
-                    );
-
+        try {
 
             const {
                 data,
-                error,
-                count
-            } =
-                await query;
-
-
-            if (
-                requestId !==
-                activeRequestId
-            ) {
-
-                return;
-            }
+                error
+            } = await supabase
+                .from("leads")
+                .select("*")
+                .eq(
+                    "id",
+                    id
+                )
+                .maybeSingle();
 
 
             if (error) {
 
                 console.error(
-                    "FSI CRM: load leads error:",
+                    "FSI CRM: Customer profile query failed:",
                     error
                 );
 
 
-                window.leadsData =
-                    [];
-
-
-                window.totalLeadsCount =
-                    0;
-
-
-                renderLeadsErrorState(
-                    typeof window.getSupabaseErrorMessage ===
-                    "function"
-                        ? window.getSupabaseErrorMessage(
-                            error,
-                            "Failed to load leads."
-                        )
-                        : (
-                            error?.message ||
-                            "Failed to load leads."
-                        )
+                showProfileError(
+                    error.message ||
+                    "Unable to load customer data."
                 );
 
 
-                updatePagination();
-
-
-                showLeadError(
-                    error,
-                    "Failed to load leads."
-                );
-
-
-                return;
+                return null;
             }
 
 
-            const leads =
-                Array.isArray(data)
-                    ? data
-                    : [];
+            if (!data) {
 
-
-            const totalCount =
-                Number.isFinite(
-                    Number(count)
-                )
-                    ? Number(count)
-                    : 0;
-
-
-            window.leadsData =
-                leads;
-
-
-            window.totalLeadsCount =
-                Math.max(
-                    0,
-                    totalCount
+                showProfileError(
+                    "Customer was not found."
                 );
 
 
-            const totalPages =
-                Math.max(
-                    1,
-                    Math.ceil(
-                        (
-                            Number(
-                                window.totalLeadsCount
-                            ) || 0
-                        ) /
-                        pageSize
-                    )
-                );
-
-
-            if (
-                pageNumber >
-                totalPages
-            ) {
-
-                leadSetCurrentPage(
-                    totalPages
-                );
-
-
-                leadsLoading =
-                    false;
-
-
-                await loadLeads(
-                    totalPages
-                );
-
-
-                return;
+                return null;
             }
 
 
-            if (
-                leads.length === 0
-            ) {
-
-                renderEmptyLeadsState();
-
-                updatePagination();
-
-                updateLeadsContext();
-
-                return;
-            }
-
-
-            renderLeads(
-                leads
-            );
-
-
-            updatePagination();
-
-            updateLeadsContext();
-
+            return data;
 
         } catch (error) {
 
             console.error(
-                "FSI CRM: loadLeads error:",
+                "FSI CRM: Customer profile request failed:",
                 error
             );
 
 
-            window.leadsData =
-                [];
-
-
-            window.totalLeadsCount =
-                0;
-
-
-            renderLeadsErrorState(
-                typeof window.getSupabaseErrorMessage ===
-                "function"
-                    ? window.getSupabaseErrorMessage(
-                        error,
-                        "An error occurred while loading leads."
-                    )
-                    : (
-                        error?.message ||
-                        "An error occurred while loading leads."
-                    )
+            showProfileError(
+                "Unable to load customer profile."
             );
 
 
-            updatePagination();
-
-
-            showLeadError(
-                error,
-                "An error occurred while loading leads."
-            );
-
-
-        } finally {
-
-            leadsLoading =
-                false;
-
-
-            if (
-                typeof window.refreshIcons ===
-                "function"
-            ) {
-
-                window.refreshIcons();
-            }
+            return null;
         }
     }
 
 
     // ========================================================
-    // LEADS CONTEXT
+    // OPEN CUSTOMER PROFILE
     // ========================================================
 
-    function updateLeadsContext() {
-
-        const selectedSalesId =
-            getSelectedSalesId();
-
-
-        const selectedSalesName =
-            getSelectedSalesName();
-
-
-        const contextElements = [
-
-            leadElement(
-                "selected-sales-label"
-            ),
-
-            leadElement(
-                "leads-selected-sales"
-            ),
-
-            leadElement(
-                "active-sales-filter"
-            )
-
-        ].filter(Boolean);
-
-
-        contextElements.forEach(
-            element => {
-
-                if (
-                    selectedSalesId
-                ) {
-
-                    element.textContent =
-                        selectedSalesName
-                            ? `Sales: ${selectedSalesName}`
-                            : "Sales terpilih";
-
-
-                    element.classList.add(
-                        "active"
-                    );
-
-                } else {
-
-                    element.textContent =
-                        "Semua Sales";
-
-
-                    element.classList.remove(
-                        "active"
-                    );
-                }
-            }
-        );
-    }
-
-
-    // ========================================================
-    // ERROR MESSAGE
-    // ========================================================
-
-    function showLeadError(
-        error,
-        fallback
+    async function openCustomerProfile(
+        customerId
     ) {
 
-        const message =
-            typeof window.getSupabaseErrorMessage ===
-            "function"
-                ? window.getSupabaseErrorMessage(
-                    error,
-                    fallback
-                )
-                : (
-                    error?.message ||
-                    fallback
-                );
-
-
-        if (
-            typeof window.showToast ===
-            "function"
-        ) {
-
-            window.showToast(
-                message,
-                "error"
-            );
-
-        } else {
-
-            console.error(
-                message
-            );
-        }
-    }
-
-
-    // ========================================================
-    // PAGINATION
-    // ========================================================
-
-    function updatePagination() {
-
-        const paginationInfo =
-            leadElement(
-                "leads-pagination-info",
-                "paginationInfo"
-            );
-
-
-        const pageIndicator =
-            leadElement(
-                "pageIndicator"
-            );
-
-
-        const prevBtn =
-            leadElement(
-                "btn-prev-page",
-                "prevBtn"
-            );
-
-
-        const nextBtn =
-            leadElement(
-                "btn-next-page",
-                "nextBtn"
-            );
-
-
-        const pageSize =
-            leadGetPageSize();
-
-
-        const totalLeads =
-            Number(
-                window.totalLeadsCount
-            ) || 0;
-
-
-        const currentPage =
-            leadGetCurrentPage();
-
-
-        const totalPages =
-            Math.max(
-                1,
-                Math.ceil(
-                    totalLeads /
-                    pageSize
-                )
-            );
-
-
-        const start =
-            totalLeads === 0
-                ? 0
-                : (
-                    (
-                        currentPage -
-                        1
-                    ) *
-                    pageSize
-                ) + 1;
-
-
-        const end =
-            Math.min(
-                currentPage *
-                pageSize,
-                totalLeads
-            );
-
-
-        if (paginationInfo) {
-
-            paginationInfo.textContent =
-                totalLeads === 0
-                    ? "0 leads"
-                    : `${start}-${end} of ${totalLeads} leads`;
-        }
-
-
-        if (pageIndicator) {
-
-            pageIndicator.textContent =
-                `Page ${currentPage} / ${totalPages}`;
-        }
-
-
-        if (prevBtn) {
-
-            const disabled =
-                totalLeads === 0 ||
-                currentPage <= 1;
-
-
-            prevBtn.disabled =
-                disabled;
-
-
-            prevBtn.setAttribute(
-                "aria-disabled",
-                String(disabled)
-            );
-        }
-
-
-        if (nextBtn) {
-
-            const disabled =
-                totalLeads === 0 ||
-                currentPage >= totalPages;
-
-
-            nextBtn.disabled =
-                disabled;
-
-
-            nextBtn.setAttribute(
-                "aria-disabled",
-                String(disabled)
-            );
-        }
-
-
-        const pageInfo =
-            leadElement(
-                "pagination-page-info"
-            );
-
-
-        if (pageInfo) {
-
-            pageInfo.textContent =
-                totalLeads === 0
-                    ? "Page 1 / 1"
-                    : `Page ${currentPage} / ${totalPages}`;
-        }
-
-
-        window.totalPages =
-            totalPages;
-    }
-
-
-    function changePage(
-        direction
-    ) {
-
-        const numericDirection =
-            Number(direction);
-
-
-        if (
-            !Number.isFinite(
-                numericDirection
-            )
-        ) {
-            return;
-        }
-
-
-        if (leadsLoading) {
-            return;
-        }
-
-
-        const pageSize =
-            leadGetPageSize();
-
-
-        const totalLeads =
-            Number(
-                window.totalLeadsCount
-            ) || 0;
-
-
-        if (totalLeads <= 0) {
-            return;
-        }
-
-
-        const totalPages =
-            Math.max(
-                1,
-                Math.ceil(
-                    totalLeads /
-                    pageSize
-                )
-            );
-
-
-        const currentPage =
-            leadGetCurrentPage();
-
-
-        const newPage =
-            currentPage +
-            numericDirection;
-
-
-        if (
-            newPage < 1 ||
-            newPage > totalPages
-        ) {
-            return;
-        }
-
-
-        loadLeads(
-            newPage
-        );
-    }
-
-
-    function nextLeadPage() {
-
-        changePage(1);
-    }
-
-
-    function previousLeadPage() {
-
-        changePage(-1);
-    }
-
-
-    // ========================================================
-    // RENDER LEADS TABLE
-    // ========================================================
-
-    function renderLeads(
-        data
-    ) {
-
-        const table =
-            leadElement(
-                "leads-table-body",
-                "leadsTable"
-            );
-
-
-        if (!table) {
-
-            console.warn(
-                "FSI CRM: leads table body not found."
-            );
-
-            return;
-        }
-
-
-        table.innerHTML =
-            "";
-
-
-        const leads =
-            Array.isArray(data)
-                ? data
-                : [];
-
-
-        if (
-            leads.length === 0
-        ) {
-
-            renderEmptyLeadsState();
-
-            return;
-        }
-
-
-        leads.forEach(
-            lead => {
-
-                const tr =
-                    document.createElement(
-                        "tr"
-                    );
-
-
-                const salesName =
-                    typeof window.getSalesName ===
-                    "function"
-                        ? window.getSalesName(
-                            lead.sales_id
-                        )
-                        : "-";
-
-
-                const displayStatus =
-                    typeof window.normalizeLeadStatus ===
-                    "function"
-                        ? window.normalizeLeadStatus(
-                            lead.status
-                        )
-                        : (
-                            lead.status ||
-                            "New"
-                        );
-
-
-                const statusCSS =
-                    typeof window.getStatusClass ===
-                    "function"
-                        ? window.getStatusClass(
-                            displayStatus
-                        )
-                        : (
-                            typeof window.statusClass ===
-                            "function"
-                                ? window.statusClass(
-                                    displayStatus
-                                )
-                                : "status-new"
-                        );
-
-
-                const customerName =
-                    leadGetValue(
-                        lead.customer_name
-                    );
-
-
-                const phone =
-                    leadGetValue(
-                        lead.phone
-                    );
-
-
-                const business =
-                    leadGetValue(
-                        lead.business
-                    );
-
-
-                const location =
-                    leadGetValue(
-                        lead.location
-                    );
-
-
-                const escapedCustomer =
-                    leadEscapeHTML(
-                        customerName
-                    );
-
-
-                const escapedPhone =
-                    leadEscapeHTML(
-                        phone
-                    );
-
-
-                const escapedBusiness =
-                    leadEscapeHTML(
-                        business
-                    );
-
-
-                const escapedLocation =
-                    leadEscapeHTML(
-                        location
-                    );
-
-
-                const escapedSales =
-                    leadEscapeHTML(
-                        salesName || "-"
-                    );
-
-
-                const safeStatus =
-                    leadEscapeHTML(
-                        displayStatus
-                    );
-
-
-                let whatsappHTML =
-                    "-";
-
-
-                if (phone) {
-
-                    const waURL =
-                        typeof window.whatsappLink ===
-                        "function"
-                            ? window.whatsappLink(
-                                phone
-                            )
-                            : "#";
-
-
-                    if (
-                        waURL &&
-                        waURL !== "#"
-                    ) {
-
-                        whatsappHTML = `
-                            <a
-                                href="${leadEscapeHTML(waURL)}"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="wa-link"
-                                title="Open WhatsApp"
-                            >
-                                ${escapedPhone}
-                            </a>
-                        `;
-
-                    } else {
-
-                        whatsappHTML =
-                            escapedPhone;
-                    }
-                }
-
-
-                const formattedFollowUp =
-                    typeof window.formatDate ===
-                    "function"
-                        ? window.formatDate(
-                            lead.follow_up_date
-                        )
-                        : (
-                            lead.follow_up_date ||
-                            "-"
-                        );
-
-
-                const formattedAppointment =
-                    typeof window.formatDate ===
-                    "function"
-                        ? window.formatDate(
-                            lead.appointment
-                        )
-                        : (
-                            lead.appointment ||
-                            "-"
-                        );
-
-
-                const safeFollowUp =
-                    leadEscapeHTML(
-                        formattedFollowUp
-                    );
-
-
-                const safeAppointment =
-                    leadEscapeHTML(
-                        formattedAppointment
-                    );
-
-
-                // ------------------------------------------------
-                // CUSTOMER ID
-                // ------------------------------------------------
-
-                const leadId =
-                    String(
-                        lead.id ?? ""
-                    ).trim();
-
-
-                tr.dataset.leadId =
-                    leadId;
-
-
-                tr.setAttribute(
-                    "data-customer-id",
-                    leadId
-                );
-
-
-                tr.innerHTML = `
-                    <td>
-
-                        <div class="lead-customer-cell">
-
-                            <button
-                                type="button"
-                                class="lead-name-btn"
-                                data-action="profile"
-                                data-lead-id="${leadEscapeHTML(leadId)}"
-                                data-customer-id="${leadEscapeHTML(leadId)}"
-                                title="Open customer profile"
-                            >
-                                ${escapedCustomer || "-"}
-                            </button>
-
-                        </div>
-
-                    </td>
-
-                    <td>
-                        ${whatsappHTML}
-                    </td>
-
-                    <td>
-                        ${escapedBusiness || "-"}
-                    </td>
-
-                    <td>
-                        ${escapedLocation || "-"}
-                    </td>
-
-                    <td>
-                        ${escapedSales || "-"}
-                    </td>
-
-                    <td>
-
-                        <span
-                            class="status-badge ${leadEscapeHTML(statusCSS)}"
-                        >
-                            ${safeStatus}
-                        </span>
-
-                    </td>
-
-                    <td>
-                        ${safeFollowUp}
-                    </td>
-
-                    <td>
-                        ${safeAppointment}
-                    </td>
-
-                    <td>
-
-                        <div class="crm-lead-actions">
-
-                            <button
-                                type="button"
-                                class="primary-btn small-btn customer-profile-btn"
-                                data-action="profile"
-                                data-lead-id="${leadEscapeHTML(leadId)}"
-                                data-customer-id="${leadEscapeHTML(leadId)}"
-                                title="Open customer profile"
-                            >
-                                <i data-lucide="user-round"></i>
-                                Profile
-                            </button>
-
-                            <button
-                                type="button"
-                                class="secondary-btn small-btn"
-                                data-action="delete"
-                                data-lead-id="${leadEscapeHTML(leadId)}"
-                                data-customer-id="${leadEscapeHTML(leadId)}"
-                                title="Delete customer"
-                            >
-                                <i data-lucide="trash-2"></i>
-                                Delete
-                            </button>
-
-                        </div>
-
-                    </td>
-                `;
-
-
-                table.appendChild(
-                    tr
-                );
-            }
-        );
-
-
-        if (
-            typeof window.refreshIcons ===
-            "function"
-        ) {
-
-            window.refreshIcons();
-        }
-    }
-
-
-    // ========================================================
-    // FILTER / SEARCH
-    // ========================================================
-
-    function filterLeads() {
-
-        leadSetCurrentPage(
-            1
-        );
-
-
-        loadLeads(
-            1
-        );
-    }
-
-
-    function onSearchInput() {
-
-        clearTimeout(
-            searchTimer
-        );
-
-
-        searchTimer =
-            setTimeout(
-                function () {
-
-                    leadSetCurrentPage(
-                        1
-                    );
-
-
-                    loadLeads(
-                        1
-                    );
-
-                },
-                400
-            );
-    }
-
-
-    function clearLeadFilters() {
-
-        const fields = [
-
-            [
-                "lead-search",
-                "leadSearch",
-                "leadsSearch"
-            ],
-
-            [
-                "filter-status",
-                "statusFilter",
-                "leadStatusFilter"
-            ],
-
-            [
-                "filter-business",
-                "businessFilter"
-            ],
-
-            [
-                "filter-location",
-                "locationFilter"
-            ]
-
-        ];
-
-
-        fields.forEach(
-            ids => {
-
-                const element =
-                    leadElement(
-                        ...ids
-                    );
-
-
-                if (element) {
-
-                    element.value =
-                        "";
-                }
-            }
-        );
-
-
-        window.crmSelectedSalesId =
-            "";
-
-
-        window.crmSelectedSalesName =
-            "";
-
-
-        const salesSelect =
-            leadElement(
-                "salesFilter"
-            );
-
-
-        if (salesSelect) {
-
-            salesSelect.value =
-                "";
-        }
-
-
-        leadSetCurrentPage(
-            1
-        );
-
-
-        loadLeads(
-            1
-        );
-    }
-
-
-    function clearSalesHeaderFilter() {
-
-        window.crmSelectedSalesId =
-            "";
-
-
-        window.crmSelectedSalesName =
-            "";
-
-
-        const salesSelect =
-            leadElement(
-                "salesFilter"
-            );
-
-
-        if (salesSelect) {
-
-            salesSelect.value =
-                "";
-        }
-
-
-        window.currentSalesFilter =
-            "";
-
-
-        leadSetCurrentPage(
-            1
-        );
-
-
-        updateLeadsContext();
-
-
-        loadLeads(
-            1
-        );
-    }
-
-
-    // ========================================================
-    // LEGACY LEAD MODAL
-    // ========================================================
-
-    function openLeadModal() {
-
-        const modal =
-            leadElement(
-                "leadModal"
-            );
-
-
-        if (!modal) {
-
-            console.error(
-                "FSI CRM: Lead modal not found."
-            );
-
-
-            if (
-                typeof window.showToast ===
-                "function"
-            ) {
-
-                window.showToast(
-                    "Lead modal not found.",
-                    "error"
-                );
-            }
-
-
-            return;
-        }
-
-
-        clearLeadForm();
-
-
-        const title =
-            leadElement(
-                "leadModalTitle"
-            );
-
-
-        if (title) {
-
-            title.textContent =
-                "Add Customer";
-        }
-
-
-        modal.classList.add(
-            "show"
-        );
-
-
-        modal.style.display =
-            "flex";
-
-
-        document.body.classList.add(
-            "modal-open"
-        );
-
-
-        setTimeout(
-            function () {
-
-                const customerInput =
-                    leadElement(
-                        "leadCustomerName",
-                        "leadCustomer"
-                    );
-
-
-                if (customerInput) {
-
-                    customerInput.focus();
-                }
-
-            },
-            50
-        );
-    }
-
-
-    function closeLeadModal() {
-
-        const modal =
-            leadElement(
-                "leadModal"
-            );
-
-
-        if (!modal) {
-            return;
-        }
-
-
-        modal.classList.remove(
-            "show"
-        );
-
-
-        modal.style.display =
-            "none";
-
-
-        document.body.classList.remove(
-            "modal-open"
-        );
-    }
-
-
-    // ========================================================
-    // CLEAR FORM
-    // ========================================================
-
-    function clearLeadForm() {
-
-        setLeadValue(
-            ["leadId"],
-            ""
-        );
-
-
-        setLeadValue(
-            [
-                "leadCustomerName",
-                "leadCustomer"
-            ],
-            ""
-        );
-
-
-        setLeadValue(
-            ["leadPhone"],
-            ""
-        );
-
-
-        setLeadValue(
-            ["leadBusiness"],
-            ""
-        );
-
-
-        setLeadValue(
-            ["leadLocation"],
-            ""
-        );
-
-
-        setLeadValue(
-            ["leadStatus"],
-            "New"
-        );
-
-
-        const profile =
-            leadGetProfile();
-
-
-        setLeadValue(
-            ["leadSalesAssign"],
-            leadIsSales()
-                ? (
-                    profile?.id ||
-                    ""
-                )
-                : (
-                    getSelectedSalesId() ||
-                    ""
-                )
-        );
-
-
-        setLeadValue(
-            ["leadFollowUp"],
-            ""
-        );
-
-
-        setLeadValue(
-            ["leadAppointment"],
-            ""
-        );
-
-
-        setLeadValue(
-            ["leadSiteSurvey"],
-            ""
-        );
-
-
-        setLeadValue(
-            ["leadQuotation"],
-            ""
-        );
-
-
-        setLeadValue(
-            [
-                "leadSpk",
-                "leadSPK"
-            ],
-            ""
-        );
-
-
-        setLeadValue(
-            ["leadClosing"],
-            ""
-        );
-
-
-        setLeadValue(
-            ["leadNotes"],
-            ""
-        );
-
-
-        if (
-            typeof window.setupSalesAssignmentAccess ===
-            "function"
-        ) {
-
-            window.setupSalesAssignmentAccess();
-        }
-    }
-
-
-    function setLeadValue(
-        ids,
-        value
-    ) {
-
-        const idList =
-            Array.isArray(ids)
-                ? ids
-                : [ids];
-
-
-        let element =
-            null;
-
-
-        for (
-            const id of idList
-        ) {
-
-            element =
-                document.getElementById(
-                    id
-                );
-
-
-            if (element) {
-                break;
-            }
-        }
-
-
-        if (!element) {
-            return;
-        }
-
-
-        if (
-            typeof window.setValue ===
-            "function"
-        ) {
-
-            window.setValue(
-                element.id,
-                value
-            );
-
-        } else {
-
-            element.value =
-                value ?? "";
-        }
-    }
-
-
-    // ========================================================
-    // OPEN EDIT / CUSTOMER PROFILE
-    // ========================================================
-
-    async function openEditLead(
-        id
-    ) {
-
-        const customerId =
+        const id =
             String(
-                id ?? ""
+                customerId ?? ""
             ).trim();
 
 
-        if (!customerId) {
+        if (!id) {
 
-            console.error(
-                "FSI CRM: openEditLead called without customer ID."
+            showProfileEmpty(
+                "Select a customer to view the profile."
             );
-
-
-            if (
-                typeof window.showToast ===
-                "function"
-            ) {
-
-                window.showToast(
-                    "Customer ID tidak ditemukan.",
-                    "error"
-                );
-            }
-
 
             return;
         }
+
+
+        if (profileLoading) {
+            return;
+        }
+
+
+        currentCustomerId =
+            id;
 
 
         window.crmCurrentCustomerId =
-            customerId;
+            id;
 
 
-        if (
-            typeof window.crmOpenCustomerProfile ===
-            "function"
-        ) {
+        profileLoading = true;
 
-            await window.crmOpenCustomerProfile(
-                customerId
+
+        showProfileLoading();
+
+
+        try {
+
+            const customer =
+                await loadCustomer(id);
+
+
+            if (!customer) {
+                return;
+            }
+
+
+            const sales =
+                await loadSales(
+                    customer.sales_id
+                );
+
+
+            renderCustomerProfile(
+                customer,
+                sales
             );
 
 
-            return;
-        }
-
-
-        if (
-            typeof window.editLead ===
-            "function"
-        ) {
-
-            await window.editLead(
-                customerId
-            );
-
-
-            return;
-        }
-
-
-        console.warn(
-            "FSI CRM: Customer profile editor is not available."
-        );
-
-
-        if (
-            typeof window.showToast ===
-            "function"
-        ) {
-
-            window.showToast(
-                "Customer Profile belum tersedia.",
-                "error"
-            );
-        }
-    }
-
-
-    // ========================================================
-    // SAVE LEAD
-    // ========================================================
-
-    async function saveLead() {
-
-        const profile =
-            leadGetProfile();
-
-
-        if (!profile) {
-
-            showLeadError(
-                new Error(
-                    "User profile is not ready."
-                ),
-                "User profile is not ready."
-            );
-
-
-            return;
-        }
-
-
-        const client =
-            leadGetSupabase();
-
-
-        if (!client) {
-
-            showLeadError(
-                new Error(
-                    "Supabase is not connected."
-                ),
-                "Supabase is not connected."
-            );
-
-
-            return;
-        }
-
-
-        const customerElement =
-            leadElement(
-                "leadCustomerName",
-                "leadCustomer"
-            );
-
-
-        const customer =
-            customerElement?.value?.trim() ||
-            "";
-
-
-        if (!customer) {
+            // ------------------------------------------------
+            // Navigate to profile page
+            // ------------------------------------------------
 
             if (
-                typeof window.showToast ===
+                typeof window.showPage ===
                 "function"
             ) {
 
-                window.showToast(
-                    "Customer name is required.",
-                    "error"
+                window.showPage(
+                    "customer-profile"
+                );
+
+            } else if (
+                typeof window.navigateToPage ===
+                "function"
+            ) {
+
+                window.navigateToPage(
+                    "customer-profile"
                 );
 
             } else {
 
-                alert(
-                    "Customer name is required."
-                );
+                activateProfilePage();
+
             }
 
 
-            customerElement?.focus();
+        } catch (error) {
 
-
-            return;
-        }
-
-
-        const leadId =
-            leadElement(
-                "leadId"
-            )?.value ||
-            "";
-
-
-        const getFormValue =
-            function (...ids) {
-
-                const element =
-                    leadElement(
-                        ...ids
-                    );
-
-
-                return (
-                    element?.value?.trim() ||
-                    ""
-                );
-            };
-
-
-        const statusValue =
-            getFormValue(
-                "leadStatus"
+            console.error(
+                "FSI CRM: Open customer profile failed:",
+                error
             );
 
 
-        const normalizedStatus =
-            typeof window.normalizeLeadStatus ===
+            showProfileError(
+                "Unable to open customer profile."
+            );
+
+        } finally {
+
+            profileLoading = false;
+
+        }
+    }
+
+
+    // ========================================================
+    // ACTIVATE PROFILE PAGE
+    // ========================================================
+
+    function activateProfilePage() {
+
+        const pages =
+            document.querySelectorAll(
+                ".crm-page"
+            );
+
+
+        pages.forEach(
+            function (page) {
+
+                page.classList.remove(
+                    "active"
+                );
+
+                page.style.display =
+                    "none";
+
+            }
+        );
+
+
+        const profilePage =
+            document.getElementById(
+                "view-customer-profile"
+            );
+
+
+        if (profilePage) {
+
+            profilePage.classList.add(
+                "active"
+            );
+
+            profilePage.style.display =
+                "block";
+
+        }
+    }
+
+
+    // ========================================================
+    // BACK TO LEADS
+    // ========================================================
+
+    function backToLeads() {
+
+        currentCustomerId =
+            null;
+
+
+        window.crmCurrentCustomerId =
+            null;
+
+
+        if (
+            typeof window.showPage ===
             "function"
-                ? window.normalizeLeadStatus(
-                    statusValue ||
-                    "New"
-                )
-                : (
-                    statusValue ||
-                    "New"
-                );
-
-
-        const payload = {
-
-            customer_name:
-                customer,
-
-            phone:
-                getFormValue(
-                    "leadPhone"
-                ),
-
-            business:
-                getFormValue(
-                    "leadBusiness"
-                ),
-
-            location:
-                getFormValue(
-                    "leadLocation"
-                ),
-
-            status:
-                normalizedStatus,
-
-            follow_up_date:
-                leadElement(
-                    "leadFollowUp"
-                )?.value ||
-                null,
-
-            appointment:
-                leadElement(
-                    "leadAppointment"
-                )?.value ||
-                null,
-
-            site_survey:
-                leadElement(
-                    "leadSiteSurvey"
-                )?.value ||
-                null,
-
-            quotation:
-                leadElement(
-                    "leadQuotation"
-                )?.value ||
-                null,
-
-            spk:
-                leadElement(
-                    "leadSpk",
-                    "leadSPK"
-                )?.value ||
-                null,
-
-            closing:
-                leadElement(
-                    "leadClosing"
-                )?.value ||
-                null,
-
-            notes:
-                getFormValue(
-                    "leadNotes"
-                )
-        };
-
-
-        const salesAssignment =
-            leadElement(
-                "leadSalesAssign"
-            );
-
-
-        const selectedSales =
-            salesAssignment?.value ||
-            "";
-
-
-        // ----------------------------------------------------
-        // ADMIN
-        // ----------------------------------------------------
-
-        if (leadIsAdmin()) {
-
-            payload.sales_id =
-                selectedSales ||
-                null;
-        }
-
-
-        // ----------------------------------------------------
-        // SALES
-        // ----------------------------------------------------
-
-        else if (
-            leadIsSales()
         ) {
 
-            payload.sales_id =
-                profile.id;
-        }
-
-
-        // ----------------------------------------------------
-        // ROLE LAIN
-        // ----------------------------------------------------
-
-        else {
-
-            payload.sales_id =
-                null;
-        }
-
-
-        try {
-
-            // =================================================
-            // UPDATE
-            // =================================================
-
-            if (leadId) {
-
-                payload.updated_by =
-                    profile.id;
-
-
-                const {
-                    error
-                } =
-                    await client
-                        .from("leads")
-                        .update(
-                            payload
-                        )
-                        .eq(
-                            "id",
-                            leadId
-                        );
-
-
-                if (error) {
-
-                    console.error(
-                        "FSI CRM: update lead error:",
-                        error
-                    );
-
-
-                    showLeadError(
-                        error,
-                        "Failed to update lead."
-                    );
-
-
-                    return;
-                }
-
-
-                if (
-                    typeof window.showToast ===
-                    "function"
-                ) {
-
-                    window.showToast(
-                        "Customer updated successfully.",
-                        "success"
-                    );
-                }
-
-            }
-
-            // =================================================
-            // INSERT
-            // =================================================
-
-            else {
-
-                payload.created_by =
-                    profile.id;
-
-
-                payload.updated_by =
-                    profile.id;
-
-
-                const {
-                    error
-                } =
-                    await client
-                        .from("leads")
-                        .insert([
-                            payload
-                        ]);
-
-
-                if (error) {
-
-                    console.error(
-                        "FSI CRM: insert lead error:",
-                        error
-                    );
-
-
-                    showLeadError(
-                        error,
-                        "Failed to add customer."
-                    );
-
-
-                    return;
-                }
-
-
-                if (
-                    typeof window.showToast ===
-                    "function"
-                ) {
-
-                    window.showToast(
-                        "Customer added successfully.",
-                        "success"
-                    );
-                }
-            }
-
-
-            closeLeadModal();
-
-
-            await loadFilterOptions();
-
-
-            await loadLeads(
-                leadGetCurrentPage()
+            window.showPage(
+                "leads"
             );
 
-
-            if (
-                typeof window.updateDashboard ===
-                "function"
-            ) {
-
-                try {
-
-                    await window.updateDashboard();
-
-                } catch (error) {
-
-                    console.warn(
-                        "FSI CRM: dashboard refresh failed:",
-                        error
-                    );
-                }
-            }
-
-
-            document.dispatchEvent(
-                new CustomEvent(
-                    "fsi:lead-changed",
-                    {
-                        detail: {
-                            action:
-                                leadId
-                                    ? "updated"
-                                    : "created"
-                        }
-                    }
-                )
-            );
-
-
-        } catch (error) {
-
-            console.error(
-                "FSI CRM: saveLead error:",
-                error
-            );
-
-
-            showLeadError(
-                error,
-                "An error occurred while saving the customer."
-            );
-        }
-    }
-
-
-    // ========================================================
-    // DELETE LEAD
-    // ========================================================
-
-    async function deleteLead(
-        id
-    ) {
-
-        const customerId =
-            String(
-                id ?? ""
-            ).trim();
-
-
-        if (!customerId) {
-            return;
-        }
-
-
-        const confirmed =
-            typeof window.confirmAction ===
-            "function"
-                ? await window.confirmAction(
-                    "Delete this customer?"
-                )
-                : confirm(
-                    "Delete this customer?"
-                );
-
-
-        if (!confirmed) {
-            return;
-        }
-
-
-        const client =
-            leadGetSupabase();
-
-
-        if (!client) {
-
-            showLeadError(
-                new Error(
-                    "Supabase is not connected."
-                ),
-                "Supabase is not connected."
-            );
-
-
-            return;
-        }
-
-
-        try {
-
-            const {
-                error
-            } =
-                await client
-                    .from("leads")
-                    .delete()
-                    .eq(
-                        "id",
-                        customerId
-                    );
-
-
-            if (error) {
-
-                console.error(
-                    "FSI CRM: delete lead error:",
-                    error
-                );
-
-
-                showLeadError(
-                    error,
-                    "Failed to delete customer."
-                );
-
-
-                return;
-            }
-
-
-            if (
-                String(
-                    window.crmCurrentCustomerId
-                ) ===
-                customerId
-            ) {
-
-                window.crmCurrentCustomerId =
-                    null;
-
-
-                window.crmCurrentCustomer =
-                    null;
-            }
-
-
-            await loadFilterOptions();
-
-
-            const oldTotal =
-                Number(
-                    window.totalLeadsCount
-                ) || 0;
-
-
-            const totalAfterDelete =
-                Math.max(
-                    0,
-                    oldTotal - 1
-                );
-
-
-            const pageSize =
-                leadGetPageSize();
-
-
-            const maxPage =
-                Math.max(
-                    1,
-                    Math.ceil(
-                        totalAfterDelete /
-                        pageSize
-                    )
-                );
-
-
-            const pageAfterDelete =
-                Math.min(
-                    leadGetCurrentPage(),
-                    maxPage
-                );
-
-
-            leadSetCurrentPage(
-                pageAfterDelete
-            );
-
-
-            await loadLeads(
-                pageAfterDelete
-            );
-
-
-            if (
-                typeof window.updateDashboard ===
-                "function"
-            ) {
-
-                try {
-
-                    await window.updateDashboard();
-
-                } catch (error) {
-
-                    console.warn(
-                        "FSI CRM: dashboard refresh failed:",
-                        error
-                    );
-                }
-            }
-
-
-            document.dispatchEvent(
-                new CustomEvent(
-                    "fsi:lead-changed",
-                    {
-                        detail: {
-                            action:
-                                "deleted",
-
-                            id:
-                                customerId
-                        }
-                    }
-                )
-            );
-
-
-            if (
-                typeof window.showToast ===
-                "function"
-            ) {
-
-                window.showToast(
-                    "Customer deleted successfully.",
-                    "success"
-                );
-            }
-
-
-        } catch (error) {
-
-            console.error(
-                "FSI CRM: deleteLead error:",
-                error
-            );
-
-
-            showLeadError(
-                error,
-                "An error occurred while deleting the customer."
-            );
-        }
-    }
-
-
-    // ========================================================
-    // SALES ASSIGNMENT ACCESS
-    // ========================================================
-
-    function setupSalesAssignmentAccess() {
-
-        const select =
-            leadElement(
-                "leadSalesAssign"
-            );
-
-
-        if (!select) {
-            return;
-        }
-
-
-        const profile =
-            leadGetProfile();
-
-
-        if (!profile) {
-
-            select.disabled =
-                true;
-
-            return;
-        }
-
-
-        const isAdmin =
-            leadIsAdmin();
-
-
-        const isSales =
-            leadIsSales();
-
-
-        // ----------------------------------------------------
-        // ADMIN
-        // ----------------------------------------------------
-
-        if (isAdmin) {
-
-            select.disabled =
-                false;
-
-
-            select.removeAttribute(
-                "aria-disabled"
-            );
-
-
-            return;
-        }
-
-
-        // ----------------------------------------------------
-        // SALES
-        // ----------------------------------------------------
-
-        if (isSales) {
-
-            select.value =
-                profile.id ||
-                "";
-
-
-            select.disabled =
-                true;
-
-
-            select.setAttribute(
-                "aria-disabled",
-                "true"
-            );
-
-
-            return;
-        }
-
-
-        select.disabled =
-            true;
-
-
-        select.setAttribute(
-            "aria-disabled",
-            "true"
-        );
-    }
-
-
-    // ========================================================
-    // TABLE EVENT DELEGATION
-    // ========================================================
-    //
-    // Profile sekarang sudah ditangani oleh global capture
-    // handler di atas.
-    //
-    // Di sini profile tetap didukung sebagai fallback.
-    //
-    // ========================================================
-
-    function setupTableActions() {
-
-        const table =
-            leadElement(
-                "leads-table-body",
-                "leadsTable"
-            );
-
-
-        if (!table) {
             return;
         }
 
 
         if (
-            table.dataset.actionsBound ===
+            typeof window.navigateToPage ===
+            "function"
+        ) {
+
+            window.navigateToPage(
+                "leads"
+            );
+
+            return;
+        }
+
+
+        activateLeadsPage();
+    }
+
+
+    // ========================================================
+    // ACTIVATE LEADS PAGE
+    // ========================================================
+
+    function activateLeadsPage() {
+
+        const pages =
+            document.querySelectorAll(
+                ".crm-page"
+            );
+
+
+        pages.forEach(
+            function (page) {
+
+                page.classList.remove(
+                    "active"
+                );
+
+                page.style.display =
+                    "none";
+
+            }
+        );
+
+
+        const leadsPage =
+            document.getElementById(
+                "view-leads"
+            );
+
+
+        if (leadsPage) {
+
+            leadsPage.classList.add(
+                "active"
+            );
+
+            leadsPage.style.display =
+                "block";
+
+        }
+    }
+
+
+    // ========================================================
+    // REFRESH PROFILE
+    // ========================================================
+
+    async function refreshCustomerProfile() {
+
+        if (!currentCustomerId) {
+            return;
+        }
+
+
+        await openCustomerProfile(
+            currentCustomerId
+        );
+    }
+
+
+    // ========================================================
+    // EVENT HANDLER
+    // ========================================================
+
+    function setupShelterEvents() {
+
+        const container =
+            getProfileContainer();
+
+
+        if (!container) {
+            return;
+        }
+
+
+        // Prevent duplicate listeners.
+        if (
+            container.dataset.shelterEventsBound ===
             "true"
         ) {
             return;
         }
 
 
-        table.dataset.actionsBound =
+        container.dataset.shelterEventsBound =
             "true";
 
 
-        table.addEventListener(
+        container.addEventListener(
             "click",
-            async function (event) {
+            function (event) {
 
-                const actionButton =
+                const actionElement =
                     event.target.closest(
-                        "[data-action]"
+                        "[data-shelter-action]"
                     );
 
 
-                if (!actionButton) {
+                if (!actionElement) {
                     return;
                 }
 
 
                 const action =
-                    actionButton.dataset.action;
-
-
-                const leadId =
-                    String(
-                        actionButton.dataset.leadId ||
-                        actionButton.dataset.customerId ||
-                        actionButton.dataset.id ||
-                        ""
-                    ).trim();
-
-
-                // ------------------------------------------------
-                // PROFILE FALLBACK
-                // ------------------------------------------------
-
-                if (
-                    action ===
-                    "profile"
-                ) {
-
-                    if (!leadId) {
-
-                        console.error(
-                            "FSI CRM: Profile button has no customer ID.",
-                            actionButton
-                        );
-
-
-                        if (
-                            typeof window.showToast ===
-                            "function"
-                        ) {
-
-                            window.showToast(
-                                "Customer ID tidak ditemukan.",
-                                "error"
-                            );
-                        }
-
-
-                        return;
-                    }
-
-
-                    if (
-                        typeof window.crmOpenCustomerProfile ===
-                        "function"
-                    ) {
-
-                        await window.crmOpenCustomerProfile(
-                            leadId
-                        );
-
-                    } else {
-
-                        await openEditLead(
-                            leadId
-                        );
-                    }
-
-
-                    return;
-                }
-
-
-                // ------------------------------------------------
-                // DELETE
-                // ------------------------------------------------
-
-                if (
-                    action ===
-                    "delete"
-                ) {
-
-                    if (!leadId) {
-                        return;
-                    }
-
-
-                    await deleteLead(
-                        leadId
+                    actionElement.getAttribute(
+                        "data-shelter-action"
                     );
 
 
-                    return;
-                }
-
-
-                // ------------------------------------------------
-                // RETRY
-                // ------------------------------------------------
-
                 if (
-                    action ===
-                    "retry-leads"
+                    action === "back"
                 ) {
 
-                    leadSetCurrentPage(
-                        1
-                    );
+                    event.preventDefault();
 
+                    backToLeads();
 
-                    await loadLeads(
-                        1
-                    );
-
-
-                    return;
                 }
 
-
-                // ------------------------------------------------
-                // CLEAR SALES FILTER
-                // ------------------------------------------------
-
-                if (
-                    action ===
-                    "clear-sales-filter"
-                ) {
-
-                    clearSalesHeaderFilter();
-
-                    return;
-                }
             }
         );
     }
 
 
     // ========================================================
-    // INITIALIZE EVENTS
+    // LUCIDE
     // ========================================================
 
-    function initializeLeads() {
+    function refreshIcons() {
 
-        if (leadsInitialized) {
-            return;
-        }
+        try {
 
+            if (
+                window.lucide &&
+                typeof window.lucide.createIcons ===
+                    "function"
+            ) {
 
-        leadsInitialized =
-            true;
+                window.lucide.createIcons();
 
-
-        // ----------------------------------------------------
-        // Add Customer + Profile
-        // ----------------------------------------------------
-
-        bindLeadsGlobalClickHandler();
-
-
-        // ----------------------------------------------------
-        // Search
-        // ----------------------------------------------------
-
-        const searchInput =
-            leadElement(
-                "lead-search",
-                "leadSearch",
-                "leadsSearch"
-            );
-
-
-        if (searchInput) {
-
-            searchInput.addEventListener(
-                "input",
-                onSearchInput
-            );
-        }
-
-
-        // ----------------------------------------------------
-        // Filters
-        // ----------------------------------------------------
-
-        [
-
-            [
-                "filter-status",
-                "statusFilter",
-                "leadStatusFilter"
-            ],
-
-            [
-                "filter-business",
-                "businessFilter"
-            ],
-
-            [
-                "filter-location",
-                "locationFilter"
-            ],
-
-            [
-                "salesFilter"
-            ]
-
-        ].forEach(
-            ids => {
-
-                const element =
-                    leadElement(
-                        ...ids
-                    );
-
-
-                if (!element) {
-                    return;
-                }
-
-
-                element.addEventListener(
-                    "change",
-                    function () {
-
-                        if (
-                            element.id ===
-                            "salesFilter"
-                        ) {
-
-                            window.crmSelectedSalesId =
-                                element.value ||
-                                "";
-
-
-                            const selected =
-                                leadGetSalesData()
-                                    .find(
-                                        sales =>
-                                            String(
-                                                sales.id
-                                            ) ===
-                                            String(
-                                                element.value
-                                            )
-                                    );
-
-
-                            window.crmSelectedSalesName =
-                                selected
-                                    ? (
-                                        selected.name ||
-                                        selected.full_name ||
-                                        selected.username ||
-                                        ""
-                                    )
-                                    : "";
-                        }
-
-
-                        filterLeads();
-                    }
-                );
             }
-        );
 
+        } catch (error) {
 
-        // ----------------------------------------------------
-        // Previous
-        // ----------------------------------------------------
-
-        const prevBtn =
-            leadElement(
-                "btn-prev-page",
-                "prevBtn"
+            console.warn(
+                "FSI CRM: Lucide icon rendering failed.",
+                error
             );
 
-
-        if (prevBtn) {
-
-            prevBtn.addEventListener(
-                "click",
-                function () {
-
-                    changePage(
-                        -1
-                    );
-                }
-            );
         }
-
-
-        // ----------------------------------------------------
-        // Next
-        // ----------------------------------------------------
-
-        const nextBtn =
-            leadElement(
-                "btn-next-page",
-                "nextBtn"
-            );
-
-
-        if (nextBtn) {
-
-            nextBtn.addEventListener(
-                "click",
-                function () {
-
-                    changePage(
-                        1
-                    );
-                }
-            );
-        }
-
-
-        // ----------------------------------------------------
-        // Clear filter
-        // ----------------------------------------------------
-
-        const clearFilterBtn =
-            leadElement(
-                "btn-clear-filters",
-                "clearLeadFilters"
-            );
-
-
-        if (clearFilterBtn) {
-
-            clearFilterBtn.addEventListener(
-                "click",
-                clearLeadFilters
-            );
-        }
-
-
-        // ----------------------------------------------------
-        // Table actions
-        // ----------------------------------------------------
-
-        setupTableActions();
-
-
-        // ----------------------------------------------------
-        // ESC
-        // ----------------------------------------------------
-
-        document.addEventListener(
-            "keydown",
-            function (event) {
-
-                if (
-                    event.key !==
-                    "Escape"
-                ) {
-                    return;
-                }
-
-
-                const modal =
-                    leadElement(
-                        "leadModal"
-                    );
-
-
-                if (
-                    modal &&
-                    modal.classList.contains(
-                        "show"
-                    )
-                ) {
-
-                    closeLeadModal();
-                }
-            }
-        );
-
-
-        // ----------------------------------------------------
-        // Click outside legacy modal
-        // ----------------------------------------------------
-
-        const modal =
-            leadElement(
-                "leadModal"
-            );
-
-
-        if (modal) {
-
-            modal.addEventListener(
-                "click",
-                function (event) {
-
-                    if (
-                        event.target ===
-                        modal
-                    ) {
-
-                        closeLeadModal();
-                    }
-                }
-            );
-        }
-
-
-        setupSalesAssignmentAccess();
-
-
-        refreshAddCustomerVisibility();
     }
 
 
     // ========================================================
-    // PROFILE READY
+    // PAGE INITIALIZATION
     // ========================================================
 
-    function handleProfileReady() {
+    function initializeShelter() {
 
-        setupSalesAssignmentAccess();
-
-        refreshAddCustomerVisibility();
-
-        bindLeadsGlobalClickHandler();
-    }
+        setupShelterEvents();
 
 
-    // ========================================================
-    // SALES SELECTED FROM HEADER
-    // ========================================================
-
-    function handleSalesSelected(
-        event
-    ) {
-
-        if (!leadIsAdmin()) {
-            return;
-        }
-
-
-        const detail =
-            event?.detail || {};
+        const profilePage =
+            document.getElementById(
+                "view-customer-profile"
+            );
 
 
         if (
-            Object.prototype.hasOwnProperty.call(
-                detail,
-                "salesId"
+            profilePage &&
+            !profilePage.classList.contains(
+                "active"
             )
         ) {
 
-            window.crmSelectedSalesId =
-                detail.salesId ||
-                "";
+            profilePage.style.display =
+                "none";
+
         }
 
 
-        if (
-            Object.prototype.hasOwnProperty.call(
-                detail,
-                "salesName"
-            )
-        ) {
-
-            window.crmSelectedSalesName =
-                detail.salesName ||
-                "";
-        }
-
-
-        const salesSelect =
-            leadElement(
-                "salesFilter"
-            );
-
-
-        if (salesSelect) {
-
-            salesSelect.value =
-                window.crmSelectedSalesId ||
-                "";
-        }
-
-
-        leadSetCurrentPage(
-            1
-        );
-
-
-        updateLeadsContext();
-
-
-        loadLeads(
-            1
-        );
+        refreshIcons();
     }
 
 
     // ========================================================
-    // APP READY
+    // PUBLIC API
     // ========================================================
 
-    function handleAppReady() {
+    window.crmOpenCustomerProfile =
+        openCustomerProfile;
 
-        setupSalesAssignmentAccess();
 
-        updateLeadsContext();
+    window.openCustomerProfile =
+        openCustomerProfile;
 
-        refreshAddCustomerVisibility();
 
-        bindLeadsGlobalClickHandler();
-    }
+    window.crmOpenShelter =
+        openCustomerProfile;
 
 
-    // ========================================================
-    // EXPORT TO WINDOW
-    // ========================================================
+    window.refreshCustomerProfile =
+        refreshCustomerProfile;
 
-    window.loadFilterOptions =
-        loadFilterOptions;
 
+    window.crmRefreshCustomerProfile =
+        refreshCustomerProfile;
 
-    window.populateFilter =
-        populateFilter;
 
+    window.crmBackToLeads =
+        backToLeads;
 
-    window.loadLeads =
-        loadLeads;
 
+    window.closeCustomerProfile =
+        backToLeads;
 
-    window.updatePagination =
-        updatePagination;
 
+    window.FSICustomerProfile = {
 
-    window.changePage =
-        changePage;
+        open:
+            openCustomerProfile,
 
+        refresh:
+            refreshCustomerProfile,
 
-    window.nextLeadPage =
-        nextLeadPage;
+        back:
+            backToLeads
 
-
-    window.previousLeadPage =
-        previousLeadPage;
-
-
-    window.renderLeads =
-        renderLeads;
-
-
-    window.filterLeads =
-        filterLeads;
-
-
-    window.onSearchInput =
-        onSearchInput;
-
-
-    window.clearLeadFilters =
-        clearLeadFilters;
-
-
-    window.openLeadModal =
-        openLeadModal;
-
-
-    window.closeLeadModal =
-        closeLeadModal;
-
-
-    window.clearLeadForm =
-        clearLeadForm;
-
-
-    window.openEditLead =
-        openEditLead;
-
-
-    window.saveLead =
-        saveLead;
-
-
-    window.deleteLead =
-        deleteLead;
-
-
-    window.setupSalesAssignmentAccess =
-        setupSalesAssignmentAccess;
-
-
-    window.clearSalesHeaderFilter =
-        clearSalesHeaderFilter;
-
-
-    window.updateAddCustomerVisibility =
-        updateAddCustomerVisibility;
-
-
-    window.bindAddCustomerButtons =
-        bindAddCustomerButtons;
-
-
-    window.openAddCustomer =
-        openAddCustomer;
-
-
-    window.FSILeads = {
-
-        loadFilterOptions,
-
-        populateFilter,
-
-        loadLeads,
-
-        updatePagination,
-
-        changePage,
-
-        nextLeadPage,
-
-        previousLeadPage,
-
-        renderLeads,
-
-        filterLeads,
-
-        onSearchInput,
-
-        clearLeadFilters,
-
-        openLeadModal,
-
-        closeLeadModal,
-
-        clearLeadForm,
-
-        openEditLead,
-
-        saveLead,
-
-        deleteLead,
-
-        setupSalesAssignmentAccess,
-
-        clearSalesHeaderFilter,
-
-        updateAddCustomerVisibility,
-
-        bindAddCustomerButtons,
-
-        openAddCustomer
     };
 
 
@@ -4911,73 +2048,21 @@
     // DOM READY
     // ========================================================
 
-    document.addEventListener(
-        "DOMContentLoaded",
-        function () {
+    if (
+        document.readyState ===
+        "loading"
+    ) {
 
-            initializeLeads();
+        document.addEventListener(
+            "DOMContentLoaded",
+            initializeShelter
+        );
 
+    } else {
 
-            console.log(
-                "FSI CRM: Leads module loaded successfully."
-            );
-        }
-    );
+        initializeShelter();
 
-
-    // ========================================================
-    // PROFILE READY
-    // ========================================================
-
-    document.addEventListener(
-        "fsi:profile-ready",
-        function () {
-
-            handleProfileReady();
-        }
-    );
-
-
-    // ========================================================
-    // APP READY
-    // ========================================================
-
-    document.addEventListener(
-        "fsi:app-ready",
-        function () {
-
-            handleAppReady();
-        }
-    );
-
-
-    // ========================================================
-    // SALES SELECTED
-    // ========================================================
-
-    document.addEventListener(
-        "fsi:sales-selected",
-        function (event) {
-
-            handleSalesSelected(
-                event
-            );
-        }
-    );
-
-
-    // ========================================================
-    // LEAD CHANGED
-    // ========================================================
-
-    document.addEventListener(
-        "fsi:lead-changed",
-        function () {
-
-            // Save/delete sudah melakukan refresh
-            // sendiri.
-        }
-    );
+    }
 
 
 })();
