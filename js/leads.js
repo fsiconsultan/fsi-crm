@@ -19,10 +19,11 @@
 // - Profile selalu menggunakan Customer ID yang benar
 // - Status & Business filter dropdown
 // - Location filter DIHAPUS
-// - Menampilkan Created At / Updated At
-// - Menampilkan Lead Age
-// - Menampilkan Follow Up Overdue
+// - Menampilkan Email
+// - Menampilkan Last Follow Up
+// - Menampilkan Follow Up Age
 // - Menampilkan Progress PLTS
+// - Menampilkan Note
 // ============================================================
 
 "use strict";
@@ -588,6 +589,43 @@
     }
 
 
+    function leadTruncateText(
+        value,
+        maxLength = 90
+    ) {
+
+        const text =
+            leadGetValue(
+                value
+            );
+
+
+        if (!text) {
+            return "";
+        }
+
+
+        if (
+            text.length <=
+            maxLength
+        ) {
+            return text;
+        }
+
+
+        return (
+            text.substring(
+                0,
+                Math.max(
+                    0,
+                    maxLength - 3
+                )
+            ) +
+            "..."
+        );
+    }
+
+
     // ========================================================
     // DATE / TIME HELPERS
     // ========================================================
@@ -603,10 +641,118 @@
         }
 
 
-        const date =
+        if (
             value instanceof Date
-                ? new Date(value.getTime())
-                : new Date(value);
+        ) {
+
+            const clonedDate =
+                new Date(
+                    value.getTime()
+                );
+
+
+            if (
+                Number.isNaN(
+                    clonedDate.getTime()
+                )
+            ) {
+                return null;
+            }
+
+
+            return clonedDate;
+        }
+
+
+        if (
+            typeof value === "number"
+        ) {
+
+            const numericDate =
+                new Date(
+                    value
+                );
+
+
+            if (
+                Number.isNaN(
+                    numericDate.getTime()
+                )
+            ) {
+                return null;
+            }
+
+
+            return numericDate;
+        }
+
+
+        const stringValue =
+            String(
+                value
+            ).trim();
+
+
+        if (!stringValue) {
+            return null;
+        }
+
+
+        // ----------------------------------------------------
+        // DATE ONLY
+        // Supaya 2026-09-22 tidak berubah menjadi
+        // tanggal 21 karena timezone UTC.
+        // ----------------------------------------------------
+
+        const dateOnlyMatch =
+            stringValue.match(
+                /^(\d{4})-(\d{2})-(\d{2})$/
+            );
+
+
+        if (dateOnlyMatch) {
+
+            const year =
+                Number(
+                    dateOnlyMatch[1]
+                );
+
+            const month =
+                Number(
+                    dateOnlyMatch[2]
+                ) - 1;
+
+            const day =
+                Number(
+                    dateOnlyMatch[3]
+                );
+
+
+            const localDate =
+                new Date(
+                    year,
+                    month,
+                    day
+                );
+
+
+            if (
+                Number.isNaN(
+                    localDate.getTime()
+                )
+            ) {
+                return null;
+            }
+
+
+            return localDate;
+        }
+
+
+        const date =
+            new Date(
+                stringValue
+            );
 
 
         if (
@@ -625,7 +771,9 @@
     function leadFormatDateTime(value) {
 
         const date =
-            leadParseDate(value);
+            leadParseDate(
+                value
+            );
 
 
         if (!date) {
@@ -658,7 +806,9 @@
     function leadFormatDateOnly(value) {
 
         const date =
-            leadParseDate(value);
+            leadParseDate(
+                value
+            );
 
 
         if (!date) {
@@ -689,7 +839,9 @@
     function leadGetAgeInDays(value) {
 
         const createdDate =
-            leadParseDate(value);
+            leadParseDate(
+                value
+            );
 
 
         if (!createdDate) {
@@ -746,7 +898,7 @@
 
 
         if (age === 0) {
-            return "Hari ini";
+            return "0 hari";
         }
 
 
@@ -791,10 +943,92 @@
     }
 
 
+    // ========================================================
+    // LAST FOLLOW UP
+    // ========================================================
+
+    function leadGetLastFollowUpHTML(
+        value
+    ) {
+
+        if (!value) {
+
+            return `
+                <div class="lead-last-update-stack lead-last-update-empty">
+
+                    <div class="lead-date-main">
+                        -
+                    </div>
+
+                    <div class="lead-date-sub">
+                        <i data-lucide="clock-3"></i>
+                        Belum ada update
+                    </div>
+
+                </div>
+            `;
+        }
+
+
+        const formatted =
+            leadFormatDateTime(
+                value
+            );
+
+
+        const age =
+            leadGetAgeInDays(
+                value
+            );
+
+
+        const ageLabel =
+            leadGetAgeLabel(
+                value
+            );
+
+
+        const ageClass =
+            leadGetAgeClass(
+                value
+            );
+
+
+        return `
+            <div
+                class="lead-last-update-stack ${leadEscapeHTML(ageClass)}"
+                data-last-follow-up="${leadEscapeHTML(String(value))}"
+            >
+
+                <div class="lead-date-main">
+                    ${leadEscapeHTML(formatted)}
+                </div>
+
+                <div class="lead-last-update-age">
+
+                    <i data-lucide="clock-3"></i>
+
+                    <span>
+                        ${leadEscapeHTML(ageLabel)}
+                    </span>
+
+                </div>
+
+            </div>
+        `;
+    }
+
+
+    // ========================================================
+    // FOLLOW UP PLANNED DATE
+    // ========================================================
+
     function leadIsOverdue(value) {
 
         const followUpDate =
-            leadParseDate(value);
+            leadParseDate(
+                value
+            );
 
 
         if (!followUpDate) {
@@ -829,7 +1063,9 @@
     function leadGetOverdueDays(value) {
 
         const followUpDate =
-            leadParseDate(value);
+            leadParseDate(
+                value
+            );
 
 
         if (!followUpDate) {
@@ -915,14 +1151,21 @@
 
             return `
                 <div class="lead-date-stack lead-followup-overdue">
+
                     <div class="lead-date-main">
                         ${safeDate}
                     </div>
 
                     <div class="lead-date-alert">
+
                         <i data-lucide="triangle-alert"></i>
-                        ${leadEscapeHTML(overdueLabel)}
+
+                        ${leadEscapeHTML(
+                            overdueLabel
+                        )}
+
                     </div>
+
                 </div>
             `;
         }
@@ -930,18 +1173,27 @@
 
         return `
             <div class="lead-date-stack">
+
                 <div class="lead-date-main">
                     ${safeDate}
                 </div>
 
                 <div class="lead-date-sub">
+
                     <i data-lucide="calendar-clock"></i>
+
                     Follow Up
+
                 </div>
+
             </div>
         `;
     }
 
+
+    // ========================================================
+    // MILESTONE / PROGRESS
+    // ========================================================
 
     function leadGetMilestoneHTML(
         label,
@@ -949,7 +1201,11 @@
         value
     ) {
 
-        if (!value) {
+        if (
+            value === null ||
+            value === undefined ||
+            value === ""
+        ) {
             return "";
         }
 
@@ -960,17 +1216,24 @@
             );
 
 
+        const formattedValue =
+            leadFormatDateTime(
+                value
+            );
+
+
         const safeValue =
             leadEscapeHTML(
-                leadFormatDateTime(
-                    value
-                )
+                formattedValue
             );
 
 
         return `
             <div class="lead-milestone-item">
-                <i data-lucide="${leadEscapeHTML(icon)}"></i>
+
+                <i
+                    data-lucide="${leadEscapeHTML(icon)}"
+                ></i>
 
                 <div class="lead-milestone-content">
 
@@ -983,6 +1246,7 @@
                     </span>
 
                 </div>
+
             </div>
         `;
     }
@@ -993,6 +1257,14 @@
     ) {
 
         const milestones = [];
+
+
+        const appointmentHTML =
+            leadGetMilestoneHTML(
+                "Appointment",
+                "calendar-days",
+                lead.appointment
+            );
 
 
         const siteSurveyHTML =
@@ -1025,6 +1297,13 @@
                 "circle-check",
                 lead.closing
             );
+
+
+        if (appointmentHTML) {
+            milestones.push(
+                appointmentHTML
+            );
+        }
 
 
         if (siteSurveyHTML) {
@@ -1061,7 +1340,7 @@
 
             return `
                 <div class="lead-progress-empty">
-                    Belum ada milestone
+                    Belum ada progress
                 </div>
             `;
         }
@@ -1070,86 +1349,6 @@
         return `
             <div class="lead-progress-list">
                 ${milestones.join("")}
-            </div>
-        `;
-    }
-
-
-    function leadGetCreatedUpdatedHTML(
-        lead
-    ) {
-
-        const createdAt =
-            lead.created_at;
-
-
-        const updatedAt =
-            lead.updated_at;
-
-
-        const ageLabel =
-            leadGetAgeLabel(
-                createdAt
-            );
-
-
-        const ageClass =
-            leadGetAgeClass(
-                createdAt
-            );
-
-
-        const createdLabel =
-            leadFormatDateTime(
-                createdAt
-            );
-
-
-        const updatedLabel =
-            leadFormatDateTime(
-                updatedAt
-            );
-
-
-        return `
-            <div class="lead-meta-block">
-
-                <div class="lead-age-row ${leadEscapeHTML(ageClass)}">
-
-                    <i data-lucide="clock-3"></i>
-
-                    <span>
-                        ${leadEscapeHTML(ageLabel)}
-                    </span>
-
-                </div>
-
-
-                <div class="lead-meta-line">
-
-                    <span class="lead-meta-label">
-                        Created
-                    </span>
-
-                    <span class="lead-meta-value">
-                        ${leadEscapeHTML(createdLabel)}
-                    </span>
-
-                </div>
-
-
-                <div class="lead-meta-line">
-
-                    <span class="lead-meta-label">
-                        Updated
-                    </span>
-
-                    <span class="lead-meta-value">
-                        ${leadEscapeHTML(updatedLabel)}
-                    </span>
-
-                </div>
-
             </div>
         `;
     }
@@ -1679,6 +1878,7 @@
 
             `customer_name.ilike.%${safeSearch}%`,
             `phone.ilike.%${safeSearch}%`,
+            `email.ilike.%${safeSearch}%`,
             `business.ilike.%${safeSearch}%`,
             `location.ilike.%${safeSearch}%`
 
@@ -1711,14 +1911,18 @@
 
         table.innerHTML = `
             <tr class="loading-row">
-                <td colspan="9">
+
+                <td colspan="10">
+
                     <div class="empty-state loading-state">
 
                         <div class="empty-state-icon">
+
                             <i
                                 data-lucide="loader-circle"
                                 class="spin"
                             ></i>
+
                         </div>
 
                         <div class="empty-state-title">
@@ -1730,7 +1934,9 @@
                         </div>
 
                     </div>
+
                 </td>
+
             </tr>
         `;
 
@@ -1812,7 +2018,8 @@
 
         table.innerHTML = `
             <tr class="empty-row">
-                <td colspan="9">
+
+                <td colspan="10">
 
                     <div class="empty-state leads-empty-state">
 
@@ -1846,6 +2053,7 @@
                     </div>
 
                 </td>
+
             </tr>
         `;
 
@@ -1882,7 +2090,8 @@
 
         table.innerHTML = `
             <tr class="error-row">
-                <td colspan="9">
+
+                <td colspan="10">
 
                     <div class="empty-state leads-error-state">
 
@@ -1913,6 +2122,7 @@
                     </div>
 
                 </td>
+
             </tr>
         `;
 
@@ -2786,6 +2996,10 @@
                     );
 
 
+                // =================================================
+                // SALES
+                // =================================================
+
                 const salesName =
                     typeof window.getSalesName ===
                     "function"
@@ -2794,6 +3008,10 @@
                         )
                         : "-";
 
+
+                // =================================================
+                // STATUS
+                // =================================================
 
                 const displayStatus =
                     typeof window.normalizeLeadStatus ===
@@ -2823,6 +3041,10 @@
                         );
 
 
+                // =================================================
+                // BASIC DATA
+                // =================================================
+
                 const customerName =
                     leadGetValue(
                         lead.customer_name
@@ -2835,17 +3057,27 @@
                     );
 
 
+                const email =
+                    leadGetValue(
+                        lead.email
+                    );
+
+
                 const business =
                     leadGetValue(
                         lead.business
                     );
 
 
-                const location =
+                const note =
                     leadGetValue(
-                        lead.location
+                        lead.notes
                     );
 
+
+                // =================================================
+                // ESCAPED VALUES
+                // =================================================
 
                 const escapedCustomer =
                     leadEscapeHTML(
@@ -2859,15 +3091,15 @@
                     );
 
 
-                const escapedBusiness =
+                const escapedEmail =
                     leadEscapeHTML(
-                        business
+                        email
                     );
 
 
-                const escapedLocation =
+                const escapedBusiness =
                     leadEscapeHTML(
-                        location
+                        business
                     );
 
 
@@ -2884,12 +3116,12 @@
 
 
                 // =================================================
-                // CREATED / UPDATED / AGE
+                // LAST FOLLOW UP
                 // =================================================
 
-                const createdUpdatedHTML =
-                    leadGetCreatedUpdatedHTML(
-                        lead
+                const lastFollowUpHTML =
+                    leadGetLastFollowUpHTML(
+                        lead.last_follow_up
                     );
 
 
@@ -2901,6 +3133,39 @@
                     leadGetProgressHTML(
                         lead
                     );
+
+
+                // =================================================
+                // NOTE
+                // =================================================
+
+                const noteHTML =
+                    note
+                        ? `
+                            <div
+                                class="lead-note-cell"
+                                title="${leadEscapeHTML(note)}"
+                            >
+
+                                <i data-lucide="sticky-note"></i>
+
+                                <span>
+                                    ${leadEscapeHTML(
+                                        leadTruncateText(
+                                            note,
+                                            100
+                                        )
+                                    )}
+                                </span>
+
+                            </div>
+                          `
+                        : `
+                            <div class="lead-note-empty">
+                                <i data-lucide="sticky-note"></i>
+                                Belum ada catatan
+                            </div>
+                          `;
 
 
                 // =================================================
@@ -2948,32 +3213,6 @@
 
 
                 // =================================================
-                // FOLLOW UP
-                // =================================================
-
-                const followUpHTML =
-                    leadGetFollowUpStatusHTML(
-                        lead.follow_up_date
-                    );
-
-
-                // =================================================
-                // APPOINTMENT
-                // =================================================
-
-                const formattedAppointment =
-                    leadFormatDateTime(
-                        lead.appointment
-                    );
-
-
-                const safeAppointment =
-                    leadEscapeHTML(
-                        formattedAppointment
-                    );
-
-
-                // =================================================
                 // CUSTOMER ID
                 // =================================================
 
@@ -2988,10 +3227,15 @@
 
 
                 // =================================================
-                // TABLE ROW
+                // ROW
                 // =================================================
 
                 tr.innerHTML = `
+
+                    <!-- =========================================
+                         CUSTOMER
+                         ========================================= -->
+
                     <td>
 
                         <div class="lead-customer-cell">
@@ -3006,37 +3250,76 @@
                                 ${escapedCustomer || "-"}
                             </button>
 
+                        </div>
 
-                            <!-- ==================================
-                                 CREATED / UPDATED / AGE
-                                 ================================== -->
+                    </td>
 
-                            ${createdUpdatedHTML}
+
+                    <!-- =========================================
+                         WHATSAPP
+                         ========================================= -->
+
+                    <td>
+
+                        ${whatsappHTML}
+
+                    </td>
+
+
+                    <!-- =========================================
+                         EMAIL
+                         ========================================= -->
+
+                    <td>
+
+                        ${
+                            escapedEmail
+                                ? `
+                                    <a
+                                        href="mailto:${escapedEmail}"
+                                        class="lead-email-link"
+                                        title="${escapedEmail}"
+                                    >
+                                        ${escapedEmail}
+                                    </a>
+                                  `
+                                : "-"
+                        }
+
+                    </td>
+
+
+                    <!-- =========================================
+                         BUSINESS
+                         ========================================= -->
+
+                    <td>
+
+                        ${escapedBusiness || "-"}
+
+                    </td>
+
+
+                    <!-- =========================================
+                         SALES
+                         ========================================= -->
+
+                    <td>
+
+                        <div class="lead-sales-cell">
+
+                            <span class="lead-sales-name">
+                                ${escapedSales || "-"}
+                            </span>
 
                         </div>
 
                     </td>
 
 
-                    <td>
-                        ${whatsappHTML}
-                    </td>
-
-
-                    <td>
-                        ${escapedBusiness || "-"}
-                    </td>
-
-
-                    <td>
-                        ${escapedLocation || "-"}
-                    </td>
-
-
-                    <td>
-                        ${escapedSales || "-"}
-                    </td>
-
+                    <!-- =========================================
+                         STATUS
+                         ========================================= -->
 
                     <td>
 
@@ -3048,43 +3331,21 @@
                                 ${safeStatus}
                             </span>
 
-
-                            <!-- ==================================
-                                 PLTS PROGRESS
-                                 ================================== -->
-
-                            <div class="lead-progress-wrapper">
-
-                                ${progressHTML}
-
-                            </div>
-
-                        </div>
-
-                    </td>
-
-
-                    <td>
-
-                        ${followUpHTML}
-
-                    </td>
-
-
-                    <td>
-
-                        <div class="lead-date-stack">
-
-                            <div class="lead-date-main">
-                                ${safeAppointment}
-                            </div>
-
                             ${
-                                lead.appointment
+                                lead.last_follow_up
                                     ? `
-                                        <div class="lead-date-sub">
-                                            <i data-lucide="calendar-days"></i>
-                                            Appointment
+                                        <div class="lead-status-update">
+
+                                            <i data-lucide="clock-3"></i>
+
+                                            <span>
+                                                ${leadEscapeHTML(
+                                                    leadFormatDateTime(
+                                                        lead.last_follow_up
+                                                    )
+                                                )}
+                                            </span>
+
                                         </div>
                                       `
                                     : ""
@@ -3095,13 +3356,52 @@
                     </td>
 
 
+                    <!-- =========================================
+                         LAST UPDATE
+                         ========================================= -->
+
+                    <td>
+
+                        ${lastFollowUpHTML}
+
+                    </td>
+
+
+                    <!-- =========================================
+                         PROGRESS
+                         ========================================= -->
+
+                    <td>
+
+                        <div class="lead-progress-wrapper">
+
+                            ${progressHTML}
+
+                        </div>
+
+                    </td>
+
+
+                    <!-- =========================================
+                         NOTE
+                         ========================================= -->
+
+                    <td>
+
+                        ${noteHTML}
+
+                    </td>
+
+
+                    <!-- =========================================
+                         ACTIONS
+                         ========================================= -->
+
                     <td>
 
                         <div class="crm-lead-actions">
 
-                            <!-- ==================================
-                                 PROFILE
-                                 ================================== -->
+                            <!-- PROFILE -->
 
                             <button
                                 type="button"
@@ -3115,9 +3415,7 @@
                             </button>
 
 
-                            <!-- ==================================
-                                 EDIT CUSTOMER
-                                 ================================== -->
+                            <!-- EDIT -->
 
                             <button
                                 type="button"
@@ -3131,9 +3429,7 @@
                             </button>
 
 
-                            <!-- ==================================
-                                 DELETE CUSTOMER
-                                 ================================== -->
+                            <!-- DELETE -->
 
                             <button
                                 type="button"
@@ -3149,6 +3445,7 @@
                         </div>
 
                     </td>
+
                 `;
 
 
@@ -3493,6 +3790,16 @@
 
 
         setLeadValue(
+            [
+                "leadEmail",
+                "customerEmail",
+                "email"
+            ],
+            ""
+        );
+
+
+        setLeadValue(
             ["leadBusiness"],
             ""
         );
@@ -3533,6 +3840,16 @@
 
         setLeadValue(
             ["leadFollowUp"],
+            ""
+        );
+
+
+        setLeadValue(
+            [
+                "leadLastFollowUp",
+                "leadLastFollowup",
+                "lastFollowUp"
+            ],
             ""
         );
 
@@ -3869,6 +4186,14 @@
                 );
 
 
+        const lastFollowUpElement =
+            leadElement(
+                "leadLastFollowUp",
+                "leadLastFollowup",
+                "lastFollowUp"
+            );
+
+
         const payload = {
 
             customer_name:
@@ -3877,6 +4202,13 @@
             phone:
                 getFormValue(
                     "leadPhone"
+                ),
+
+            email:
+                getFormValue(
+                    "leadEmail",
+                    "customerEmail",
+                    "email"
                 ),
 
             business:
@@ -3934,6 +4266,21 @@
                     "leadNotes"
                 )
         };
+
+
+        // ----------------------------------------------------
+        // LAST FOLLOW UP
+        // Hanya dikirim jika field tersebut memang tersedia
+        // di form. Ini mencegah perubahan otomatis ketika
+        // customer hanya diedit pada field lain.
+        // ----------------------------------------------------
+
+        if (lastFollowUpElement) {
+
+            payload.last_follow_up =
+                lastFollowUpElement.value ||
+                null;
+        }
 
 
         const salesAssignment =
