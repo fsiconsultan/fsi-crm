@@ -45,7 +45,8 @@
 
             if (!id) continue;
 
-            const element = document.getElementById(id);
+            const element =
+                document.getElementById(id);
 
             if (element) {
                 return element;
@@ -65,8 +66,7 @@
 
         if (
             window.supabaseClient &&
-            typeof window.supabaseClient
-                .from === "function"
+            typeof window.supabaseClient.from === "function"
         ) {
             return window.supabaseClient;
         }
@@ -133,15 +133,6 @@
     // ========================================================
     // DATE PARSER
     // ========================================================
-    //
-    // IMPORTANT:
-    // Date "YYYY-MM-DD" dibuat sebagai tanggal LOCAL,
-    // bukan UTC.
-    //
-    // Ini mencegah masalah timezone ketika menghitung
-    // selisih tanggal Follow Up.
-    //
-    // ========================================================
 
     function parseCalendarDate(value) {
 
@@ -161,11 +152,6 @@
             return null;
         }
 
-
-        // ----------------------------------------------------
-        // Format database utama:
-        // YYYY-MM-DD
-        // ----------------------------------------------------
 
         const match =
             raw.match(
@@ -206,10 +192,6 @@
         }
 
 
-        // ----------------------------------------------------
-        // Fallback untuk format tanggal lain
-        // ----------------------------------------------------
-
         const fallback =
             new Date(raw);
 
@@ -249,21 +231,6 @@
 
     // ========================================================
     // DATE DIFFERENCE
-    // ========================================================
-    //
-    // Hasil:
-    //
-    // follow-up kemarin:
-    //     +1
-    //
-    // follow-up hari ini:
-    //      0
-    //
-    // follow-up besok:
-    //     -1
-    //
-    // Jadi hasil positif = sudah lewat.
-    //
     // ========================================================
 
     function getCalendarDayDifference(
@@ -387,8 +354,10 @@
             return {
                 exists: false,
                 label: "No follow-up date",
-                detail: "No follow-up date has been set.",
-                className: "followup-none",
+                detail:
+                    "No follow-up date has been set.",
+                className:
+                    "followup-none",
                 days: null
             };
 
@@ -406,26 +375,20 @@
             );
 
 
-        // ----------------------------------------------------
-        // HARI INI
-        // ----------------------------------------------------
-
         if (difference === 0) {
 
             return {
                 exists: true,
                 label: "Today",
-                detail: "Follow-up is due today.",
-                className: "followup-today",
+                detail:
+                    "Follow-up is due today.",
+                className:
+                    "followup-today",
                 days: 0
             };
 
         }
 
-
-        // ----------------------------------------------------
-        // SUDAH LEWAT
-        // ----------------------------------------------------
 
         if (difference > 0) {
 
@@ -438,16 +401,13 @@
                 detail:
                     `Follow-up date was ${difference} ` +
                     `${difference === 1 ? "day" : "days"} ago.`,
-                className: "followup-overdue",
+                className:
+                    "followup-overdue",
                 days: difference
             };
 
         }
 
-
-        // ----------------------------------------------------
-        // BELUM TIBA
-        // ----------------------------------------------------
 
         const daysUntil =
             Math.abs(difference);
@@ -462,7 +422,8 @@
             detail:
                 `Follow-up is scheduled in ${daysUntil} ` +
                 `${daysUntil === 1 ? "day" : "days"}.`,
-            className: "followup-upcoming",
+            className:
+                "followup-upcoming",
             days: difference
         };
     }
@@ -575,9 +536,7 @@
     // SHOW PROFILE EMPTY
     // ========================================================
 
-    function showProfileEmpty(
-        message
-    ) {
+    function showProfileEmpty(message) {
 
         const container =
             getProfileContainer();
@@ -617,9 +576,7 @@
     // SHOW PROFILE ERROR
     // ========================================================
 
-    function showProfileError(
-        message
-    ) {
+    function showProfileError(message) {
 
         const container =
             getProfileContainer();
@@ -758,10 +715,6 @@
             );
 
 
-        // ----------------------------------------------------
-        // FOLLOW UP VISUAL
-        // ----------------------------------------------------
-
         let followUpBadge = "";
 
 
@@ -803,10 +756,6 @@
 
         }
 
-
-        // ----------------------------------------------------
-        // DAYS TEXT
-        // ----------------------------------------------------
 
         let followUpDaysText =
             "No follow-up date";
@@ -852,10 +801,6 @@
         }
 
 
-        // ----------------------------------------------------
-        // PIPELINE DATE DATA
-        // ----------------------------------------------------
-
         const appointment =
             formatDate(
                 customer.appointment
@@ -893,17 +838,13 @@
             );
 
 
-        // ----------------------------------------------------
-        // RENDER
-        // ----------------------------------------------------
+        // ====================================================
+        // RENDER HTML
+        // ====================================================
 
         container.innerHTML = `
 
             <div class="customer-profile">
-
-                <!-- =========================================
-                     PROFILE HEADER
-                ========================================== -->
 
                 <div class="customer-profile-header">
 
@@ -971,11 +912,6 @@
                 </div>
 
 
-
-                <!-- =========================================
-                     FOLLOW UP HIGHLIGHT
-                ========================================== -->
-
                 <section
                     class="profile-followup-card ${escapeHTML(
                         followUpInfo.className
@@ -1028,11 +964,6 @@
 
                 </section>
 
-
-
-                <!-- =========================================
-                     CUSTOMER INFORMATION
-                ========================================== -->
 
                 <section class="profile-card">
 
@@ -1158,11 +1089,6 @@
 
                 </section>
 
-
-
-                <!-- =========================================
-                     PIPELINE
-                ========================================== -->
 
                 <section class="profile-card">
 
@@ -1331,11 +1257,6 @@
                 </section>
 
 
-
-                <!-- =========================================
-                     NOTES
-                ========================================== -->
-
                 <section class="profile-card">
 
                     <div class="profile-card-header">
@@ -1369,11 +1290,6 @@
 
                 </section>
 
-
-
-                <!-- =========================================
-                     RECORD INFORMATION
-                ========================================== -->
 
                 <section class="profile-card profile-meta-card">
 
@@ -1444,9 +1360,7 @@
     // LOAD SALES
     // ========================================================
 
-    async function loadSales(
-        salesId
-    ) {
+    async function loadSales(salesId) {
 
         if (
             !salesId ||
@@ -1509,9 +1423,7 @@
     // LOAD CUSTOMER
     // ========================================================
 
-    async function loadCustomer(
-        customerId
-    ) {
+    async function loadCustomer(customerId) {
 
         const supabase =
             getSupabaseClient();
@@ -1608,6 +1520,283 @@
 
 
     // ========================================================
+    // FORCE SHOW PROFILE PAGE
+    // ========================================================
+    //
+    // Ini bagian penting untuk perbaikan.
+    //
+    // Kita tidak lagi bergantung hanya pada:
+    //
+    //     window.showPage()
+    //
+    // karena navigation.js versi sekarang belum mengekspos
+    // showPage sebagai window.showPage.
+    //
+    // Kita gunakan FSINavigation.showPage() jika tersedia.
+    // Kalau tidak tersedia, gunakan fallback manual.
+    //
+    // ========================================================
+
+    function showCustomerProfilePage() {
+
+        const profilePage =
+            document.getElementById(
+                "view-customer-profile"
+            );
+
+
+        if (!profilePage) {
+
+            console.error(
+                "FSI CRM: #view-customer-profile tidak ditemukan."
+            );
+
+            return false;
+        }
+
+
+        // ----------------------------------------------------
+        // PRIORITAS 1
+        // Navigation system utama
+        // ----------------------------------------------------
+
+        if (
+            window.FSINavigation &&
+            typeof window.FSINavigation.showPage ===
+                "function"
+        ) {
+
+            const result =
+                window.FSINavigation.showPage(
+                    "customer-profile"
+                );
+
+
+            // Pastikan DOM benar-benar terlihat
+            ensureProfilePageVisible();
+
+
+            return result !== false;
+
+        }
+
+
+        // ----------------------------------------------------
+        // PRIORITAS 2
+        // Global showPage jika ada
+        // ----------------------------------------------------
+
+        if (
+            typeof window.showPage ===
+            "function"
+        ) {
+
+            const result =
+                window.showPage(
+                    "customer-profile"
+                );
+
+
+            ensureProfilePageVisible();
+
+
+            return result !== false;
+
+        }
+
+
+        // ----------------------------------------------------
+        // PRIORITAS 3
+        // Global navigation
+        // ----------------------------------------------------
+
+        if (
+            typeof window.crmNavigate ===
+            "function"
+        ) {
+
+            const result =
+                window.crmNavigate(
+                    "customer-profile"
+                );
+
+
+            ensureProfilePageVisible();
+
+
+            return result !== false;
+
+        }
+
+
+        // ----------------------------------------------------
+        // FALLBACK
+        // ----------------------------------------------------
+
+        activateProfilePage();
+
+
+        return true;
+    }
+
+
+    // ========================================================
+    // ENSURE PROFILE PAGE VISIBLE
+    // ========================================================
+    //
+    // Fungsi ini sengaja dibuat setelah navigation.
+    //
+    // Tujuannya memastikan:
+    //
+    // #view-customer-profile
+    //     active
+    //     tidak hidden
+    //     display block
+    //
+    // ========================================================
+
+    function ensureProfilePageVisible() {
+
+        const pages =
+            document.querySelectorAll(
+                ".crm-page, .app-page, [id^='view-']"
+            );
+
+
+        pages.forEach(
+            function (page) {
+
+                if (
+                    page.id ===
+                    "view-customer-profile"
+                ) {
+
+                    page.classList.add(
+                        "active"
+                    );
+
+                    page.classList.remove(
+                        "hidden"
+                    );
+
+                    page.setAttribute(
+                        "aria-hidden",
+                        "false"
+                    );
+
+                    page.style.display =
+                        "block";
+
+                } else {
+
+                    page.classList.remove(
+                        "active"
+                    );
+
+                    page.classList.add(
+                        "hidden"
+                    );
+
+                    page.setAttribute(
+                        "aria-hidden",
+                        "true"
+                    );
+
+                    page.style.display =
+                        "none";
+
+                }
+
+            }
+        );
+
+
+        const container =
+            getProfileContainer();
+
+
+        if (container) {
+
+            container.style.display =
+                "block";
+
+            container.style.visibility =
+                "visible";
+
+            container.style.opacity =
+                "1";
+
+        }
+
+
+        // ----------------------------------------------------
+        // Debug ringan
+        // ----------------------------------------------------
+
+        console.log(
+            "[FSI Customer Profile] Page visible:",
+            {
+                page:
+                    !!document.getElementById(
+                        "view-customer-profile"
+                    ),
+
+                active:
+                    profilePageIsActive(),
+
+                display:
+                    profilePageDisplay(),
+
+                container:
+                    !!container
+            }
+        );
+    }
+
+
+    // ========================================================
+    // PROFILE PAGE STATUS
+    // ========================================================
+
+    function profilePageIsActive() {
+
+        const page =
+            document.getElementById(
+                "view-customer-profile"
+            );
+
+
+        if (!page) {
+            return false;
+        }
+
+
+        return page.classList.contains(
+            "active"
+        );
+    }
+
+
+    function profilePageDisplay() {
+
+        const page =
+            document.getElementById(
+                "view-customer-profile"
+            );
+
+
+        if (!page) {
+            return "NOT FOUND";
+        }
+
+
+        return window.getComputedStyle(
+            page
+        ).display;
+    }
+
+
+    // ========================================================
     // OPEN CUSTOMER PROFILE
     // ========================================================
 
@@ -1622,6 +1811,10 @@
 
 
         if (!id) {
+
+            // Tampilkan halaman Profile terlebih dahulu
+            showCustomerProfilePage();
+
 
             showProfileEmpty(
                 "Select a customer to view the profile."
@@ -1645,6 +1838,31 @@
 
 
         profileLoading = true;
+
+
+        // ----------------------------------------------------
+        // PENTING:
+        // Buka halaman PROFILE terlebih dahulu.
+        // ----------------------------------------------------
+
+        showCustomerProfilePage();
+
+
+        // Pastikan container tersedia
+        const container =
+            getProfileContainer();
+
+
+        if (!container) {
+
+            console.error(
+                "FSI CRM: customer-profile-container tidak ditemukan."
+            );
+
+            profileLoading = false;
+
+            return;
+        }
 
 
         showProfileLoading();
@@ -1674,32 +1892,10 @@
 
 
             // ------------------------------------------------
-            // Navigate to profile page
+            // Setelah render, pastikan page tetap aktif.
             // ------------------------------------------------
 
-            if (
-                typeof window.showPage ===
-                "function"
-            ) {
-
-                window.showPage(
-                    "customer-profile"
-                );
-
-            } else if (
-                typeof window.navigateToPage ===
-                "function"
-            ) {
-
-                window.navigateToPage(
-                    "customer-profile"
-                );
-
-            } else {
-
-                activateProfilePage();
-
-            }
+            ensureProfilePageVisible();
 
 
         } catch (error) {
@@ -1713,6 +1909,7 @@
             showProfileError(
                 "Unable to open customer profile."
             );
+
 
         } finally {
 
@@ -1730,40 +1927,77 @@
 
         const pages =
             document.querySelectorAll(
-                ".crm-page"
+                ".crm-page, .app-page, [id^='view-']"
             );
 
 
         pages.forEach(
             function (page) {
 
-                page.classList.remove(
-                    "active"
-                );
+                if (
+                    page.id ===
+                    "view-customer-profile"
+                ) {
 
-                page.style.display =
-                    "none";
+                    page.classList.add(
+                        "active"
+                    );
+
+                    page.classList.remove(
+                        "hidden"
+                    );
+
+                    page.setAttribute(
+                        "aria-hidden",
+                        "false"
+                    );
+
+                    page.style.display =
+                        "block";
+
+                } else {
+
+                    page.classList.remove(
+                        "active"
+                    );
+
+                    page.classList.add(
+                        "hidden"
+                    );
+
+                    page.setAttribute(
+                        "aria-hidden",
+                        "true"
+                    );
+
+                    page.style.display =
+                        "none";
+
+                }
 
             }
         );
 
 
-        const profilePage =
-            document.getElementById(
-                "view-customer-profile"
-            );
+        const container =
+            getProfileContainer();
 
 
-        if (profilePage) {
+        if (container) {
 
-            profilePage.classList.add(
-                "active"
-            );
-
-            profilePage.style.display =
+            container.style.display =
                 "block";
 
+            container.style.visibility =
+                "visible";
+
+            container.style.opacity =
+                "1";
+
         }
+
+
+        refreshIcons();
     }
 
 
@@ -1781,6 +2015,24 @@
             null;
 
 
+        // ----------------------------------------------------
+        // Gunakan navigation system utama
+        // ----------------------------------------------------
+
+        if (
+            window.FSINavigation &&
+            typeof window.FSINavigation.showPage ===
+                "function"
+        ) {
+
+            window.FSINavigation.showPage(
+                "leads"
+            );
+
+            return;
+        }
+
+
         if (
             typeof window.showPage ===
             "function"
@@ -1795,11 +2047,11 @@
 
 
         if (
-            typeof window.navigateToPage ===
+            typeof window.crmNavigate ===
             "function"
         ) {
 
-            window.navigateToPage(
+            window.crmNavigate(
                 "leads"
             );
 
@@ -1819,40 +2071,59 @@
 
         const pages =
             document.querySelectorAll(
-                ".crm-page"
+                ".crm-page, .app-page, [id^='view-']"
             );
 
 
         pages.forEach(
             function (page) {
 
-                page.classList.remove(
-                    "active"
-                );
+                if (
+                    page.id ===
+                    "view-leads"
+                ) {
 
-                page.style.display =
-                    "none";
+                    page.classList.add(
+                        "active"
+                    );
+
+                    page.classList.remove(
+                        "hidden"
+                    );
+
+                    page.setAttribute(
+                        "aria-hidden",
+                        "false"
+                    );
+
+                    page.style.display =
+                        "block";
+
+                } else {
+
+                    page.classList.remove(
+                        "active"
+                    );
+
+                    page.classList.add(
+                        "hidden"
+                    );
+
+                    page.setAttribute(
+                        "aria-hidden",
+                        "true"
+                    );
+
+                    page.style.display =
+                        "none";
+
+                }
 
             }
         );
 
 
-        const leadsPage =
-            document.getElementById(
-                "view-leads"
-            );
-
-
-        if (leadsPage) {
-
-            leadsPage.classList.add(
-                "active"
-            );
-
-            leadsPage.style.display =
-                "block";
-
-        }
+        refreshIcons();
     }
 
 
@@ -1888,7 +2159,6 @@
         }
 
 
-        // Prevent duplicate listeners.
         if (
             container.dataset.shelterEventsBound ===
             "true"
@@ -1981,15 +2251,23 @@
             );
 
 
-        if (
-            profilePage &&
-            !profilePage.classList.contains(
-                "active"
-            )
-        ) {
+        if (profilePage) {
 
-            profilePage.style.display =
-                "none";
+            if (
+                profilePage.classList.contains(
+                    "active"
+                )
+            ) {
+
+                profilePage.style.display =
+                    "block";
+
+            } else {
+
+                profilePage.style.display =
+                    "none";
+
+            }
 
         }
 
