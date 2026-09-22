@@ -17,6 +17,8 @@
 // - Empty state tanpa stuck loading
 // - Add Customer tersedia untuk Admin & Sales
 // - Profile selalu menggunakan Customer ID yang benar
+// - Status & Business filter dropdown
+// - Location filter DIHAPUS
 // ============================================================
 
 "use strict";
@@ -690,6 +692,10 @@
 
         try {
 
+            // ------------------------------------------------
+            // SALES LOOKUP
+            // ------------------------------------------------
+
             if (
                 typeof window.loadSalesLookup ===
                 "function"
@@ -709,6 +715,15 @@
             }
 
 
+            // ------------------------------------------------
+            // BUSINESS LOOKUP
+            // ------------------------------------------------
+            //
+            // Location sudah tidak digunakan sebagai filter.
+            // Kita hanya mengambil Business dari leads.
+            //
+            // ------------------------------------------------
+
             const {
                 data,
                 error
@@ -716,14 +731,14 @@
                 await client
                     .from("leads")
                     .select(
-                        "business,location"
+                        "business"
                     );
 
 
             if (error) {
 
                 console.error(
-                    "FSI CRM: load filter options error:",
+                    "FSI CRM: load business filter options error:",
                     error
                 );
 
@@ -748,16 +763,9 @@
                 );
 
 
-            const locations =
-                uniqueSortedValues(
-                    leads.map(
-                        lead =>
-                            leadGetValue(
-                                lead.location
-                            )
-                    )
-                );
-
+            // ------------------------------------------------
+            // BUSINESS FILTER
+            // ------------------------------------------------
 
             populateFilter(
                 [
@@ -769,15 +777,9 @@
             );
 
 
-            populateFilter(
-                [
-                    "filter-location",
-                    "locationFilter"
-                ],
-                locations,
-                "All Location"
-            );
-
+            // ------------------------------------------------
+            // SALES FILTER
+            // ------------------------------------------------
 
             if (
                 typeof window.populateSalesDropdowns ===
@@ -885,7 +887,9 @@
 
 
         const currentValue =
-            select.value;
+            String(
+                select.value || ""
+            ).trim();
 
 
         select.innerHTML =
@@ -912,9 +916,11 @@
 
 
         const safeValues =
-            Array.isArray(values)
-                ? values
-                : [];
+            uniqueSortedValues(
+                Array.isArray(values)
+                    ? values
+                    : []
+            );
 
 
         safeValues.forEach(
@@ -987,13 +993,6 @@
             );
 
 
-        const locationInput =
-            leadElement(
-                "filter-location",
-                "locationFilter"
-            );
-
-
         const salesInput =
             leadElement(
                 "salesFilter"
@@ -1033,10 +1032,6 @@
 
             business:
                 businessInput?.value ||
-                "",
-
-            location:
-                locationInput?.value ||
                 "",
 
             salesFilter:
@@ -1201,8 +1196,7 @@
             if (
                 filters.search ||
                 filters.status ||
-                filters.business ||
-                filters.location
+                filters.business
             ) {
 
                 title =
@@ -1432,6 +1426,23 @@
             }
 
 
+            // Pastikan Business dropdown sudah terisi.
+            const businessFilter =
+                leadElement(
+                    "filter-business",
+                    "businessFilter"
+                );
+
+
+            if (
+                businessFilter &&
+                businessFilter.options.length <= 1
+            ) {
+
+                await loadFilterOptions();
+            }
+
+
             applySelectedSalesFilter();
 
 
@@ -1451,8 +1462,9 @@
                 filters.business;
 
 
+            // Location filter sudah dihapus.
             window.currentLocationFilter =
-                filters.location;
+                "";
 
 
             window.currentSalesFilter =
@@ -1471,12 +1483,20 @@
                     );
 
 
+            // ------------------------------------------------
+            // SEARCH
+            // ------------------------------------------------
+
             query =
                 buildSearchQuery(
                     query,
                     filters.search
                 );
 
+
+            // ------------------------------------------------
+            // STATUS FILTER
+            // ------------------------------------------------
 
             if (filters.status) {
 
@@ -1488,22 +1508,16 @@
             }
 
 
+            // ------------------------------------------------
+            // BUSINESS FILTER
+            // ------------------------------------------------
+
             if (filters.business) {
 
                 query =
                     query.eq(
                         "business",
                         filters.business
-                    );
-            }
-
-
-            if (filters.location) {
-
-                query =
-                    query.eq(
-                        "location",
-                        filters.location
                     );
             }
 
@@ -2553,11 +2567,6 @@
             [
                 "filter-business",
                 "businessFilter"
-            ],
-
-            [
-                "filter-location",
-                "locationFilter"
             ]
 
         ];
@@ -2602,9 +2611,32 @@
         }
 
 
+        window.currentSearch =
+            "";
+
+
+        window.currentStatusFilter =
+            "";
+
+
+        window.currentBusinessFilter =
+            "";
+
+
+        window.currentLocationFilter =
+            "";
+
+
+        window.currentSalesFilter =
+            "";
+
+
         leadSetCurrentPage(
             1
         );
+
+
+        updateLeadsContext();
 
 
         loadLeads(
@@ -3060,15 +3092,6 @@
 
     // ========================================================
     // SAVE LEAD
-    // ========================================================
-    //
-    // Compatibility:
-    // Jika customer-form.js sudah aktif, Add/Edit utama
-    // menggunakan module tersebut.
-    //
-    // Fungsi ini tetap dipertahankan supaya kode lama
-    // tidak rusak.
-    //
     // ========================================================
 
     async function saveLead() {
@@ -4097,11 +4120,6 @@
             ],
 
             [
-                "filter-location",
-                "locationFilter"
-            ],
-
-            [
                 "salesFilter"
             ]
 
@@ -4333,6 +4351,22 @@
 
 
         refreshAddCustomerVisibility();
+
+
+        // ----------------------------------------------------
+        // Load Business dropdown
+        // ----------------------------------------------------
+
+        loadFilterOptions()
+            .catch(
+                error => {
+
+                    console.warn(
+                        "FSI CRM: initial filter options load failed:",
+                        error
+                    );
+                }
+            );
     }
 
 
@@ -4347,6 +4381,17 @@
         refreshAddCustomerVisibility();
 
         bindAddCustomerButtons();
+
+        loadFilterOptions()
+            .catch(
+                error => {
+
+                    console.warn(
+                        "FSI CRM: profile-ready filter load failed:",
+                        error
+                    );
+                }
+            );
     }
 
 
@@ -4434,6 +4479,17 @@
         refreshAddCustomerVisibility();
 
         bindAddCustomerButtons();
+
+        loadFilterOptions()
+            .catch(
+                error => {
+
+                    console.warn(
+                        "FSI CRM: app-ready filter load failed:",
+                        error
+                    );
+                }
+            );
     }
 
 
