@@ -8,6 +8,7 @@
 // - Search & filter
 // - Pagination
 // - Add Customer
+// - Edit Customer
 // - Delete customer
 // - Sales assignment
 // - Admin / Sales access
@@ -178,16 +179,6 @@
     // ========================================================
     // ADD CUSTOMER VISIBILITY
     // ========================================================
-    //
-    // ADMIN:
-    // - BOLEH Add Customer
-    //
-    // SALES:
-    // - BOLEH Add Customer
-    //
-    // Customer / My Customers menu tidak disentuh.
-    //
-    // ========================================================
 
     function updateAddCustomerVisibility() {
 
@@ -284,10 +275,7 @@
             );
 
 
-        // ----------------------------------------------------
         // Admin & Sales sama-sama boleh Add Customer.
-        // ----------------------------------------------------
-
         if (
             isAdmin ||
             isSales
@@ -342,16 +330,6 @@
     // ========================================================
     // ADD CUSTOMER BUTTON
     // ========================================================
-    //
-    // PENTING:
-    // Add Customer TIDAK BOLEH memanggil
-    // crmOpenCustomerProfile(id).
-    //
-    // Add Customer harus memanggil:
-    // crmOpenAddCustomer()
-    //
-    // sehingga TIDAK membutuhkan Customer ID.
-    // ========================================================
 
     function handleAddCustomerButton(
         event
@@ -389,10 +367,6 @@
         }
 
 
-        // ----------------------------------------------------
-        // STOP handler lama.
-        // ----------------------------------------------------
-
         event.preventDefault();
         event.stopPropagation();
 
@@ -405,10 +379,23 @@
         }
 
 
-        // ----------------------------------------------------
-        // Utamakan Customer Profile.
-        // ----------------------------------------------------
+        // ====================================================
+        // CUSTOMER FORM MODULE
+        // ====================================================
 
+        if (
+            window.FSICustomerForm &&
+            typeof window.FSICustomerForm.openAddCustomer ===
+            "function"
+        ) {
+
+            window.FSICustomerForm.openAddCustomer();
+
+            return true;
+        }
+
+
+        // Compatibility dengan fungsi global.
         if (
             typeof window.crmOpenAddCustomer ===
             "function"
@@ -420,10 +407,7 @@
         }
 
 
-        // ----------------------------------------------------
-        // Fallback hanya jika shelter.js belum siap.
-        // ----------------------------------------------------
-
+        // Fallback.
         if (
             typeof window.openLeadModal ===
             "function"
@@ -441,7 +425,7 @@
         ) {
 
             window.showToast(
-                "Customer Profile belum siap.",
+                "Customer form belum siap.",
                 "error"
             );
         }
@@ -464,10 +448,6 @@
         document.documentElement.dataset
             .fsiAddCustomerHandler = "true";
 
-
-        // Capture phase supaya handler lama
-        // tidak sempat menjalankan open profile
-        // tanpa ID.
 
         document.addEventListener(
             "click",
@@ -2367,7 +2347,7 @@
 
 
                 // ------------------------------------------------
-                // INI ID CUSTOMER YANG AKAN DIPAKAI PROFILE.
+                // CUSTOMER ID
                 // ------------------------------------------------
 
                 const leadId =
@@ -2379,6 +2359,10 @@
                 tr.dataset.leadId =
                     leadId;
 
+
+                // =================================================
+                // TABLE ROW
+                // =================================================
 
                 tr.innerHTML = `
                     <td>
@@ -2437,6 +2421,10 @@
 
                         <div class="crm-lead-actions">
 
+                            <!-- ==================================
+                                 PROFILE
+                                 ================================== -->
+
                             <button
                                 type="button"
                                 class="primary-btn small-btn"
@@ -2447,6 +2435,27 @@
                                 <i data-lucide="user-round"></i>
                                 Profile
                             </button>
+
+
+                            <!-- ==================================
+                                 EDIT CUSTOMER
+                                 ================================== -->
+
+                            <button
+                                type="button"
+                                class="secondary-btn small-btn"
+                                data-action="edit"
+                                data-lead-id="${leadEscapeHTML(leadId)}"
+                                title="Edit customer"
+                            >
+                                <i data-lucide="pencil"></i>
+                                Edit
+                            </button>
+
+
+                            <!-- ==================================
+                                 DELETE CUSTOMER
+                                 ================================== -->
 
                             <button
                                 type="button"
@@ -2651,9 +2660,7 @@
     //
     // Tetap dipertahankan untuk compatibility.
     //
-    // Tombol Add Customer UTAMA tidak lagi diarahkan
-    // ke modal ini. Tombol Add Customer diarahkan
-    // ke crmOpenAddCustomer() dari shelter.js.
+    // Add Customer utama menggunakan customer-form.js.
     //
     // ========================================================
 
@@ -2693,6 +2700,7 @@
 
         const title =
             leadElement(
+                "lead-modal-title",
                 "leadModalTitle"
             );
 
@@ -2816,8 +2824,12 @@
             leadGetProfile();
 
 
+        // Support both old and current field ID.
         setLeadValue(
-            ["leadSalesAssign"],
+            [
+                "leadSales",
+                "leadSalesAssign"
+            ],
             leadIsSales()
                 ? (
                     profile?.id ||
@@ -2940,7 +2952,13 @@
 
 
     // ========================================================
-    // OPEN EDIT / CUSTOMER PROFILE
+    // EDIT CUSTOMER
+    // ========================================================
+    //
+    // EDIT sekarang diarahkan ke customer-form.js.
+    //
+    // Profile TIDAK disentuh.
+    //
     // ========================================================
 
     async function openEditLead(
@@ -2952,10 +2970,6 @@
                 id ?? ""
             ).trim();
 
-
-        // ----------------------------------------------------
-        // EDIT / PROFILE WAJIB punya ID.
-        // ----------------------------------------------------
 
         if (!customerId) {
 
@@ -2980,36 +2994,54 @@
         }
 
 
+        // ====================================================
+        // CUSTOMER FORM MODULE
+        // ====================================================
+
         if (
-            typeof window.crmOpenCustomerProfile ===
+            window.FSICustomerForm &&
+            typeof window.FSICustomerForm.openEditCustomer ===
             "function"
         ) {
 
-            await window.crmOpenCustomerProfile(
+            await window.FSICustomerForm.openEditCustomer(
                 customerId
             );
 
+            return;
+        }
+
+
+        // Compatibility global function.
+        if (
+            typeof window.crmOpenEditCustomer ===
+            "function"
+        ) {
+
+            await window.crmOpenEditCustomer(
+                customerId
+            );
 
             return;
         }
 
 
         if (
-            typeof window.editLead ===
-            "function"
+            typeof window.openEditCustomer ===
+            "function" &&
+            window.openEditCustomer !== openEditLead
         ) {
 
-            await window.editLead(
+            await window.openEditCustomer(
                 customerId
             );
-
 
             return;
         }
 
 
         console.warn(
-            "FSI CRM: Customer profile editor is not available."
+            "FSI CRM: Customer form editor is not available."
         );
 
 
@@ -3019,7 +3051,7 @@
         ) {
 
             window.showToast(
-                "Customer Profile belum tersedia.",
+                "Edit Customer belum tersedia. Pastikan customer-form.js sudah dimuat.",
                 "error"
             );
         }
@@ -3029,8 +3061,32 @@
     // ========================================================
     // SAVE LEAD
     // ========================================================
+    //
+    // Compatibility:
+    // Jika customer-form.js sudah aktif, Add/Edit utama
+    // menggunakan module tersebut.
+    //
+    // Fungsi ini tetap dipertahankan supaya kode lama
+    // tidak rusak.
+    //
+    // ========================================================
 
     async function saveLead() {
+
+        // ----------------------------------------------------
+        // Jika Customer Form Module tersedia,
+        // gunakan module tersebut.
+        // ----------------------------------------------------
+
+        if (
+            window.FSICustomerForm &&
+            typeof window.FSICustomerForm.saveCustomer ===
+            "function"
+        ) {
+
+            return window.FSICustomerForm.saveCustomer();
+        }
+
 
         const profile =
             leadGetProfile();
@@ -3218,6 +3274,7 @@
 
         const salesAssignment =
             leadElement(
+                "leadSales",
                 "leadSalesAssign"
             );
 
@@ -3233,7 +3290,6 @@
 
         if (leadIsAdmin()) {
 
-            // Admin boleh membuat customer.
             payload.sales_id =
                 selectedSales ||
                 null;
@@ -3247,9 +3303,6 @@
         else if (
             leadIsSales()
         ) {
-
-            // Sales hanya dapat membuat customer
-            // miliknya sendiri.
 
             payload.sales_id =
                 profile.id;
@@ -3329,9 +3382,6 @@
             // =================================================
 
             else {
-
-                // Admin maupun Sales boleh membuat
-                // customer baru.
 
                 payload.created_by =
                     profile.id;
@@ -3660,8 +3710,12 @@
 
     function setupSalesAssignmentAccess() {
 
+        // Current index.html menggunakan leadSales.
+        // leadSalesAssign tetap didukung untuk compatibility.
+
         const select =
             leadElement(
+                "leadSales",
                 "leadSalesAssign"
             );
 
@@ -3803,9 +3857,9 @@
                     ).trim();
 
 
-                // ------------------------------------------------
+                // =================================================
                 // PROFILE
-                // ------------------------------------------------
+                // =================================================
 
                 if (
                     action ===
@@ -3839,6 +3893,7 @@
                     event.preventDefault();
 
 
+                    // Profile TETAP menggunakan shelter.js.
                     if (
                         typeof window.crmOpenCustomerProfile ===
                         "function"
@@ -3850,9 +3905,21 @@
 
                     } else {
 
-                        await openEditLead(
-                            leadId
+                        console.warn(
+                            "FSI CRM: Customer Profile function not available."
                         );
+
+
+                        if (
+                            typeof window.showToast ===
+                            "function"
+                        ) {
+
+                            window.showToast(
+                                "Customer Profile belum tersedia.",
+                                "error"
+                            );
+                        }
                     }
 
 
@@ -3860,9 +3927,54 @@
                 }
 
 
-                // ------------------------------------------------
+                // =================================================
+                // EDIT CUSTOMER
+                // =================================================
+
+                if (
+                    action ===
+                    "edit"
+                ) {
+
+                    if (!leadId) {
+
+                        console.error(
+                            "FSI CRM: Edit button has no customer ID.",
+                            actionButton
+                        );
+
+
+                        if (
+                            typeof window.showToast ===
+                            "function"
+                        ) {
+
+                            window.showToast(
+                                "Customer ID tidak ditemukan.",
+                                "error"
+                            );
+                        }
+
+
+                        return;
+                    }
+
+
+                    event.preventDefault();
+
+
+                    await openEditLead(
+                        leadId
+                    );
+
+
+                    return;
+                }
+
+
+                // =================================================
                 // DELETE
-                // ------------------------------------------------
+                // =================================================
 
                 if (
                     action ===
@@ -3883,9 +3995,9 @@
                 }
 
 
-                // ------------------------------------------------
+                // =================================================
                 // RETRY
-                // ------------------------------------------------
+                // =================================================
 
                 if (
                     action ===
@@ -3906,9 +4018,9 @@
                 }
 
 
-                // ------------------------------------------------
+                // =================================================
                 // CLEAR SALES FILTER
-                // ------------------------------------------------
+                // =================================================
 
                 if (
                     action ===
@@ -4159,14 +4271,27 @@
                     )
                 ) {
 
-                    closeLeadModal();
+                    // Jika customer-form.js memiliki close,
+                    // gunakan itu terlebih dahulu.
+                    if (
+                        window.FSICustomerForm &&
+                        typeof window.FSICustomerForm.closeCustomerForm ===
+                        "function"
+                    ) {
+
+                        window.FSICustomerForm.closeCustomerForm();
+
+                    } else {
+
+                        closeLeadModal();
+                    }
                 }
             }
         );
 
 
         // ----------------------------------------------------
-        // Click outside legacy modal
+        // Click outside modal
         // ----------------------------------------------------
 
         const modal =
@@ -4186,7 +4311,18 @@
                         modal
                     ) {
 
-                        closeLeadModal();
+                        if (
+                            window.FSICustomerForm &&
+                            typeof window.FSICustomerForm.closeCustomerForm ===
+                            "function"
+                        ) {
+
+                            window.FSICustomerForm.closeCustomerForm();
+
+                        } else {
+
+                            closeLeadModal();
+                        }
                     }
                 }
             );
@@ -4502,8 +4638,7 @@
         "fsi:lead-changed",
         function () {
 
-            // Save/delete sudah melakukan refresh
-            // sendiri.
+            // Save/delete melakukan refresh sendiri.
         }
     );
 
