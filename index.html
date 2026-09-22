@@ -21,6 +21,7 @@
 
     <title>FSI CRM — Sales Management</title>
 
+
     <!-- =====================================================
          SECURITY / URL CLEANUP
     ====================================================== -->
@@ -60,6 +61,7 @@
                         cleanUrl
                     );
                 }
+
             } catch (error) {
                 console.warn(
                     "URL cleanup failed:",
@@ -110,6 +112,7 @@
 
 <body>
 
+
     <!-- =====================================================
          LOGIN PAGE
     ====================================================== -->
@@ -124,11 +127,14 @@
             <div class="login-card">
 
                 <div class="login-logo">
+
                     <img
                         src="logo-fsi.png"
                         alt="FSI Logo"
                     >
+
                 </div>
+
 
                 <div class="login-heading">
 
@@ -229,7 +235,7 @@
 
 
     <!-- =====================================================
-         APPLICATION
+         APPLICATION SHELL
     ====================================================== -->
 
     <div
@@ -248,6 +254,7 @@
                 id="top-header"
                 class="top-header"
             >
+
 
                 <!-- BRAND -->
 
@@ -284,6 +291,7 @@
                 </div>
 
 
+
                 <!-- MOBILE MENU -->
 
                 <button
@@ -303,6 +311,7 @@
                 </button>
 
 
+
                 <!-- =================================================
                      DESKTOP NAVIGATION
                 ================================================== -->
@@ -312,6 +321,7 @@
                     class="main-navigation"
                     aria-label="Main navigation"
                 >
+
 
                     <!-- DASHBOARD -->
 
@@ -334,6 +344,7 @@
                     </button>
 
 
+
                     <!-- LEADS -->
 
                     <button
@@ -353,6 +364,7 @@
                         </span>
 
                     </button>
+
 
 
                     <!-- SALES DROPDOWN -->
@@ -434,6 +446,7 @@
                     </div>
 
 
+
                     <!-- MANAGE SALES -->
 
                     <button
@@ -458,6 +471,7 @@
                 </nav>
 
 
+
                 <!-- =================================================
                      USER AREA
                 ================================================== -->
@@ -471,23 +485,21 @@
                         class="user-avatar"
                         id="user-avatar"
                     >
+
                         <span id="user-avatar-text">
                             F
                         </span>
+
                     </div>
 
 
                     <div class="user-details">
 
-                        <strong
-                            id="header-user-name"
-                        >
+                        <strong id="header-user-name">
                             User
                         </strong>
 
-                        <span
-                            id="header-user-role"
-                        >
+                        <span id="header-user-role">
                             Sales
                         </span>
 
@@ -633,9 +645,7 @@
                                 aria-hidden="true"
                             ></i>
 
-                            <span
-                                id="current-page-title"
-                            >
+                            <span id="current-page-title">
                                 Dashboard
                             </span>
 
@@ -658,7 +668,7 @@
 
 
                 <!-- =================================================
-                     DASHBOARD PAGE
+                     DASHBOARD
                 ================================================== -->
 
                 <section
@@ -666,6 +676,7 @@
                     class="crm-page active"
                     data-page-view="dashboard"
                 >
+
 
                     <!-- DASHBOARD ERROR -->
 
@@ -675,12 +686,11 @@
                     ></div>
 
 
+
                     <!-- STATISTICS -->
 
                     <div class="stats-grid">
 
-
-                        <!-- TOTAL -->
 
                         <article class="stat-card">
 
@@ -712,7 +722,6 @@
                         </article>
 
 
-                        <!-- NEW -->
 
                         <article class="stat-card">
 
@@ -744,7 +753,6 @@
                         </article>
 
 
-                        <!-- INTERESTED -->
 
                         <article class="stat-card">
 
@@ -776,7 +784,6 @@
                         </article>
 
 
-                        <!-- FOLLOW UP -->
 
                         <article class="stat-card">
 
@@ -808,7 +815,6 @@
                         </article>
 
 
-                        <!-- APPOINTMENT -->
 
                         <article class="stat-card">
 
@@ -840,7 +846,6 @@
                         </article>
 
 
-                        <!-- SITE SURVEY -->
 
                         <article class="stat-card">
 
@@ -872,7 +877,6 @@
                         </article>
 
 
-                        <!-- QUOTATION -->
 
                         <article class="stat-card">
 
@@ -904,7 +908,6 @@
                         </article>
 
 
-                        <!-- SPK -->
 
                         <article class="stat-card">
 
@@ -936,7 +939,6 @@
                         </article>
 
 
-                        <!-- CLOSING -->
 
                         <article class="stat-card">
 
@@ -968,7 +970,6 @@
                         </article>
 
 
-                        <!-- NOT INTERESTED -->
 
                         <article class="stat-card">
 
@@ -1112,7 +1113,7 @@
 
 
                 <!-- =================================================
-                     LEADS PAGE
+                     LEADS / CUSTOMER PAGE
                 ================================================== -->
 
                 <section
@@ -1139,10 +1140,17 @@
                         </div>
 
 
+                        <!--
+                            IMPORTANT:
+                            ID tetap btn-add-lead agar
+                            JavaScript lama tetap kompatibel.
+                        -->
+
                         <button
                             id="btn-add-lead"
                             type="button"
                             class="btn-primary primary-btn"
+                            data-action="add-customer"
                         >
 
                             <i
@@ -1151,7 +1159,7 @@
                             ></i>
 
                             <span>
-                                Add Lead
+                                Add Customer
                             </span>
 
                         </button>
@@ -1184,6 +1192,7 @@
                         </div>
 
 
+
                         <!-- STATUS -->
 
                         <select
@@ -1196,6 +1205,7 @@
                             </option>
 
                         </select>
+
 
 
                         <!-- BUSINESS -->
@@ -1212,6 +1222,7 @@
                         </select>
 
 
+
                         <!-- LOCATION -->
 
                         <select
@@ -1224,6 +1235,7 @@
                             </option>
 
                         </select>
+
 
 
                         <!-- SALES -->
@@ -1350,9 +1362,7 @@
                             </button>
 
 
-                            <span
-                                id="leads-page-number"
-                            >
+                            <span id="leads-page-number">
                                 1
                             </span>
 
@@ -1592,7 +1602,10 @@
 
 
     <!-- =====================================================
-         LEAD MODAL
+         CUSTOMER ADD / EDIT MODAL
+         
+         MODAL INI TETAP MENGGUNAKAN ID LAMA
+         AGAR TIDAK MERUSAK JAVASCRIPT YANG SUDAH ADA.
     ====================================================== -->
 
     <div
@@ -1616,10 +1629,10 @@
                 <div>
 
                     <h3 id="lead-modal-title">
-                        Add Customer Lead
+                        Add Customer
                     </h3>
 
-                    <p>
+                    <p id="lead-modal-description">
                         Enter customer information and pipeline status.
                     </p>
 
@@ -1680,6 +1693,7 @@
                     </div>
 
 
+
                     <!-- PHONE -->
 
                     <div class="form-group">
@@ -1697,6 +1711,7 @@
                         >
 
                     </div>
+
 
 
                     <!-- BUSINESS -->
@@ -1717,6 +1732,7 @@
                     </div>
 
 
+
                     <!-- LOCATION -->
 
                     <div class="form-group">
@@ -1733,6 +1749,7 @@
                         >
 
                     </div>
+
 
 
                     <!-- STATUS -->
@@ -1789,6 +1806,7 @@
                     </div>
 
 
+
                     <!-- FOLLOW UP -->
 
                     <div class="form-group">
@@ -1804,6 +1822,7 @@
                         >
 
                     </div>
+
 
 
                     <!-- APPOINTMENT -->
@@ -1823,6 +1842,7 @@
                     </div>
 
 
+
                     <!-- SITE SURVEY -->
 
                     <div class="form-group">
@@ -1838,6 +1858,7 @@
                         >
 
                     </div>
+
 
 
                     <!-- QUOTATION -->
@@ -1857,6 +1878,7 @@
                     </div>
 
 
+
                     <!-- SPK -->
 
                     <div class="form-group">
@@ -1874,6 +1896,7 @@
                     </div>
 
 
+
                     <!-- CLOSING -->
 
                     <div class="form-group">
@@ -1889,6 +1912,7 @@
                         >
 
                     </div>
+
 
 
                     <!-- SALES -->
@@ -1914,6 +1938,7 @@
                         </select>
 
                     </div>
+
 
 
                     <!-- NOTES -->
@@ -1945,9 +1970,7 @@
                         type="button"
                         class="btn-secondary secondary-btn"
                     >
-
                         Cancel
-
                     </button>
 
 
@@ -1962,8 +1985,8 @@
                             aria-hidden="true"
                         ></i>
 
-                        <span>
-                            Save Lead
+                        <span id="lead-save-text">
+                            Save Customer
                         </span>
 
                     </button>
@@ -2067,6 +2090,7 @@
                     </div>
 
 
+
                     <!-- USERNAME -->
 
                     <div class="form-group">
@@ -2084,6 +2108,7 @@
                         >
 
                     </div>
+
 
 
                     <!-- EMAIL -->
@@ -2104,6 +2129,7 @@
                     </div>
 
 
+
                     <!-- PHONE -->
 
                     <div class="form-group">
@@ -2120,6 +2146,7 @@
                         >
 
                     </div>
+
 
 
                     <!-- ROLE -->
@@ -2146,6 +2173,7 @@
                         </select>
 
                     </div>
+
 
 
                     <!-- STATUS -->
@@ -2186,9 +2214,7 @@
                         type="button"
                         class="btn-secondary secondary-btn"
                     >
-
                         Cancel
-
                     </button>
 
 
@@ -2228,13 +2254,15 @@
     ></script>
 
 
+
     <!-- =====================================================
-         LUCIDE ICONS
+         LUCIDE
     ====================================================== -->
 
     <script
         src="https://unpkg.com/lucide@latest"
     ></script>
+
 
 
     <!-- =====================================================
@@ -2250,6 +2278,10 @@
     <script src="js/dashboard.js"></script>
 
     <script src="js/leads.js"></script>
+
+    <!-- NEW:
+         Dedicated Add/Edit Customer module -->
+    <script src="js/customer-form.js"></script>
 
     <script src="js/sales.js"></script>
 
@@ -2287,20 +2319,25 @@
                      */
 
                     if (loginPage) {
+
                         loginPage.classList.remove("hidden");
+
                         loginPage.hidden = false;
+
                     }
 
 
                     if (appShell) {
+
                         appShell.classList.add("hidden");
+
                         appShell.hidden = true;
+
                     }
 
 
                     /*
-                     * Only dashboard is prepared
-                     * as the default CRM page.
+                     * Prepare CRM pages.
                      */
 
                     pages.forEach(function (page) {
@@ -2311,6 +2348,10 @@
 
                     });
 
+
+                    /*
+                     * Dashboard is default page.
+                     */
 
                     const dashboard =
                         document.getElementById(
@@ -2351,6 +2392,7 @@
             }
         );
     </script>
+
 
 </body>
 
