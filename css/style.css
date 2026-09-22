@@ -1,7 +1,7 @@
 /* =========================================================
    FSI CRM
    MAIN APPLICATION STYLES
-   Version: 2026.09.4
+   Version: 2026.09.5
 ========================================================= */
 
 
@@ -162,129 +162,642 @@ svg {
 
 /* =========================================================
    LOGIN
+   MODERN SAAS SPLIT SCREEN
 ========================================================= */
 
 .login-page {
     position: fixed;
+
     inset: 0;
 
+    z-index: 1000;
+
+    width: 100%;
+    min-height: 100vh;
+
     display: flex;
+
+    align-items: stretch;
+    justify-content: stretch;
+
+    padding: 0;
+
+    overflow: hidden;
+
+    background: #ffffff;
+}
+
+
+/* ---------------------------------------------------------
+   LEFT HERO
+--------------------------------------------------------- */
+
+.login-hero {
+    position: relative;
+
+    width: 50%;
+    min-width: 0;
+
+    min-height: 100vh;
+
+    display: flex;
+    align-items: flex-end;
+
+    padding: 60px;
+
+    overflow: hidden;
+
+    background:
+        linear-gradient(
+            135deg,
+            #0f172a,
+            #1e293b
+        );
+}
+
+
+/*
+   Supports both:
+   <div class="login-hero">
+       ...
+   </div>
+
+   and:
+   <div class="login-hero-image">
+       ...
+   </div>
+*/
+
+.login-hero-image {
+    position: absolute;
+
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+
+    object-position: center;
+
+    z-index: 0;
+}
+
+
+/* Background image version */
+
+.login-hero::before {
+    content: "";
+
+    position: absolute;
+
+    inset: 0;
+
+    z-index: 1;
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(15, 23, 42, 0.08) 0%,
+            rgba(15, 23, 42, 0.20) 30%,
+            rgba(15, 23, 42, 0.72) 100%
+        );
+
+    pointer-events: none;
+}
+
+
+/*
+   If the image is implemented using
+   background-image on the hero itself.
+*/
+
+.login-hero[style*="background"] {
+    background-size: cover;
+    background-position: center;
+}
+
+
+/* ---------------------------------------------------------
+   HERO CONTENT
+--------------------------------------------------------- */
+
+.login-hero-content {
+    position: relative;
+
+    z-index: 2;
+
+    width: 100%;
+    max-width: 620px;
+
+    color: #ffffff;
+}
+
+.login-hero-badge {
+    display: inline-flex;
+
     align-items: center;
     justify-content: center;
 
-    min-height: 100vh;
-    padding: 24px;
+    min-height: 32px;
+
+    margin-bottom: 18px;
+
+    padding: 0 13px;
+
+    border: 1px solid rgba(255, 255, 255, 0.25);
+
+    border-radius: 99px;
 
     background:
-        radial-gradient(
-            circle at 10% 10%,
-            rgba(37, 99, 235, 0.14),
-            transparent 35%
-        ),
-        radial-gradient(
-            circle at 90% 90%,
-            rgba(124, 58, 237, 0.12),
-            transparent 35%
-        ),
+        rgba(255, 255, 255, 0.12);
+
+    color: rgba(255, 255, 255, 0.95);
+
+    font-size: 11px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.2px;
+
+    backdrop-filter: blur(12px);
+}
+
+.login-hero-content h1,
+.login-hero-title {
+    margin: 0;
+
+    color: #ffffff;
+
+    font-size: clamp(34px, 4vw, 58px);
+
+    line-height: 1.05;
+
+    font-weight: 800;
+
+    letter-spacing: -1.8px;
+
+    text-shadow:
+        0 3px 20px rgba(0, 0, 0, 0.20);
+}
+
+.login-hero-content p,
+.login-hero-description {
+    max-width: 570px;
+
+    margin: 18px 0 0;
+
+    color:
+        rgba(255, 255, 255, 0.86);
+
+    font-size: 15px;
+
+    line-height: 1.7;
+
+    font-weight: 400;
+}
+
+.login-hero-content .login-hero-small,
+.login-hero-small {
+    margin-top: 22px;
+
+    color:
+        rgba(255, 255, 255, 0.68);
+
+    font-size: 11px;
+
+    font-weight: 600;
+
+    letter-spacing: 0.3px;
+}
+
+
+/* ---------------------------------------------------------
+   HERO DECORATION
+--------------------------------------------------------- */
+
+.login-hero::after {
+    content: "";
+
+    position: absolute;
+
+    width: 340px;
+    height: 340px;
+
+    right: -130px;
+    top: -120px;
+
+    border-radius: 50%;
+
+    background:
+        rgba(255, 255, 255, 0.06);
+
+    z-index: 1;
+
+    pointer-events: none;
+}
+
+
+/* ---------------------------------------------------------
+   RIGHT LOGIN PANEL
+--------------------------------------------------------- */
+
+.login-panel {
+    position: relative;
+
+    width: 50%;
+    min-width: 0;
+
+    min-height: 100vh;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 50px;
+
+    background:
         linear-gradient(
             135deg,
-            #f8fafc 0%,
-            #eef4ff 50%,
-            #f8fafc 100%
+            #ffffff 0%,
+            #fbfdff 100%
         );
 
-    z-index: 1000;
+    overflow-y: auto;
 }
+
+
+/* ---------------------------------------------------------
+   LOGIN CONTAINER
+--------------------------------------------------------- */
 
 .login-container {
     width: 100%;
+
     max-width: 430px;
+
+    margin: auto;
 }
+
+
+/* ---------------------------------------------------------
+   LOGIN CARD
+   Card is intentionally flat because the panel
+   already acts as the visual container.
+--------------------------------------------------------- */
 
 .login-card {
-    background: rgba(255, 255, 255, 0.96);
+    width: 100%;
 
-    border: 1px solid rgba(226, 232, 240, 0.9);
+    padding: 0;
 
-    border-radius: 24px;
+    background: transparent;
 
-    padding: 38px;
+    border: 0;
 
-    box-shadow:
-        0 30px 80px rgba(15, 23, 42, 0.12);
+    border-radius: 0;
 
-    backdrop-filter: blur(16px);
+    box-shadow: none;
+
+    backdrop-filter: none;
 }
+
+
+/* ---------------------------------------------------------
+   LOGIN LOGO
+--------------------------------------------------------- */
 
 .login-logo {
     display: flex;
-    justify-content: center;
 
-    margin-bottom: 22px;
+    align-items: center;
+    justify-content: flex-start;
+
+    margin-bottom: 28px;
 }
 
 .login-logo img {
     width: 82px;
     height: 82px;
+
     object-fit: contain;
 }
 
+
+/* ---------------------------------------------------------
+   LOGIN HEADING
+--------------------------------------------------------- */
+
 .login-heading {
-    text-align: center;
     margin-bottom: 30px;
+
+    text-align: left;
 }
 
 .login-title {
     margin: 0;
 
-    font-size: 30px;
+    color: var(--slate-900);
+
+    font-size: 32px;
+
     line-height: 1.15;
 
     font-weight: 800;
 
-    color: var(--slate-900);
+    letter-spacing: -0.8px;
 }
 
 .login-subtitle {
-    margin: 8px 0 0;
+    margin: 9px 0 0;
 
     color: var(--slate-500);
+
     font-size: 14px;
+
+    line-height: 1.6;
 }
+
+
+/* ---------------------------------------------------------
+   LOGIN FORM
+--------------------------------------------------------- */
 
 .login-form {
     display: flex;
+
     flex-direction: column;
+
     gap: 18px;
 }
+
+
+/* ---------------------------------------------------------
+   LOGIN INPUT GROUP
+--------------------------------------------------------- */
+
+.login-form .form-group {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 7px;
+
+    min-width: 0;
+}
+
+.login-form .form-group label {
+    color: var(--slate-700);
+
+    font-size: 12px;
+
+    font-weight: 700;
+}
+
+.login-form input {
+    width: 100%;
+
+    min-height: 48px;
+
+    padding:
+        0
+        14px;
+
+    border:
+        1px solid
+        var(--slate-200);
+
+    border-radius: 10px;
+
+    outline: none;
+
+    background: #ffffff;
+
+    color: var(--slate-800);
+
+    font-size: 13px;
+
+    transition:
+        border-color var(--transition),
+        box-shadow var(--transition),
+        background var(--transition);
+}
+
+.login-form input::placeholder {
+    color: var(--slate-400);
+}
+
+.login-form input:hover {
+    border-color: var(--slate-300);
+}
+
+.login-form input:focus {
+    border-color: #93c5fd;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 0 0 4px
+        rgba(37, 99, 235, 0.08);
+}
+
+
+/* ---------------------------------------------------------
+   PASSWORD WRAPPER
+--------------------------------------------------------- */
+
+.password-wrapper,
+.login-password-wrapper {
+    position: relative;
+
+    width: 100%;
+}
+
+.password-wrapper input,
+.login-password-wrapper input {
+    padding-right: 50px;
+}
+
+
+/* ---------------------------------------------------------
+   PASSWORD EYE BUTTON
+--------------------------------------------------------- */
+
+.password-toggle,
+.login-password-toggle,
+#toggle-password {
+    position: absolute;
+
+    top: 50%;
+    right: 7px;
+
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    transform: translateY(-50%);
+
+    border-radius: 8px;
+
+    background: transparent;
+
+    color: var(--slate-400);
+
+    cursor: pointer;
+
+    transition:
+        background var(--transition),
+        color var(--transition);
+}
+
+.password-toggle:hover,
+.login-password-toggle:hover,
+#toggle-password:hover {
+    color: var(--primary);
+
+    background: var(--primary-light);
+}
+
+.password-toggle svg,
+.login-password-toggle svg,
+#toggle-password svg {
+    width: 18px;
+    height: 18px;
+}
+
+
+/* ---------------------------------------------------------
+   LOGIN ERROR
+--------------------------------------------------------- */
 
 .login-error {
     display: none;
 
-    padding: 11px 13px;
+    padding:
+        11px
+        13px;
 
     border-radius: 10px;
 
     background: var(--danger-light);
-    border: 1px solid #fecaca;
+
+    border:
+        1px solid
+        #fecaca;
 
     color: var(--danger);
 
-    font-size: 13px;
+    font-size: 12px;
+
+    line-height: 1.5;
 }
 
 .login-error:not(:empty) {
     display: block;
 }
 
-.login-footer {
-    margin-top: 25px;
 
-    text-align: center;
+/* ---------------------------------------------------------
+   LOGIN BUTTON
+--------------------------------------------------------- */
+
+.login-form button[type="submit"],
+#login-button {
+    width: 100%;
+
+    min-height: 50px;
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    margin-top: 3px;
+
+    padding:
+        0
+        18px;
+
+    border-radius: 10px;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--primary),
+            var(--primary-dark)
+        );
+
+    color: #ffffff;
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 8px 20px
+        rgba(37, 99, 235, 0.20);
+
+    transition:
+        transform var(--transition),
+        box-shadow var(--transition),
+        filter var(--transition);
+}
+
+.login-form button[type="submit"]:hover,
+#login-button:hover {
+    transform: translateY(-1px);
+
+    filter: brightness(1.03);
+
+    box-shadow:
+        0 12px 26px
+        rgba(37, 99, 235, 0.26);
+}
+
+.login-form button[type="submit"]:active,
+#login-button:active {
+    transform: translateY(0);
+}
+
+.login-form button[type="submit"]:disabled,
+#login-button:disabled {
+    opacity: 0.65;
+
+    cursor: not-allowed;
+
+    transform: none;
+}
+
+
+/* ---------------------------------------------------------
+   LOGIN FOOTER
+--------------------------------------------------------- */
+
+.login-footer {
+    margin-top: 30px;
+
+    padding-top: 20px;
+
+    border-top:
+        1px solid
+        var(--slate-100);
+
+    text-align: left;
 
     color: var(--slate-400);
 
-    font-size: 12px;
+    font-size: 11px;
+
+    line-height: 1.5;
 }
 
 
@@ -836,9 +1349,6 @@ svg:last-child {
 
 /* =========================================================
    PAGE VISIBILITY
-   IMPORTANT:
-   CRM pages are hidden by default.
-   ONLY .active pages are displayed.
 ========================================================= */
 
 .crm-page {
@@ -1639,11 +2149,6 @@ svg:last-child {
 
 /* =========================================================
    SEARCH BOX
-   Improved:
-   - icon no longer covers typed text
-   - larger left padding
-   - stable vertical alignment
-   - search field has proper right-side space
 ========================================================= */
 
 .search-box {
@@ -1687,15 +2192,11 @@ svg:last-child {
     z-index: 1;
 }
 
-/* Prevent browser search decoration from creating
-   an unwanted overlap with our search layout. */
 .search-box input[type="search"] {
     -webkit-appearance: none;
     appearance: none;
 }
 
-/* Keep the native clear button available and
-   positioned safely on the right side. */
 .search-box input[type="search"]::-webkit-search-cancel-button {
     -webkit-appearance: none;
 
@@ -3270,6 +3771,24 @@ svg:last-child {
         grid-template-columns:
             repeat(3, minmax(0, 1fr));
     }
+
+
+    /* -----------------------------------------------------
+       LOGIN — TABLET
+    ----------------------------------------------------- */
+
+    .login-hero {
+        padding: 45px;
+    }
+
+    .login-panel {
+        padding: 40px;
+    }
+
+    .login-hero-content h1,
+    .login-hero-title {
+        font-size: 42px;
+    }
 }
 
 
@@ -3399,6 +3918,79 @@ svg:last-child {
         align-items: flex-start;
 
         flex-direction: column;
+    }
+
+
+    /* -----------------------------------------------------
+       LOGIN — MOBILE/TABLET
+    ----------------------------------------------------- */
+
+    .login-page {
+        position: fixed;
+
+        overflow-y: auto;
+
+        display: flex;
+
+        flex-direction: column;
+    }
+
+    .login-hero {
+        width: 100%;
+
+        min-height: 42vh;
+
+        height: 42vh;
+
+        flex: 0 0 42vh;
+
+        align-items: flex-end;
+
+        padding: 35px 28px;
+    }
+
+    .login-panel {
+        width: 100%;
+
+        min-height: 58vh;
+
+        padding: 40px 28px;
+    }
+
+    .login-hero-content {
+        max-width: 700px;
+    }
+
+    .login-hero-content h1,
+    .login-hero-title {
+        font-size: 36px;
+
+        letter-spacing: -1px;
+    }
+
+    .login-hero-content p,
+    .login-hero-description {
+        margin-top: 12px;
+
+        font-size: 13px;
+
+        line-height: 1.55;
+    }
+
+    .login-logo {
+        margin-bottom: 20px;
+    }
+
+    .login-heading {
+        margin-bottom: 24px;
+    }
+
+    .login-title {
+        font-size: 28px;
+    }
+
+    .login-subtitle {
+        font-size: 13px;
     }
 
 
@@ -3574,7 +4166,6 @@ svg:last-child {
         grid-column: auto;
     }
 
-    /* Extra breathing room on small screens */
     .search-box input {
         padding-left: 43px !important;
         padding-right: 38px !important;
@@ -3622,6 +4213,80 @@ svg:last-child {
 
     .modal-footer button {
         width: 100%;
+    }
+
+
+    /* -----------------------------------------------------
+       LOGIN — SMALL MOBILE
+    ----------------------------------------------------- */
+
+    .login-page {
+        overflow-y: auto;
+    }
+
+    .login-hero {
+        min-height: 38vh;
+
+        height: 38vh;
+
+        flex-basis: 38vh;
+
+        padding:
+            28px
+            22px;
+    }
+
+    .login-panel {
+        min-height: 62vh;
+
+        padding:
+            32px
+            22px
+            40px;
+    }
+
+    .login-hero-content h1,
+    .login-hero-title {
+        font-size: 29px;
+
+        line-height: 1.08;
+    }
+
+    .login-hero-content p,
+    .login-hero-description {
+        display: none;
+    }
+
+    .login-hero-badge {
+        min-height: 28px;
+
+        margin-bottom: 12px;
+
+        padding: 0 10px;
+
+        font-size: 9px;
+    }
+
+    .login-logo img {
+        width: 68px;
+        height: 68px;
+    }
+
+    .login-title {
+        font-size: 26px;
+    }
+
+    .login-form {
+        gap: 15px;
+    }
+
+    .login-form input {
+        min-height: 46px;
+    }
+
+    .login-form button[type="submit"],
+    #login-button {
+        min-height: 48px;
     }
 
 
@@ -3924,6 +4589,66 @@ svg:last-child {
 
     .profile-followup-date {
         font-size: 15px;
+    }
+
+
+    /* -----------------------------------------------------
+       LOGIN — VERY SMALL SCREEN
+    ----------------------------------------------------- */
+
+    .login-hero {
+        min-height: 34vh;
+
+        height: 34vh;
+
+        flex-basis: 34vh;
+
+        padding:
+            22px
+            18px;
+    }
+
+    .login-panel {
+        min-height: 66vh;
+
+        padding:
+            28px
+            18px
+            35px;
+    }
+
+    .login-hero-content h1,
+    .login-hero-title {
+        font-size: 25px;
+    }
+
+    .login-title {
+        font-size: 24px;
+    }
+}
+
+
+/* =========================================================
+   LOGIN — LANDSCAPE MOBILE
+========================================================= */
+
+@media (max-height: 650px) and (max-width: 800px) {
+
+    .login-hero {
+        min-height: 330px;
+
+        height: 330px;
+
+        flex-basis: 330px;
+    }
+
+    .login-panel {
+        min-height: 420px;
+    }
+
+    .login-hero-content p,
+    .login-hero-description {
+        display: none;
     }
 }
 
