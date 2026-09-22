@@ -857,9 +857,6 @@ svg:last-child {
 
 /* =========================================================
    CUSTOMER PROFILE PAGE VISIBILITY
-   IMPORTANT:
-   The profile page is controlled ONLY by .active.
-   Responsive breakpoints must NEVER force it visible.
 ========================================================= */
 
 #view-customer-profile {
@@ -1639,8 +1636,21 @@ svg:last-child {
     box-shadow: var(--shadow-xs);
 }
 
+
+/* =========================================================
+   SEARCH BOX
+   Improved:
+   - icon no longer covers typed text
+   - larger left padding
+   - stable vertical alignment
+   - search field has proper right-side space
+========================================================= */
+
 .search-box {
     position: relative;
+
+    width: 100%;
+    min-width: 0;
 
     display: flex;
     align-items: center;
@@ -1649,19 +1659,52 @@ svg:last-child {
 .search-box svg {
     position: absolute;
 
-    left: 11px;
+    left: 13px;
+    top: 50%;
 
-    width: 16px;
-    height: 16px;
+    width: 17px;
+    height: 17px;
+
+    transform: translateY(-50%);
 
     color: var(--slate-400);
 
     pointer-events: none;
+
+    z-index: 2;
 }
 
 .search-box input {
     width: 100%;
-    padding-left: 35px;
+    min-width: 0;
+
+    padding-left: 43px !important;
+    padding-right: 40px !important;
+
+    cursor: text;
+
+    position: relative;
+    z-index: 1;
+}
+
+/* Prevent browser search decoration from creating
+   an unwanted overlap with our search layout. */
+.search-box input[type="search"] {
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+/* Keep the native clear button available and
+   positioned safely on the right side. */
+.search-box input[type="search"]::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+
+    width: 16px;
+    height: 16px;
+
+    margin-right: 2px;
+
+    cursor: pointer;
 }
 
 
@@ -3278,12 +3321,6 @@ svg:last-child {
         grid-template-columns: 1fr;
     }
 
-    /*
-       IMPORTANT:
-       Customer Profile visibility is NOT controlled here.
-       The parent .crm-page.active rule controls visibility.
-    */
-
     #customer-profile-container {
         width: 100%;
         max-width: none;
@@ -3537,6 +3574,19 @@ svg:last-child {
         grid-column: auto;
     }
 
+    /* Extra breathing room on small screens */
+    .search-box input {
+        padding-left: 43px !important;
+        padding-right: 38px !important;
+    }
+
+    .search-box svg {
+        left: 13px;
+
+        width: 16px;
+        height: 16px;
+    }
+
     .pagination-wrapper {
         align-items: flex-start;
 
@@ -3577,8 +3627,6 @@ svg:last-child {
 
     /* -----------------------------------------------------
        CUSTOMER PROFILE — MOBILE
-       No display/visibility forcing here.
-       Parent .crm-page controls page visibility.
     ----------------------------------------------------- */
 
     #customer-profile-container {
