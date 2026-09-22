@@ -255,7 +255,6 @@
                 class="top-header"
             >
 
-
                 <!-- BRAND -->
 
                 <div
@@ -321,7 +320,6 @@
                     class="main-navigation"
                     aria-label="Main navigation"
                 >
-
 
                     <!-- DASHBOARD -->
 
@@ -1135,7 +1133,11 @@
 
 
 
-                    <!-- FILTERS -->
+                    <!-- =================================================
+                         FILTERS
+                         Location filter removed.
+                         Status + Business remain.
+                    ================================================== -->
 
                     <div class="filter-panel">
 
@@ -1156,6 +1158,8 @@
                         </div>
 
 
+                        <!-- STATUS DROPDOWN -->
+
                         <select
                             id="filter-status"
                             aria-label="Filter status"
@@ -1165,8 +1169,46 @@
                                 All Status
                             </option>
 
+                            <option value="New">
+                                New
+                            </option>
+
+                            <option value="Flyer Sent">
+                                Flyer Sent
+                            </option>
+
+                            <option value="Interested">
+                                Interested
+                            </option>
+
+                            <option value="Follow Up">
+                                Follow Up
+                            </option>
+
+                            <option value="Appointment">
+                                Appointment
+                            </option>
+
+                            <option value="Site Survey">
+                                Site Survey
+                            </option>
+
+                            <option value="Quotation">
+                                Quotation
+                            </option>
+
+                            <option value="Closing">
+                                Closing
+                            </option>
+
+                            <option value="Not Interested">
+                                Not Interested
+                            </option>
+
                         </select>
 
+
+                        <!-- BUSINESS DROPDOWN -->
 
                         <select
                             id="filter-business"
@@ -1180,17 +1222,7 @@
                         </select>
 
 
-                        <select
-                            id="filter-location"
-                            aria-label="Filter location"
-                        >
-
-                            <option value="">
-                                All Location
-                            </option>
-
-                        </select>
-
+                        <!-- SALES FILTER - ADMIN ONLY -->
 
                         <select
                             id="filter-sales"
@@ -1644,21 +1676,63 @@
                     </div>
 
 
+                    <!-- =================================================
+                         BUSINESS DROPDOWN
+                    ================================================== -->
+
                     <div class="form-group">
 
                         <label for="leadBusiness">
                             Business
                         </label>
 
-                        <input
+                        <select
                             id="leadBusiness"
                             name="business"
-                            type="text"
-                            placeholder="House, Villa, Hotel, Restaurant..."
                         >
+
+                            <option value="">
+                                Select Business
+                            </option>
+
+                            <option value="Residential">
+                                Residential
+                            </option>
+
+                            <option value="Villa">
+                                Villa
+                            </option>
+
+                            <option value="Hotel">
+                                Hotel
+                            </option>
+
+                            <option value="Restaurant">
+                                Restaurant
+                            </option>
+
+                            <option value="Office">
+                                Office
+                            </option>
+
+                            <option value="Factory">
+                                Factory
+                            </option>
+
+                            <option value="Commercial">
+                                Commercial
+                            </option>
+
+                            <option value="Other">
+                                Other
+                            </option>
+
+                        </select>
 
                     </div>
 
+
+                    <!-- LOCATION REMAINS NORMAL INPUT -->
 
                     <div class="form-group">
 
@@ -1675,6 +1749,8 @@
 
                     </div>
 
+
+                    <!-- STATUS DROPDOWN -->
 
                     <div class="form-group">
 
@@ -2138,10 +2214,6 @@
 
     <!-- =====================================================
          CRM JAVASCRIPT
-         
-         IMPORTANT:
-         customer-form.js harus dimuat SEBELUM leads.js
-         karena leads.js menggunakan modul Add/Edit Customer.
     ====================================================== -->
 
     <script src="js/config.js"></script>
@@ -2152,19 +2224,14 @@
 
     <script src="js/dashboard.js"></script>
 
-    <!-- Customer Add/Edit module -->
     <script src="js/customer-form.js"></script>
 
-    <!-- Leads module -->
     <script src="js/leads.js"></script>
 
-    <!-- Sales management -->
     <script src="js/sales.js"></script>
 
-    <!-- Customer Profile -->
     <script src="js/shelter.js"></script>
 
-    <!-- Authentication -->
     <script src="js/auth.js"></script>
 
 
