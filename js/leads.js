@@ -19,6 +19,10 @@
 // - Profile selalu menggunakan Customer ID yang benar
 // - Status & Business filter dropdown
 // - Location filter DIHAPUS
+// - Menampilkan Created At / Updated At
+// - Menampilkan Lead Age
+// - Menampilkan Follow Up Overdue
+// - Menampilkan Progress PLTS
 // ============================================================
 
 "use strict";
@@ -237,7 +241,6 @@
         );
 
 
-        // Cari berdasarkan teks.
         document
             .querySelectorAll(
                 "button, a, [role='button']"
@@ -277,7 +280,6 @@
             );
 
 
-        // Admin & Sales sama-sama boleh Add Customer.
         if (
             isAdmin ||
             isSales
@@ -381,10 +383,6 @@
         }
 
 
-        // ====================================================
-        // CUSTOMER FORM MODULE
-        // ====================================================
-
         if (
             window.FSICustomerForm &&
             typeof window.FSICustomerForm.openAddCustomer ===
@@ -397,7 +395,6 @@
         }
 
 
-        // Compatibility dengan fungsi global.
         if (
             typeof window.crmOpenAddCustomer ===
             "function"
@@ -409,7 +406,6 @@
         }
 
 
-        // Fallback.
         if (
             typeof window.openLeadModal ===
             "function"
@@ -593,6 +589,573 @@
 
 
     // ========================================================
+    // DATE / TIME HELPERS
+    // ========================================================
+
+    function leadParseDate(value) {
+
+        if (
+            value === null ||
+            value === undefined ||
+            value === ""
+        ) {
+            return null;
+        }
+
+
+        const date =
+            value instanceof Date
+                ? new Date(value.getTime())
+                : new Date(value);
+
+
+        if (
+            Number.isNaN(
+                date.getTime()
+            )
+        ) {
+            return null;
+        }
+
+
+        return date;
+    }
+
+
+    function leadFormatDateTime(value) {
+
+        const date =
+            leadParseDate(value);
+
+
+        if (!date) {
+            return "-";
+        }
+
+
+        try {
+
+            return new Intl.DateTimeFormat(
+                "id-ID",
+                {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit"
+                }
+            ).format(date);
+
+        } catch (error) {
+
+            return date.toLocaleString(
+                "id-ID"
+            );
+        }
+    }
+
+
+    function leadFormatDateOnly(value) {
+
+        const date =
+            leadParseDate(value);
+
+
+        if (!date) {
+            return "-";
+        }
+
+
+        try {
+
+            return new Intl.DateTimeFormat(
+                "id-ID",
+                {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric"
+                }
+            ).format(date);
+
+        } catch (error) {
+
+            return date.toLocaleDateString(
+                "id-ID"
+            );
+        }
+    }
+
+
+    function leadGetAgeInDays(value) {
+
+        const createdDate =
+            leadParseDate(value);
+
+
+        if (!createdDate) {
+            return null;
+        }
+
+
+        const now =
+            new Date();
+
+
+        const start =
+            new Date(
+                createdDate.getFullYear(),
+                createdDate.getMonth(),
+                createdDate.getDate()
+            );
+
+
+        const end =
+            new Date(
+                now.getFullYear(),
+                now.getMonth(),
+                now.getDate()
+            );
+
+
+        const difference =
+            end.getTime() -
+            start.getTime();
+
+
+        return Math.max(
+            0,
+            Math.floor(
+                difference /
+                86400000
+            )
+        );
+    }
+
+
+    function leadGetAgeLabel(value) {
+
+        const age =
+            leadGetAgeInDays(
+                value
+            );
+
+
+        if (age === null) {
+            return "-";
+        }
+
+
+        if (age === 0) {
+            return "Hari ini";
+        }
+
+
+        if (age === 1) {
+            return "1 hari";
+        }
+
+
+        return `${age} hari`;
+    }
+
+
+    function leadGetAgeClass(value) {
+
+        const age =
+            leadGetAgeInDays(
+                value
+            );
+
+
+        if (age === null) {
+            return "";
+        }
+
+
+        if (age >= 60) {
+            return "lead-age-critical";
+        }
+
+
+        if (age >= 30) {
+            return "lead-age-warning";
+        }
+
+
+        if (age >= 14) {
+            return "lead-age-aging";
+        }
+
+
+        return "lead-age-new";
+    }
+
+
+    function leadIsOverdue(value) {
+
+        const followUpDate =
+            leadParseDate(value);
+
+
+        if (!followUpDate) {
+            return false;
+        }
+
+
+        const now =
+            new Date();
+
+
+        const today =
+            new Date(
+                now.getFullYear(),
+                now.getMonth(),
+                now.getDate()
+            );
+
+
+        const followUpDay =
+            new Date(
+                followUpDate.getFullYear(),
+                followUpDate.getMonth(),
+                followUpDate.getDate()
+            );
+
+
+        return followUpDay < today;
+    }
+
+
+    function leadGetOverdueDays(value) {
+
+        const followUpDate =
+            leadParseDate(value);
+
+
+        if (!followUpDate) {
+            return 0;
+        }
+
+
+        const now =
+            new Date();
+
+
+        const today =
+            new Date(
+                now.getFullYear(),
+                now.getMonth(),
+                now.getDate()
+            );
+
+
+        const followUpDay =
+            new Date(
+                followUpDate.getFullYear(),
+                followUpDate.getMonth(),
+                followUpDate.getDate()
+            );
+
+
+        const difference =
+            today.getTime() -
+            followUpDay.getTime();
+
+
+        if (difference <= 0) {
+            return 0;
+        }
+
+
+        return Math.floor(
+            difference /
+            86400000
+        );
+    }
+
+
+    function leadGetFollowUpStatusHTML(
+        value
+    ) {
+
+        if (!value) {
+            return "-";
+        }
+
+
+        const formatted =
+            leadFormatDateTime(
+                value
+            );
+
+
+        const safeDate =
+            leadEscapeHTML(
+                formatted
+            );
+
+
+        if (
+            leadIsOverdue(
+                value
+            )
+        ) {
+
+            const overdueDays =
+                leadGetOverdueDays(
+                    value
+                );
+
+
+            const overdueLabel =
+                overdueDays === 1
+                    ? "1 hari lewat"
+                    : `${overdueDays} hari lewat`;
+
+
+            return `
+                <div class="lead-date-stack lead-followup-overdue">
+                    <div class="lead-date-main">
+                        ${safeDate}
+                    </div>
+
+                    <div class="lead-date-alert">
+                        <i data-lucide="triangle-alert"></i>
+                        ${leadEscapeHTML(overdueLabel)}
+                    </div>
+                </div>
+            `;
+        }
+
+
+        return `
+            <div class="lead-date-stack">
+                <div class="lead-date-main">
+                    ${safeDate}
+                </div>
+
+                <div class="lead-date-sub">
+                    <i data-lucide="calendar-clock"></i>
+                    Follow Up
+                </div>
+            </div>
+        `;
+    }
+
+
+    function leadGetMilestoneHTML(
+        label,
+        icon,
+        value
+    ) {
+
+        if (!value) {
+            return "";
+        }
+
+
+        const safeLabel =
+            leadEscapeHTML(
+                label
+            );
+
+
+        const safeValue =
+            leadEscapeHTML(
+                leadFormatDateTime(
+                    value
+                )
+            );
+
+
+        return `
+            <div class="lead-milestone-item">
+                <i data-lucide="${leadEscapeHTML(icon)}"></i>
+
+                <div class="lead-milestone-content">
+
+                    <span class="lead-milestone-label">
+                        ${safeLabel}
+                    </span>
+
+                    <span class="lead-milestone-date">
+                        ${safeValue}
+                    </span>
+
+                </div>
+            </div>
+        `;
+    }
+
+
+    function leadGetProgressHTML(
+        lead
+    ) {
+
+        const milestones = [];
+
+
+        const siteSurveyHTML =
+            leadGetMilestoneHTML(
+                "Site Survey",
+                "map-pin-check",
+                lead.site_survey
+            );
+
+
+        const quotationHTML =
+            leadGetMilestoneHTML(
+                "Quotation",
+                "file-text",
+                lead.quotation
+            );
+
+
+        const spkHTML =
+            leadGetMilestoneHTML(
+                "SPK",
+                "file-check-2",
+                lead.spk
+            );
+
+
+        const closingHTML =
+            leadGetMilestoneHTML(
+                "Closing",
+                "circle-check",
+                lead.closing
+            );
+
+
+        if (siteSurveyHTML) {
+            milestones.push(
+                siteSurveyHTML
+            );
+        }
+
+
+        if (quotationHTML) {
+            milestones.push(
+                quotationHTML
+            );
+        }
+
+
+        if (spkHTML) {
+            milestones.push(
+                spkHTML
+            );
+        }
+
+
+        if (closingHTML) {
+            milestones.push(
+                closingHTML
+            );
+        }
+
+
+        if (
+            milestones.length === 0
+        ) {
+
+            return `
+                <div class="lead-progress-empty">
+                    Belum ada milestone
+                </div>
+            `;
+        }
+
+
+        return `
+            <div class="lead-progress-list">
+                ${milestones.join("")}
+            </div>
+        `;
+    }
+
+
+    function leadGetCreatedUpdatedHTML(
+        lead
+    ) {
+
+        const createdAt =
+            lead.created_at;
+
+
+        const updatedAt =
+            lead.updated_at;
+
+
+        const ageLabel =
+            leadGetAgeLabel(
+                createdAt
+            );
+
+
+        const ageClass =
+            leadGetAgeClass(
+                createdAt
+            );
+
+
+        const createdLabel =
+            leadFormatDateTime(
+                createdAt
+            );
+
+
+        const updatedLabel =
+            leadFormatDateTime(
+                updatedAt
+            );
+
+
+        return `
+            <div class="lead-meta-block">
+
+                <div class="lead-age-row ${leadEscapeHTML(ageClass)}">
+
+                    <i data-lucide="clock-3"></i>
+
+                    <span>
+                        ${leadEscapeHTML(ageLabel)}
+                    </span>
+
+                </div>
+
+
+                <div class="lead-meta-line">
+
+                    <span class="lead-meta-label">
+                        Created
+                    </span>
+
+                    <span class="lead-meta-value">
+                        ${leadEscapeHTML(createdLabel)}
+                    </span>
+
+                </div>
+
+
+                <div class="lead-meta-line">
+
+                    <span class="lead-meta-label">
+                        Updated
+                    </span>
+
+                    <span class="lead-meta-value">
+                        ${leadEscapeHTML(updatedLabel)}
+                    </span>
+
+                </div>
+
+            </div>
+        `;
+    }
+
+
+    // ========================================================
     // SELECTED SALES
     // ========================================================
 
@@ -692,10 +1255,6 @@
 
         try {
 
-            // ------------------------------------------------
-            // SALES LOOKUP
-            // ------------------------------------------------
-
             if (
                 typeof window.loadSalesLookup ===
                 "function"
@@ -715,21 +1274,6 @@
             }
 
 
-            // ------------------------------------------------
-            // BUSINESS LOOKUP
-            // ------------------------------------------------
-            //
-            // Location sudah tidak digunakan sebagai filter.
-            //
-            // Business sekarang menggunakan:
-            // 1. Pilihan standar CRM
-            // 2. Business yang memang ada di Supabase
-            //
-            // Dengan begitu dropdown Business tetap memiliki
-            // pilihan walaupun data tertentu belum ada di leads.
-            //
-            // ------------------------------------------------
-
             const {
                 data,
                 error
@@ -748,8 +1292,7 @@
                     error
                 );
 
-                // Jangan membuat dropdown kosong.
-                // Gunakan pilihan Business standar.
+
                 populateBusinessFilter([]);
 
             } else {
@@ -774,10 +1317,6 @@
                 );
             }
 
-
-            // ------------------------------------------------
-            // SALES FILTER
-            // ------------------------------------------------
 
             if (
                 typeof window.populateSalesDropdowns ===
@@ -808,8 +1347,7 @@
                 error
             );
 
-            // Pastikan Business tetap memiliki dropdown
-            // walaupun terjadi error pada lookup.
+
             populateBusinessFilter([]);
         }
     }
@@ -1489,7 +2027,6 @@
             }
 
 
-            // Pastikan Business dropdown sudah terisi.
             const businessFilter =
                 leadElement(
                     "filter-business",
@@ -1525,7 +2062,6 @@
                 filters.business;
 
 
-            // Location filter sudah dihapus.
             window.currentLocationFilter =
                 "";
 
@@ -2347,6 +2883,30 @@
                     );
 
 
+                // =================================================
+                // CREATED / UPDATED / AGE
+                // =================================================
+
+                const createdUpdatedHTML =
+                    leadGetCreatedUpdatedHTML(
+                        lead
+                    );
+
+
+                // =================================================
+                // PROGRESS PLTS
+                // =================================================
+
+                const progressHTML =
+                    leadGetProgressHTML(
+                        lead
+                    );
+
+
+                // =================================================
+                // WHATSAPP
+                // =================================================
+
                 let whatsappHTML =
                     "-";
 
@@ -2387,33 +2947,23 @@
                 }
 
 
-                const formattedFollowUp =
-                    typeof window.formatDate ===
-                    "function"
-                        ? window.formatDate(
-                            lead.follow_up_date
-                        )
-                        : (
-                            lead.follow_up_date ||
-                            "-"
-                        );
+                // =================================================
+                // FOLLOW UP
+                // =================================================
 
+                const followUpHTML =
+                    leadGetFollowUpStatusHTML(
+                        lead.follow_up_date
+                    );
+
+
+                // =================================================
+                // APPOINTMENT
+                // =================================================
 
                 const formattedAppointment =
-                    typeof window.formatDate ===
-                    "function"
-                        ? window.formatDate(
-                            lead.appointment
-                        )
-                        : (
-                            lead.appointment ||
-                            "-"
-                        );
-
-
-                const safeFollowUp =
-                    leadEscapeHTML(
-                        formattedFollowUp
+                    leadFormatDateTime(
+                        lead.appointment
                     );
 
 
@@ -2423,9 +2973,9 @@
                     );
 
 
-                // ------------------------------------------------
+                // =================================================
                 // CUSTOMER ID
-                // ------------------------------------------------
+                // =================================================
 
                 const leadId =
                     String(
@@ -2456,43 +3006,94 @@
                                 ${escapedCustomer || "-"}
                             </button>
 
+
+                            <!-- ==================================
+                                 CREATED / UPDATED / AGE
+                                 ================================== -->
+
+                            ${createdUpdatedHTML}
+
                         </div>
 
                     </td>
+
 
                     <td>
                         ${whatsappHTML}
                     </td>
 
+
                     <td>
                         ${escapedBusiness || "-"}
                     </td>
+
 
                     <td>
                         ${escapedLocation || "-"}
                     </td>
 
+
                     <td>
                         ${escapedSales || "-"}
                     </td>
 
+
                     <td>
 
-                        <span
-                            class="status-badge ${leadEscapeHTML(statusCSS)}"
-                        >
-                            ${safeStatus}
-                        </span>
+                        <div class="lead-status-wrapper">
+
+                            <span
+                                class="status-badge ${leadEscapeHTML(statusCSS)}"
+                            >
+                                ${safeStatus}
+                            </span>
+
+
+                            <!-- ==================================
+                                 PLTS PROGRESS
+                                 ================================== -->
+
+                            <div class="lead-progress-wrapper">
+
+                                ${progressHTML}
+
+                            </div>
+
+                        </div>
 
                     </td>
 
-                    <td>
-                        ${safeFollowUp}
-                    </td>
 
                     <td>
-                        ${safeAppointment}
+
+                        ${followUpHTML}
+
                     </td>
+
+
+                    <td>
+
+                        <div class="lead-date-stack">
+
+                            <div class="lead-date-main">
+                                ${safeAppointment}
+                            </div>
+
+                            ${
+                                lead.appointment
+                                    ? `
+                                        <div class="lead-date-sub">
+                                            <i data-lucide="calendar-days"></i>
+                                            Appointment
+                                        </div>
+                                      `
+                                    : ""
+                            }
+
+                        </div>
+
+                    </td>
+
 
                     <td>
 
@@ -2752,12 +3353,6 @@
     // ========================================================
     // LEGACY LEAD MODAL
     // ========================================================
-    //
-    // Tetap dipertahankan untuk compatibility.
-    //
-    // Add Customer utama menggunakan customer-form.js.
-    //
-    // ========================================================
 
     function openLeadModal() {
 
@@ -2919,7 +3514,6 @@
             leadGetProfile();
 
 
-        // Support both old and current field ID.
         setLeadValue(
             [
                 "leadSales",
@@ -3049,12 +3643,6 @@
     // ========================================================
     // EDIT CUSTOMER
     // ========================================================
-    //
-    // EDIT sekarang diarahkan ke customer-form.js.
-    //
-    // Profile TIDAK disentuh.
-    //
-    // ========================================================
 
     async function openEditLead(
         id
@@ -3089,10 +3677,6 @@
         }
 
 
-        // ====================================================
-        // CUSTOMER FORM MODULE
-        // ====================================================
-
         if (
             window.FSICustomerForm &&
             typeof window.FSICustomerForm.openEditCustomer ===
@@ -3107,7 +3691,6 @@
         }
 
 
-        // Compatibility global function.
         if (
             typeof window.crmOpenEditCustomer ===
             "function"
@@ -3158,11 +3741,6 @@
     // ========================================================
 
     async function saveLead() {
-
-        // ----------------------------------------------------
-        // Jika Customer Form Module tersedia,
-        // gunakan module tersebut.
-        // ----------------------------------------------------
 
         if (
             window.FSICustomerForm &&
@@ -3370,36 +3948,20 @@
             "";
 
 
-        // ----------------------------------------------------
-        // ADMIN
-        // ----------------------------------------------------
-
         if (leadIsAdmin()) {
 
             payload.sales_id =
                 selectedSales ||
                 null;
-        }
 
-
-        // ----------------------------------------------------
-        // SALES
-        // ----------------------------------------------------
-
-        else if (
+        } else if (
             leadIsSales()
         ) {
 
             payload.sales_id =
                 profile.id;
-        }
 
-
-        // ----------------------------------------------------
-        // ROLE LAIN
-        // ----------------------------------------------------
-
-        else {
+        } else {
 
             payload.sales_id =
                 null;
@@ -3407,10 +3969,6 @@
 
 
         try {
-
-            // =================================================
-            // UPDATE
-            // =================================================
 
             if (leadId) {
 
@@ -3461,13 +4019,7 @@
                     );
                 }
 
-            }
-
-            // =================================================
-            // INSERT
-            // =================================================
-
-            else {
+            } else {
 
                 payload.created_by =
                     profile.id;
@@ -3796,9 +4348,6 @@
 
     function setupSalesAssignmentAccess() {
 
-        // Current index.html menggunakan leadSales.
-        // leadSalesAssign tetap didukung untuk compatibility.
-
         const select =
             leadElement(
                 "leadSales",
@@ -3832,10 +4381,6 @@
             leadIsSales();
 
 
-        // ----------------------------------------------------
-        // ADMIN
-        // ----------------------------------------------------
-
         if (isAdmin) {
 
             select.disabled =
@@ -3850,10 +4395,6 @@
             return;
         }
 
-
-        // ----------------------------------------------------
-        // SALES
-        // ----------------------------------------------------
 
         if (isSales) {
 
@@ -3943,10 +4484,6 @@
                     ).trim();
 
 
-                // =================================================
-                // PROFILE
-                // =================================================
-
                 if (
                     action ===
                     "profile"
@@ -3979,7 +4516,6 @@
                     event.preventDefault();
 
 
-                    // Profile TETAP menggunakan shelter.js.
                     if (
                         typeof window.crmOpenCustomerProfile ===
                         "function"
@@ -4012,10 +4548,6 @@
                     return;
                 }
 
-
-                // =================================================
-                // EDIT CUSTOMER
-                // =================================================
 
                 if (
                     action ===
@@ -4058,10 +4590,6 @@
                 }
 
 
-                // =================================================
-                // DELETE
-                // =================================================
-
                 if (
                     action ===
                     "delete"
@@ -4081,10 +4609,6 @@
                 }
 
 
-                // =================================================
-                // RETRY
-                // =================================================
-
                 if (
                     action ===
                     "retry-leads"
@@ -4103,10 +4627,6 @@
                     return;
                 }
 
-
-                // =================================================
-                // CLEAR SALES FILTER
-                // =================================================
 
                 if (
                     action ===
@@ -4137,16 +4657,8 @@
             true;
 
 
-        // ----------------------------------------------------
-        // Add Customer
-        // ----------------------------------------------------
-
         bindAddCustomerButtons();
 
-
-        // ----------------------------------------------------
-        // Search
-        // ----------------------------------------------------
 
         const searchInput =
             leadElement(
@@ -4164,10 +4676,6 @@
             );
         }
 
-
-        // ----------------------------------------------------
-        // Filters
-        // ----------------------------------------------------
 
         [
 
@@ -4246,10 +4754,6 @@
         );
 
 
-        // ----------------------------------------------------
-        // Previous
-        // ----------------------------------------------------
-
         const prevBtn =
             leadElement(
                 "btn-prev-page",
@@ -4270,10 +4774,6 @@
             );
         }
 
-
-        // ----------------------------------------------------
-        // Next
-        // ----------------------------------------------------
 
         const nextBtn =
             leadElement(
@@ -4296,10 +4796,6 @@
         }
 
 
-        // ----------------------------------------------------
-        // Clear filter
-        // ----------------------------------------------------
-
         const clearFilterBtn =
             leadElement(
                 "btn-clear-filters",
@@ -4316,16 +4812,8 @@
         }
 
 
-        // ----------------------------------------------------
-        // Table actions
-        // ----------------------------------------------------
-
         setupTableActions();
 
-
-        // ----------------------------------------------------
-        // ESC
-        // ----------------------------------------------------
 
         document.addEventListener(
             "keydown",
@@ -4352,8 +4840,6 @@
                     )
                 ) {
 
-                    // Jika customer-form.js memiliki close,
-                    // gunakan itu terlebih dahulu.
                     if (
                         window.FSICustomerForm &&
                         typeof window.FSICustomerForm.closeCustomerForm ===
@@ -4370,10 +4856,6 @@
             }
         );
 
-
-        // ----------------------------------------------------
-        // Click outside modal
-        // ----------------------------------------------------
 
         const modal =
             leadElement(
@@ -4415,10 +4897,6 @@
 
         refreshAddCustomerVisibility();
 
-
-        // ----------------------------------------------------
-        // Load Business dropdown
-        // ----------------------------------------------------
 
         loadFilterOptions()
             .catch(
