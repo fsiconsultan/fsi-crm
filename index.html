@@ -96,49 +96,41 @@
 
     <!-- =====================================================
          CSS — MODULAR
-
+         
          IMPORTANT:
-         responsive.css MUST remain last
-         so responsive rules can override base/module styles.
+         responsive.css MUST remain last.
     ====================================================== -->
 
-    <!-- Global / Base -->
     <link
         rel="stylesheet"
         href="css/style.css"
     >
 
-    <!-- Login / PLTS Hero -->
     <link
         rel="stylesheet"
         href="css/login.css"
     >
 
-    <!-- Dashboard -->
     <link
         rel="stylesheet"
         href="css/dashboard.css"
     >
 
-    <!-- Leads / Customer Table -->
     <link
         rel="stylesheet"
         href="css/leads.css"
     >
 
-    <!-- Customer Profile -->
     <link
         rel="stylesheet"
         href="css/profile.css"
     >
 
-    <!-- Customer Add / Edit -->
     <link
         rel="stylesheet"
         href="css/customer-edit.css"
     >
 
-    <!-- Responsive — MUST BE LAST -->
     <link
         rel="stylesheet"
         href="css/responsive.css"
@@ -291,8 +283,6 @@
                 class="top-header"
             >
 
-                <!-- BRAND -->
-
                 <div
                     class="brand"
                     id="brand-home"
@@ -347,17 +337,13 @@
 
 
 
-                <!-- =================================================
-                     DESKTOP NAVIGATION
-                ================================================== -->
+                <!-- DESKTOP NAVIGATION -->
 
                 <nav
                     id="main-navigation"
                     class="main-navigation"
                     aria-label="Main navigation"
                 >
-
-                    <!-- DASHBOARD -->
 
                     <button
                         type="button"
@@ -378,9 +364,6 @@
                     </button>
 
 
-
-                    <!-- LEADS -->
-
                     <button
                         type="button"
                         class="nav-link"
@@ -398,7 +381,6 @@
                         </span>
 
                     </button>
-
 
 
                     <!-- SALES DROPDOWN -->
@@ -506,9 +488,7 @@
 
 
 
-                <!-- =================================================
-                     USER AREA
-                ================================================== -->
+                <!-- USER AREA -->
 
                 <div
                     id="topbar-user"
@@ -659,11 +639,6 @@
                 class="main-content"
             >
 
-
-                <!-- =================================================
-                     PAGE HEADER
-                ================================================== -->
-
                 <div class="page-header">
 
                     <div>
@@ -732,9 +707,7 @@
 
                             <div class="stat-details">
 
-                                <span>
-                                    Total Leads
-                                </span>
+                                <span>Total Leads</span>
 
                                 <strong id="statTotal">
                                     0
@@ -762,9 +735,7 @@
 
                             <div class="stat-details">
 
-                                <span>
-                                    New
-                                </span>
+                                <span>New</span>
 
                                 <strong id="statNew">
                                     0
@@ -792,9 +763,7 @@
 
                             <div class="stat-details">
 
-                                <span>
-                                    Interested
-                                </span>
+                                <span>Interested</span>
 
                                 <strong id="statInterested">
                                     0
@@ -822,9 +791,7 @@
 
                             <div class="stat-details">
 
-                                <span>
-                                    Follow Up
-                                </span>
+                                <span>Follow Up</span>
 
                                 <strong id="statFollowUp">
                                     0
@@ -852,9 +819,7 @@
 
                             <div class="stat-details">
 
-                                <span>
-                                    Appointment
-                                </span>
+                                <span>Appointment</span>
 
                                 <strong id="statAppointment">
                                     0
@@ -882,9 +847,7 @@
 
                             <div class="stat-details">
 
-                                <span>
-                                    Site Survey
-                                </span>
+                                <span>Site Survey</span>
 
                                 <strong id="statSiteSurvey">
                                     0
@@ -912,9 +875,7 @@
 
                             <div class="stat-details">
 
-                                <span>
-                                    Quotation
-                                </span>
+                                <span>Quotation</span>
 
                                 <strong id="statQuotation">
                                     0
@@ -942,9 +903,7 @@
 
                             <div class="stat-details">
 
-                                <span>
-                                    SPK
-                                </span>
+                                <span>SPK</span>
 
                                 <strong id="statSPK">
                                     0
@@ -972,9 +931,7 @@
 
                             <div class="stat-details">
 
-                                <span>
-                                    Closing
-                                </span>
+                                <span>Closing</span>
 
                                 <strong id="statClosing">
                                     0
@@ -1002,9 +959,7 @@
 
                             <div class="stat-details">
 
-                                <span>
-                                    Not Interested
-                                </span>
+                                <span>Not Interested</span>
 
                                 <strong id="statNotInterested">
                                     0
@@ -1169,11 +1124,7 @@
 
 
 
-                    <!-- =================================================
-                         FILTERS
-                         Location filter removed.
-                         Status + Business remain.
-                    ================================================== -->
+                    <!-- FILTERS -->
 
                     <div class="filter-panel">
 
@@ -1193,8 +1144,6 @@
 
                         </div>
 
-
-                        <!-- STATUS DROPDOWN -->
 
                         <select
                             id="filter-status"
@@ -1244,8 +1193,6 @@
                         </select>
 
 
-                        <!-- BUSINESS DROPDOWN -->
-
                         <select
                             id="filter-business"
                             aria-label="Filter business"
@@ -1257,8 +1204,6 @@
 
                         </select>
 
-
-                        <!-- SALES FILTER - ADMIN ONLY -->
 
                         <select
                             id="filter-sales"
@@ -1276,9 +1221,7 @@
 
 
 
-                    <!-- =================================================
-                         LEADS TABLE
-                    ================================================== -->
+                    <!-- LEADS TABLE -->
 
                     <div
                         class="table-panel table-container"
@@ -1293,45 +1236,25 @@
 
                                 <tr>
 
-                                    <th>
-                                        Customer
-                                    </th>
+                                    <th>Customer</th>
 
-                                    <th>
-                                        WhatsApp
-                                    </th>
+                                    <th>WhatsApp</th>
 
-                                    <th>
-                                        Email
-                                    </th>
+                                    <th>Email</th>
 
-                                    <th>
-                                        Business
-                                    </th>
+                                    <th>Business</th>
 
-                                    <th>
-                                        Sales
-                                    </th>
+                                    <th>Sales</th>
 
-                                    <th>
-                                        Status
-                                    </th>
+                                    <th>Status</th>
 
-                                    <th>
-                                        Last Update
-                                    </th>
+                                    <th>Last Update</th>
 
-                                    <th>
-                                        Progress
-                                    </th>
+                                    <th>Progress</th>
 
-                                    <th>
-                                        Note
-                                    </th>
+                                    <th>Note</th>
 
-                                    <th>
-                                        Actions
-                                    </th>
+                                    <th>Actions</th>
 
                                 </tr>
 
@@ -1359,9 +1282,7 @@
 
 
 
-                    <!-- =================================================
-                         PAGINATION
-                    ================================================== -->
+                    <!-- PAGINATION -->
 
                     <div class="pagination-wrapper">
 
@@ -1510,33 +1431,19 @@
 
                                 <tr>
 
-                                    <th>
-                                        Sales
-                                    </th>
+                                    <th>Sales</th>
 
-                                    <th>
-                                        Username
-                                    </th>
+                                    <th>Username</th>
 
-                                    <th>
-                                        Phone
-                                    </th>
+                                    <th>Phone</th>
 
-                                    <th>
-                                        Role
-                                    </th>
+                                    <th>Role</th>
 
-                                    <th>
-                                        Status
-                                    </th>
+                                    <th>Status</th>
 
-                                    <th>
-                                        Created
-                                    </th>
+                                    <th>Created</th>
 
-                                    <th>
-                                        Action
-                                    </th>
+                                    <th>Action</th>
 
                                 </tr>
 
@@ -2011,6 +1918,12 @@
 
     <!-- =====================================================
          SALES MODAL
+         
+         FIXED:
+         1. Added Password field.
+         2. Added salesFormMessage.
+         3. Cancel ID compatible with sales.js.
+         4. Existing X button preserved.
     ====================================================== -->
 
     <div
@@ -2062,6 +1975,7 @@
             <form
                 id="sales-form"
                 class="modal-body"
+                autocomplete="off"
             >
 
                 <input
@@ -2072,6 +1986,9 @@
 
 
                 <div class="form-grid">
+
+
+                    <!-- FULL NAME -->
 
                     <div class="form-group full-width">
 
@@ -2084,11 +2001,14 @@
                             name="name"
                             type="text"
                             placeholder="Sales full name"
+                            autocomplete="name"
                             required
                         >
 
                     </div>
 
+
+                    <!-- USERNAME -->
 
                     <div class="form-group">
 
@@ -2101,11 +2021,35 @@
                             name="username"
                             type="text"
                             placeholder="username"
+                            autocomplete="username"
                             required
                         >
 
                     </div>
 
+
+                    <!-- PASSWORD -->
+
+                    <div class="form-group">
+
+                        <label for="salesPassword">
+                            Password *
+                        </label>
+
+                        <input
+                            id="salesPassword"
+                            name="password"
+                            type="password"
+                            placeholder="Minimum 6 characters"
+                            autocomplete="new-password"
+                            minlength="6"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- EMAIL -->
 
                     <div class="form-group">
 
@@ -2118,10 +2062,13 @@
                             name="email"
                             type="email"
                             placeholder="sales@example.com"
+                            autocomplete="email"
                         >
 
                     </div>
 
+
+                    <!-- PHONE -->
 
                     <div class="form-group">
 
@@ -2134,10 +2081,13 @@
                             name="phone"
                             type="tel"
                             placeholder="08xxxxxxxxxx"
+                            autocomplete="tel"
                         >
 
                     </div>
 
+
+                    <!-- ROLE -->
 
                     <div class="form-group">
 
@@ -2162,6 +2112,8 @@
 
                     </div>
 
+
+                    <!-- STATUS -->
 
                     <div class="form-group">
 
@@ -2190,10 +2142,23 @@
 
 
 
+                <!-- FORM MESSAGE -->
+
+                <div
+                    id="salesFormMessage"
+                    class="form-message"
+                    role="alert"
+                    aria-live="polite"
+                ></div>
+
+
+
+                <!-- MODAL FOOTER -->
+
                 <div class="modal-footer">
 
                     <button
-                        id="sales-modal-cancel"
+                        id="salesModalClose"
                         type="button"
                         class="btn-secondary secondary-btn"
                     >
@@ -2250,9 +2215,8 @@
 
     <!-- =====================================================
          CRM JAVASCRIPT
-
-         IMPORTANT:
-         Existing JavaScript order is preserved.
+         
+         EXISTING ORDER PRESERVED.
     ====================================================== -->
 
     <script src="js/config.js"></script>
