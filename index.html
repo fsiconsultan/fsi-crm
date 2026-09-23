@@ -5,355 +5,571 @@
 <head>
     <meta charset="UTF-8">
 
-```
-<meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
->
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-<meta
-    name="theme-color"
-    content="#2563eb"
->
+    <meta
+        name="theme-color"
+        content="#2563eb"
+    >
 
-<meta
-    name="description"
-    content="FSI CRM - Sales Management System"
->
+    <meta
+        name="description"
+        content="FSI CRM - Sales Management System"
+    >
 
-<title>FSI CRM — Sales Management</title>
+    <title>FSI CRM — Sales Management</title>
 
 
-<!-- =====================================================
-     SECURITY / URL CLEANUP
-====================================================== -->
+    <!-- =====================================================
+         SECURITY / URL CLEANUP
+    ====================================================== -->
 
-<script>
-    (function () {
-        try {
-            const url = new URL(window.location.href);
+    <script>
+        (function () {
+            try {
+                const url = new URL(window.location.href);
 
-            const sensitiveParams = [
-                "username",
-                "password",
-                "email",
-                "token",
-                "access_token",
-                "refresh_token"
-            ];
+                const sensitiveParams = [
+                    "username",
+                    "password",
+                    "email",
+                    "token",
+                    "access_token",
+                    "refresh_token"
+                ];
 
-            let changed = false;
+                let changed = false;
 
-            sensitiveParams.forEach(function (param) {
-                if (url.searchParams.has(param)) {
-                    url.searchParams.delete(param);
-                    changed = true;
+                sensitiveParams.forEach(function (param) {
+                    if (url.searchParams.has(param)) {
+                        url.searchParams.delete(param);
+                        changed = true;
+                    }
+                });
+
+                if (changed) {
+                    const cleanUrl =
+                        url.pathname +
+                        (url.search ? url.search : "") +
+                        (url.hash ? url.hash : "");
+
+                    window.history.replaceState(
+                        {},
+                        document.title,
+                        cleanUrl
+                    );
                 }
-            });
 
-            if (changed) {
-                const cleanUrl =
-                    url.pathname +
-                    (url.search ? url.search : "") +
-                    (url.hash ? url.hash : "");
-
-                window.history.replaceState(
-                    {},
-                    document.title,
-                    cleanUrl
+            } catch (error) {
+                console.warn(
+                    "URL cleanup failed:",
+                    error
                 );
             }
-
-        } catch (error) {
-            console.warn(
-                "URL cleanup failed:",
-                error
-            );
-        }
-    })();
-</script>
+        })();
+    </script>
 
 
-<!-- =====================================================
-     GOOGLE FONT
-====================================================== -->
+    <!-- =====================================================
+         GOOGLE FONT
+    ====================================================== -->
 
-<link
-    rel="preconnect"
-    href="https://fonts.googleapis.com"
->
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
 
-<link
-    rel="preconnect"
-    href="https://fonts.gstatic.com"
-    crossorigin
->
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
 
-<link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-    rel="stylesheet"
->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
 
 
-<!-- =====================================================
-     CSS — MODULAR
-     
-     IMPORTANT:
-     responsive.css MUST remain last
-     so responsive rules can override base/module styles.
-====================================================== -->
+    <!-- =====================================================
+         CSS — MODULAR
 
-<!-- Global / Base -->
-<link
-    rel="stylesheet"
-    href="css/style.css"
->
+         IMPORTANT:
+         responsive.css MUST remain last
+         so responsive rules can override base/module styles.
+    ====================================================== -->
 
-<!-- Dashboard -->
-<link
-    rel="stylesheet"
-    href="css/dashboard.css"
->
+    <!-- Global / Base -->
+    <link
+        rel="stylesheet"
+        href="css/style.css"
+    >
 
-<!-- Leads / Customer Table -->
-<link
-    rel="stylesheet"
-    href="css/leads.css"
->
+    <!-- Login / PLTS Hero -->
+    <link
+        rel="stylesheet"
+        href="css/login.css"
+    >
 
-<!-- Customer Profile -->
-<link
-    rel="stylesheet"
-    href="css/profile.css"
->
+    <!-- Dashboard -->
+    <link
+        rel="stylesheet"
+        href="css/dashboard.css"
+    >
 
-<!-- Customer Add / Edit -->
-<link
-    rel="stylesheet"
-    href="css/customer-edit.css"
->
+    <!-- Leads / Customer Table -->
+    <link
+        rel="stylesheet"
+        href="css/leads.css"
+    >
 
-<!-- Responsive — MUST BE LAST -->
-<link
-    rel="stylesheet"
-    href="css/responsive.css"
->
-```
+    <!-- Customer Profile -->
+    <link
+        rel="stylesheet"
+        href="css/profile.css"
+    >
+
+    <!-- Customer Add / Edit -->
+    <link
+        rel="stylesheet"
+        href="css/customer-edit.css"
+    >
+
+    <!-- Responsive — MUST BE LAST -->
+    <link
+        rel="stylesheet"
+        href="css/responsive.css"
+    >
 
 </head>
 
 <body>
 
-```
-<!-- =====================================================
-     LOGIN PAGE
-====================================================== -->
 
-<section
-    id="login-page"
-    class="login-page"
->
+    <!-- =====================================================
+         LOGIN PAGE
+    ====================================================== -->
 
-    <div class="login-container">
+    <section
+        id="login-page"
+        class="login-page"
+    >
 
-        <div class="login-card">
+        <div class="login-container">
 
-            <div class="login-logo">
+            <div class="login-card">
 
-                <img
-                    src="logo-fsi.png"
-                    alt="FSI Logo"
-                >
+                <div class="login-logo">
 
-            </div>
-
-
-            <div class="login-heading">
-
-                <h1 class="login-title">
-                    FSI CRM
-                </h1>
-
-                <p class="login-subtitle">
-                    Sales Management System
-                </p>
-
-            </div>
-
-
-            <form
-                id="login-form"
-                class="login-form"
-                autocomplete="on"
-            >
-
-                <div class="form-group">
-
-                    <label for="login-username">
-                        Username
-                    </label>
-
-                    <input
-                        id="login-username"
-                        name="username"
-                        type="text"
-                        autocomplete="username"
-                        placeholder="Enter username"
-                        required
+                    <img
+                        src="logo-fsi.png"
+                        alt="FSI Logo"
                     >
 
                 </div>
 
 
-                <div class="form-group">
+                <div class="login-heading">
 
-                    <label for="login-password">
-                        Password
-                    </label>
+                    <h1 class="login-title">
+                        FSI CRM
+                    </h1>
 
-                    <input
-                        id="login-password"
-                        name="password"
-                        type="password"
-                        autocomplete="current-password"
-                        placeholder="Enter password"
-                        required
-                    >
+                    <p class="login-subtitle">
+                        Sales Management System
+                    </p>
 
                 </div>
 
 
-                <div
-                    id="login-error"
-                    class="login-error"
-                    role="alert"
-                ></div>
-
-
-                <button
-                    id="login-button"
-                    class="btn-primary primary-btn"
-                    type="submit"
+                <form
+                    id="login-form"
+                    class="login-form"
+                    autocomplete="on"
                 >
 
-                    <i
-                        data-lucide="log-in"
-                        aria-hidden="true"
-                    ></i>
+                    <div class="form-group">
+
+                        <label for="login-username">
+                            Username
+                        </label>
+
+                        <input
+                            id="login-username"
+                            name="username"
+                            type="text"
+                            autocomplete="username"
+                            placeholder="Enter username"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="login-password">
+                            Password
+                        </label>
+
+                        <input
+                            id="login-password"
+                            name="password"
+                            type="password"
+                            autocomplete="current-password"
+                            placeholder="Enter password"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div
+                        id="login-error"
+                        class="login-error"
+                        role="alert"
+                    ></div>
+
+
+                    <button
+                        id="login-button"
+                        class="btn-primary primary-btn"
+                        type="submit"
+                    >
+
+                        <i
+                            data-lucide="log-in"
+                            aria-hidden="true"
+                        ></i>
+
+                        <span>
+                            Sign In
+                        </span>
+
+                    </button>
+
+                </form>
+
+
+                <div class="login-footer">
 
                     <span>
-                        Sign In
+                        FSI Consultant
                     </span>
 
-                </button>
-
-            </form>
-
-
-            <div class="login-footer">
-
-                <span>
-                    FSI Consultant
-                </span>
+                </div>
 
             </div>
 
         </div>
 
-    </div>
-
-</section>
+    </section>
 
 
 
-<!-- =====================================================
-     APPLICATION SHELL
-====================================================== -->
+    <!-- =====================================================
+         APPLICATION SHELL
+    ====================================================== -->
 
-<div
-    id="app-shell"
-    class="app-shell hidden"
->
+    <div
+        id="app-shell"
+        class="app-shell hidden"
+    >
 
-    <div class="app-container">
+        <div class="app-container">
 
 
-        <!-- =================================================
-             TOP HEADER
-        ================================================== -->
+            <!-- =================================================
+                 TOP HEADER
+            ================================================== -->
 
-        <header
-            id="top-header"
-            class="top-header"
-        >
-
-            <!-- BRAND -->
-
-            <div
-                class="brand"
-                id="brand-home"
-                data-home="dashboard"
-                role="button"
-                tabindex="0"
+            <header
+                id="top-header"
+                class="top-header"
             >
 
-                <div class="brand-logo">
+                <!-- BRAND -->
 
-                    <img
-                        src="logo-fsi.png"
-                        alt="FSI"
+                <div
+                    class="brand"
+                    id="brand-home"
+                    data-home="dashboard"
+                    role="button"
+                    tabindex="0"
+                >
+
+                    <div class="brand-logo">
+
+                        <img
+                            src="logo-fsi.png"
+                            alt="FSI"
+                        >
+
+                    </div>
+
+
+                    <div class="brand-text">
+
+                        <strong>
+                            FSI CRM
+                        </strong>
+
+                        <span>
+                            Sales Management
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- MOBILE MENU -->
+
+                <button
+                    id="mobileMenuBtn"
+                    class="mobile-menu-btn"
+                    type="button"
+                    aria-label="Open navigation"
+                    aria-expanded="false"
+                    aria-controls="mobileNav"
+                >
+
+                    <i
+                        data-lucide="menu"
+                        aria-hidden="true"
+                    ></i>
+
+                </button>
+
+
+
+                <!-- =================================================
+                     DESKTOP NAVIGATION
+                ================================================== -->
+
+                <nav
+                    id="main-navigation"
+                    class="main-navigation"
+                    aria-label="Main navigation"
+                >
+
+                    <!-- DASHBOARD -->
+
+                    <button
+                        type="button"
+                        class="nav-link"
+                        data-page="dashboard"
+                        data-nav="dashboard"
                     >
 
+                        <i
+                            data-lucide="layout-dashboard"
+                            aria-hidden="true"
+                        ></i>
+
+                        <span>
+                            Dashboard
+                        </span>
+
+                    </button>
+
+
+
+                    <!-- LEADS -->
+
+                    <button
+                        type="button"
+                        class="nav-link"
+                        data-page="leads"
+                        data-nav="leads"
+                    >
+
+                        <i
+                            data-lucide="users"
+                            aria-hidden="true"
+                        ></i>
+
+                        <span>
+                            Leads
+                        </span>
+
+                    </button>
+
+
+
+                    <!-- SALES DROPDOWN -->
+
+                    <div
+                        class="nav-dropdown"
+                        id="sales-navigation"
+                    >
+
+                        <button
+                            type="button"
+                            class="nav-dropdown-btn"
+                            id="sales-nav-button"
+                            aria-haspopup="true"
+                            aria-expanded="false"
+                        >
+
+                            <i
+                                data-lucide="briefcase-business"
+                                aria-hidden="true"
+                            ></i>
+
+                            <span>
+                                Sales
+                            </span>
+
+                            <i
+                                data-lucide="chevron-down"
+                                aria-hidden="true"
+                            ></i>
+
+                        </button>
+
+
+                        <div
+                            class="nav-dropdown-menu"
+                            id="sales-nav-menu"
+                        >
+
+                            <button
+                                type="button"
+                                class="nav-dropdown-item"
+                                data-page="leads"
+                                data-nav="leads"
+                            >
+
+                                <i
+                                    data-lucide="user-round"
+                                    aria-hidden="true"
+                                ></i>
+
+                                <span>
+                                    My Leads
+                                </span>
+
+                            </button>
+
+
+                            <button
+                                type="button"
+                                class="nav-dropdown-item"
+                                data-page="customer-profile"
+                                data-nav="customer-profile"
+                            >
+
+                                <i
+                                    data-lucide="contact"
+                                    aria-hidden="true"
+                                ></i>
+
+                                <span>
+                                    Customer Profile
+                                </span>
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- MANAGE SALES -->
+
+                    <button
+                        type="button"
+                        id="manage-sales-nav"
+                        class="nav-link admin-only"
+                        data-page="sales"
+                        data-nav="sales"
+                    >
+
+                        <i
+                            data-lucide="user-cog"
+                            aria-hidden="true"
+                        ></i>
+
+                        <span>
+                            Manage Sales
+                        </span>
+
+                    </button>
+
+                </nav>
+
+
+
+                <!-- =================================================
+                     USER AREA
+                ================================================== -->
+
+                <div
+                    id="topbar-user"
+                    class="topbar-user"
+                >
+
+                    <div
+                        class="user-avatar"
+                        id="user-avatar"
+                    >
+
+                        <span id="user-avatar-text">
+                            F
+                        </span>
+
+                    </div>
+
+
+                    <div class="user-details">
+
+                        <strong id="header-user-name">
+                            User
+                        </strong>
+
+                        <span id="header-user-role">
+                            Sales
+                        </span>
+
+                    </div>
+
+
+                    <button
+                        id="logout-button"
+                        class="logout-button"
+                        type="button"
+                        title="Logout"
+                        aria-label="Logout"
+                    >
+
+                        <i
+                            data-lucide="log-out"
+                            aria-hidden="true"
+                        ></i>
+
+                    </button>
+
                 </div>
 
-
-                <div class="brand-text">
-
-                    <strong>
-                        FSI CRM
-                    </strong>
-
-                    <span>
-                        Sales Management
-                    </span>
-
-                </div>
-
-            </div>
-
-
-
-            <!-- MOBILE MENU -->
-
-            <button
-                id="mobileMenuBtn"
-                class="mobile-menu-btn"
-                type="button"
-                aria-label="Open navigation"
-                aria-expanded="false"
-                aria-controls="mobileNav"
-            >
-
-                <i
-                    data-lucide="menu"
-                    aria-hidden="true"
-                ></i>
-
-            </button>
+            </header>
 
 
 
             <!-- =================================================
-                 DESKTOP NAVIGATION
+                 MOBILE NAVIGATION
             ================================================== -->
 
             <nav
-                id="main-navigation"
-                class="main-navigation"
-                aria-label="Main navigation"
+                id="mobileNav"
+                class="mobile-nav"
+                aria-label="Mobile navigation"
             >
-
-                <!-- DASHBOARD -->
 
                 <button
                     type="button"
@@ -374,9 +590,6 @@
                 </button>
 
 
-
-                <!-- LEADS -->
-
                 <button
                     type="button"
                     class="nav-link"
@@ -396,92 +609,27 @@
                 </button>
 
 
-
-                <!-- SALES DROPDOWN -->
-
-                <div
-                    class="nav-dropdown"
-                    id="sales-navigation"
+                <button
+                    type="button"
+                    class="nav-link"
+                    data-page="customer-profile"
+                    data-nav="customer-profile"
                 >
 
-                    <button
-                        type="button"
-                        class="nav-dropdown-btn"
-                        id="sales-nav-button"
-                        aria-haspopup="true"
-                        aria-expanded="false"
-                    >
+                    <i
+                        data-lucide="contact"
+                        aria-hidden="true"
+                    ></i>
 
-                        <i
-                            data-lucide="briefcase-business"
-                            aria-hidden="true"
-                        ></i>
+                    <span>
+                        Customer Profile
+                    </span>
 
-                        <span>
-                            Sales
-                        </span>
+                </button>
 
-                        <i
-                            data-lucide="chevron-down"
-                            aria-hidden="true"
-                        ></i>
-
-                    </button>
-
-
-                    <div
-                        class="nav-dropdown-menu"
-                        id="sales-nav-menu"
-                    >
-
-                        <button
-                            type="button"
-                            class="nav-dropdown-item"
-                            data-page="leads"
-                            data-nav="leads"
-                        >
-
-                            <i
-                                data-lucide="user-round"
-                                aria-hidden="true"
-                            ></i>
-
-                            <span>
-                                My Leads
-                            </span>
-
-                        </button>
-
-
-                        <button
-                            type="button"
-                            class="nav-dropdown-item"
-                            data-page="customer-profile"
-                            data-nav="customer-profile"
-                        >
-
-                            <i
-                                data-lucide="contact"
-                                aria-hidden="true"
-                            ></i>
-
-                            <span>
-                                Customer Profile
-                            </span>
-
-                        </button>
-
-                    </div>
-
-                </div>
-
-
-
-                <!-- MANAGE SALES -->
 
                 <button
                     type="button"
-                    id="manage-sales-nav"
                     class="nav-link admin-only"
                     data-page="sales"
                     data-nav="sales"
@@ -503,585 +651,759 @@
 
 
             <!-- =================================================
-                 USER AREA
+                 MAIN CONTENT
             ================================================== -->
 
-            <div
-                id="topbar-user"
-                class="topbar-user"
+            <main
+                id="main-content"
+                class="main-content"
             >
 
-                <div
-                    class="user-avatar"
-                    id="user-avatar"
-                >
 
-                    <span id="user-avatar-text">
-                        F
-                    </span>
+                <!-- =================================================
+                     PAGE HEADER
+                ================================================== -->
 
-                </div>
+                <div class="page-header">
 
+                    <div>
 
-                <div class="user-details">
+                        <div class="page-breadcrumb">
 
-                    <strong id="header-user-name">
-                        User
-                    </strong>
+                            <span>
+                                FSI CRM
+                            </span>
 
-                    <span id="header-user-role">
-                        Sales
-                    </span>
+                            <i
+                                data-lucide="chevron-right"
+                                aria-hidden="true"
+                            ></i>
 
-                </div>
+                            <span id="current-page-title">
+                                Dashboard
+                            </span>
 
-
-                <button
-                    id="logout-button"
-                    class="logout-button"
-                    type="button"
-                    title="Logout"
-                    aria-label="Logout"
-                >
-
-                    <i
-                        data-lucide="log-out"
-                        aria-hidden="true"
-                    ></i>
-
-                </button>
-
-            </div>
-
-        </header>
+                        </div>
 
 
-
-        <!-- =================================================
-             MOBILE NAVIGATION
-        ================================================== -->
-
-        <nav
-            id="mobileNav"
-            class="mobile-nav"
-            aria-label="Mobile navigation"
-        >
-
-            <button
-                type="button"
-                class="nav-link"
-                data-page="dashboard"
-                data-nav="dashboard"
-            >
-
-                <i
-                    data-lucide="layout-dashboard"
-                    aria-hidden="true"
-                ></i>
-
-                <span>
-                    Dashboard
-                </span>
-
-            </button>
-
-
-            <button
-                type="button"
-                class="nav-link"
-                data-page="leads"
-                data-nav="leads"
-            >
-
-                <i
-                    data-lucide="users"
-                    aria-hidden="true"
-                ></i>
-
-                <span>
-                    Leads
-                </span>
-
-            </button>
-
-
-            <button
-                type="button"
-                class="nav-link"
-                data-page="customer-profile"
-                data-nav="customer-profile"
-            >
-
-                <i
-                    data-lucide="contact"
-                    aria-hidden="true"
-                ></i>
-
-                <span>
-                    Customer Profile
-                </span>
-
-            </button>
-
-
-            <button
-                type="button"
-                class="nav-link admin-only"
-                data-page="sales"
-                data-nav="sales"
-            >
-
-                <i
-                    data-lucide="user-cog"
-                    aria-hidden="true"
-                ></i>
-
-                <span>
-                    Manage Sales
-                </span>
-
-            </button>
-
-        </nav>
-
-
-
-        <!-- =================================================
-             MAIN CONTENT
-        ================================================== -->
-
-        <main
-            id="main-content"
-            class="main-content"
-        >
-
-
-            <!-- =================================================
-                 PAGE HEADER
-            ================================================== -->
-
-            <div class="page-header">
-
-                <div>
-
-                    <div class="page-breadcrumb">
-
-                        <span>
-                            FSI CRM
-                        </span>
-
-                        <i
-                            data-lucide="chevron-right"
-                            aria-hidden="true"
-                        ></i>
-
-                        <span id="current-page-title">
+                        <h1 id="page-title">
                             Dashboard
-                        </span>
+                        </h1>
+
+
+                        <p id="page-description">
+                            Overview of your sales activity and customer pipeline.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- =================================================
+                     DASHBOARD
+                ================================================== -->
+
+                <section
+                    id="view-dashboard"
+                    class="crm-page active"
+                    data-page-view="dashboard"
+                >
+
+                    <div
+                        id="dashboardError"
+                        role="alert"
+                    ></div>
+
+
+                    <div class="stats-grid">
+
+                        <article class="stat-card">
+
+                            <div class="stat-icon bg-blue">
+
+                                <i
+                                    data-lucide="users"
+                                    aria-hidden="true"
+                                ></i>
+
+                            </div>
+
+                            <div class="stat-details">
+
+                                <span>
+                                    Total Leads
+                                </span>
+
+                                <strong id="statTotal">
+                                    0
+                                </strong>
+
+                                <small>
+                                    All customers
+                                </small>
+
+                            </div>
+
+                        </article>
+
+
+                        <article class="stat-card">
+
+                            <div class="stat-icon bg-cyan">
+
+                                <i
+                                    data-lucide="sparkles"
+                                    aria-hidden="true"
+                                ></i>
+
+                            </div>
+
+                            <div class="stat-details">
+
+                                <span>
+                                    New
+                                </span>
+
+                                <strong id="statNew">
+                                    0
+                                </strong>
+
+                                <small>
+                                    New leads
+                                </small>
+
+                            </div>
+
+                        </article>
+
+
+                        <article class="stat-card">
+
+                            <div class="stat-icon bg-green">
+
+                                <i
+                                    data-lucide="thumbs-up"
+                                    aria-hidden="true"
+                                ></i>
+
+                            </div>
+
+                            <div class="stat-details">
+
+                                <span>
+                                    Interested
+                                </span>
+
+                                <strong id="statInterested">
+                                    0
+                                </strong>
+
+                                <small>
+                                    Interested customers
+                                </small>
+
+                            </div>
+
+                        </article>
+
+
+                        <article class="stat-card">
+
+                            <div class="stat-icon bg-orange">
+
+                                <i
+                                    data-lucide="phone-call"
+                                    aria-hidden="true"
+                                ></i>
+
+                            </div>
+
+                            <div class="stat-details">
+
+                                <span>
+                                    Follow Up
+                                </span>
+
+                                <strong id="statFollowUp">
+                                    0
+                                </strong>
+
+                                <small>
+                                    Need follow-up
+                                </small>
+
+                            </div>
+
+                        </article>
+
+
+                        <article class="stat-card">
+
+                            <div class="stat-icon bg-purple">
+
+                                <i
+                                    data-lucide="calendar-check"
+                                    aria-hidden="true"
+                                ></i>
+
+                            </div>
+
+                            <div class="stat-details">
+
+                                <span>
+                                    Appointment
+                                </span>
+
+                                <strong id="statAppointment">
+                                    0
+                                </strong>
+
+                                <small>
+                                    Appointments
+                                </small>
+
+                            </div>
+
+                        </article>
+
+
+                        <article class="stat-card">
+
+                            <div class="stat-icon bg-cyan">
+
+                                <i
+                                    data-lucide="map-pin"
+                                    aria-hidden="true"
+                                ></i>
+
+                            </div>
+
+                            <div class="stat-details">
+
+                                <span>
+                                    Site Survey
+                                </span>
+
+                                <strong id="statSiteSurvey">
+                                    0
+                                </strong>
+
+                                <small>
+                                    Survey required
+                                </small>
+
+                            </div>
+
+                        </article>
+
+
+                        <article class="stat-card">
+
+                            <div class="stat-icon bg-yellow">
+
+                                <i
+                                    data-lucide="file-text"
+                                    aria-hidden="true"
+                                ></i>
+
+                            </div>
+
+                            <div class="stat-details">
+
+                                <span>
+                                    Quotation
+                                </span>
+
+                                <strong id="statQuotation">
+                                    0
+                                </strong>
+
+                                <small>
+                                    Quotations
+                                </small>
+
+                            </div>
+
+                        </article>
+
+
+                        <article class="stat-card">
+
+                            <div class="stat-icon bg-indigo">
+
+                                <i
+                                    data-lucide="file-check-2"
+                                    aria-hidden="true"
+                                ></i>
+
+                            </div>
+
+                            <div class="stat-details">
+
+                                <span>
+                                    SPK
+                                </span>
+
+                                <strong id="statSPK">
+                                    0
+                                </strong>
+
+                                <small>
+                                    SPK customers
+                                </small>
+
+                            </div>
+
+                        </article>
+
+
+                        <article class="stat-card">
+
+                            <div class="stat-icon bg-green">
+
+                                <i
+                                    data-lucide="badge-check"
+                                    aria-hidden="true"
+                                ></i>
+
+                            </div>
+
+                            <div class="stat-details">
+
+                                <span>
+                                    Closing
+                                </span>
+
+                                <strong id="statClosing">
+                                    0
+                                </strong>
+
+                                <small>
+                                    Closed customers
+                                </small>
+
+                            </div>
+
+                        </article>
+
+
+                        <article class="stat-card">
+
+                            <div class="stat-icon bg-red">
+
+                                <i
+                                    data-lucide="user-round-x"
+                                    aria-hidden="true"
+                                ></i>
+
+                            </div>
+
+                            <div class="stat-details">
+
+                                <span>
+                                    Not Interested
+                                </span>
+
+                                <strong id="statNotInterested">
+                                    0
+                                </strong>
+
+                                <small>
+                                    Not interested
+                                </small>
+
+                            </div>
+
+                        </article>
 
                     </div>
 
 
-                    <h1 id="page-title">
-                        Dashboard
-                    </h1>
 
+                    <div class="dashboard-grid">
 
-                    <p id="page-description">
-                        Overview of your sales activity and customer pipeline.
-                    </p>
+                        <section class="dashboard-card">
 
-                </div>
+                            <div class="card-header">
 
-            </div>
+                                <div>
 
+                                    <h2>
+                                        Sales Pipeline
+                                    </h2>
 
+                                    <p>
+                                        Customer progress by stage
+                                    </p>
 
-            <!-- =================================================
-                 DASHBOARD
-            ================================================== -->
-
-            <section
-                id="view-dashboard"
-                class="crm-page active"
-                data-page-view="dashboard"
-            >
-
-                <div
-                    id="dashboardError"
-                    role="alert"
-                ></div>
-
-
-                <div class="stats-grid">
-
-                    <article class="stat-card">
-
-                        <div class="stat-icon bg-blue">
-
-                            <i
-                                data-lucide="users"
-                                aria-hidden="true"
-                            ></i>
-
-                        </div>
-
-                        <div class="stat-details">
-
-                            <span>
-                                Total Leads
-                            </span>
-
-                            <strong id="statTotal">
-                                0
-                            </strong>
-
-                            <small>
-                                All customers
-                            </small>
-
-                        </div>
-
-                    </article>
-
-
-                    <article class="stat-card">
-
-                        <div class="stat-icon bg-cyan">
-
-                            <i
-                                data-lucide="sparkles"
-                                aria-hidden="true"
-                            ></i>
-
-                        </div>
-
-                        <div class="stat-details">
-
-                            <span>
-                                New
-                            </span>
-
-                            <strong id="statNew">
-                                0
-                            </strong>
-
-                            <small>
-                                New leads
-                            </small>
-
-                        </div>
-
-                    </article>
-
-
-                    <article class="stat-card">
-
-                        <div class="stat-icon bg-green">
-
-                            <i
-                                data-lucide="thumbs-up"
-                                aria-hidden="true"
-                            ></i>
-
-                        </div>
-
-                        <div class="stat-details">
-
-                            <span>
-                                Interested
-                            </span>
-
-                            <strong id="statInterested">
-                                0
-                            </strong>
-
-                            <small>
-                                Interested customers
-                            </small>
-
-                        </div>
-
-                    </article>
-
-
-                    <article class="stat-card">
-
-                        <div class="stat-icon bg-orange">
-
-                            <i
-                                data-lucide="phone-call"
-                                aria-hidden="true"
-                            ></i>
-
-                        </div>
-
-                        <div class="stat-details">
-
-                            <span>
-                                Follow Up
-                            </span>
-
-                            <strong id="statFollowUp">
-                                0
-                            </strong>
-
-                            <small>
-                                Need follow-up
-                            </small>
-
-                        </div>
-
-                    </article>
-
-
-                    <article class="stat-card">
-
-                        <div class="stat-icon bg-purple">
-
-                            <i
-                                data-lucide="calendar-check"
-                                aria-hidden="true"
-                            ></i>
-
-                        </div>
-
-                        <div class="stat-details">
-
-                            <span>
-                                Appointment
-                            </span>
-
-                            <strong id="statAppointment">
-                                0
-                            </strong>
-
-                            <small>
-                                Appointments
-                            </small>
-
-                        </div>
-
-                    </article>
-
-
-                    <article class="stat-card">
-
-                        <div class="stat-icon bg-cyan">
-
-                            <i
-                                data-lucide="map-pin"
-                                aria-hidden="true"
-                            ></i>
-
-                        </div>
-
-                        <div class="stat-details">
-
-                            <span>
-                                Site Survey
-                            </span>
-
-                            <strong id="statSiteSurvey">
-                                0
-                            </strong>
-
-                            <small>
-                                Survey required
-                            </small>
-
-                        </div>
-
-                    </article>
-
-
-                    <article class="stat-card">
-
-                        <div class="stat-icon bg-yellow">
-
-                            <i
-                                data-lucide="file-text"
-                                aria-hidden="true"
-                            ></i>
-
-                        </div>
-
-                        <div class="stat-details">
-
-                            <span>
-                                Quotation
-                            </span>
-
-                            <strong id="statQuotation">
-                                0
-                            </strong>
-
-                            <small>
-                                Quotations
-                            </small>
-
-                        </div>
-
-                    </article>
-
-
-                    <article class="stat-card">
-
-                        <div class="stat-icon bg-indigo">
-
-                            <i
-                                data-lucide="file-check-2"
-                                aria-hidden="true"
-                            ></i>
-
-                        </div>
-
-                        <div class="stat-details">
-
-                            <span>
-                                SPK
-                            </span>
-
-                            <strong id="statSPK">
-                                0
-                            </strong>
-
-                            <small>
-                                SPK customers
-                            </small>
-
-                        </div>
-
-                    </article>
-
-
-                    <article class="stat-card">
-
-                        <div class="stat-icon bg-green">
-
-                            <i
-                                data-lucide="badge-check"
-                                aria-hidden="true"
-                            ></i>
-
-                        </div>
-
-                        <div class="stat-details">
-
-                            <span>
-                                Closing
-                            </span>
-
-                            <strong id="statClosing">
-                                0
-                            </strong>
-
-                            <small>
-                                Closed customers
-                            </small>
-
-                        </div>
-
-                    </article>
-
-
-                    <article class="stat-card">
-
-                        <div class="stat-icon bg-red">
-
-                            <i
-                                data-lucide="user-round-x"
-                                aria-hidden="true"
-                            ></i>
-
-                        </div>
-
-                        <div class="stat-details">
-
-                            <span>
-                                Not Interested
-                            </span>
-
-                            <strong id="statNotInterested">
-                                0
-                            </strong>
-
-                            <small>
-                                Not interested
-                            </small>
-
-                        </div>
-
-                    </article>
-
-                </div>
-
-
-
-                <div class="dashboard-grid">
-
-                    <section class="dashboard-card">
-
-                        <div class="card-header">
-
-                            <div>
-
-                                <h2>
-                                    Sales Pipeline
-                                </h2>
-
-                                <p>
-                                    Customer progress by stage
-                                </p>
+                                </div>
 
                             </div>
 
+
+                            <div
+                                id="pipeline-summary"
+                                class="pipeline-summary"
+                            >
+
+                                <div class="pipeline-loading">
+                                    Loading pipeline...
+                                </div>
+
+                            </div>
+
+                        </section>
+
+
+                        <section class="dashboard-card">
+
+                            <div class="card-header">
+
+                                <div>
+
+                                    <h2>
+                                        Recent Leads
+                                    </h2>
+
+                                    <p>
+                                        Latest customer activity
+                                    </p>
+
+                                </div>
+
+
+                                <button
+                                    type="button"
+                                    class="btn-outline"
+                                    data-page="leads"
+                                >
+
+                                    <span>
+                                        View All
+                                    </span>
+
+                                    <i
+                                        data-lucide="arrow-right"
+                                        aria-hidden="true"
+                                    ></i>
+
+                                </button>
+
+                            </div>
+
+
+                            <div
+                                id="recent-leads"
+                                class="recent-leads"
+                            >
+
+                                <div class="empty-state">
+
+                                    <i
+                                        data-lucide="users"
+                                        aria-hidden="true"
+                                    ></i>
+
+                                    <span>
+                                        Loading recent leads...
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                        </section>
+
+                    </div>
+
+                </section>
+
+
+
+                <!-- =================================================
+                     LEADS / CUSTOMER PAGE
+                ================================================== -->
+
+                <section
+                    id="view-leads"
+                    class="crm-page"
+                    data-page-view="leads"
+                >
+
+                    <div class="section-header">
+
+                        <div>
+
+                            <h2>
+                                Customer Leads
+                            </h2>
+
+                            <p>
+                                Manage customer leads and sales pipeline.
+                            </p>
+
                         </div>
 
 
-                        <div
-                            id="pipeline-summary"
-                            class="pipeline-summary"
+                        <button
+                            id="btn-add-lead"
+                            type="button"
+                            class="btn-primary primary-btn"
+                            data-action="add-customer"
                         >
 
-                            <div class="pipeline-loading">
-                                Loading pipeline...
-                            </div>
+                            <i
+                                data-lucide="plus"
+                                aria-hidden="true"
+                            ></i>
+
+                            <span>
+                                Add Customer
+                            </span>
+
+                        </button>
+
+                    </div>
+
+
+
+                    <!-- =================================================
+                         FILTERS
+                         Location filter removed.
+                         Status + Business remain.
+                    ================================================== -->
+
+                    <div class="filter-panel">
+
+                        <div class="search-box">
+
+                            <i
+                                data-lucide="search"
+                                aria-hidden="true"
+                            ></i>
+
+                            <input
+                                id="lead-search"
+                                type="search"
+                                placeholder="Search customer, phone, business..."
+                                autocomplete="off"
+                            >
 
                         </div>
 
-                    </section>
+
+                        <!-- STATUS DROPDOWN -->
+
+                        <select
+                            id="filter-status"
+                            aria-label="Filter status"
+                        >
+
+                            <option value="">
+                                All Status
+                            </option>
+
+                            <option value="New">
+                                New
+                            </option>
+
+                            <option value="Flyer Sent">
+                                Flyer Sent
+                            </option>
+
+                            <option value="Interested">
+                                Interested
+                            </option>
+
+                            <option value="Follow Up">
+                                Follow Up
+                            </option>
+
+                            <option value="Appointment">
+                                Appointment
+                            </option>
+
+                            <option value="Site Survey">
+                                Site Survey
+                            </option>
+
+                            <option value="Quotation">
+                                Quotation
+                            </option>
+
+                            <option value="Closing">
+                                Closing
+                            </option>
+
+                            <option value="Not Interested">
+                                Not Interested
+                            </option>
+
+                        </select>
 
 
-                    <section class="dashboard-card">
+                        <!-- BUSINESS DROPDOWN -->
 
-                        <div class="card-header">
+                        <select
+                            id="filter-business"
+                            aria-label="Filter business"
+                        >
 
-                            <div>
+                            <option value="">
+                                All Business
+                            </option>
 
-                                <h2>
-                                    Recent Leads
-                                </h2>
+                        </select>
 
-                                <p>
-                                    Latest customer activity
-                                </p>
 
-                            </div>
+                        <!-- SALES FILTER - ADMIN ONLY -->
+
+                        <select
+                            id="filter-sales"
+                            class="admin-only"
+                            aria-label="Filter sales"
+                        >
+
+                            <option value="">
+                                All Sales
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+
+                    <!-- =================================================
+                         LEADS TABLE
+                    ================================================== -->
+
+                    <div
+                        class="table-panel table-container"
+                    >
+
+                        <table
+                            id="leads-table"
+                            class="crm-table data-table"
+                        >
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>
+                                        Customer
+                                    </th>
+
+                                    <th>
+                                        WhatsApp
+                                    </th>
+
+                                    <th>
+                                        Email
+                                    </th>
+
+                                    <th>
+                                        Business
+                                    </th>
+
+                                    <th>
+                                        Sales
+                                    </th>
+
+                                    <th>
+                                        Status
+                                    </th>
+
+                                    <th>
+                                        Last Update
+                                    </th>
+
+                                    <th>
+                                        Progress
+                                    </th>
+
+                                    <th>
+                                        Note
+                                    </th>
+
+                                    <th>
+                                        Actions
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody id="leads-table-body">
+
+                                <tr>
+
+                                    <td
+                                        colspan="10"
+                                        class="table-loading"
+                                    >
+                                        Loading leads...
+                                    </td>
+
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+
+
+                    <!-- =================================================
+                         PAGINATION
+                    ================================================== -->
+
+                    <div class="pagination-wrapper">
+
+                        <div
+                            id="leads-pagination-info"
+                            class="pagination-info"
+                        >
+                            Showing 0 of 0
+                        </div>
+
+
+                        <div class="pagination-controls">
+
+                            <button
+                                id="btn-prev-page"
+                                type="button"
+                                aria-label="Previous page"
+                                disabled
+                            >
+
+                                <i
+                                    data-lucide="chevron-left"
+                                    aria-hidden="true"
+                                ></i>
+
+                            </button>
+
+
+                            <span id="leads-page-number">
+                                1
+                            </span>
 
 
                             <button
+                                id="btn-next-page"
                                 type="button"
-                                class="btn-outline"
-                                data-page="leads"
+                                aria-label="Next page"
+                                disabled
                             >
 
-                                <span>
-                                    View All
-                                </span>
-
                                 <i
-                                    data-lucide="arrow-right"
+                                    data-lucide="chevron-right"
                                     aria-hidden="true"
                                 ></i>
 
@@ -1089,1290 +1411,971 @@
 
                         </div>
 
+                    </div>
 
-                        <div
-                            id="recent-leads"
-                            class="recent-leads"
-                        >
+                </section>
 
-                            <div class="empty-state">
 
-                                <i
-                                    data-lucide="users"
-                                    aria-hidden="true"
-                                ></i>
 
-                                <span>
-                                    Loading recent leads...
-                                </span>
+                <!-- =================================================
+                     CUSTOMER PROFILE PAGE
+                ================================================== -->
 
-                            </div>
+                <section
+                    id="view-customer-profile"
+                    class="crm-page"
+                    data-page-view="customer-profile"
+                >
+
+                    <div
+                        id="customer-profile-container"
+                        class="customer-profile-container"
+                    >
+
+                        <div class="empty-state">
+
+                            <i
+                                data-lucide="contact"
+                                aria-hidden="true"
+                            ></i>
+
+                            <span>
+                                Select a customer to view the profile.
+                            </span>
 
                         </div>
 
-                    </section>
-
-                </div>
-
-            </section>
-
-
-
-            <!-- =================================================
-                 LEADS / CUSTOMER PAGE
-            ================================================== -->
-
-            <section
-                id="view-leads"
-                class="crm-page"
-                data-page-view="leads"
-            >
-
-                <div class="section-header">
-
-                    <div>
-
-                        <h2>
-                            Customer Leads
-                        </h2>
-
-                        <p>
-                            Manage customer leads and sales pipeline.
-                        </p>
-
                     </div>
 
-
-                    <button
-                        id="btn-add-lead"
-                        type="button"
-                        class="btn-primary primary-btn"
-                        data-action="add-customer"
-                    >
-
-                        <i
-                            data-lucide="plus"
-                            aria-hidden="true"
-                        ></i>
-
-                        <span>
-                            Add Customer
-                        </span>
-
-                    </button>
-
-                </div>
+                </section>
 
 
 
                 <!-- =================================================
-                     FILTERS
-                     Location filter removed.
-                     Status + Business remain.
+                     MANAGE SALES PAGE
                 ================================================== -->
 
-                <div class="filter-panel">
+                <section
+                    id="view-sales"
+                    class="crm-page"
+                    data-page-view="sales"
+                >
 
-                    <div class="search-box">
+                    <div class="section-header">
 
-                        <i
-                            data-lucide="search"
-                            aria-hidden="true"
-                        ></i>
+                        <div>
+
+                            <h2>
+                                Manage Sales
+                            </h2>
+
+                            <p>
+                                Manage FSI sales accounts and access.
+                            </p>
+
+                        </div>
+
+
+                        <button
+                            id="btn-add-sales"
+                            type="button"
+                            class="btn-primary primary-btn"
+                        >
+
+                            <i
+                                data-lucide="user-plus"
+                                aria-hidden="true"
+                            ></i>
+
+                            <span>
+                                Add Sales
+                            </span>
+
+                        </button>
+
+                    </div>
+
+
+
+                    <div
+                        class="table-panel table-container"
+                    >
+
+                        <table
+                            id="sales-table"
+                            class="crm-table data-table"
+                        >
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>
+                                        Sales
+                                    </th>
+
+                                    <th>
+                                        Username
+                                    </th>
+
+                                    <th>
+                                        Phone
+                                    </th>
+
+                                    <th>
+                                        Role
+                                    </th>
+
+                                    <th>
+                                        Status
+                                    </th>
+
+                                    <th>
+                                        Created
+                                    </th>
+
+                                    <th>
+                                        Action
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody id="sales-table-body">
+
+                                <tr>
+
+                                    <td
+                                        colspan="7"
+                                        class="table-loading"
+                                    >
+                                        Loading sales...
+                                    </td>
+
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+
+
+                    <div class="pagination-wrapper">
+
+                        <div
+                            id="sales-pagination-info"
+                            class="pagination-info"
+                        >
+                            Showing 0 sales
+                        </div>
+
+
+                        <div class="pagination-controls">
+
+                            <button
+                                id="sales-prev-page"
+                                type="button"
+                                aria-label="Previous page"
+                            >
+
+                                <i
+                                    data-lucide="chevron-left"
+                                    aria-hidden="true"
+                                ></i>
+
+                            </button>
+
+
+                            <span id="sales-page-number">
+                                1
+                            </span>
+
+
+                            <button
+                                id="sales-next-page"
+                                type="button"
+                                aria-label="Next page"
+                            >
+
+                                <i
+                                    data-lucide="chevron-right"
+                                    aria-hidden="true"
+                                ></i>
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+            </main>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         CUSTOMER ADD / EDIT MODAL
+    ====================================================== -->
+
+    <div
+        id="leadModal"
+        class="modal-overlay hidden"
+        aria-hidden="true"
+    >
+
+        <div
+            class="modal-card large-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="lead-modal-title"
+        >
+
+            <div class="modal-header">
+
+                <div>
+
+                    <h3 id="lead-modal-title">
+                        Add Customer
+                    </h3>
+
+                    <p id="lead-modal-description">
+                        Enter customer information and pipeline status.
+                    </p>
+
+                </div>
+
+
+                <button
+                    id="lead-modal-close"
+                    type="button"
+                    class="btn-close"
+                    aria-label="Close"
+                >
+
+                    <i
+                        data-lucide="x"
+                        aria-hidden="true"
+                    ></i>
+
+                </button>
+
+            </div>
+
+
+
+            <form
+                id="lead-form"
+                class="modal-body"
+            >
+
+                <input
+                    type="hidden"
+                    id="leadId"
+                    name="leadId"
+                >
+
+
+                <div class="form-grid">
+
+                    <div class="form-group">
+
+                        <label for="leadCustomerName">
+                            Customer Name *
+                        </label>
 
                         <input
-                            id="lead-search"
-                            type="search"
-                            placeholder="Search customer, phone, business..."
-                            autocomplete="off"
+                            id="leadCustomerName"
+                            name="customer_name"
+                            type="text"
+                            placeholder="Customer name"
+                            required
                         >
 
                     </div>
 
 
-                    <!-- STATUS DROPDOWN -->
+                    <div class="form-group">
 
-                    <select
-                        id="filter-status"
-                        aria-label="Filter status"
-                    >
+                        <label for="leadPhone">
+                            Phone *
+                        </label>
 
-                        <option value="">
-                            All Status
-                        </option>
+                        <input
+                            id="leadPhone"
+                            name="phone"
+                            type="tel"
+                            placeholder="08xxxxxxxxxx"
+                            required
+                        >
 
-                        <option value="New">
-                            New
-                        </option>
+                    </div>
 
-                        <option value="Flyer Sent">
-                            Flyer Sent
-                        </option>
 
-                        <option value="Interested">
-                            Interested
-                        </option>
+                    <div class="form-group">
 
-                        <option value="Follow Up">
-                            Follow Up
-                        </option>
+                        <label for="leadBusiness">
+                            Business
+                        </label>
 
-                        <option value="Appointment">
+                        <select
+                            id="leadBusiness"
+                            name="business"
+                        >
+
+                            <option value="">
+                                Select Business
+                            </option>
+
+                            <option value="Residential">
+                                Residential
+                            </option>
+
+                            <option value="Villa">
+                                Villa
+                            </option>
+
+                            <option value="Hotel">
+                                Hotel
+                            </option>
+
+                            <option value="Restaurant">
+                                Restaurant
+                            </option>
+
+                            <option value="Office">
+                                Office
+                            </option>
+
+                            <option value="Factory">
+                                Factory
+                            </option>
+
+                            <option value="Commercial">
+                                Commercial
+                            </option>
+
+                            <option value="Other">
+                                Other
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="leadLocation">
+                            Location
+                        </label>
+
+                        <input
+                            id="leadLocation"
+                            name="location"
+                            type="text"
+                            placeholder="Denpasar, Sanur, Seminyak..."
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="leadStatus">
+                            Status
+                        </label>
+
+                        <select
+                            id="leadStatus"
+                            name="status"
+                        >
+
+                            <option value="New">
+                                New
+                            </option>
+
+                            <option value="Flyer Sent">
+                                Flyer Sent
+                            </option>
+
+                            <option value="Interested">
+                                Interested
+                            </option>
+
+                            <option value="Follow Up">
+                                Follow Up
+                            </option>
+
+                            <option value="Appointment">
+                                Appointment
+                            </option>
+
+                            <option value="Site Survey">
+                                Site Survey
+                            </option>
+
+                            <option value="Quotation">
+                                Quotation
+                            </option>
+
+                            <option value="Closing">
+                                Closing
+                            </option>
+
+                            <option value="Not Interested">
+                                Not Interested
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="leadFollowUp">
+                            Follow Up Date
+                        </label>
+
+                        <input
+                            id="leadFollowUp"
+                            name="follow_up_date"
+                            type="date"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="leadAppointment">
                             Appointment
-                        </option>
+                        </label>
 
-                        <option value="Site Survey">
+                        <input
+                            id="leadAppointment"
+                            name="appointment"
+                            type="date"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="leadSiteSurvey">
                             Site Survey
-                        </option>
+                        </label>
 
-                        <option value="Quotation">
+                        <input
+                            id="leadSiteSurvey"
+                            name="site_survey"
+                            type="date"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="leadQuotation">
                             Quotation
-                        </option>
+                        </label>
 
-                        <option value="Closing">
+                        <input
+                            id="leadQuotation"
+                            name="quotation"
+                            type="date"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="leadSpk">
+                            SPK
+                        </label>
+
+                        <input
+                            id="leadSpk"
+                            name="spk"
+                            type="date"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="leadClosing">
                             Closing
-                        </option>
+                        </label>
 
-                        <option value="Not Interested">
-                            Not Interested
-                        </option>
+                        <input
+                            id="leadClosing"
+                            name="closing"
+                            type="date"
+                        >
 
-                    </select>
+                    </div>
 
-
-                    <!-- BUSINESS DROPDOWN -->
-
-                    <select
-                        id="filter-business"
-                        aria-label="Filter business"
-                    >
-
-                        <option value="">
-                            All Business
-                        </option>
-
-                    </select>
-
-
-                    <!-- SALES FILTER - ADMIN ONLY -->
-
-                    <select
-                        id="filter-sales"
-                        class="admin-only"
-                        aria-label="Filter sales"
-                    >
-
-                        <option value="">
-                            All Sales
-                        </option>
-
-                    </select>
-
-                </div>
-
-
-
-                <!-- =================================================
-                     LEADS TABLE
-                ================================================== -->
-
-                <div
-                    class="table-panel table-container"
-                >
-
-                    <table
-                        id="leads-table"
-                        class="crm-table data-table"
-                    >
-
-                        <thead>
-
-                            <tr>
-
-                                <th>
-                                    Customer
-                                </th>
-
-                                <th>
-                                    WhatsApp
-                                </th>
-
-                                <th>
-                                    Email
-                                </th>
-
-                                <th>
-                                    Business
-                                </th>
-
-                                <th>
-                                    Sales
-                                </th>
-
-                                <th>
-                                    Status
-                                </th>
-
-                                <th>
-                                    Last Update
-                                </th>
-
-                                <th>
-                                    Progress
-                                </th>
-
-                                <th>
-                                    Note
-                                </th>
-
-                                <th>
-                                    Actions
-                                </th>
-
-                            </tr>
-
-                        </thead>
-
-
-                        <tbody id="leads-table-body">
-
-                            <tr>
-
-                                <td
-                                    colspan="10"
-                                    class="table-loading"
-                                >
-                                    Loading leads...
-                                </td>
-
-                            </tr>
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-
-
-                <!-- =================================================
-                     PAGINATION
-                ================================================== -->
-
-                <div class="pagination-wrapper">
 
                     <div
-                        id="leads-pagination-info"
-                        class="pagination-info"
+                        class="form-group admin-only"
+                        id="lead-sales-group"
                     >
-                        Showing 0 of 0
+
+                        <label for="leadSales">
+                            Assign Sales
+                        </label>
+
+                        <select
+                            id="leadSales"
+                            name="sales_id"
+                        >
+
+                            <option value="">
+                                Select Sales
+                            </option>
+
+                        </select>
+
                     </div>
 
 
-                    <div class="pagination-controls">
+                    <div class="form-group full-width">
 
-                        <button
-                            id="btn-prev-page"
-                            type="button"
-                            aria-label="Previous page"
-                            disabled
-                        >
+                        <label for="leadNotes">
+                            Notes
+                        </label>
 
-                            <i
-                                data-lucide="chevron-left"
-                                aria-hidden="true"
-                            ></i>
-
-                        </button>
-
-
-                        <span id="leads-page-number">
-                            1
-                        </span>
-
-
-                        <button
-                            id="btn-next-page"
-                            type="button"
-                            aria-label="Next page"
-                            disabled
-                        >
-
-                            <i
-                                data-lucide="chevron-right"
-                                aria-hidden="true"
-                            ></i>
-
-                        </button>
+                        <textarea
+                            id="leadNotes"
+                            name="notes"
+                            placeholder="Customer notes..."
+                        ></textarea>
 
                     </div>
 
                 </div>
 
-            </section>
 
 
+                <div class="modal-footer">
 
-            <!-- =================================================
-                 CUSTOMER PROFILE PAGE
-            ================================================== -->
-
-            <section
-                id="view-customer-profile"
-                class="crm-page"
-                data-page-view="customer-profile"
-            >
-
-                <div
-                    id="customer-profile-container"
-                    class="customer-profile-container"
-                >
-
-                    <div class="empty-state">
-
-                        <i
-                            data-lucide="contact"
-                            aria-hidden="true"
-                        ></i>
-
-                        <span>
-                            Select a customer to view the profile.
-                        </span>
-
-                    </div>
-
-                </div>
-
-            </section>
-
-
-
-            <!-- =================================================
-                 MANAGE SALES PAGE
-            ================================================== -->
-
-            <section
-                id="view-sales"
-                class="crm-page"
-                data-page-view="sales"
-            >
-
-                <div class="section-header">
-
-                    <div>
-
-                        <h2>
-                            Manage Sales
-                        </h2>
-
-                        <p>
-                            Manage FSI sales accounts and access.
-                        </p>
-
-                    </div>
+                    <button
+                        id="lead-modal-cancel"
+                        type="button"
+                        class="btn-secondary secondary-btn"
+                    >
+                        Cancel
+                    </button>
 
 
                     <button
-                        id="btn-add-sales"
-                        type="button"
+                        id="lead-save-button"
+                        type="submit"
                         class="btn-primary primary-btn"
                     >
 
                         <i
-                            data-lucide="user-plus"
+                            data-lucide="save"
                             aria-hidden="true"
                         ></i>
 
-                        <span>
-                            Add Sales
+                        <span id="lead-save-text">
+                            Save Customer
                         </span>
 
                     </button>
 
                 </div>
 
+            </form>
+
+        </div>
+
+    </div>
 
 
-                <div
-                    class="table-panel table-container"
+
+    <!-- =====================================================
+         SALES MODAL
+    ====================================================== -->
+
+    <div
+        id="salesModal"
+        class="modal-overlay hidden"
+        aria-hidden="true"
+    >
+
+        <div
+            class="modal-card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="sales-modal-title"
+        >
+
+            <div class="modal-header">
+
+                <div>
+
+                    <h3 id="sales-modal-title">
+                        Add Sales
+                    </h3>
+
+                    <p>
+                        Create or update a sales account.
+                    </p>
+
+                </div>
+
+
+                <button
+                    id="sales-modal-close"
+                    type="button"
+                    class="btn-close"
+                    aria-label="Close"
                 >
 
-                    <table
-                        id="sales-table"
-                        class="crm-table data-table"
-                    >
+                    <i
+                        data-lucide="x"
+                        aria-hidden="true"
+                    ></i>
 
-                        <thead>
+                </button>
 
-                            <tr>
-
-                                <th>
-                                    Sales
-                                </th>
-
-                                <th>
-                                    Username
-                                </th>
-
-                                <th>
-                                    Phone
-                                </th>
-
-                                <th>
-                                    Role
-                                </th>
-
-                                <th>
-                                    Status
-                                </th>
-
-                                <th>
-                                    Created
-                                </th>
-
-                                <th>
-                                    Action
-                                </th>
-
-                            </tr>
-
-                        </thead>
+            </div>
 
 
-                        <tbody id="sales-table-body">
 
-                            <tr>
+            <form
+                id="sales-form"
+                class="modal-body"
+            >
 
-                                <td
-                                    colspan="7"
-                                    class="table-loading"
-                                >
-                                    Loading sales...
-                                </td>
+                <input
+                    type="hidden"
+                    id="salesId"
+                    name="salesId"
+                >
 
-                            </tr>
 
-                        </tbody>
+                <div class="form-grid">
 
-                    </table>
+                    <div class="form-group full-width">
+
+                        <label for="salesName">
+                            Full Name *
+                        </label>
+
+                        <input
+                            id="salesName"
+                            name="name"
+                            type="text"
+                            placeholder="Sales full name"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="salesUsername">
+                            Username *
+                        </label>
+
+                        <input
+                            id="salesUsername"
+                            name="username"
+                            type="text"
+                            placeholder="username"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="salesEmail">
+                            Email
+                        </label>
+
+                        <input
+                            id="salesEmail"
+                            name="email"
+                            type="email"
+                            placeholder="sales@example.com"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="salesPhone">
+                            Phone
+                        </label>
+
+                        <input
+                            id="salesPhone"
+                            name="phone"
+                            type="tel"
+                            placeholder="08xxxxxxxxxx"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="salesRole">
+                            Role
+                        </label>
+
+                        <select
+                            id="salesRole"
+                            name="role"
+                        >
+
+                            <option value="sales">
+                                Sales
+                            </option>
+
+                            <option value="Admin">
+                                Admin
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="salesStatus">
+                            Status
+                        </label>
+
+                        <select
+                            id="salesStatus"
+                            name="status"
+                        >
+
+                            <option value="active">
+                                Active
+                            </option>
+
+                            <option value="inactive">
+                                Inactive
+                            </option>
+
+                        </select>
+
+                    </div>
 
                 </div>
 
 
 
-                <div class="pagination-wrapper">
+                <div class="modal-footer">
 
-                    <div
-                        id="sales-pagination-info"
-                        class="pagination-info"
+                    <button
+                        id="sales-modal-cancel"
+                        type="button"
+                        class="btn-secondary secondary-btn"
                     >
-                        Showing 0 sales
-                    </div>
+                        Cancel
+                    </button>
 
 
-                    <div class="pagination-controls">
+                    <button
+                        id="sales-save-button"
+                        type="submit"
+                        class="btn-primary primary-btn"
+                    >
 
-                        <button
-                            id="sales-prev-page"
-                            type="button"
-                            aria-label="Previous page"
-                        >
+                        <i
+                            data-lucide="save"
+                            aria-hidden="true"
+                        ></i>
 
-                            <i
-                                data-lucide="chevron-left"
-                                aria-hidden="true"
-                            ></i>
-
-                        </button>
-
-
-                        <span id="sales-page-number">
-                            1
+                        <span>
+                            Save Sales
                         </span>
 
-
-                        <button
-                            id="sales-next-page"
-                            type="button"
-                            aria-label="Next page"
-                        >
-
-                            <i
-                                data-lucide="chevron-right"
-                                aria-hidden="true"
-                            ></i>
-
-                        </button>
-
-                    </div>
+                    </button>
 
                 </div>
 
-            </section>
-
-        </main>
-
-    </div>
-
-</div>
-
-
-
-<!-- =====================================================
-     CUSTOMER ADD / EDIT MODAL
-====================================================== -->
-
-<div
-    id="leadModal"
-    class="modal-overlay hidden"
-    aria-hidden="true"
->
-
-    <div
-        class="modal-card large-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="lead-modal-title"
-    >
-
-        <div class="modal-header">
-
-            <div>
-
-                <h3 id="lead-modal-title">
-                    Add Customer
-                </h3>
-
-                <p id="lead-modal-description">
-                    Enter customer information and pipeline status.
-                </p>
-
-            </div>
-
-
-            <button
-                id="lead-modal-close"
-                type="button"
-                class="btn-close"
-                aria-label="Close"
-            >
-
-                <i
-                    data-lucide="x"
-                    aria-hidden="true"
-                ></i>
-
-            </button>
+            </form>
 
         </div>
 
-
-
-        <form
-            id="lead-form"
-            class="modal-body"
-        >
-
-            <input
-                type="hidden"
-                id="leadId"
-                name="leadId"
-            >
-
-
-            <div class="form-grid">
-
-                <div class="form-group">
-
-                    <label for="leadCustomerName">
-                        Customer Name *
-                    </label>
-
-                    <input
-                        id="leadCustomerName"
-                        name="customer_name"
-                        type="text"
-                        placeholder="Customer name"
-                        required
-                    >
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="leadPhone">
-                        Phone *
-                    </label>
-
-                    <input
-                        id="leadPhone"
-                        name="phone"
-                        type="tel"
-                        placeholder="08xxxxxxxxxx"
-                        required
-                    >
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="leadBusiness">
-                        Business
-                    </label>
-
-                    <select
-                        id="leadBusiness"
-                        name="business"
-                    >
-
-                        <option value="">
-                            Select Business
-                        </option>
-
-                        <option value="Residential">
-                            Residential
-                        </option>
-
-                        <option value="Villa">
-                            Villa
-                        </option>
-
-                        <option value="Hotel">
-                            Hotel
-                        </option>
-
-                        <option value="Restaurant">
-                            Restaurant
-                        </option>
-
-                        <option value="Office">
-                            Office
-                        </option>
-
-                        <option value="Factory">
-                            Factory
-                        </option>
-
-                        <option value="Commercial">
-                            Commercial
-                        </option>
-
-                        <option value="Other">
-                            Other
-                        </option>
-
-                    </select>
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="leadLocation">
-                        Location
-                    </label>
-
-                    <input
-                        id="leadLocation"
-                        name="location"
-                        type="text"
-                        placeholder="Denpasar, Sanur, Seminyak..."
-                    >
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="leadStatus">
-                        Status
-                    </label>
-
-                    <select
-                        id="leadStatus"
-                        name="status"
-                    >
-
-                        <option value="New">
-                            New
-                        </option>
-
-                        <option value="Flyer Sent">
-                            Flyer Sent
-                        </option>
-
-                        <option value="Interested">
-                            Interested
-                        </option>
-
-                        <option value="Follow Up">
-                            Follow Up
-                        </option>
-
-                        <option value="Appointment">
-                            Appointment
-                        </option>
-
-                        <option value="Site Survey">
-                            Site Survey
-                        </option>
-
-                        <option value="Quotation">
-                            Quotation
-                        </option>
-
-                        <option value="Closing">
-                            Closing
-                        </option>
-
-                        <option value="Not Interested">
-                            Not Interested
-                        </option>
-
-                    </select>
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="leadFollowUp">
-                        Follow Up Date
-                    </label>
-
-                    <input
-                        id="leadFollowUp"
-                        name="follow_up_date"
-                        type="date"
-                    >
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="leadAppointment">
-                        Appointment
-                    </label>
-
-                    <input
-                        id="leadAppointment"
-                        name="appointment"
-                        type="date"
-                    >
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="leadSiteSurvey">
-                        Site Survey
-                    </label>
-
-                    <input
-                        id="leadSiteSurvey"
-                        name="site_survey"
-                        type="date"
-                    >
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="leadQuotation">
-                        Quotation
-                    </label>
-
-                    <input
-                        id="leadQuotation"
-                        name="quotation"
-                        type="date"
-                    >
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="leadSpk">
-                        SPK
-                    </label>
-
-                    <input
-                        id="leadSpk"
-                        name="spk"
-                        type="date"
-                    >
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="leadClosing">
-                        Closing
-                    </label>
-
-                    <input
-                        id="leadClosing"
-                        name="closing"
-                        type="date"
-                    >
-
-                </div>
-
-
-                <div
-                    class="form-group admin-only"
-                    id="lead-sales-group"
-                >
-
-                    <label for="leadSales">
-                        Assign Sales
-                    </label>
-
-                    <select
-                        id="leadSales"
-                        name="sales_id"
-                    >
-
-                        <option value="">
-                            Select Sales
-                        </option>
-
-                    </select>
-
-                </div>
-
-
-                <div class="form-group full-width">
-
-                    <label for="leadNotes">
-                        Notes
-                    </label>
-
-                    <textarea
-                        id="leadNotes"
-                        name="notes"
-                        placeholder="Customer notes..."
-                    ></textarea>
-
-                </div>
-
-            </div>
-
-
-
-            <div class="modal-footer">
-
-                <button
-                    id="lead-modal-cancel"
-                    type="button"
-                    class="btn-secondary secondary-btn"
-                >
-                    Cancel
-                </button>
-
-
-                <button
-                    id="lead-save-button"
-                    type="submit"
-                    class="btn-primary primary-btn"
-                >
-
-                    <i
-                        data-lucide="save"
-                        aria-hidden="true"
-                    ></i>
-
-                    <span id="lead-save-text">
-                        Save Customer
-                    </span>
-
-                </button>
-
-            </div>
-
-        </form>
-
     </div>
 
-</div>
 
 
+    <!-- =====================================================
+         SUPABASE
+    ====================================================== -->
 
-<!-- =====================================================
-     SALES MODAL
-====================================================== -->
+    <script
+        src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+    ></script>
 
-<div
-    id="salesModal"
-    class="modal-overlay hidden"
-    aria-hidden="true"
->
 
-    <div
-        class="modal-card"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="sales-modal-title"
-    >
 
-        <div class="modal-header">
+    <!-- =====================================================
+         LUCIDE
+    ====================================================== -->
 
-            <div>
+    <script
+        src="https://unpkg.com/lucide@latest"
+    ></script>
 
-                <h3 id="sales-modal-title">
-                    Add Sales
-                </h3>
 
-                <p>
-                    Create or update a sales account.
-                </p>
 
-            </div>
+    <!-- =====================================================
+         CRM JAVASCRIPT
 
+         IMPORTANT:
+         Existing JavaScript order is preserved.
+    ====================================================== -->
 
-            <button
-                id="sales-modal-close"
-                type="button"
-                class="btn-close"
-                aria-label="Close"
-            >
+    <script src="js/config.js"></script>
 
-                <i
-                    data-lucide="x"
-                    aria-hidden="true"
-                ></i>
+    <script src="js/helpers.js"></script>
 
-            </button>
+    <script src="js/navigation.js"></script>
 
-        </div>
+    <script src="js/dashboard.js"></script>
 
+    <script src="js/customer-form.js"></script>
 
+    <script src="js/leads.js"></script>
 
-        <form
-            id="sales-form"
-            class="modal-body"
-        >
+    <script src="js/sales.js"></script>
 
-            <input
-                type="hidden"
-                id="salesId"
-                name="salesId"
-            >
+    <script src="js/shelter.js"></script>
 
+    <script src="js/auth.js"></script>
 
-            <div class="form-grid">
 
-                <div class="form-group full-width">
 
-                    <label for="salesName">
-                        Full Name *
-                    </label>
+    <!-- =====================================================
+         INITIAL UI
+    ====================================================== -->
 
-                    <input
-                        id="salesName"
-                        name="name"
-                        type="text"
-                        placeholder="Sales full name"
-                        required
-                    >
+    <script>
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
 
-                </div>
+                try {
 
+                    const loginPage =
+                        document.getElementById("login-page");
 
-                <div class="form-group">
+                    const appShell =
+                        document.getElementById("app-shell");
 
-                    <label for="salesUsername">
-                        Username *
-                    </label>
+                    const pages =
+                        document.querySelectorAll(".crm-page");
 
-                    <input
-                        id="salesUsername"
-                        name="username"
-                        type="text"
-                        placeholder="username"
-                        required
-                    >
 
-                </div>
+                    /*
+                     * Initial state:
+                     * Login visible.
+                     * CRM hidden.
+                     */
 
+                    if (loginPage) {
 
-                <div class="form-group">
+                        loginPage.classList.remove("hidden");
 
-                    <label for="salesEmail">
-                        Email
-                    </label>
+                        loginPage.hidden = false;
 
-                    <input
-                        id="salesEmail"
-                        name="email"
-                        type="email"
-                        placeholder="sales@example.com"
-                    >
+                    }
 
-                </div>
 
+                    if (appShell) {
 
-                <div class="form-group">
+                        appShell.classList.add("hidden");
 
-                    <label for="salesPhone">
-                        Phone
-                    </label>
+                        appShell.hidden = true;
 
-                    <input
-                        id="salesPhone"
-                        name="phone"
-                        type="tel"
-                        placeholder="08xxxxxxxxxx"
-                    >
+                    }
 
-                </div>
 
+                    /*
+                     * Prepare CRM pages.
+                     */
 
-                <div class="form-group">
+                    pages.forEach(function (page) {
 
-                    <label for="salesRole">
-                        Role
-                    </label>
+                        page.classList.remove("active");
 
-                    <select
-                        id="salesRole"
-                        name="role"
-                    >
+                        page.style.display = "none";
 
-                        <option value="sales">
-                            Sales
-                        </option>
+                    });
 
-                        <option value="Admin">
-                            Admin
-                        </option>
 
-                    </select>
+                    /*
+                     * Dashboard is default page.
+                     */
 
-                </div>
+                    const dashboard =
+                        document.getElementById(
+                            "view-dashboard"
+                        );
 
+                    if (dashboard) {
 
-                <div class="form-group">
+                        dashboard.classList.add("active");
 
-                    <label for="salesStatus">
-                        Status
-                    </label>
+                        dashboard.style.display = "block";
 
-                    <select
-                        id="salesStatus"
-                        name="status"
-                    >
+                    }
 
-                        <option value="active">
-                            Active
-                        </option>
 
-                        <option value="inactive">
-                            Inactive
-                        </option>
+                    /*
+                     * Render Lucide icons.
+                     */
 
-                    </select>
+                    if (
+                        window.lucide &&
+                        typeof window.lucide.createIcons === "function"
+                    ) {
 
-                </div>
+                        window.lucide.createIcons();
 
-            </div>
+                    }
 
+                } catch (error) {
 
-
-            <div class="modal-footer">
-
-                <button
-                    id="sales-modal-cancel"
-                    type="button"
-                    class="btn-secondary secondary-btn"
-                >
-                    Cancel
-                </button>
-
-
-                <button
-                    id="sales-save-button"
-                    type="submit"
-                    class="btn-primary primary-btn"
-                >
-
-                    <i
-                        data-lucide="save"
-                        aria-hidden="true"
-                    ></i>
-
-                    <span>
-                        Save Sales
-                    </span>
-
-                </button>
-
-            </div>
-
-        </form>
-
-    </div>
-
-</div>
-
-
-
-<!-- =====================================================
-     SUPABASE
-====================================================== -->
-
-<script
-    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
-></script>
-
-
-
-<!-- =====================================================
-     LUCIDE
-====================================================== -->
-
-<script
-    src="https://unpkg.com/lucide@latest"
-></script>
-
-
-
-<!-- =====================================================
-     CRM JAVASCRIPT
-     
-     IMPORTANT:
-     Existing JavaScript order is preserved.
-====================================================== -->
-
-<script src="js/config.js"></script>
-
-<script src="js/helpers.js"></script>
-
-<script src="js/navigation.js"></script>
-
-<script src="js/dashboard.js"></script>
-
-<script src="js/customer-form.js"></script>
-
-<script src="js/leads.js"></script>
-
-<script src="js/sales.js"></script>
-
-<script src="js/shelter.js"></script>
-
-<script src="js/auth.js"></script>
-
-
-
-<!-- =====================================================
-     INITIAL UI
-====================================================== -->
-
-<script>
-    document.addEventListener(
-        "DOMContentLoaded",
-        function () {
-
-            try {
-
-                const loginPage =
-                    document.getElementById("login-page");
-
-                const appShell =
-                    document.getElementById("app-shell");
-
-                const pages =
-                    document.querySelectorAll(".crm-page");
-
-
-                /*
-                 * Initial state:
-                 * Login visible.
-                 * CRM hidden.
-                 */
-
-                if (loginPage) {
-
-                    loginPage.classList.remove("hidden");
-
-                    loginPage.hidden = false;
-
-                }
-
-
-                if (appShell) {
-
-                    appShell.classList.add("hidden");
-
-                    appShell.hidden = true;
-
-                }
-
-
-                /*
-                 * Prepare CRM pages.
-                 */
-
-                pages.forEach(function (page) {
-
-                    page.classList.remove("active");
-
-                    page.style.display = "none";
-
-                });
-
-
-                /*
-                 * Dashboard is default page.
-                 */
-
-                const dashboard =
-                    document.getElementById(
-                        "view-dashboard"
+                    console.error(
+                        "Initial CRM UI error:",
+                        error
                     );
 
-                if (dashboard) {
-
-                    dashboard.classList.add("active");
-
-                    dashboard.style.display = "block";
-
                 }
-
-
-                /*
-                 * Render Lucide icons.
-                 */
-
-                if (
-                    window.lucide &&
-                    typeof window.lucide.createIcons === "function"
-                ) {
-
-                    window.lucide.createIcons();
-
-                }
-
-            } catch (error) {
-
-                console.error(
-                    "Initial CRM UI error:",
-                    error
-                );
 
             }
-
-        }
-    );
-</script>
-```
+        );
+    </script>
 
 </body>
 
