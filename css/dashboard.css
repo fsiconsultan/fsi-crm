@@ -1,2383 +1,367 @@
-// ============================================================
-// FSI CRM - DASHBOARD
-// File: js/dashboard.js
-// ============================================================
-
-"use strict";
-
-(function () {
-
-  // ==========================================================
-  // STATE
-  // ==========================================================
-
-  let dashboardInitialized = false;
-  let dashboardLoading = false;
-
-  let dashboardData = [];
-
-  let dashboardStats = {
-    total: 0,
-    new: 0,
-    flyerSent: 0,
-    interested: 0,
-    followUp: 0,
-    appointment: 0,
-    siteSurvey: 0,
-    quotation: 0,
-    spk: 0,
-    closing: 0,
-    notInterested: 0
-  };
-
-
-  // ==========================================================
-  // HELPERS
-  // ==========================================================
-
-  function getClient() {
-
-    if (window.supabaseClient) {
-      return window.supabaseClient;
-    }
-
-    try {
-
-      if (
-        typeof supabaseClient !== "undefined" &&
-        supabaseClient
-      ) {
-        return supabaseClient;
-      }
-
-    } catch (error) {
-      // Ignore
-    }
-
-    return null;
-  }
-
-
-  function getProfile() {
-
-    if (window.currentProfile) {
-      return window.currentProfile;
-    }
-
-    try {
-
-      if (
-        typeof currentProfile !== "undefined" &&
-        currentProfile
-      ) {
-        return currentProfile;
-      }
-
-    } catch (error) {
-      // Ignore
-    }
-
-    return null;
-  }
-
-
-  function getUser() {
-
-    if (window.currentUser) {
-      return window.currentUser;
-    }
-
-    try {
-
-      if (
-        typeof currentUser !== "undefined" &&
-        currentUser
-      ) {
-        return currentUser;
-      }
-
-    } catch (error) {
-      // Ignore
-    }
-
-    return null;
-  }
-
-
-  function normalizeRole(role) {
-
-    return String(role || "")
-      .trim()
-      .toLowerCase();
-
-  }
-
-
-  function isAdmin() {
-
-    const profile = getProfile();
-
-    if (!profile) {
-      return false;
-    }
-
-    const role =
-      normalizeRole(profile.role);
-
-    return (
-      role === "admin" ||
-      role === "owner" ||
-      role === "administrator"
-    );
-
-  }
-
-
-  function isSales() {
-
-    const profile = getProfile();
-
-    if (!profile) {
-      return false;
-    }
-
-    const role =
-      normalizeRole(profile.role);
-
-    return (
-      role === "sales" ||
-      role === "salesperson"
-    );
-
-  }
-
-
-  function getPage(id) {
-
-    return document.getElementById(id);
-
-  }
-
-
-  // ==========================================================
-  // PAGE CONTROL
-  // ==========================================================
-
-  function dashboardShowPage(pageName) {
-
-    if (
-      window.FSINavigation &&
-      typeof window.FSINavigation.showPage === "function"
-    ) {
-
-      return window.FSINavigation.showPage(
-        pageName,
-        {
-          keepScroll: false
-        }
-      );
-
-    }
-
-
-    const pageMap = {
-
-      dashboard:
-        "view-dashboard",
-
-      leads:
-        "view-leads",
-
-      sales:
-        "view-sales",
-
-      "customer-profile":
-        "view-customer-profile"
-
-    };
-
-
-    const targetId =
-      pageMap[pageName];
-
-
-    if (!targetId) {
-      return false;
-    }
-
-
-    document
-      .querySelectorAll(".crm-page")
-      .forEach(function (page) {
-
-        page.classList.remove("active");
-        page.classList.add("hidden");
-
-        page.setAttribute(
-          "aria-hidden",
-          "true"
+/* =========================================================
+   DASHBOARD
+========================================================= */
+.stats-grid {
+    display: grid;
+    grid-template-columns:
+        repeat(5, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 18px;
+}
+.stat-card {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 110px;
+    padding: 17px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xs);
+    transition:
+        transform var(--transition),
+        box-shadow var(--transition),
+        border-color var(--transition);
+}
+.stat-card:hover {
+    transform: translateY(-2px);
+    border-color: #dbe3ef;
+    box-shadow: var(--shadow-md);
+}
+.stat-icon {
+    width: 43px;
+    height: 43px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 11px;
+}
+.stat-icon svg {
+    width: 20px;
+    height: 20px;
+}
+.stat-icon.bg-blue {
+    color: var(--primary);
+    background: var(--primary-light);
+}
+.stat-icon.bg-cyan {
+    color: var(--info);
+    background: var(--info-light);
+}
+.stat-icon.bg-green {
+    color: var(--success);
+    background: var(--success-light);
+}
+.stat-icon.bg-orange {
+    color: var(--warning);
+    background: var(--warning-light);
+}
+.stat-icon.bg-purple {
+    color: var(--purple);
+    background: var(--purple-light);
+}
+.stat-icon.bg-yellow {
+    color: var(--yellow);
+    background: var(--yellow-light);
+}
+.stat-icon.bg-indigo {
+    color: var(--indigo);
+    background: var(--indigo-light);
+}
+.stat-icon.bg-red {
+    color: var(--danger);
+    background: var(--danger-light);
+}
+.stat-details {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+.stat-details span {
+    color: var(--slate-500);
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.stat-details strong {
+    margin-top: 2px;
+    color: var(--slate-900);
+    font-size: 23px;
+    line-height: 1.2;
+    font-weight: 800;
+}
+.stat-details small {
+    margin-top: 3px;
+    color: var(--slate-400);
+    font-size: 9px;
+}
+
+
+/* =========================================================
+   DASHBOARD GRID
+========================================================= */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns:
+        minmax(0, 1.15fr)
+        minmax(360px, 0.85fr);
+    gap: 18px;
+}
+.dashboard-card {
+    min-width: 0;
+    overflow: hidden;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xs);
+}
+.card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    padding: 18px 19px;
+    border-bottom: 1px solid var(--slate-100);
+}
+.card-header h2 {
+    margin: 0;
+    color: var(--slate-900);
+    font-size: 14px;
+    font-weight: 800;
+}
+.card-header p {
+    margin: 4px 0 0;
+    color: var(--slate-400);
+    font-size: 10px;
+}
+
+
+/* =========================================================
+   PIPELINE
+========================================================= */
+.pipeline-summary {
+    padding: 15px 18px;
+}
+.pipeline-item {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 10px 2px;
+    border-bottom: 1px solid var(--slate-100);
+}
+.pipeline-item:last-child {
+    border-bottom: 0;
+}
+.pipeline-dot {
+    width: 9px;
+    height: 9px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--primary);
+}
+.pipeline-content {
+    min-width: 0;
+    flex: 1;
+}
+.pipeline-label {
+    display: block;
+    color: var(--slate-600);
+    font-size: 11px;
+    font-weight: 600;
+}
+.pipeline-bar {
+    height: 5px;
+    margin-top: 6px;
+    overflow: hidden;
+    border-radius: 99px;
+    background: var(--slate-100);
+}
+.pipeline-bar-fill {
+    height: 100%;
+    border-radius: inherit;
+    background:
+        linear-gradient(
+            90deg,
+            var(--primary),
+            #60a5fa
         );
-
-      });
-
-
-    const target =
-      getPage(targetId);
-
-
-    if (!target) {
-      return false;
-    }
-
-
-    target.classList.remove("hidden");
-    target.classList.add("active");
-
-    target.setAttribute(
-      "aria-hidden",
-      "false"
-    );
+}
+.pipeline-count {
+    min-width: 28px;
+    color: var(--slate-800);
+    font-size: 12px;
+    font-weight: 800;
+    text-align: right;
+}
+.pipeline-loading {
+    padding: 25px 10px;
+    color: var(--slate-400);
+    font-size: 12px;
+    text-align: center;
+}
 
 
-    return true;
-
-  }
-
-
-  // ==========================================================
-  // PROFILE REQUIREMENT
-  // ==========================================================
-
-  function requireProfile() {
-
-    const profile =
-      getProfile();
-
-
-    if (profile) {
-      return true;
-    }
-
-
-    if (
-      typeof window.showToast === "function"
-    ) {
-
-      window.showToast(
-        "Session belum siap. Silakan login kembali.",
-        "warning"
-      );
-
-    }
-
-
-    return false;
-
-  }
-
-
-  // ==========================================================
-  // SHOW DASHBOARD
-  // ==========================================================
-
-  async function showDashboard() {
-
-    if (!requireProfile()) {
-      return false;
-    }
-
-
-    dashboardShowPage(
-      "dashboard"
-    );
-
-
-    setDashboardTitle();
+/* =========================================================
+   RECENT LEADS
+========================================================= */
+.recent-leads {
+    padding: 7px 18px 13px;
+}
+.recent-lead-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 2px;
+    border-bottom: 1px solid var(--slate-100);
+    cursor: pointer;
+}
+.recent-lead-item:last-child {
+    border-bottom: 0;
+}
+.recent-lead-avatar {
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 10px;
+    color: var(--primary);
+    background: var(--primary-light);
+    font-size: 11px;
+    font-weight: 800;
+}
+.recent-lead-content {
+    min-width: 0;
+    flex: 1;
+}
+.recent-lead-name {
+    overflow: hidden;
+    color: var(--slate-800);
+    font-size: 11px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.recent-lead-meta {
+    margin-top: 2px;
+    color: var(--slate-400);
+    font-size: 9px;
+}
+.recent-lead-status {
+    flex-shrink: 0;
+}
 
 
-    await updateDashboard();
-
-
-    refreshIcons();
-
-
-    return true;
-
-  }
-
-
-  // ==========================================================
-  // SHOW LEADS
-  // ==========================================================
-
-  async function showLeads() {
-
-    if (!requireProfile()) {
-      return false;
-    }
-
-
-    dashboardShowPage(
-      "leads"
-    );
-
-
-    setLeadsTitle();
-
-
-    if (
-      typeof window.loadFilterOptions === "function"
-    ) {
-
-      try {
-
-        await window.loadFilterOptions();
-
-      } catch (error) {
-
-        console.warn(
-          "[Dashboard] loadFilterOptions:",
-          error
+/* =========================================================
+   PROFILE PIPELINE
+========================================================= */
+.profile-pipeline-grid {
+    display: grid;
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    padding: 17px 19px;
+}
+.pipeline-date-item {
+    position: relative;
+    min-width: 0;
+    min-height: 92px;
+    display: flex;
+    flex-direction: column;
+    padding: 13px;
+    border: 1px solid var(--slate-100);
+    border-radius: 12px;
+    background:
+        linear-gradient(
+            135deg,
+            #fafbfc,
+            #ffffff
         );
-
-      }
-
-    }
-
-
-    if (
-      typeof window.loadLeads === "function"
-    ) {
-
-      try {
-
-        const currentPage =
-          window.currentPage || 1;
-
-
-        await window.loadLeads(
-          currentPage
-        );
-
-      } catch (error) {
-
-        console.error(
-          "[Dashboard] loadLeads:",
-          error
-        );
-
-      }
-
-    }
-
-
-    refreshIcons();
-
-
-    return true;
-
-  }
-
-
-  // ==========================================================
-  // SHOW SALES
-  // ==========================================================
-
-  async function showSales() {
-
-    if (!requireProfile()) {
-      return false;
-    }
-
-
-    if (!isAdmin()) {
-
-      if (
-        typeof window.showToast === "function"
-      ) {
-
-        window.showToast(
-          "Manage Sales hanya dapat diakses Admin.",
-          "warning"
-        );
-
-      }
-
-
-      return false;
-
-    }
-
-
-    dashboardShowPage(
-      "sales"
-    );
-
-
-    setSalesTitle();
-
-
-    if (
-      typeof window.loadSalesUsers === "function"
-    ) {
-
-      try {
-
-        await window.loadSalesUsers();
-
-      } catch (error) {
-
-        console.error(
-          "[Dashboard] loadSalesUsers:",
-          error
-        );
-
-      }
-
-    }
-
-
-    refreshIcons();
-
-
-    return true;
-
-  }
-
-
-  // ==========================================================
-  // SHOW CUSTOMER PROFILE
-  // ==========================================================
-
-  async function showCustomerProfile(
-    customerId
-  ) {
-
-    if (!requireProfile()) {
-      return false;
-    }
-
-
-    dashboardShowPage(
-      "customer-profile"
-    );
-
-
-    setCustomerProfileTitle();
-
-
-    if (
-      customerId &&
-      typeof window.loadCustomerProfile === "function"
-    ) {
-
-      try {
-
-        await window.loadCustomerProfile(
-          customerId
-        );
-
-      } catch (error) {
-
-        console.error(
-          "[Dashboard] loadCustomerProfile:",
-          error
-        );
-
-      }
-
-    }
-
-
-    refreshIcons();
-
-
-    return true;
-
-  }
-
-
-  // ==========================================================
-  // PAGE TITLES
-  // ==========================================================
-
-  function setDashboardTitle() {
-
-    setText(
-      "current-page-title",
-      "Dashboard"
-    );
-
-    setText(
-      "page-title",
-      "Dashboard"
-    );
-
-    setText(
-      "pageTitle",
-      "Dashboard"
-    );
-
-
-    setText(
-      "current-page-subtitle",
-      "Overview CRM dan aktivitas customer."
-    );
-
-    setText(
-      "page-subtitle",
-      "Overview CRM dan aktivitas customer."
-    );
-
-  }
-
-
-  function setLeadsTitle() {
-
-    const title =
-      isAdmin()
-        ? "Customer & Leads"
-        : "My Customers";
-
-
-    const subtitle =
-      isAdmin()
-        ? "Kelola seluruh database customer dan leads."
-        : "Kelola database customer Anda.";
-
-
-    setText(
-      "current-page-title",
-      title
-    );
-
-    setText(
-      "page-title",
-      title
-    );
-
-    setText(
-      "pageTitle",
-      title
-    );
-
-
-    setText(
-      "current-page-subtitle",
-      subtitle
-    );
-
-    setText(
-      "page-subtitle",
-      subtitle
-    );
-
-  }
-
-
-  function setSalesTitle() {
-
-    setText(
-      "current-page-title",
-      "Manage Sales"
-    );
-
-    setText(
-      "page-title",
-      "Manage Sales"
-    );
-
-    setText(
-      "pageTitle",
-      "Manage Sales"
-    );
-
-
-    setText(
-      "current-page-subtitle",
-      "Kelola akun, role, dan status Sales."
-    );
-
-    setText(
-      "page-subtitle",
-      "Kelola akun, role, dan status Sales."
-    );
-
-  }
-
-
-  function setCustomerProfileTitle() {
-
-    setText(
-      "current-page-title",
-      "Customer Profile"
-    );
-
-    setText(
-      "page-title",
-      "Customer Profile"
-    );
-
-    setText(
-      "pageTitle",
-      "Customer Profile"
-    );
-
-
-    setText(
-      "current-page-subtitle",
-      "Detail informasi dan aktivitas customer."
-    );
-
-    setText(
-      "page-subtitle",
-      "Detail informasi dan aktivitas customer."
-    );
-
-  }
-
-
-  // ==========================================================
-  // DOM TEXT HELPER
-  // ==========================================================
-
-  function setText(
-    id,
-    value
-  ) {
-
-    const element =
-      document.getElementById(id);
-
-
-    if (!element) {
-      return;
-    }
-
-
-    element.textContent =
-      value == null
-        ? ""
-        : String(value);
-
-  }
-
-
-  // ==========================================================
-  // FETCH DASHBOARD DATA
-  // ==========================================================
-
-  async function fetchDashboardLeads() {
-
-    const client =
-      getClient();
-
-
-    if (!client) {
-
-      throw new Error(
-        "Supabase client belum tersedia."
-      );
-
-    }
-
-
-    const profile =
-      getProfile();
-
-
-    if (!profile) {
-
-      throw new Error(
-        "Profile user belum tersedia."
-      );
-
-    }
-
-
-    const allRows = [];
-
-    const batchSize = 1000;
-
-    let from = 0;
-
-    let keepLoading = true;
-
-
-    while (keepLoading) {
-
-      const to =
-        from + batchSize - 1;
-
-
-      let query =
-        client
-          .from("leads")
-          .select(
-            [
-              "id",
-              "customer_name",
-              "phone",
-              "business",
-              "location",
-              "status",
-              "follow_up_date",
-              "appointment",
-              "site_survey",
-              "quotation",
-              "spk",
-              "closing",
-              "sales_id",
-              "created_at",
-              "updated_at"
-            ].join(",")
-          );
-
-
-      // ======================================================
-      // ACCESS CONTROL
-      // ======================================================
-      //
-      // ADMIN:
-      //   melihat seluruh customer.
-      //
-      // SALES:
-      //   hanya melihat customer miliknya sendiri.
-      //
-      // RLS Supabase tetap menjadi security layer utama.
-      // Filter ini hanya memastikan dashboard UI tidak
-      // mengambil data milik Sales lain.
-      //
-      // ======================================================
-
-      if (isSales()) {
-
-        if (!profile.id) {
-
-          throw new Error(
-            "Sales profile ID tidak ditemukan."
-          );
-
-        }
-
-
-        query =
-          query.eq(
-            "sales_id",
-            profile.id
-          );
-
-      }
-
-
-      const {
-        data,
-        error
-      } =
-        await query
-          .order(
-            "created_at",
-            {
-              ascending: false
-            }
-          )
-          .range(
-            from,
-            to
-          );
-
-
-      if (error) {
-
-        throw error;
-
-      }
-
-
-      const rows =
-        Array.isArray(data)
-          ? data
-          : [];
-
-
-      allRows.push(
-        ...rows
-      );
-
-
-      if (
-        rows.length < batchSize
-      ) {
-
-        keepLoading = false;
-
-      } else {
-
-        from += batchSize;
-
-      }
-
-
-      // Safety limit
-      if (
-        from > 100000
-      ) {
-
-        keepLoading = false;
-
-      }
-
-    }
-
-
-    return allRows;
-
-  }
-
-
-  // ==========================================================
-  // STATUS NORMALIZATION
-  // ==========================================================
-
-  function normalizeStatus(status) {
-
-    if (
-      typeof window.normalizeLeadStatus ===
-      "function"
-    ) {
-
-      return window.normalizeLeadStatus(
-        status
-      );
-
-    }
-
-
-    return String(status || "")
-      .trim()
-      .toLowerCase();
-
-  }
-
-
-  // ==========================================================
-  // BOOLEAN / VALUE CHECK
-  // ==========================================================
-
-  function hasValue(value) {
-
-    if (
-      value === null ||
-      value === undefined
-    ) {
-      return false;
-    }
-
-
-    if (
-      typeof value === "boolean"
-    ) {
-
-      return value;
-
-    }
-
-
-    if (
-      typeof value === "number"
-    ) {
-
-      return value > 0;
-
-    }
-
-
-    const text =
-      String(value)
-        .trim()
-        .toLowerCase();
-
-
-    if (
-      !text ||
-      text === "false" ||
-      text === "0" ||
-      text === "no" ||
-      text === "tidak" ||
-      text === "null" ||
-      text === "undefined"
-    ) {
-
-      return false;
-
-    }
-
-
-    return true;
-
-  }
-
-
-  // ==========================================================
-  // CALCULATE STATS
-  // ==========================================================
-
-  function calculateDashboardStats(
-    rows
-  ) {
-
-    const stats = {
-
-      total: 0,
-      new: 0,
-      flyerSent: 0,
-      interested: 0,
-      followUp: 0,
-      appointment: 0,
-      siteSurvey: 0,
-      quotation: 0,
-      spk: 0,
-      closing: 0,
-      notInterested: 0
-
-    };
-
-
-    if (!Array.isArray(rows)) {
-      return stats;
-    }
-
-
-    stats.total =
-      rows.length;
-
-
-    rows.forEach(function (lead) {
-
-      const status =
-        normalizeStatus(
-          lead.status
-        );
-
-
-      switch (status) {
-
-        case "new":
-
-          stats.new++;
-
-          break;
-
-
-        case "flyer sent":
-        case "flyer":
-
-          stats.flyerSent++;
-
-          break;
-
-
-        case "interested":
-
-          stats.interested++;
-
-          break;
-
-
-        case "follow up":
-        case "follow-up":
-        case "followup":
-
-          stats.followUp++;
-
-          break;
-
-
-        case "appointment":
-
-          stats.appointment++;
-
-          break;
-
-
-        case "site survey":
-        case "site-survey":
-        case "survey":
-
-          stats.siteSurvey++;
-
-          break;
-
-
-        case "quotation":
-        case "quote":
-
-          stats.quotation++;
-
-          break;
-
-
-        case "closing":
-
-          stats.closing++;
-
-          break;
-
-
-        case "not interested":
-        case "not-interested":
-
-          stats.notInterested++;
-
-          break;
-
-
-        default:
-
-          break;
-
-      }
-
-
-      // SPK adalah milestone,
-      // bukan status utama.
-
-      if (
-        hasValue(lead.spk)
-      ) {
-
-        stats.spk++;
-
-      }
-
-    });
-
-
-    return stats;
-
-  }
-
-
-  // ==========================================================
-  // RENDER STAT CARDS
-  // ==========================================================
-
-  function renderDashboardStats(
-    stats
-  ) {
-
-    if (!stats) {
-      return;
-    }
-
-
-    const mapping = {
-
-      statTotal:
-        stats.total,
-
-      statNew:
-        stats.new,
-
-      statFlyerSent:
-        stats.flyerSent,
-
-      statInterested:
-        stats.interested,
-
-      statFollowUp:
-        stats.followUp,
-
-      statAppointment:
-        stats.appointment,
-
-      statSiteSurvey:
-        stats.siteSurvey,
-
-      statQuotation:
-        stats.quotation,
-
-      statSPK:
-        stats.spk,
-
-      statClosing:
-        stats.closing,
-
-      statNotInterested:
-        stats.notInterested
-
-    };
-
-
-    Object.keys(mapping)
-      .forEach(function (id) {
-
-        const element =
-          document.getElementById(id);
-
-
-        if (!element) {
-          return;
-        }
-
-
-        element.textContent =
-          formatNumber(
-            mapping[id]
-          );
-
-      });
-
-
-    setNumberIfExists(
-      [
-        "dashboardTotal",
-        "totalCustomers"
-      ],
-      stats.total
-    );
-
-
-    setNumberIfExists(
-      [
-        "dashboardNew",
-        "newCustomers"
-      ],
-      stats.new
-    );
-
-
-    setNumberIfExists(
-      [
-        "dashboardInterested",
-        "interestedCustomers"
-      ],
-      stats.interested
-    );
-
-
-    setNumberIfExists(
-      [
-        "dashboardFollowUp",
-        "followUpCustomers"
-      ],
-      stats.followUp
-    );
-
-
-    setNumberIfExists(
-      [
-        "dashboardAppointment",
-        "appointmentCustomers"
-      ],
-      stats.appointment
-    );
-
-
-    setNumberIfExists(
-      [
-        "dashboardSiteSurvey",
-        "siteSurveyCustomers"
-      ],
-      stats.siteSurvey
-    );
-
-
-    setNumberIfExists(
-      [
-        "dashboardQuotation",
-        "quotationCustomers"
-      ],
-      stats.quotation
-    );
-
-
-    setNumberIfExists(
-      [
-        "dashboardSPK",
-        "spkCustomers"
-      ],
-      stats.spk
-    );
-
-
-    setNumberIfExists(
-      [
-        "dashboardClosing",
-        "closingCustomers"
-      ],
-      stats.closing
-    );
-
-
-    setNumberIfExists(
-      [
-        "dashboardNotInterested",
-        "notInterestedCustomers"
-      ],
-      stats.notInterested
-    );
-
-  }
-
-
-  function setNumberIfExists(
-    ids,
-    value
-  ) {
-
-    ids.forEach(function (id) {
-
-      const element =
-        document.getElementById(id);
-
-
-      if (!element) {
-        return;
-      }
-
-
-      element.textContent =
-        formatNumber(value);
-
-    });
-
-  }
-
-
-  function formatNumber(
-    value
-  ) {
-
-    const number =
-      Number(value) || 0;
-
-
-    try {
-
-      return new Intl.NumberFormat(
-        "id-ID"
-      ).format(number);
-
-    } catch (error) {
-
-      return String(number);
-
-    }
-
-  }
-
-
-  // ==========================================================
-  // PIPELINE SUMMARY
-  // ==========================================================
-
-  function renderPipelineSummary(
-    stats
-  ) {
-
-    const container =
-      document.getElementById(
-        "pipeline-summary"
-      ) ||
-      document.getElementById(
-        "pipelineSummary"
-      );
-
-
-    if (!container) {
-      return;
-    }
-
-
-    const stages = [
-
-      {
-        key: "new",
-        label: "New",
-        value: stats.new
-      },
-
-      {
-        key: "flyer",
-        label: "Flyer Sent",
-        value: stats.flyerSent
-      },
-
-      {
-        key: "interested",
-        label: "Interested",
-        value: stats.interested
-      },
-
-      {
-        key: "follow-up",
-        label: "Follow Up",
-        value: stats.followUp
-      },
-
-      {
-        key: "appointment",
-        label: "Appointment",
-        value: stats.appointment
-      },
-
-      {
-        key: "site-survey",
-        label: "Site Survey",
-        value: stats.siteSurvey
-      },
-
-      {
-        key: "quotation",
-        label: "Quotation",
-        value: stats.quotation
-      },
-
-      {
-        key: "closing",
-        label: "Closing",
-        value: stats.closing
-      },
-
-      {
-        key: "not-interested",
-        label: "Not Interested",
-        value: stats.notInterested
-      }
-
-    ];
-
-
-    container.innerHTML =
-      stages.map(function (stage) {
-
-        return `
-          <div
-            class="pipeline-item"
-            data-stage="${escapeHTML(stage.key)}"
-          >
-
-            <div class="pipeline-item-label">
-
-              <span class="pipeline-dot"></span>
-
-              <span>
-                ${escapeHTML(stage.label)}
-              </span>
-
-            </div>
-
-            <strong class="pipeline-item-value">
-              ${formatNumber(stage.value)}
-            </strong>
-
-          </div>
-        `;
-
-      }).join("");
-
-  }
-
-
-  // ==========================================================
-  // RECENT LEADS
-  // ==========================================================
-
-  function renderRecentLeads(
-    rows
-  ) {
-
-    const container =
-      document.getElementById(
-        "recent-leads-body"
-      ) ||
-      document.getElementById(
-        "recentLeadsBody"
-      ) ||
-      document.getElementById(
-        "recentActivitiesList"
-      );
-
-
-    if (!container) {
-      return;
-    }
-
-
-    const recent =
-      Array.isArray(rows)
-        ? rows.slice(0, 8)
-        : [];
-
-
-    if (!recent.length) {
-
-      container.innerHTML = `
-        <div class="empty-state">
-
-          <div class="empty-state-icon">
-            <i data-lucide="inbox"></i>
-          </div>
-
-          <h4>
-            Belum ada data
-          </h4>
-
-          <p>
-            Belum ada customer yang tersedia.
-          </p>
-
-        </div>
-      `;
-
-
-      refreshIcons();
-
-
-      return;
-
-    }
-
-
-    container.innerHTML =
-      recent.map(function (lead) {
-
-        const name =
-          lead.customer_name ||
-          "Unnamed Customer";
-
-
-        const status =
-          lead.status ||
-          "New";
-
-
-        const location =
-          lead.location ||
-          "-";
-
-
-        return `
-          <div class="recent-lead-item">
-
-            <div class="recent-lead-main">
-
-              <div class="recent-lead-avatar">
-                ${escapeHTML(
-                  getInitials(name)
-                )}
-              </div>
-
-              <div class="recent-lead-info">
-
-                <strong>
-                  ${escapeHTML(name)}
-                </strong>
-
-                <span>
-                  ${escapeHTML(location)}
-                </span>
-
-              </div>
-
-            </div>
-
-            <div class="recent-lead-status">
-
-              ${
-                typeof window.getStatusBadge ===
-                "function"
-
-                  ? window.getStatusBadge(status)
-
-                  : `
-                    <span class="status-badge">
-                      ${escapeHTML(status)}
-                    </span>
-                  `
-              }
-
-            </div>
-
-          </div>
-        `;
-
-      }).join("");
-
-
-    refreshIcons();
-
-  }
-
-
-  function getInitials(
-    name
-  ) {
-
-    const text =
-      String(name || "")
-        .trim();
-
-
-    if (!text) {
-      return "?";
-    }
-
-
-    const words =
-      text
-        .split(/\s+/)
-        .filter(Boolean);
-
-
-    if (
-      words.length === 1
-    ) {
-
-      return words[0]
-        .substring(0, 2)
-        .toUpperCase();
-
-    }
-
-
-    return (
-      words[0][0] +
-      words[1][0]
-    ).toUpperCase();
-
-  }
-
-
-  // ==========================================================
-  // ESCAPE HTML
-  // ==========================================================
-
-  function escapeHTML(
-    value
-  ) {
-
-    if (
-      typeof window.escapeHTML ===
-      "function"
-    ) {
-
-      return window.escapeHTML(
-        value
-      );
-
-    }
-
-
-    return String(
-      value == null
-        ? ""
-        : value
-    )
-      .replace(
-        /&/g,
-        "&amp;"
-      )
-      .replace(
-        /</g,
-        "&lt;"
-      )
-      .replace(
-        />/g,
-        "&gt;"
-      )
-      .replace(
-        /"/g,
-        "&quot;"
-      )
-      .replace(
-        /'/g,
-        "&#039;"
-      );
-
-  }
-
-
-  // ==========================================================
-  // DASHBOARD UPDATE
-  // ==========================================================
-
-  async function updateDashboard(
-    options
-  ) {
-
-    options =
-      options || {};
-
-
-    if (dashboardLoading) {
-      return dashboardStats;
-    }
-
-
-    const client =
-      getClient();
-
-
-    if (!client) {
-
-      showDashboardError(
-        "Supabase belum terhubung."
-      );
-
-
-      return null;
-
-    }
-
-
-    dashboardLoading = true;
-
-
-    setDashboardLoading(
-      true
-    );
-
-
-    try {
-
-      const rows =
-        await fetchDashboardLeads();
-
-
-      dashboardData =
-        rows;
-
-
-      dashboardStats =
-        calculateDashboardStats(
-          rows
-        );
-
-
-      renderDashboardStats(
-        dashboardStats
-      );
-
-
-      renderPipelineSummary(
-        dashboardStats
-      );
-
-
-      renderRecentLeads(
-        rows
-      );
-
-
-      hideDashboardError();
-
-
-      if (
-        typeof window.renderDashboardCharts ===
-        "function"
-      ) {
-
-        try {
-
-          window.renderDashboardCharts(
-            dashboardStats,
-            rows
-          );
-
-        } catch (error) {
-
-          console.warn(
-            "[Dashboard] chart render error:",
-            error
-          );
-
-        }
-
-      }
-
-
-      if (
-        typeof window.renderDashboardRecentLeads ===
-        "function"
-      ) {
-
-        try {
-
-          window.renderDashboardRecentLeads(
-            rows
-          );
-
-        } catch (error) {
-
-          console.warn(
-            "[Dashboard] recent leads render error:",
-            error
-          );
-
-        }
-
-      }
-
-
-      try {
-
-        window.dispatchEvent(
-          new CustomEvent(
-            "fsi:dashboard-updated",
-            {
-              detail: {
-
-                stats:
-                  dashboardStats,
-
-                rows:
-                  dashboardData
-
-              }
-            }
-          )
-        );
-
-      } catch (error) {
-        // Ignore
-      }
-
-
-      refreshIcons();
-
-
-      return dashboardStats;
-
-    } catch (error) {
-
-      console.error(
-        "[FSI Dashboard] Error:",
-        error
-      );
-
-
-      const message =
-        typeof window.getSupabaseErrorMessage ===
-        "function"
-
-          ? window.getSupabaseErrorMessage(
-              error
-            )
-
-          : (
-              error &&
-              error.message
-            ) ||
-            "Gagal mengambil data dashboard.";
-
-
-      showDashboardError(
-        message
-      );
-
-
-      return null;
-
-    } finally {
-
-      dashboardLoading = false;
-
-
-      setDashboardLoading(
-        false
-      );
-
-    }
-
-  }
-
-
-  // ==========================================================
-  // LOADING STATE
-  // ==========================================================
-
-  function setDashboardLoading(
-    loading
-  ) {
-
-    const dashboard =
-      getPage(
-        "view-dashboard"
-      );
-
-
-    if (!dashboard) {
-      return;
-    }
-
-
-    dashboard.classList.toggle(
-      "is-loading",
-      Boolean(loading)
-    );
-
-
-    const loaders =
-      dashboard.querySelectorAll(
-        ".dashboard-loading"
-      );
-
-
-    loaders.forEach(function (element) {
-
-      element.style.display =
-        loading
-          ? ""
-          : "none";
-
-    });
-
-  }
-
-
-  // ==========================================================
-  // ERROR STATE
-  // ==========================================================
-
-  function showDashboardError(
-    message
-  ) {
-
-    const errorElement =
-      getPage(
-        "dashboard-error"
-      ) ||
-      getPage(
-        "dashboardError"
-      );
-
-
-    if (!errorElement) {
-
-      const dashboard =
-        getPage(
-          "view-dashboard"
-        );
-
-
-      if (!dashboard) {
-        return;
-      }
-
-
-      let generated =
-        dashboard.querySelector(
-          ".dashboard-error"
-        );
-
-
-      if (!generated) {
-
-        generated =
-          document.createElement(
-            "div"
-          );
-
-
-        generated.className =
-          "dashboard-error";
-
-
-        generated.id =
-          "dashboard-error";
-
-
-        dashboard.prepend(
-          generated
-        );
-
-      }
-
-
-      generated.innerHTML = `
-        <div class="dashboard-error-icon">
-          <i data-lucide="alert-circle"></i>
-        </div>
-
-        <div class="dashboard-error-content">
-
-          <strong>
-            Dashboard tidak dapat dimuat
-          </strong>
-
-          <span>
-            ${escapeHTML(message)}
-          </span>
-
-        </div>
-
-        <button
-          type="button"
-          class="btn btn-secondary"
-          data-dashboard-retry
-        >
-
-          <i data-lucide="refresh-cw"></i>
-
-          Coba Lagi
-
-        </button>
-      `;
-
-
-      bindDashboardRetry(
-        generated
-      );
-
-
-      refreshIcons();
-
-
-      return;
-
-    }
-
-
-    errorElement.innerHTML = `
-      <div class="dashboard-error-content">
-
-        <strong>
-          Dashboard tidak dapat dimuat
-        </strong>
-
-        <span>
-          ${escapeHTML(message)}
-        </span>
-
-      </div>
-    `;
-
-
-    errorElement.style.display =
-      "";
-
-  }
-
-
-  function hideDashboardError() {
-
-    const elements = [
-
-      getPage(
-        "dashboard-error"
-      ),
-
-      getPage(
-        "dashboardError"
-      ),
-
-      document.querySelector(
-        ".dashboard-error"
-      )
-
-    ].filter(Boolean);
-
-
-    elements.forEach(function (element) {
-
-      element.style.display =
-        "none";
-
-    });
-
-  }
-
-
-  function bindDashboardRetry(
-    container
-  ) {
-
-    const button =
-      container.querySelector(
-        "[data-dashboard-retry]"
-      );
-
-
-    if (!button) {
-      return;
-    }
-
-
-    if (
-      button.dataset.bound ===
-      "true"
-    ) {
-      return;
-    }
-
-
-    button.dataset.bound =
-      "true";
-
-
-    button.addEventListener(
-      "click",
-      function () {
-
-        updateDashboard();
-
-      }
-    );
-
-  }
-
-
-  // ==========================================================
-  // REFRESH ICONS
-  // ==========================================================
-
-  function refreshIcons() {
-
-    if (
-      typeof window.refreshIcons ===
-      "function"
-    ) {
-
-      try {
-
-        window.refreshIcons();
-
-      } catch (error) {
-        // Ignore
-      }
-
-
-      return;
-
-    }
-
-
-    if (
-      window.lucide &&
-      typeof window.lucide.createIcons ===
-      "function"
-    ) {
-
-      try {
-
-        window.lucide.createIcons();
-
-      } catch (error) {
-        // Ignore
-      }
-
-    }
-
-  }
-
-
-  // ==========================================================
-  // REFRESH DASHBOARD
-  // ==========================================================
-
-  async function refreshDashboard() {
-
-    return updateDashboard();
-
-  }
-
-
-  // ==========================================================
-  // EVENTS
-  // ==========================================================
-
-  function bindDashboardEvents() {
-
-    if (dashboardInitialized) {
-      return;
-    }
-
-
-    dashboardInitialized =
-      true;
-
-
-    // --------------------------------------------------------
-    // App siap
-    // --------------------------------------------------------
-
-    window.addEventListener(
-      "fsi:app-ready",
-      function () {
-
-        if (
-          getProfile()
-        ) {
-
-          refreshNavigationState();
-
-        }
-
-      }
-    );
-
-
-    // --------------------------------------------------------
-    // Profile tersedia
-    // --------------------------------------------------------
-
-    window.addEventListener(
-      "fsi:profile-ready",
-      function () {
-
-        refreshNavigationState();
-
-      }
-    );
-
-
-    // --------------------------------------------------------
-    // Auth siap
-    // --------------------------------------------------------
-
-    window.addEventListener(
-      "fsi:auth-ready",
-      function () {
-
-        refreshNavigationState();
-
-      }
-    );
-
-
-    // --------------------------------------------------------
-    // Lead berubah
-    // --------------------------------------------------------
-
-    window.addEventListener(
-      "fsi:lead-changed",
-      function () {
-
-        if (
-          isCurrentDashboard()
-        ) {
-
-          updateDashboard();
-
-        }
-
-      }
-    );
-
-
-    // --------------------------------------------------------
-    // Sales berubah
-    // --------------------------------------------------------
-
-    window.addEventListener(
-      "fsi:sales-changed",
-      function () {
-
-        if (
-          isCurrentDashboard()
-        ) {
-
-          updateDashboard();
-
-        }
-
-      }
-    );
-
-
-    // --------------------------------------------------------
-    // Navigation berubah
-    // --------------------------------------------------------
-
-    window.addEventListener(
-      "fsi:navigation-changed",
-      function (event) {
-
-        if (
-          !event ||
-          !event.detail
-        ) {
-          return;
-        }
-
-
-        if (
-          event.detail.page ===
-          "dashboard"
-        ) {
-
-          setTimeout(
-            function () {
-
-              updateDashboard();
-
-            },
-            50
-          );
-
-        }
-
-      }
-    );
-
-  }
-
-
-  function isCurrentDashboard() {
-
-    const dashboard =
-      getPage(
-        "view-dashboard"
-      );
-
-
-    if (!dashboard) {
-      return false;
-    }
-
-
-    return dashboard.classList.contains(
-      "active"
-    );
-
-  }
-
-
-  function refreshNavigationState() {
-
-    if (
-      window.FSINavigation &&
-      typeof window.FSINavigation.refresh ===
-      "function"
-    ) {
-
-      window.FSINavigation.refresh();
-
-    }
-
-  }
-
-
-  // ==========================================================
-  // INITIALIZE
-  // ==========================================================
-
-  function initializeDashboard() {
-
-    bindDashboardEvents();
-
-
-    console.log(
-      "FSI Dashboard initialized."
-    );
-
-  }
-
-
-  if (
-    document.readyState ===
-    "loading"
-  ) {
-
-    document.addEventListener(
-      "DOMContentLoaded",
-      initializeDashboard
-    );
-
-  } else {
-
-    initializeDashboard();
-
-  }
-
-
-  // ==========================================================
-  // PUBLIC API
-  // ==========================================================
-
-  window.FSIDashboard = {
-
-    initialize:
-      initializeDashboard,
-
-    showDashboard:
-      showDashboard,
-
-    showLeads:
-      showLeads,
-
-    showSales:
-      showSales,
-
-    showCustomerProfile:
-      showCustomerProfile,
-
-    updateDashboard:
-      updateDashboard,
-
-    refresh:
-      refreshDashboard,
-
-    fetchDashboardLeads:
-      fetchDashboardLeads,
-
-    calculateDashboardStats:
-      calculateDashboardStats,
-
-    renderDashboardStats:
-      renderDashboardStats,
-
-    renderPipelineSummary:
-      renderPipelineSummary,
-
-    renderRecentLeads:
-      renderRecentLeads,
-
-    getStats:
-      function () {
-
-        return {
-          ...dashboardStats
-        };
-
-      },
-
-    getData:
-      function () {
-
-        return [
-          ...dashboardData
-        ];
-
-      }
-
-  };
-
-
-  // ==========================================================
-  // GLOBAL COMPATIBILITY
-  // ==========================================================
-
-  window.showDashboard =
-    showDashboard;
-
-
-  window.showLeads =
-    showLeads;
-
-
-  window.showSales =
-    showSales;
-
-
-  window.showCustomerProfile =
-    showCustomerProfile;
-
-
-  window.updateDashboard =
-    updateDashboard;
-
-
-})();
+    transition:
+        transform var(--transition),
+        border-color var(--transition),
+        box-shadow var(--transition);
+}
+.pipeline-date-item:hover {
+    transform: translateY(-1px);
+    border-color: #dbe3ef;
+    box-shadow: var(--shadow-xs);
+}
+.pipeline-date-icon {
+    width: 31px;
+    height: 31px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 9px;
+    border-radius: 9px;
+    color: var(--primary);
+    background: var(--primary-light);
+}
+.pipeline-date-icon svg {
+    width: 15px;
+    height: 15px;
+}
+.pipeline-date-item:nth-child(2)
+.pipeline-date-icon {
+    color: var(--purple);
+    background: var(--purple-light);
+}
+.pipeline-date-item:nth-child(3)
+.pipeline-date-icon {
+    color: var(--info);
+    background: var(--info-light);
+}
+.pipeline-date-item:nth-child(4)
+.pipeline-date-icon {
+    color: var(--warning);
+    background: var(--warning-light);
+}
+.pipeline-date-item:nth-child(5)
+.pipeline-date-icon {
+    color: var(--indigo);
+    background: var(--indigo-light);
+}
+.pipeline-date-item:nth-child(6)
+.pipeline-date-icon {
+    color: var(--success);
+    background: var(--success-light);
+}
+.pipeline-date-item .pipeline-date-label,
+.pipeline-date-item small {
+    color: var(--slate-400);
+    font-size: 9px;
+    font-weight: 700;
+}
+.pipeline-date-item .pipeline-date-value,
+.pipeline-date-item strong {
+    margin-top: 3px;
+    overflow-wrap: anywhere;
+    color: var(--slate-700);
+    font-size: 11px;
+    line-height: 1.4;
+    font-weight: 800;
+}
+
+
+/* =========================================================
+   DASHBOARD ERROR
+========================================================= */
+#dashboardError {
+    display: none;
+    margin-bottom: 15px;
+    padding: 12px 15px;
+    border: 1px solid #fecaca;
+    border-radius: 10px;
+    background: var(--danger-light);
+    color: var(--danger);
+    font-size: 12px;
+}
+#dashboardError:not(:empty) {
+    display: block;
+}
