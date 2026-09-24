@@ -446,29 +446,23 @@
             "new":
                 "status-new",
 
-            "flyer sent":
-                "status-flyer",
+            "first contact":
+                "status-first-contact",
 
-            "interested":
-                "status-interested",
-
-            "follow up":
-                "status-follow-up",
-
-            "appointment":
-                "status-appointment",
-
-            "site survey":
-                "status-site-survey",
+            "first meeting / appointment / site survey":
+                "status-first-meeting",
 
             "quotation":
                 "status-quotation",
 
-            "closing":
-                "status-closing",
+            "second appointment":
+                "status-second-appointment",
 
-            "not interested":
-                "status-not-interested"
+            "deal":
+                "status-deal",
+
+            "no deal":
+                "status-no-deal"
 
         };
 
