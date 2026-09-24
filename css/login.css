@@ -1,4 +1,3 @@
-```css
 /* =========================================================
    FSI CRM — LOGIN / PLTS HERO
    File: css/login.css
@@ -22,6 +21,11 @@
 
     color: #ffffff;
 
+    /*
+     * PLTS hero background.
+     * login.css berada di /css/
+     * logo-hero.jpg berada di root project.
+     */
     background:
         linear-gradient(
             90deg,
@@ -50,7 +54,7 @@
     align-items: center;
     justify-content: flex-end;
 
-    padding: 36px 7vw;
+    padding: 40px 7vw;
 }
 
 
@@ -63,14 +67,17 @@
     z-index: 1;
 
     width: 100%;
-    max-width: 560px;
+    max-width: 430px;
 
     box-sizing: border-box;
 
-    padding: 34px 42px;
+    padding: 40px;
 
-    border-radius: 24px;
+    border-radius: 28px;
 
+    /*
+     * Glass effect
+     */
     background:
         linear-gradient(
             145deg,
@@ -118,10 +125,10 @@
     position: relative;
     z-index: 2;
 
-    width: 68px;
-    height: 68px;
+    width: 76px;
+    height: 76px;
 
-    margin: 0 auto 18px;
+    margin: 0 auto 22px;
 
     display: flex;
     align-items: center;
@@ -129,7 +136,7 @@
 
     box-sizing: border-box;
 
-    border-radius: 19px;
+    border-radius: 22px;
 
     background: rgba(255, 255, 255, 0.12);
 
@@ -147,8 +154,8 @@
 #login-page .login-logo img {
     display: block;
 
-    width: 50px;
-    height: 50px;
+    width: 56px;
+    height: 56px;
 
     object-fit: contain;
 
@@ -169,7 +176,7 @@
 
     text-align: center;
 
-    margin-bottom: 22px;
+    margin-bottom: 30px;
 }
 
 
@@ -178,12 +185,12 @@
 
     color: #ffffff;
 
-    font-size: 29px;
+    font-size: 32px;
     line-height: 1.1;
 
     font-weight: 900;
 
-    letter-spacing: -0.8px;
+    letter-spacing: -1px;
 
     text-shadow:
         0 4px 20px rgba(0, 0, 0, 0.20);
@@ -191,11 +198,11 @@
 
 
 #login-page .login-subtitle {
-    margin: 7px 0 0;
+    margin: 9px 0 0;
 
     color: rgba(255, 255, 255, 0.70);
 
-    font-size: 13px;
+    font-size: 14px;
     line-height: 1.5;
 
     font-weight: 500;
@@ -212,10 +219,10 @@
 
     width: 100%;
 
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
+    flex-direction: column;
 
-    gap: 15px 16px;
+    gap: 18px;
 }
 
 
@@ -227,16 +234,14 @@
     display: flex;
     flex-direction: column;
 
-    gap: 7px;
-
-    min-width: 0;
+    gap: 8px;
 }
 
 
 #login-page .form-group label {
     color: rgba(255, 255, 255, 0.88);
 
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
 
     line-height: 1.4;
@@ -249,15 +254,15 @@
 
 #login-page .form-group input {
     width: 100%;
-    height: 50px;
+    height: 54px;
 
     box-sizing: border-box;
 
-    padding: 0 15px;
+    padding: 0 16px;
 
     border: 1px solid rgba(255, 255, 255, 0.15);
 
-    border-radius: 13px;
+    border-radius: 14px;
 
     outline: none;
 
@@ -267,7 +272,7 @@
         rgba(0, 20, 40, 0.42);
 
     font-family: inherit;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 500;
 
     transition:
@@ -306,119 +311,21 @@
 
 
 /* =========================================================
-   PASSWORD EYE BUTTON
-   ========================================================= */
-
-#login-page #toggle-login-password {
-    color: rgba(255, 255, 255, 0.62);
-
-    border-radius: 7px;
-
-    transition:
-        color 0.2s ease,
-        background 0.2s ease,
-        transform 0.2s ease;
-}
-
-
-#login-page #toggle-login-password:hover {
-    color: #ffffff;
-
-    background:
-        rgba(255, 255, 255, 0.08);
-}
-
-
-#login-page #toggle-login-password:focus-visible {
-    outline:
-        2px solid rgba(103, 213, 255, 0.55);
-
-    outline-offset: 2px;
-}
-
-
-#login-page #toggle-login-password svg {
-    width: 18px;
-    height: 18px;
-}
-
-
-/* =========================================================
-   REMEMBER ME
-   ========================================================= */
-
-#login-page .remember-me {
-    grid-column: 1 / -1;
-
-    display: flex;
-    align-items: center;
-
-    margin-top: -2px;
-    margin-bottom: -2px;
-
-    color:
-        rgba(255, 255, 255, 0.72);
-
-    font-size: 12px;
-    line-height: 1.4;
-}
-
-
-#login-page .remember-me label {
-    display: inline-flex;
-    align-items: center;
-
-    gap: 8px;
-
-    cursor: pointer;
-
-    user-select: none;
-}
-
-
-#login-page .remember-me input[type="checkbox"] {
-    width: 16px !important;
-    height: 16px !important;
-
-    margin: 0;
-
-    padding: 0;
-
-    flex: 0 0 auto;
-
-    accent-color: #38bdf8;
-
-    cursor: pointer;
-}
-
-
-#login-page .remember-me span {
-    color:
-        rgba(255, 255, 255, 0.75);
-
-    font-size: 12px;
-    font-weight: 500;
-}
-
-
-/* =========================================================
    LOGIN ERROR
    ========================================================= */
 
 #login-page .login-error {
-    grid-column: 1 / -1;
-
     position: relative;
     z-index: 2;
 
-    min-height: 18px;
+    min-height: 20px;
 
-    margin-top: -2px;
+    margin-top: -3px;
     padding: 0;
 
     color: #fecaca;
 
-    font-size: 12px;
+    font-size: 13px;
     line-height: 1.5;
 
     text-align: center;
@@ -429,6 +336,7 @@
 
 /*
  * Hide empty error container.
+ * It still keeps a small minimum space when populated.
  */
 
 #login-page .login-error:empty {
@@ -441,13 +349,11 @@
    ========================================================= */
 
 #login-page #login-button {
-    grid-column: 1 / -1;
-
     position: relative;
     z-index: 2;
 
     width: 100%;
-    min-height: 52px;
+    min-height: 56px;
 
     display: flex;
     align-items: center;
@@ -455,12 +361,12 @@
 
     gap: 10px;
 
-    margin-top: 1px;
+    margin-top: 3px;
 
     padding: 0 20px;
 
     border: 0;
-    border-radius: 13px;
+    border-radius: 14px;
 
     cursor: pointer;
 
@@ -475,7 +381,7 @@
         );
 
     font-family: inherit;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 800;
 
     box-shadow:
@@ -589,10 +495,8 @@
     position: relative;
     z-index: 2;
 
-    grid-column: 1 / -1;
-
-    margin-top: 7px;
-    padding-top: 15px;
+    margin-top: 25px;
+    padding-top: 18px;
 
     border-top:
         1px solid rgba(255, 255, 255, 0.10);
@@ -602,7 +506,7 @@
     color:
         rgba(255, 255, 255, 0.48);
 
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 600;
 
     line-height: 1.5;
@@ -620,10 +524,9 @@
     }
 
     #login-page .login-card {
-        max-width: 580px;
+        max-width: 450px;
 
-        padding:
-            36px 46px;
+        padding: 44px;
     }
 }
 
@@ -636,15 +539,14 @@
 
     #login-page .login-container {
         padding:
-            32px
+            40px
             5vw;
     }
 
     #login-page .login-card {
-        max-width: 540px;
+        max-width: 420px;
 
-        padding:
-            34px 38px;
+        padding: 36px;
     }
 }
 
@@ -684,28 +586,14 @@
         max-width: 500px;
 
         padding:
-            30px 26px;
+            32px 25px;
 
-        border-radius: 22px;
-    }
-
-
-    #login-page .login-form {
-        grid-template-columns: 1fr;
-        gap: 15px;
-    }
-
-
-    #login-page .remember-me,
-    #login-page .login-error,
-    #login-page #login-button,
-    #login-page .login-footer {
-        grid-column: 1;
+        border-radius: 24px;
     }
 
 
     #login-page .login-title {
-        font-size: 28px;
+        font-size: 30px;
     }
 }
 
@@ -726,61 +614,66 @@
         max-width: 100%;
 
         padding:
-            27px 20px;
+            28px 20px;
+
+        border-radius: 22px;
+    }
+
+
+    #login-page .login-logo {
+        width: 68px;
+        height: 68px;
+
+        margin-bottom: 20px;
 
         border-radius: 20px;
     }
 
 
-    #login-page .login-logo {
-        width: 64px;
-        height: 64px;
-
-        margin-bottom: 18px;
-
-        border-radius: 18px;
-    }
-
-
     #login-page .login-logo img {
-        width: 48px;
-        height: 48px;
+        width: 50px;
+        height: 50px;
     }
 
 
     #login-page .login-heading {
-        margin-bottom: 23px;
+        margin-bottom: 26px;
     }
 
 
     #login-page .login-title {
-        font-size: 26px;
+        font-size: 28px;
     }
 
 
     #login-page .login-subtitle {
-        font-size: 12px;
+        font-size: 13px;
+    }
+
+
+    #login-page .login-form {
+        gap: 16px;
     }
 
 
     #login-page .form-group input {
-        height: 50px;
+        height: 52px;
 
-        border-radius: 12px;
+        border-radius: 13px;
     }
 
 
     #login-page #login-button {
-        min-height: 52px;
+        min-height: 54px;
 
-        border-radius: 12px;
+        border-radius: 13px;
     }
 
 
     #login-page .login-footer {
-        margin-top: 5px;
+        margin-top: 22px;
 
-        padding-top: 14px;
+        padding-top: 16px;
     }
 }
 
@@ -799,26 +692,26 @@
 
     #login-page .login-card {
         padding:
-            23px 16px;
+            24px 16px;
 
-        border-radius: 18px;
+        border-radius: 20px;
     }
 
 
     #login-page .login-logo {
-        width: 60px;
-        height: 60px;
+        width: 62px;
+        height: 62px;
     }
 
 
     #login-page .login-logo img {
-        width: 44px;
-        height: 44px;
+        width: 46px;
+        height: 46px;
     }
 
 
     #login-page .login-title {
-        font-size: 24px;
+        font-size: 25px;
     }
 
 
@@ -833,21 +726,16 @@
 
 
     #login-page .form-group input {
-        height: 48px;
+        height: 50px;
 
         font-size: 13px;
     }
 
 
     #login-page #login-button {
-        min-height: 50px;
+        min-height: 52px;
 
         font-size: 14px;
-    }
-
-
-    #login-page .remember-me span {
-        font-size: 11px;
     }
 }
 
