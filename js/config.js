@@ -95,13 +95,6 @@ window.FSI_SUPABASE_PUBLISHABLE_KEY =
 // ============================================================
 // GLOBAL AUTH STATE
 // ============================================================
-//
-// Jangan menggunakan:
-// var currentUser
-// var currentProfile
-//
-// File auth.js menggunakan state ini.
-//
 
 let currentUser = null;
 
@@ -162,17 +155,36 @@ let editingSalesId = null;
 // ============================================================
 // LEAD STATUS
 // ============================================================
+//
+// STATUS UTAMA CRM = 7 STATUS
+//
+// 1. New
+// 2. First Contact
+// 3. First Meeting / Appointment / Site Survey
+// 4. Quotation
+// 5. Second Appointment
+// 6. Deal
+// 7. No Deal
+//
+// SPK dan Closing BUKAN status utama.
+// Keduanya tetap merupakan field/detail customer.
+// ============================================================
 
 const LEAD_STATUSES = [
+
     "New",
-    "Flyer Sent",
-    "Interested",
-    "Follow Up",
-    "Appointment",
-    "Site Survey",
+
+    "First Contact",
+
+    "First Meeting / Appointment / Site Survey",
+
     "Quotation",
-    "Closing",
-    "Not Interested"
+
+    "Second Appointment",
+
+    "Deal",
+
+    "No Deal"
 ];
 
 
@@ -185,29 +197,23 @@ const LEAD_STATUS_LABELS = {
     "New":
         "New",
 
-    "Flyer Sent":
-        "Flyer Sent",
+    "First Contact":
+        "First Contact",
 
-    "Interested":
-        "Interested",
-
-    "Follow Up":
-        "Follow Up",
-
-    "Appointment":
-        "Appointment",
-
-    "Site Survey":
-        "Site Survey",
+    "First Meeting / Appointment / Site Survey":
+        "First Meeting / Appointment / Site Survey",
 
     "Quotation":
         "Quotation",
 
-    "Closing":
-        "Closing",
+    "Second Appointment":
+        "Second Appointment",
 
-    "Not Interested":
-        "Not Interested"
+    "Deal":
+        "Deal",
+
+    "No Deal":
+        "No Deal"
 };
 
 
@@ -220,29 +226,23 @@ const LEAD_STATUS_CLASSES = {
     "New":
         "status-new",
 
-    "Flyer Sent":
-        "status-flyer",
+    "First Contact":
+        "status-first-contact",
 
-    "Interested":
-        "status-interested",
-
-    "Follow Up":
-        "status-follow-up",
-
-    "Appointment":
-        "status-appointment",
-
-    "Site Survey":
-        "status-site-survey",
+    "First Meeting / Appointment / Site Survey":
+        "status-first-meeting",
 
     "Quotation":
         "status-quotation",
 
-    "Closing":
-        "status-closing",
+    "Second Appointment":
+        "status-second-appointment",
 
-    "Not Interested":
-        "status-not-interested"
+    "Deal":
+        "status-deal",
+
+    "No Deal":
+        "status-no-deal"
 };
 
 
@@ -250,11 +250,12 @@ const LEAD_STATUS_CLASSES = {
 // PIPELINE STAGES
 // ============================================================
 //
-// SPK bukan status lead.
-// SPK adalah milestone / field.
+// Pipeline mengikuti 7 STATUS UTAMA.
 //
-// Jadi SPK TIDAK dimasukkan ke LEAD_STATUSES.
-//
+// SPK dan Closing tidak dimasukkan ke pipeline status.
+// SPK / Deposit dan Closing tetap tersedia sebagai
+// field/detail customer.
+// ============================================================
 
 const PIPELINE_STAGES = [
 
@@ -266,38 +267,17 @@ const PIPELINE_STAGES = [
     },
 
     {
-        key: "flyer_sent",
-        status: "Flyer Sent",
-        label: "Flyer Sent",
-        className: "status-flyer"
+        key: "first_contact",
+        status: "First Contact",
+        label: "First Contact",
+        className: "status-first-contact"
     },
 
     {
-        key: "interested",
-        status: "Interested",
-        label: "Interested",
-        className: "status-interested"
-    },
-
-    {
-        key: "follow_up",
-        status: "Follow Up",
-        label: "Follow Up",
-        className: "status-follow-up"
-    },
-
-    {
-        key: "appointment",
-        status: "Appointment",
-        label: "Appointment",
-        className: "status-appointment"
-    },
-
-    {
-        key: "site_survey",
-        status: "Site Survey",
-        label: "Site Survey",
-        className: "status-site-survey"
+        key: "first_meeting",
+        status: "First Meeting / Appointment / Site Survey",
+        label: "First Meeting / Appointment / Site Survey",
+        className: "status-first-meeting"
     },
 
     {
@@ -308,17 +288,24 @@ const PIPELINE_STAGES = [
     },
 
     {
-        key: "closing",
-        status: "Closing",
-        label: "Closing",
-        className: "status-closing"
+        key: "second_appointment",
+        status: "Second Appointment",
+        label: "Second Appointment",
+        className: "status-second-appointment"
     },
 
     {
-        key: "not_interested",
-        status: "Not Interested",
-        label: "Not Interested",
-        className: "status-not-interested"
+        key: "deal",
+        status: "Deal",
+        label: "Deal",
+        className: "status-deal"
+    },
+
+    {
+        key: "no_deal",
+        status: "No Deal",
+        label: "No Deal",
+        className: "status-no-deal"
     }
 ];
 
@@ -333,23 +320,17 @@ const DASHBOARD_STAT_KEYS = [
 
     "new",
 
-    "flyer_sent",
+    "first_contact",
 
-    "interested",
-
-    "follow_up",
-
-    "appointment",
-
-    "site_survey",
+    "first_meeting",
 
     "quotation",
 
-    "spk",
+    "second_appointment",
 
-    "closing",
+    "deal",
 
-    "not_interested"
+    "no_deal"
 ];
 
 
@@ -716,6 +697,12 @@ function normalizeRole(role) {
 // ============================================================
 // NORMALIZE LEAD STATUS
 // ============================================================
+//
+// Fungsi ini sekarang hanya mengenali 7 STATUS BARU.
+//
+// Status lama tetap bisa ditemukan di database lama,
+// tetapi TIDAK akan dijadikan status baru.
+// ============================================================
 
 function normalizeLeadStatus(status) {
 
@@ -735,6 +722,10 @@ function normalizeLeadStatus(status) {
 
     const aliases = {
 
+        // ----------------------------------------------------
+        // NEW
+        // ----------------------------------------------------
+
         "baru":
             "New",
 
@@ -742,52 +733,82 @@ function normalizeLeadStatus(status) {
             "New",
 
 
+        // ----------------------------------------------------
+        // FIRST CONTACT
+        // ----------------------------------------------------
+
+        "first contact":
+            "First Contact",
+
+        "first-contact":
+            "First Contact",
+
+        "firstcontact":
+            "First Contact",
+
+        "kontak pertama":
+            "First Contact",
+
+        "contact pertama":
+            "First Contact",
+
         "flyer":
-            "Flyer Sent",
+            "First Contact",
 
         "flyer sent":
-            "Flyer Sent",
+            "First Contact",
 
         "sudah kirim flyer":
-            "Flyer Sent",
+            "First Contact",
 
         "sudah dikirim flyer":
-            "Flyer Sent",
+            "First Contact",
 
 
-        "tertarik":
-            "Interested",
+        // ----------------------------------------------------
+        // FIRST MEETING / APPOINTMENT / SITE SURVEY
+        // ----------------------------------------------------
+
+        "first meeting":
+            "First Meeting / Appointment / Site Survey",
+
+        "first meeting / appointment / site survey":
+            "First Meeting / Appointment / Site Survey",
+
+        "first-meeting":
+            "First Meeting / Appointment / Site Survey",
+
+        "firstmeeting":
+            "First Meeting / Appointment / Site Survey",
+
+        "meeting pertama":
+            "First Meeting / Appointment / Site Survey",
 
         "interested":
-            "Interested",
+            "First Meeting / Appointment / Site Survey",
 
-
-        "follow up":
-            "Follow Up",
-
-        "follow-up":
-            "Follow Up",
-
-        "followup":
-            "Follow Up",
-
+        "tertarik":
+            "First Meeting / Appointment / Site Survey",
 
         "appointment":
-            "Appointment",
+            "First Meeting / Appointment / Site Survey",
 
         "janji":
-            "Appointment",
-
+            "First Meeting / Appointment / Site Survey",
 
         "site survey":
-            "Site Survey",
+            "First Meeting / Appointment / Site Survey",
 
         "site-survey":
-            "Site Survey",
+            "First Meeting / Appointment / Site Survey",
 
         "survey":
-            "Site Survey",
+            "First Meeting / Appointment / Site Survey",
 
+
+        // ----------------------------------------------------
+        // QUOTATION
+        // ----------------------------------------------------
 
         "quotation":
             "Quotation",
@@ -799,21 +820,67 @@ function normalizeLeadStatus(status) {
             "Quotation",
 
 
+        // ----------------------------------------------------
+        // SECOND APPOINTMENT
+        // ----------------------------------------------------
+
+        "second appointment":
+            "Second Appointment",
+
+        "second-appointment":
+            "Second Appointment",
+
+        "secondappointment":
+            "Second Appointment",
+
+        "appointment kedua":
+            "Second Appointment",
+
+        "follow up":
+            "Second Appointment",
+
+        "follow-up":
+            "Second Appointment",
+
+        "followup":
+            "Second Appointment",
+
+
+        // ----------------------------------------------------
+        // DEAL
+        // ----------------------------------------------------
+
+        "deal":
+            "Deal",
+
         "closing":
-            "Closing",
+            "Deal",
 
         "closed":
-            "Closing",
+            "Deal",
 
+
+        // ----------------------------------------------------
+        // NO DEAL
+        // ----------------------------------------------------
+
+        "no deal":
+            "No Deal",
+
+        "no-deal":
+            "No Deal",
+
+        "nodeal":
+            "No Deal",
 
         "tidak tertarik":
-            "Not Interested",
+            "No Deal",
 
         "not interested":
-            "Not Interested",
+            "No Deal",
 
         "tidak berminat":
-            "Not Interested"
+            "No Deal"
     };
 
 
