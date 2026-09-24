@@ -886,6 +886,18 @@
             );
 
 
+            // =================================================
+            // TAMBAHAN LAST FOLLOW UP
+            // =================================================
+
+            setValue(
+                "leadLastFollowUp",
+                dateValue(
+                    customer.last_follow_up
+                )
+            );
+
+
             setValue(
                 "leadAppointment",
                 dateValue(
@@ -1087,6 +1099,17 @@
                 getValue(
                     "leadFollowUp"
                 ) || null,
+
+
+            // =================================================
+            // TAMBAHAN LAST FOLLOW UP
+            // =================================================
+
+            last_follow_up:
+                getValue(
+                    "leadLastFollowUp"
+                ) || null,
+
 
             appointment:
                 getValue(
