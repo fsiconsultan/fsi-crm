@@ -33,7 +33,9 @@ function updatePagination() {
 
     const totalPages = Math.max(
         1,
-        Math.ceil(totalLeads / pageSize)
+        Math.ceil(
+            totalLeads / pageSize
+        )
     );
 
     const start = totalLeads === 0
@@ -47,10 +49,17 @@ function updatePagination() {
 
     // INFO
     if (paginationInfo) {
-        paginationInfo.textContent =
-            totalLeads === 0
-                ? "0 leads"
-                : `${start}-${end} of ${totalLeads} leads`;
+        if (totalLeads === 0) {
+            paginationInfo.textContent = "0 leads";
+        } else {
+            paginationInfo.textContent =
+                start +
+                "-" +
+                end +
+                " of " +
+                totalLeads +
+                " leads";
+        }
     }
 
     // PAGE NUMBER
@@ -93,10 +102,15 @@ function updatePagination() {
     );
 
     if (pageInfo) {
-        pageInfo.textContent =
-            totalLeads === 0
-                ? "Page 1 / 1"
-                : `Page ${currentPage} / ${totalPages}`;
+        if (totalLeads === 0) {
+            pageInfo.textContent = "Page 1 / 1";
+        } else {
+            pageInfo.textContent =
+                "Page " +
+                currentPage +
+                " / " +
+                totalPages;
+        }
     }
 
     window.totalPages = totalPages;
@@ -130,13 +144,16 @@ function changePage(direction) {
 
     const totalPages = Math.max(
         1,
-        Math.ceil(totalLeads / pageSize)
+        Math.ceil(
+            totalLeads / pageSize
+        )
     );
 
     const currentPage = leadGetCurrentPage();
 
     const newPage =
-        currentPage + numericDirection;
+        currentPage +
+        numericDirection;
 
     if (
         newPage < 1 ||
