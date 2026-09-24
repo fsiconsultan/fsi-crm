@@ -131,16 +131,6 @@
         href="css/customer-edit.css"
     >
 
-    <!-- =====================================================
-         SALES DASHBOARD
-         ADMIN ONLY
-    ====================================================== -->
-
-    <link
-        rel="stylesheet"
-        href="css/sales-dashboard.css"
-    >
-
     <link
         rel="stylesheet"
         href="css/responsive.css"
@@ -393,9 +383,7 @@
                     </button>
 
 
-                    <!-- =================================================
-                         SALES DROPDOWN
-                    ================================================== -->
+                    <!-- SALES DROPDOWN -->
 
                     <div
                         class="nav-dropdown"
@@ -431,45 +419,6 @@
                             class="nav-dropdown-menu"
                             id="sales-nav-menu"
                         >
-
-                            <!-- =================================================
-                                 SALES DASHBOARD
-                                 ADMIN ONLY
-                            ================================================== -->
-
-                            <div
-                                id="sales-dashboard-menu-section"
-                                class="admin-only"
-                            >
-
-                                <button
-                                    type="button"
-                                    class="nav-dropdown-item"
-                                    data-page="sales-dashboard"
-                                    data-nav="sales-dashboard"
-                                    data-sales-dashboard="all"
-                                >
-
-                                    <i
-                                        data-lucide="chart-no-axes-combined"
-                                        aria-hidden="true"
-                                    ></i>
-
-                                    <span>
-                                        Sales Dashboard
-                                    </span>
-
-                                </button>
-
-
-                                <div
-                                    id="sales-dashboard-menu-list"
-                                    class="sales-dashboard-menu-list"
-                                    aria-label="Sales Dashboard List"
-                                ></div>
-
-                            </div>
-
 
                             <button
                                 type="button"
@@ -642,26 +591,6 @@
 
                 <button
                     type="button"
-                    class="nav-link admin-only"
-                    data-page="sales-dashboard"
-                    data-nav="sales-dashboard"
-                    data-sales-dashboard="all"
-                >
-
-                    <i
-                        data-lucide="chart-no-axes-combined"
-                        aria-hidden="true"
-                    ></i>
-
-                    <span>
-                        Sales Dashboard
-                    </span>
-
-                </button>
-
-
-                <button
-                    type="button"
                     class="nav-link"
                     data-page="customer-profile"
                     data-nav="customer-profile"
@@ -765,6 +694,8 @@
 
                     <div class="stats-grid">
 
+                        <!-- TOTAL -->
+
                         <article class="stat-card">
 
                             <div class="stat-icon bg-blue">
@@ -792,6 +723,8 @@
 
                         </article>
 
+
+                        <!-- 1. NEW -->
 
                         <article class="stat-card">
 
@@ -821,6 +754,8 @@
                         </article>
 
 
+                        <!-- 2. FIRST CONTACT -->
+
                         <article class="stat-card">
 
                             <div class="stat-icon bg-green">
@@ -848,6 +783,8 @@
 
                         </article>
 
+
+                        <!-- 3. FIRST MEETING / APPOINTMENT / SITE SURVEY -->
 
                         <article class="stat-card">
 
@@ -879,6 +816,8 @@
                         </article>
 
 
+                        <!-- 4. QUOTATION -->
+
                         <article class="stat-card">
 
                             <div class="stat-icon bg-yellow">
@@ -908,6 +847,8 @@
 
                         </article>
 
+
+                        <!-- 5. SECOND APPOINTMENT -->
 
                         <article class="stat-card">
 
@@ -939,6 +880,11 @@
                         </article>
 
 
+                        <!-- =================================================
+                             INTERNAL ID statSPK KEPT FOR
+                             JAVASCRIPT COMPATIBILITY
+                        ================================================== -->
+
                         <article class="stat-card">
 
                             <div class="stat-icon bg-indigo">
@@ -969,6 +915,8 @@
                         </article>
 
 
+                        <!-- 7. NO DEAL -->
+
                         <article class="stat-card">
 
                             <div class="stat-icon bg-red">
@@ -998,6 +946,16 @@
 
                         </article>
 
+
+                        <!--
+                            INTERNAL LEGACY ID KEPT:
+                            statClosing
+
+                            It remains in the DOM so existing
+                            JavaScript does not immediately break.
+                            It is hidden visually until the
+                            dashboard JavaScript is updated.
+                        -->
 
                         <strong
                             id="statClosing"
@@ -1111,696 +1069,7 @@
 
 
                 <!-- =================================================
-                     SALES DASHBOARD
-                     ADMIN ONLY
-                ================================================== -->
-
-                <section
-                    id="view-sales-dashboard"
-                    class="crm-page admin-only"
-                    data-page-view="sales-dashboard"
-                >
-
-                    <!-- HEADER -->
-
-                    <div class="sales-dashboard-header">
-
-                        <div class="sales-dashboard-title-area">
-
-                            <button
-                                type="button"
-                                id="sales-dashboard-back"
-                                class="btn-outline"
-                                data-sales-dashboard-action="back"
-                                data-page="dashboard"
-                            >
-
-                                <i
-                                    data-lucide="arrow-left"
-                                    aria-hidden="true"
-                                ></i>
-
-                                <span>
-                                    Back
-                                </span>
-
-                            </button>
-
-
-                            <div>
-
-                                <div class="sales-dashboard-eyebrow">
-                                    Sales Performance
-                                </div>
-
-                                <h2
-                                    id="sales-dashboard-name"
-                                    data-sales-dashboard-name
-                                >
-                                    Sales Dashboard
-                                </h2>
-
-                                <p
-                                    id="sales-dashboard-description"
-                                    data-sales-dashboard-email
-                                >
-                                    Sales performance, pipeline, follow-up, and customer data.
-                                </p>
-
-                            </div>
-
-                        </div>
-
-
-                        <div class="sales-dashboard-selector">
-
-                            <label for="sales-dashboard-select">
-                                Select Sales
-                            </label>
-
-                            <select
-                                id="sales-dashboard-select"
-                            >
-
-                                <option value="">
-                                    Select Sales
-                                </option>
-
-                            </select>
-
-                        </div>
-
-                    </div>
-
-
-
-                    <!-- LOADING -->
-
-                    <div
-                        id="sales-dashboard-loading"
-                        class="sales-dashboard-loading"
-                        hidden
-                    >
-
-                        <div class="sales-dashboard-loading-spinner"></div>
-
-                        <span>
-                            Loading sales data...
-                        </span>
-
-                    </div>
-
-
-
-                    <!-- ERROR -->
-
-                    <div
-                        id="sales-dashboard-error"
-                        class="sales-dashboard-error"
-                        role="alert"
-                        hidden
-                    ></div>
-
-
-
-                    <!-- CONTENT -->
-
-                    <div
-                        id="sales-dashboard-content"
-                        class="sales-dashboard-content"
-                    >
-
-
-                        <!-- =================================================
-                             SALES STATISTICS
-                        ================================================== -->
-
-                        <div
-                            id="sales-dashboard-stats"
-                            class="sales-dashboard-stats"
-                        >
-
-                            <article class="sales-stat-card">
-
-                                <div class="sales-stat-icon bg-blue">
-
-                                    <i
-                                        data-lucide="users"
-                                        aria-hidden="true"
-                                    ></i>
-
-                                </div>
-
-                                <div>
-
-                                    <span>Total Leads</span>
-
-                                    <strong
-                                        id="salesStatTotal"
-                                        data-sales-stat="total"
-                                    >
-                                        0
-                                    </strong>
-
-                                </div>
-
-                            </article>
-
-
-                            <article class="sales-stat-card">
-
-                                <div class="sales-stat-icon bg-cyan">
-
-                                    <i
-                                        data-lucide="sparkles"
-                                        aria-hidden="true"
-                                    ></i>
-
-                                </div>
-
-                                <div>
-
-                                    <span>New</span>
-
-                                    <strong
-                                        id="salesStatNew"
-                                        data-sales-stat="new"
-                                    >
-                                        0
-                                    </strong>
-
-                                </div>
-
-                            </article>
-
-
-                            <article class="sales-stat-card">
-
-                                <div class="sales-stat-icon bg-green">
-
-                                    <i
-                                        data-lucide="phone"
-                                        aria-hidden="true"
-                                    ></i>
-
-                                </div>
-
-                                <div>
-
-                                    <span>First Contact</span>
-
-                                    <strong
-                                        id="salesStatFirstContact"
-                                        data-sales-stat="first_contact"
-                                    >
-                                        0
-                                    </strong>
-
-                                </div>
-
-                            </article>
-
-
-                            <article class="sales-stat-card">
-
-                                <div class="sales-stat-icon bg-orange">
-
-                                    <i
-                                        data-lucide="calendar-check"
-                                        aria-hidden="true"
-                                    ></i>
-
-                                </div>
-
-                                <div>
-
-                                    <span>First Meeting</span>
-
-                                    <strong
-                                        id="salesStatFirstMeeting"
-                                        data-sales-stat="first_meeting"
-                                    >
-                                        0
-                                    </strong>
-
-                                </div>
-
-                            </article>
-
-
-                            <article class="sales-stat-card">
-
-                                <div class="sales-stat-icon bg-yellow">
-
-                                    <i
-                                        data-lucide="file-text"
-                                        aria-hidden="true"
-                                    ></i>
-
-                                </div>
-
-                                <div>
-
-                                    <span>Quotation</span>
-
-                                    <strong
-                                        id="salesStatQuotation"
-                                        data-sales-stat="quotation"
-                                    >
-                                        0
-                                    </strong>
-
-                                </div>
-
-                            </article>
-
-
-                            <article class="sales-stat-card">
-
-                                <div class="sales-stat-icon bg-purple">
-
-                                    <i
-                                        data-lucide="calendar-clock"
-                                        aria-hidden="true"
-                                    ></i>
-
-                                </div>
-
-                                <div>
-
-                                    <span>Second Appointment</span>
-
-                                    <strong
-                                        id="salesStatSecondAppointment"
-                                        data-sales-stat="second_appointment"
-                                    >
-                                        0
-                                    </strong>
-
-                                </div>
-
-                            </article>
-
-
-                            <article class="sales-stat-card">
-
-                                <div class="sales-stat-icon bg-indigo">
-
-                                    <i
-                                        data-lucide="handshake"
-                                        aria-hidden="true"
-                                    ></i>
-
-                                </div>
-
-                                <div>
-
-                                    <span>Deal</span>
-
-                                    <strong
-                                        id="salesStatDeal"
-                                        data-sales-stat="deal"
-                                    >
-                                        0
-                                    </strong>
-
-                                </div>
-
-                            </article>
-
-
-                            <article class="sales-stat-card">
-
-                                <div class="sales-stat-icon bg-red">
-
-                                    <i
-                                        data-lucide="user-round-x"
-                                        aria-hidden="true"
-                                    ></i>
-
-                                </div>
-
-                                <div>
-
-                                    <span>No Deal</span>
-
-                                    <strong
-                                        id="salesStatNoDeal"
-                                        data-sales-stat="no_deal"
-                                    >
-                                        0
-                                    </strong>
-
-                                </div>
-
-                            </article>
-
-                        </div>
-
-
-
-                        <!-- =================================================
-                             SALES PIPELINE
-                        ================================================== -->
-
-                        <section class="sales-dashboard-card">
-
-                            <div class="sales-dashboard-card-header">
-
-                                <div>
-
-                                    <h3>
-                                        Sales Pipeline
-                                    </h3>
-
-                                    <p>
-                                        Customer progress by stage.
-                                    </p>
-
-                                </div>
-
-                            </div>
-
-
-                            <div
-                                id="sales-dashboard-pipeline-container"
-                                class="sales-dashboard-pipeline"
-                            >
-
-                                <div class="sales-dashboard-empty">
-
-                                    <i
-                                        data-lucide="chart-no-axes-combined"
-                                        aria-hidden="true"
-                                    ></i>
-
-                                    <span>
-                                        Select a Sales to view the pipeline.
-                                    </span>
-
-                                </div>
-
-                            </div>
-
-                        </section>
-
-
-
-                        <!-- =================================================
-                             FOLLOW UP
-                        ================================================== -->
-
-                        <section class="sales-dashboard-card">
-
-                            <div class="sales-dashboard-card-header">
-
-                                <div>
-
-                                    <h3>
-                                        Follow Up
-                                    </h3>
-
-                                    <p>
-                                        Upcoming customer follow-ups.
-                                    </p>
-
-                                </div>
-
-                            </div>
-
-
-                            <div
-                                id="sales-dashboard-follow-up"
-                                class="sales-dashboard-follow-up"
-                            >
-
-                                <div class="sales-dashboard-empty">
-
-                                    <i
-                                        data-lucide="calendar-clock"
-                                        aria-hidden="true"
-                                    ></i>
-
-                                    <span>
-                                        No follow-up data.
-                                    </span>
-
-                                </div>
-
-                            </div>
-
-                        </section>
-
-
-
-                        <!-- =================================================
-                             CUSTOMER LIST
-                        ================================================== -->
-
-                        <section
-                            class="sales-dashboard-card sales-dashboard-leads-card"
-                        >
-
-                            <div class="sales-dashboard-card-header">
-
-                                <div>
-
-                                    <h3>
-                                        Customer List
-                                    </h3>
-
-                                    <p>
-                                        All leads assigned to this Sales.
-                                    </p>
-
-                                </div>
-
-
-                                <button
-                                    type="button"
-                                    id="sales-dashboard-view-leads"
-                                    class="btn-outline"
-                                    data-sales-dashboard-action="open-leads"
-                                    data-page="leads"
-                                >
-
-                                    <span>
-                                        Open Leads
-                                    </span>
-
-                                    <i
-                                        data-lucide="arrow-right"
-                                        aria-hidden="true"
-                                    ></i>
-
-                                </button>
-
-                            </div>
-
-
-
-                            <!-- SEARCH / FILTER -->
-
-                            <div class="sales-dashboard-toolbar">
-
-                                <div class="search-box">
-
-                                    <i
-                                        data-lucide="search"
-                                        aria-hidden="true"
-                                    ></i>
-
-                                    <input
-                                        id="sales-dashboard-search"
-                                        type="search"
-                                        placeholder="Search customer..."
-                                        autocomplete="off"
-                                        data-sales-dashboard-search
-                                    >
-
-                                </div>
-
-
-                                <select
-                                    id="sales-dashboard-status-filter"
-                                    aria-label="Filter sales status"
-                                    data-sales-dashboard-status-filter
-                                >
-
-                                    <option value="">
-                                        All Status
-                                    </option>
-
-                                    <option value="New">
-                                        New
-                                    </option>
-
-                                    <option value="First Contact">
-                                        First Contact
-                                    </option>
-
-                                    <option value="First Meeting / Appointment / Site Survey">
-                                        First Meeting / Appointment / Site Survey
-                                    </option>
-
-                                    <option value="Quotation">
-                                        Quotation
-                                    </option>
-
-                                    <option value="Second Appointment">
-                                        Second Appointment
-                                    </option>
-
-                                    <option value="Deal">
-                                        Deal
-                                    </option>
-
-                                    <option value="No Deal">
-                                        No Deal
-                                    </option>
-
-                                </select>
-
-                            </div>
-
-
-
-                            <!-- CUSTOMER TABLE -->
-
-                            <div
-                                id="sales-dashboard-leads-container"
-                                class="table-panel table-container"
-                            >
-
-                                <table
-                                    id="sales-dashboard-leads-table"
-                                    class="crm-table data-table sales-dashboard-table"
-                                >
-
-                                    <thead>
-
-                                        <tr>
-
-                                            <th>
-                                                Customer
-                                            </th>
-
-                                            <th>
-                                                Business
-                                            </th>
-
-                                            <th>
-                                                Location
-                                            </th>
-
-                                            <th>
-                                                Status
-                                            </th>
-
-                                            <th>
-                                                Follow Up
-                                            </th>
-
-                                            <th>
-                                                Input Date
-                                            </th>
-
-                                            <th>
-                                                Action
-                                            </th>
-
-                                        </tr>
-
-                                    </thead>
-
-
-                                    <tbody
-                                        id="sales-dashboard-leads-body"
-                                    >
-
-                                        <tr>
-
-                                            <td
-                                                colspan="7"
-                                                class="table-loading"
-                                            >
-                                                Select a Sales to load customers.
-                                            </td>
-
-                                        </tr>
-
-                                    </tbody>
-
-                                </table>
-
-                            </div>
-
-
-
-                            <!-- PAGINATION -->
-
-                            <div class="pagination-wrapper">
-
-                                <div
-                                    id="sales-dashboard-pagination-info"
-                                    class="pagination-info"
-                                >
-                                    Showing 0 customers
-                                </div>
-
-
-                                <div class="pagination-controls">
-
-                                    <button
-                                        id="sales-dashboard-prev-page"
-                                        type="button"
-                                        aria-label="Previous page"
-                                        disabled
-                                        data-sales-dashboard-action="previous-page"
-                                    >
-
-                                        <i
-                                            data-lucide="chevron-left"
-                                            aria-hidden="true"
-                                        ></i>
-
-                                    </button>
-
-
-                                    <span id="sales-dashboard-page-number">
-                                        1
-                                    </span>
-
-
-                                    <button
-                                        id="sales-dashboard-next-page"
-                                        type="button"
-                                        aria-label="Next page"
-                                        disabled
-                                        data-sales-dashboard-action="next-page"
-                                    >
-
-                                        <i
-                                            data-lucide="chevron-right"
-                                            aria-hidden="true"
-                                        ></i>
-
-                                    </button>
-
-                                </div>
-
-                            </div>
-
-                        </section>
-
-                    </div>
-
-                </section>
-
-
-
-                <!-- =================================================
-                     LEADS
+                     LEADS / CUSTOMER PAGE
                 ================================================== -->
 
                 <section
@@ -1866,6 +1135,8 @@
 
                         </div>
 
+
+                        <!-- STATUS FILTER — NEW 7 STATUSES -->
 
                         <select
                             id="filter-status"
@@ -2055,7 +1326,7 @@
 
 
                 <!-- =================================================
-                     CUSTOMER PROFILE
+                     CUSTOMER PROFILE PAGE
                 ================================================== -->
 
                 <section
@@ -2089,7 +1360,7 @@
 
 
                 <!-- =================================================
-                     MANAGE SALES
+                     MANAGE SALES PAGE
                 ================================================== -->
 
                 <section
@@ -2411,6 +1682,10 @@
                     </div>
 
 
+                    <!-- =================================================
+                         STATUS — NEW 7 STAGES
+                    ================================================== -->
+
                     <div class="form-group">
 
                         <label for="leadStatus">
@@ -2455,6 +1730,14 @@
                     </div>
 
 
+                    <!-- =================================================
+                         STATUS INPUT DATE
+                         
+                         MANUAL DATE:
+                         Menentukan tanggal customer mulai
+                         berada pada status tersebut.
+                    ================================================== -->
+
                     <div class="form-group">
 
                         <label for="leadStatusStartedAt">
@@ -2484,6 +1767,12 @@
 
                     </div>
 
+
+                    <!-- =================================================
+                         LAST FOLLOW UP
+                         
+                         STORES THE MOST RECENT FOLLOW-UP DATE.
+                    ================================================== -->
 
                     <div class="form-group">
 
@@ -2545,7 +1834,12 @@
                     </div>
 
 
-                    <!-- INTERNAL LEGACY SPK FIELD -->
+                    <!-- =================================================
+                         DEPOSIT DATE
+                         
+                         INTERNAL FIELD REMAINS "spk"
+                         TO KEEP EXISTING JAVASCRIPT COMPATIBLE.
+                    ================================================== -->
 
                     <div class="form-group">
 
@@ -2658,6 +1952,12 @@
 
     <!-- =====================================================
          SALES MODAL
+
+         FIXED:
+         1. Added Password field.
+         2. Added salesFormMessage.
+         3. Cancel ID compatible with sales.js.
+         4. Existing X button preserved.
     ====================================================== -->
 
     <div
@@ -2721,6 +2021,9 @@
 
                 <div class="form-grid">
 
+
+                    <!-- FULL NAME -->
+
                     <div class="form-group full-width">
 
                         <label for="salesName">
@@ -2739,6 +2042,8 @@
                     </div>
 
 
+                    <!-- USERNAME -->
+
                     <div class="form-group">
 
                         <label for="salesUsername">
@@ -2756,6 +2061,8 @@
 
                     </div>
 
+
+                    <!-- PASSWORD -->
 
                     <div class="form-group">
 
@@ -2776,6 +2083,8 @@
                     </div>
 
 
+                    <!-- EMAIL -->
+
                     <div class="form-group">
 
                         <label for="salesEmail">
@@ -2793,6 +2102,8 @@
                     </div>
 
 
+                    <!-- PHONE -->
+
                     <div class="form-group">
 
                         <label for="salesPhone">
@@ -2809,6 +2120,8 @@
 
                     </div>
 
+
+                    <!-- ROLE -->
 
                     <div class="form-group">
 
@@ -2842,6 +2155,8 @@
                     </div>
 
 
+                    <!-- STATUS -->
+
                     <div class="form-group">
 
                         <label for="salesStatus">
@@ -2869,6 +2184,8 @@
 
 
 
+                <!-- FORM MESSAGE -->
+
                 <div
                     id="salesFormMessage"
                     class="form-message"
@@ -2877,6 +2194,8 @@
                 ></div>
 
 
+
+                <!-- MODAL FOOTER -->
 
                 <div class="modal-footer">
 
@@ -2938,6 +2257,11 @@
 
     <!-- =====================================================
          CRM JAVASCRIPT
+
+         EXISTING ORDER PRESERVED.
+
+         DASHBOARD IS NOW MODULAR.
+         LEADS IS NOW MODULAR.
     ====================================================== -->
 
     <script src="js/config.js"></script>
@@ -3008,23 +2332,6 @@
     <script src="js/leads/leads-sales-actions.js"></script>
 
     <script src="js/leads/leads-init.js"></script>
-
-
-    <!-- =====================================================
-         SALES DASHBOARD — MODULAR
-    ====================================================== -->
-
-    <script src="js/sales-dashboard/sales-dashboard-state.js"></script>
-
-    <script src="js/sales-dashboard/sales-dashboard-data.js"></script>
-
-    <script src="js/sales-dashboard/sales-dashboard-stats.js"></script>
-
-    <script src="js/sales-dashboard/sales-dashboard-pipeline.js"></script>
-
-    <script src="js/sales-dashboard/sales-dashboard-leads.js"></script>
-
-    <script src="js/sales-dashboard/sales-dashboard.js"></script>
 
 
     <!-- =====================================================
