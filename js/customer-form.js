@@ -9,6 +9,15 @@
 // 5. Update customer
 // 6. Close popup
 //
+// STATUS SYSTEM:
+// 1. New
+// 2. First Contact
+// 3. First Meeting / Appointment / Site Survey
+// 4. Quotation
+// 5. Second Appointment
+// 6. Deal
+// 7. No Deal
+//
 // TIDAK menangani:
 // - Customer Profile
 // - Delete
@@ -17,6 +26,11 @@
 // - Pagination
 // - Dashboard
 // - Manage Sales
+//
+// CATATAN:
+// - SPK sudah dihapus dari Customer Form.
+// - Appointment, Site Survey, Quotation, Closing tetap
+//   sebagai detail/activity field.
 // ============================================================
 
 (function () {
@@ -111,6 +125,32 @@
             role === "sales" ||
             role === "salesperson"
         );
+
+    }
+
+
+    // ========================================================
+    // STATUS
+    // ========================================================
+
+    function normalizeStatus(status) {
+
+        const rawStatus =
+            String(status || "New").trim();
+
+
+        if (
+            typeof window.normalizeLeadStatus === "function"
+        ) {
+
+            return window.normalizeLeadStatus(
+                rawStatus || "New"
+            );
+
+        }
+
+
+        return rawStatus || "New";
 
     }
 
@@ -731,6 +771,14 @@
         resetForm();
 
 
+        // Pastikan status awal selalu New.
+
+        setValue(
+            "leadStatus",
+            normalizeStatus("New")
+        );
+
+
         setModalTitle(
             "Add Customer"
         );
@@ -834,7 +882,9 @@
                 customerId;
 
 
+            // =================================================
             // ID
+            // =================================================
 
             setValue(
                 "leadId",
@@ -842,7 +892,9 @@
             );
 
 
-            // Basic information
+            // =================================================
+            // BASIC INFORMATION
+            // =================================================
 
             setValue(
                 "leadCustomerName",
@@ -868,11 +920,25 @@
             );
 
 
-            // Status
+            // =================================================
+            // STATUS
+            // =================================================
+            // Mengikuti 7 status baru dari config.js.
+            //
+            // Jika database masih memiliki status lama,
+            // normalizeLeadStatus() akan mengubah tampilan
+            // ke status baru tanpa melakukan migration DB.
+            // =================================================
+
+            const normalizedStatus =
+                normalizeStatus(
+                    customer.status || "New"
+                );
+
 
             setValue(
                 "leadStatus",
-                customer.status || "New"
+                normalizedStatus
             );
 
 
@@ -892,7 +958,9 @@
             );
 
 
-            // Pipeline dates
+            // =================================================
+            // FOLLOW UP DATE
+            // =================================================
 
             setValue(
                 "leadFollowUp",
@@ -903,7 +971,7 @@
 
 
             // =================================================
-            // TAMBAHAN LAST FOLLOW UP
+            // LAST FOLLOW UP
             // =================================================
 
             setValue(
@@ -914,6 +982,10 @@
             );
 
 
+            // =================================================
+            // APPOINTMENT
+            // =================================================
+
             setValue(
                 "leadAppointment",
                 dateValue(
@@ -921,6 +993,10 @@
                 )
             );
 
+
+            // =================================================
+            // SITE SURVEY
+            // =================================================
 
             setValue(
                 "leadSiteSurvey",
@@ -930,6 +1006,10 @@
             );
 
 
+            // =================================================
+            // QUOTATION
+            // =================================================
+
             setValue(
                 "leadQuotation",
                 dateValue(
@@ -938,16 +1018,9 @@
             );
 
 
-            setFirstValue(
-                [
-                    "leadSpk",
-                    "leadSPK"
-                ],
-                dateValue(
-                    customer.spk
-                )
-            );
-
+            // =================================================
+            // CLOSING
+            // =================================================
 
             setValue(
                 "leadClosing",
@@ -957,7 +1030,9 @@
             );
 
 
-            // Sales assignment
+            // =================================================
+            // SALES ASSIGNMENT
+            // =================================================
 
             setFirstValue(
                 [
@@ -968,13 +1043,19 @@
             );
 
 
-            // Notes
+            // =================================================
+            // NOTES
+            // =================================================
 
             setValue(
                 "leadNotes",
                 customer.notes
             );
 
+
+            // =================================================
+            // MODAL
+            // =================================================
 
             setModalTitle(
                 "Edit Customer"
@@ -1088,6 +1169,26 @@
         }
 
 
+        // =====================================================
+        // STATUS
+        // =====================================================
+
+        const rawStatus =
+            getValue(
+                "leadStatus"
+            ) || "New";
+
+
+        const normalizedStatus =
+            normalizeStatus(
+                rawStatus
+            );
+
+
+        // =====================================================
+        // PAYLOAD
+        // =====================================================
+
         const payload = {
 
             customer_name:
@@ -1107,9 +1208,7 @@
                 ) || null,
 
             status:
-                getValue(
-                    "leadStatus"
-                ) || "New",
+                normalizedStatus,
 
 
             // =================================================
@@ -1133,7 +1232,7 @@
 
 
             // =================================================
-            // TAMBAHAN LAST FOLLOW UP
+            // LAST FOLLOW UP
             // =================================================
 
             last_follow_up:
@@ -1142,32 +1241,49 @@
                 ) || null,
 
 
+            // =================================================
+            // APPOINTMENT
+            // =================================================
+
             appointment:
                 getValue(
                     "leadAppointment"
                 ) || null,
+
+
+            // =================================================
+            // SITE SURVEY
+            // =================================================
 
             site_survey:
                 getValue(
                     "leadSiteSurvey"
                 ) || null,
 
+
+            // =================================================
+            // QUOTATION
+            // =================================================
+
             quotation:
                 getValue(
                     "leadQuotation"
                 ) || null,
 
-            spk:
-                getValue(
-                    "leadSpk"
-                ) || getValue(
-                    "leadSPK"
-                ) || null,
+
+            // =================================================
+            // CLOSING
+            // =================================================
 
             closing:
                 getValue(
                     "leadClosing"
                 ) || null,
+
+
+            // =================================================
+            // NOTES
+            // =================================================
 
             notes:
                 getValue(
@@ -1244,7 +1360,7 @@
         if (!profile) {
 
             showToast(
-                "Profile user belum tersedia.",
+                "User profile belum tersedia.",
                 "error"
             );
 
