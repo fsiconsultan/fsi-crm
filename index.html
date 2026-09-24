@@ -132,7 +132,7 @@
     >
 
     <!-- =====================================================
-         NEW — SALES DASHBOARD
+         SALES DASHBOARD
          ADMIN ONLY
     ====================================================== -->
 
@@ -433,7 +433,7 @@
                         >
 
                             <!-- =================================================
-                                 NEW — SALES DASHBOARD
+                                 SALES DASHBOARD
                                  ADMIN ONLY
                             ================================================== -->
 
@@ -466,15 +466,7 @@
                                     id="sales-dashboard-menu-list"
                                     class="sales-dashboard-menu-list"
                                     aria-label="Sales Dashboard List"
-                                >
-
-                                    <!--
-                                        Sales A / Sales B / Sales C
-                                        akan dimuat otomatis oleh
-                                        sales-dashboard.js
-                                    -->
-
-                                </div>
+                                ></div>
 
                             </div>
 
@@ -648,11 +640,6 @@
                 </button>
 
 
-                <!-- =================================================
-                     MOBILE — SALES DASHBOARD
-                     ADMIN ONLY
-                ================================================== -->
-
                 <button
                     type="button"
                     class="nav-link admin-only"
@@ -778,8 +765,6 @@
 
                     <div class="stats-grid">
 
-                        <!-- TOTAL -->
-
                         <article class="stat-card">
 
                             <div class="stat-icon bg-blue">
@@ -807,8 +792,6 @@
 
                         </article>
 
-
-                        <!-- 1. NEW -->
 
                         <article class="stat-card">
 
@@ -838,8 +821,6 @@
                         </article>
 
 
-                        <!-- 2. FIRST CONTACT -->
-
                         <article class="stat-card">
 
                             <div class="stat-icon bg-green">
@@ -867,8 +848,6 @@
 
                         </article>
 
-
-                        <!-- 3. FIRST MEETING / APPOINTMENT / SITE SURVEY -->
 
                         <article class="stat-card">
 
@@ -900,8 +879,6 @@
                         </article>
 
 
-                        <!-- 4. QUOTATION -->
-
                         <article class="stat-card">
 
                             <div class="stat-icon bg-yellow">
@@ -931,8 +908,6 @@
 
                         </article>
 
-
-                        <!-- 5. SECOND APPOINTMENT -->
 
                         <article class="stat-card">
 
@@ -964,8 +939,6 @@
                         </article>
 
 
-                        <!-- DEAL -->
-
                         <article class="stat-card">
 
                             <div class="stat-icon bg-indigo">
@@ -996,8 +969,6 @@
                         </article>
 
 
-                        <!-- 7. NO DEAL -->
-
                         <article class="stat-card">
 
                             <div class="stat-icon bg-red">
@@ -1027,8 +998,6 @@
 
                         </article>
 
-
-                        <!-- INTERNAL LEGACY ID -->
 
                         <strong
                             id="statClosing"
@@ -1142,19 +1111,8 @@
 
 
                 <!-- =================================================
-                     NEW — SALES DASHBOARD
-                     
+                     SALES DASHBOARD
                      ADMIN ONLY
-
-                     Dashboard khusus per Sales:
-                     - Sales name
-                     - Statistics
-                     - Pipeline
-                     - Follow Up
-                     - Customer List
-
-                     Data akan diisi oleh
-                     sales-dashboard.js
                 ================================================== -->
 
                 <section
@@ -1163,7 +1121,7 @@
                     data-page-view="sales-dashboard"
                 >
 
-                    <!-- SALES DASHBOARD HEADER -->
+                    <!-- HEADER -->
 
                     <div class="sales-dashboard-header">
 
@@ -1173,6 +1131,7 @@
                                 type="button"
                                 id="sales-dashboard-back"
                                 class="btn-outline"
+                                data-sales-dashboard-action="back"
                                 data-page="dashboard"
                             >
 
@@ -1194,11 +1153,17 @@
                                     Sales Performance
                                 </div>
 
-                                <h2 id="sales-dashboard-name">
+                                <h2
+                                    id="sales-dashboard-name"
+                                    data-sales-dashboard-name
+                                >
                                     Sales Dashboard
                                 </h2>
 
-                                <p id="sales-dashboard-description">
+                                <p
+                                    id="sales-dashboard-description"
+                                    data-sales-dashboard-email
+                                >
                                     Sales performance, pipeline, follow-up, and customer data.
                                 </p>
 
@@ -1206,8 +1171,6 @@
 
                         </div>
 
-
-                        <!-- SALES SELECTOR -->
 
                         <div class="sales-dashboard-selector">
 
@@ -1231,7 +1194,7 @@
 
 
 
-                    <!-- SALES DASHBOARD LOADING -->
+                    <!-- LOADING -->
 
                     <div
                         id="sales-dashboard-loading"
@@ -1249,7 +1212,7 @@
 
 
 
-                    <!-- SALES DASHBOARD ERROR -->
+                    <!-- ERROR -->
 
                     <div
                         id="sales-dashboard-error"
@@ -1260,7 +1223,7 @@
 
 
 
-                    <!-- SALES DASHBOARD CONTENT -->
+                    <!-- CONTENT -->
 
                     <div
                         id="sales-dashboard-content"
@@ -1272,9 +1235,10 @@
                              SALES STATISTICS
                         ================================================== -->
 
-                        <div class="sales-dashboard-stats">
-
-                            <!-- TOTAL -->
+                        <div
+                            id="sales-dashboard-stats"
+                            class="sales-dashboard-stats"
+                        >
 
                             <article class="sales-stat-card">
 
@@ -1289,11 +1253,12 @@
 
                                 <div>
 
-                                    <span>
-                                        Total Leads
-                                    </span>
+                                    <span>Total Leads</span>
 
-                                    <strong id="salesStatTotal">
+                                    <strong
+                                        id="salesStatTotal"
+                                        data-sales-stat="total"
+                                    >
                                         0
                                     </strong>
 
@@ -1301,8 +1266,6 @@
 
                             </article>
 
-
-                            <!-- NEW -->
 
                             <article class="sales-stat-card">
 
@@ -1317,11 +1280,12 @@
 
                                 <div>
 
-                                    <span>
-                                        New
-                                    </span>
+                                    <span>New</span>
 
-                                    <strong id="salesStatNew">
+                                    <strong
+                                        id="salesStatNew"
+                                        data-sales-stat="new"
+                                    >
                                         0
                                     </strong>
 
@@ -1329,8 +1293,6 @@
 
                             </article>
 
-
-                            <!-- FIRST CONTACT -->
 
                             <article class="sales-stat-card">
 
@@ -1345,11 +1307,12 @@
 
                                 <div>
 
-                                    <span>
-                                        First Contact
-                                    </span>
+                                    <span>First Contact</span>
 
-                                    <strong id="salesStatFirstContact">
+                                    <strong
+                                        id="salesStatFirstContact"
+                                        data-sales-stat="first_contact"
+                                    >
                                         0
                                     </strong>
 
@@ -1357,8 +1320,6 @@
 
                             </article>
 
-
-                            <!-- FIRST MEETING -->
 
                             <article class="sales-stat-card">
 
@@ -1373,11 +1334,12 @@
 
                                 <div>
 
-                                    <span>
-                                        First Meeting
-                                    </span>
+                                    <span>First Meeting</span>
 
-                                    <strong id="salesStatFirstMeeting">
+                                    <strong
+                                        id="salesStatFirstMeeting"
+                                        data-sales-stat="first_meeting"
+                                    >
                                         0
                                     </strong>
 
@@ -1385,8 +1347,6 @@
 
                             </article>
 
-
-                            <!-- QUOTATION -->
 
                             <article class="sales-stat-card">
 
@@ -1401,11 +1361,12 @@
 
                                 <div>
 
-                                    <span>
-                                        Quotation
-                                    </span>
+                                    <span>Quotation</span>
 
-                                    <strong id="salesStatQuotation">
+                                    <strong
+                                        id="salesStatQuotation"
+                                        data-sales-stat="quotation"
+                                    >
                                         0
                                     </strong>
 
@@ -1413,8 +1374,6 @@
 
                             </article>
 
-
-                            <!-- SECOND APPOINTMENT -->
 
                             <article class="sales-stat-card">
 
@@ -1429,11 +1388,12 @@
 
                                 <div>
 
-                                    <span>
-                                        Second Appointment
-                                    </span>
+                                    <span>Second Appointment</span>
 
-                                    <strong id="salesStatSecondAppointment">
+                                    <strong
+                                        id="salesStatSecondAppointment"
+                                        data-sales-stat="second_appointment"
+                                    >
                                         0
                                     </strong>
 
@@ -1441,8 +1401,6 @@
 
                             </article>
 
-
-                            <!-- DEAL -->
 
                             <article class="sales-stat-card">
 
@@ -1457,11 +1415,12 @@
 
                                 <div>
 
-                                    <span>
-                                        Deal
-                                    </span>
+                                    <span>Deal</span>
 
-                                    <strong id="salesStatDeal">
+                                    <strong
+                                        id="salesStatDeal"
+                                        data-sales-stat="deal"
+                                    >
                                         0
                                     </strong>
 
@@ -1469,8 +1428,6 @@
 
                             </article>
 
-
-                            <!-- NO DEAL -->
 
                             <article class="sales-stat-card">
 
@@ -1485,11 +1442,12 @@
 
                                 <div>
 
-                                    <span>
-                                        No Deal
-                                    </span>
+                                    <span>No Deal</span>
 
-                                    <strong id="salesStatNoDeal">
+                                    <strong
+                                        id="salesStatNoDeal"
+                                        data-sales-stat="no_deal"
+                                    >
                                         0
                                     </strong>
 
@@ -1525,7 +1483,7 @@
 
 
                             <div
-                                id="sales-dashboard-pipeline"
+                                id="sales-dashboard-pipeline-container"
                                 class="sales-dashboard-pipeline"
                             >
 
@@ -1599,7 +1557,9 @@
                              CUSTOMER LIST
                         ================================================== -->
 
-                        <section class="sales-dashboard-card sales-dashboard-leads-card">
+                        <section
+                            class="sales-dashboard-card sales-dashboard-leads-card"
+                        >
 
                             <div class="sales-dashboard-card-header">
 
@@ -1620,6 +1580,7 @@
                                     type="button"
                                     id="sales-dashboard-view-leads"
                                     class="btn-outline"
+                                    data-sales-dashboard-action="open-leads"
                                     data-page="leads"
                                 >
 
@@ -1638,7 +1599,7 @@
 
 
 
-                            <!-- SEARCH -->
+                            <!-- SEARCH / FILTER -->
 
                             <div class="sales-dashboard-toolbar">
 
@@ -1654,6 +1615,7 @@
                                         type="search"
                                         placeholder="Search customer..."
                                         autocomplete="off"
+                                        data-sales-dashboard-search
                                     >
 
                                 </div>
@@ -1662,6 +1624,7 @@
                                 <select
                                     id="sales-dashboard-status-filter"
                                     aria-label="Filter sales status"
+                                    data-sales-dashboard-status-filter
                                 >
 
                                     <option value="">
@@ -1702,13 +1665,16 @@
 
 
 
-                            <!-- TABLE -->
+                            <!-- CUSTOMER TABLE -->
 
-                            <div class="table-panel table-container">
+                            <div
+                                id="sales-dashboard-leads-container"
+                                class="table-panel table-container"
+                            >
 
                                 <table
                                     id="sales-dashboard-leads-table"
-                                    class="crm-table data-table"
+                                    class="crm-table data-table sales-dashboard-table"
                                 >
 
                                     <thead>
@@ -1758,9 +1724,7 @@
                                                 colspan="7"
                                                 class="table-loading"
                                             >
-
                                                 Select a Sales to load customers.
-
                                             </td>
 
                                         </tr>
@@ -1792,6 +1756,7 @@
                                         type="button"
                                         aria-label="Previous page"
                                         disabled
+                                        data-sales-dashboard-action="previous-page"
                                     >
 
                                         <i
@@ -1812,6 +1777,7 @@
                                         type="button"
                                         aria-label="Next page"
                                         disabled
+                                        data-sales-dashboard-action="next-page"
                                     >
 
                                         <i
@@ -1834,7 +1800,7 @@
 
 
                 <!-- =================================================
-                     LEADS / CUSTOMER PAGE
+                     LEADS
                 ================================================== -->
 
                 <section
@@ -2089,7 +2055,7 @@
 
 
                 <!-- =================================================
-                     CUSTOMER PROFILE PAGE
+                     CUSTOMER PROFILE
                 ================================================== -->
 
                 <section
@@ -2123,7 +2089,7 @@
 
 
                 <!-- =================================================
-                     MANAGE SALES PAGE
+                     MANAGE SALES
                 ================================================== -->
 
                 <section
@@ -2445,8 +2411,6 @@
                     </div>
 
 
-                    <!-- STATUS — NEW 7 STAGES -->
-
                     <div class="form-group">
 
                         <label for="leadStatus">
@@ -2491,8 +2455,6 @@
                     </div>
 
 
-                    <!-- STATUS INPUT DATE -->
-
                     <div class="form-group">
 
                         <label for="leadStatusStartedAt">
@@ -2522,8 +2484,6 @@
 
                     </div>
 
-
-                    <!-- LAST FOLLOW UP -->
 
                     <div class="form-group">
 
@@ -3051,14 +3011,18 @@
 
 
     <!-- =====================================================
-         SALES DASHBOARD — NEW
-         
-         ADMIN ONLY
-         
-         Untuk sementara file utama.
-         Nanti akan kita pecah menjadi beberapa modul
-         setelah fungsi dasarnya berjalan.
+         SALES DASHBOARD — MODULAR
     ====================================================== -->
+
+    <script src="js/sales-dashboard/sales-dashboard-state.js"></script>
+
+    <script src="js/sales-dashboard/sales-dashboard-data.js"></script>
+
+    <script src="js/sales-dashboard/sales-dashboard-stats.js"></script>
+
+    <script src="js/sales-dashboard/sales-dashboard-pipeline.js"></script>
+
+    <script src="js/sales-dashboard/sales-dashboard-leads.js"></script>
 
     <script src="js/sales-dashboard/sales-dashboard.js"></script>
 
