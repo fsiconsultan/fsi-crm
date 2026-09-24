@@ -1,4 +1,3 @@
-```js
 // PAGINATION
 // ========================================================
 
@@ -264,4 +263,3 @@ if (
     bindPaginationEvents();
     updatePagination();
 }
-```
