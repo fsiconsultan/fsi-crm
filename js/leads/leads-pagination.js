@@ -1,3 +1,4 @@
+```js
 // PAGINATION
 // ========================================================
 
@@ -10,6 +11,7 @@ function updatePagination() {
 
     const pageIndicator =
         leadElement(
+            "leads-page-number",
             "pageIndicator"
         );
 
@@ -73,7 +75,9 @@ function updatePagination() {
     // PAGE INDICATOR
     if (pageIndicator) {
         pageIndicator.textContent =
-            `Page ${currentPage} / ${totalPages}`;
+            totalLeads === 0
+                ? "1"
+                : `${currentPage}`;
     }
 
     // PREVIOUS
@@ -299,3 +303,4 @@ if (
     bindPaginationEvents();
     updatePagination();
 }
+```
