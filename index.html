@@ -201,20 +201,104 @@
                     </div>
 
 
+                    <!-- =================================================
+                         PASSWORD
+                    ================================================== -->
+
                     <div class="form-group">
 
                         <label for="login-password">
                             Password
                         </label>
 
-                        <input
-                            id="login-password"
-                            name="password"
-                            type="password"
-                            autocomplete="current-password"
-                            placeholder="Enter password"
-                            required
+                        <div
+                            style="
+                                position: relative;
+                                width: 100%;
+                            "
                         >
+
+                            <input
+                                id="login-password"
+                                name="password"
+                                type="password"
+                                autocomplete="current-password"
+                                placeholder="Enter password"
+                                required
+                                style="
+                                    width: 100%;
+                                    padding-right: 48px;
+                                "
+                            >
+
+
+                            <!-- SHOW / HIDE PASSWORD -->
+
+                            <button
+                                id="toggle-login-password"
+                                type="button"
+                                aria-label="Show password"
+                                title="Show password"
+                                style="
+                                    position: absolute;
+                                    right: 10px;
+                                    top: 50%;
+                                    transform: translateY(-50%);
+                                    width: 32px;
+                                    height: 32px;
+                                    padding: 0;
+                                    margin: 0;
+                                    border: 0;
+                                    background: transparent;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    cursor: pointer;
+                                    color: #64748b;
+                                    border-radius: 6px;
+                                "
+                            >
+
+                                <i
+                                    id="toggle-login-password-icon"
+                                    data-lucide="eye"
+                                    aria-hidden="true"
+                                ></i>
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         REMEMBER ME
+                    ================================================== -->
+
+                    <div class="remember-me">
+
+                        <label
+                            for="remember-me"
+                            style="
+                                display: inline-flex;
+                                align-items: center;
+                                gap: 8px;
+                                cursor: pointer;
+                            "
+                        >
+
+                            <input
+                                id="remember-me"
+                                name="remember-me"
+                                type="checkbox"
+                            >
+
+                            <span>
+                                Remember me
+                            </span>
+
+                        </label>
 
                     </div>
 
@@ -2447,6 +2531,189 @@
             }
         );
     </script>
+
+
+
+    <!-- =====================================================
+         LOGIN PASSWORD TOGGLE
+    ====================================================== -->
+
+    <script>
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
+
+                const passwordInput =
+                    document.getElementById(
+                        "login-password"
+                    );
+
+                const toggleButton =
+                    document.getElementById(
+                        "toggle-login-password"
+                    );
+
+                if (
+                    !passwordInput ||
+                    !toggleButton
+                ) {
+                    return;
+                }
+
+
+                toggleButton.addEventListener(
+                    "click",
+                    function () {
+
+                        const isPassword =
+                            passwordInput.type === "password";
+
+
+                        passwordInput.type =
+                            isPassword
+                                ? "text"
+                                : "password";
+
+
+                        toggleButton.setAttribute(
+                            "aria-label",
+                            isPassword
+                                ? "Hide password"
+                                : "Show password"
+                        );
+
+
+                        toggleButton.setAttribute(
+                            "title",
+                            isPassword
+                                ? "Hide password"
+                                : "Show password"
+                        );
+
+
+                        const icon =
+                            document.getElementById(
+                                "toggle-login-password-icon"
+                            );
+
+
+                        if (icon) {
+
+                            icon.setAttribute(
+                                "data-lucide",
+                                isPassword
+                                    ? "eye-off"
+                                    : "eye"
+                            );
+
+
+                            if (
+                                window.lucide &&
+                                typeof window.lucide.createIcons === "function"
+                            ) {
+
+                                window.lucide.createIcons();
+
+                            }
+
+                        }
+
+                    }
+                );
+
+            }
+        );
+    </script>
+
+
+
+    <!-- =====================================================
+         REMEMBER ME — USERNAME
+    ====================================================== -->
+
+    <script>
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
+
+                const usernameInput =
+                    document.getElementById(
+                        "login-username"
+                    );
+
+                const rememberCheckbox =
+                    document.getElementById(
+                        "remember-me"
+                    );
+
+                const loginForm =
+                    document.getElementById(
+                        "login-form"
+                    );
+
+
+                if (
+                    !usernameInput ||
+                    !rememberCheckbox
+                ) {
+                    return;
+                }
+
+
+                const savedUsername =
+                    localStorage.getItem(
+                        "fsi_crm_remember_username"
+                    );
+
+
+                if (savedUsername) {
+
+                    usernameInput.value =
+                        savedUsername;
+
+                    rememberCheckbox.checked =
+                        true;
+
+                }
+
+
+                if (loginForm) {
+
+                    loginForm.addEventListener(
+                        "submit",
+                        function () {
+
+                            const username =
+                                usernameInput.value.trim();
+
+
+                            if (
+                                rememberCheckbox.checked &&
+                                username
+                            ) {
+
+                                localStorage.setItem(
+                                    "fsi_crm_remember_username",
+                                    username
+                                );
+
+                            } else {
+
+                                localStorage.removeItem(
+                                    "fsi_crm_remember_username"
+                                );
+
+                            }
+
+                        }
+                    );
+
+                }
+
+            }
+        );
+    </script>
+
 
 </body>
 
