@@ -1,4 +1,3 @@
-```javascript
 // RENDER LEADS TABLE
 // ========================================================
 function renderLeads(
@@ -147,14 +146,6 @@ function renderLeads(
             const lastFollowUpHTML =
                 leadGetLastFollowUpHTML(
                     lead.last_follow_up
-                );
-
-            // =================================================
-            // LAST UPDATE
-            // =================================================
-            const lastUpdateHTML =
-                leadFormatLastUpdate(
-                    lead.updated_at
                 );
 
             // =================================================
@@ -344,7 +335,15 @@ ${leadEscapeHTML(
 LAST UPDATE
 ========================================= -->
 <td>
-${lastUpdateHTML}
+${
+    lead.updated_at
+        ? leadEscapeHTML(
+            leadFormatDateTime(
+                lead.updated_at
+            )
+        )
+        : "-"
+}
 </td>
 
 <!-- =========================================
@@ -427,4 +426,3 @@ Delete
 }
 
 // ========================================================
-```
