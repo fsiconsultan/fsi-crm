@@ -3,66 +3,47 @@
 // ========================================================
 
 function updatePagination() {
-    const paginationInfo =
-        leadElement(
-            "leads-pagination-info",
-            "paginationInfo"
-        );
+    const paginationInfo = leadElement(
+        "leads-pagination-info",
+        "paginationInfo"
+    );
 
-    const pageIndicator =
-        leadElement(
-            "leads-page-number",
-            "pageIndicator"
-        );
+    const pageIndicator = leadElement(
+        "leads-page-number",
+        "pageIndicator"
+    );
 
-    const prevBtn =
-        leadElement(
-            "btn-prev-page",
-            "prevBtn"
-        );
+    const prevBtn = leadElement(
+        "btn-prev-page",
+        "prevBtn"
+    );
 
-    const nextBtn =
-        leadElement(
-            "btn-next-page",
-            "nextBtn"
-        );
+    const nextBtn = leadElement(
+        "btn-next-page",
+        "nextBtn"
+    );
 
-    const pageSize =
-        leadGetPageSize();
+    const pageSize = leadGetPageSize();
 
-    const totalLeads =
-        Number(
-            window.totalLeadsCount
-        ) || 0;
+    const totalLeads = Number(
+        window.totalLeadsCount
+    ) || 0;
 
-    const currentPage =
-        leadGetCurrentPage();
+    const currentPage = leadGetCurrentPage();
 
-    const totalPages =
-        Math.max(
-            1,
-            Math.ceil(
-                totalLeads /
-                pageSize
-            )
-        );
+    const totalPages = Math.max(
+        1,
+        Math.ceil(totalLeads / pageSize)
+    );
 
-    const start =
-        totalLeads === 0
-            ? 0
-            : (
-                (
-                    currentPage - 1
-                ) *
-                pageSize
-            ) + 1;
+    const start = totalLeads === 0
+        ? 0
+        : ((currentPage - 1) * pageSize) + 1;
 
-    const end =
-        Math.min(
-            currentPage *
-            pageSize,
-            totalLeads
-        );
+    const end = Math.min(
+        currentPage * pageSize,
+        totalLeads
+    );
 
     // INFO
     if (paginationInfo) {
@@ -72,12 +53,10 @@ function updatePagination() {
                 : `${start}-${end} of ${totalLeads} leads`;
     }
 
-    // PAGE INDICATOR
+    // PAGE NUMBER
     if (pageIndicator) {
         pageIndicator.textContent =
-            totalLeads === 0
-                ? "1"
-                : `${currentPage}`;
+            String(currentPage);
     }
 
     // PREVIOUS
@@ -86,8 +65,7 @@ function updatePagination() {
             totalLeads === 0 ||
             currentPage <= 1;
 
-        prevBtn.disabled =
-            disabled;
+        prevBtn.disabled = disabled;
 
         prevBtn.setAttribute(
             "aria-disabled",
@@ -101,8 +79,7 @@ function updatePagination() {
             totalLeads === 0 ||
             currentPage >= totalPages;
 
-        nextBtn.disabled =
-            disabled;
+        nextBtn.disabled = disabled;
 
         nextBtn.setAttribute(
             "aria-disabled",
@@ -110,11 +87,10 @@ function updatePagination() {
         );
     }
 
-    // SECOND PAGE INFO
-    const pageInfo =
-        leadElement(
-            "pagination-page-info"
-        );
+    // PAGE INFO
+    const pageInfo = leadElement(
+        "pagination-page-info"
+    );
 
     if (pageInfo) {
         pageInfo.textContent =
@@ -123,8 +99,7 @@ function updatePagination() {
                 : `Page ${currentPage} / ${totalPages}`;
     }
 
-    window.totalPages =
-        totalPages;
+    window.totalPages = totalPages;
 }
 
 
@@ -132,17 +107,10 @@ function updatePagination() {
 // CHANGE PAGE
 // ========================================================
 
-function changePage(
-    direction
-) {
-    const numericDirection =
-        Number(direction);
+function changePage(direction) {
+    const numericDirection = Number(direction);
 
-    if (
-        !Number.isFinite(
-            numericDirection
-        )
-    ) {
+    if (!Number.isFinite(numericDirection)) {
         return;
     }
 
@@ -150,33 +118,25 @@ function changePage(
         return;
     }
 
-    const pageSize =
-        leadGetPageSize();
+    const pageSize = leadGetPageSize();
 
-    const totalLeads =
-        Number(
-            window.totalLeadsCount
-        ) || 0;
+    const totalLeads = Number(
+        window.totalLeadsCount
+    ) || 0;
 
     if (totalLeads <= 0) {
         return;
     }
 
-    const totalPages =
-        Math.max(
-            1,
-            Math.ceil(
-                totalLeads /
-                pageSize
-            )
-        );
+    const totalPages = Math.max(
+        1,
+        Math.ceil(totalLeads / pageSize)
+    );
 
-    const currentPage =
-        leadGetCurrentPage();
+    const currentPage = leadGetCurrentPage();
 
     const newPage =
-        currentPage +
-        numericDirection;
+        currentPage + numericDirection;
 
     if (
         newPage < 1 ||
@@ -185,9 +145,7 @@ function changePage(
         return;
     }
 
-    loadLeads(
-        newPage
-    );
+    loadLeads(newPage);
 }
 
 
@@ -209,26 +167,20 @@ function previousLeadPage() {
 // ========================================================
 
 function bindPaginationEvents() {
+    const prevBtn = leadElement(
+        "btn-prev-page",
+        "prevBtn"
+    );
 
-    const prevBtn =
-        leadElement(
-            "btn-prev-page",
-            "prevBtn"
-        );
-
-    const nextBtn =
-        leadElement(
-            "btn-next-page",
-            "nextBtn"
-        );
+    const nextBtn = leadElement(
+        "btn-next-page",
+        "nextBtn"
+    );
 
     if (prevBtn) {
-
-        // Hindari event listener dobel
         if (
             prevBtn.dataset.paginationBound !== "true"
         ) {
-
             prevBtn.addEventListener(
                 "click",
                 function () {
@@ -236,18 +188,14 @@ function bindPaginationEvents() {
                 }
             );
 
-            prevBtn.dataset.paginationBound =
-                "true";
+            prevBtn.dataset.paginationBound = "true";
         }
     }
 
     if (nextBtn) {
-
-        // Hindari event listener dobel
         if (
             nextBtn.dataset.paginationBound !== "true"
         ) {
-
             nextBtn.addEventListener(
                 "click",
                 function () {
@@ -255,8 +203,7 @@ function bindPaginationEvents() {
                 }
             );
 
-            nextBtn.dataset.paginationBound =
-                "true";
+            nextBtn.dataset.paginationBound = "true";
         }
     }
 }
@@ -289,7 +236,6 @@ window.bindPaginationEvents =
 if (
     document.readyState === "loading"
 ) {
-
     document.addEventListener(
         "DOMContentLoaded",
         function () {
@@ -297,9 +243,7 @@ if (
             updatePagination();
         }
     );
-
 } else {
-
     bindPaginationEvents();
     updatePagination();
 }
