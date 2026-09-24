@@ -12,6 +12,26 @@
 // 6. Tidak menangani Add Customer
 // 7. Tidak menangani Edit Customer
 //
+// STATUS SYSTEM:
+// 1. New
+// 2. First Contact
+// 3. First Meeting / Appointment / Site Survey
+// 4. Quotation
+// 5. Second Appointment
+// 6. Deal
+// 7. No Deal
+//
+// DETAIL / ACTIVITY:
+// - Follow Up
+// - Last Follow Up
+// - Appointment
+// - Site Survey
+// - Quotation
+// - Closing
+// - Notes
+//
+// SPK SUDAH DIHAPUS DARI CUSTOMER PROFILE.
+//
 // Add / Edit Customer ditangani oleh:
 //     js/customer-form.js
 //
@@ -430,14 +450,39 @@
 
 
     // ========================================================
+    // STATUS NORMALIZATION
+    // ========================================================
+
+    function normalizeStatus(status) {
+
+        const rawStatus =
+            String(status || "New").trim();
+
+
+        if (
+            typeof window.normalizeLeadStatus ===
+            "function"
+        ) {
+
+            return window.normalizeLeadStatus(
+                rawStatus || "New"
+            );
+
+        }
+
+
+        return rawStatus || "New";
+    }
+
+
+    // ========================================================
     // STATUS CLASS
     // ========================================================
 
     function getStatusClass(status) {
 
         const normalized =
-            String(status || "")
-                .trim()
+            normalizeStatus(status)
                 .toLowerCase();
 
 
@@ -667,10 +712,13 @@
             );
 
 
+        // ====================================================
+        // STATUS
+        // ====================================================
+
         const status =
-            displayValue(
-                customer.status,
-                "New"
+            normalizeStatus(
+                customer.status || "New"
             );
 
 
@@ -795,6 +843,10 @@
         }
 
 
+        // ====================================================
+        // DETAIL / ACTIVITY DATES
+        // ====================================================
+
         const appointment =
             formatDate(
                 customer.appointment
@@ -810,12 +862,6 @@
         const quotation =
             formatDate(
                 customer.quotation
-            );
-
-
-        const spk =
-            formatDate(
-                customer.spk
             );
 
 
@@ -1204,29 +1250,6 @@
                         <div class="pipeline-date-item">
 
                             <div class="pipeline-date-icon">
-                                <i data-lucide="file-check-2"></i>
-                            </div>
-
-                            <div>
-
-                                <span>
-                                    SPK
-                                </span>
-
-                                <strong>
-                                    ${escapeHTML(
-                                        spk
-                                    )}
-                                </strong>
-
-                            </div>
-
-                        </div>
-
-
-                        <div class="pipeline-date-item">
-
-                            <div class="pipeline-date-icon">
                                 <i data-lucide="badge-check"></i>
                             </div>
 
@@ -1516,20 +1539,6 @@
     // ========================================================
     // FORCE SHOW PROFILE PAGE
     // ========================================================
-    //
-    // Ini bagian penting untuk perbaikan.
-    //
-    // Kita tidak lagi bergantung hanya pada:
-    //
-    //     window.showPage()
-    //
-    // karena navigation.js versi sekarang belum mengekspos
-    // showPage sebagai window.showPage.
-    //
-    // Kita gunakan FSINavigation.showPage() jika tersedia.
-    // Kalau tidak tersedia, gunakan fallback manual.
-    //
-    // ========================================================
 
     function showCustomerProfilePage() {
 
@@ -1566,7 +1575,6 @@
                 );
 
 
-            // Pastikan DOM benar-benar terlihat
             ensureProfilePageVisible();
 
 
@@ -1636,17 +1644,6 @@
 
     // ========================================================
     // ENSURE PROFILE PAGE VISIBLE
-    // ========================================================
-    //
-    // Fungsi ini sengaja dibuat setelah navigation.
-    //
-    // Tujuannya memastikan:
-    //
-    // #view-customer-profile
-    //     active
-    //     tidak hidden
-    //     display block
-    //
     // ========================================================
 
     function ensureProfilePageVisible() {
@@ -1722,10 +1719,6 @@
 
         }
 
-
-        // ----------------------------------------------------
-        // Debug ringan
-        // ----------------------------------------------------
 
         console.log(
             "[FSI Customer Profile] Page visible:",
@@ -1806,7 +1799,6 @@
 
         if (!id) {
 
-            // Tampilkan halaman Profile terlebih dahulu
             showCustomerProfilePage();
 
 
@@ -1835,14 +1827,12 @@
 
 
         // ----------------------------------------------------
-        // PENTING:
         // Buka halaman PROFILE terlebih dahulu.
         // ----------------------------------------------------
 
         showCustomerProfilePage();
 
 
-        // Pastikan container tersedia
         const container =
             getProfileContainer();
 
@@ -1884,10 +1874,6 @@
                 sales
             );
 
-
-            // ------------------------------------------------
-            // Setelah render, pastikan page tetap aktif.
-            // ------------------------------------------------
 
             ensureProfilePageVisible();
 
@@ -2008,10 +1994,6 @@
         window.crmCurrentCustomerId =
             null;
 
-
-        // ----------------------------------------------------
-        // Gunakan navigation system utama
-        // ----------------------------------------------------
 
         if (
             window.FSINavigation &&
