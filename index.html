@@ -694,6 +694,8 @@
 
                     <div class="stats-grid">
 
+                        <!-- TOTAL -->
+
                         <article class="stat-card">
 
                             <div class="stat-icon bg-blue">
@@ -721,6 +723,8 @@
 
                         </article>
 
+
+                        <!-- 1. NEW -->
 
                         <article class="stat-card">
 
@@ -750,12 +754,14 @@
                         </article>
 
 
+                        <!-- 2. FIRST CONTACT -->
+
                         <article class="stat-card">
 
                             <div class="stat-icon bg-green">
 
                                 <i
-                                    data-lucide="thumbs-up"
+                                    data-lucide="phone"
                                     aria-hidden="true"
                                 ></i>
 
@@ -763,52 +769,26 @@
 
                             <div class="stat-details">
 
-                                <span>Interested</span>
+                                <span>First Contact</span>
 
                                 <strong id="statInterested">
                                     0
                                 </strong>
 
                                 <small>
-                                    Interested customers
+                                    First contact made
                                 </small>
 
                             </div>
 
                         </article>
 
+
+                        <!-- 3. FIRST MEETING / APPOINTMENT / SITE SURVEY -->
 
                         <article class="stat-card">
 
                             <div class="stat-icon bg-orange">
-
-                                <i
-                                    data-lucide="phone-call"
-                                    aria-hidden="true"
-                                ></i>
-
-                            </div>
-
-                            <div class="stat-details">
-
-                                <span>Follow Up</span>
-
-                                <strong id="statFollowUp">
-                                    0
-                                </strong>
-
-                                <small>
-                                    Need follow-up
-                                </small>
-
-                            </div>
-
-                        </article>
-
-
-                        <article class="stat-card">
-
-                            <div class="stat-icon bg-purple">
 
                                 <i
                                     data-lucide="calendar-check"
@@ -819,14 +799,16 @@
 
                             <div class="stat-details">
 
-                                <span>Appointment</span>
+                                <span>
+                                    First Meeting / Appointment / Site Survey
+                                </span>
 
-                                <strong id="statAppointment">
+                                <strong id="statFollowUp">
                                     0
                                 </strong>
 
                                 <small>
-                                    Appointments
+                                    Meeting or survey stage
                                 </small>
 
                             </div>
@@ -834,33 +816,7 @@
                         </article>
 
 
-                        <article class="stat-card">
-
-                            <div class="stat-icon bg-cyan">
-
-                                <i
-                                    data-lucide="map-pin"
-                                    aria-hidden="true"
-                                ></i>
-
-                            </div>
-
-                            <div class="stat-details">
-
-                                <span>Site Survey</span>
-
-                                <strong id="statSiteSurvey">
-                                    0
-                                </strong>
-
-                                <small>
-                                    Survey required
-                                </small>
-
-                            </div>
-
-                        </article>
-
+                        <!-- 4. QUOTATION -->
 
                         <article class="stat-card">
 
@@ -875,14 +831,48 @@
 
                             <div class="stat-details">
 
-                                <span>Quotation</span>
+                                <span>
+                                    Quotation
+                                </span>
 
                                 <strong id="statQuotation">
                                     0
                                 </strong>
 
                                 <small>
-                                    Quotations
+                                    Quotation stage
+                                </small>
+
+                            </div>
+
+                        </article>
+
+
+                        <!-- 5. SECOND APPOINTMENT -->
+
+                        <article class="stat-card">
+
+                            <div class="stat-icon bg-purple">
+
+                                <i
+                                    data-lucide="calendar-clock"
+                                    aria-hidden="true"
+                                ></i>
+
+                            </div>
+
+                            <div class="stat-details">
+
+                                <span>
+                                    Second Appointment
+                                </span>
+
+                                <strong id="statAppointment">
+                                    0
+                                </strong>
+
+                                <small>
+                                    Follow-up meeting
                                 </small>
 
                             </div>
@@ -891,10 +881,8 @@
 
 
                         <!-- =================================================
-                             DEPOSIT
-                             
-                             INTERNAL ID KEPT AS statSPK
-                             FOR JAVASCRIPT COMPATIBILITY.
+                             INTERNAL ID statSPK KEPT FOR
+                             JAVASCRIPT COMPATIBILITY
                         ================================================== -->
 
                         <article class="stat-card">
@@ -902,7 +890,7 @@
                             <div class="stat-icon bg-indigo">
 
                                 <i
-                                    data-lucide="wallet-cards"
+                                    data-lucide="handshake"
                                     aria-hidden="true"
                                 ></i>
 
@@ -910,14 +898,16 @@
 
                             <div class="stat-details">
 
-                                <span>Deposit</span>
+                                <span>
+                                    Deal
+                                </span>
 
                                 <strong id="statSPK">
                                     0
                                 </strong>
 
                                 <small>
-                                    Deposit customers
+                                    Successful deals
                                 </small>
 
                             </div>
@@ -925,33 +915,7 @@
                         </article>
 
 
-                        <article class="stat-card">
-
-                            <div class="stat-icon bg-green">
-
-                                <i
-                                    data-lucide="badge-check"
-                                    aria-hidden="true"
-                                ></i>
-
-                            </div>
-
-                            <div class="stat-details">
-
-                                <span>Closing</span>
-
-                                <strong id="statClosing">
-                                    0
-                                </strong>
-
-                                <small>
-                                    Closed customers
-                                </small>
-
-                            </div>
-
-                        </article>
-
+                        <!-- 7. NO DEAL -->
 
                         <article class="stat-card">
 
@@ -966,19 +930,39 @@
 
                             <div class="stat-details">
 
-                                <span>Not Interested</span>
+                                <span>
+                                    No Deal
+                                </span>
 
                                 <strong id="statNotInterested">
                                     0
                                 </strong>
 
                                 <small>
-                                    Not interested
+                                    Customers not continuing
                                 </small>
 
                             </div>
 
                         </article>
+
+
+                        <!--
+                            INTERNAL LEGACY ID KEPT:
+                            statClosing
+
+                            It remains in the DOM so existing
+                            JavaScript does not immediately break.
+                            It is hidden visually until the
+                            dashboard JavaScript is updated.
+                        -->
+
+                        <strong
+                            id="statClosing"
+                            style="display:none;"
+                        >
+                            0
+                        </strong>
 
                     </div>
 
@@ -1152,6 +1136,8 @@
                         </div>
 
 
+                        <!-- STATUS FILTER — NEW 7 STATUSES -->
+
                         <select
                             id="filter-status"
                             aria-label="Filter status"
@@ -1165,36 +1151,28 @@
                                 New
                             </option>
 
-                            <option value="Flyer Sent">
-                                Flyer Sent
+                            <option value="First Contact">
+                                First Contact
                             </option>
 
-                            <option value="Interested">
-                                Interested
-                            </option>
-
-                            <option value="Follow Up">
-                                Follow Up
-                            </option>
-
-                            <option value="Appointment">
-                                Appointment
-                            </option>
-
-                            <option value="Site Survey">
-                                Site Survey
+                            <option value="First Meeting / Appointment / Site Survey">
+                                First Meeting / Appointment / Site Survey
                             </option>
 
                             <option value="Quotation">
                                 Quotation
                             </option>
 
-                            <option value="Closing">
-                                Closing
+                            <option value="Second Appointment">
+                                Second Appointment
                             </option>
 
-                            <option value="Not Interested">
-                                Not Interested
+                            <option value="Deal">
+                                Deal
+                            </option>
+
+                            <option value="No Deal">
+                                No Deal
                             </option>
 
                         </select>
@@ -1704,6 +1682,10 @@
                     </div>
 
 
+                    <!-- =================================================
+                         STATUS — NEW 7 STAGES
+                    ================================================== -->
+
                     <div class="form-group">
 
                         <label for="leadStatus">
@@ -1719,36 +1701,28 @@
                                 New
                             </option>
 
-                            <option value="Flyer Sent">
-                                Flyer Sent
+                            <option value="First Contact">
+                                First Contact
                             </option>
 
-                            <option value="Interested">
-                                Interested
-                            </option>
-
-                            <option value="Follow Up">
-                                Follow Up
-                            </option>
-
-                            <option value="Appointment">
-                                Appointment
-                            </option>
-
-                            <option value="Site Survey">
-                                Site Survey
+                            <option value="First Meeting / Appointment / Site Survey">
+                                First Meeting / Appointment / Site Survey
                             </option>
 
                             <option value="Quotation">
                                 Quotation
                             </option>
 
-                            <option value="Closing">
-                                Closing
+                            <option value="Second Appointment">
+                                Second Appointment
                             </option>
 
-                            <option value="Not Interested">
-                                Not Interested
+                            <option value="Deal">
+                                Deal
+                            </option>
+
+                            <option value="No Deal">
+                                No Deal
                             </option>
 
                         </select>
