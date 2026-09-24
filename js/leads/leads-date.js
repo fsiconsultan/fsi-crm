@@ -1,7 +1,8 @@
-```javascript
 // DATE / TIME HELPERS
 // ========================================================
+
 function leadParseDate(value) {
+
     if (
         value === null ||
         value === undefined ||
@@ -59,8 +60,6 @@ function leadParseDate(value) {
 
     // ----------------------------------------------------
     // DATE ONLY
-    // Supaya 2026-09-22 tidak berubah menjadi
-    // tanggal 21 karena timezone UTC.
     // ----------------------------------------------------
     const dateOnlyMatch =
         stringValue.match(
@@ -68,6 +67,7 @@ function leadParseDate(value) {
         );
 
     if (dateOnlyMatch) {
+
         const year =
             Number(
                 dateOnlyMatch[1]
@@ -118,7 +118,12 @@ function leadParseDate(value) {
 }
 
 
+// ========================================================
+// FORMAT DATE + TIME
+// ========================================================
+
 function leadFormatDateTime(value) {
+
     const date =
         leadParseDate(
             value
@@ -129,6 +134,7 @@ function leadFormatDateTime(value) {
     }
 
     try {
+
         return new Intl.DateTimeFormat(
             "id-ID",
             {
@@ -138,8 +144,12 @@ function leadFormatDateTime(value) {
                 hour: "2-digit",
                 minute: "2-digit"
             }
-        ).format(date);
+        ).format(
+            date
+        );
+
     } catch (error) {
+
         return date.toLocaleString(
             "id-ID"
         );
@@ -147,7 +157,12 @@ function leadFormatDateTime(value) {
 }
 
 
+// ========================================================
+// FORMAT DATE ONLY
+// ========================================================
+
 function leadFormatDateOnly(value) {
+
     const date =
         leadParseDate(
             value
@@ -158,6 +173,7 @@ function leadFormatDateOnly(value) {
     }
 
     try {
+
         return new Intl.DateTimeFormat(
             "id-ID",
             {
@@ -165,8 +181,12 @@ function leadFormatDateOnly(value) {
                 month: "short",
                 year: "numeric"
             }
-        ).format(date);
+        ).format(
+            date
+        );
+
     } catch (error) {
+
         return date.toLocaleDateString(
             "id-ID"
         );
@@ -174,7 +194,12 @@ function leadFormatDateOnly(value) {
 }
 
 
+// ========================================================
+// AGE IN DAYS
+// ========================================================
+
 function leadGetAgeInDays(value) {
+
     const createdDate =
         leadParseDate(
             value
@@ -215,7 +240,12 @@ function leadGetAgeInDays(value) {
 }
 
 
+// ========================================================
+// AGE LABEL
+// ========================================================
+
 function leadGetAgeLabel(value) {
+
     const age =
         leadGetAgeInDays(
             value
@@ -233,11 +263,18 @@ function leadGetAgeLabel(value) {
         return "1 hari";
     }
 
-    return `${age} hari`;
+    return String(
+        age
+    ) + " hari";
 }
 
 
+// ========================================================
+// AGE CLASS
+// ========================================================
+
 function leadGetAgeClass(value) {
+
     const age =
         leadGetAgeInDays(
             value
@@ -264,9 +301,11 @@ function leadGetAgeClass(value) {
 
 
 // ========================================================
-// LAST UPDATE
+// LAST UPDATE - RELATIVE TIME
 // ========================================================
+
 function leadGetRelativeTime(value) {
+
     const date =
         leadParseDate(
             value
@@ -310,22 +349,33 @@ function leadGetRelativeTime(value) {
     }
 
     if (minutes < 60) {
-        return `${minutes} menit lalu`;
+        return String(
+            minutes
+        ) + " menit lalu";
     }
 
     if (hours < 24) {
-        return `${hours} jam lalu`;
+        return String(
+            hours
+        ) + " jam lalu";
     }
 
     if (days === 1) {
         return "1 hari lalu";
     }
 
-    return `${days} hari lalu`;
+    return String(
+        days
+    ) + " hari lalu";
 }
 
 
+// ========================================================
+// LAST UPDATE HTML
+// ========================================================
+
 function leadFormatLastUpdate(value) {
+
     const date =
         leadParseDate(
             value
@@ -345,18 +395,17 @@ function leadFormatLastUpdate(value) {
             value
         );
 
-    return `
-        <div class="lead-last-update">
-            <div class="lead-last-update-date">
-                ${exactDate}
-            </div>
-            <div class="lead-last-update-relative">
-                ${relativeTime}
-            </div>
-        </div>
-    `;
+    return (
+        '<div class="lead-last-update">' +
+            '<div class="lead-last-update-date">' +
+                exactDate +
+            '</div>' +
+            '<div class="lead-last-update-relative">' +
+                relativeTime +
+            '</div>' +
+        '</div>'
+    );
 }
 
 
 // ========================================================
-```
