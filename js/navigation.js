@@ -1,7 +1,8 @@
+```javascript
 // ============================================================
 // FSI CRM - NAVIGATION SYSTEM
 // File: js/navigation.js
-// Version: 2026.09.4
+// Version: 2026.09.24
 // ============================================================
 
 "use strict";
@@ -33,7 +34,13 @@
 
     sales: "view-sales",
     manageSales: "view-sales",
-    "manage-sales": "view-sales"
+    "manage-sales": "view-sales",
+
+    // --------------------------------------------------------
+    // SALES DASHBOARD
+    // --------------------------------------------------------
+
+    "sales-dashboard": "view-sales-dashboard"
   };
 
 
@@ -45,20 +52,19 @@
   // Satu element ID hanya boleh memiliki satu nama halaman
   // utama/canonical.
   //
-  // Ini mencegah:
-  //
-  // view-customer-profile
-  //
-  // terbaca sebagai "customer" dan bukan
-  // "customer-profile".
-  //
   // ==========================================================
 
   const CANONICAL_PAGE_BY_ID = {
     "view-dashboard": "dashboard",
     "view-leads": "leads",
     "view-customer-profile": "customer-profile",
-    "view-sales": "sales"
+    "view-sales": "sales",
+
+    // --------------------------------------------------------
+    // SALES DASHBOARD
+    // --------------------------------------------------------
+
+    "view-sales-dashboard": "sales-dashboard"
   };
 
 
@@ -206,19 +212,6 @@
     // --------------------------------------------------------
     // DIRECT PAGE ID
     // --------------------------------------------------------
-    //
-    // IMPORTANT:
-    // Jangan mencari reverse dari PAGE_MAP karena:
-    //
-    // customer
-    // customer-profile
-    // profile
-    //
-    // semuanya memiliki ID yang sama.
-    //
-    // Kita gunakan canonical mapping.
-    //
-    // --------------------------------------------------------
 
     if (CANONICAL_PAGE_BY_ID[value]) {
 
@@ -250,7 +243,8 @@
       value === "profile" ||
       value === "sales" ||
       value === "managesales" ||
-      value === "manage-sales"
+      value === "manage-sales" ||
+      value === "sales-dashboard"
     ) {
 
       // ------------------------------------------------------
@@ -317,7 +311,17 @@
         "sales",
 
       "manage-sales":
-        "sales"
+        "sales",
+
+      // ------------------------------------------------------
+      // SALES DASHBOARD
+      // ------------------------------------------------------
+
+      salesdashboard:
+        "sales-dashboard",
+
+      "sales-dashboard":
+        "sales-dashboard"
 
     };
 
@@ -420,23 +424,6 @@
   // ==========================================================
   // FORCE PAGE ACTIVE
   // ==========================================================
-  //
-  // Centralized function khusus untuk memastikan page aktif.
-  //
-  // Ini penting karena CSS memakai:
-  //
-  // .crm-page {
-  //   display:none !important;
-  // }
-  //
-  // .crm-page.active {
-  //   display:block !important;
-  // }
-  //
-  // Jadi class "active" harus selalu dipasang pada page,
-  // bukan hanya mengandalkan inline style.
-  //
-  // ==========================================================
 
   function activatePageElement(page) {
 
@@ -477,10 +464,6 @@
       computedStyle.display === "none"
     ) {
 
-      // Do NOT leave a normal inline display value
-      // as the primary mechanism.
-      //
-      // Re-apply active class first.
       page.classList.remove("hidden");
       page.classList.add("active");
 
@@ -519,11 +502,14 @@
 
 
     // --------------------------------------------------------
-    // Sales page hanya untuk Admin
+    // Sales page dan Sales Dashboard hanya untuk Admin
     // --------------------------------------------------------
 
     if (
-      normalized === "sales" &&
+      (
+        normalized === "sales" ||
+        normalized === "sales-dashboard"
+      ) &&
       !isAdmin()
     ) {
 
@@ -533,7 +519,9 @@
       ) {
 
         window.showToast(
-          "Hanya Admin yang dapat membuka Manage Sales.",
+          normalized === "sales-dashboard"
+            ? "Hanya Admin yang dapat membuka Sales Dashboard."
+            : "Hanya Admin yang dapat membuka Manage Sales.",
           "warning"
         );
 
@@ -662,14 +650,6 @@
 
     // --------------------------------------------------------
     // FINAL PROFILE SAFETY
-    // --------------------------------------------------------
-    //
-    // Khusus Customer Profile:
-    // Pastikan parent page tetap active setelah semua event.
-    //
-    // Ini tidak merender ulang profile.
-    // Hanya memastikan visibility page.
-    //
     // --------------------------------------------------------
 
     if (
@@ -844,6 +824,21 @@
 
         subtitle:
           "Kelola akun, role, dan status Sales."
+
+      },
+
+
+      // ------------------------------------------------------
+      // SALES DASHBOARD
+      // ------------------------------------------------------
+
+      "sales-dashboard": {
+
+        title:
+          "Sales Dashboard",
+
+        subtitle:
+          "Overview performa, pipeline, follow-up, dan customer Sales."
 
       }
 
@@ -2303,19 +2298,91 @@
 
 
   // ==========================================================
-  // NAVIGATE CUSTOMER PROFILE
+  // NAVIGATE SALES DASHBOARD
   // ==========================================================
   //
-  // IMPORTANT:
+  // Sales Dashboard hanya dapat dibuka oleh Admin.
   //
-  // Urutan baru:
+  // Jika sales-dashboard.js sudah tersedia dan memiliki
+  // openSalesDashboard(), fungsi tersebut akan digunakan.
   //
-  // 1. Pastikan halaman Customer Profile aktif.
-  // 2. Baru minta shelter.js membuka customer.
+  // Jika belum tersedia, navigation tetap membuka page
+  // view-sales-dashboard sebagai fallback.
   //
-  // Jadi shelter.js tidak perlu menjadi pihak pertama
-  // yang menentukan visibility page.
-  //
+  // ==========================================================
+
+  function navigateSalesDashboard(
+    salesId
+  ) {
+
+    if (!isAdmin()) {
+
+      if (
+        typeof window.showToast ===
+        "function"
+      ) {
+
+        window.showToast(
+          "Akses Sales Dashboard hanya untuk Admin.",
+          "warning"
+        );
+
+      }
+
+      return false;
+
+    }
+
+
+    const selectedSalesId =
+      salesId !== undefined &&
+      salesId !== null &&
+      String(salesId).trim()
+        ? String(salesId).trim()
+        : null;
+
+
+    // --------------------------------------------------------
+    // Gunakan Sales Dashboard module jika tersedia.
+    // --------------------------------------------------------
+
+    if (
+      typeof window.openSalesDashboard ===
+      "function"
+    ) {
+
+      try {
+
+        return window.openSalesDashboard(
+          selectedSalesId
+        );
+
+      } catch (error) {
+
+        console.error(
+          "[FSI Navigation] Error membuka Sales Dashboard:",
+          error
+        );
+
+      }
+
+    }
+
+
+    // --------------------------------------------------------
+    // Fallback:
+    // tampilkan page Sales Dashboard.
+    // --------------------------------------------------------
+
+    return showPage(
+      "sales-dashboard"
+    );
+
+  }
+
+
+  // ==========================================================
+  // NAVIGATE CUSTOMER PROFILE
   // ==========================================================
 
   function navigateCustomerProfile(
@@ -2588,6 +2655,16 @@
         return navigateSales();
 
 
+      case "sales-dashboard":
+
+        return navigateSalesDashboard(
+          data &&
+          data.salesId
+            ? data.salesId
+            : null
+        );
+
+
       case "customer-profile":
 
         return navigateCustomerProfile(
@@ -2672,11 +2749,19 @@
       null;
 
 
+    const salesId =
+      element.dataset.salesId ||
+      null;
+
+
     crmNavigate(
       normalized,
       {
         customerId:
-          customerId
+          customerId,
+
+        salesId:
+          salesId
       }
     );
 
@@ -3237,6 +3322,9 @@
     navigateSales:
       navigateSales,
 
+    navigateSalesDashboard:
+      navigateSalesDashboard,
+
     navigateCustomerProfile:
       navigateCustomerProfile,
 
@@ -3264,7 +3352,7 @@
     getCurrentPage:
       function () {
         return currentPage;
-    },
+      },
 
     isAdmin:
       isAdmin,
@@ -3299,8 +3387,13 @@
     navigateSales;
 
 
+  window.navigateSalesDashboard =
+    navigateSalesDashboard;
+
+
   window.navigateCustomerProfile =
     navigateCustomerProfile;
 
 
 })();
+```
