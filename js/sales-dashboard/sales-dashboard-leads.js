@@ -7,11 +7,12 @@
    - Search
    - Filter status
    - Pagination
-   - Render table
+   - Render table rows
    - View customer
    - Data leads Sales yang dipilih
 
-   File ini tidak mengubah database.
+   Compatible dengan index.html terbaru.
+   Tidak mengubah database.
    ========================================================= */
 
 
@@ -38,16 +39,92 @@ function getSalesDashboardLeadsFromState() {
 
 
 /* =========================================================
+   NORMALIZE STATUS
+   ========================================================= */
+
+function normalizeSalesDashboardLeadStatus(
+    status
+) {
+
+    /*
+     * Gunakan normalizer CRM utama jika tersedia.
+     */
+
+    if (
+        typeof window.normalizeLeadStatus ===
+        "function"
+    ) {
+        return window.normalizeLeadStatus(
+            status
+        );
+    }
+
+
+    /*
+     * Fallback untuk memastikan status lama
+     * tetap dapat dibaca.
+     */
+
+    const value =
+        String(
+            status || ""
+        ).trim();
+
+
+    const aliases = {
+
+        "New":
+            "New",
+
+        "Flyer Sent":
+            "First Contact",
+
+        "Interested":
+            "First Meeting / Appointment / Site Survey",
+
+        "Appointment":
+            "First Meeting / Appointment / Site Survey",
+
+        "Site Survey":
+            "First Meeting / Appointment / Site Survey",
+
+        "Follow Up":
+            "Second Appointment",
+
+        "Quotation":
+            "Quotation",
+
+        "Closing":
+            "Deal",
+
+        "Not Interested":
+            "No Deal"
+
+    };
+
+
+    return (
+        aliases[value] ||
+        value ||
+        "New"
+    );
+}
+
+
+/* =========================================================
    FILTER LEADS
    ========================================================= */
 
 window.filterSalesDashboardLeads =
-    function (leads) {
+    function (
+        leads
+    ) {
 
         const safeLeads =
             Array.isArray(leads)
                 ? leads
                 : [];
+
 
         if (
             typeof window.getSalesDashboardState !==
@@ -56,8 +133,10 @@ window.filterSalesDashboardLeads =
             return safeLeads;
         }
 
+
         const state =
             window.getSalesDashboardState();
+
 
         const searchTerm =
             String(
@@ -65,6 +144,7 @@ window.filterSalesDashboardLeads =
             )
                 .trim()
                 .toLowerCase();
+
 
         const statusFilter =
             String(
@@ -77,9 +157,9 @@ window.filterSalesDashboardLeads =
         return safeLeads.filter(
             function (lead) {
 
-                /*
-                 * SEARCH
-                 */
+                /* -----------------------------------------
+                   SEARCH
+                ----------------------------------------- */
 
                 if (searchTerm) {
 
@@ -98,12 +178,14 @@ window.filterSalesDashboardLeads =
                     ]
                         .map(
                             function (value) {
+
                                 return String(
                                     value || ""
                                 ).toLowerCase();
                             }
                         )
                         .join(" ");
+
 
                     if (
                         !searchableText.includes(
@@ -115,24 +197,21 @@ window.filterSalesDashboardLeads =
                 }
 
 
-                /*
-                 * STATUS FILTER
-                 */
+                /* -----------------------------------------
+                   STATUS FILTER
+                ----------------------------------------- */
 
                 if (statusFilter) {
 
                     const leadStatus =
-                        typeof normalizeSalesDashboardStatus ===
-                        "function"
-                            ? normalizeSalesDashboardStatus(
-                                lead?.status
-                            )
-                            : String(
-                                lead?.status || ""
-                            ).trim();
+                        normalizeSalesDashboardLeadStatus(
+                            lead?.status
+                        );
+
 
                     if (
-                        leadStatus.toLowerCase() !==
+                        leadStatus
+                            .toLowerCase() !==
                         statusFilter
                     ) {
                         return false;
@@ -151,78 +230,107 @@ window.filterSalesDashboardLeads =
    ========================================================= */
 
 window.getSalesDashboardPaginatedLeads =
-    function (leads) {
+    function (
+        leads
+    ) {
 
         const filteredLeads =
             window.filterSalesDashboardLeads(
                 leads
             );
 
+
         if (
             typeof window.getSalesDashboardState !==
             "function"
         ) {
+
             return {
-                leads: filteredLeads,
-                total: filteredLeads.length,
-                totalPages: 1,
-                currentPage: 1
+
+                leads:
+                    filteredLeads,
+
+                total:
+                    filteredLeads.length,
+
+                totalPages:
+                    1,
+
+                currentPage:
+                    1,
+
+                pageSize:
+                    filteredLeads.length || 20
+
             };
         }
 
+
         const state =
             window.getSalesDashboardState();
+
 
         const pageSize =
             Number(
                 state?.pageSize || 20
             );
 
+
         let currentPage =
             Number(
                 state?.currentPage || 1
             );
 
+
         const total =
             filteredLeads.length;
+
 
         const totalPages =
             Math.max(
                 1,
                 Math.ceil(
-                    total / pageSize
+                    total /
+                    pageSize
                 )
             );
 
 
-        /*
-         * Pastikan current page tidak melebihi
-         * total halaman.
-         */
+        if (
+            currentPage >
+            totalPages
+        ) {
 
-        if (currentPage > totalPages) {
-            currentPage = totalPages;
-        }
-
-        if (currentPage < 1) {
-            currentPage = 1;
+            currentPage =
+                totalPages;
         }
 
 
-        /*
-         * Simpan current page.
-         */
+        if (
+            currentPage <
+            1
+        ) {
+
+            currentPage =
+                1;
+        }
+
 
         state.currentPage =
             currentPage;
 
 
         const start =
-            (currentPage - 1) *
+            (
+                currentPage -
+                1
+            ) *
             pageSize;
 
+
         const end =
-            start + pageSize;
+            start +
+            pageSize;
 
 
         return {
@@ -240,6 +348,7 @@ window.getSalesDashboardPaginatedLeads =
             currentPage,
 
             pageSize
+
         };
     };
 
@@ -256,8 +365,10 @@ function formatSalesDashboardDate(
         return "-";
     }
 
+
     const date =
         new Date(value);
+
 
     if (
         Number.isNaN(
@@ -267,12 +378,18 @@ function formatSalesDashboardDate(
         return "-";
     }
 
+
     return date.toLocaleDateString(
         "id-ID",
         {
-            day: "2-digit",
-            month: "short",
-            year: "numeric"
+            day:
+                "2-digit",
+
+            month:
+                "short",
+
+            year:
+                "numeric"
         }
     );
 }
@@ -287,29 +404,67 @@ function getSalesDashboardStatusClass(
 ) {
 
     const normalizedStatus =
-        typeof normalizeSalesDashboardStatus ===
-        "function"
-            ? normalizeSalesDashboardStatus(status)
-            : String(status || "").trim();
+        normalizeSalesDashboardLeadStatus(
+            status
+        );
 
-    const pipelineStage =
+
+    if (
         typeof window.getSalesDashboardPipelineStage ===
         "function"
-            ? window.getSalesDashboardPipelineStage(
-                normalizedStatus
-            )
-            : null;
+    ) {
 
-    if (pipelineStage?.className) {
-        return pipelineStage.className;
+        const pipelineStage =
+            window.getSalesDashboardPipelineStage(
+                normalizedStatus
+            );
+
+
+        if (
+            pipelineStage?.className
+        ) {
+
+            return pipelineStage.className;
+        }
     }
 
 
     /*
-     * Fallback.
+     * Fallback status classes.
      */
 
-    return "status-new";
+    const classMap = {
+
+        "New":
+            "status-new",
+
+        "First Contact":
+            "status-first-contact",
+
+        "First Meeting / Appointment / Site Survey":
+            "status-first-meeting",
+
+        "Quotation":
+            "status-quotation",
+
+        "Second Appointment":
+            "status-second-appointment",
+
+        "Deal":
+            "status-deal",
+
+        "No Deal":
+            "status-no-deal"
+
+    };
+
+
+    return (
+        classMap[
+            normalizedStatus
+        ] ||
+        "status-new"
+    );
 }
 
 
@@ -321,13 +476,9 @@ function getSalesDashboardStatusLabel(
     status
 ) {
 
-    const normalizedStatus =
-        typeof normalizeSalesDashboardStatus ===
-        "function"
-            ? normalizeSalesDashboardStatus(status)
-            : String(status || "").trim();
-
-    return normalizedStatus || "New";
+    return normalizeSalesDashboardLeadStatus(
+        status
+    );
 }
 
 
@@ -340,7 +491,10 @@ function escapeSalesDashboardLeadsHtml(
 ) {
 
     const div =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
+
 
     div.textContent =
         value === null ||
@@ -348,12 +502,65 @@ function escapeSalesDashboardLeadsHtml(
             ? ""
             : String(value);
 
+
     return div.innerHTML;
 }
 
 
 /* =========================================================
-   RENDER LEADS TABLE
+   RENDER EMPTY TABLE
+   ========================================================= */
+
+function renderSalesDashboardLeadsEmpty(
+    container
+) {
+
+    if (!container) {
+        return;
+    }
+
+
+    container.innerHTML = `
+        <tr class="sales-dashboard-empty-row">
+
+            <td
+                colspan="7"
+                class="sales-dashboard-empty-cell"
+            >
+
+                <div class="sales-dashboard-empty">
+
+                    <div class="sales-dashboard-empty-icon">
+                        <i data-lucide="users"></i>
+                    </div>
+
+                    <div class="sales-dashboard-empty-title">
+                        No Leads Found
+                    </div>
+
+                    <div class="sales-dashboard-empty-text">
+                        Tidak ada customer yang sesuai dengan
+                        pencarian atau filter.
+                    </div>
+
+                </div>
+
+            </td>
+
+        </tr>
+    `;
+
+
+    refreshSalesDashboardLeadIcons();
+}
+
+
+/* =========================================================
+   RENDER LEADS TABLE BODY
+   ---------------------------------------------------------
+   PENTING:
+   container sekarang adalah <tbody>
+   sesuai index.html terbaru.
    ========================================================= */
 
 window.renderSalesDashboardLeads =
@@ -374,222 +581,198 @@ window.renderSalesDashboardLeads =
 
 
         /*
-         * EMPTY RESULT
+         * EMPTY
          */
 
-        if (!result.leads.length) {
+        if (
+            !result.leads.length
+        ) {
 
-            container.innerHTML = `
-                <div class="sales-dashboard-empty">
+            renderSalesDashboardLeadsEmpty(
+                container
+            );
 
-                    <div class="sales-dashboard-empty-icon">
-                        <i data-lucide="users"></i>
-                    </div>
 
-                    <div class="sales-dashboard-empty-title">
-                        No Leads Found
-                    </div>
+            updateSalesDashboardPagination(
+                result
+            );
 
-                    <div class="sales-dashboard-empty-text">
-                        Tidak ada customer yang sesuai dengan
-                        pencarian atau filter.
-                    </div>
-
-                </div>
-            `;
-
-            refreshSalesDashboardLeadIcons();
 
             return;
         }
 
 
         /*
-         * TABLE
+         * RENDER ROWS SAJA.
+         *
+         * Jangan membuat <table> / <tbody>
+         * di sini karena container sudah merupakan
+         * <tbody> dari index.html.
          */
 
-        container.innerHTML = `
+        container.innerHTML =
+            result.leads
+                .map(
+                    function (lead) {
 
-            <div class="sales-dashboard-table-wrapper">
+                        const status =
+                            getSalesDashboardStatusLabel(
+                                lead?.status
+                            );
 
-                <table class="sales-dashboard-table">
 
-                    <thead>
+                        const statusClass =
+                            getSalesDashboardStatusClass(
+                                lead?.status
+                            );
 
-                        <tr>
 
-                            <th>
-                                Customer
-                            </th>
+                        const leadId =
+                            escapeSalesDashboardLeadsHtml(
+                                lead?.id
+                            );
 
-                            <th>
-                                Phone
-                            </th>
 
-                            <th>
-                                Business
-                            </th>
+                        const customerName =
+                            escapeSalesDashboardLeadsHtml(
+                                lead?.customer_name ||
+                                "Unnamed Customer"
+                            );
 
-                            <th>
-                                Location
-                            </th>
 
-                            <th>
-                                Status
-                            </th>
+                        const email =
+                            escapeSalesDashboardLeadsHtml(
+                                lead?.email ||
+                                "-"
+                            );
 
-                            <th>
-                                Follow Up
-                            </th>
 
-                            <th>
-                                Action
-                            </th>
+                        const phone =
+                            escapeSalesDashboardLeadsHtml(
+                                lead?.phone ||
+                                "-"
+                            );
 
-                        </tr>
 
-                    </thead>
+                        const business =
+                            escapeSalesDashboardLeadsHtml(
+                                lead?.business ||
+                                "-"
+                            );
 
-                    <tbody>
 
-                        ${result.leads.map(
-                            function (lead) {
+                        const location =
+                            escapeSalesDashboardLeadsHtml(
+                                lead?.location ||
+                                "-"
+                            );
 
-                                const status =
-                                    getSalesDashboardStatusLabel(
-                                        lead?.status
-                                    );
 
-                                const statusClass =
-                                    getSalesDashboardStatusClass(
-                                        lead?.status
-                                    );
+                        const followUp =
+                            formatSalesDashboardDate(
+                                lead?.follow_up_date
+                            );
 
-                                return `
 
-                                    <tr
-                                        data-lead-id="${escapeSalesDashboardLeadsHtml(
-                                            lead?.id
-                                        )}"
+                        return `
+                            <tr
+                                data-lead-id="${leadId}"
+                            >
+
+                                <td>
+
+                                    <div class="sales-dashboard-customer">
+
+                                        <div class="sales-dashboard-customer-avatar">
+
+                                            <i
+                                                data-lucide="user"
+                                            ></i>
+
+                                        </div>
+
+                                        <div class="sales-dashboard-customer-info">
+
+                                            <div class="sales-dashboard-customer-name">
+                                                ${customerName}
+                                            </div>
+
+                                            <div class="sales-dashboard-customer-email">
+                                                ${email}
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                </td>
+
+
+                                <td>
+                                    ${phone}
+                                </td>
+
+
+                                <td>
+                                    ${business}
+                                </td>
+
+
+                                <td>
+                                    ${location}
+                                </td>
+
+
+                                <td>
+
+                                    <span
+                                        class="sales-dashboard-status ${statusClass}"
                                     >
+                                        ${escapeSalesDashboardLeadsHtml(
+                                            status
+                                        )}
+                                    </span>
 
-                                        <td>
-
-                                            <div class="sales-dashboard-customer">
-
-                                                <div class="sales-dashboard-customer-avatar">
-
-                                                    <i data-lucide="user"></i>
-
-                                                </div>
-
-                                                <div class="sales-dashboard-customer-info">
-
-                                                    <div class="sales-dashboard-customer-name">
-                                                        ${escapeSalesDashboardLeadsHtml(
-                                                            lead?.customer_name ||
-                                                            "Unnamed Customer"
-                                                        )}
-                                                    </div>
-
-                                                    <div class="sales-dashboard-customer-email">
-
-                                                        ${escapeSalesDashboardLeadsHtml(
-                                                            lead?.email || "-"
-                                                        )}
-
-                                                    </div>
-
-                                                </div>
-
-                                            </div>
-
-                                        </td>
+                                </td>
 
 
-                                        <td>
-                                            ${escapeSalesDashboardLeadsHtml(
-                                                lead?.phone || "-"
-                                            )}
-                                        </td>
+                                <td>
+                                    ${followUp}
+                                </td>
 
 
-                                        <td>
-                                            ${escapeSalesDashboardLeadsHtml(
-                                                lead?.business || "-"
-                                            )}
-                                        </td>
+                                <td>
+
+                                    <div class="sales-dashboard-actions">
+
+                                        <button
+                                            type="button"
+                                            class="sales-dashboard-action-btn"
+                                            data-action="view-lead"
+                                            data-lead-id="${leadId}"
+                                            title="View Customer"
+                                        >
+
+                                            <i
+                                                data-lucide="eye"
+                                            ></i>
+
+                                        </button>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+                        `;
+                    }
+                )
+                .join("");
 
 
-                                        <td>
-                                            ${escapeSalesDashboardLeadsHtml(
-                                                lead?.location || "-"
-                                            )}
-                                        </td>
-
-
-                                        <td>
-
-                                            <span
-                                                class="
-                                                    sales-dashboard-status
-                                                    ${statusClass}
-                                                "
-                                            >
-                                                ${escapeSalesDashboardLeadsHtml(
-                                                    status
-                                                )}
-                                            </span>
-
-                                        </td>
-
-
-                                        <td>
-                                            ${formatSalesDashboardDate(
-                                                lead?.follow_up_date
-                                            )}
-                                        </td>
-
-
-                                        <td>
-
-                                            <div class="sales-dashboard-actions">
-
-                                                <button
-                                                    type="button"
-                                                    class="sales-dashboard-action-btn"
-                                                    data-action="view-lead"
-                                                    data-lead-id="${escapeSalesDashboardLeadsHtml(
-                                                        lead?.id
-                                                    )}"
-                                                    title="View Customer"
-                                                >
-
-                                                    <i data-lucide="eye"></i>
-
-                                                </button>
-
-                                            </div>
-
-                                        </td>
-
-                                    </tr>
-
-                                `;
-                            }
-                        ).join("")}
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-            ${renderSalesDashboardPagination(
-                result
-            )}
-
-        `;
+        updateSalesDashboardPagination(
+            result
+        );
 
 
         refreshSalesDashboardLeadIcons();
@@ -597,70 +780,131 @@ window.renderSalesDashboardLeads =
 
 
 /* =========================================================
-   RENDER PAGINATION
+   UPDATE PAGINATION
+   ---------------------------------------------------------
+   Menggunakan ID yang memang ada di index.html.
    ========================================================= */
 
-function renderSalesDashboardPagination(
+function updateSalesDashboardPagination(
     result
 ) {
 
-    if (
-        !result ||
-        result.totalPages <= 1
-    ) {
-        return "";
-    }
+    const info =
+        document.getElementById(
+            "sales-dashboard-pagination-info"
+        );
+
+
+    const previousButton =
+        document.getElementById(
+            "sales-dashboard-prev-page"
+        );
+
+
+    const pageNumber =
+        document.getElementById(
+            "sales-dashboard-page-number"
+        );
+
+
+    const nextButton =
+        document.getElementById(
+            "sales-dashboard-next-page"
+        );
 
 
     const currentPage =
-        result.currentPage;
+        Number(
+            result?.currentPage || 1
+        );
+
 
     const totalPages =
-        result.totalPages;
+        Number(
+            result?.totalPages || 1
+        );
 
 
-    return `
-
-        <div class="sales-dashboard-pagination">
-
-            <button
-                type="button"
-                class="sales-dashboard-page-btn"
-                data-page-action="previous"
-                ${currentPage <= 1 ? "disabled" : ""}
-            >
-                <i data-lucide="chevron-left"></i>
-                Previous
-            </button>
+    const total =
+        Number(
+            result?.total || 0
+        );
 
 
-            <div class="sales-dashboard-page-info">
+    /*
+     * Info.
+     */
 
-                Page
-                <strong>
-                    ${currentPage}
-                </strong>
-                of
-                <strong>
-                    ${totalPages}
-                </strong>
+    if (info) {
 
-            </div>
+        if (!total) {
+
+            info.textContent =
+                "0 customers";
+
+        } else {
+
+            const start =
+                (
+                    (
+                        currentPage -
+                        1
+                    ) *
+                    (
+                        result?.pageSize ||
+                        20
+                    )
+                ) + 1;
 
 
-            <button
-                type="button"
-                class="sales-dashboard-page-btn"
-                data-page-action="next"
-                ${currentPage >= totalPages ? "disabled" : ""}
-            >
-                Next
-                <i data-lucide="chevron-right"></i>
-            </button>
+            const end =
+                Math.min(
+                    currentPage *
+                    (
+                        result?.pageSize ||
+                        20
+                    ),
+                    total
+                );
 
-        </div>
 
-    `;
+            info.textContent =
+                `${start}-${end} of ${total}`;
+        }
+    }
+
+
+    /*
+     * Page number.
+     */
+
+    if (pageNumber) {
+
+        pageNumber.textContent =
+            `${currentPage} / ${totalPages}`;
+    }
+
+
+    /*
+     * Previous.
+     */
+
+    if (previousButton) {
+
+        previousButton.disabled =
+            currentPage <= 1;
+    }
+
+
+    /*
+     * Next.
+     */
+
+    if (nextButton) {
+
+        nextButton.disabled =
+            currentPage >= totalPages;
+    }
 }
 
 
@@ -680,16 +924,20 @@ window.changeSalesDashboardPage =
             return;
         }
 
+
         const state =
             window.getSalesDashboardState();
 
+
         const leads =
             getSalesDashboardLeadsFromState();
+
 
         const result =
             window.getSalesDashboardPaginatedLeads(
                 leads
             );
+
 
         let nextPage =
             Number(
@@ -697,12 +945,16 @@ window.changeSalesDashboardPage =
             );
 
 
-        if (direction === "next") {
+        if (
+            direction ===
+            "next"
+        ) {
 
             nextPage++;
 
         } else if (
-            direction === "previous"
+            direction ===
+            "previous"
         ) {
 
             nextPage--;
@@ -721,6 +973,13 @@ window.changeSalesDashboardPage =
 
         state.currentPage =
             nextPage;
+
+
+        /*
+         * Render ulang.
+         */
+
+        window.renderCurrentSalesDashboardLeads();
     };
 
 
@@ -737,19 +996,24 @@ window.handleSalesDashboardSearch =
             typeof window.setSalesDashboardSearch ===
             "function"
         ) {
+
             window.setSalesDashboardSearch(
                 value
             );
         }
 
+
         if (
             typeof window.getSalesDashboardState ===
             "function"
         ) {
+
             const state =
                 window.getSalesDashboardState();
 
-            state.currentPage = 1;
+
+            state.currentPage =
+                1;
         }
     };
 
@@ -767,19 +1031,24 @@ window.handleSalesDashboardStatusFilter =
             typeof window.setSalesDashboardStatusFilter ===
             "function"
         ) {
+
             window.setSalesDashboardStatusFilter(
                 value
             );
         }
 
+
         if (
             typeof window.getSalesDashboardState ===
             "function"
         ) {
+
             const state =
                 window.getSalesDashboardState();
 
-            state.currentPage = 1;
+
+            state.currentPage =
+                1;
         }
     };
 
@@ -795,8 +1064,12 @@ window.resetSalesDashboardLeadFilters =
             typeof window.resetSalesDashboardFilters ===
             "function"
         ) {
+
             window.resetSalesDashboardFilters();
         }
+
+
+        window.renderCurrentSalesDashboardLeads();
     };
 
 
@@ -810,27 +1083,28 @@ window.handleSalesDashboardLeadAction =
         leadId
     ) {
 
-        if (!action || !leadId) {
+        if (
+            !action ||
+            !leadId
+        ) {
             return;
         }
 
 
-        if (action === "view-lead") {
+        if (
+            action ===
+            "view-lead"
+        ) {
 
-            openSalesDashboardLead(
+            window.openSalesDashboardLead(
                 leadId
             );
-
-            return;
         }
     };
 
 
 /* =========================================================
    OPEN LEAD
-   ---------------------------------------------------------
-   Untuk sementara mencari lead dari state.
-   Nanti dapat disambungkan ke Customer Profile CRM utama.
    ========================================================= */
 
 window.openSalesDashboardLead =
@@ -841,16 +1115,17 @@ window.openSalesDashboardLead =
         const leads =
             getSalesDashboardLeadsFromState();
 
+
         const lead =
             leads.find(
                 function (item) {
 
                     return String(
                         item?.id
-                    ) === String(
+                    ) ===
+                    String(
                         leadId
                     );
-
                 }
             );
 
@@ -867,8 +1142,7 @@ window.openSalesDashboardLead =
 
 
         /*
-         * Jika CRM utama memiliki fungsi untuk membuka
-         * Customer Profile, gunakan fungsi tersebut.
+         * Customer Profile CRM utama.
          */
 
         if (
@@ -898,7 +1172,7 @@ window.openSalesDashboardLead =
 
 
         /*
-         * Fallback sementara.
+         * Fallback.
          */
 
         console.info(
@@ -909,82 +1183,7 @@ window.openSalesDashboardLead =
 
 
 /* =========================================================
-   INITIALIZE LEAD EVENTS
-   ========================================================= */
-
-window.initSalesDashboardLeadEvents =
-    function (
-        container
-    ) {
-
-        if (!container) {
-            return;
-        }
-
-
-        /*
-         * Event delegation untuk action button.
-         */
-
-        container.addEventListener(
-            "click",
-            function (event) {
-
-                const actionButton =
-                    event.target.closest(
-                        "[data-action]"
-                    );
-
-                if (actionButton) {
-
-                    const action =
-                        actionButton.dataset.action;
-
-                    const leadId =
-                        actionButton.dataset.leadId;
-
-                    window.handleSalesDashboardLeadAction(
-                        action,
-                        leadId
-                    );
-
-                    return;
-                }
-
-
-                /*
-                 * Pagination
-                 */
-
-                const pageButton =
-                    event.target.closest(
-                        "[data-page-action]"
-                    );
-
-                if (pageButton) {
-
-                    const pageAction =
-                        pageButton.dataset.pageAction;
-
-                    window.changeSalesDashboardPage(
-                        pageAction
-                    );
-
-                    /*
-                     * Render ulang table.
-                     */
-
-                    window.renderCurrentSalesDashboardLeads();
-
-                }
-
-            }
-        );
-    };
-
-
-/* =========================================================
-   RENDER CURRENT STATE LEADS
+   RENDER CURRENT LEADS
    ========================================================= */
 
 window.renderCurrentSalesDashboardLeads =
@@ -992,16 +1191,23 @@ window.renderCurrentSalesDashboardLeads =
 
         const container =
             document.getElementById(
-                "sales-dashboard-leads-container"
+                "sales-dashboard-leads-body"
             );
 
+
         if (!container) {
+
+            console.warn(
+                "sales-dashboard-leads-body tidak ditemukan."
+            );
+
             return;
         }
 
 
         const leads =
             getSalesDashboardLeadsFromState();
+
 
         window.renderSalesDashboardLeads(
             container,
@@ -1011,17 +1217,138 @@ window.renderCurrentSalesDashboardLeads =
 
 
 /* =========================================================
+   LEAD EVENTS
+   ---------------------------------------------------------
+   Event delegation dipasang sekali pada document.
+   Jadi tidak masalah kalau table dirender ulang.
+   ========================================================= */
+
+let salesDashboardLeadEventsInitialized =
+    false;
+
+
+function initSalesDashboardLeadEvents() {
+
+    if (
+        salesDashboardLeadEventsInitialized
+    ) {
+
+        return;
+    }
+
+
+    salesDashboardLeadEventsInitialized =
+        true;
+
+
+    document.addEventListener(
+        "click",
+        function (event) {
+
+            /*
+             * View Customer
+             */
+
+            const actionButton =
+                event.target.closest(
+                    "#sales-dashboard-leads-body [data-action]"
+                );
+
+
+            if (actionButton) {
+
+                const action =
+                    actionButton.dataset.action;
+
+
+                const leadId =
+                    actionButton.dataset.leadId;
+
+
+                window.handleSalesDashboardLeadAction(
+                    action,
+                    leadId
+                );
+
+
+                return;
+            }
+
+
+            /*
+             * Previous page
+             */
+
+            const previousButton =
+                event.target.closest(
+                    "#sales-dashboard-prev-page"
+                );
+
+
+            if (
+                previousButton &&
+                !previousButton.disabled
+            ) {
+
+                window.changeSalesDashboardPage(
+                    "previous"
+                );
+
+
+                return;
+            }
+
+
+            /*
+             * Next page
+             */
+
+            const nextButton =
+                event.target.closest(
+                    "#sales-dashboard-next-page"
+                );
+
+
+            if (
+                nextButton &&
+                !nextButton.disabled
+            ) {
+
+                window.changeSalesDashboardPage(
+                    "next"
+                );
+            }
+        }
+    );
+}
+
+
+/* =========================================================
    REFRESH ICONS
    ========================================================= */
 
 function refreshSalesDashboardLeadIcons() {
 
     if (
-        typeof window.lucide !== "undefined" &&
+        typeof window.lucide !==
+        "undefined" &&
         typeof window.lucide.createIcons ===
-            "function"
+        "function"
     ) {
 
         window.lucide.createIcons();
     }
 }
+
+
+/* =========================================================
+   INITIALIZE
+   ========================================================= */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        initSalesDashboardLeadEvents();
+    }
+);
