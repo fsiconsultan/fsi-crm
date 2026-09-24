@@ -445,6 +445,77 @@
     }
 
     // ========================================================
+    // GET LEAD ASSIGNABLE USERS
+    // ========================================================
+    // Used only for Lead ownership / PIC.
+    //
+    // Includes:
+    // - Active Admin
+    // - Active Owner
+    // - Active Sales
+    //
+    // Manage Sales list still uses getActiveSales(),
+    // so Admin/Owner will NOT appear as Sales accounts.
+    // ========================================================
+
+    function getLeadAssignableUsers() {
+
+        const salesList =
+            Array.isArray(
+                window.salesUsersData
+            )
+                ? window.salesUsersData
+                : [];
+
+        return salesList
+            .filter(
+                function (user) {
+
+                    const role =
+                        normalizeRole(
+                            user.role
+                        );
+
+                    const status =
+                        normalizeSalesStatus(
+                            user.status
+                        );
+
+                    return (
+                        (
+                            (
+                                role === "admin" ||
+                                role === "owner"
+                            ) &&
+                            status === "Active"
+                        ) ||
+                        (
+                            role === "sales" &&
+                            status === "Active"
+                        )
+                    );
+                }
+            )
+            .sort(
+                function (a, b) {
+
+                    return getSalesDisplayName(
+                        a
+                    ).localeCompare(
+                        getSalesDisplayName(
+                            b
+                        ),
+                        undefined,
+                        {
+                            sensitivity:
+                                "base"
+                        }
+                    );
+                }
+            );
+    }
+
+    // ========================================================
     // LOAD SALES LOOKUP
     // ========================================================
 
@@ -648,7 +719,7 @@
         );
 
         // ----------------------------------------------------
-        // ACTIVE SALES
+        // ACTIVE SALES / ADMIN
         // ----------------------------------------------------
 
         activeSales.forEach(
@@ -818,16 +889,34 @@
         const activeSales =
             getActiveSales();
 
+        const leadAssignableUsers =
+            getLeadAssignableUsers();
+
+        // ----------------------------------------------------
+        // LEAD FILTER
+        // Admin + Active Sales
+        // ----------------------------------------------------
+
         populateLeadSalesFilter(
-            activeSales
+            leadAssignableUsers
         );
+
+        // ----------------------------------------------------
+        // TOP HEADER DROPDOWN
+        // Admin + Active Sales
+        // ----------------------------------------------------
 
         populateTopSalesDropdown(
-            activeSales
+            leadAssignableUsers
         );
 
+        // ----------------------------------------------------
+        // LEAD ASSIGNMENT
+        // Admin + Active Sales
+        // ----------------------------------------------------
+
         populateLeadAssignment(
-            activeSales
+            leadAssignableUsers
         );
 
         updateSalesDropdownButtonFromFilter();
@@ -889,11 +978,11 @@
 
             if (profileId) {
 
-                const activeSales =
-                    getActiveSales();
+                const assignableUsers =
+                    getLeadAssignableUsers();
 
                 const exists =
-                    activeSales.some(
+                    assignableUsers.some(
                         function (sales) {
 
                             return String(
@@ -1089,7 +1178,7 @@
         data
     ) {
 
-        const tableBody =
+        let tableBody =
             salesElement(
                 "salesTableBody",
                 "sales-table-body"
@@ -2569,6 +2658,7 @@
         ) {
 
             await loadSalesUsers();
+
         } else {
 
             /*
@@ -3072,6 +3162,9 @@
     window.getActiveSales =
         getActiveSales;
 
+    window.getLeadAssignableUsers =
+        getLeadAssignableUsers;
+
     window.populateSalesDropdowns =
         populateSalesDropdowns;
 
@@ -3135,6 +3228,8 @@
         loadSalesLookup,
 
         getActiveSales,
+
+        getLeadAssignableUsers,
 
         populateSalesDropdowns,
 
