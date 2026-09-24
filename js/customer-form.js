@@ -876,6 +876,22 @@
             );
 
 
+            // =================================================
+            // STATUS INPUT DATE
+            // =================================================
+            // Manual date:
+            // Menyimpan tanggal customer masuk
+            // ke status yang sedang dipilih.
+            // =================================================
+
+            setValue(
+                "leadStatusStartedAt",
+                dateValue(
+                    customer.status_started_at
+                )
+            );
+
+
             // Pipeline dates
 
             setValue(
@@ -1094,6 +1110,21 @@
                 getValue(
                     "leadStatus"
                 ) || "New",
+
+
+            // =================================================
+            // STATUS INPUT DATE
+            // =================================================
+            // Manual:
+            // User menentukan sendiri tanggal
+            // customer masuk ke status tersebut.
+            // =================================================
+
+            status_started_at:
+                getValue(
+                    "leadStatusStartedAt"
+                ) || null,
+
 
             follow_up_date:
                 getValue(
