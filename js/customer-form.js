@@ -27,10 +27,29 @@
 // - Dashboard
 // - Manage Sales
 //
+// CUSTOMER FORM:
+// - Customer Name
+// - Phone
+// - Business
+// - Location
+// - Status
+// - Input Date
+// - Appointment
+// - Site Survey
+// - Quotation
+// - Assign Sales
+// - Notes
+//
+// FIELD LAMA YANG TIDAK LAGI DIGUNAKAN DI FORM:
+// - Follow Up Date
+// - Last Follow Up
+// - SPK / Deposit Date
+// - Closing
+//
 // CATATAN:
-// - SPK sudah dihapus dari Customer Form.
-// - Appointment, Site Survey, Quotation, Closing tetap
-//   sebagai detail/activity field.
+// Field database lama tetap ada.
+// File ini hanya tidak lagi membaca / menulis field tersebut
+// dari Add / Edit Customer Form.
 // ============================================================
 
 (function () {
@@ -959,30 +978,6 @@
 
 
             // =================================================
-            // FOLLOW UP DATE
-            // =================================================
-
-            setValue(
-                "leadFollowUp",
-                dateValue(
-                    customer.follow_up_date
-                )
-            );
-
-
-            // =================================================
-            // LAST FOLLOW UP
-            // =================================================
-
-            setValue(
-                "leadLastFollowUp",
-                dateValue(
-                    customer.last_follow_up
-                )
-            );
-
-
-            // =================================================
             // APPOINTMENT
             // =================================================
 
@@ -1014,18 +1009,6 @@
                 "leadQuotation",
                 dateValue(
                     customer.quotation
-                )
-            );
-
-
-            // =================================================
-            // CLOSING
-            // =================================================
-
-            setValue(
-                "leadClosing",
-                dateValue(
-                    customer.closing
                 )
             );
 
@@ -1225,22 +1208,6 @@
                 ) || null,
 
 
-            follow_up_date:
-                getValue(
-                    "leadFollowUp"
-                ) || null,
-
-
-            // =================================================
-            // LAST FOLLOW UP
-            // =================================================
-
-            last_follow_up:
-                getValue(
-                    "leadLastFollowUp"
-                ) || null,
-
-
             // =================================================
             // APPOINTMENT
             // =================================================
@@ -1268,16 +1235,6 @@
             quotation:
                 getValue(
                     "leadQuotation"
-                ) || null,
-
-
-            // =================================================
-            // CLOSING
-            // =================================================
-
-            closing:
-                getValue(
-                    "leadClosing"
                 ) || null,
 
 
