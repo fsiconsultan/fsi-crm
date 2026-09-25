@@ -434,18 +434,29 @@
 
 
     // ========================================================
+    // GET PROFILE CONTAINER
+    // ========================================================
+
+    function getProfileContainer() {
+
+        return document.getElementById(
+            "customer-profile-container"
+        );
+
+    }
+
+
+    // ========================================================
     // RENDER SECTION
     // ========================================================
 
     function renderDocumentsSection() {
 
-        const page =
-            document.getElementById(
-                "customerProfilePage"
-            );
+        const container =
+            getProfileContainer();
 
-        if (!page) {
-            return;
+        if (!container) {
+            return false;
         }
 
 
@@ -458,19 +469,19 @@
 
             loadDocuments();
 
-            return;
+            return true;
 
         }
 
 
         const wrapper =
-            document.createElement("div");
+            document.createElement("section");
 
         wrapper.id =
             "fsiCustomerDocuments";
 
         wrapper.className =
-            "panel crm-edit-card fsi-documents-card";
+            "profile-card fsi-documents-card";
 
 
         wrapper.innerHTML = `
@@ -572,25 +583,9 @@
         `;
 
 
-        const editPage =
-            page.querySelector(
-                ".crm-full-edit-page"
-            );
-
-
-        if (editPage) {
-
-            editPage.appendChild(
-                wrapper
-            );
-
-        } else {
-
-            page.appendChild(
-                wrapper
-            );
-
-        }
+        container.appendChild(
+            wrapper
+        );
 
 
         const uploadButton =
@@ -610,6 +605,8 @@
 
 
         loadDocuments();
+
+        return true;
 
     }
 
@@ -792,14 +789,14 @@
 
         list.innerHTML =
             documents
-                .map(function (document) {
+                .map(function (docRecord) {
 
                     return `
 
                         <div
                             class="fsi-document-item"
                             data-document-id="${escapeHTML(
-                                document.id
+                                docRecord.id
                             )}"
                         >
 
@@ -813,7 +810,7 @@
                                 <div class="fsi-document-name">
 
                                     ${escapeHTML(
-                                        document.file_name
+                                        docRecord.file_name
                                     )}
 
                                 </div>
@@ -824,20 +821,20 @@
                                     <span class="fsi-document-type">
 
                                         ${escapeHTML(
-                                            document.document_type
+                                            docRecord.document_type
                                         )}
 
                                     </span>
 
                                     <span>
                                         ${formatFileSize(
-                                            document.file_size
+                                            docRecord.file_size
                                         )}
                                     </span>
 
                                     <span>
                                         ${formatDate(
-                                            document.uploaded_at
+                                            docRecord.uploaded_at
                                         )}
                                     </span>
 
@@ -852,7 +849,7 @@
                                     type="button"
                                     class="fsi-document-btn primary"
                                     data-document-view="${escapeHTML(
-                                        document.id
+                                        docRecord.id
                                     )}"
                                 >
                                     Preview
@@ -863,7 +860,7 @@
                                     type="button"
                                     class="fsi-document-btn"
                                     data-document-download="${escapeHTML(
-                                        document.id
+                                        docRecord.id
                                     )}"
                                 >
                                     Download
@@ -877,7 +874,7 @@
                                             type="button"
                                             class="fsi-document-btn danger"
                                             data-document-delete="${escapeHTML(
-                                                document.id
+                                                docRecord.id
                                             )}"
                                         >
                                             Delete
@@ -1202,9 +1199,6 @@
 
             if (insertResult.error) {
 
-                // Try to clean up uploaded
-                // storage file if DB insert fails.
-
                 await supabase.storage
                     .from(BUCKET_NAME)
                     .remove([
@@ -1350,7 +1344,7 @@
 
         try {
 
-            const document =
+            const docRecord =
                 await getDocument(
                     documentId
                 );
@@ -1360,7 +1354,7 @@
                 await supabase.storage
                     .from(BUCKET_NAME)
                     .createSignedUrl(
-                        document.file_path,
+                        docRecord.file_path,
                         SIGNED_URL_SECONDS
                     );
 
@@ -1432,7 +1426,7 @@
 
         try {
 
-            const document =
+            const docRecord =
                 await getDocument(
                     documentId
                 );
@@ -1442,7 +1436,7 @@
                 await supabase.storage
                     .from(BUCKET_NAME)
                     .download(
-                        document.file_path
+                        docRecord.file_path
                     );
 
 
@@ -1464,16 +1458,18 @@
 
 
             const anchor =
-                document.createElement("a");
+                window.document.createElement(
+                    "a"
+                );
 
             anchor.href =
                 url;
 
             anchor.download =
-                document.file_name ||
+                docRecord.file_name ||
                 "customer-document.pdf";
 
-            document.body.appendChild(
+            window.document.body.appendChild(
                 anchor
             );
 
@@ -1536,9 +1532,21 @@
         }
 
 
+        if (!isAdmin()) {
+
+            showMessage(
+                "Hanya Admin yang dapat menghapus document.",
+                "error"
+            );
+
+            return;
+
+        }
+
+
         try {
 
-            const document =
+            const docRecord =
                 await getDocument(
                     documentId
                 );
@@ -1547,7 +1555,7 @@
             const confirmed =
                 window.confirm(
                     "Hapus document \"" +
-                    document.file_name +
+                    docRecord.file_name +
                     "\"?"
                 );
 
@@ -1561,7 +1569,7 @@
                 await supabase.storage
                     .from(BUCKET_NAME)
                     .remove([
-                        document.file_path
+                        docRecord.file_path
                     ]);
 
 
@@ -1628,7 +1636,7 @@
 
 
         if (
-            typeof window.crmRenderCustomerEditPage !==
+            typeof window.crmOpenCustomerProfile !==
             "function"
         ) {
 
@@ -1646,14 +1654,17 @@
         }
 
 
-        const originalRenderer =
-            window.crmRenderCustomerEditPage;
+        const originalOpen =
+            window.crmOpenCustomerProfile;
 
 
-        window.crmRenderCustomerEditPage =
-            function (customer) {
+        window.crmOpenCustomerProfile =
+            async function (customerId) {
 
-                originalRenderer(customer);
+                const result =
+                    await originalOpen(
+                        customerId
+                    );
 
 
                 setTimeout(
@@ -1665,11 +1676,46 @@
                     0
                 );
 
+
+                return result;
+
             };
 
 
         window.crmCustomerDocumentsWrapped =
             true;
+
+
+        if (
+            typeof window.openCustomerProfile ===
+            "function"
+        ) {
+
+            window.openCustomerProfile =
+                window.crmOpenCustomerProfile;
+
+        }
+
+
+        if (
+            typeof window.crmOpenShelter ===
+            "function"
+        ) {
+
+            window.crmOpenShelter =
+                window.crmOpenCustomerProfile;
+
+        }
+
+
+        if (
+            window.FSICustomerProfile
+        ) {
+
+            window.FSICustomerProfile.open =
+                window.crmOpenCustomerProfile;
+
+        }
 
 
         return true;
@@ -1723,7 +1769,7 @@
                         );
 
                         console.warn(
-                            "FSI CRM: Customer profile renderer not found."
+                            "FSI CRM: Customer profile function not found."
                         );
 
                     }
