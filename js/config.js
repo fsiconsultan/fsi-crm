@@ -120,7 +120,7 @@ let currentCustomer = null;
 
 let currentPage = 1;
 
-let pageSize = 20;
+let pageSize = 100;
 
 let totalLeadsCount = 0;
 
@@ -488,7 +488,7 @@ const CRM_CONFIG = {
         "1.0.0",
 
     pageSize:
-        20,
+        100,
 
     searchDebounce:
         400,
@@ -923,7 +923,7 @@ function calculateTotalPages(
     const safeSize =
         Math.max(
             1,
-            Number(size) || 20
+            Number(size) || 100
         );
 
 
@@ -1027,7 +1027,7 @@ function resetCRMState() {
         1;
 
     pageSize =
-        20;
+        100;
 
     totalLeadsCount =
         0;
