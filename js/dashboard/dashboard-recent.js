@@ -1,4 +1,4 @@
-
+```js
 // ============================================================
 // FIND RECENT LEADS CONTAINER
 // ============================================================
@@ -40,7 +40,214 @@ function dashboardFindRecentLeadsContainer() {
 
 
 // ============================================================
-// RENDER RECENT LEADS
+// FORMAT HISTORY DATE
+// ============================================================
+function dashboardFormatHistoryDate(
+    value
+) {
+
+    if (!value) {
+        return "-";
+    }
+
+    if (
+        typeof window.formatDateTime ===
+        "function"
+    ) {
+
+        try {
+
+            return window.formatDateTime(
+                value
+            );
+
+        } catch (error) {
+
+            console.warn(
+                "FSI CRM: dashboard date format error:",
+                error
+            );
+        }
+    }
+
+    const date =
+        new Date(
+            value
+        );
+
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
+
+        return "-";
+    }
+
+    return date.toLocaleDateString(
+        "id-ID",
+        {
+            day:
+                "2-digit",
+
+            month:
+                "short",
+
+            year:
+                "numeric"
+        }
+    );
+}
+
+
+// ============================================================
+// GET CUSTOMER HISTORY
+// ============================================================
+function dashboardGetCustomerHistory(
+    lead
+) {
+
+    const history = [];
+
+
+    // --------------------------------------------------------
+    // CREATED
+    // --------------------------------------------------------
+    if (
+        lead.created_at
+    ) {
+
+        history.push(
+            {
+                label:
+                    "Created",
+
+                date:
+                    lead.created_at,
+
+                icon:
+                    "user-plus"
+            }
+        );
+    }
+
+
+    // --------------------------------------------------------
+    // INPUT DATE / CURRENT STATUS DATE
+    // --------------------------------------------------------
+    if (
+        lead.status_started_at
+    ) {
+
+        history.push(
+            {
+                label:
+                    "Input Date",
+
+                date:
+                    lead.status_started_at,
+
+                icon:
+                    "calendar-days"
+            }
+        );
+    }
+
+
+    // --------------------------------------------------------
+    // APPOINTMENT
+    // --------------------------------------------------------
+    if (
+        lead.appointment
+    ) {
+
+        history.push(
+            {
+                label:
+                    "Appointment",
+
+                date:
+                    lead.appointment,
+
+                icon:
+                    "calendar-check"
+            }
+        );
+    }
+
+
+    // --------------------------------------------------------
+    // SITE SURVEY
+    // --------------------------------------------------------
+    if (
+        lead.site_survey
+    ) {
+
+        history.push(
+            {
+                label:
+                    "Site Survey",
+
+                date:
+                    lead.site_survey,
+
+                icon:
+                    "map-pin"
+            }
+        );
+    }
+
+
+    // --------------------------------------------------------
+    // QUOTATION
+    // --------------------------------------------------------
+    if (
+        lead.quotation
+    ) {
+
+        history.push(
+            {
+                label:
+                    "Quotation",
+
+                date:
+                    lead.quotation,
+
+                icon:
+                    "file-text"
+            }
+        );
+    }
+
+
+    // --------------------------------------------------------
+    // DEAL
+    // --------------------------------------------------------
+    if (
+        lead.closing
+    ) {
+
+        history.push(
+            {
+                label:
+                    "Deal",
+
+                date:
+                    lead.closing,
+
+                icon:
+                    "handshake"
+            }
+        );
+    }
+
+
+    return history;
+}
+
+
+// ============================================================
+// RENDER RECENT LEADS / CUSTOMER HISTORY
 // ============================================================
 function renderDashboardRecentLeads(
     data
@@ -58,11 +265,18 @@ function renderDashboardRecentLeads(
         return;
     }
 
+
     const list =
         Array.isArray(data)
             ? data
             : [];
 
+
+    // --------------------------------------------------------
+    // SORT
+    // Tetap menggunakan created_at supaya data terbaru
+    // tetap tampil di bagian atas.
+    // --------------------------------------------------------
     const recent =
         [...list]
             .sort(
@@ -93,30 +307,34 @@ function renderDashboardRecentLeads(
             );
 
 
+    // --------------------------------------------------------
+    // EMPTY
+    // --------------------------------------------------------
     if (
         !recent.length
     ) {
 
-        container.innerHTML = `
-<div class="empty-state">
+        container.innerHTML =
+            '<div class="empty-state">' +
 
-<div class="empty-state-icon">
-<i data-lucide="inbox"></i>
-</div>
+            '<div class="empty-state-icon">' +
+            '<i data-lucide="inbox"></i>' +
+            '</div>' +
 
-<h4>
-No recent leads
-</h4>
+            '<h4>' +
+            'No recent leads' +
+            '</h4>' +
 
-<p>
-Belum ada data customer terbaru.
-</p>
+            '<p>' +
+            'Belum ada data customer terbaru.' +
+            '</p>' +
 
-</div>
-`;
+            '</div>';
+
 
         if (
-            typeof window.refreshIcons === "function"
+            typeof window.refreshIcons ===
+            "function"
         ) {
 
             window.refreshIcons();
@@ -126,6 +344,9 @@ Belum ada data customer terbaru.
     }
 
 
+    // --------------------------------------------------------
+    // CUSTOMER HISTORY
+    // --------------------------------------------------------
     container.innerHTML =
         recent.map(
             lead => {
@@ -134,78 +355,146 @@ Belum ada data customer terbaru.
                     lead.customer_name ||
                     "Unnamed Customer";
 
+
                 const status =
-                    dashboardNormalizeStatus(
-                        lead.status
-                    ) ||
-                    "New";
+                    typeof window.dashboardNormalizeStatus ===
+                    "function"
+                        ? (
+                            window.dashboardNormalizeStatus(
+                                lead.status
+                            ) ||
+                            "New"
+                        )
+                        : (
+                            lead.status ||
+                            "New"
+                        );
+
 
                 const statusClass =
-                    typeof window.getStatusClass === "function"
+                    typeof window.getStatusClass ===
+                    "function"
                         ? window.getStatusClass(
                             status
                         )
                         : "status-new";
 
-                const date =
-                    typeof window.formatDateTime === "function"
-                        ? window.formatDateTime(
-                            lead.created_at
-                        )
-                        : (
-                            lead.created_at
-                                ? new Date(
-                                    lead.created_at
-                                ).toLocaleString(
-                                    "id-ID"
-                                )
-                                : "-"
-                        );
+
+                const history =
+                    dashboardGetCustomerHistory(
+                        lead
+                    );
 
 
-                return `
-<div class="activity-item">
+                let historyHTML =
+                    "";
 
-<div class="activity-icon">
-<i data-lucide="user-plus"></i>
-</div>
 
-<div class="activity-content">
+                if (
+                    history.length
+                ) {
 
-<div class="activity-title">
-${dashboardEscapeHTML(
-    name
-)}
-</div>
+                    historyHTML =
+                        '<div class="dashboard-customer-history">';
 
-<div class="activity-meta">
 
-<span class="status-badge ${dashboardEscapeHTML(
-    statusClass
-)}">
-${dashboardEscapeHTML(
-    status
-)}
-</span>
+                    history.forEach(
+                        item => {
 
-<span>
-${dashboardEscapeHTML(
-    date
-)}
-</span>
+                            historyHTML +=
+                                '<div class="dashboard-history-item">' +
 
-</div>
+                                '<div class="dashboard-history-icon">' +
 
-</div>
+                                '<i data-lucide="' +
+                                dashboardEscapeHTML(
+                                    item.icon
+                                ) +
+                                '"></i>' +
 
-</div>
-`;
+                                '</div>' +
+
+                                '<div class="dashboard-history-content">' +
+
+                                '<span class="dashboard-history-label">' +
+                                dashboardEscapeHTML(
+                                    item.label
+                                ) +
+                                '</span>' +
+
+                                '<span class="dashboard-history-date">' +
+                                dashboardEscapeHTML(
+                                    dashboardFormatHistoryDate(
+                                        item.date
+                                    )
+                                ) +
+                                '</span>' +
+
+                                '</div>' +
+
+                                '</div>';
+                        }
+                    );
+
+
+                    historyHTML +=
+                        '</div>';
+
+                } else {
+
+                    historyHTML =
+                        '<div class="dashboard-history-empty">' +
+                        'Belum ada history tanggal.' +
+                        '</div>';
+                }
+
+
+                return (
+
+                    '<div class="activity-item dashboard-customer-history-card">' +
+
+                    '<div class="activity-icon">' +
+                    '<i data-lucide="user-round"></i>' +
+                    '</div>' +
+
+                    '<div class="activity-content">' +
+
+                    '<div class="activity-title">' +
+                    dashboardEscapeHTML(
+                        name
+                    ) +
+                    '</div>' +
+
+                    '<div class="activity-meta">' +
+
+                    '<span class="status-badge ' +
+                    dashboardEscapeHTML(
+                        statusClass
+                    ) +
+                    '">' +
+                    dashboardEscapeHTML(
+                        status
+                    ) +
+                    '</span>' +
+
+                    '</div>' +
+
+                    historyHTML +
+
+                    '</div>' +
+
+                    '</div>'
+                );
             }
         ).join("");
 
 
+    // --------------------------------------------------------
+    // REFRESH ICONS
+    // --------------------------------------------------------
     if (
-        typeof window.refreshIcons === "function"
+        typeof window.refreshIcons ===
+        "function"
     ) {
 
         window.refreshIcons();
@@ -221,7 +510,8 @@ function dashboardEscapeHTML(
 ) {
 
     if (
-        typeof window.escapeHTML === "function"
+        typeof window.escapeHTML ===
+        "function"
     ) {
 
         return window.escapeHTML(
@@ -229,10 +519,12 @@ function dashboardEscapeHTML(
         );
     }
 
+
     const text =
         String(
             value ?? ""
         );
+
 
     return text
         .replace(
@@ -259,3 +551,4 @@ function dashboardEscapeHTML(
 
 
 // ============================================================
+```
