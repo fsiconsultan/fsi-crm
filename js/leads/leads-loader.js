@@ -1,4 +1,3 @@
-```js
 // LOAD LEADS
 // ========================================================
 async function loadLeads(
@@ -205,6 +204,10 @@ async function loadLeads(
             pageSize -
             1;
 
+        // ------------------------------------------------
+        // SORT CUSTOMER NAME A-Z
+        // ------------------------------------------------
+
         query =
             query
                 .order(
@@ -212,6 +215,7 @@ async function loadLeads(
                     {
                         ascending:
                             true,
+
                         nullsFirst:
                             false
                     }
@@ -328,8 +332,11 @@ async function loadLeads(
             leads.length === 0
         ) {
             renderEmptyLeadsState();
+
             updatePagination();
+
             updateLeadsContext();
+
             return;
         }
 
@@ -426,7 +433,7 @@ function updateLeadsContext() {
 
                 element.textContent =
                     selectedSalesName
-                        ? `Sales: ${selectedSalesName}`
+                        ? "Sales: " + selectedSalesName
                         : "Sales terpilih";
 
                 element.classList.add(
@@ -488,4 +495,3 @@ function showLeadError(
 
 
 // ========================================================
-```
