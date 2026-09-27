@@ -518,3 +518,198 @@
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-xs);
 }
+
+
+/* =========================================================
+   CUSTOMER JOURNEY
+========================================================= */
+.customer-journey {
+    width: 100%;
+    min-width: 0;
+    display: grid;
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+
+/* =========================================================
+   CUSTOMER JOURNEY STAGE CARD
+========================================================= */
+.customer-journey-stage {
+    position: relative;
+    min-width: 0;
+    min-height: 145px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xs);
+    overflow: hidden;
+    transition:
+        border-color var(--transition),
+        box-shadow var(--transition),
+        transform var(--transition);
+}
+
+.customer-journey-stage:hover {
+    border-color: #dbe3ef;
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   JOURNEY COMPLETED
+========================================================= */
+.customer-journey-stage.completed {
+    border-color: #bbf7d0;
+    background:
+        linear-gradient(
+            135deg,
+            #ffffff 0%,
+            #f0fdf4 100%
+        );
+}
+
+
+/* =========================================================
+   JOURNEY PENDING
+========================================================= */
+.customer-journey-stage.pending {
+    border-color: var(--slate-200);
+    background:
+        linear-gradient(
+            135deg,
+            #ffffff 0%,
+            #f8fafc 100%
+        );
+}
+
+
+/* =========================================================
+   JOURNEY ICON
+========================================================= */
+.journey-stage-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 12px;
+    background: var(--slate-100);
+    color: var(--slate-500);
+    border: 1px solid var(--slate-200);
+}
+
+.journey-stage-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.customer-journey-stage.completed
+.journey-stage-icon {
+    background: #dcfce7;
+    border-color: #bbf7d0;
+    color: #15803d;
+}
+
+.customer-journey-stage.pending
+.journey-stage-icon {
+    background: #f1f5f9;
+    border-color: #e2e8f0;
+    color: #64748b;
+}
+
+
+/* =========================================================
+   JOURNEY CONTENT
+========================================================= */
+.journey-stage-content {
+    min-width: 0;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.journey-stage-title {
+    color: var(--slate-900);
+    font-size: 12px;
+    line-height: 1.35;
+    font-weight: 800;
+}
+
+.journey-stage-date {
+    margin-top: 4px;
+    color: var(--slate-500);
+    font-size: 10px;
+    line-height: 1.4;
+    font-weight: 600;
+}
+
+.journey-stage-description {
+    margin-top: 7px;
+    color: var(--slate-400);
+    font-size: 10px;
+    line-height: 1.45;
+}
+
+
+/* =========================================================
+   JOURNEY DAY COUNT
+========================================================= */
+.journey-stage-age {
+    width: fit-content;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 8px;
+    padding: 5px 9px;
+    border-radius: 8px;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    font-size: 10px;
+    line-height: 1;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.customer-journey-stage.completed
+.journey-stage-age {
+    background: #ecfdf5;
+    border-color: #bbf7d0;
+    color: #15803d;
+}
+
+.customer-journey-stage.pending
+.journey-stage-age {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+    color: #64748b;
+}
+
+
+/* =========================================================
+   CUSTOMER JOURNEY RESPONSIVE
+========================================================= */
+@media (max-width: 1100px) {
+    .customer-journey {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 680px) {
+    .customer-journey {
+        grid-template-columns: 1fr;
+    }
+
+    .customer-journey-stage {
+        min-height: auto;
+    }
+}
