@@ -114,7 +114,7 @@
     // DATE PARSER
     // ========================================================
     //
-    // SAME DATE LOGIC AS LEADS
+    // SAME BASIC DATE LOGIC AS LEADS
     //
     // ========================================================
 
@@ -122,7 +122,8 @@
 
         if (
             value === null ||
-            value === undefined
+            value === undefined ||
+            value === ""
         ) {
             return null;
         }
@@ -238,13 +239,17 @@
 
 
     // ========================================================
-    // DAYS
+    // LEADS AGE LOGIC
     // ========================================================
     //
-    // SAME LOGIC AS LEADS
+    // IMPORTANT:
     //
-    // Input Date = created_at
-    // Days = today - created_at
+    // CUSTOMER PROFILE MUST USE THE SAME DATE
+    // SOURCE AS LEADS.
+    //
+    // Input Date = status_started_at
+    //
+    // Days = today - status_started_at
     //
     // ========================================================
 
@@ -295,7 +300,7 @@
 
 
     // ========================================================
-    // DAYS LABEL
+    // LEADS AGE LABEL
     // ========================================================
 
     function getLeadAgeLabel(value) {
@@ -883,6 +888,18 @@
 
     function renderCustomerJourney(customer) {
 
+        // IMPORTANT:
+        // New / Input Date follows LEADS:
+        // status_started_at
+        const inputDate =
+            getJourneyDate(
+                customer,
+                [
+                    "status_started_at"
+                ]
+            );
+
+
         const appointmentDate =
             getJourneyDate(
                 customer,
@@ -936,15 +953,6 @@
                 [
                     "second_appointment",
                     "second_meeting"
-                ]
-            );
-
-
-        const createdDate =
-            getJourneyDate(
-                customer,
-                [
-                    "created_at"
                 ]
             );
 
@@ -1022,11 +1030,11 @@
 
                     ${journeyStage(
                         "New",
-                        createdDate,
+                        inputDate,
                         true,
                         "sparkles",
-                        createdDate
-                            ? "Customer created"
+                        inputDate
+                            ? "Customer input date"
                             : "Customer record"
                     )}
 
@@ -1328,10 +1336,26 @@
         // ====================================================
         // INPUT DATE
         // ====================================================
+        //
+        // SAME AS LEADS:
+        //
+        // status_started_at
+        //
+        // ====================================================
 
-        const createdAt =
+        const inputDateValue =
+            customer.status_started_at;
+
+
+        const inputDate =
+            formatDate(
+                inputDateValue
+            );
+
+
+        const inputDateTime =
             formatDateTime(
-                customer.created_at
+                inputDateValue
             );
 
 
@@ -1339,22 +1363,21 @@
         // DAYS
         // ====================================================
         //
-        // IMPORTANT:
-        // SAME AS LEADS
+        // SAME AS LEADS:
         //
-        // created_at -> Days
+        // status_started_at -> Days
         //
         // ====================================================
 
         const customerAge =
             getLeadAgeInDays(
-                customer.created_at
+                inputDateValue
             );
 
 
         const customerAgeLabel =
             getLeadAgeLabel(
-                customer.created_at
+                inputDateValue
             );
 
 
@@ -1573,7 +1596,7 @@
 
 
                                 <!-- ================================= -->
-                                <!-- INPUT DATE + DAYS -->
+                                <!-- INPUT DATE -->
                                 <!-- ================================= -->
 
                                 <div class="customer-profile-lead-age">
@@ -1590,9 +1613,7 @@
                                     <strong>
 
                                         ${escapeHTML(
-                                            formatDate(
-                                                customer.created_at
-                                            )
+                                            inputDate
                                         )}
 
                                     </strong>
@@ -1616,7 +1637,7 @@
 
 
                     <!-- ======================================== -->
-                    <!-- DAYS -->
+                    <!-- DAYS SINCE INPUT -->
                     <!-- ======================================== -->
 
                     <div class="customer-profile-update-age">
@@ -1648,9 +1669,7 @@
 
                                 Customer created
                                 ${escapeHTML(
-                                    formatDate(
-                                        customer.created_at
-                                    )
+                                    inputDate
                                 )}
 
                             </small>
@@ -2029,9 +2048,7 @@
                             <strong>
 
                                 ${escapeHTML(
-                                    formatDate(
-                                        customer.created_at
-                                    )
+                                    inputDate
                                 )}
 
                             </strong>
@@ -2175,28 +2192,6 @@
 
                                 <i data-lucide="calendar-plus"></i>
 
-                                Created
-
-                            </span>
-
-
-                            <strong>
-
-                                ${escapeHTML(
-                                    createdAt
-                                )}
-
-                            </strong>
-
-                        </div>
-
-
-                        <div class="profile-info-item">
-
-                            <span class="profile-info-label">
-
-                                <i data-lucide="calendar-days"></i>
-
                                 Input Date
 
                             </span>
@@ -2205,9 +2200,7 @@
                             <strong>
 
                                 ${escapeHTML(
-                                    formatDate(
-                                        customer.created_at
-                                    )
+                                    inputDateTime
                                 )}
 
                             </strong>
@@ -2405,7 +2398,7 @@
     // LOAD CUSTOMER
     // ========================================================
     //
-    // CUSTOMER PROFILE READS DIRECTLY FROM LEADS.
+    // CUSTOMER PROFILE USES LEADS DIRECTLY.
     //
     // ========================================================
 
