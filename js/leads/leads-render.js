@@ -322,6 +322,11 @@ function renderLeads(
                     lead.business
                 );
 
+            const leadType =
+                leadGetValue(
+                    lead.lead_type
+                ) || "Customer";
+
             const note =
                 leadGetValue(
                     lead.notes
@@ -375,6 +380,11 @@ function renderLeads(
             const escapedBusiness =
                 leadEscapeHTML(
                     business
+                );
+
+            const escapedLeadType =
+                leadEscapeHTML(
+                    leadType
                 );
 
             const escapedSales =
@@ -496,6 +506,7 @@ function renderLeads(
             // URUTAN HARUS SAMA DENGAN TABLE HEADER:
             //
             // Customer
+            // Lead Type
             // WhatsApp
             // Email
             // Business
@@ -528,6 +539,16 @@ CUSTOMER
         </button>
 
     </div>
+
+</td>
+
+
+<!-- =========================================
+LEAD TYPE
+========================================= -->
+<td>
+
+    ${escapedLeadType || "-"}
 
 </td>
 
