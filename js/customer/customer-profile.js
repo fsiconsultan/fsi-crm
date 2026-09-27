@@ -10,8 +10,9 @@
 // 4. Display Follow Up Date
 // 5. Calculate Follow Up difference based on CALENDAR DATE
 // 6. Display Days Since Last Update
-// 7. Does not handle Add Customer
-// 8. Does not handle Edit Customer
+// 7. Fallback to created_at when updated_at is empty
+// 8. Does not handle Add Customer
+// 9. Does not handle Edit Customer
 //
 // STATUS SYSTEM:
 // 1. New
@@ -391,6 +392,73 @@
 
 
         return `Updated ${age} days ago`;
+    }
+
+
+    // ========================================================
+    // CUSTOMER LAST UPDATED VALUE
+    // ========================================================
+    //
+    // Priority:
+    // 1. updated_at
+    // 2. created_at
+    //
+    // Customer lama mungkin belum memiliki updated_at.
+    // Jika updated_at kosong, created_at digunakan sebagai
+    // fallback agar Days Since Update tetap tampil.
+    //
+    // ========================================================
+
+    function getCustomerLastUpdatedValue(customer) {
+
+        if (!customer) {
+            return null;
+        }
+
+
+        // ----------------------------------------------------
+        // PRIORITY 1: updated_at
+        // ----------------------------------------------------
+
+        const updatedAt =
+            customer.updated_at;
+
+
+        if (
+            updatedAt !== null &&
+            updatedAt !== undefined &&
+            String(updatedAt).trim() !== ""
+        ) {
+
+            return updatedAt;
+
+        }
+
+
+        // ----------------------------------------------------
+        // PRIORITY 2: created_at
+        // ----------------------------------------------------
+
+        const createdAt =
+            customer.created_at;
+
+
+        if (
+            createdAt !== null &&
+            createdAt !== undefined &&
+            String(createdAt).trim() !== ""
+        ) {
+
+            return createdAt;
+
+        }
+
+
+        // ----------------------------------------------------
+        // NO DATE
+        // ----------------------------------------------------
+
+        return null;
     }
 
 
@@ -1417,9 +1485,26 @@
             );
 
 
+        // ====================================================
+        // LAST UPDATED
+        // ====================================================
+        //
+        // Use updated_at first.
+        // If updated_at is empty, use created_at.
+        //
+        // This ensures older customers still show a
+        // Days Since Update value.
+        // ====================================================
+
+        const customerLastUpdated =
+            getCustomerLastUpdatedValue(
+                customer
+            );
+
+
         const updatedAt =
             formatDateTime(
-                customer.updated_at
+                customerLastUpdated
             );
 
 
@@ -1429,19 +1514,19 @@
 
         const updateAgeLabel =
             getUpdateAgeLabel(
-                customer.updated_at
+                customerLastUpdated
             );
 
 
         const updateAgeDetail =
             getUpdateAgeDetail(
-                customer.updated_at
+                customerLastUpdated
             );
 
 
         const updateAge =
             getUpdateAgeInDays(
-                customer.updated_at
+                customerLastUpdated
             );
 
 
@@ -2457,6 +2542,14 @@
 
         try {
 
+            // =================================================
+            // IMPORTANT:
+            // Always load directly from Supabase.
+            //
+            // This ensures updated_at is fresh after
+            // customer-form.js performs an UPDATE.
+            // =================================================
+
             const {
                 data,
                 error
@@ -3181,6 +3274,7 @@
                         "[FSI Customer Profile] Appointment clicked."
                     );
 
+
                     /*
                      * Appointment is not forced into
                      * Supabase from here.
@@ -3216,6 +3310,7 @@
                     console.log(
                         "[FSI Customer Profile] Save clicked."
                     );
+
 
                     /*
                      * Save intentionally does not perform
