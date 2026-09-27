@@ -1,9 +1,57 @@
-// ========================================================
-// FSI CRM - CUSTOMER PROFILE / SHELTER
-// ========================================================
+// ============================================================
+// FSI CRM - CUSTOMER PROFILE
+// File: js/shelter.js
+// ============================================================
+//
+// Fungsi:
+// 1. Menampilkan Customer Profile
+// 2. Mengambil data customer dari tabel "leads"
+// 3. Mengambil nama Sales dari tabel "sales_users"
+// 4. Menampilkan Input Date
+// 5. Menghitung selisih Input Date berdasarkan TANGGAL KALENDER
+// 6. Tidak menangani Add Customer
+// 7. Tidak menangani Edit Customer
+//
+// STATUS SYSTEM:
+// 1. New
+// 2. First Contact
+// 3. First Meeting / Appointment / Site Survey
+// 4. Quotation
+// 5. Second Appointment
+// 6. Deal
+// 7. No Deal
+//
+// DETAIL / ACTIVITY:
+// - Follow Up
+// - Last Follow Up
+// - Appointment
+// - Site Survey
+// - Quotation
+// - Closing
+// - Notes
+//
+// INPUT DATE:
+// Menggunakan field:
+//     status_started_at
+//
+// Days Since Input:
+// Menggunakan perhitungan tanggal kalender yang sama
+// dengan sistem Leads.
+//
+// SPK SUDAH DIHAPUS DARI CUSTOMER PROFILE.
+//
+// Add / Edit Customer ditangani oleh:
+//     js/customer-form.js
+//
+// Daftar Leads ditangani oleh:
+//     js/leads.js
+//
+// ============================================================
 
 (function () {
+
     "use strict";
+
 
     // ========================================================
     // STATE
@@ -14,189 +62,66 @@
 
 
     // ========================================================
-    // SUPABASE
+    // DOM HELPER
     // ========================================================
 
-    function getSupabase() {
-        return window.supabaseClient || window.supabase || null;
+    function shelterElement() {
+
+        for (let i = 0; i < arguments.length; i++) {
+
+            const id = arguments[i];
+
+            if (!id) continue;
+
+            const element =
+                document.getElementById(id);
+
+            if (element) {
+                return element;
+            }
+
+        }
+
+        return null;
     }
 
 
     // ========================================================
-    // DATE HELPERS
+    // SUPABASE HELPER
     // ========================================================
 
-    function parseCalendarDate(value) {
+    function getSupabaseClient() {
+
         if (
-            value === null ||
-            value === undefined ||
-            value === ""
+            window.supabaseClient &&
+            typeof window.supabaseClient.from === "function"
         ) {
-            return null;
+            return window.supabaseClient;
         }
 
-        if (value instanceof Date) {
-            const clonedDate = new Date(value.getTime());
 
-            if (Number.isNaN(clonedDate.getTime())) {
-                return null;
-            }
-
-            return clonedDate;
+        if (
+            window.supabase &&
+            typeof window.supabase.from === "function"
+        ) {
+            return window.supabase;
         }
 
-        if (typeof value === "number") {
-            const numericDate = new Date(value);
 
-            if (Number.isNaN(numericDate.getTime())) {
-                return null;
-            }
-
-            return numericDate;
-        }
-
-        const stringValue = String(value).trim();
-
-        if (!stringValue) {
-            return null;
-        }
-
-        const dateOnlyMatch = stringValue.match(
-            /^(\d{4})-(\d{2})-(\d{2})$/
+        console.error(
+            "FSI CRM: Supabase client is not available."
         );
 
-        if (dateOnlyMatch) {
-            const year = Number(dateOnlyMatch[1]);
-            const month = Number(dateOnlyMatch[2]) - 1;
-            const day = Number(dateOnlyMatch[3]);
-
-            const localDate = new Date(
-                year,
-                month,
-                day
-            );
-
-            if (Number.isNaN(localDate.getTime())) {
-                return null;
-            }
-
-            return localDate;
-        }
-
-        const date = new Date(stringValue);
-
-        if (Number.isNaN(date.getTime())) {
-            return null;
-        }
-
-        return date;
+        return null;
     }
 
 
     // ========================================================
-    // SAME AGE LOGIC AS LEADS
-    // Input Date = status_started_at
+    // HTML ESCAPE
     // ========================================================
 
-    function getLeadAgeInDays(value) {
-        const createdDate = parseCalendarDate(value);
+    function escapeHTML(value) {
 
-        if (!createdDate) {
-            return null;
-        }
-
-        const now = new Date();
-
-        const start = new Date(
-            createdDate.getFullYear(),
-            createdDate.getMonth(),
-            createdDate.getDate()
-        );
-
-        const end = new Date(
-            now.getFullYear(),
-            now.getMonth(),
-            now.getDate()
-        );
-
-        const difference =
-            end.getTime() - start.getTime();
-
-        return Math.max(
-            0,
-            Math.floor(
-                difference / 86400000
-            )
-        );
-    }
-
-
-    function getLeadAgeLabel(value) {
-        const age = getLeadAgeInDays(value);
-
-        if (age === null) {
-            return "-";
-        }
-
-        if (age === 0) {
-            return "0 days";
-        }
-
-        if (age === 1) {
-            return "1 day";
-        }
-
-        return `${age} days`;
-    }
-
-
-    // ========================================================
-    // DATE FORMAT
-    // ========================================================
-
-    function formatDate(value) {
-        const date = parseCalendarDate(value);
-
-        if (!date) {
-            return "-";
-        }
-
-        return date.toLocaleDateString(
-            "en-GB",
-            {
-                day: "2-digit",
-                month: "short",
-                year: "numeric"
-            }
-        );
-    }
-
-
-    function formatDateTime(value) {
-        const date = parseCalendarDate(value);
-
-        if (!date) {
-            return "-";
-        }
-
-        return date.toLocaleString(
-            "en-GB",
-            {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit"
-            }
-        );
-    }
-
-
-    // ========================================================
-    // ESCAPE HTML
-    // ========================================================
-
-    function escapeHtml(value) {
         if (
             value === null ||
             value === undefined
@@ -214,341 +139,973 @@
 
 
     // ========================================================
-    // FOLLOW UP HELPER
+    // TEXT HELPER
     // ========================================================
 
-    function getFollowUpDate(customer) {
-        if (!customer) {
+    function displayValue(value, fallback) {
+
+        const text =
+            value === null ||
+            value === undefined
+                ? ""
+                : String(value).trim();
+
+        if (!text) {
+            return fallback || "—";
+        }
+
+        return text;
+    }
+
+
+    // ========================================================
+    // DATE PARSER
+    // ========================================================
+
+    function parseCalendarDate(value) {
+
+        if (
+            value === null ||
+            value === undefined
+        ) {
             return null;
         }
 
-        return (
-            customer.follow_up_date ||
-            customer.last_follow_up ||
-            null
+
+        const raw =
+            String(value).trim();
+
+
+        if (!raw) {
+            return null;
+        }
+
+
+        const match =
+            raw.match(
+                /^(\d{4})-(\d{2})-(\d{2})/
+            );
+
+
+        if (match) {
+
+            const year =
+                Number(match[1]);
+
+            const month =
+                Number(match[2]);
+
+            const day =
+                Number(match[3]);
+
+
+            const date =
+                new Date(
+                    year,
+                    month - 1,
+                    day
+                );
+
+
+            if (
+                date.getFullYear() === year &&
+                date.getMonth() === month - 1 &&
+                date.getDate() === day
+            ) {
+
+                return date;
+
+            }
+
+        }
+
+
+        const fallback =
+            new Date(raw);
+
+
+        if (
+            !Number.isNaN(
+                fallback.getTime()
+            )
+        ) {
+
+            return new Date(
+                fallback.getFullYear(),
+                fallback.getMonth(),
+                fallback.getDate()
+            );
+
+        }
+
+
+        return null;
+    }
+
+
+    // ========================================================
+    // START OF DAY
+    // ========================================================
+
+    function startOfCalendarDay(date) {
+
+        return new Date(
+            date.getFullYear(),
+            date.getMonth(),
+            date.getDate()
         );
     }
 
 
     // ========================================================
-    // STATUS
+    // DATE DIFFERENCE
+    // ========================================================
+
+    function getCalendarDayDifference(
+        startDate,
+        today
+    ) {
+
+        const start =
+            startOfCalendarDay(
+                startDate
+            );
+
+        const todayDate =
+            startOfCalendarDay(
+                today
+            );
+
+
+        const millisecondsPerDay =
+            24 * 60 * 60 * 1000;
+
+
+        return Math.round(
+            (
+                todayDate.getTime() -
+                start.getTime()
+            ) /
+            millisecondsPerDay
+        );
+    }
+
+
+    // ========================================================
+    // INPUT DATE CALCULATION
+    // ========================================================
+    //
+    // SAMA DENGAN LOGIC LEADS
+    //
+    // Input Date = status_started_at
+    //
+    // Contoh:
+    // status_started_at = 31 Jul 2026
+    // hari ini = 27 Sep 2026
+    //
+    // hasil:
+    // 58 days
+    //
+    // ========================================================
+
+    function getInputDateInfo(
+        inputDateValue
+    ) {
+
+        const inputDate =
+            parseCalendarDate(
+                inputDateValue
+            );
+
+
+        if (!inputDate) {
+
+            return {
+                exists: false,
+                date: null,
+                days: null,
+                label: "—",
+                subtitle: "No input date",
+                detail:
+                    "No input date has been set."
+            };
+
+        }
+
+
+        const today =
+            new Date();
+
+
+        const difference =
+            getCalendarDayDifference(
+                inputDate,
+                today
+            );
+
+
+        const safeDays =
+            Math.max(
+                0,
+                difference
+            );
+
+
+        let daysLabel;
+
+
+        if (safeDays === 0) {
+
+            daysLabel =
+                "0 days";
+
+        } else if (safeDays === 1) {
+
+            daysLabel =
+                "1 day";
+
+        } else {
+
+            daysLabel =
+                `${safeDays} days`;
+
+        }
+
+
+        return {
+
+            exists: true,
+
+            date:
+                inputDate,
+
+            days:
+                safeDays,
+
+            label:
+                daysLabel,
+
+            subtitle:
+                "SINCE INPUT",
+
+            detail:
+                `Customer created ${formatDate(
+                    inputDateValue
+                )}`
+
+        };
+    }
+
+
+    // ========================================================
+    // FORMAT DATE
+    // ========================================================
+
+    function formatDate(value) {
+
+        const date =
+            parseCalendarDate(value);
+
+
+        if (!date) {
+            return "—";
+        }
+
+
+        return new Intl.DateTimeFormat(
+            "id-ID",
+            {
+                day: "2-digit",
+                month: "short",
+                year: "numeric"
+            }
+        ).format(date);
+    }
+
+
+    // ========================================================
+    // FORMAT DATETIME
+    // ========================================================
+
+    function formatDateTime(value) {
+
+        if (
+            value === null ||
+            value === undefined ||
+            String(value).trim() === ""
+        ) {
+            return "—";
+        }
+
+
+        const date =
+            new Date(value);
+
+
+        if (
+            Number.isNaN(
+                date.getTime()
+            )
+        ) {
+
+            return displayValue(
+                value,
+                "—"
+            );
+
+        }
+
+
+        return new Intl.DateTimeFormat(
+            "id-ID",
+            {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit"
+            }
+        ).format(date);
+    }
+
+
+    // ========================================================
+    // FOLLOW UP CALCULATION
+    // ========================================================
+    //
+    // Follow Up tetap dipakai untuk bagian Activity /
+    // Pipeline.
+    //
+    // Tidak lagi digunakan sebagai card utama di atas.
+    //
+    // ========================================================
+
+    function getFollowUpInfo(
+        followUpValue
+    ) {
+
+        const followUpDate =
+            parseCalendarDate(
+                followUpValue
+            );
+
+
+        if (!followUpDate) {
+
+            return {
+                exists: false,
+                label: "No follow-up date",
+                detail:
+                    "No follow-up date has been set.",
+                className:
+                    "followup-none",
+                days: null
+            };
+
+        }
+
+
+        const today =
+            new Date();
+
+
+        const difference =
+            getCalendarDayDifference(
+                followUpDate,
+                today
+            );
+
+
+        if (difference === 0) {
+
+            return {
+                exists: true,
+                label: "Today",
+                detail:
+                    "Follow-up is due today.",
+                className:
+                    "followup-today",
+                days: 0
+            };
+
+        }
+
+
+        if (difference > 0) {
+
+            return {
+                exists: true,
+                label:
+                    difference === 1
+                        ? "1 day overdue"
+                        : `${difference} days overdue`,
+                detail:
+                    `Follow-up date was ${difference} ` +
+                    `${difference === 1 ? "day" : "days"} ago.`,
+                className:
+                    "followup-overdue",
+                days: difference
+            };
+
+        }
+
+
+        const daysUntil =
+            Math.abs(difference);
+
+
+        return {
+            exists: true,
+            label:
+                daysUntil === 1
+                    ? "In 1 day"
+                    : `In ${daysUntil} days`,
+            detail:
+                `Follow-up is scheduled in ${daysUntil} ` +
+                `${daysUntil === 1 ? "day" : "days"}.`,
+            className:
+                "followup-upcoming",
+            days: difference
+        };
+    }
+
+
+    // ========================================================
+    // STATUS NORMALIZATION
     // ========================================================
 
     function normalizeStatus(status) {
-        if (!status) {
-            return "New";
-        }
 
-        return String(status).trim();
-    }
+        const rawStatus =
+            String(status || "New").trim();
 
 
-    function getStatusClass(status) {
-        const normalized = normalizeStatus(status)
-            .toLowerCase()
-            .replace(/\s+/g, "-")
-            .replace(/\//g, "-");
+        if (
+            typeof window.normalizeLeadStatus ===
+            "function"
+        ) {
 
-        return `status-${normalized}`;
-    }
-
-
-    // ========================================================
-    // JOURNEY DATE
-    // ========================================================
-
-    function getJourneyDate(customer, stage) {
-        if (!customer) {
-            return null;
-        }
-
-        switch (stage) {
-            case "New":
-                return customer.status_started_at || null;
-
-            case "First Contact":
-                return (
-                    customer.first_contact ||
-                    customer.contact_date ||
-                    customer.last_follow_up ||
-                    null
-                );
-
-            case "Appointment":
-                return customer.appointment || null;
-
-            case "Site Survey":
-                return customer.site_survey || null;
-
-            case "Quotation":
-                return customer.quotation || null;
-
-            case "Second Appointment":
-                return (
-                    customer.second_appointment ||
-                    customer.second_meeting ||
-                    null
-                );
-
-            case "Deal":
-                return customer.closing || null;
-
-            default:
-                return null;
-        }
-    }
-
-
-    // ========================================================
-    // CUSTOMER JOURNEY
-    // ========================================================
-
-    function renderCustomerJourney(customer) {
-        const stages = [
-            {
-                key: "New",
-                label: "New"
-            },
-            {
-                key: "First Contact",
-                label: "First Contact"
-            },
-            {
-                key: "Appointment",
-                label: "Appointment"
-            },
-            {
-                key: "Site Survey",
-                label: "Site Survey"
-            },
-            {
-                key: "Quotation",
-                label: "Quotation"
-            },
-            {
-                key: "Second Appointment",
-                label: "Second Appointment"
-            },
-            {
-                key: "Deal",
-                label: "Deal"
-            }
-        ];
-
-        const currentStatus =
-            normalizeStatus(customer.status);
-
-        const currentIndex =
-            stages.findIndex(
-                stage =>
-                    stage.key.toLowerCase() ===
-                    currentStatus.toLowerCase()
+            return window.normalizeLeadStatus(
+                rawStatus || "New"
             );
 
-        return stages.map(
-            (stage, index) => {
-                const dateValue =
-                    getJourneyDate(
-                        customer,
-                        stage.key
-                    );
-
-                const hasDate =
-                    !!dateValue;
-
-                let stateClass = "";
-
-                if (
-                    currentIndex >= 0 &&
-                    index < currentIndex
-                ) {
-                    stateClass = "completed";
-                } else if (
-                    currentIndex === index
-                ) {
-                    stateClass = "active";
-                } else if (hasDate) {
-                    stateClass = "completed";
-                }
-
-                return `
-                    <div class="customer-journey-item ${stateClass}">
-                        <div class="customer-journey-dot"></div>
-
-                        <div class="customer-journey-content">
-                            <div class="customer-journey-title">
-                                ${escapeHtml(stage.label)}
-                            </div>
-
-                            <div class="customer-journey-date">
-                                ${
-                                    hasDate
-                                        ? escapeHtml(
-                                            formatDate(dateValue)
-                                        )
-                                        : "-"
-                                }
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-        ).join("");
-    }
-
-
-    // ========================================================
-    // DOCUMENTS
-    // ========================================================
-
-    function renderCustomerDocuments(customer) {
-        return `
-            <div class="customer-profile-section customer-documents-section">
-
-                <div class="customer-profile-section-header">
-                    <div>
-                        <h3>Documents</h3>
-                        <p>Customer related documents</p>
-                    </div>
-
-                    <label
-                        class="customer-document-upload"
-                        for="customerDocumentUpload"
-                    >
-                        Upload PDF
-                    </label>
-
-                    <input
-                        type="file"
-                        id="customerDocumentUpload"
-                        accept="application/pdf"
-                        style="display:none;"
-                    >
-                </div>
-
-                <div class="customer-document-list">
-                    <div class="customer-document-empty">
-                        No documents uploaded.
-                    </div>
-                </div>
-
-            </div>
-        `;
-    }
-
-
-    // ========================================================
-    // CUSTOMER PROFILE
-    // ========================================================
-
-    function renderCustomerProfile(customer) {
-        if (!customer) {
-            return `
-                <div class="customer-profile-empty">
-                    Customer not found.
-                </div>
-            `;
         }
 
+
+        return rawStatus || "New";
+    }
+
+
+    // ========================================================
+    // STATUS CLASS
+    // ========================================================
+
+    function getStatusClass(status) {
+
+        const normalized =
+            normalizeStatus(status)
+                .toLowerCase();
+
+
+        const map = {
+
+            "new":
+                "status-new",
+
+            "first contact":
+                "status-first-contact",
+
+            "first meeting / appointment / site survey":
+                "status-first-meeting",
+
+            "quotation":
+                "status-quotation",
+
+            "second appointment":
+                "status-second-appointment",
+
+            "deal":
+                "status-deal",
+
+            "no deal":
+                "status-no-deal"
+
+        };
+
+
+        return (
+            map[normalized] ||
+            "status-default"
+        );
+    }
+
+
+    // ========================================================
+    // PROFILE CONTAINER
+    // ========================================================
+
+    function getProfileContainer() {
+
+        return shelterElement(
+            "customer-profile-container"
+        );
+    }
+
+
+    // ========================================================
+    // SHOW PROFILE LOADING
+    // ========================================================
+
+    function showProfileLoading() {
+
+        const container =
+            getProfileContainer();
+
+
+        if (!container) {
+            return;
+        }
+
+
+        container.innerHTML = `
+
+            <div class="customer-profile-loading">
+
+                <div class="profile-loading-icon">
+                    <i data-lucide="loader-circle"></i>
+                </div>
+
+                <h3>
+                    Loading Customer Profile
+                </h3>
+
+                <p>
+                    Please wait while customer data is loaded.
+                </p>
+
+            </div>
+
+        `;
+
+
+        refreshIcons();
+    }
+
+
+    // ========================================================
+    // SHOW PROFILE EMPTY
+    // ========================================================
+
+    function showProfileEmpty(message) {
+
+        const container =
+            getProfileContainer();
+
+
+        if (!container) {
+            return;
+        }
+
+
+        container.innerHTML = `
+
+            <div class="empty-state customer-profile-empty">
+
+                <i
+                    data-lucide="contact"
+                    aria-hidden="true"
+                ></i>
+
+                <span>
+                    ${escapeHTML(
+                        message ||
+                        "Select a customer to view the profile."
+                    )}
+                </span>
+
+            </div>
+
+        `;
+
+
+        refreshIcons();
+    }
+
+
+    // ========================================================
+    // SHOW PROFILE ERROR
+    // ========================================================
+
+    function showProfileError(message) {
+
+        const container =
+            getProfileContainer();
+
+
+        if (!container) {
+            return;
+        }
+
+
+        container.innerHTML = `
+
+            <div class="empty-state customer-profile-error">
+
+                <i
+                    data-lucide="circle-alert"
+                    aria-hidden="true"
+                ></i>
+
+                <strong>
+                    Unable to load customer
+                </strong>
+
+                <span>
+                    ${escapeHTML(
+                        message ||
+                        "Customer profile could not be loaded."
+                    )}
+                </span>
+
+                <button
+                    type="button"
+                    class="secondary-btn small-btn"
+                    data-shelter-action="back"
+                >
+                    <i data-lucide="arrow-left"></i>
+                    Back to Leads
+                </button>
+
+            </div>
+
+        `;
+
+
+        refreshIcons();
+    }
+
+
+    // ========================================================
+    // RENDER PROFILE
+    // ========================================================
+
+    function renderCustomerProfile(
+        customer,
+        sales
+    ) {
+
+        const container =
+            getProfileContainer();
+
+
+        if (!container) {
+
+            console.warn(
+                "FSI CRM: customer-profile-container not found."
+            );
+
+            return;
+        }
+
+
+        const customerName =
+            displayValue(
+                customer.customer_name,
+                "Unnamed Customer"
+            );
+
+
+        const phone =
+            displayValue(
+                customer.phone
+            );
+
+
+        const business =
+            displayValue(
+                customer.business
+            );
+
+
+        const location =
+            displayValue(
+                customer.location
+            );
+
+
         // ====================================================
-        // IMPORTANT:
-        // INPUT DATE MUST BE THE SAME AS LEADS
+        // STATUS
+        // ====================================================
+
+        const status =
+            normalizeStatus(
+                customer.status || "New"
+            );
+
+
+        const salesName =
+            sales
+                ? displayValue(
+                    sales.full_name ||
+                    sales.name ||
+                    sales.username,
+                    "Unassigned"
+                )
+                : "Unassigned";
+
+
+        // ====================================================
+        // INPUT DATE
+        // ====================================================
+        //
+        // PENTING:
+        // Sama dengan Leads:
+        //
+        // Input Date = status_started_at
+        //
+        // BUKAN:
+        // created_at
+        //
+        // BUKAN:
+        // follow_up_date
+        //
         // ====================================================
 
         const inputDateValue =
             customer.status_started_at;
 
+
+        const inputDateInfo =
+            getInputDateInfo(
+                inputDateValue
+            );
+
+
         const inputDate =
-            formatDate(inputDateValue);
-
-        const customerAge =
-            getLeadAgeInDays(inputDateValue);
-
-        const customerAgeLabel =
-            getLeadAgeLabel(inputDateValue);
+            inputDateInfo.exists
+                ? formatDate(
+                    inputDateValue
+                )
+                : "—";
 
 
-        // ====================================================
-        // CUSTOMER DATA
-        // ====================================================
+        const inputDays =
+            inputDateInfo.exists
+                ? inputDateInfo.days
+                : null;
 
-        const customerName =
-            customer.customer_name || "-";
 
-        const phone =
-            customer.phone || "-";
-
-        const email =
-            customer.email || "-";
-
-        const business =
-            customer.business || "-";
-
-        const location =
-            customer.location || "-";
-
-        const salesName =
-            customer.sales_name ||
-            customer.sales ||
-            "-";
-
-        const status =
-            normalizeStatus(customer.status);
+        const inputDaysLabel =
+            inputDateInfo.exists
+                ? inputDateInfo.label
+                : "—";
 
 
         // ====================================================
-        // NOTES
+        // FOLLOW UP
         // ====================================================
+
+        const followUpInfo =
+            getFollowUpInfo(
+                customer.follow_up_date
+            );
+
+
+        const avatarLetter =
+            customerName
+                .charAt(0)
+                .toUpperCase();
+
+
+        const createdAt =
+            formatDateTime(
+                customer.created_at
+            );
+
+
+        const updatedAt =
+            formatDateTime(
+                customer.updated_at
+            );
+
+
+        // ====================================================
+        // FOLLOW UP DATA
+        // ====================================================
+        //
+        // Tetap disiapkan karena Follow Up masih dipakai
+        // di bagian Customer Information dan Pipeline.
+        //
+        // ====================================================
+
+        let followUpBadge = "";
+
+
+        if (followUpInfo.exists) {
+
+            followUpBadge = `
+
+                <span
+                    class="followup-badge ${escapeHTML(
+                        followUpInfo.className
+                    )}"
+                >
+
+                    <i data-lucide="clock-3"></i>
+
+                    ${escapeHTML(
+                        followUpInfo.label
+                    )}
+
+                </span>
+
+            `;
+
+        } else {
+
+            followUpBadge = `
+
+                <span
+                    class="followup-badge followup-none"
+                >
+
+                    <i data-lucide="calendar-x-2"></i>
+
+                    No follow-up date
+
+                </span>
+
+            `;
+
+        }
+
+
+        let followUpDaysText =
+            "No follow-up date";
+
+
+        if (followUpInfo.exists) {
+
+            if (
+                followUpInfo.days === 0
+            ) {
+
+                followUpDaysText =
+                    "Today";
+
+            } else if (
+                followUpInfo.days > 0
+            ) {
+
+                followUpDaysText =
+                    `${followUpInfo.days} ${
+                        followUpInfo.days === 1
+                            ? "day"
+                            : "days"
+                    } overdue`;
+
+            } else {
+
+                const daysUntil =
+                    Math.abs(
+                        followUpInfo.days
+                    );
+
+
+                followUpDaysText =
+                    `In ${daysUntil} ${
+                        daysUntil === 1
+                            ? "day"
+                            : "days"
+                    }`;
+
+            }
+
+        }
+
+
+        // ====================================================
+        // DETAIL / ACTIVITY DATES
+        // ====================================================
+
+        const appointment =
+            formatDate(
+                customer.appointment
+            );
+
+
+        const siteSurvey =
+            formatDate(
+                customer.site_survey
+            );
+
+
+        const quotation =
+            formatDate(
+                customer.quotation
+            );
+
+
+        const closing =
+            formatDate(
+                customer.closing
+            );
+
 
         const notes =
-            customer.notes || "";
+            displayValue(
+                customer.notes,
+                "No notes available."
+            );
 
 
         // ====================================================
-        // PROFILE HTML
+        // RENDER HTML
         // ====================================================
 
-        return `
-            <div class="customer-profile-container">
+        container.innerHTML = `
 
-                <!-- ==========================================
-                     PROFILE HEADER
-                =========================================== -->
+            <div class="customer-profile">
 
                 <div class="customer-profile-header">
 
-                    <div class="customer-profile-header-left">
+                    <div class="customer-profile-heading">
 
                         <button
                             type="button"
-                            class="customer-profile-back-btn"
-                            onclick="window.crmBackToLeads()"
+                            class="secondary-btn small-btn customer-profile-back"
+                            data-shelter-action="back"
                         >
+
                             <i data-lucide="arrow-left"></i>
+
                             Back to Leads
+
                         </button>
 
-                        <div class="customer-profile-avatar">
-                            ${escapeHtml(
-                                customerName
-                                    .charAt(0)
-                                    .toUpperCase()
-                            )}
-                        </div>
 
-                        <div class="customer-profile-title">
+                        <div class="customer-identity">
 
-                            <h1>
-                                ${escapeHtml(customerName)}
-                            </h1>
+                            <div class="customer-profile-avatar">
 
-                            <div class="customer-profile-status-row">
+                                ${escapeHTML(
+                                    avatarLetter
+                                )}
 
-                                <span
-                                    class="customer-profile-status ${getStatusClass(status)}"
-                                >
-                                    ${escapeHtml(status)}
-                                </span>
+                            </div>
+
+
+                            <div class="customer-profile-name">
+
+                                <h2>
+                                    ${escapeHTML(
+                                        customerName
+                                    )}
+                                </h2>
+
+                                <p>
+                                    Customer Profile
+                                </p>
 
                             </div>
 
@@ -557,331 +1114,516 @@
                     </div>
 
 
-                    <div class="customer-profile-header-actions">
+                    <div class="customer-profile-status">
 
-                        <button
-                            type="button"
-                            class="btn btn-secondary"
-                            onclick="window.crmBackToLeads()"
+                        <span
+                            class="status-badge ${escapeHTML(
+                                getStatusClass(status)
+                            )}"
                         >
-                            <i data-lucide="list"></i>
-                            Leads
-                        </button>
+
+                            ${escapeHTML(
+                                status
+                            )}
+
+                        </span>
 
                     </div>
 
                 </div>
 
 
-                <!-- ==========================================
-                     TOP INFORMATION CARDS
-                =========================================== -->
+                <!-- ==================================================
+                     INPUT DATE CARD
+                     MENGGANTIKAN FOLLOW-UP CARD UTAMA
+                =================================================== -->
 
-                <div class="customer-profile-stats">
+                <section
+                    class="profile-followup-card input-date-profile-card"
+                >
 
-                    <!-- INPUT DATE -->
-                    <div class="customer-profile-stat-card">
+                    <div class="profile-followup-icon">
 
-                        <div class="customer-profile-stat-icon">
-                            <i data-lucide="calendar-days"></i>
-                        </div>
-
-                        <div class="customer-profile-stat-content">
-
-                            <div class="customer-profile-stat-label">
-                                INPUT DATE
-                            </div>
-
-                            <div class="customer-profile-stat-value">
-                                ${escapeHtml(inputDate)}
-                            </div>
-
-                            <div class="customer-profile-stat-subtitle">
-                                ${escapeHtml(customerAgeLabel)}
-                            </div>
-
-                        </div>
+                        <i data-lucide="calendar-days"></i>
 
                     </div>
 
 
-                    <!-- DAYS SINCE INPUT -->
-                    <div class="customer-profile-stat-card">
+                    <div class="profile-followup-content">
 
-                        <div class="customer-profile-stat-icon">
+                        <span class="profile-followup-label">
+                            Input Date
+                        </span>
+
+                        <strong>
+                            ${escapeHTML(
+                                inputDate
+                            )}
+                        </strong>
+
+                        <small>
+                            ${escapeHTML(
+                                inputDateInfo.exists
+                                    ? `Customer created ${inputDate}`
+                                    : "No input date has been set."
+                            )}
+                        </small>
+
+                    </div>
+
+
+                    <div class="profile-followup-days">
+
+                        <span
+                            class="followup-badge input-date-badge"
+                        >
+
                             <i data-lucide="clock-3"></i>
-                        </div>
 
-                        <div class="customer-profile-stat-content">
+                            ${escapeHTML(
+                                inputDaysLabel
+                            )}
 
-                            <div class="customer-profile-stat-label">
-                                ${escapeHtml(customerAgeLabel)}
-                            </div>
+                        </span>
 
-                            <div class="customer-profile-stat-value">
-                                ${escapeHtml(customerAgeLabel)}
-                            </div>
 
-                            <div class="customer-profile-stat-subtitle">
-                                SINCE INPUT
-                            </div>
-
-                        </div>
+                        <span class="followup-days-text">
+                            SINCE INPUT
+                        </span>
 
                     </div>
 
-
-                    <!-- CUSTOMER CREATED -->
-                    <div class="customer-profile-stat-card">
-
-                        <div class="customer-profile-stat-icon">
-                            <i data-lucide="user-plus"></i>
-                        </div>
-
-                        <div class="customer-profile-stat-content">
-
-                            <div class="customer-profile-stat-label">
-                                CUSTOMER CREATED
-                            </div>
-
-                            <div class="customer-profile-stat-value">
-                                ${escapeHtml(inputDate)}
-                            </div>
-
-                            <div class="customer-profile-stat-subtitle">
-                                Input Date ${escapeHtml(inputDate)}
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </div>
+                </section>
 
 
-                <!-- ==========================================
-                     CUSTOMER INFORMATION
-                =========================================== -->
+                <section class="profile-card">
 
-                <div class="customer-profile-section">
-
-                    <div class="customer-profile-section-header">
+                    <div class="profile-card-header">
 
                         <div>
-                            <h3>Customer Information</h3>
-                            <p>Customer details and sales assignment</p>
+
+                            <h3>
+                                Customer Information
+                            </h3>
+
+                            <p>
+                                Basic customer details
+                            </p>
+
                         </div>
 
                     </div>
 
 
-                    <div class="customer-profile-info-grid">
+                    <div class="profile-info-grid">
 
-                        <div class="customer-profile-info-item">
+                        <div class="profile-info-item">
 
-                            <span class="customer-profile-info-label">
+                            <span class="profile-info-label">
+                                <i data-lucide="user-round"></i>
                                 Customer Name
                             </span>
 
-                            <span class="customer-profile-info-value">
-                                ${escapeHtml(customerName)}
-                            </span>
+                            <strong>
+                                ${escapeHTML(
+                                    customerName
+                                )}
+                            </strong>
 
                         </div>
 
 
-                        <div class="customer-profile-info-item">
+                        <div class="profile-info-item">
 
-                            <span class="customer-profile-info-label">
-                                WhatsApp
+                            <span class="profile-info-label">
+                                <i data-lucide="phone"></i>
+                                Phone
                             </span>
 
-                            <span class="customer-profile-info-value">
-                                ${escapeHtml(phone)}
-                            </span>
+                            <strong>
+                                ${escapeHTML(
+                                    phone
+                                )}
+                            </strong>
 
                         </div>
 
 
-                        <div class="customer-profile-info-item">
+                        <div class="profile-info-item">
 
-                            <span class="customer-profile-info-label">
-                                Email
-                            </span>
-
-                            <span class="customer-profile-info-value">
-                                ${escapeHtml(email)}
-                            </span>
-
-                        </div>
-
-
-                        <div class="customer-profile-info-item">
-
-                            <span class="customer-profile-info-label">
+                            <span class="profile-info-label">
+                                <i data-lucide="building-2"></i>
                                 Business
                             </span>
 
-                            <span class="customer-profile-info-value">
-                                ${escapeHtml(business)}
-                            </span>
+                            <strong>
+                                ${escapeHTML(
+                                    business
+                                )}
+                            </strong>
 
                         </div>
 
 
-                        <div class="customer-profile-info-item">
+                        <div class="profile-info-item">
 
-                            <span class="customer-profile-info-label">
+                            <span class="profile-info-label">
+                                <i data-lucide="map-pin"></i>
                                 Location
                             </span>
 
-                            <span class="customer-profile-info-value">
-                                ${escapeHtml(location)}
-                            </span>
+                            <strong>
+                                ${escapeHTML(
+                                    location
+                                )}
+                            </strong>
 
                         </div>
 
 
-                        <div class="customer-profile-info-item">
+                        <div class="profile-info-item">
 
-                            <span class="customer-profile-info-label">
+                            <span class="profile-info-label">
+                                <i data-lucide="briefcase-business"></i>
                                 Sales
                             </span>
 
-                            <span class="customer-profile-info-value">
-                                ${escapeHtml(salesName)}
+                            <strong>
+                                ${escapeHTML(
+                                    salesName
+                                )}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="profile-info-item">
+
+                            <span class="profile-info-label">
+                                <i data-lucide="calendar-check"></i>
+                                Follow Up Date
                             </span>
+
+                            <strong>
+                                ${escapeHTML(
+                                    customer.follow_up_date
+                                        ? formatDate(
+                                            customer.follow_up_date
+                                        )
+                                        : "Not scheduled"
+                                )}
+                            </strong>
 
                         </div>
 
                     </div>
 
-                </div>
+                </section>
 
 
-                <!-- ==========================================
-                     CUSTOMER JOURNEY
-                =========================================== -->
+                <section class="profile-card">
 
-                <div class="customer-profile-section">
-
-                    <div class="customer-profile-section-header">
+                    <div class="profile-card-header">
 
                         <div>
-                            <h3>Customer Journey</h3>
-                            <p>Sales process progress</p>
+
+                            <h3>
+                                Sales Pipeline
+                            </h3>
+
+                            <p>
+                                Customer progress and important dates
+                            </p>
+
                         </div>
 
                     </div>
 
 
-                    <div class="customer-journey">
+                    <div class="profile-pipeline-grid">
 
-                        ${renderCustomerJourney(customer)}
+                        <div class="pipeline-date-item">
+
+                            <div class="pipeline-date-icon">
+                                <i data-lucide="phone-call"></i>
+                            </div>
+
+                            <div>
+
+                                <span>
+                                    Follow Up
+                                </span>
+
+                                <strong>
+                                    ${escapeHTML(
+                                        customer.follow_up_date
+                                            ? formatDate(
+                                                customer.follow_up_date
+                                            )
+                                            : "—"
+                                    )}
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="pipeline-date-item">
+
+                            <div class="pipeline-date-icon">
+                                <i data-lucide="calendar-check"></i>
+                            </div>
+
+                            <div>
+
+                                <span>
+                                    Appointment
+                                </span>
+
+                                <strong>
+                                    ${escapeHTML(
+                                        appointment
+                                    )}
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="pipeline-date-item">
+
+                            <div class="pipeline-date-icon">
+                                <i data-lucide="map-pin"></i>
+                            </div>
+
+                            <div>
+
+                                <span>
+                                    Site Survey
+                                </span>
+
+                                <strong>
+                                    ${escapeHTML(
+                                        siteSurvey
+                                    )}
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="pipeline-date-item">
+
+                            <div class="pipeline-date-icon">
+                                <i data-lucide="file-text"></i>
+                            </div>
+
+                            <div>
+
+                                <span>
+                                    Quotation
+                                </span>
+
+                                <strong>
+                                    ${escapeHTML(
+                                        quotation
+                                    )}
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="pipeline-date-item">
+
+                            <div class="pipeline-date-icon">
+                                <i data-lucide="badge-check"></i>
+                            </div>
+
+                            <div>
+
+                                <span>
+                                    Closing
+                                </span>
+
+                                <strong>
+                                    ${escapeHTML(
+                                        closing
+                                    )}
+                                </strong>
+
+                            </div>
+
+                        </div>
 
                     </div>
 
-                </div>
+                </section>
 
 
-                <!-- ==========================================
-                     NOTES
-                =========================================== -->
+                <section class="profile-card">
 
-                <div class="customer-profile-section">
-
-                    <div class="customer-profile-section-header">
+                    <div class="profile-card-header">
 
                         <div>
-                            <h3>Notes</h3>
-                            <p>Customer notes and information</p>
+
+                            <h3>
+                                Notes
+                            </h3>
+
+                            <p>
+                                Customer notes and information
+                            </p>
+
                         </div>
 
                     </div>
 
 
-                    <div class="customer-profile-notes">
+                    <div class="profile-notes">
 
-                        ${
-                            notes
-                                ? escapeHtml(notes)
-                                : "No notes available."
-                        }
+                        <i data-lucide="notebook-pen"></i>
+
+                        <p>
+                            ${escapeHTML(
+                                notes
+                            )}
+                        </p>
 
                     </div>
 
-                </div>
+                </section>
 
 
-                <!-- ==========================================
-                     DOCUMENTS
-                =========================================== -->
+                <section class="profile-card profile-meta-card">
 
-                ${renderCustomerDocuments(customer)}
-
-
-                <!-- ==========================================
-                     RECORD INFORMATION
-                =========================================== -->
-
-                <div class="customer-profile-section">
-
-                    <div class="customer-profile-section-header">
+                    <div class="profile-card-header">
 
                         <div>
-                            <h3>Record Information</h3>
-                            <p>CRM customer record</p>
-                        </div>
 
-                    </div>
+                            <h3>
+                                Record Information
+                            </h3>
 
-
-                    <div class="customer-profile-info-grid">
-
-                        <div class="customer-profile-info-item">
-
-                            <span class="customer-profile-info-label">
-                                Input Date
-                            </span>
-
-                            <span class="customer-profile-info-value">
-                                ${escapeHtml(inputDate)}
-                            </span>
-
-                        </div>
-
-
-                        <div class="customer-profile-info-item">
-
-                            <span class="customer-profile-info-label">
-                                Days Since Input
-                            </span>
-
-                            <span class="customer-profile-info-value">
-                                ${escapeHtml(customerAgeLabel)}
-                            </span>
-
-                        </div>
-
-
-                        <div class="customer-profile-info-item">
-
-                            <span class="customer-profile-info-label">
-                                Status
-                            </span>
-
-                            <span class="customer-profile-info-value">
-                                ${escapeHtml(status)}
-                            </span>
+                            <p>
+                                CRM record details
+                            </p>
 
                         </div>
 
                     </div>
 
-                </div>
+
+                    <div class="profile-info-grid">
+
+                        <div class="profile-info-item">
+
+                            <span class="profile-info-label">
+                                <i data-lucide="calendar-plus"></i>
+                                Created
+                            </span>
+
+                            <strong>
+                                ${escapeHTML(
+                                    createdAt
+                                )}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="profile-info-item">
+
+                            <span class="profile-info-label">
+                                <i data-lucide="refresh-cw"></i>
+                                Last Updated
+                            </span>
+
+                            <strong>
+                                ${escapeHTML(
+                                    updatedAt
+                                )}
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </section>
 
             </div>
+
         `;
+
+
+        refreshIcons();
+    }
+
+
+    // ========================================================
+    // LOAD SALES
+    // ========================================================
+
+    async function loadSales(salesId) {
+
+        if (
+            !salesId ||
+            String(salesId).trim() === ""
+        ) {
+            return null;
+        }
+
+
+        const supabase =
+            getSupabaseClient();
+
+
+        if (!supabase) {
+            return null;
+        }
+
+
+        try {
+
+            const {
+                data,
+                error
+            } = await supabase
+                .from("sales_users")
+                .select("*")
+                .eq(
+                    "id",
+                    salesId
+                )
+                .maybeSingle();
+
+
+            if (error) {
+
+                console.warn(
+                    "FSI CRM: Unable to load sales profile.",
+                    error
+                );
+
+                return null;
+            }
+
+
+            return data || null;
+
+        } catch (error) {
+
+            console.warn(
+                "FSI CRM: Sales profile request failed.",
+                error
+            );
+
+            return null;
+        }
     }
 
 
@@ -891,75 +1633,344 @@
 
     async function loadCustomer(customerId) {
 
-        const supabase = getSupabase();
+        const supabase =
+            getSupabaseClient();
+
 
         if (!supabase) {
-            console.error(
-                "Supabase client not found."
+
+            showProfileError(
+                "Supabase connection is not available."
             );
 
             return null;
         }
 
-        if (!customerId) {
-            console.error(
-                "Customer ID is missing."
+
+        const id =
+            String(
+                customerId ?? ""
+            ).trim();
+
+
+        if (!id) {
+
+            showProfileEmpty(
+                "Select a customer to view the profile."
             );
 
             return null;
         }
 
-        const {
-            data,
-            error
-        } = await supabase
-            .from("leads")
-            .select("*")
-            .eq("id", customerId)
-            .maybeSingle();
 
-        if (error) {
+        try {
+
+            const {
+                data,
+                error
+            } = await supabase
+                .from("leads")
+                .select("*")
+                .eq(
+                    "id",
+                    id
+                )
+                .maybeSingle();
+
+
+            if (error) {
+
+                console.error(
+                    "FSI CRM: Customer profile query failed:",
+                    error
+                );
+
+
+                showProfileError(
+                    error.message ||
+                    "Unable to load customer data."
+                );
+
+
+                return null;
+            }
+
+
+            if (!data) {
+
+                showProfileError(
+                    "Customer was not found."
+                );
+
+
+                return null;
+            }
+
+
+            return data;
+
+        } catch (error) {
+
             console.error(
-                "Error loading customer:",
+                "FSI CRM: Customer profile request failed:",
                 error
             );
 
+
+            showProfileError(
+                "Unable to load customer profile."
+            );
+
+
             return null;
         }
-
-        return data || null;
     }
 
 
     // ========================================================
-    // LOAD SALES
+    // FORCE SHOW PROFILE PAGE
     // ========================================================
 
-    async function loadSales() {
+    function showCustomerProfilePage() {
 
-        const supabase = getSupabase();
-
-        if (!supabase) {
-            return [];
-        }
-
-        const {
-            data,
-            error
-        } = await supabase
-            .from("sales_users")
-            .select("*");
-
-        if (error) {
-            console.error(
-                "Error loading sales:",
-                error
+        const profilePage =
+            document.getElementById(
+                "view-customer-profile"
             );
 
-            return [];
+
+        if (!profilePage) {
+
+            console.error(
+                "FSI CRM: #view-customer-profile tidak ditemukan."
+            );
+
+            return false;
         }
 
-        return data || [];
+
+        // ----------------------------------------------------
+        // PRIORITAS 1
+        // Navigation system utama
+        // ----------------------------------------------------
+
+        if (
+            window.FSINavigation &&
+            typeof window.FSINavigation.showPage ===
+                "function"
+        ) {
+
+            const result =
+                window.FSINavigation.showPage(
+                    "customer-profile"
+                );
+
+
+            ensureProfilePageVisible();
+
+
+            return result !== false;
+
+        }
+
+
+        // ----------------------------------------------------
+        // PRIORITAS 2
+        // Global showPage jika ada
+        // ----------------------------------------------------
+
+        if (
+            typeof window.showPage ===
+            "function"
+        ) {
+
+            const result =
+                window.showPage(
+                    "customer-profile"
+                );
+
+
+            ensureProfilePageVisible();
+
+
+            return result !== false;
+
+        }
+
+
+        // ----------------------------------------------------
+        // PRIORITAS 3
+        // Global navigation
+        // ----------------------------------------------------
+
+        if (
+            typeof window.crmNavigate ===
+            "function"
+        ) {
+
+            const result =
+                window.crmNavigate(
+                    "customer-profile"
+                );
+
+
+            ensureProfilePageVisible();
+
+
+            return result !== false;
+
+        }
+
+
+        // ----------------------------------------------------
+        // FALLBACK
+        // ----------------------------------------------------
+
+        activateProfilePage();
+
+
+        return true;
+    }
+
+
+    // ========================================================
+    // ENSURE PROFILE PAGE VISIBLE
+    // ========================================================
+
+    function ensureProfilePageVisible() {
+
+        const pages =
+            document.querySelectorAll(
+                ".crm-page, .app-page, [id^='view-']"
+            );
+
+
+        pages.forEach(
+            function (page) {
+
+                if (
+                    page.id ===
+                    "view-customer-profile"
+                ) {
+
+                    page.classList.add(
+                        "active"
+                    );
+
+                    page.classList.remove(
+                        "hidden"
+                    );
+
+                    page.setAttribute(
+                        "aria-hidden",
+                        "false"
+                    );
+
+                    page.style.display =
+                        "block";
+
+                } else {
+
+                    page.classList.remove(
+                        "active"
+                    );
+
+                    page.classList.add(
+                        "hidden"
+                    );
+
+                    page.setAttribute(
+                        "aria-hidden",
+                        "true"
+                    );
+
+                    page.style.display =
+                        "none";
+
+                }
+
+            }
+        );
+
+
+        const container =
+            getProfileContainer();
+
+
+        if (container) {
+
+            container.style.display =
+                "block";
+
+            container.style.visibility =
+                "visible";
+
+            container.style.opacity =
+                "1";
+
+        }
+
+
+        console.log(
+            "[FSI Customer Profile] Page visible:",
+            {
+                page:
+                    !!document.getElementById(
+                        "view-customer-profile"
+                    ),
+
+                active:
+                    profilePageIsActive(),
+
+                display:
+                    profilePageDisplay(),
+
+                container:
+                    !!container
+            }
+        );
+    }
+
+
+    // ========================================================
+    // PROFILE PAGE STATUS
+    // ========================================================
+
+    function profilePageIsActive() {
+
+        const page =
+            document.getElementById(
+                "view-customer-profile"
+            );
+
+
+        if (!page) {
+            return false;
+        }
+
+
+        return page.classList.contains(
+            "active"
+        );
+    }
+
+
+    function profilePageDisplay() {
+
+        const page =
+            document.getElementById(
+                "view-customer-profile"
+            );
+
+
+        if (!page) {
+            return "NOT FOUND";
+        }
+
+
+        return window.getComputedStyle(
+            page
+        ).display;
     }
 
 
@@ -967,158 +1978,109 @@
     // OPEN CUSTOMER PROFILE
     // ========================================================
 
-    async function openCustomerProfile(customerId) {
+    async function openCustomerProfile(
+        customerId
+    ) {
 
-        if (!customerId) {
+        const id =
+            String(
+                customerId ?? ""
+            ).trim();
+
+
+        if (!id) {
+
+            showCustomerProfilePage();
+
+
+            showProfileEmpty(
+                "Select a customer to view the profile."
+            );
+
             return;
         }
 
+
+        if (profileLoading) {
+            return;
+        }
+
+
         currentCustomerId =
-            customerId;
+            id;
+
+
+        window.crmCurrentCustomerId =
+            id;
+
 
         profileLoading = true;
 
-        window.crmCurrentCustomerId =
-            customerId;
 
-        const profileContainer =
-            document.querySelector(
-                "#customerProfile"
-            ) ||
-            document.querySelector(
-                "#customer-profile"
-            ) ||
-            document.querySelector(
-                ".customer-profile"
-            );
+        // ----------------------------------------------------
+        // Buka halaman PROFILE terlebih dahulu.
+        // ----------------------------------------------------
 
-        if (!profileContainer) {
+        showCustomerProfilePage();
+
+
+        const container =
+            getProfileContainer();
+
+
+        if (!container) {
+
             console.error(
-                "Customer profile container not found."
+                "FSI CRM: customer-profile-container tidak ditemukan."
             );
 
             profileLoading = false;
+
             return;
         }
 
-        profileContainer.classList.add(
-            "active"
-        );
 
-        profileContainer.innerHTML = `
-            <div class="customer-profile-loading">
-                <div class="customer-profile-loading-spinner"></div>
-                <div>Loading customer...</div>
-            </div>
-        `;
+        showProfileLoading();
 
 
         try {
 
             const customer =
-                await loadCustomer(
-                    customerId
-                );
+                await loadCustomer(id);
+
 
             if (!customer) {
-
-                profileContainer.innerHTML = `
-                    <div class="customer-profile-empty">
-
-                        <div class="customer-profile-empty-icon">
-                            <i data-lucide="user-x"></i>
-                        </div>
-
-                        <h3>
-                            Customer not found
-                        </h3>
-
-                        <p>
-                            The customer record could not be loaded.
-                        </p>
-
-                        <button
-                            type="button"
-                            class="btn btn-secondary"
-                            onclick="window.crmBackToLeads()"
-                        >
-                            Back to Leads
-                        </button>
-
-                    </div>
-                `;
-
-                if (
-                    window.lucide &&
-                    typeof window.lucide.createIcons ===
-                        "function"
-                ) {
-                    window.lucide.createIcons();
-                }
-
                 return;
             }
 
 
-            // Load sales so existing sales-related
-            // functionality remains available.
-            await loadSales();
-
-
-            profileContainer.innerHTML =
-                renderCustomerProfile(
-                    customer
+            const sales =
+                await loadSales(
+                    customer.sales_id
                 );
 
 
-            if (
-                window.lucide &&
-                typeof window.lucide.createIcons ===
-                    "function"
-            ) {
-                window.lucide.createIcons();
-            }
+            renderCustomerProfile(
+                customer,
+                sales
+            );
+
+
+            ensureProfilePageVisible();
+
 
         } catch (error) {
 
             console.error(
-                "Customer profile error:",
+                "FSI CRM: Open customer profile failed:",
                 error
             );
 
-            profileContainer.innerHTML = `
-                <div class="customer-profile-empty">
 
-                    <div class="customer-profile-empty-icon">
-                        <i data-lucide="alert-circle"></i>
-                    </div>
+            showProfileError(
+                "Unable to open customer profile."
+            );
 
-                    <h3>
-                        Unable to load customer
-                    </h3>
-
-                    <p>
-                        Please try again.
-                    </p>
-
-                    <button
-                        type="button"
-                        class="btn btn-secondary"
-                        onclick="window.crmBackToLeads()"
-                    >
-                        Back to Leads
-                    </button>
-
-                </div>
-            `;
-
-            if (
-                window.lucide &&
-                typeof window.lucide.createIcons ===
-                    "function"
-            ) {
-                window.lucide.createIcons();
-            }
 
         } finally {
 
@@ -1129,18 +2091,84 @@
 
 
     // ========================================================
-    // REFRESH CUSTOMER PROFILE
+    // ACTIVATE PROFILE PAGE
     // ========================================================
 
-    async function refreshCustomerProfile() {
+    function activateProfilePage() {
 
-        if (!currentCustomerId) {
-            return;
+        const pages =
+            document.querySelectorAll(
+                ".crm-page, .app-page, [id^='view-']"
+            );
+
+
+        pages.forEach(
+            function (page) {
+
+                if (
+                    page.id ===
+                    "view-customer-profile"
+                ) {
+
+                    page.classList.add(
+                        "active"
+                    );
+
+                    page.classList.remove(
+                        "hidden"
+                    );
+
+                    page.setAttribute(
+                        "aria-hidden",
+                        "false"
+                    );
+
+                    page.style.display =
+                        "block";
+
+                } else {
+
+                    page.classList.remove(
+                        "active"
+                    );
+
+                    page.classList.add(
+                        "hidden"
+                    );
+
+                    page.setAttribute(
+                        "aria-hidden",
+                        "true"
+                    );
+
+                    page.style.display =
+                        "none";
+
+                }
+
+            }
+        );
+
+
+        const container =
+            getProfileContainer();
+
+
+        if (container) {
+
+            container.style.display =
+                "block";
+
+            container.style.visibility =
+                "visible";
+
+            container.style.opacity =
+                "1";
+
         }
 
-        await openCustomerProfile(
-            currentCustomerId
-        );
+
+        refreshIcons();
     }
 
 
@@ -1150,66 +2178,268 @@
 
     function backToLeads() {
 
-        currentCustomerId = null;
+        currentCustomerId =
+            null;
+
 
         window.crmCurrentCustomerId =
             null;
 
-        const profileContainer =
-            document.querySelector(
-                "#customerProfile"
-            ) ||
-            document.querySelector(
-                "#customer-profile"
-            ) ||
-            document.querySelector(
-                ".customer-profile"
-            );
-
-        if (profileContainer) {
-            profileContainer.classList.remove(
-                "active"
-            );
-        }
 
         if (
-            typeof window.crmShowPage ===
-            "function"
+            window.FSINavigation &&
+            typeof window.FSINavigation.showPage ===
+                "function"
         ) {
-            window.crmShowPage("leads");
+
+            window.FSINavigation.showPage(
+                "leads"
+            );
+
             return;
         }
+
 
         if (
             typeof window.showPage ===
             "function"
         ) {
-            window.showPage("leads");
+
+            window.showPage(
+                "leads"
+            );
+
             return;
         }
 
-        const leadsPage =
-            document.querySelector(
-                "#leadsPage"
-            ) ||
-            document.querySelector(
-                "#leads-page"
+
+        if (
+            typeof window.crmNavigate ===
+            "function"
+        ) {
+
+            window.crmNavigate(
+                "leads"
             );
 
-        if (leadsPage) {
-            leadsPage.classList.add(
-                "active"
+            return;
+        }
+
+
+        activateLeadsPage();
+    }
+
+
+    // ========================================================
+    // ACTIVATE LEADS PAGE
+    // ========================================================
+
+    function activateLeadsPage() {
+
+        const pages =
+            document.querySelectorAll(
+                ".crm-page, .app-page, [id^='view-']"
             );
+
+
+        pages.forEach(
+            function (page) {
+
+                if (
+                    page.id ===
+                    "view-leads"
+                ) {
+
+                    page.classList.add(
+                        "active"
+                    );
+
+                    page.classList.remove(
+                        "hidden"
+                    );
+
+                    page.setAttribute(
+                        "aria-hidden",
+                        "false"
+                    );
+
+                    page.style.display =
+                        "block";
+
+                } else {
+
+                    page.classList.remove(
+                        "active"
+                    );
+
+                    page.classList.add(
+                        "hidden"
+                    );
+
+                    page.setAttribute(
+                        "aria-hidden",
+                        "true"
+                    );
+
+                    page.style.display =
+                        "none";
+
+                }
+
+            }
+        );
+
+
+        refreshIcons();
+    }
+
+
+    // ========================================================
+    // REFRESH PROFILE
+    // ========================================================
+
+    async function refreshCustomerProfile() {
+
+        if (!currentCustomerId) {
+            return;
+        }
+
+
+        await openCustomerProfile(
+            currentCustomerId
+        );
+    }
+
+
+    // ========================================================
+    // EVENT HANDLER
+    // ========================================================
+
+    function setupShelterEvents() {
+
+        const container =
+            getProfileContainer();
+
+
+        if (!container) {
+            return;
+        }
+
+
+        if (
+            container.dataset.shelterEventsBound ===
+            "true"
+        ) {
+            return;
+        }
+
+
+        container.dataset.shelterEventsBound =
+            "true";
+
+
+        container.addEventListener(
+            "click",
+            function (event) {
+
+                const actionElement =
+                    event.target.closest(
+                        "[data-shelter-action]"
+                    );
+
+
+                if (!actionElement) {
+                    return;
+                }
+
+
+                const action =
+                    actionElement.getAttribute(
+                        "data-shelter-action"
+                    );
+
+
+                if (
+                    action === "back"
+                ) {
+
+                    event.preventDefault();
+
+                    backToLeads();
+
+                }
+
+            }
+        );
+    }
+
+
+    // ========================================================
+    // LUCIDE
+    // ========================================================
+
+    function refreshIcons() {
+
+        try {
+
+            if (
+                window.lucide &&
+                typeof window.lucide.createIcons ===
+                    "function"
+            ) {
+
+                window.lucide.createIcons();
+
+            }
+
+        } catch (error) {
+
+            console.warn(
+                "FSI CRM: Lucide icon rendering failed.",
+                error
+            );
+
         }
     }
 
 
     // ========================================================
-    // CLOSE CUSTOMER PROFILE
+    // PAGE INITIALIZATION
     // ========================================================
 
-    function closeCustomerProfile() {
-        backToLeads();
+    function initializeShelter() {
+
+        setupShelterEvents();
+
+
+        const profilePage =
+            document.getElementById(
+                "view-customer-profile"
+            );
+
+
+        if (profilePage) {
+
+            if (
+                profilePage.classList.contains(
+                    "active"
+                )
+            ) {
+
+                profilePage.style.display =
+                    "block";
+
+            } else {
+
+                profilePage.style.display =
+                    "none";
+
+            }
+
+        }
+
+
+        refreshIcons();
     }
 
 
@@ -1220,47 +2450,64 @@
     window.crmOpenCustomerProfile =
         openCustomerProfile;
 
+
     window.openCustomerProfile =
         openCustomerProfile;
+
 
     window.crmOpenShelter =
         openCustomerProfile;
 
+
     window.refreshCustomerProfile =
         refreshCustomerProfile;
+
 
     window.crmRefreshCustomerProfile =
         refreshCustomerProfile;
 
+
     window.crmBackToLeads =
         backToLeads;
 
+
     window.closeCustomerProfile =
-        closeCustomerProfile;
+        backToLeads;
 
 
     window.FSICustomerProfile = {
+
         open:
             openCustomerProfile,
 
         refresh:
             refreshCustomerProfile,
 
-        close:
-            closeCustomerProfile,
-
         back:
-            backToLeads,
+            backToLeads
 
-        getCurrentCustomerId:
-            function () {
-                return currentCustomerId;
-            },
-
-        isLoading:
-            function () {
-                return profileLoading;
-            }
     };
+
+
+    // ========================================================
+    // DOM READY
+    // ========================================================
+
+    if (
+        document.readyState ===
+        "loading"
+    ) {
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            initializeShelter
+        );
+
+    } else {
+
+        initializeShelter();
+
+    }
+
 
 })();
