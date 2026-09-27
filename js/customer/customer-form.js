@@ -7,7 +7,8 @@
 // 3. Load customer dari Supabase
 // 4. Save customer baru
 // 5. Update customer
-// 6. Close popup
+// 6. Update updated_at automatically
+// 7. Close popup
 //
 // STATUS SYSTEM:
 // 1. New
@@ -50,6 +51,10 @@
 // Field database lama tetap ada.
 // File ini hanya tidak lagi membaca / menulis field tersebut
 // dari Add / Edit Customer Form.
+//
+// UPDATED_AT:
+// - Customer baru → updated_at = waktu dibuat
+// - Edit Customer → updated_at = waktu update
 // ============================================================
 
 (function () {
@@ -193,6 +198,7 @@
             return;
         }
 
+
         if (
             typeof window.showToast === "function"
         ) {
@@ -204,6 +210,7 @@
 
             return;
         }
+
 
         console.log(
             "FSI CRM:",
@@ -231,6 +238,7 @@
             return;
         }
 
+
         if (
             typeof window.showLoading === "function"
         ) {
@@ -255,6 +263,7 @@
 
             return;
         }
+
 
         if (
             typeof window.hideLoading === "function"
@@ -282,10 +291,11 @@
 
         const modal = getModal();
 
+
         if (!modal) {
 
             console.error(
-                "FSI CRM: #leadModal tidak ditemukan."
+                "FSI CRM: #leadModal not found."
             );
 
             return false;
@@ -334,6 +344,7 @@
     function closeModal() {
 
         const modal = getModal();
+
 
         if (!modal) {
             return;
@@ -385,6 +396,7 @@
 
         const form = getForm();
 
+
         if (form) {
 
             form.reset();
@@ -394,6 +406,7 @@
 
         const leadId =
             getElement("leadId");
+
 
         if (leadId) {
 
@@ -412,9 +425,11 @@
         const element =
             getElement(id);
 
+
         if (!element) {
             return;
         }
+
 
         element.value =
             value == null
@@ -437,6 +452,7 @@
             const element =
                 getElement(id);
 
+
             if (element) {
 
                 element.value =
@@ -458,9 +474,11 @@
         const element =
             getElement(id);
 
+
         if (!element) {
             return "";
         }
+
 
         return String(
             element.value || ""
@@ -479,8 +497,10 @@
             return "";
         }
 
+
         const text =
             String(value).trim();
+
 
         if (text.length >= 10) {
 
@@ -490,6 +510,7 @@
             );
 
         }
+
 
         return text;
 
@@ -505,6 +526,7 @@
         const titleElement =
             getElement("lead-modal-title");
 
+
         if (titleElement) {
 
             titleElement.textContent =
@@ -518,6 +540,7 @@
 
         const alternateTitle =
             getElement("leadModalTitle");
+
 
         if (alternateTitle) {
 
@@ -534,6 +557,7 @@
         const element =
             getElement("lead-modal-description");
 
+
         if (element) {
 
             element.textContent =
@@ -549,6 +573,7 @@
         const element =
             getElement("lead-save-text");
 
+
         if (element) {
 
             element.textContent =
@@ -562,6 +587,7 @@
         const button =
             getElement("lead-save-button");
 
+
         if (!button) {
             return;
         }
@@ -569,6 +595,7 @@
 
         const span =
             button.querySelector("span");
+
 
         if (span) {
 
@@ -589,8 +616,10 @@
         const select =
             getElement("leadSales");
 
+
         const group =
             getElement("lead-sales-group");
+
 
         if (!select) {
             return;
@@ -618,6 +647,7 @@
 
             }
 
+
             select.disabled = false;
 
             return;
@@ -638,8 +668,10 @@
 
             }
 
+
             select.value =
                 profile.id || "";
+
 
             select.disabled = true;
 
@@ -656,6 +688,7 @@
 
         const customerId =
             String(id || "").trim();
+
 
         if (!customerId) {
             return null;
@@ -696,7 +729,7 @@
         if (!customerId) {
 
             throw new Error(
-                "Customer ID tidak ditemukan."
+                "Customer ID not found."
             );
 
         }
@@ -728,7 +761,7 @@
         if (!supabase) {
 
             throw new Error(
-                "Supabase belum tersedia."
+                "Supabase is not available."
             );
 
         }
@@ -752,7 +785,7 @@
         if (!result.data) {
 
             throw new Error(
-                "Customer tidak ditemukan."
+                "Customer not found."
             );
 
         }
@@ -776,7 +809,7 @@
         if (!profile) {
 
             showToast(
-                "Profile belum siap. Silakan tunggu sebentar.",
+                "Profile is not ready. Please wait a moment.",
                 "warning"
             );
 
@@ -786,6 +819,7 @@
 
 
         editingCustomerId = null;
+
 
         resetForm();
 
@@ -828,6 +862,7 @@
                     "leadCustomerName"
                 );
 
+
             if (input) {
 
                 input.focus();
@@ -852,7 +887,7 @@
         if (!customerId) {
 
             showToast(
-                "Customer ID tidak ditemukan.",
+                "Customer ID not found.",
                 "error"
             );
 
@@ -868,7 +903,7 @@
         if (!profile) {
 
             showToast(
-                "Profile belum siap.",
+                "Profile is not ready.",
                 "warning"
             );
 
@@ -880,7 +915,7 @@
         try {
 
             showLoading(
-                "Memuat data customer..."
+                "Loading customer data..."
             );
 
 
@@ -1070,6 +1105,7 @@
                         "leadCustomerName"
                     );
 
+
                 if (input) {
 
                     input.focus();
@@ -1089,7 +1125,7 @@
 
             showToast(
                 error?.message ||
-                "Gagal memuat customer.",
+                "Unable to load customer.",
                 "error"
             );
 
@@ -1116,7 +1152,7 @@
         if (!profile) {
 
             throw new Error(
-                "User profile belum tersedia."
+                "User profile is not available."
             );
 
         }
@@ -1137,7 +1173,7 @@
         if (!customerName) {
 
             throw new Error(
-                "Customer Name wajib diisi."
+                "Customer Name is required."
             );
 
         }
@@ -1146,7 +1182,7 @@
         if (!phone) {
 
             throw new Error(
-                "Phone wajib diisi."
+                "Phone is required."
             );
 
         }
@@ -1301,7 +1337,7 @@
         if (!supabase) {
 
             showToast(
-                "Supabase belum tersedia.",
+                "Supabase is not available.",
                 "error"
             );
 
@@ -1317,7 +1353,7 @@
         if (!profile) {
 
             showToast(
-                "User profile belum tersedia.",
+                "User profile is not available.",
                 "error"
             );
 
@@ -1365,13 +1401,35 @@
 
 
             // =================================================
-            // UPDATE
+            // UPDATE EXISTING CUSTOMER
             // =================================================
 
             if (customerId) {
 
                 payload.updated_by =
                     profile.id || null;
+
+
+                // =================================================
+                // IMPORTANT:
+                // UPDATE LAST UPDATED TIME
+                // =================================================
+                //
+                // Every time the customer is edited,
+                // updated_at is changed to the current
+                // date and time.
+                //
+                // This value is used by Customer Profile
+                // to calculate:
+                //
+                // "0 DAYS SINCE UPDATE"
+                // "1 DAY SINCE UPDATE"
+                // "3 DAYS SINCE UPDATE"
+                //
+                // =================================================
+
+                payload.updated_at =
+                    new Date().toISOString();
 
 
                 const result =
@@ -1392,7 +1450,7 @@
 
 
                 showToast(
-                    "Customer berhasil diperbarui.",
+                    "Customer updated successfully.",
                     "success"
                 );
 
@@ -1400,7 +1458,7 @@
 
 
             // =================================================
-            // INSERT
+            // INSERT NEW CUSTOMER
             // =================================================
 
             else {
@@ -1408,8 +1466,30 @@
                 payload.created_by =
                     profile.id || null;
 
+
                 payload.updated_by =
                     profile.id || null;
+
+
+                // =================================================
+                // CREATED / LAST UPDATED
+                // =================================================
+                //
+                // New customer starts with the same
+                // created and updated timestamp.
+                //
+                // =================================================
+
+                const now =
+                    new Date().toISOString();
+
+
+                payload.created_at =
+                    now;
+
+
+                payload.updated_at =
+                    now;
 
 
                 const result =
@@ -1428,7 +1508,7 @@
 
 
                 showToast(
-                    "Customer berhasil ditambahkan.",
+                    "Customer added successfully.",
                     "success"
                 );
 
@@ -1440,6 +1520,27 @@
             // =================================================
 
             closeModal();
+
+
+            // =================================================
+            // REFRESH CUSTOMER PROFILE
+            // =================================================
+            //
+            // If the user is currently viewing a Customer
+            // Profile, reload it so the new updated_at
+            // immediately appears.
+            //
+            // =================================================
+
+            if (
+                customerId &&
+                typeof window.crmRefreshCustomerProfile ===
+                    "function"
+            ) {
+
+                await window.crmRefreshCustomerProfile();
+
+            }
 
 
             // =================================================
@@ -1497,12 +1598,15 @@
                     "fsi:lead-changed",
                     {
                         detail: {
+
                             action:
                                 customerId
                                     ? "update"
                                     : "insert",
+
                             id:
                                 customerId || null
+
                         }
                     }
                 )
@@ -1519,7 +1623,7 @@
 
             showToast(
                 error?.message ||
-                "Gagal menyimpan customer.",
+                "Unable to save customer.",
                 "error"
             );
 
@@ -1777,7 +1881,9 @@
     };
 
 
-    // Compatibility names
+    // ========================================================
+    // COMPATIBILITY NAMES
+    // ========================================================
 
     window.crmOpenAddCustomer =
         openAddCustomer;
