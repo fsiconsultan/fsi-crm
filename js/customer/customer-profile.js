@@ -1,6 +1,6 @@
 // ============================================================
 // FSI CRM - CUSTOMER PROFILE
-// File: js/shelter.js
+// File: js/customer/customer-profile.js
 // ============================================================
 //
 // Fungsi:
