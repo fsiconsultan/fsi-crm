@@ -493,6 +493,212 @@
 
 
     // ========================================================
+    // BUSINESS OPTIONS
+    // ========================================================
+    // Business mengikuti Lead Type.
+    //
+    // Customer:
+    // - Residential
+    // - Villa
+    // - Hotel
+    // - Restaurant
+    // - Office
+    // - Factory
+    // - Commercial
+    // - Other
+    //
+    // Partner:
+    // - Real Estate
+    // - Kontraktor
+    // - Arsitek
+    // - Developer
+    // - Interior
+    // - Property Agent
+    // - Villa Management
+    // - Hotel / HOREKA
+    // - Electrical Contractor
+    // - Supplier
+    // - Other
+    // ========================================================
+
+    const CUSTOMER_BUSINESS_OPTIONS = [
+
+        "Residential",
+
+        "Villa",
+
+        "Hotel",
+
+        "Restaurant",
+
+        "Office",
+
+        "Factory",
+
+        "Commercial",
+
+        "Other"
+
+    ];
+
+
+    const PARTNER_BUSINESS_OPTIONS = [
+
+        "Real Estate",
+
+        "Kontraktor",
+
+        "Arsitek",
+
+        "Developer",
+
+        "Interior",
+
+        "Property Agent",
+
+        "Villa Management",
+
+        "Hotel / HOREKA",
+
+        "Electrical Contractor",
+
+        "Supplier",
+
+        "Other"
+
+    ];
+
+
+    function setupBusinessOptions(
+        leadType,
+        selectedBusiness
+    ) {
+
+        const select =
+            getElement("leadBusiness");
+
+
+        if (!select) {
+            return;
+        }
+
+
+        const type =
+            String(
+                leadType || "Customer"
+            )
+                .trim()
+                .toLowerCase() === "partner"
+                ? "Partner"
+                : "Customer";
+
+
+        const currentValue =
+            selectedBusiness != null
+                ? String(
+                    selectedBusiness
+                ).trim()
+                : "";
+
+
+        const options =
+            type === "Partner"
+                ? PARTNER_BUSINESS_OPTIONS
+                : CUSTOMER_BUSINESS_OPTIONS;
+
+
+        // Hapus semua option lama.
+
+        select.innerHTML = "";
+
+
+        // Placeholder.
+
+        const placeholder =
+            document.createElement("option");
+
+
+        placeholder.value = "";
+
+        placeholder.textContent =
+            "Select Business";
+
+
+        select.appendChild(
+            placeholder
+        );
+
+
+        // Tambahkan Business sesuai Lead Type.
+
+        options.forEach(
+            function (business) {
+
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                option.value =
+                    business;
+
+
+                option.textContent =
+                    business;
+
+
+                select.appendChild(
+                    option
+                );
+
+            }
+        );
+
+
+        // ====================================================
+        // COMPATIBILITY
+        // ====================================================
+        // Kalau ada data Business lama yang tidak ada
+        // di daftar baru, jangan sampai data lama hilang
+        // ketika Edit Customer.
+        // ====================================================
+
+        if (
+            currentValue &&
+            !options.includes(
+                currentValue
+            )
+        ) {
+
+            const existingOption =
+                document.createElement(
+                    "option"
+                );
+
+
+            existingOption.value =
+                currentValue;
+
+
+            existingOption.textContent =
+                currentValue;
+
+
+            select.appendChild(
+                existingOption
+            );
+
+        }
+
+
+        select.value =
+            currentValue;
+
+    }
+
+
+    // ========================================================
     // DATE
     // ========================================================
 
@@ -837,6 +1043,19 @@
         );
 
 
+        // ====================================================
+        // BUSINESS
+        // ====================================================
+        // Saat Add Customer, Business otomatis menggunakan
+        // daftar Business untuk Lead Type Customer.
+        // ====================================================
+
+        setupBusinessOptions(
+            "Customer",
+            ""
+        );
+
+
         // Pastikan status awal selalu New.
 
         setValue(
@@ -975,21 +1194,37 @@
             );
 
 
-            setValue(
-                "leadBusiness",
-                customer.business
-            );
-
-
             // =================================================
             // LEAD TYPE
             // =================================================
 
+            const customerLeadType =
+                customer.lead_type || "Customer";
+
+
             setValue(
                 "leadType",
-                customer.lead_type || "Customer"
+                customerLeadType
             );
 
+
+            // =================================================
+            // BUSINESS
+            // =================================================
+            // Business harus mengikuti Lead Type yang tersimpan.
+            // selectedBusiness digunakan agar Business lama
+            // tetap terpilih saat Edit.
+            // =================================================
+
+            setupBusinessOptions(
+                customerLeadType,
+                customer.business || ""
+            );
+
+
+            // =================================================
+            // LOCATION
+            // =================================================
 
             setValue(
                 "leadLocation",
@@ -1805,6 +2040,46 @@
                         closeModal();
 
                     }
+
+                }
+            );
+
+        }
+
+
+        // ====================================================
+        // LEAD TYPE → BUSINESS
+        // ====================================================
+        // Ketika Lead Type berubah:
+        //
+        // Customer → Business Customer
+        // Partner  → Business Partner
+        //
+        // Business lama dikosongkan agar tidak membawa
+        // pilihan Business dari Lead Type sebelumnya.
+        // ====================================================
+
+        const leadTypeSelect =
+            getElement("leadType");
+
+
+        if (
+            leadTypeSelect &&
+            !leadTypeSelect.dataset.customerFormBusinessBound
+        ) {
+
+            leadTypeSelect.dataset.customerFormBusinessBound =
+                "true";
+
+
+            leadTypeSelect.addEventListener(
+                "change",
+                function () {
+
+                    setupBusinessOptions(
+                        leadTypeSelect.value,
+                        ""
+                    );
 
                 }
             );
