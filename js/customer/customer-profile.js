@@ -284,6 +284,84 @@
 
 
     // ========================================================
+    // CUSTOMER JOURNEY DAY COUNT
+    // Sama seperti perhitungan day count di Leads
+    // ========================================================
+
+    function getJourneyAgeInDays(value) {
+
+        const createdDate =
+            parseCalendarDate(value);
+
+
+        if (!createdDate) {
+            return null;
+        }
+
+
+        const now =
+            new Date();
+
+
+        const start =
+            new Date(
+                createdDate.getFullYear(),
+                createdDate.getMonth(),
+                createdDate.getDate()
+            );
+
+
+        const end =
+            new Date(
+                now.getFullYear(),
+                now.getMonth(),
+                now.getDate()
+            );
+
+
+        const difference =
+            end.getTime() -
+            start.getTime();
+
+
+        return Math.max(
+            0,
+            Math.floor(
+                difference /
+                86400000
+            )
+        );
+    }
+
+
+    function getJourneyAgeLabel(value) {
+
+        const age =
+            getJourneyAgeInDays(
+                value
+            );
+
+
+        if (age === null) {
+            return "";
+        }
+
+
+        if (age === 0) {
+            return "0 hari";
+        }
+
+
+        if (age === 1) {
+            return "1 hari";
+        }
+
+
+        return `${age} hari`;
+    }
+
+
+    // ========================================================
     // FORMAT DATE
     // ========================================================
 
@@ -708,6 +786,14 @@
         description
     ) {
 
+        const ageLabel =
+            date
+                ? getJourneyAgeLabel(
+                    date
+                )
+                : "";
+
+
         return `
 
             <div class="
@@ -742,6 +828,18 @@
                         }
 
                     </div>
+
+                    ${
+                        ageLabel
+                            ? `
+                                <div class="journey-stage-age">
+                                    ${escapeHTML(
+                                        ageLabel
+                                    )}
+                                </div>
+                            `
+                            : ""
+                    }
 
                     <div class="journey-stage-description">
 
