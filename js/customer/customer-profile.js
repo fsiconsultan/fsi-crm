@@ -3,14 +3,15 @@
 // File: js/shelter.js
 // ============================================================
 //
-// Fungsi:
-// 1. Menampilkan Customer Profile
-// 2. Mengambil data customer dari tabel "leads"
-// 3. Mengambil nama Sales dari tabel "sales_users"
-// 4. Menampilkan Follow Up Date
-// 5. Menghitung selisih Follow Up berdasarkan TANGGAL KALENDER
-// 6. Tidak menangani Add Customer
-// 7. Tidak menangani Edit Customer
+// Functions:
+// 1. Display Customer Profile
+// 2. Load customer data from "leads"
+// 3. Load Sales name from "sales_users"
+// 4. Display Follow Up Date
+// 5. Calculate Follow Up difference based on CALENDAR DATE
+// 6. Display Days Since Last Update
+// 7. Does not handle Add Customer
+// 8. Does not handle Edit Customer
 //
 // STATUS SYSTEM:
 // 1. New
@@ -30,12 +31,12 @@
 // - Closing
 // - Notes
 //
-// SPK SUDAH DIHAPUS DARI CUSTOMER PROFILE.
+// SPK HAS BEEN REMOVED FROM CUSTOMER PROFILE.
 //
-// Add / Edit Customer ditangani oleh:
+// Add / Edit Customer is handled by:
 //     js/customer-form.js
 //
-// Daftar Leads ditangani oleh:
+// Leads List is handled by:
 //     js/leads.js
 //
 // ============================================================
@@ -284,8 +285,118 @@
 
 
     // ========================================================
+    // CUSTOMER UPDATE AGE
+    // Calculates how many calendar days have passed
+    // since the customer's last update.
+    // ========================================================
+
+    function getUpdateAgeInDays(value) {
+
+        const updatedDate =
+            parseCalendarDate(value);
+
+
+        if (!updatedDate) {
+            return null;
+        }
+
+
+        const today =
+            new Date();
+
+
+        const start =
+            startOfCalendarDay(
+                updatedDate
+            );
+
+
+        const end =
+            startOfCalendarDay(
+                today
+            );
+
+
+        const difference =
+            end.getTime() -
+            start.getTime();
+
+
+        return Math.max(
+            0,
+            Math.floor(
+                difference /
+                86400000
+            )
+        );
+    }
+
+
+    // ========================================================
+    // CUSTOMER UPDATE AGE LABEL
+    // ========================================================
+
+    function getUpdateAgeLabel(value) {
+
+        const age =
+            getUpdateAgeInDays(
+                value
+            );
+
+
+        if (age === null) {
+            return "NO UPDATE DATE";
+        }
+
+
+        if (age === 0) {
+            return "0 DAYS";
+        }
+
+
+        if (age === 1) {
+            return "1 DAY";
+        }
+
+
+        return `${age} DAYS`;
+    }
+
+
+    // ========================================================
+    // CUSTOMER UPDATE DETAIL
+    // ========================================================
+
+    function getUpdateAgeDetail(value) {
+
+        const age =
+            getUpdateAgeInDays(
+                value
+            );
+
+
+        if (age === null) {
+            return "No update date available";
+        }
+
+
+        if (age === 0) {
+            return "Updated today";
+        }
+
+
+        if (age === 1) {
+            return "Updated 1 day ago";
+        }
+
+
+        return `Updated ${age} days ago`;
+    }
+
+
+    // ========================================================
     // CUSTOMER JOURNEY DAY COUNT
-    // Sama seperti perhitungan day count di Leads
+    // Same day-count calculation used in Leads
     // ========================================================
 
     function getJourneyAgeInDays(value) {
@@ -348,16 +459,16 @@
 
 
         if (age === 0) {
-            return "0 hari";
+            return "0 days";
         }
 
 
         if (age === 1) {
-            return "1 hari";
+            return "1 day";
         }
 
 
-        return `${age} hari`;
+        return `${age} days`;
     }
 
 
@@ -377,7 +488,7 @@
 
 
         return new Intl.DateTimeFormat(
-            "id-ID",
+            "en-GB",
             {
                 day: "2-digit",
                 month: "short",
@@ -421,7 +532,7 @@
 
 
         return new Intl.DateTimeFormat(
-            "id-ID",
+            "en-GB",
             {
                 day: "2-digit",
                 month: "short",
@@ -1312,6 +1423,40 @@
             );
 
 
+        // ====================================================
+        // UPDATE AGE
+        // ====================================================
+
+        const updateAgeLabel =
+            getUpdateAgeLabel(
+                customer.updated_at
+            );
+
+
+        const updateAgeDetail =
+            getUpdateAgeDetail(
+                customer.updated_at
+            );
+
+
+        const updateAge =
+            getUpdateAgeInDays(
+                customer.updated_at
+            );
+
+
+        const updateAgeClass =
+            updateAge === null
+                ? "customer-update-none"
+                : updateAge === 0
+                    ? "customer-update-today"
+                    : updateAge >= 30
+                        ? "customer-update-critical"
+                        : updateAge >= 14
+                            ? "customer-update-warning"
+                            : "customer-update-normal";
+
+
         const appointment =
             formatDate(
                 customer.appointment
@@ -1535,7 +1680,94 @@
 
                                 </p>
 
+
+                                <!-- ================================= -->
+                                <!-- LAST UPDATED -->
+                                <!-- ================================= -->
+
+                                <div class="
+                                    customer-profile-last-update
+                                    ${escapeHTML(
+                                        updateAgeClass
+                                    )}
+                                ">
+
+                                    <span
+                                        class="customer-profile-last-update-icon"
+                                    >
+
+                                        <i data-lucide="refresh-cw"></i>
+
+                                    </span>
+
+
+                                    <span
+                                        class="customer-profile-last-update-text"
+                                    >
+
+                                        <span
+                                            class="customer-profile-last-update-label"
+                                        >
+                                            Last Updated
+                                        </span>
+
+
+                                        <strong>
+                                            ${escapeHTML(
+                                                updatedAt
+                                            )}
+                                        </strong>
+
+                                    </span>
+
+                                </div>
+
                             </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ========================================= -->
+                    <!-- DAYS SINCE UPDATE -->
+                    <!-- ========================================= -->
+
+                    <div
+                        class="
+                            customer-profile-update-age
+                            ${escapeHTML(
+                                updateAgeClass
+                            )}
+                    "
+                    >
+
+                        <div class="customer-update-age-icon">
+
+                            <i data-lucide="clock-3"></i>
+
+                        </div>
+
+
+                        <div class="customer-update-age-content">
+
+                            <strong>
+                                ${escapeHTML(
+                                    updateAgeLabel
+                                )}
+                            </strong>
+
+
+                            <span>
+                                SINCE UPDATE
+                            </span>
+
+
+                            <small>
+                                ${escapeHTML(
+                                    updateAgeDetail
+                                )}
+                            </small>
 
                         </div>
 
@@ -2302,7 +2534,7 @@
         if (!profilePage) {
 
             console.error(
-                "FSI CRM: #view-customer-profile tidak ditemukan."
+                "FSI CRM: #view-customer-profile not found."
             );
 
             return false;
@@ -2310,8 +2542,8 @@
 
 
         // ----------------------------------------------------
-        // PRIORITAS 1
-        // Navigation system utama
+        // PRIORITY 1
+        // Main navigation system
         // ----------------------------------------------------
 
         if (
@@ -2335,8 +2567,8 @@
 
 
         // ----------------------------------------------------
-        // PRIORITAS 2
-        // Global showPage jika ada
+        // PRIORITY 2
+        // Global showPage if available
         // ----------------------------------------------------
 
         if (
@@ -2359,7 +2591,7 @@
 
 
         // ----------------------------------------------------
-        // PRIORITAS 3
+        // PRIORITY 3
         // Global navigation
         // ----------------------------------------------------
 
@@ -2578,7 +2810,7 @@
 
 
         // ----------------------------------------------------
-        // Buka halaman PROFILE terlebih dahulu.
+        // Open PROFILE page first.
         // ----------------------------------------------------
 
         showCustomerProfilePage();
@@ -2591,7 +2823,7 @@
         if (!container) {
 
             console.error(
-                "FSI CRM: customer-profile-container tidak ditemukan."
+                "FSI CRM: customer-profile-container not found."
             );
 
             profileLoading = false;
@@ -2950,10 +3182,10 @@
                     );
 
                     /*
-                     * Appointment belum dipaksa masuk
-                     * ke database di sini.
+                     * Appointment is not forced into
+                     * Supabase from here.
                      *
-                     * Tetap menggunakan sistem existing.
+                     * Existing system remains unchanged.
                      */
 
                     if (
@@ -2986,11 +3218,11 @@
                     );
 
                     /*
-                     * Save sengaja tidak melakukan
-                     * UPDATE Supabase secara otomatis.
+                     * Save intentionally does not perform
+                     * an automatic Supabase UPDATE.
                      *
-                     * Edit Customer tetap ditangani
-                     * oleh customer-form.js.
+                     * Customer editing remains handled
+                     * by customer-form.js.
                      */
 
                     if (
