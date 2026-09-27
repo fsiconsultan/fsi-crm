@@ -2,45 +2,6 @@
 // FSI CRM - CUSTOMER PROFILE
 // File: js/shelter.js
 // ============================================================
-//
-// Functions:
-// 1. Display Customer Profile
-// 2. Load customer data from "leads"
-// 3. Load Sales name from "sales_users"
-// 4. Display Follow Up Date
-// 5. Calculate Follow Up difference based on CALENDAR DATE
-// 6. Display Days Since Last Update
-// 7. Fallback to created_at when updated_at is empty
-// 8. Does not handle Add Customer
-// 9. Does not handle Edit Customer
-//
-// STATUS SYSTEM:
-// 1. New
-// 2. First Contact
-// 3. First Meeting / Appointment / Site Survey
-// 4. Quotation
-// 5. Second Appointment
-// 6. Deal
-// 7. No Deal
-//
-// DETAIL / ACTIVITY:
-// - Follow Up
-// - Last Follow Up
-// - Appointment
-// - Site Survey
-// - Quotation
-// - Closing
-// - Notes
-//
-// SPK HAS BEEN REMOVED FROM CUSTOMER PROFILE.
-//
-// Add / Edit Customer is handled by:
-//     js/customer-form.js
-//
-// Leads List is handled by:
-//     js/leads.js
-//
-// ============================================================
 
 (function () {
 
@@ -73,7 +34,6 @@
             if (element) {
                 return element;
             }
-
         }
 
         return null;
@@ -93,14 +53,12 @@
             return window.supabaseClient;
         }
 
-
         if (
             window.supabase &&
             typeof window.supabase.from === "function"
         ) {
             return window.supabase;
         }
-
 
         console.error(
             "FSI CRM: Supabase client is not available."
@@ -133,7 +91,7 @@
 
 
     // ========================================================
-    // TEXT HELPER
+    // DISPLAY VALUE
     // ========================================================
 
     function displayValue(value, fallback) {
@@ -155,6 +113,10 @@
     // ========================================================
     // DATE PARSER
     // ========================================================
+    //
+    // SAME LOGIC AS LEADS
+    //
+    // ========================================================
 
     function parseCalendarDate(value) {
 
@@ -166,308 +128,126 @@
         }
 
 
-        const raw =
+        if (value instanceof Date) {
+
+            const clonedDate =
+                new Date(
+                    value.getTime()
+                );
+
+            if (
+                Number.isNaN(
+                    clonedDate.getTime()
+                )
+            ) {
+                return null;
+            }
+
+            return clonedDate;
+        }
+
+
+        if (typeof value === "number") {
+
+            const numericDate =
+                new Date(value);
+
+            if (
+                Number.isNaN(
+                    numericDate.getTime()
+                )
+            ) {
+                return null;
+            }
+
+            return numericDate;
+        }
+
+
+        const stringValue =
             String(value).trim();
 
 
-        if (!raw) {
+        if (!stringValue) {
             return null;
         }
 
 
-        const match =
-            raw.match(
-                /^(\d{4})-(\d{2})-(\d{2})/
+        const dateOnlyMatch =
+            stringValue.match(
+                /^(\d{4})-(\d{2})-(\d{2})$/
             );
 
 
-        if (match) {
+        if (dateOnlyMatch) {
 
             const year =
-                Number(match[1]);
+                Number(
+                    dateOnlyMatch[1]
+                );
 
             const month =
-                Number(match[2]);
+                Number(
+                    dateOnlyMatch[2]
+                ) - 1;
 
             const day =
-                Number(match[3]);
+                Number(
+                    dateOnlyMatch[3]
+                );
 
 
-            const date =
+            const localDate =
                 new Date(
                     year,
-                    month - 1,
+                    month,
                     day
                 );
 
 
             if (
-                date.getFullYear() === year &&
-                date.getMonth() === month - 1 &&
-                date.getDate() === day
+                Number.isNaN(
+                    localDate.getTime()
+                )
             ) {
-
-                return date;
-
+                return null;
             }
 
+
+            return localDate;
         }
 
 
-        const fallback =
-            new Date(raw);
+        const date =
+            new Date(
+                stringValue
+            );
 
 
         if (
-            !Number.isNaN(
-                fallback.getTime()
+            Number.isNaN(
+                date.getTime()
             )
         ) {
-
-            return new Date(
-                fallback.getFullYear(),
-                fallback.getMonth(),
-                fallback.getDate()
-            );
-
-        }
-
-
-        return null;
-    }
-
-
-    // ========================================================
-    // START OF DAY
-    // ========================================================
-
-    function startOfCalendarDay(date) {
-
-        return new Date(
-            date.getFullYear(),
-            date.getMonth(),
-            date.getDate()
-        );
-    }
-
-
-    // ========================================================
-    // DATE DIFFERENCE
-    // ========================================================
-
-    function getCalendarDayDifference(
-        followUpDate,
-        today
-    ) {
-
-        const followDate =
-            startOfCalendarDay(
-                followUpDate
-            );
-
-        const todayDate =
-            startOfCalendarDay(
-                today
-            );
-
-
-        const millisecondsPerDay =
-            24 * 60 * 60 * 1000;
-
-
-        return Math.round(
-            (
-                todayDate.getTime() -
-                followDate.getTime()
-            ) /
-            millisecondsPerDay
-        );
-    }
-
-
-    // ========================================================
-    // CUSTOMER UPDATE AGE
-    // Calculates how many calendar days have passed
-    // since the customer's last update.
-    // ========================================================
-
-    function getUpdateAgeInDays(value) {
-
-        const updatedDate =
-            parseCalendarDate(value);
-
-
-        if (!updatedDate) {
             return null;
         }
 
 
-        const today =
-            new Date();
-
-
-        const start =
-            startOfCalendarDay(
-                updatedDate
-            );
-
-
-        const end =
-            startOfCalendarDay(
-                today
-            );
-
-
-        const difference =
-            end.getTime() -
-            start.getTime();
-
-
-        return Math.max(
-            0,
-            Math.floor(
-                difference /
-                86400000
-            )
-        );
+        return date;
     }
 
 
     // ========================================================
-    // CUSTOMER UPDATE AGE LABEL
-    // ========================================================
-
-    function getUpdateAgeLabel(value) {
-
-        const age =
-            getUpdateAgeInDays(
-                value
-            );
-
-
-        if (age === null) {
-            return "NO UPDATE DATE";
-        }
-
-
-        if (age === 0) {
-            return "0 DAYS";
-        }
-
-
-        if (age === 1) {
-            return "1 DAY";
-        }
-
-
-        return `${age} DAYS`;
-    }
-
-
-    // ========================================================
-    // CUSTOMER UPDATE DETAIL
-    // ========================================================
-
-    function getUpdateAgeDetail(value) {
-
-        const age =
-            getUpdateAgeInDays(
-                value
-            );
-
-
-        if (age === null) {
-            return "No update date available";
-        }
-
-
-        if (age === 0) {
-            return "Updated today";
-        }
-
-
-        if (age === 1) {
-            return "Updated 1 day ago";
-        }
-
-
-        return `Updated ${age} days ago`;
-    }
-
-
-    // ========================================================
-    // CUSTOMER LAST UPDATED VALUE
+    // LEADS - AGE IN DAYS
     // ========================================================
     //
-    // Priority:
-    // 1. updated_at
-    // 2. created_at
+    // THIS IS THE SAME LOGIC USED BY LEADS.
     //
-    // Customer lama mungkin belum memiliki updated_at.
-    // Jika updated_at kosong, created_at digunakan sebagai
-    // fallback agar Days Since Update tetap tampil.
+    // Days = TODAY - created_at
     //
     // ========================================================
 
-    function getCustomerLastUpdatedValue(customer) {
-
-        if (!customer) {
-            return null;
-        }
-
-
-        // ----------------------------------------------------
-        // PRIORITY 1: updated_at
-        // ----------------------------------------------------
-
-        const updatedAt =
-            customer.updated_at;
-
-
-        if (
-            updatedAt !== null &&
-            updatedAt !== undefined &&
-            String(updatedAt).trim() !== ""
-        ) {
-
-            return updatedAt;
-
-        }
-
-
-        // ----------------------------------------------------
-        // PRIORITY 2: created_at
-        // ----------------------------------------------------
-
-        const createdAt =
-            customer.created_at;
-
-
-        if (
-            createdAt !== null &&
-            createdAt !== undefined &&
-            String(createdAt).trim() !== ""
-        ) {
-
-            return createdAt;
-
-        }
-
-
-        // ----------------------------------------------------
-        // NO DATE
-        // ----------------------------------------------------
-
-        return null;
-    }
-
-
-    // ========================================================
-    // CUSTOMER JOURNEY DAY COUNT
-    // Same day-count calculation used in Leads
-    // ========================================================
-
-    function getJourneyAgeInDays(value) {
+    function getLeadAgeInDays(value) {
 
         const createdDate =
             parseCalendarDate(value);
@@ -513,16 +293,20 @@
     }
 
 
-    function getJourneyAgeLabel(value) {
+    // ========================================================
+    // LEADS - AGE LABEL
+    // ========================================================
+
+    function getLeadAgeLabel(value) {
 
         const age =
-            getJourneyAgeInDays(
+            getLeadAgeInDays(
                 value
             );
 
 
         if (age === null) {
-            return "";
+            return "-";
         }
 
 
@@ -537,6 +321,171 @@
 
 
         return `${age} days`;
+    }
+
+
+    // ========================================================
+    // UPDATE AGE
+    // ========================================================
+    //
+    // This is separate from Leads Days.
+    //
+    // Leads:
+    //     created_at -> Days
+    //
+    // Customer Profile:
+    //     updated_at -> Days Since Update
+    //
+    // ========================================================
+
+    function getUpdateAgeInDays(value) {
+
+        const updatedDate =
+            parseCalendarDate(value);
+
+
+        if (!updatedDate) {
+            return null;
+        }
+
+
+        const now =
+            new Date();
+
+
+        const start =
+            new Date(
+                updatedDate.getFullYear(),
+                updatedDate.getMonth(),
+                updatedDate.getDate()
+            );
+
+
+        const end =
+            new Date(
+                now.getFullYear(),
+                now.getMonth(),
+                now.getDate()
+            );
+
+
+        const difference =
+            end.getTime() -
+            start.getTime();
+
+
+        return Math.max(
+            0,
+            Math.floor(
+                difference /
+                86400000
+            )
+        );
+    }
+
+
+    // ========================================================
+    // UPDATE AGE LABEL
+    // ========================================================
+
+    function getUpdateAgeLabel(value) {
+
+        const age =
+            getUpdateAgeInDays(
+                value
+            );
+
+
+        if (age === null) {
+            return "NO UPDATE DATE";
+        }
+
+
+        if (age === 0) {
+            return "0 DAYS";
+        }
+
+
+        if (age === 1) {
+            return "1 DAY";
+        }
+
+
+        return `${age} DAYS`;
+    }
+
+
+    // ========================================================
+    // UPDATE AGE DETAIL
+    // ========================================================
+
+    function getUpdateAgeDetail(value) {
+
+        const age =
+            getUpdateAgeInDays(
+                value
+            );
+
+
+        if (age === null) {
+            return "No update date available";
+        }
+
+
+        if (age === 0) {
+            return "Updated today";
+        }
+
+
+        if (age === 1) {
+            return "Updated 1 day ago";
+        }
+
+
+        return `Updated ${age} days ago`;
+    }
+
+
+    // ========================================================
+    // CUSTOMER LAST UPDATED
+    // ========================================================
+
+    function getCustomerLastUpdatedValue(customer) {
+
+        if (!customer) {
+            return null;
+        }
+
+
+        const updatedAt =
+            customer.updated_at;
+
+
+        if (
+            updatedAt !== null &&
+            updatedAt !== undefined &&
+            String(updatedAt).trim() !== ""
+        ) {
+
+            return updatedAt;
+        }
+
+
+        const createdAt =
+            customer.created_at;
+
+
+        if (
+            createdAt !== null &&
+            createdAt !== undefined &&
+            String(createdAt).trim() !== ""
+        ) {
+
+            return createdAt;
+        }
+
+
+        return null;
     }
 
 
@@ -590,12 +539,10 @@
                 date.getTime()
             )
         ) {
-
             return displayValue(
                 value,
                 "—"
             );
-
         }
 
 
@@ -613,16 +560,14 @@
 
 
     // ========================================================
-    // FOLLOW UP CALCULATION
+    // FOLLOW UP
     // ========================================================
 
-    function getFollowUpInfo(
-        followUpValue
-    ) {
+    function getFollowUpInfo(value) {
 
         const followUpDate =
             parseCalendarDate(
-                followUpValue
+                value
             );
 
 
@@ -637,7 +582,6 @@
                     "followup-none",
                 days: null
             };
-
         }
 
 
@@ -645,10 +589,29 @@
             new Date();
 
 
+        const followDate =
+            new Date(
+                followUpDate.getFullYear(),
+                followUpDate.getMonth(),
+                followUpDate.getDate()
+            );
+
+
+        const todayDate =
+            new Date(
+                today.getFullYear(),
+                today.getMonth(),
+                today.getDate()
+            );
+
+
         const difference =
-            getCalendarDayDifference(
-                followUpDate,
-                today
+            Math.floor(
+                (
+                    todayDate.getTime() -
+                    followDate.getTime()
+                ) /
+                86400000
             );
 
 
@@ -663,7 +626,6 @@
                     "followup-today",
                 days: 0
             };
-
         }
 
 
@@ -676,18 +638,22 @@
                         ? "1 day overdue"
                         : `${difference} days overdue`,
                 detail:
-                    `Follow-up date was ${difference} ` +
-                    `${difference === 1 ? "day" : "days"} ago.`,
+                    `Follow-up date was ${difference} ${
+                        difference === 1
+                            ? "day"
+                            : "days"
+                    } ago.`,
                 className:
                     "followup-overdue",
                 days: difference
             };
-
         }
 
 
         const daysUntil =
-            Math.abs(difference);
+            Math.abs(
+                difference
+            );
 
 
         return {
@@ -697,8 +663,11 @@
                     ? "In 1 day"
                     : `In ${daysUntil} days`,
             detail:
-                `Follow-up is scheduled in ${daysUntil} ` +
-                `${daysUntil === 1 ? "day" : "days"}.`,
+                `Follow-up is scheduled in ${daysUntil} ${
+                    daysUntil === 1
+                        ? "day"
+                        : "days"
+                }.`,
             className:
                 "followup-upcoming",
             days: difference
@@ -713,7 +682,9 @@
     function normalizeStatus(status) {
 
         const rawStatus =
-            String(status || "New").trim();
+            String(
+                status || "New"
+            ).trim();
 
 
         if (
@@ -724,7 +695,6 @@
             return window.normalizeLeadStatus(
                 rawStatus || "New"
             );
-
         }
 
 
@@ -739,8 +709,9 @@
     function getStatusClass(status) {
 
         const normalized =
-            normalizeStatus(status)
-                .toLowerCase();
+            normalizeStatus(
+                status
+            ).toLowerCase();
 
 
         const map = {
@@ -798,7 +769,7 @@
 
 
     // ========================================================
-    // SHOW PROFILE LOADING
+    // LOADING
     // ========================================================
 
     function showProfileLoading() {
@@ -838,7 +809,7 @@
 
 
     // ========================================================
-    // SHOW PROFILE EMPTY
+    // EMPTY
     // ========================================================
 
     function showProfileEmpty(message) {
@@ -878,7 +849,7 @@
 
 
     // ========================================================
-    // SHOW PROFILE ERROR
+    // ERROR
     // ========================================================
 
     function showProfileError(message) {
@@ -931,31 +902,46 @@
 
 
     // ========================================================
-    // CUSTOMER JOURNEY HELPER
+    // JOURNEY DATE
     // ========================================================
 
-    function getJourneyDate(customer, fields) {
+    function getJourneyDate(
+        customer,
+        fields
+    ) {
 
-        for (let i = 0; i < fields.length; i++) {
+        for (
+            let i = 0;
+            i < fields.length;
+            i++
+        ) {
 
             const field =
                 fields[i];
 
+
+            const value =
+                customer[field];
+
+
             if (
-                customer[field] !== null &&
-                customer[field] !== undefined &&
-                String(customer[field]).trim() !== ""
+                value !== null &&
+                value !== undefined &&
+                String(value).trim() !== ""
             ) {
 
-                return customer[field];
-
+                return value;
             }
-
         }
+
 
         return null;
     }
 
+
+    // ========================================================
+    // JOURNEY STAGE
+    // ========================================================
 
     function journeyStage(
         title,
@@ -967,7 +953,7 @@
 
         const ageLabel =
             date
-                ? getJourneyAgeLabel(
+                ? getLeadAgeLabel(
                     date
                 )
                 : "";
@@ -985,16 +971,20 @@
                     ${
                         completed
                             ? `<i data-lucide="check"></i>`
-                            : `<i data-lucide="${escapeHTML(icon)}"></i>`
+                            : `<i data-lucide="${escapeHTML(
+                                icon
+                            )}"></i>`
                     }
 
                 </div>
+
 
                 <div class="journey-stage-content">
 
                     <div class="journey-stage-title">
                         ${escapeHTML(title)}
                     </div>
+
 
                     <div class="journey-stage-date">
 
@@ -1008,6 +998,7 @@
 
                     </div>
 
+
                     ${
                         ageLabel
                             ? `
@@ -1020,15 +1011,18 @@
                             : ""
                     }
 
+
                     <div class="journey-stage-description">
 
                         ${
                             completed
                                 ? escapeHTML(
-                                    description || "Completed"
+                                    description ||
+                                    "Completed"
                                 )
                                 : escapeHTML(
-                                    description || "Not yet"
+                                    description ||
+                                    "Not yet"
                                 )
                         }
 
@@ -1117,8 +1111,7 @@
         const status =
             normalizeStatus(
                 customer.status
-            )
-                .toLowerCase();
+            ).toLowerCase();
 
 
         const hasFirstContact =
@@ -1195,6 +1188,7 @@
                             ? "Customer created"
                             : "Customer record"
                     )}
+
 
                     <div class="journey-arrow">
                         <i data-lucide="arrow-right"></i>
@@ -1305,7 +1299,7 @@
 
 
     // ========================================================
-    // DOCUMENTS PLACEHOLDER
+    // DOCUMENTS
     // ========================================================
 
     function renderCustomerDocuments() {
@@ -1328,6 +1322,7 @@
 
                     </div>
 
+
                     <div class="profile-card-header-icon">
 
                         <i data-lucide="folder-open"></i>
@@ -1345,9 +1340,11 @@
 
                     </div>
 
+
                     <strong>
                         No documents uploaded
                     </strong>
+
 
                     <span>
                         Upload PDF documents for this customer.
@@ -1399,7 +1396,7 @@
 
 
     // ========================================================
-    // RENDER PROFILE
+    // RENDER CUSTOMER PROFILE
     // ========================================================
 
     function renderCustomerProfile(
@@ -1412,14 +1409,13 @@
 
 
         if (!container) {
-
-            console.warn(
-                "FSI CRM: customer-profile-container not found."
-            );
-
             return;
         }
 
+
+        // ====================================================
+        // BASIC DATA
+        // ====================================================
 
         const customerName =
             displayValue(
@@ -1431,6 +1427,12 @@
         const phone =
             displayValue(
                 customer.phone
+            );
+
+
+        const email =
+            displayValue(
+                customer.email
             );
 
 
@@ -1446,13 +1448,10 @@
             );
 
 
-        // ====================================================
-        // STATUS
-        // ====================================================
-
         const status =
             normalizeStatus(
-                customer.status || "New"
+                customer.status ||
+                "New"
             );
 
 
@@ -1467,17 +1466,19 @@
                 : "Unassigned";
 
 
+        // ====================================================
+        // FOLLOW UP
+        // ====================================================
+
         const followUpInfo =
             getFollowUpInfo(
                 customer.follow_up_date
             );
 
 
-        const avatarLetter =
-            customerName
-                .charAt(0)
-                .toUpperCase();
-
+        // ====================================================
+        // DATES
+        // ====================================================
 
         const createdAt =
             formatDateTime(
@@ -1486,14 +1487,29 @@
 
 
         // ====================================================
-        // LAST UPDATED
+        // IMPORTANT:
+        // SAME "DAYS" DATA AS LEADS
+        //
+        // Leads uses created_at.
+        //
+        // Therefore Customer Profile also uses created_at
+        // for the main customer age.
         // ====================================================
-        //
-        // Use updated_at first.
-        // If updated_at is empty, use created_at.
-        //
-        // This ensures older customers still show a
-        // Days Since Update value.
+
+        const customerAge =
+            getLeadAgeInDays(
+                customer.created_at
+            );
+
+
+        const customerAgeLabel =
+            getLeadAgeLabel(
+                customer.created_at
+            );
+
+
+        // ====================================================
+        // LAST UPDATED
         // ====================================================
 
         const customerLastUpdated =
@@ -1507,10 +1523,6 @@
                 customerLastUpdated
             );
 
-
-        // ====================================================
-        // UPDATE AGE
-        // ====================================================
 
         const updateAgeLabel =
             getUpdateAgeLabel(
@@ -1542,6 +1554,10 @@
                             : "customer-update-normal";
 
 
+        // ====================================================
+        // PIPELINE DATES
+        // ====================================================
+
         const appointment =
             formatDate(
                 customer.appointment
@@ -1566,6 +1582,10 @@
             );
 
 
+        // ====================================================
+        // NOTES
+        // ====================================================
+
         const notes =
             displayValue(
                 customer.notes,
@@ -1574,7 +1594,17 @@
 
 
         // ====================================================
-        // PHONE FOR WHATSAPP
+        // AVATAR
+        // ====================================================
+
+        const avatarLetter =
+            customerName
+                .charAt(0)
+                .toUpperCase();
+
+
+        // ====================================================
+        // WHATSAPP
         // ====================================================
 
         const whatsappPhone =
@@ -1593,69 +1623,35 @@
                 : "#";
 
 
-        const email =
+        // ====================================================
+        // EMAIL
+        // ====================================================
+
+        const emailValue =
             String(
                 customer.email || ""
             ).trim();
 
 
         const emailURL =
-            email
-                ? `mailto:${encodeURIComponent(email)}`
+            emailValue
+                ? `mailto:${encodeURIComponent(
+                    emailValue
+                )}`
                 : "#";
 
 
         // ====================================================
-        // FOLLOW UP BADGE
+        // FOLLOW UP TEXT
         // ====================================================
-
-        let followUpBadge = "";
-
-
-        if (followUpInfo.exists) {
-
-            followUpBadge = `
-
-                <span
-                    class="followup-badge ${escapeHTML(
-                        followUpInfo.className
-                    )}"
-                >
-
-                    <i data-lucide="clock-3"></i>
-
-                    ${escapeHTML(
-                        followUpInfo.label
-                    )}
-
-                </span>
-
-            `;
-
-        } else {
-
-            followUpBadge = `
-
-                <span
-                    class="followup-badge followup-none"
-                >
-
-                    <i data-lucide="calendar-x-2"></i>
-
-                    No follow-up date
-
-                </span>
-
-            `;
-
-        }
-
 
         let followUpDaysText =
             "No follow-up date";
 
 
-        if (followUpInfo.exists) {
+        if (
+            followUpInfo.exists
+        ) {
 
             if (
                 followUpInfo.days === 0
@@ -1689,14 +1685,12 @@
                             ? "day"
                             : "days"
                     }`;
-
             }
-
         }
 
 
         // ====================================================
-        // RENDER HTML
+        // RENDER
         // ====================================================
 
         container.innerHTML = `
@@ -1704,9 +1698,9 @@
             <div class="customer-profile">
 
 
-                <!-- ========================================== -->
+                <!-- ======================================== -->
                 <!-- HEADER -->
-                <!-- ========================================== -->
+                <!-- ======================================== -->
 
                 <div class="customer-profile-header">
 
@@ -1749,21 +1743,64 @@
                                 <p class="customer-profile-subtitle">
 
                                     <span>
+
                                         <i data-lucide="building-2"></i>
+
                                         ${escapeHTML(
                                             business
                                         )}
+
                                     </span>
 
 
                                     <span>
+
                                         <i data-lucide="map-pin"></i>
+
                                         ${escapeHTML(
                                             location
                                         )}
+
                                     </span>
 
                                 </p>
+
+
+                                <!-- ================================= -->
+                                <!-- CREATED / LEAD AGE -->
+                                <!-- ================================= -->
+
+                                <div class="customer-profile-lead-age">
+
+                                    <span>
+
+                                        <i data-lucide="calendar-days"></i>
+
+                                        Input Date
+
+                                    </span>
+
+
+                                    <strong>
+
+                                        ${escapeHTML(
+                                            formatDate(
+                                                customer.created_at
+                                            )
+                                        )}
+
+                                    </strong>
+
+
+                                    <span class="customer-profile-lead-days">
+
+                                        ${escapeHTML(
+                                            customerAgeLabel
+                                        )}
+
+                                    </span>
+
+                                </div>
 
 
                                 <!-- ================================= -->
@@ -1814,9 +1851,9 @@
                     </div>
 
 
-                    <!-- ========================================= -->
+                    <!-- ======================================== -->
                     <!-- DAYS SINCE UPDATE -->
-                    <!-- ========================================= -->
+                    <!-- ======================================== -->
 
                     <div
                         class="
@@ -1824,7 +1861,7 @@
                             ${escapeHTML(
                                 updateAgeClass
                             )}
-                    "
+                        "
                     >
 
                         <div class="customer-update-age-icon">
@@ -1863,7 +1900,9 @@
 
                         <span
                             class="status-badge ${escapeHTML(
-                                getStatusClass(status)
+                                getStatusClass(
+                                    status
+                                )
                             )}"
                         >
 
@@ -1878,9 +1917,9 @@
                 </div>
 
 
-                <!-- ========================================== -->
+                <!-- ======================================== -->
                 <!-- ACTION BUTTONS -->
-                <!-- ========================================== -->
+                <!-- ======================================== -->
 
                 <div class="customer-profile-actions">
 
@@ -1895,11 +1934,6 @@
                                 ? ""
                                 : "disabled"
                         }"
-                        ${
-                            whatsappPhone
-                                ? ""
-                                : "aria-disabled=\"true\""
-                        }
                     >
 
                         <i data-lucide="message-circle"></i>
@@ -1914,15 +1948,10 @@
                             emailURL
                         )}"
                         class="profile-action-btn email-action ${
-                            email
+                            emailValue
                                 ? ""
                                 : "disabled"
                         }"
-                        ${
-                            email
-                                ? ""
-                                : "aria-disabled=\"true\""
-                        }
                     >
 
                         <i data-lucide="mail"></i>
@@ -1960,9 +1989,9 @@
                 </div>
 
 
-                <!-- ========================================== -->
+                <!-- ======================================== -->
                 <!-- FOLLOW UP -->
-                <!-- ========================================== -->
+                <!-- ======================================== -->
 
                 <section
                     class="profile-followup-card ${escapeHTML(
@@ -2012,7 +2041,19 @@
 
                     <div class="profile-followup-days">
 
-                        ${followUpBadge}
+                        <span
+                            class="followup-badge ${escapeHTML(
+                                followUpInfo.className
+                            )}"
+                        >
+
+                            <i data-lucide="clock-3"></i>
+
+                            ${escapeHTML(
+                                followUpInfo.label
+                            )}
+
+                        </span>
 
 
                         <span class="followup-days-text">
@@ -2028,9 +2069,9 @@
                 </section>
 
 
-                <!-- ========================================== -->
+                <!-- ======================================== -->
                 <!-- CUSTOMER INFORMATION -->
-                <!-- ========================================== -->
+                <!-- ======================================== -->
 
                 <section class="profile-card">
 
@@ -2087,6 +2128,28 @@
 
                                 ${escapeHTML(
                                     phone
+                                )}
+
+                            </strong>
+
+                        </div>
+
+
+                        <div class="profile-info-item">
+
+                            <span class="profile-info-label">
+
+                                <i data-lucide="mail"></i>
+
+                                Email
+
+                            </span>
+
+
+                            <strong>
+
+                                ${escapeHTML(
+                                    email
                                 )}
 
                             </strong>
@@ -2187,14 +2250,60 @@
 
                         </div>
 
+
+                        <div class="profile-info-item">
+
+                            <span class="profile-info-label">
+
+                                <i data-lucide="calendar-days"></i>
+
+                                Input Date
+
+                            </span>
+
+
+                            <strong>
+
+                                ${escapeHTML(
+                                    formatDate(
+                                        customer.created_at
+                                    )
+                                )}
+
+                            </strong>
+
+                        </div>
+
+
+                        <div class="profile-info-item">
+
+                            <span class="profile-info-label">
+
+                                <i data-lucide="clock-3"></i>
+
+                                Days
+
+                            </span>
+
+
+                            <strong>
+
+                                ${escapeHTML(
+                                    customerAgeLabel
+                                )}
+
+                            </strong>
+
+                        </div>
+
                     </div>
 
                 </section>
 
 
-                <!-- ========================================== -->
+                <!-- ======================================== -->
                 <!-- CUSTOMER JOURNEY -->
-                <!-- ========================================== -->
+                <!-- ======================================== -->
 
                 <section class="profile-card customer-journey-card">
 
@@ -2222,9 +2331,9 @@
                 </section>
 
 
-                <!-- ========================================== -->
+                <!-- ======================================== -->
                 <!-- NOTES -->
-                <!-- ========================================== -->
+                <!-- ======================================== -->
 
                 <section class="profile-card">
 
@@ -2263,16 +2372,16 @@
                 </section>
 
 
-                <!-- ========================================== -->
-                <!-- CUSTOMER DOCUMENTS -->
-                <!-- ========================================== -->
+                <!-- ======================================== -->
+                <!-- DOCUMENTS / PDF -->
+                <!-- ======================================== -->
 
                 ${renderCustomerDocuments()}
 
 
-                <!-- ========================================== -->
+                <!-- ======================================== -->
                 <!-- RECORD INFORMATION -->
-                <!-- ========================================== -->
+                <!-- ======================================== -->
 
                 <section class="profile-card profile-meta-card">
 
@@ -2311,6 +2420,28 @@
 
                                 ${escapeHTML(
                                     createdAt
+                                )}
+
+                            </strong>
+
+                        </div>
+
+
+                        <div class="profile-info-item">
+
+                            <span class="profile-info-label">
+
+                                <i data-lucide="calendar-days"></i>
+
+                                Days
+
+                            </span>
+
+
+                            <strong>
+
+                                ${escapeHTML(
+                                    customerAgeLabel
                                 )}
 
                             </strong>
@@ -2542,14 +2673,6 @@
 
         try {
 
-            // =================================================
-            // IMPORTANT:
-            // Always load directly from Supabase.
-            //
-            // This ensures updated_at is fresh after
-            // customer-form.js performs an UPDATE.
-            // =================================================
-
             const {
                 data,
                 error
@@ -2613,7 +2736,7 @@
 
 
     // ========================================================
-    // FORCE SHOW PROFILE PAGE
+    // SHOW CUSTOMER PROFILE PAGE
     // ========================================================
 
     function showCustomerProfilePage() {
@@ -2634,11 +2757,6 @@
         }
 
 
-        // ----------------------------------------------------
-        // PRIORITY 1
-        // Main navigation system
-        // ----------------------------------------------------
-
         if (
             window.FSINavigation &&
             typeof window.FSINavigation.showPage ===
@@ -2655,14 +2773,8 @@
 
 
             return result !== false;
-
         }
 
-
-        // ----------------------------------------------------
-        // PRIORITY 2
-        // Global showPage if available
-        // ----------------------------------------------------
 
         if (
             typeof window.showPage ===
@@ -2679,14 +2791,8 @@
 
 
             return result !== false;
-
         }
 
-
-        // ----------------------------------------------------
-        // PRIORITY 3
-        // Global navigation
-        // ----------------------------------------------------
 
         if (
             typeof window.crmNavigate ===
@@ -2703,13 +2809,8 @@
 
 
             return result !== false;
-
         }
 
-
-        // ----------------------------------------------------
-        // FALLBACK
-        // ----------------------------------------------------
 
         activateProfilePage();
 
@@ -2719,7 +2820,7 @@
 
 
     // ========================================================
-    // ENSURE PROFILE PAGE VISIBLE
+    // ENSURE PROFILE PAGE
     // ========================================================
 
     function ensureProfilePageVisible() {
@@ -2771,7 +2872,6 @@
 
                     page.style.display =
                         "none";
-
                 }
 
             }
@@ -2792,70 +2892,10 @@
 
             container.style.opacity =
                 "1";
-
         }
 
 
-        console.log(
-            "[FSI Customer Profile] Page visible:",
-            {
-                page:
-                    !!document.getElementById(
-                        "view-customer-profile"
-                    ),
-
-                active:
-                    profilePageIsActive(),
-
-                display:
-                    profilePageDisplay(),
-
-                container:
-                    !!container
-            }
-        );
-    }
-
-
-    // ========================================================
-    // PROFILE PAGE STATUS
-    // ========================================================
-
-    function profilePageIsActive() {
-
-        const page =
-            document.getElementById(
-                "view-customer-profile"
-            );
-
-
-        if (!page) {
-            return false;
-        }
-
-
-        return page.classList.contains(
-            "active"
-        );
-    }
-
-
-    function profilePageDisplay() {
-
-        const page =
-            document.getElementById(
-                "view-customer-profile"
-            );
-
-
-        if (!page) {
-            return "NOT FOUND";
-        }
-
-
-        return window.getComputedStyle(
-            page
-        ).display;
+        refreshIcons();
     }
 
 
@@ -2902,10 +2942,6 @@
         profileLoading = true;
 
 
-        // ----------------------------------------------------
-        // Open PROFILE page first.
-        // ----------------------------------------------------
-
         showCustomerProfilePage();
 
 
@@ -2931,7 +2967,9 @@
         try {
 
             const customer =
-                await loadCustomer(id);
+                await loadCustomer(
+                    id
+                );
 
 
             if (!customer) {
@@ -2953,7 +2991,6 @@
 
             ensureProfilePageVisible();
 
-
         } catch (error) {
 
             console.error(
@@ -2966,94 +3003,10 @@
                 "Unable to open customer profile."
             );
 
-
         } finally {
 
             profileLoading = false;
-
         }
-    }
-
-
-    // ========================================================
-    // ACTIVATE PROFILE PAGE
-    // ========================================================
-
-    function activateProfilePage() {
-
-        const pages =
-            document.querySelectorAll(
-                ".crm-page, .app-page, [id^='view-']"
-            );
-
-
-        pages.forEach(
-            function (page) {
-
-                if (
-                    page.id ===
-                    "view-customer-profile"
-                ) {
-
-                    page.classList.add(
-                        "active"
-                    );
-
-                    page.classList.remove(
-                        "hidden"
-                    );
-
-                    page.setAttribute(
-                        "aria-hidden",
-                        "false"
-                    );
-
-                    page.style.display =
-                        "block";
-
-                } else {
-
-                    page.classList.remove(
-                        "active"
-                    );
-
-                    page.classList.add(
-                        "hidden"
-                    );
-
-                    page.setAttribute(
-                        "aria-hidden",
-                        "true"
-                    );
-
-                    page.style.display =
-                        "none";
-
-                }
-
-            }
-        );
-
-
-        const container =
-            getProfileContainer();
-
-
-        if (container) {
-
-            container.style.display =
-                "block";
-
-            container.style.visibility =
-                "visible";
-
-            container.style.opacity =
-                "1";
-
-        }
-
-
-        refreshIcons();
     }
 
 
@@ -3168,7 +3121,6 @@
 
                     page.style.display =
                         "none";
-
                 }
 
             }
@@ -3180,7 +3132,7 @@
 
 
     // ========================================================
-    // REFRESH PROFILE
+    // REFRESH CUSTOMER PROFILE
     // ========================================================
 
     async function refreshCustomerProfile() {
@@ -3197,7 +3149,7 @@
 
 
     // ========================================================
-    // EVENT HANDLER
+    // EVENTS
     // ========================================================
 
     function setupShelterEvents() {
@@ -3270,17 +3222,6 @@
 
                     event.preventDefault();
 
-                    console.log(
-                        "[FSI Customer Profile] Appointment clicked."
-                    );
-
-
-                    /*
-                     * Appointment is not forced into
-                     * Supabase from here.
-                     *
-                     * Existing system remains unchanged.
-                     */
 
                     if (
                         typeof window.crmOpenAppointment ===
@@ -3290,8 +3231,8 @@
                         window.crmOpenAppointment(
                             currentCustomerId
                         );
-
                     }
+
 
                     return;
                 }
@@ -3307,18 +3248,6 @@
 
                     event.preventDefault();
 
-                    console.log(
-                        "[FSI Customer Profile] Save clicked."
-                    );
-
-
-                    /*
-                     * Save intentionally does not perform
-                     * an automatic Supabase UPDATE.
-                     *
-                     * Customer editing remains handled
-                     * by customer-form.js.
-                     */
 
                     if (
                         typeof window.crmSaveCustomer ===
@@ -3328,15 +3257,15 @@
                         window.crmSaveCustomer(
                             currentCustomerId
                         );
-
                     }
+
 
                     return;
                 }
 
 
                 // ------------------------------------------
-                // UPLOAD DOCUMENT
+                // UPLOAD PDF
                 // ------------------------------------------
 
                 if (
@@ -3345,6 +3274,7 @@
 
                     event.preventDefault();
 
+
                     const fileInput =
                         document.getElementById(
                             "customer-profile-pdf"
@@ -3352,10 +3282,9 @@
 
 
                     if (fileInput) {
-
                         fileInput.click();
-
                     }
+
 
                     return;
                 }
@@ -3380,7 +3309,6 @@
             ) {
 
                 window.lucide.createIcons();
-
             }
 
         } catch (error) {
@@ -3389,46 +3317,17 @@
                 "FSI CRM: Lucide icon rendering failed.",
                 error
             );
-
         }
     }
 
 
     // ========================================================
-    // PAGE INITIALIZATION
+    // INITIALIZE
     // ========================================================
 
     function initializeShelter() {
 
         setupShelterEvents();
-
-
-        const profilePage =
-            document.getElementById(
-                "view-customer-profile"
-            );
-
-
-        if (profilePage) {
-
-            if (
-                profilePage.classList.contains(
-                    "active"
-                )
-            ) {
-
-                profilePage.style.display =
-                    "block";
-
-            } else {
-
-                profilePage.style.display =
-                    "none";
-
-            }
-
-        }
-
 
         refreshIcons();
     }
@@ -3497,7 +3396,6 @@
     } else {
 
         initializeShelter();
-
     }
 
 
