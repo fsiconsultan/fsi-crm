@@ -114,7 +114,7 @@
     // DATE PARSER
     // ========================================================
     //
-    // SAME LOGIC AS LEADS
+    // SAME DATE LOGIC AS LEADS
     //
     // ========================================================
 
@@ -238,12 +238,13 @@
 
 
     // ========================================================
-    // LEADS - AGE IN DAYS
+    // DAYS
     // ========================================================
     //
-    // THIS IS THE SAME LOGIC USED BY LEADS.
+    // SAME LOGIC AS LEADS
     //
-    // Days = TODAY - created_at
+    // Input Date = created_at
+    // Days = today - created_at
     //
     // ========================================================
 
@@ -294,7 +295,7 @@
 
 
     // ========================================================
-    // LEADS - AGE LABEL
+    // DAYS LABEL
     // ========================================================
 
     function getLeadAgeLabel(value) {
@@ -321,171 +322,6 @@
 
 
         return `${age} days`;
-    }
-
-
-    // ========================================================
-    // UPDATE AGE
-    // ========================================================
-    //
-    // This is separate from Leads Days.
-    //
-    // Leads:
-    //     created_at -> Days
-    //
-    // Customer Profile:
-    //     updated_at -> Days Since Update
-    //
-    // ========================================================
-
-    function getUpdateAgeInDays(value) {
-
-        const updatedDate =
-            parseCalendarDate(value);
-
-
-        if (!updatedDate) {
-            return null;
-        }
-
-
-        const now =
-            new Date();
-
-
-        const start =
-            new Date(
-                updatedDate.getFullYear(),
-                updatedDate.getMonth(),
-                updatedDate.getDate()
-            );
-
-
-        const end =
-            new Date(
-                now.getFullYear(),
-                now.getMonth(),
-                now.getDate()
-            );
-
-
-        const difference =
-            end.getTime() -
-            start.getTime();
-
-
-        return Math.max(
-            0,
-            Math.floor(
-                difference /
-                86400000
-            )
-        );
-    }
-
-
-    // ========================================================
-    // UPDATE AGE LABEL
-    // ========================================================
-
-    function getUpdateAgeLabel(value) {
-
-        const age =
-            getUpdateAgeInDays(
-                value
-            );
-
-
-        if (age === null) {
-            return "NO UPDATE DATE";
-        }
-
-
-        if (age === 0) {
-            return "0 DAYS";
-        }
-
-
-        if (age === 1) {
-            return "1 DAY";
-        }
-
-
-        return `${age} DAYS`;
-    }
-
-
-    // ========================================================
-    // UPDATE AGE DETAIL
-    // ========================================================
-
-    function getUpdateAgeDetail(value) {
-
-        const age =
-            getUpdateAgeInDays(
-                value
-            );
-
-
-        if (age === null) {
-            return "No update date available";
-        }
-
-
-        if (age === 0) {
-            return "Updated today";
-        }
-
-
-        if (age === 1) {
-            return "Updated 1 day ago";
-        }
-
-
-        return `Updated ${age} days ago`;
-    }
-
-
-    // ========================================================
-    // CUSTOMER LAST UPDATED
-    // ========================================================
-
-    function getCustomerLastUpdatedValue(customer) {
-
-        if (!customer) {
-            return null;
-        }
-
-
-        const updatedAt =
-            customer.updated_at;
-
-
-        if (
-            updatedAt !== null &&
-            updatedAt !== undefined &&
-            String(updatedAt).trim() !== ""
-        ) {
-
-            return updatedAt;
-        }
-
-
-        const createdAt =
-            customer.created_at;
-
-
-        if (
-            createdAt !== null &&
-            createdAt !== undefined &&
-            String(createdAt).trim() !== ""
-        ) {
-
-            return createdAt;
-        }
-
-
-        return null;
     }
 
 
@@ -788,7 +624,9 @@
             <div class="customer-profile-loading">
 
                 <div class="profile-loading-icon">
+
                     <i data-lucide="loader-circle"></i>
+
                 </div>
 
                 <h3>
@@ -888,8 +726,11 @@
                     class="secondary-btn small-btn"
                     data-shelter-action="back"
                 >
+
                     <i data-lucide="arrow-left"></i>
+
                     Back to Leads
+
                 </button>
 
             </div>
@@ -1191,7 +1032,9 @@
 
 
                     <div class="journey-arrow">
+
                         <i data-lucide="arrow-right"></i>
+
                     </div>
 
 
@@ -1207,7 +1050,9 @@
 
 
                     <div class="journey-arrow">
+
                         <i data-lucide="arrow-right"></i>
+
                     </div>
 
 
@@ -1238,7 +1083,9 @@
 
 
                     <div class="journey-arrow">
+
                         <i data-lucide="arrow-right"></i>
+
                     </div>
 
 
@@ -1254,7 +1101,9 @@
 
 
                     <div class="journey-arrow">
+
                         <i data-lucide="arrow-right"></i>
+
                     </div>
 
 
@@ -1477,7 +1326,7 @@
 
 
         // ====================================================
-        // DATES
+        // INPUT DATE
         // ====================================================
 
         const createdAt =
@@ -1487,13 +1336,14 @@
 
 
         // ====================================================
+        // DAYS
+        // ====================================================
+        //
         // IMPORTANT:
-        // SAME "DAYS" DATA AS LEADS
+        // SAME AS LEADS
         //
-        // Leads uses created_at.
+        // created_at -> Days
         //
-        // Therefore Customer Profile also uses created_at
-        // for the main customer age.
         // ====================================================
 
         const customerAge =
@@ -1506,52 +1356,6 @@
             getLeadAgeLabel(
                 customer.created_at
             );
-
-
-        // ====================================================
-        // LAST UPDATED
-        // ====================================================
-
-        const customerLastUpdated =
-            getCustomerLastUpdatedValue(
-                customer
-            );
-
-
-        const updatedAt =
-            formatDateTime(
-                customerLastUpdated
-            );
-
-
-        const updateAgeLabel =
-            getUpdateAgeLabel(
-                customerLastUpdated
-            );
-
-
-        const updateAgeDetail =
-            getUpdateAgeDetail(
-                customerLastUpdated
-            );
-
-
-        const updateAge =
-            getUpdateAgeInDays(
-                customerLastUpdated
-            );
-
-
-        const updateAgeClass =
-            updateAge === null
-                ? "customer-update-none"
-                : updateAge === 0
-                    ? "customer-update-today"
-                    : updateAge >= 30
-                        ? "customer-update-critical"
-                        : updateAge >= 14
-                            ? "customer-update-warning"
-                            : "customer-update-normal";
 
 
         // ====================================================
@@ -1734,9 +1538,11 @@
                             <div class="customer-profile-name">
 
                                 <h2>
+
                                     ${escapeHTML(
                                         customerName
                                     )}
+
                                 </h2>
 
 
@@ -1767,7 +1573,7 @@
 
 
                                 <!-- ================================= -->
-                                <!-- CREATED / LEAD AGE -->
+                                <!-- INPUT DATE + DAYS -->
                                 <!-- ================================= -->
 
                                 <div class="customer-profile-lead-age">
@@ -1802,48 +1608,6 @@
 
                                 </div>
 
-
-                                <!-- ================================= -->
-                                <!-- LAST UPDATED -->
-                                <!-- ================================= -->
-
-                                <div class="
-                                    customer-profile-last-update
-                                    ${escapeHTML(
-                                        updateAgeClass
-                                    )}
-                                ">
-
-                                    <span
-                                        class="customer-profile-last-update-icon"
-                                    >
-
-                                        <i data-lucide="refresh-cw"></i>
-
-                                    </span>
-
-
-                                    <span
-                                        class="customer-profile-last-update-text"
-                                    >
-
-                                        <span
-                                            class="customer-profile-last-update-label"
-                                        >
-                                            Last Updated
-                                        </span>
-
-
-                                        <strong>
-                                            ${escapeHTML(
-                                                updatedAt
-                                            )}
-                                        </strong>
-
-                                    </span>
-
-                                </div>
-
                             </div>
 
                         </div>
@@ -1852,17 +1616,10 @@
 
 
                     <!-- ======================================== -->
-                    <!-- DAYS SINCE UPDATE -->
+                    <!-- DAYS -->
                     <!-- ======================================== -->
 
-                    <div
-                        class="
-                            customer-profile-update-age
-                            ${escapeHTML(
-                                updateAgeClass
-                            )}
-                        "
-                    >
+                    <div class="customer-profile-update-age">
 
                         <div class="customer-update-age-icon">
 
@@ -1874,21 +1631,28 @@
                         <div class="customer-update-age-content">
 
                             <strong>
+
                                 ${escapeHTML(
-                                    updateAgeLabel
+                                    customerAgeLabel
                                 )}
+
                             </strong>
 
 
                             <span>
-                                SINCE UPDATE
+                                SINCE INPUT
                             </span>
 
 
                             <small>
+
+                                Customer created
                                 ${escapeHTML(
-                                    updateAgeDetail
+                                    formatDate(
+                                        customer.created_at
+                                    )
                                 )}
+
                             </small>
 
                         </div>
@@ -2433,7 +2197,7 @@
 
                                 <i data-lucide="calendar-days"></i>
 
-                                Days
+                                Input Date
 
                             </span>
 
@@ -2441,7 +2205,9 @@
                             <strong>
 
                                 ${escapeHTML(
-                                    customerAgeLabel
+                                    formatDate(
+                                        customer.created_at
+                                    )
                                 )}
 
                             </strong>
@@ -2453,9 +2219,9 @@
 
                             <span class="profile-info-label">
 
-                                <i data-lucide="refresh-cw"></i>
+                                <i data-lucide="clock-3"></i>
 
-                                Last Updated
+                                Days
 
                             </span>
 
@@ -2463,7 +2229,7 @@
                             <strong>
 
                                 ${escapeHTML(
-                                    updatedAt
+                                    customerAgeLabel
                                 )}
 
                             </strong>
@@ -2637,6 +2403,10 @@
 
     // ========================================================
     // LOAD CUSTOMER
+    // ========================================================
+    //
+    // CUSTOMER PROFILE READS DIRECTLY FROM LEADS.
+    //
     // ========================================================
 
     async function loadCustomer(customerId) {
@@ -3086,6 +2856,69 @@
                 if (
                     page.id ===
                     "view-leads"
+                ) {
+
+                    page.classList.add(
+                        "active"
+                    );
+
+                    page.classList.remove(
+                        "hidden"
+                    );
+
+                    page.setAttribute(
+                        "aria-hidden",
+                        "false"
+                    );
+
+                    page.style.display =
+                        "block";
+
+                } else {
+
+                    page.classList.remove(
+                        "active"
+                    );
+
+                    page.classList.add(
+                        "hidden"
+                    );
+
+                    page.setAttribute(
+                        "aria-hidden",
+                        "true"
+                    );
+
+                    page.style.display =
+                        "none";
+                }
+
+            }
+        );
+
+
+        refreshIcons();
+    }
+
+
+    // ========================================================
+    // ACTIVATE PROFILE PAGE
+    // ========================================================
+
+    function activateProfilePage() {
+
+        const pages =
+            document.querySelectorAll(
+                ".crm-page, .app-page, [id^='view-']"
+            );
+
+
+        pages.forEach(
+            function (page) {
+
+                if (
+                    page.id ===
+                    "view-customer-profile"
                 ) {
 
                     page.classList.add(
