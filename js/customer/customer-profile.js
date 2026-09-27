@@ -497,6 +497,12 @@
             "first meeting / appointment / site survey":
                 "status-first-meeting",
 
+            "appointment":
+                "status-first-meeting",
+
+            "site survey":
+                "status-first-meeting",
+
             "quotation":
                 "status-quotation",
 
@@ -504,6 +510,9 @@
                 "status-second-appointment",
 
             "deal":
+                "status-deal",
+
+            "closing":
                 "status-deal",
 
             "no deal":
@@ -665,6 +674,454 @@
 
 
     // ========================================================
+    // CUSTOMER JOURNEY HELPER
+    // ========================================================
+
+    function getJourneyDate(customer, fields) {
+
+        for (let i = 0; i < fields.length; i++) {
+
+            const field =
+                fields[i];
+
+            if (
+                customer[field] !== null &&
+                customer[field] !== undefined &&
+                String(customer[field]).trim() !== ""
+            ) {
+
+                return customer[field];
+
+            }
+
+        }
+
+        return null;
+    }
+
+
+    function journeyStage(
+        title,
+        date,
+        completed,
+        icon,
+        description
+    ) {
+
+        return `
+
+            <div class="
+                customer-journey-stage
+                ${completed ? "completed" : "pending"}
+            ">
+
+                <div class="journey-stage-icon">
+
+                    ${
+                        completed
+                            ? `<i data-lucide="check"></i>`
+                            : `<i data-lucide="${escapeHTML(icon)}"></i>`
+                    }
+
+                </div>
+
+                <div class="journey-stage-content">
+
+                    <div class="journey-stage-title">
+                        ${escapeHTML(title)}
+                    </div>
+
+                    <div class="journey-stage-date">
+
+                        ${
+                            date
+                                ? escapeHTML(
+                                    formatDate(date)
+                                )
+                                : "Not scheduled"
+                        }
+
+                    </div>
+
+                    <div class="journey-stage-description">
+
+                        ${
+                            completed
+                                ? escapeHTML(
+                                    description || "Completed"
+                                )
+                                : escapeHTML(
+                                    description || "Not yet"
+                                )
+                        }
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        `;
+    }
+
+
+    // ========================================================
+    // CUSTOMER JOURNEY
+    // ========================================================
+
+    function renderCustomerJourney(customer) {
+
+        const appointmentDate =
+            getJourneyDate(
+                customer,
+                [
+                    "appointment"
+                ]
+            );
+
+
+        const surveyDate =
+            getJourneyDate(
+                customer,
+                [
+                    "site_survey"
+                ]
+            );
+
+
+        const quotationDate =
+            getJourneyDate(
+                customer,
+                [
+                    "quotation"
+                ]
+            );
+
+
+        const closingDate =
+            getJourneyDate(
+                customer,
+                [
+                    "closing"
+                ]
+            );
+
+
+        const firstContactDate =
+            getJourneyDate(
+                customer,
+                [
+                    "first_contact",
+                    "contact_date",
+                    "last_follow_up"
+                ]
+            );
+
+
+        const secondAppointmentDate =
+            getJourneyDate(
+                customer,
+                [
+                    "second_appointment",
+                    "second_meeting"
+                ]
+            );
+
+
+        const createdDate =
+            getJourneyDate(
+                customer,
+                [
+                    "created_at"
+                ]
+            );
+
+
+        const status =
+            normalizeStatus(
+                customer.status
+            )
+                .toLowerCase();
+
+
+        const hasFirstContact =
+            !!firstContactDate ||
+            [
+                "first contact",
+                "first meeting / appointment / site survey",
+                "appointment",
+                "site survey",
+                "quotation",
+                "second appointment",
+                "deal",
+                "no deal"
+            ].includes(status);
+
+
+        const hasAppointment =
+            !!appointmentDate ||
+            [
+                "first meeting / appointment / site survey",
+                "appointment",
+                "site survey",
+                "quotation",
+                "second appointment",
+                "deal"
+            ].includes(status);
+
+
+        const hasSurvey =
+            !!surveyDate ||
+            [
+                "site survey",
+                "quotation",
+                "second appointment",
+                "deal"
+            ].includes(status);
+
+
+        const hasQuotation =
+            !!quotationDate ||
+            [
+                "quotation",
+                "second appointment",
+                "deal"
+            ].includes(status);
+
+
+        const hasSecondAppointment =
+            !!secondAppointmentDate ||
+            [
+                "second appointment",
+                "deal"
+            ].includes(status);
+
+
+        const hasDeal =
+            !!closingDate ||
+            status === "deal" ||
+            status === "closing";
+
+
+        return `
+
+            <div class="customer-journey">
+
+                <div class="customer-journey-row">
+
+                    ${journeyStage(
+                        "New",
+                        createdDate,
+                        true,
+                        "sparkles",
+                        createdDate
+                            ? "Customer created"
+                            : "Customer record"
+                    )}
+
+                    <div class="journey-arrow">
+                        <i data-lucide="arrow-right"></i>
+                    </div>
+
+
+                    ${journeyStage(
+                        "Contact",
+                        firstContactDate,
+                        hasFirstContact,
+                        "phone-call",
+                        hasFirstContact
+                            ? "Contact completed"
+                            : "Not contacted"
+                    )}
+
+
+                    <div class="journey-arrow">
+                        <i data-lucide="arrow-right"></i>
+                    </div>
+
+
+                    ${journeyStage(
+                        "Appointment",
+                        appointmentDate,
+                        hasAppointment,
+                        "calendar-check",
+                        hasAppointment
+                            ? "Completed"
+                            : "Not scheduled"
+                    )}
+
+                </div>
+
+
+                <div class="customer-journey-row">
+
+                    ${journeyStage(
+                        "Survey",
+                        surveyDate,
+                        hasSurvey,
+                        "map-pin",
+                        hasSurvey
+                            ? "Completed"
+                            : "Not scheduled"
+                    )}
+
+
+                    <div class="journey-arrow">
+                        <i data-lucide="arrow-right"></i>
+                    </div>
+
+
+                    ${journeyStage(
+                        "Quotation",
+                        quotationDate,
+                        hasQuotation,
+                        "file-text",
+                        hasQuotation
+                            ? "Completed"
+                            : "Not scheduled"
+                    )}
+
+
+                    <div class="journey-arrow">
+                        <i data-lucide="arrow-right"></i>
+                    </div>
+
+
+                    ${journeyStage(
+                        "2nd Meeting",
+                        secondAppointmentDate,
+                        hasSecondAppointment,
+                        "users",
+                        hasSecondAppointment
+                            ? "Completed"
+                            : "Not scheduled"
+                    )}
+
+                </div>
+
+
+                <div class="customer-journey-final-arrow">
+
+                    <i data-lucide="arrow-down"></i>
+
+                </div>
+
+
+                <div class="customer-journey-final">
+
+                    ${journeyStage(
+                        "Deal",
+                        closingDate,
+                        hasDeal,
+                        "badge-check",
+                        hasDeal
+                            ? "Completed"
+                            : "Not yet"
+                    )}
+
+                </div>
+
+            </div>
+
+        `;
+    }
+
+
+    // ========================================================
+    // DOCUMENTS PLACEHOLDER
+    // ========================================================
+
+    function renderCustomerDocuments() {
+
+        return `
+
+            <section class="profile-card customer-documents-card">
+
+                <div class="profile-card-header">
+
+                    <div>
+
+                        <h3>
+                            Customer Documents
+                        </h3>
+
+                        <p>
+                            Customer quotation and proposal documents
+                        </p>
+
+                    </div>
+
+                    <div class="profile-card-header-icon">
+
+                        <i data-lucide="folder-open"></i>
+
+                    </div>
+
+                </div>
+
+
+                <div class="customer-documents-empty">
+
+                    <div class="customer-documents-empty-icon">
+
+                        <i data-lucide="file-up"></i>
+
+                    </div>
+
+                    <strong>
+                        No documents uploaded
+                    </strong>
+
+                    <span>
+                        Upload PDF documents for this customer.
+                    </span>
+
+                </div>
+
+
+                <div class="customer-documents-upload">
+
+                    <label
+                        class="document-upload-btn"
+                        for="customer-profile-pdf"
+                    >
+
+                        <i data-lucide="upload"></i>
+
+                        Choose PDF
+
+                    </label>
+
+
+                    <input
+                        type="file"
+                        id="customer-profile-pdf"
+                        accept="application/pdf"
+                        hidden
+                    />
+
+
+                    <button
+                        type="button"
+                        class="primary-btn"
+                        data-shelter-action="upload-document"
+                    >
+
+                        <i data-lucide="upload-cloud"></i>
+
+                        Upload PDF
+
+                    </button>
+
+                </div>
+
+            </section>
+
+        `;
+    }
+
+
+    // ========================================================
     // RENDER PROFILE
     // ========================================================
 
@@ -757,6 +1214,73 @@
             );
 
 
+        const appointment =
+            formatDate(
+                customer.appointment
+            );
+
+
+        const siteSurvey =
+            formatDate(
+                customer.site_survey
+            );
+
+
+        const quotation =
+            formatDate(
+                customer.quotation
+            );
+
+
+        const closing =
+            formatDate(
+                customer.closing
+            );
+
+
+        const notes =
+            displayValue(
+                customer.notes,
+                "No notes available."
+            );
+
+
+        // ====================================================
+        // PHONE FOR WHATSAPP
+        // ====================================================
+
+        const whatsappPhone =
+            String(
+                customer.phone || ""
+            )
+            .replace(
+                /[^0-9]/g,
+                ""
+            );
+
+
+        const whatsappURL =
+            whatsappPhone
+                ? `https://wa.me/${whatsappPhone}`
+                : "#";
+
+
+        const email =
+            String(
+                customer.email || ""
+            ).trim();
+
+
+        const emailURL =
+            email
+                ? `mailto:${encodeURIComponent(email)}`
+                : "#";
+
+
+        // ====================================================
+        // FOLLOW UP BADGE
+        // ====================================================
+
         let followUpBadge = "";
 
 
@@ -844,41 +1368,6 @@
 
 
         // ====================================================
-        // DETAIL / ACTIVITY DATES
-        // ====================================================
-
-        const appointment =
-            formatDate(
-                customer.appointment
-            );
-
-
-        const siteSurvey =
-            formatDate(
-                customer.site_survey
-            );
-
-
-        const quotation =
-            formatDate(
-                customer.quotation
-            );
-
-
-        const closing =
-            formatDate(
-                customer.closing
-            );
-
-
-        const notes =
-            displayValue(
-                customer.notes,
-                "No notes available."
-            );
-
-
-        // ====================================================
         // RENDER HTML
         // ====================================================
 
@@ -886,9 +1375,15 @@
 
             <div class="customer-profile">
 
+
+                <!-- ========================================== -->
+                <!-- HEADER -->
+                <!-- ========================================== -->
+
                 <div class="customer-profile-header">
 
                     <div class="customer-profile-heading">
+
 
                         <button
                             type="button"
@@ -922,8 +1417,24 @@
                                     )}
                                 </h2>
 
-                                <p>
-                                    Customer Profile
+
+                                <p class="customer-profile-subtitle">
+
+                                    <span>
+                                        <i data-lucide="building-2"></i>
+                                        ${escapeHTML(
+                                            business
+                                        )}
+                                    </span>
+
+
+                                    <span>
+                                        <i data-lucide="map-pin"></i>
+                                        ${escapeHTML(
+                                            location
+                                        )}
+                                    </span>
+
                                 </p>
 
                             </div>
@@ -952,6 +1463,92 @@
                 </div>
 
 
+                <!-- ========================================== -->
+                <!-- ACTION BUTTONS -->
+                <!-- ========================================== -->
+
+                <div class="customer-profile-actions">
+
+                    <a
+                        href="${escapeHTML(
+                            whatsappURL
+                        )}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="profile-action-btn whatsapp-action ${
+                            whatsappPhone
+                                ? ""
+                                : "disabled"
+                        }"
+                        ${
+                            whatsappPhone
+                                ? ""
+                                : "aria-disabled=\"true\""
+                        }
+                    >
+
+                        <i data-lucide="message-circle"></i>
+
+                        WhatsApp
+
+                    </a>
+
+
+                    <a
+                        href="${escapeHTML(
+                            emailURL
+                        )}"
+                        class="profile-action-btn email-action ${
+                            email
+                                ? ""
+                                : "disabled"
+                        }"
+                        ${
+                            email
+                                ? ""
+                                : "aria-disabled=\"true\""
+                        }
+                    >
+
+                        <i data-lucide="mail"></i>
+
+                        Email
+
+                    </a>
+
+
+                    <button
+                        type="button"
+                        class="profile-action-btn appointment-action"
+                        data-shelter-action="appointment"
+                    >
+
+                        <i data-lucide="calendar-plus"></i>
+
+                        Appointment
+
+                    </button>
+
+
+                    <button
+                        type="button"
+                        class="profile-action-btn save-action"
+                        data-shelter-action="save"
+                    >
+
+                        <i data-lucide="save"></i>
+
+                        Save
+
+                    </button>
+
+                </div>
+
+
+                <!-- ========================================== -->
+                <!-- FOLLOW UP -->
+                <!-- ========================================== -->
+
                 <section
                     class="profile-followup-card ${escapeHTML(
                         followUpInfo.className
@@ -968,23 +1565,31 @@
                     <div class="profile-followup-content">
 
                         <span class="profile-followup-label">
-                            Follow Up
+                            FOLLOW-UP
                         </span>
 
+
                         <strong>
-                            ${escapeHTML(
+
+                            ${
                                 customer.follow_up_date
-                                    ? formatDate(
-                                        customer.follow_up_date
+                                    ? escapeHTML(
+                                        formatDate(
+                                            customer.follow_up_date
+                                        )
                                     )
                                     : "No date set"
-                            )}
+                            }
+
                         </strong>
 
+
                         <small>
+
                             ${escapeHTML(
                                 followUpInfo.detail
                             )}
+
                         </small>
 
                     </div>
@@ -994,16 +1599,23 @@
 
                         ${followUpBadge}
 
+
                         <span class="followup-days-text">
+
                             ${escapeHTML(
                                 followUpDaysText
                             )}
+
                         </span>
 
                     </div>
 
                 </section>
 
+
+                <!-- ========================================== -->
+                <!-- CUSTOMER INFORMATION -->
+                <!-- ========================================== -->
 
                 <section class="profile-card">
 
@@ -1015,10 +1627,6 @@
                                 Customer Information
                             </h3>
 
-                            <p>
-                                Basic customer details
-                            </p>
-
                         </div>
 
                     </div>
@@ -1026,17 +1634,24 @@
 
                     <div class="profile-info-grid">
 
+
                         <div class="profile-info-item">
 
                             <span class="profile-info-label">
+
                                 <i data-lucide="user-round"></i>
+
                                 Customer Name
+
                             </span>
 
+
                             <strong>
+
                                 ${escapeHTML(
                                     customerName
                                 )}
+
                             </strong>
 
                         </div>
@@ -1045,14 +1660,20 @@
                         <div class="profile-info-item">
 
                             <span class="profile-info-label">
+
                                 <i data-lucide="phone"></i>
+
                                 Phone
+
                             </span>
 
+
                             <strong>
+
                                 ${escapeHTML(
                                     phone
                                 )}
+
                             </strong>
 
                         </div>
@@ -1061,14 +1682,20 @@
                         <div class="profile-info-item">
 
                             <span class="profile-info-label">
+
                                 <i data-lucide="building-2"></i>
+
                                 Business
+
                             </span>
 
+
                             <strong>
+
                                 ${escapeHTML(
                                     business
                                 )}
+
                             </strong>
 
                         </div>
@@ -1077,14 +1704,20 @@
                         <div class="profile-info-item">
 
                             <span class="profile-info-label">
+
                                 <i data-lucide="map-pin"></i>
+
                                 Location
+
                             </span>
 
+
                             <strong>
+
                                 ${escapeHTML(
                                     location
                                 )}
+
                             </strong>
 
                         </div>
@@ -1093,14 +1726,20 @@
                         <div class="profile-info-item">
 
                             <span class="profile-info-label">
+
                                 <i data-lucide="briefcase-business"></i>
+
                                 Sales
+
                             </span>
 
+
                             <strong>
+
                                 ${escapeHTML(
                                     salesName
                                 )}
+
                             </strong>
 
                         </div>
@@ -1109,18 +1748,26 @@
                         <div class="profile-info-item">
 
                             <span class="profile-info-label">
+
                                 <i data-lucide="calendar-check"></i>
+
                                 Follow Up Date
+
                             </span>
 
+
                             <strong>
-                                ${escapeHTML(
+
+                                ${
                                     customer.follow_up_date
-                                        ? formatDate(
-                                            customer.follow_up_date
+                                        ? escapeHTML(
+                                            formatDate(
+                                                customer.follow_up_date
+                                            )
                                         )
                                         : "Not scheduled"
-                                )}
+                                }
+
                             </strong>
 
                         </div>
@@ -1130,14 +1777,18 @@
                 </section>
 
 
-                <section class="profile-card">
+                <!-- ========================================== -->
+                <!-- CUSTOMER JOURNEY -->
+                <!-- ========================================== -->
+
+                <section class="profile-card customer-journey-card">
 
                     <div class="profile-card-header">
 
                         <div>
 
                             <h3>
-                                Sales Pipeline
+                                Customer Journey
                             </h3>
 
                             <p>
@@ -1149,130 +1800,16 @@
                     </div>
 
 
-                    <div class="profile-pipeline-grid">
-
-                        <div class="pipeline-date-item">
-
-                            <div class="pipeline-date-icon">
-                                <i data-lucide="phone-call"></i>
-                            </div>
-
-                            <div>
-
-                                <span>
-                                    Follow Up
-                                </span>
-
-                                <strong>
-                                    ${escapeHTML(
-                                        customer.follow_up_date
-                                            ? formatDate(
-                                                customer.follow_up_date
-                                            )
-                                            : "—"
-                                    )}
-                                </strong>
-
-                            </div>
-
-                        </div>
-
-
-                        <div class="pipeline-date-item">
-
-                            <div class="pipeline-date-icon">
-                                <i data-lucide="calendar-check"></i>
-                            </div>
-
-                            <div>
-
-                                <span>
-                                    Appointment
-                                </span>
-
-                                <strong>
-                                    ${escapeHTML(
-                                        appointment
-                                    )}
-                                </strong>
-
-                            </div>
-
-                        </div>
-
-
-                        <div class="pipeline-date-item">
-
-                            <div class="pipeline-date-icon">
-                                <i data-lucide="map-pin"></i>
-                            </div>
-
-                            <div>
-
-                                <span>
-                                    Site Survey
-                                </span>
-
-                                <strong>
-                                    ${escapeHTML(
-                                        siteSurvey
-                                    )}
-                                </strong>
-
-                            </div>
-
-                        </div>
-
-
-                        <div class="pipeline-date-item">
-
-                            <div class="pipeline-date-icon">
-                                <i data-lucide="file-text"></i>
-                            </div>
-
-                            <div>
-
-                                <span>
-                                    Quotation
-                                </span>
-
-                                <strong>
-                                    ${escapeHTML(
-                                        quotation
-                                    )}
-                                </strong>
-
-                            </div>
-
-                        </div>
-
-
-                        <div class="pipeline-date-item">
-
-                            <div class="pipeline-date-icon">
-                                <i data-lucide="badge-check"></i>
-                            </div>
-
-                            <div>
-
-                                <span>
-                                    Closing
-                                </span>
-
-                                <strong>
-                                    ${escapeHTML(
-                                        closing
-                                    )}
-                                </strong>
-
-                            </div>
-
-                        </div>
-
-                    </div>
+                    ${renderCustomerJourney(
+                        customer
+                    )}
 
                 </section>
 
+
+                <!-- ========================================== -->
+                <!-- NOTES -->
+                <!-- ========================================== -->
 
                 <section class="profile-card">
 
@@ -1297,16 +1834,30 @@
 
                         <i data-lucide="notebook-pen"></i>
 
+
                         <p>
+
                             ${escapeHTML(
                                 notes
                             )}
+
                         </p>
 
                     </div>
 
                 </section>
 
+
+                <!-- ========================================== -->
+                <!-- CUSTOMER DOCUMENTS -->
+                <!-- ========================================== -->
+
+                ${renderCustomerDocuments()}
+
+
+                <!-- ========================================== -->
+                <!-- RECORD INFORMATION -->
+                <!-- ========================================== -->
 
                 <section class="profile-card profile-meta-card">
 
@@ -1329,17 +1880,24 @@
 
                     <div class="profile-info-grid">
 
+
                         <div class="profile-info-item">
 
                             <span class="profile-info-label">
+
                                 <i data-lucide="calendar-plus"></i>
+
                                 Created
+
                             </span>
 
+
                             <strong>
+
                                 ${escapeHTML(
                                     createdAt
                                 )}
+
                             </strong>
 
                         </div>
@@ -1348,14 +1906,108 @@
                         <div class="profile-info-item">
 
                             <span class="profile-info-label">
+
                                 <i data-lucide="refresh-cw"></i>
+
                                 Last Updated
+
                             </span>
 
+
                             <strong>
+
                                 ${escapeHTML(
                                     updatedAt
                                 )}
+
+                            </strong>
+
+                        </div>
+
+
+                        <div class="profile-info-item">
+
+                            <span class="profile-info-label">
+
+                                <i data-lucide="calendar-check-2"></i>
+
+                                Appointment
+
+                            </span>
+
+
+                            <strong>
+
+                                ${escapeHTML(
+                                    appointment
+                                )}
+
+                            </strong>
+
+                        </div>
+
+
+                        <div class="profile-info-item">
+
+                            <span class="profile-info-label">
+
+                                <i data-lucide="map"></i>
+
+                                Site Survey
+
+                            </span>
+
+
+                            <strong>
+
+                                ${escapeHTML(
+                                    siteSurvey
+                                )}
+
+                            </strong>
+
+                        </div>
+
+
+                        <div class="profile-info-item">
+
+                            <span class="profile-info-label">
+
+                                <i data-lucide="file-text"></i>
+
+                                Quotation
+
+                            </span>
+
+
+                            <strong>
+
+                                ${escapeHTML(
+                                    quotation
+                                )}
+
+                            </strong>
+
+                        </div>
+
+
+                        <div class="profile-info-item">
+
+                            <span class="profile-info-label">
+
+                                <i data-lucide="badge-check"></i>
+
+                                Closing
+
+                            </span>
+
+
+                            <strong>
+
+                                ${escapeHTML(
+                                    closing
+                                )}
+
                             </strong>
 
                         </div>
@@ -1363,6 +2015,7 @@
                     </div>
 
                 </section>
+
 
             </div>
 
@@ -2168,6 +2821,10 @@
                     );
 
 
+                // ------------------------------------------
+                // BACK
+                // ------------------------------------------
+
                 if (
                     action === "back"
                 ) {
@@ -2176,6 +2833,106 @@
 
                     backToLeads();
 
+                    return;
+                }
+
+
+                // ------------------------------------------
+                // APPOINTMENT
+                // ------------------------------------------
+
+                if (
+                    action === "appointment"
+                ) {
+
+                    event.preventDefault();
+
+                    console.log(
+                        "[FSI Customer Profile] Appointment clicked."
+                    );
+
+                    /*
+                     * Appointment belum dipaksa masuk
+                     * ke database di sini.
+                     *
+                     * Tetap menggunakan sistem existing.
+                     */
+
+                    if (
+                        typeof window.crmOpenAppointment ===
+                        "function"
+                    ) {
+
+                        window.crmOpenAppointment(
+                            currentCustomerId
+                        );
+
+                    }
+
+                    return;
+                }
+
+
+                // ------------------------------------------
+                // SAVE
+                // ------------------------------------------
+
+                if (
+                    action === "save"
+                ) {
+
+                    event.preventDefault();
+
+                    console.log(
+                        "[FSI Customer Profile] Save clicked."
+                    );
+
+                    /*
+                     * Save sengaja tidak melakukan
+                     * UPDATE Supabase secara otomatis.
+                     *
+                     * Edit Customer tetap ditangani
+                     * oleh customer-form.js.
+                     */
+
+                    if (
+                        typeof window.crmSaveCustomer ===
+                        "function"
+                    ) {
+
+                        window.crmSaveCustomer(
+                            currentCustomerId
+                        );
+
+                    }
+
+                    return;
+                }
+
+
+                // ------------------------------------------
+                // UPLOAD DOCUMENT
+                // ------------------------------------------
+
+                if (
+                    action === "upload-document"
+                ) {
+
+                    event.preventDefault();
+
+                    const fileInput =
+                        document.getElementById(
+                            "customer-profile-pdf"
+                        );
+
+
+                    if (fileInput) {
+
+                        fileInput.click();
+
+                    }
+
+                    return;
                 }
 
             }
