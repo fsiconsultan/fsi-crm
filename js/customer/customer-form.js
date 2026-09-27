@@ -32,6 +32,7 @@
 // - Customer Name
 // - Phone
 // - Business
+// - Lead Type
 // - Location
 // - Status
 // - Input Date
@@ -51,6 +52,10 @@
 // Field database lama tetap ada.
 // File ini hanya tidak lagi membaca / menulis field tersebut
 // dari Add / Edit Customer Form.
+//
+// LEAD TYPE:
+// - Customer
+// - Partner
 //
 // UPDATED_AT:
 // - Customer baru → updated_at = waktu dibuat
@@ -824,6 +829,14 @@
         resetForm();
 
 
+        // Pastikan Lead Type awal selalu Customer.
+
+        setValue(
+            "leadType",
+            "Customer"
+        );
+
+
         // Pastikan status awal selalu New.
 
         setValue(
@@ -965,6 +978,16 @@
             setValue(
                 "leadBusiness",
                 customer.business
+            );
+
+
+            // =================================================
+            // LEAD TYPE
+            // =================================================
+
+            setValue(
+                "leadType",
+                customer.lead_type || "Customer"
             );
 
 
@@ -1205,6 +1228,16 @@
 
 
         // =====================================================
+        // LEAD TYPE
+        // =====================================================
+
+        const leadType =
+            getValue(
+                "leadType"
+            ) || "Customer";
+
+
+        // =====================================================
         // PAYLOAD
         // =====================================================
 
@@ -1225,6 +1258,9 @@
                 getValue(
                     "leadLocation"
                 ) || null,
+
+            lead_type:
+                leadType,
 
             status:
                 normalizedStatus,
