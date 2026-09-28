@@ -1,4 +1,3 @@
-```js
 // ============================================================
 // DASHBOARD GREETING
 // ============================================================
@@ -29,6 +28,9 @@ function dashboardUpdateGreeting(profile) {
      * ========================================================
      * AMBIL NAMA USER
      * ========================================================
+     *
+     * Mendukung beberapa kemungkinan nama field
+     * tanpa mengganggu struktur profile yang sekarang.
      */
     const userName =
         String(
@@ -121,6 +123,10 @@ function dashboardUpdateGreeting(profile) {
         );
 
 
+    /*
+     * Jika element belum ada,
+     * buat otomatis.
+     */
     if (!greetingElement) {
 
         greetingElement =
@@ -161,6 +167,9 @@ function dashboardUpdateGreeting(profile) {
             "1.3";
 
 
+        /*
+         * Cari halaman Dashboard.
+         */
         const dashboardPage =
             dashboardFindPage(
                 "dashboard"
@@ -169,6 +178,10 @@ function dashboardUpdateGreeting(profile) {
 
         if (dashboardPage) {
 
+            /*
+             * Masukkan greeting
+             * sebagai element pertama.
+             */
             dashboardPage.prepend(
                 greetingElement
             );
@@ -202,6 +215,10 @@ function dashboardUpdateGreeting(profile) {
      * ========================================================
      * ROLE INFO
      * ========================================================
+     *
+     * Tidak mengubah tampilan utama.
+     * Hanya menyimpan informasi role di dataset
+     * jika nanti dibutuhkan.
      */
     greetingElement.dataset.role =
         role ||
@@ -219,447 +236,6 @@ function dashboardUpdateGreeting(profile) {
             name: displayName,
             role: role || "Guest",
             hour
-        }
-    );
-}
-
-
-// ============================================================
-// DASHBOARD NUMBER COUNT-UP ANIMATION
-// ============================================================
-//
-// Animasi angka statistik Dashboard.
-//
-// Contoh:
-//
-// 0 → 25
-// 0 → 120
-// 0 → 8
-//
-// Fungsi ini dibuat terpisah agar tidak mengubah
-// perhitungan statistik yang sudah ada.
-// ============================================================
-
-function dashboardAnimateNumber(
-    element,
-    targetValue,
-    duration = 800
-) {
-
-    if (!element) {
-        return;
-    }
-
-
-    /*
-     * Pastikan target berupa angka.
-     */
-    const target =
-        Number(
-            String(
-                targetValue ?? 0
-            ).replace(
-                /[^0-9.-]/g,
-                ""
-            )
-        );
-
-
-    if (
-        !Number.isFinite(target)
-    ) {
-
-        return;
-    }
-
-
-    /*
-     * Batalkan animasi sebelumnya
-     * jika element sedang dianimasikan.
-     */
-    if (
-        element._fsiCountUpFrame
-    ) {
-
-        cancelAnimationFrame(
-            element._fsiCountUpFrame
-        );
-    }
-
-
-    const startTime =
-        performance.now();
-
-
-    const startValue =
-        Number(
-            element.dataset.countValue ||
-            0
-        );
-
-
-    const difference =
-        target -
-        startValue;
-
-
-    /*
-     * Simpan target terakhir.
-     */
-    element.dataset.countValue =
-        String(target);
-
-
-    /*
-     * Jika user mengaktifkan
-     * reduced motion, langsung tampilkan angka.
-     */
-    const reduceMotion =
-        window.matchMedia &&
-        window.matchMedia(
-            "(prefers-reduced-motion: reduce)"
-        ).matches;
-
-
-    if (reduceMotion) {
-
-        element.textContent =
-            target.toLocaleString(
-                "en-US"
-            );
-
-        return;
-    }
-
-
-    /*
-     * Jika tidak ada perubahan,
-     * tidak perlu animasi ulang.
-     */
-    if (
-        difference === 0
-    ) {
-
-        element.textContent =
-            target.toLocaleString(
-                "en-US"
-            );
-
-        return;
-    }
-
-
-    /*
-     * Easing agar gerakan angka
-     * terasa lebih natural.
-     */
-    function easeOutCubic(
-        progress
-    ) {
-
-        return 1 -
-            Math.pow(
-                1 - progress,
-                3
-            );
-    }
-
-
-    function animate(
-        currentTime
-    ) {
-
-        const elapsed =
-            currentTime -
-            startTime;
-
-
-        const progress =
-            Math.min(
-                elapsed /
-                duration,
-                1
-            );
-
-
-        const easedProgress =
-            easeOutCubic(
-                progress
-            );
-
-
-        const currentValue =
-            startValue +
-            (
-                difference *
-                easedProgress
-            );
-
-
-        element.textContent =
-            Math.round(
-                currentValue
-            ).toLocaleString(
-                "en-US"
-            );
-
-
-        if (
-            progress < 1
-        ) {
-
-            element._fsiCountUpFrame =
-                requestAnimationFrame(
-                    animate
-                );
-
-        } else {
-
-            element.textContent =
-                target.toLocaleString(
-                    "en-US"
-                );
-
-
-            element._fsiCountUpFrame =
-                null;
-        }
-    }
-
-
-    element._fsiCountUpFrame =
-        requestAnimationFrame(
-            animate
-        );
-}
-
-
-// ============================================================
-// ANIMATE DASHBOARD STAT NUMBERS
-// ============================================================
-//
-// Fungsi ini mencari angka pada kartu statistik
-// setelah renderDashboardStats() selesai.
-//
-// Tidak mengubah HTML render statistik.
-// ============================================================
-
-function dashboardAnimateStatNumbers(
-    stats
-) {
-
-    if (!stats) {
-        return;
-    }
-
-
-    const statContainer =
-        document.querySelector(
-            ".stats-grid"
-        );
-
-
-    if (!statContainer) {
-
-        return;
-    }
-
-
-    /*
-     * Cari semua angka statistik.
-     */
-    const statNumbers =
-        statContainer.querySelectorAll(
-            ".stat-details strong"
-        );
-
-
-    if (
-        !statNumbers.length
-    ) {
-
-        return;
-    }
-
-
-    /*
-     * Ambil angka dari stats berdasarkan
-     * urutan kartu yang sudah dirender.
-     *
-     * Urutan normal:
-     *
-     * 1. Total
-     * 2. New
-     * 3. Interested
-     * 4. Follow Up
-     * 5. Closing
-     */
-    const values = [
-
-        Number(
-            stats.total || 0
-        ),
-
-        Number(
-            stats.new || 0
-        ),
-
-        Number(
-            stats.interested || 0
-        ),
-
-        Number(
-            stats.followUp || 0
-        ),
-
-        Number(
-            stats.closing || 0
-        )
-
-    ];
-
-
-    statNumbers.forEach(
-        (
-            element,
-            index
-        ) => {
-
-            const value =
-                values[index];
-
-
-            if (
-                typeof value !==
-                "number"
-            ) {
-
-                return;
-            }
-
-
-            /*
-             * Delay kecil mengikuti
-             * animasi kartu Dashboard.
-             */
-            setTimeout(
-                function () {
-
-                    dashboardAnimateNumber(
-                        element,
-                        value,
-                        850
-                    );
-
-                },
-                index * 90
-            );
-        }
-    );
-}
-
-
-// ============================================================
-// DASHBOARD ELEMENT ENTRANCE
-// ============================================================
-//
-// Memastikan element yang baru dirender mendapatkan
-// class animasi yang sudah disiapkan di dashboard.css.
-//
-// CSS animation tetap menjadi sumber utama animasi.
-// Fungsi ini hanya membantu ketika data dirender ulang.
-// ============================================================
-
-function dashboardAnimateRenderedContent() {
-
-    /*
-     * ========================================================
-     * STAT CARDS
-     * ========================================================
-     */
-    const statCards =
-        document.querySelectorAll(
-            ".stats-grid .stat-card"
-        );
-
-
-    statCards.forEach(
-        (
-            card,
-            index
-        ) => {
-
-            card.style.animationDelay =
-                `${index * 70}ms`;
-        }
-    );
-
-
-    /*
-     * ========================================================
-     * PIPELINE ITEMS
-     * ========================================================
-     */
-    const pipelineItems =
-        document.querySelectorAll(
-            ".pipeline-item"
-        );
-
-
-    pipelineItems.forEach(
-        (
-            item,
-            index
-        ) => {
-
-            item.style.animationDelay =
-                `${index * 60}ms`;
-        }
-    );
-
-
-    /*
-     * ========================================================
-     * RECENT LEADS
-     * ========================================================
-     */
-    const recentItems =
-        document.querySelectorAll(
-            ".recent-lead-item"
-        );
-
-
-    recentItems.forEach(
-        (
-            item,
-            index
-        ) => {
-
-            item.style.animationDelay =
-                `${index * 55}ms`;
-        }
-    );
-
-
-    /*
-     * ========================================================
-     * PROFILE PIPELINE
-     * ========================================================
-     */
-    const dateItems =
-        document.querySelectorAll(
-            ".pipeline-date-item"
-        );
-
-
-    dateItems.forEach(
-        (
-            item,
-            index
-        ) => {
-
-            item.style.animationDelay =
-                `${index * 60}ms`;
         }
     );
 }
@@ -684,7 +260,7 @@ async function updateDashboard() {
 
 
     // ========================================================
-    // GREETING
+    // TAMBAHAN GREETING
     // ========================================================
     dashboardUpdateGreeting(
         profile
@@ -725,6 +301,24 @@ async function updateDashboard() {
          * ========================================================
          * FILTER DATA DASHBOARD BERDASARKAN SALES
          * ========================================================
+         *
+         * Sales biasa:
+         * dashboardFetchLeads() sudah membatasi
+         * berdasarkan sales_id miliknya.
+         *
+         * Admin:
+         *
+         * All Sales
+         *      -> semua leads
+         *
+         * Sales A
+         *      -> hanya leads Sales A
+         *
+         * Sales B
+         *      -> hanya leads Sales B
+         *
+         * Sales C
+         *      -> hanya leads Sales C
          */
         let scopedDashboardData =
             [...rawDashboardData];
@@ -792,6 +386,9 @@ async function updateDashboard() {
          * ========================================================
          * STATUS PIPELINE BARU
          * ========================================================
+         *
+         * Tetap dipertahankan agar tidak menghilangkan
+         * fungsi Dashboard yang sudah berjalan.
          */
         if (!window.FSIDashboard.statuses) {
 
@@ -831,6 +428,12 @@ async function updateDashboard() {
          * PASTIKAN STATISTIK UTAMA BENAR-BENAR
          * MENGGUNAKAN DATA SALES YANG SUDAH TERFILTER
          * ========================================================
+         *
+         * Total Leads
+         * New
+         * Interested
+         * Follow Up
+         * Closing
          */
         stats.total =
             dashboardData.length;
@@ -902,16 +505,6 @@ async function updateDashboard() {
 
         /*
          * ========================================================
-         * ANIMASI ANGKA STATISTIK
-         * ========================================================
-         */
-        dashboardAnimateStatNumbers(
-            stats
-        );
-
-
-        /*
-         * ========================================================
          * RENDER PIPELINE
          * ========================================================
          */
@@ -928,14 +521,6 @@ async function updateDashboard() {
         renderDashboardRecentLeads(
             dashboardData
         );
-
-
-        /*
-         * ========================================================
-         * ANIMASI CONTENT DASHBOARD
-         * ========================================================
-         */
-        dashboardAnimateRenderedContent();
 
 
         /*
@@ -1071,15 +656,6 @@ async function updateDashboard() {
         );
 
 
-        /*
-         * Animasi angka juga tetap dijalankan
-         * ketika hasil kosong.
-         */
-        dashboardAnimateStatNumbers(
-            emptyStats
-        );
-
-
         renderDashboardPipeline(
             []
         );
@@ -1088,9 +664,6 @@ async function updateDashboard() {
         renderDashboardRecentLeads(
             []
         );
-
-
-        dashboardAnimateRenderedContent();
 
 
         if (
@@ -1127,6 +700,21 @@ async function updateDashboard() {
 
 // ============================================================
 // GET SELECTED SALES ID
+// ============================================================
+//
+// Fungsi ini khusus membaca Sales yang sedang dipilih
+// pada Dashboard.
+//
+// Dashboard menggunakan:
+// #salesFilter
+//
+// Filter Leads tetap menggunakan:
+// #filter-sales
+//
+// Keduanya sengaja dipisahkan agar tidak saling mengganggu.
+//
+// Jika value kosong:
+// berarti All Sales.
 // ============================================================
 
 function dashboardGetSelectedSalesId() {
@@ -1169,6 +757,16 @@ function dashboardGetSelectedSalesId() {
 // ============================================================
 // REFRESH DASHBOARD
 // ============================================================
+//
+// Ketika Admin mengganti Sales pada Dashboard:
+//
+// All Sales
+// Sales A
+// Sales B
+// Sales C
+//
+// Dashboard langsung menghitung ulang.
+// ============================================================
 
 function dashboardBindSalesFilterChange() {
 
@@ -1208,6 +806,10 @@ function dashboardBindSalesFilterChange() {
             }
 
 
+            /*
+             * Hanya Admin yang menggunakan
+             * filter Sales Dashboard.
+             */
             if (
                 !dashboardIsAdmin()
             ) {
@@ -1215,6 +817,10 @@ function dashboardBindSalesFilterChange() {
             }
 
 
+            /*
+             * Refresh Dashboard
+             * dengan Sales yang baru dipilih.
+             */
             updateDashboard();
 
         }
@@ -1230,7 +836,6 @@ function dashboardBindSalesFilterChange() {
 // ============================================================
 // REFRESH DASHBOARD
 // ============================================================
-
 async function refreshDashboard() {
 
     if (
@@ -1309,6 +914,21 @@ function getDashboardStats() {
 // ============================================================
 // VIEW ALL BUTTON
 // ============================================================
+//
+// index.html terbaru:
+//
+// <button
+//     type="button"
+//     class="btn-outline"
+//     data-page="leads"
+// >
+//     <span>View All</span>
+//     ...
+// </button>
+//
+// Dashboard tetap mendukung navigation.js.
+// Binding ini hanya menjadi fallback.
+// ============================================================
 
 let dashboardViewAllBound =
     false;
@@ -1358,6 +978,10 @@ function dashboardBindViewAllButton() {
                 "click",
                 async function (event) {
 
+                    /*
+                     * Jika navigation.js sudah bekerja,
+                     * event tetap aman.
+                     */
                     event.preventDefault();
 
 
@@ -1396,6 +1020,10 @@ document.addEventListener(
     "fsi:lead-changed",
     function () {
 
+        /*
+         * Jika user sedang berada di Dashboard,
+         * langsung refresh angka.
+         */
         const page =
             dashboardFindPage(
                 "dashboard"
@@ -1443,6 +1071,9 @@ document.addEventListener(
             null;
 
 
+        /*
+         * Tutup popup jika user profile berubah.
+         */
         dashboardCloseStatPopup();
 
 
@@ -1466,6 +1097,11 @@ document.addEventListener(
         );
 
 
+        /*
+         * Jangan langsung query jika profile belum siap.
+         * Auth module akan memanggil showDashboard()
+         * setelah profile berhasil dimuat.
+         */
         const profile =
             dashboardGetProfile();
 
@@ -1753,23 +1389,9 @@ window.dashboardUpdateGreeting =
 
 
 /*
- * Number animation exports.
- */
-window.dashboardAnimateNumber =
-    dashboardAnimateNumber;
-
-
-window.dashboardAnimateStatNumbers =
-    dashboardAnimateStatNumbers;
-
-
-window.dashboardAnimateRenderedContent =
-    dashboardAnimateRenderedContent;
-
-
-/*
  * Statistic popup exports.
  */
+
 window.dashboardOpenStatPopup =
     dashboardOpenStatPopup;
 
@@ -1861,15 +1483,6 @@ Object.assign(
          */
         dashboardUpdateGreeting,
 
-        /*
-         * Dashboard animation.
-         */
-        dashboardAnimateNumber,
-
-        dashboardAnimateStatNumbers,
-
-        dashboardAnimateRenderedContent,
-
         dashboardOpenStatPopup,
 
         dashboardCloseStatPopup,
@@ -1909,4 +1522,3 @@ Object.assign(
 console.log(
     "FSI CRM: Dashboard module initialized."
 );
-```
