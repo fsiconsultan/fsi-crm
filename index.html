@@ -817,7 +817,7 @@
 
 
                     <!-- =================================================
-                         MAIN DASHBOARD STATS
+                         DASHBOARD STATS
                     ================================================== -->
 
                     <div class="stats-grid">
@@ -848,7 +848,7 @@
                                 </strong>
 
                                 <small>
-                                    Total customers
+                                    All customers
                                 </small>
 
                             </div>
@@ -857,7 +857,7 @@
 
 
 
-                        <!-- NEW -->
+                        <!-- 1. NEW -->
 
                         <article class="stat-card">
 
@@ -891,7 +891,7 @@
 
 
 
-                        <!-- INTERESTED -->
+                        <!-- 2. FIRST CONTACT -->
 
                         <article class="stat-card">
 
@@ -908,7 +908,7 @@
                             <div class="stat-details">
 
                                 <span>
-                                    Interested
+                                    First Contact
                                 </span>
 
                                 <strong id="statInterested">
@@ -916,7 +916,7 @@
                                 </strong>
 
                                 <small>
-                                    Interested customers
+                                    First contact stage
                                 </small>
 
                             </div>
@@ -925,7 +925,7 @@
 
 
 
-                        <!-- FOLLOW UP -->
+                        <!-- 3. FIRST MEETING / APPOINTMENT / SITE SURVEY -->
 
                         <article class="stat-card">
 
@@ -942,7 +942,7 @@
                             <div class="stat-details">
 
                                 <span>
-                                    Follow Up
+                                    First Meeting / Appointment / Site Survey
                                 </span>
 
                                 <strong id="statFollowUp">
@@ -950,7 +950,7 @@
                                 </strong>
 
                                 <small>
-                                    Customers to follow up
+                                    Meeting or survey stage
                                 </small>
 
                             </div>
@@ -959,7 +959,75 @@
 
 
 
-                        <!-- CLOSING -->
+                        <!-- 4. QUOTATION -->
+
+                        <article class="stat-card">
+
+                            <div class="stat-icon bg-yellow">
+
+                                <i
+                                    data-lucide="file-text"
+                                    aria-hidden="true"
+                                ></i>
+
+                            </div>
+
+
+                            <div class="stat-details">
+
+                                <span>
+                                    Quotation
+                                </span>
+
+                                <strong id="statQuotation">
+                                    0
+                                </strong>
+
+                                <small>
+                                    Quotation stage
+                                </small>
+
+                            </div>
+
+                        </article>
+
+
+
+                        <!-- 5. SECOND APPOINTMENT -->
+
+                        <article class="stat-card">
+
+                            <div class="stat-icon bg-purple">
+
+                                <i
+                                    data-lucide="calendar-clock"
+                                    aria-hidden="true"
+                                ></i>
+
+                            </div>
+
+
+                            <div class="stat-details">
+
+                                <span>
+                                    Second Appointment
+                                </span>
+
+                                <strong id="statAppointment">
+                                    0
+                                </strong>
+
+                                <small>
+                                    Second meeting stage
+                                </small>
+
+                            </div>
+
+                        </article>
+
+
+
+                        <!-- 6. DEAL -->
 
                         <article class="stat-card">
 
@@ -976,15 +1044,49 @@
                             <div class="stat-details">
 
                                 <span>
-                                    Closing
+                                    Deal
                                 </span>
 
-                                <strong id="statClosing">
+                                <strong id="statSPK">
                                     0
                                 </strong>
 
                                 <small>
-                                    Closing customers
+                                    Successful deals
+                                </small>
+
+                            </div>
+
+                        </article>
+
+
+
+                        <!-- 7. NO DEAL -->
+
+                        <article class="stat-card">
+
+                            <div class="stat-icon bg-red">
+
+                                <i
+                                    data-lucide="user-round-x"
+                                    aria-hidden="true"
+                                ></i>
+
+                            </div>
+
+
+                            <div class="stat-details">
+
+                                <span>
+                                    No Deal
+                                </span>
+
+                                <strong id="statNotInterested">
+                                    0
+                                </strong>
+
+                                <small>
+                                    Customers not continuing
                                 </small>
 
                             </div>
@@ -994,47 +1096,11 @@
 
 
                         <!-- =================================================
-                             LEGACY IDS
-                             KEPT FOR JAVASCRIPT COMPATIBILITY
+                             LEGACY ID KEPT FOR JAVASCRIPT COMPATIBILITY
                         ================================================== -->
 
                         <strong
-                            id="statFlyerSent"
-                            style="display:none;"
-                        >
-                            0
-                        </strong>
-
-                        <strong
-                            id="statAppointment"
-                            style="display:none;"
-                        >
-                            0
-                        </strong>
-
-                        <strong
-                            id="statSiteSurvey"
-                            style="display:none;"
-                        >
-                            0
-                        </strong>
-
-                        <strong
-                            id="statQuotation"
-                            style="display:none;"
-                        >
-                            0
-                        </strong>
-
-                        <strong
-                            id="statSPK"
-                            style="display:none;"
-                        >
-                            0
-                        </strong>
-
-                        <strong
-                            id="statNotInterested"
+                            id="statClosing"
                             style="display:none;"
                         >
                             0
@@ -1049,11 +1115,6 @@
                     ================================================== -->
 
                     <div class="dashboard-grid">
-
-
-                        <!-- =================================================
-                             SALES PIPELINE
-                        ================================================== -->
 
                         <section class="dashboard-card">
 
@@ -1087,11 +1148,6 @@
 
                         </section>
 
-
-
-                        <!-- =================================================
-                             RECENT LEADS
-                        ================================================== -->
 
                         <section class="dashboard-card">
 
