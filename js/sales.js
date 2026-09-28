@@ -585,6 +585,13 @@
     // ========================================================
     // POPULATE LEAD SALES FILTER
     // ========================================================
+    //
+    // KHUSUS FILTER LEADS.
+    //
+    // IMPORTANT:
+    // #salesFilter TIDAK digunakan di sini karena
+    // sekarang #salesFilter adalah filter Dashboard.
+    // ========================================================
 
     function populateLeadSalesFilter(
         activeSales
@@ -592,7 +599,6 @@
 
         const salesFilter =
             salesElement(
-                "salesFilter",
                 "leadSalesFilter",
                 "filter-sales",
                 "filterSales"
@@ -613,6 +619,7 @@
             );
 
         allOption.value = "";
+
         allOption.textContent =
             "All Sales";
 
@@ -644,6 +651,112 @@
 
         const exists =
             activeSales.some(
+                function (sales) {
+
+                    return String(
+                        sales.id
+                    ) === String(
+                        currentValue
+                    );
+                }
+            );
+
+        salesFilter.value =
+            exists
+                ? currentValue
+                : "";
+    }
+
+    // ========================================================
+    // POPULATE DASHBOARD SALES FILTER
+    // ========================================================
+    //
+    // KHUSUS DASHBOARD ADMIN.
+    //
+    // #salesFilter:
+    //
+    // All Sales
+    // Sales A
+    // Sales B
+    // Sales C
+    //
+    // Hanya Active Sales.
+    // Admin / Owner tidak dimasukkan sebagai pilihan Sales.
+    // ========================================================
+
+    function populateDashboardSalesFilter(
+        activeSales
+    ) {
+
+        const salesFilter =
+            document.getElementById(
+                "salesFilter"
+            );
+
+        if (!salesFilter) {
+            return;
+        }
+
+        const currentValue =
+            salesFilter.value || "";
+
+        salesFilter.innerHTML = "";
+
+        // ----------------------------------------------------
+        // ALL SALES
+        // ----------------------------------------------------
+
+        const allOption =
+            document.createElement(
+                "option"
+            );
+
+        allOption.value = "";
+
+        allOption.textContent =
+            "All Sales";
+
+        salesFilter.appendChild(
+            allOption
+        );
+
+        // ----------------------------------------------------
+        // ACTIVE SALES
+        // ----------------------------------------------------
+
+        const salesList =
+            Array.isArray(activeSales)
+                ? activeSales
+                : [];
+
+        salesList.forEach(
+            function (sales) {
+
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+                option.value =
+                    sales.id || "";
+
+                option.textContent =
+                    getSalesDisplayName(
+                        sales
+                    );
+
+                salesFilter.appendChild(
+                    option
+                );
+            }
+        );
+
+        // ----------------------------------------------------
+        // RESTORE CURRENT VALUE
+        // ----------------------------------------------------
+
+        const exists =
+            salesList.some(
                 function (sales) {
 
                     return String(
@@ -908,6 +1021,15 @@
 
         populateTopSalesDropdown(
             leadAssignableUsers
+        );
+
+        // ----------------------------------------------------
+        // DASHBOARD FILTER
+        // Admin + Active Sales
+        // ----------------------------------------------------
+
+        populateDashboardSalesFilter(
+            activeSales
         );
 
         // ----------------------------------------------------
@@ -2313,6 +2435,12 @@
     // ========================================================
     // TOP SALES FILTER
     // ========================================================
+    //
+    // FILTER INI KHUSUS UNTUK LEADS.
+    //
+    // #salesFilter TIDAK digunakan karena sekarang
+    // dipakai khusus Dashboard.
+    // ========================================================
 
     function applyTopSalesFilter(
         salesId
@@ -2320,7 +2448,6 @@
 
         const salesFilter =
             salesElement(
-                "salesFilter",
                 "leadSalesFilter",
                 "filter-sales",
                 "filterSales"
@@ -2356,6 +2483,9 @@
     // ========================================================
     // SELECT SALES FILTER
     // ========================================================
+    //
+    // FILTER INI KHUSUS UNTUK LEADS.
+    // ========================================================
 
     function selectSalesFilter(
         salesId,
@@ -2364,7 +2494,6 @@
 
         const salesFilter =
             salesElement(
-                "salesFilter",
                 "leadSalesFilter",
                 "filter-sales",
                 "filterSales"
@@ -2404,14 +2533,13 @@
     }
 
     // ========================================================
-    // UPDATE TOP DROPDOWN FROM CURRENT FILTER
+    // UPDATE TOP DROPDOWN FROM CURRENT LEAD FILTER
     // ========================================================
 
     function updateSalesDropdownButtonFromFilter() {
 
         const salesFilter =
             salesElement(
-                "salesFilter",
                 "leadSalesFilter",
                 "filter-sales",
                 "filterSales"
@@ -3171,6 +3299,9 @@
     window.populateLeadSalesFilter =
         populateLeadSalesFilter;
 
+    window.populateDashboardSalesFilter =
+        populateDashboardSalesFilter;
+
     window.populateTopSalesDropdown =
         populateTopSalesDropdown;
 
@@ -3234,6 +3365,8 @@
         populateSalesDropdowns,
 
         populateLeadSalesFilter,
+
+        populateDashboardSalesFilter,
 
         populateTopSalesDropdown,
 
