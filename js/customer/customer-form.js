@@ -1,6 +1,7 @@
 // ============================================================
 // FSI CRM - CUSTOMER FORM MODULE
 // ============================================================
+
 // Fungsi:
 // 1. Add Customer popup
 // 2. Edit Customer popup
@@ -64,1018 +65,1329 @@
 
 (function () {
 
-    "use strict";
+"use strict";
 
 
-    // ========================================================
-    // STATE
-    // ========================================================
 
-    let customerFormInitialized = false;
+// ========================================================
+// STATE
+// ========================================================
 
-    let editingCustomerId = null;
+let customerFormInitialized = false;
 
-    let customerSaving = false;
+let editingCustomerId = null;
 
-
-    // ========================================================
-    // DOM HELPER
-    // ========================================================
-
-    function getElement(id) {
-
-        return document.getElementById(id);
-
-    }
+let customerSaving = false;
 
 
-    // ========================================================
-    // SUPABASE
-    // ========================================================
 
-    function getSupabase() {
+// ========================================================
+// DOM HELPER
+// ========================================================
 
-        return window.supabaseClient || null;
+function getElement(id) {
 
-    }
+    return document.getElementById(id);
 
-
-    // ========================================================
-    // PROFILE
-    // ========================================================
-
-    function getProfile() {
-
-        return window.currentProfile || null;
-
-    }
+}
 
 
-    // ========================================================
-    // ROLE
-    // ========================================================
 
-    function isAdmin() {
+// ========================================================
+// SUPABASE
+// ========================================================
 
-        const profile = getProfile();
+function getSupabase() {
 
-        if (!profile) {
-            return false;
-        }
+    return window.supabaseClient || null;
 
-        const role =
-            String(profile.role || "")
-                .trim()
-                .toLowerCase();
+}
 
-        return (
-            role === "admin" ||
-            role === "owner" ||
-            role === "administrator"
-        );
+
+
+// ========================================================
+// PROFILE
+// ========================================================
+
+function getProfile() {
+
+    return window.currentProfile || null;
+
+}
+
+
+
+// ========================================================
+// ROLE
+// ========================================================
+
+function isAdmin() {
+
+    const profile = getProfile();
+
+    if (!profile) {
+
+        return false;
 
     }
 
+    const role =
+        String(profile.role || "")
+            .trim()
+            .toLowerCase();
 
-    function isSales() {
+    return (
+        role === "admin" ||
+        role === "owner" ||
+        role === "administrator"
+    );
 
-        const profile = getProfile();
-
-        if (!profile) {
-            return false;
-        }
-
-        const role =
-            String(profile.role || "")
-                .trim()
-                .toLowerCase();
-
-        return (
-            role === "sales" ||
-            role === "salesperson"
-        );
-
-    }
+}
 
 
-    // ========================================================
-    // STATUS
-    // ========================================================
 
-    function normalizeStatus(status) {
+function isSales() {
 
-        const rawStatus =
-            String(status || "New").trim();
+    const profile = getProfile();
 
+    if (!profile) {
 
-        if (
-            typeof window.normalizeLeadStatus === "function"
-        ) {
-
-            return window.normalizeLeadStatus(
-                rawStatus || "New"
-            );
-
-        }
-
-
-        return rawStatus || "New";
+        return false;
 
     }
 
+    const role =
+        String(profile.role || "")
+            .trim()
+            .toLowerCase();
 
-    // ========================================================
-    // TOAST
-    // ========================================================
+    return (
+        role === "sales" ||
+        role === "salesperson"
+    );
 
-    function showToast(message, type) {
+}
 
-        if (
-            window.FSIHelpers &&
-            typeof window.FSIHelpers.showToast === "function"
-        ) {
 
-            window.FSIHelpers.showToast(
-                message,
-                type || "info"
-            );
 
-            return;
-        }
+// ========================================================
+// STATUS
+// ========================================================
 
+function normalizeStatus(status) {
 
-        if (
-            typeof window.showToast === "function"
-        ) {
+    const rawStatus =
+        String(status || "New").trim();
 
-            window.showToast(
-                message,
-                type || "info"
-            );
 
-            return;
-        }
-
-
-        console.log(
-            "FSI CRM:",
-            message
-        );
-
-    }
-
-
-    // ========================================================
-    // LOADING
-    // ========================================================
-
-    function showLoading(message) {
-
-        if (
-            window.FSIHelpers &&
-            typeof window.FSIHelpers.showLoading === "function"
-        ) {
-
-            window.FSIHelpers.showLoading(
-                message || "Loading..."
-            );
-
-            return;
-        }
-
-
-        if (
-            typeof window.showLoading === "function"
-        ) {
-
-            window.showLoading(
-                message || "Loading..."
-            );
-
-        }
-
-    }
-
-
-    function hideLoading() {
-
-        if (
-            window.FSIHelpers &&
-            typeof window.FSIHelpers.hideLoading === "function"
-        ) {
-
-            window.FSIHelpers.hideLoading();
-
-            return;
-        }
-
-
-        if (
-            typeof window.hideLoading === "function"
-        ) {
-
-            window.hideLoading();
-
-        }
-
-    }
-
-
-    // ========================================================
-    // MODAL
-    // ========================================================
-
-    function getModal() {
-
-        return getElement("leadModal");
-
-    }
-
-
-    function openModal() {
-
-        const modal = getModal();
-
-
-        if (!modal) {
-
-            console.error(
-                "FSI CRM: #leadModal not found."
-            );
-
-            return false;
-
-        }
-
-
-        modal.classList.remove("hidden");
-
-        modal.classList.add("show");
-
-        modal.hidden = false;
-
-        modal.style.display = "flex";
-
-        modal.style.visibility = "visible";
-
-        modal.style.opacity = "1";
-
-        modal.setAttribute(
-            "aria-hidden",
-            "false"
-        );
-
-
-        document.body.classList.add(
-            "modal-open"
-        );
-
-
-        if (
-            window.lucide &&
-            typeof window.lucide.createIcons === "function"
-        ) {
-
-            window.lucide.createIcons();
-
-        }
-
-
-        return true;
-
-    }
-
-
-    function closeModal() {
-
-        const modal = getModal();
-
-
-        if (!modal) {
-            return;
-        }
-
-
-        modal.classList.remove("show");
-
-        modal.classList.add("hidden");
-
-        modal.hidden = true;
-
-        modal.style.display = "none";
-
-        modal.style.visibility = "hidden";
-
-        modal.style.opacity = "0";
-
-        modal.setAttribute(
-            "aria-hidden",
-            "true"
-        );
-
-
-        document.body.classList.remove(
-            "modal-open"
-        );
-
-
-        editingCustomerId = null;
-
-        customerSaving = false;
-
-    }
-
-
-    // ========================================================
-    // FORM
-    // ========================================================
-
-    function getForm() {
-
-        return getElement("lead-form");
-
-    }
-
-
-    function resetForm() {
-
-        const form = getForm();
-
-
-        if (form) {
-
-            form.reset();
-
-        }
-
-
-        const leadId =
-            getElement("leadId");
-
-
-        if (leadId) {
-
-            leadId.value = "";
-
-        }
-
-
-        editingCustomerId = null;
-
-    }
-
-
-    function setValue(id, value) {
-
-        const element =
-            getElement(id);
-
-
-        if (!element) {
-            return;
-        }
-
-
-        element.value =
-            value == null
-                ? ""
-                : String(value);
-
-    }
-
-
-    function setFirstValue(ids, value) {
-
-        const list =
-            Array.isArray(ids)
-                ? ids
-                : [ids];
-
-
-        for (const id of list) {
-
-            const element =
-                getElement(id);
-
-
-            if (element) {
-
-                element.value =
-                    value == null
-                        ? ""
-                        : String(value);
-
-                return;
-
-            }
-
-        }
-
-    }
-
-
-    function getValue(id) {
-
-        const element =
-            getElement(id);
-
-
-        if (!element) {
-            return "";
-        }
-
-
-        return String(
-            element.value || ""
-        ).trim();
-
-    }
-
-
-    // ========================================================
-    // BUSINESS OPTIONS
-    // ========================================================
-    // Business mengikuti Lead Type.
-    //
-    // Customer:
-    // - Residential
-    // - Villa
-    // - Hotel
-    // - Restaurant
-    // - Office
-    // - Factory
-    // - Commercial
-    // - Other
-    //
-    // Partner:
-    // - Real Estate
-    // - Kontraktor
-    // - Arsitek
-    // - Developer
-    // - Interior
-    // - Property Agent
-    // - Villa Management
-    // - Hotel / HOREKA
-    // - Electrical Contractor
-    // - Supplier
-    // - Other
-    // ========================================================
-
-    const CUSTOMER_BUSINESS_OPTIONS = [
-
-        "Residential",
-
-        "Villa",
-
-        "Hotel",
-
-        "Restaurant",
-
-        "Office",
-
-        "Factory",
-
-        "Commercial",
-
-        "Other"
-
-    ];
-
-
-    const PARTNER_BUSINESS_OPTIONS = [
-
-        "Real Estate",
-
-        "Kontraktor",
-
-        "Arsitek",
-
-        "Developer",
-
-        "Interior",
-
-        "Property Agent",
-
-        "Villa Management",
-
-        "Hotel / HOREKA",
-
-        "Electrical Contractor",
-
-        "Supplier",
-
-        "Other"
-
-    ];
-
-
-    function setupBusinessOptions(
-        leadType,
-        selectedBusiness
+    if (
+        typeof window.normalizeLeadStatus === "function"
     ) {
 
-        const select =
-            getElement("leadBusiness");
+        return window.normalizeLeadStatus(
+            rawStatus || "New"
+        );
+
+    }
 
 
-        if (!select) {
+    return rawStatus || "New";
+
+}
+
+
+
+// ========================================================
+// TOAST
+// ========================================================
+
+function showToast(message, type) {
+
+    if (
+        window.FSIHelpers &&
+        typeof window.FSIHelpers.showToast === "function"
+    ) {
+
+        window.FSIHelpers.showToast(
+            message,
+            type || "info"
+        );
+
+        return;
+    }
+
+
+    if (
+        typeof window.showToast === "function"
+    ) {
+
+        window.showToast(
+            message,
+            type || "info"
+        );
+
+        return;
+    }
+
+
+    console.log(
+        "FSI CRM:",
+        message
+    );
+
+}
+
+
+
+// ========================================================
+// LOADING
+// ========================================================
+
+function showLoading(message) {
+
+    if (
+        window.FSIHelpers &&
+        typeof window.FSIHelpers.showLoading === "function"
+    ) {
+
+        window.FSIHelpers.showLoading(
+            message || "Loading..."
+        );
+
+        return;
+    }
+
+
+    if (
+        typeof window.showLoading === "function"
+    ) {
+
+        window.showLoading(
+            message || "Loading..."
+        );
+
+    }
+
+}
+
+
+
+function hideLoading() {
+
+    if (
+        window.FSIHelpers &&
+        typeof window.FSIHelpers.hideLoading === "function"
+    ) {
+
+        window.FSIHelpers.hideLoading();
+
+        return;
+    }
+
+
+    if (
+        typeof window.hideLoading === "function"
+    ) {
+
+        window.hideLoading();
+
+    }
+
+}
+
+
+
+// ========================================================
+// MODAL
+// ========================================================
+
+function getModal() {
+
+    return getElement("leadModal");
+
+}
+
+
+
+function openModal() {
+
+    const modal = getModal();
+
+
+    if (!modal) {
+
+        console.error(
+            "FSI CRM: #leadModal not found."
+        );
+
+        return false;
+
+    }
+
+
+    modal.classList.remove("hidden");
+
+    modal.classList.add("show");
+
+    modal.hidden = false;
+
+    modal.style.display = "flex";
+
+    modal.style.visibility = "visible";
+
+    modal.style.opacity = "1";
+
+    modal.setAttribute(
+        "aria-hidden",
+        "false"
+    );
+
+
+    document.body.classList.add(
+        "modal-open"
+    );
+
+
+    if (
+        window.lucide &&
+        typeof window.lucide.createIcons === "function"
+    ) {
+
+        window.lucide.createIcons();
+
+    }
+
+
+    return true;
+
+}
+
+
+
+function closeModal() {
+
+    const modal = getModal();
+
+
+    if (!modal) {
+        return;
+    }
+
+
+    modal.classList.remove("show");
+
+    modal.classList.add("hidden");
+
+    modal.hidden = true;
+
+    modal.style.display = "none";
+
+    modal.style.visibility = "hidden";
+
+    modal.style.opacity = "0";
+
+    modal.setAttribute(
+        "aria-hidden",
+        "true"
+    );
+
+
+    document.body.classList.remove(
+        "modal-open"
+    );
+
+
+    editingCustomerId = null;
+
+    customerSaving = false;
+
+}
+
+
+
+// ========================================================
+// FORM
+// ========================================================
+
+function getForm() {
+
+    return getElement("lead-form");
+
+}
+
+
+
+function resetForm() {
+
+    const form = getForm();
+
+
+    if (form) {
+
+        form.reset();
+
+    }
+
+
+    const leadId =
+        getElement("leadId");
+
+
+    if (leadId) {
+
+        leadId.value = "";
+
+    }
+
+
+    editingCustomerId = null;
+
+}
+
+
+
+function setValue(id, value) {
+
+    const element =
+        getElement(id);
+
+
+    if (!element) {
+        return;
+    }
+
+
+    element.value =
+        value == null
+            ? ""
+            : String(value);
+
+}
+
+
+
+function setFirstValue(ids, value) {
+
+    const list =
+        Array.isArray(ids)
+            ? ids
+            : [ids];
+
+
+    for (const id of list) {
+
+        const element =
+            getElement(id);
+
+
+        if (element) {
+
+            element.value =
+                value == null
+                    ? ""
+                    : String(value);
+
             return;
+
         }
 
+    }
 
-        const type =
-            String(
-                leadType || "Customer"
-            )
-                .trim()
-                .toLowerCase() === "partner"
-                ? "Partner"
-                : "Customer";
+}
 
 
-        const currentValue =
-            selectedBusiness != null
-                ? String(
-                    selectedBusiness
-                ).trim()
-                : "";
+
+function getValue(id) {
+
+    const element =
+        getElement(id);
 
 
-        const options =
-            type === "Partner"
-                ? PARTNER_BUSINESS_OPTIONS
-                : CUSTOMER_BUSINESS_OPTIONS;
+    if (!element) {
+        return "";
+    }
 
 
-        // Hapus semua option lama.
+    return String(
+        element.value || ""
+    ).trim();
 
-        select.innerHTML = "";
-
-
-        // Placeholder.
-
-        const placeholder =
-            document.createElement("option");
+}
 
 
-        placeholder.value = "";
 
-        placeholder.textContent =
-            "Select Business";
+// ========================================================
+// BUSINESS OPTIONS
+// ========================================================
 
-
-        select.appendChild(
-            placeholder
-        );
-
-
-        // Tambahkan Business sesuai Lead Type.
-
-        options.forEach(
-            function (business) {
-
-                const option =
-                    document.createElement(
-                        "option"
-                    );
-
-
-                option.value =
-                    business;
-
-
-                option.textContent =
-                    business;
-
-
-                select.appendChild(
-                    option
-                );
-
-            }
-        );
+// Business mengikuti Lead Type.
+//
+// Customer:
+// - Residential
+// - Villa
+// - Hotel
+// - Restaurant
+// - Office
+// - Factory
+// - Commercial
+// - EPC
+// - Other
+//
+// Partner:
+// - Real Estate
+// - Kontraktor
+// - Arsitek
+// - Developer
+// - Interior
+// - Property Agent
+// - Villa Management
+// - Hotel / HOREKA
+// - Electrical Contractor
+// - Supplier
+// - EPC
+// - Other
+// ========================================================
 
 
-        // ====================================================
-        // COMPATIBILITY
-        // ====================================================
-        // Kalau ada data Business lama yang tidak ada
-        // di daftar baru, jangan sampai data lama hilang
-        // ketika Edit Customer.
-        // ====================================================
+const CUSTOMER_BUSINESS_OPTIONS = [
 
-        if (
-            currentValue &&
-            !options.includes(
-                currentValue
-            )
-        ) {
+    "Residential",
 
-            const existingOption =
+    "Villa",
+
+    "Hotel",
+
+    "Restaurant",
+
+    "Office",
+
+    "Factory",
+
+    "Commercial",
+
+    "EPC",
+
+    "Other"
+
+];
+
+
+
+const PARTNER_BUSINESS_OPTIONS = [
+
+    "Real Estate",
+
+    "Kontraktor",
+
+    "Arsitek",
+
+    "Developer",
+
+    "Interior",
+
+    "Property Agent",
+
+    "Villa Management",
+
+    "Hotel / HOREKA",
+
+    "Electrical Contractor",
+
+    "Supplier",
+
+    "EPC",
+
+    "Other"
+
+];
+
+
+
+function setupBusinessOptions(
+    leadType,
+    selectedBusiness
+) {
+
+    const select =
+        getElement("leadBusiness");
+
+
+    if (!select) {
+        return;
+    }
+
+
+    const type =
+        String(
+            leadType || "Customer"
+        )
+            .trim()
+            .toLowerCase() === "partner"
+            ? "Partner"
+            : "Customer";
+
+
+    const currentValue =
+        selectedBusiness != null
+            ? String(
+                selectedBusiness
+            ).trim()
+            : "";
+
+
+    const options =
+        type === "Partner"
+            ? PARTNER_BUSINESS_OPTIONS
+            : CUSTOMER_BUSINESS_OPTIONS;
+
+
+    // Hapus semua option lama.
+
+    select.innerHTML = "";
+
+
+    // Placeholder.
+
+    const placeholder =
+        document.createElement("option");
+
+
+    placeholder.value = "";
+
+    placeholder.textContent =
+        "Select Business";
+
+
+    select.appendChild(
+        placeholder
+    );
+
+
+    // Tambahkan Business sesuai Lead Type.
+
+    options.forEach(
+        function (business) {
+
+            const option =
                 document.createElement(
                     "option"
                 );
 
 
-            existingOption.value =
-                currentValue;
+            option.value =
+                business;
 
 
-            existingOption.textContent =
-                currentValue;
+            option.textContent =
+                business;
 
 
             select.appendChild(
-                existingOption
+                option
             );
+
+        }
+    );
+
+
+    // ====================================================
+    // COMPATIBILITY
+    // ====================================================
+    // Kalau ada data Business lama yang tidak ada
+    // di daftar baru, jangan sampai data lama hilang
+    // ketika Edit Customer.
+    // ====================================================
+
+    if (
+        currentValue &&
+        !options.includes(
+            currentValue
+        )
+    ) {
+
+        const existingOption =
+            document.createElement(
+                "option"
+            );
+
+
+        existingOption.value =
+            currentValue;
+
+
+        existingOption.textContent =
+            currentValue;
+
+
+        select.appendChild(
+            existingOption
+        );
+
+    }
+
+
+    select.value =
+        currentValue;
+
+}
+
+
+
+// ========================================================
+// DATE
+// ========================================================
+
+function dateValue(value) {
+
+    if (!value) {
+        return "";
+    }
+
+
+    const text =
+        String(value).trim();
+
+
+    if (text.length >= 10) {
+
+        return text.substring(
+            0,
+            10
+        );
+
+    }
+
+
+    return text;
+
+}
+
+
+
+// ========================================================
+// MODAL TITLE
+// ========================================================
+
+function setModalTitle(title) {
+
+    const titleElement =
+        getElement("lead-modal-title");
+
+
+    if (titleElement) {
+
+        titleElement.textContent =
+            title;
+
+    }
+
+
+    // Compatibility dengan ID
+    // yang mungkin digunakan JS lama.
+
+    const alternateTitle =
+        getElement("leadModalTitle");
+
+
+    if (alternateTitle) {
+
+        alternateTitle.textContent =
+            title;
+
+    }
+
+}
+
+
+
+function setModalDescription(description) {
+
+    const element =
+        getElement("lead-modal-description");
+
+
+    if (element) {
+
+        element.textContent =
+            description;
+
+    }
+
+}
+
+
+
+function setSaveButtonText(text) {
+
+    const element =
+        getElement("lead-save-text");
+
+
+    if (element) {
+
+        element.textContent =
+            text;
+
+        return;
+
+    }
+
+
+    const button =
+        getElement("lead-save-button");
+
+
+    if (!button) {
+        return;
+    }
+
+
+    const span =
+        button.querySelector("span");
+
+
+    if (span) {
+
+        span.textContent =
+            text;
+
+    }
+
+}
+
+
+
+// ========================================================
+// SALES ASSIGNMENT
+// ========================================================
+
+function setupSalesAssignment() {
+
+    const select =
+        getElement("leadSales");
+
+
+    const group =
+        getElement("lead-sales-group");
+
+
+    if (!select) {
+        return;
+    }
+
+
+    const profile =
+        getProfile();
+
+
+    if (!profile) {
+        return;
+    }
+
+
+    if (isAdmin()) {
+
+        if (group) {
+
+            group.classList.remove(
+                "hidden"
+            );
+
+            group.style.display = "";
+
+        }
+
+
+        select.disabled = false;
+
+        return;
+
+    }
+
+
+    if (isSales()) {
+
+        if (group) {
+
+            group.classList.add(
+                "hidden"
+            );
+
+            group.style.display =
+                "none";
 
         }
 
 
         select.value =
-            currentValue;
+            profile.id || "";
+
+
+        select.disabled = true;
 
     }
 
-
-    // ========================================================
-    // DATE
-    // ========================================================
-
-    function dateValue(value) {
-
-        if (!value) {
-            return "";
-        }
+}
 
 
-        const text =
-            String(value).trim();
+
+// ========================================================
+// FIND LOCAL CUSTOMER
+// ========================================================
+
+function findLocalCustomer(id) {
+
+    const customerId =
+        String(id || "").trim();
 
 
-        if (text.length >= 10) {
+    if (!customerId) {
+        return null;
+    }
 
-            return text.substring(
-                0,
-                10
+
+    const data =
+        Array.isArray(window.leadsData)
+            ? window.leadsData
+            : [];
+
+
+    return (
+        data.find(function (item) {
+
+            return (
+                String(
+                    item?.id || ""
+                ).trim() === customerId
             );
 
-        }
+        }) || null
+    );
 
+}
 
-        return text;
 
-    }
 
+// ========================================================
+// LOAD CUSTOMER
+// ========================================================
 
-    // ========================================================
-    // MODAL TITLE
-    // ========================================================
+async function loadCustomer(id) {
 
-    function setModalTitle(title) {
+    const customerId =
+        String(id || "").trim();
 
-        const titleElement =
-            getElement("lead-modal-title");
 
+    if (!customerId) {
 
-        if (titleElement) {
-
-            titleElement.textContent =
-                title;
-
-        }
-
-
-        // Compatibility dengan ID
-        // yang mungkin digunakan JS lama.
-
-        const alternateTitle =
-            getElement("leadModalTitle");
-
-
-        if (alternateTitle) {
-
-            alternateTitle.textContent =
-                title;
-
-        }
-
-    }
-
-
-    function setModalDescription(description) {
-
-        const element =
-            getElement("lead-modal-description");
-
-
-        if (element) {
-
-            element.textContent =
-                description;
-
-        }
-
-    }
-
-
-    function setSaveButtonText(text) {
-
-        const element =
-            getElement("lead-save-text");
-
-
-        if (element) {
-
-            element.textContent =
-                text;
-
-            return;
-
-        }
-
-
-        const button =
-            getElement("lead-save-button");
-
-
-        if (!button) {
-            return;
-        }
-
-
-        const span =
-            button.querySelector("span");
-
-
-        if (span) {
-
-            span.textContent =
-                text;
-
-        }
-
-    }
-
-
-    // ========================================================
-    // SALES ASSIGNMENT
-    // ========================================================
-
-    function setupSalesAssignment() {
-
-        const select =
-            getElement("leadSales");
-
-
-        const group =
-            getElement("lead-sales-group");
-
-
-        if (!select) {
-            return;
-        }
-
-
-        const profile =
-            getProfile();
-
-
-        if (!profile) {
-            return;
-        }
-
-
-        if (isAdmin()) {
-
-            if (group) {
-
-                group.classList.remove(
-                    "hidden"
-                );
-
-                group.style.display = "";
-
-            }
-
-
-            select.disabled = false;
-
-            return;
-
-        }
-
-
-        if (isSales()) {
-
-            if (group) {
-
-                group.classList.add(
-                    "hidden"
-                );
-
-                group.style.display =
-                    "none";
-
-            }
-
-
-            select.value =
-                profile.id || "";
-
-
-            select.disabled = true;
-
-        }
-
-    }
-
-
-    // ========================================================
-    // FIND LOCAL CUSTOMER
-    // ========================================================
-
-    function findLocalCustomer(id) {
-
-        const customerId =
-            String(id || "").trim();
-
-
-        if (!customerId) {
-            return null;
-        }
-
-
-        const data =
-            Array.isArray(window.leadsData)
-                ? window.leadsData
-                : [];
-
-
-        return (
-            data.find(function (item) {
-
-                return (
-                    String(
-                        item?.id || ""
-                    ).trim() === customerId
-                );
-
-            }) || null
+        throw new Error(
+            "Customer ID not found."
         );
 
     }
 
 
-    // ========================================================
-    // LOAD CUSTOMER
-    // ========================================================
+    // Coba data yang sudah ada
+    // terlebih dahulu.
 
-    async function loadCustomer(id) {
-
-        const customerId =
-            String(id || "").trim();
-
-
-        if (!customerId) {
-
-            throw new Error(
-                "Customer ID not found."
-            );
-
-        }
+    const localCustomer =
+        findLocalCustomer(
+            customerId
+        );
 
 
-        // Coba data yang sudah ada
-        // terlebih dahulu.
+    if (localCustomer) {
 
-        const localCustomer =
-            findLocalCustomer(
-                customerId
-            );
-
-
-        if (localCustomer) {
-
-            return localCustomer;
-
-        }
-
-
-        // Kalau tidak ada di halaman
-        // sekarang, ambil dari Supabase.
-
-        const supabase =
-            getSupabase();
-
-
-        if (!supabase) {
-
-            throw new Error(
-                "Supabase is not available."
-            );
-
-        }
-
-
-        const result =
-            await supabase
-                .from("leads")
-                .select("*")
-                .eq("id", customerId)
-                .single();
-
-
-        if (result.error) {
-
-            throw result.error;
-
-        }
-
-
-        if (!result.data) {
-
-            throw new Error(
-                "Customer not found."
-            );
-
-        }
-
-
-        return result.data;
+        return localCustomer;
 
     }
 
 
-    // ========================================================
-    // OPEN ADD CUSTOMER
-    // ========================================================
+    // Kalau tidak ada di halaman
+    // sekarang, ambil dari Supabase.
 
-    function openAddCustomer() {
-
-        const profile =
-            getProfile();
+    const supabase =
+        getSupabase();
 
 
-        if (!profile) {
+    if (!supabase) {
 
-            showToast(
-                "Profile is not ready. Please wait a moment.",
-                "warning"
+        throw new Error(
+            "Supabase is not available."
+        );
+
+    }
+
+
+    const result =
+        await supabase
+            .from("leads")
+            .select("*")
+            .eq("id", customerId)
+            .single();
+
+
+    if (result.error) {
+
+        throw result.error;
+
+    }
+
+
+    if (!result.data) {
+
+        throw new Error(
+            "Customer not found."
+        );
+
+    }
+
+
+    return result.data;
+
+}
+
+
+
+// ========================================================
+// OPEN ADD CUSTOMER
+// ========================================================
+
+function openAddCustomer() {
+
+    const profile =
+        getProfile();
+
+
+    if (!profile) {
+
+        showToast(
+            "Profile is not ready. Please wait a moment.",
+            "warning"
+        );
+
+        return;
+
+    }
+
+
+    editingCustomerId = null;
+
+
+    resetForm();
+
+
+    // Pastikan Lead Type awal selalu Customer.
+
+    setValue(
+        "leadType",
+        "Customer"
+    );
+
+
+    // ====================================================
+    // BUSINESS
+    // ====================================================
+    // Saat Add Customer, Business otomatis menggunakan
+    // daftar Business untuk Lead Type Customer.
+    // ====================================================
+
+    setupBusinessOptions(
+        "Customer",
+        ""
+    );
+
+
+    // Pastikan status awal selalu New.
+
+    setValue(
+        "leadStatus",
+        normalizeStatus("New")
+    );
+
+
+    setModalTitle(
+        "Add Customer"
+    );
+
+
+    setModalDescription(
+        "Enter customer information and pipeline status."
+    );
+
+
+    setSaveButtonText(
+        "Save Customer"
+    );
+
+
+    setupSalesAssignment();
+
+
+    if (!openModal()) {
+        return;
+    }
+
+
+    setTimeout(function () {
+
+        const input =
+            getElement(
+                "leadCustomerName"
             );
 
-            return;
+
+        if (input) {
+
+            input.focus();
 
         }
 
+    }, 100);
 
-        editingCustomerId = null;
+}
+
+
+
+// ========================================================
+// OPEN EDIT CUSTOMER
+// ========================================================
+
+async function openEditCustomer(id) {
+
+    const customerId =
+        String(id || "").trim();
+
+
+    if (!customerId) {
+
+        showToast(
+            "Customer ID not found.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    const profile =
+        getProfile();
+
+
+    if (!profile) {
+
+        showToast(
+            "Profile is not ready.",
+            "warning"
+        );
+
+        return;
+
+    }
+
+
+    try {
+
+        showLoading(
+            "Loading customer data..."
+        );
+
+
+        const customer =
+            await loadCustomer(
+                customerId
+            );
+
+
+        editingCustomerId =
+            customerId;
 
 
         resetForm();
 
 
-        // Pastikan Lead Type awal selalu Customer.
+        editingCustomerId =
+            customerId;
+
+
+        // =================================================
+        // ID
+        // =================================================
+
+        setValue(
+            "leadId",
+            customer.id
+        );
+
+
+        // =================================================
+        // BASIC INFORMATION
+        // =================================================
+
+        setValue(
+            "leadCustomerName",
+            customer.customer_name
+        );
+
+
+        setValue(
+            "leadPhone",
+            customer.phone
+        );
+
+
+        // =================================================
+        // LEAD TYPE
+        // =================================================
+
+        const customerLeadType =
+            customer.lead_type || "Customer";
+
 
         setValue(
             "leadType",
-            "Customer"
+            customerLeadType
         );
 
 
-        // ====================================================
+        // =================================================
         // BUSINESS
-        // ====================================================
-        // Saat Add Customer, Business otomatis menggunakan
-        // daftar Business untuk Lead Type Customer.
-        // ====================================================
+        // =================================================
+        // Business harus mengikuti Lead Type yang tersimpan.
+        // selectedBusiness digunakan agar Business lama
+        // tetap terpilih saat Edit.
+        // =================================================
 
         setupBusinessOptions(
-            "Customer",
-            ""
+            customerLeadType,
+            customer.business || ""
         );
 
 
-        // Pastikan status awal selalu New.
+        // =================================================
+        // LOCATION
+        // =================================================
+
+        setValue(
+            "leadLocation",
+            customer.location
+        );
+
+
+        // =================================================
+        // STATUS
+        // =================================================
+        // Mengikuti 7 status baru dari config.js.
+        //
+        // Jika database masih memiliki status lama,
+        // normalizeLeadStatus() akan mengubah tampilan
+        // ke status baru tanpa melakukan migration DB.
+        // =================================================
+
+        const normalizedStatus =
+            normalizeStatus(
+                customer.status || "New"
+            );
+
 
         setValue(
             "leadStatus",
-            normalizeStatus("New")
+            normalizedStatus
         );
 
 
+        // =================================================
+        // STATUS INPUT DATE
+        // =================================================
+        // Manual date:
+        // Menyimpan tanggal customer masuk
+        // ke status yang sedang dipilih.
+        // =================================================
+
+        setValue(
+            "leadStatusStartedAt",
+            dateValue(
+                customer.status_started_at
+            )
+        );
+
+
+        // =================================================
+        // APPOINTMENT
+        // =================================================
+
+        setValue(
+            "leadAppointment",
+            dateValue(
+                customer.appointment
+            )
+        );
+
+
+        // =================================================
+        // SITE SURVEY
+        // =================================================
+
+        setValue(
+            "leadSiteSurvey",
+            dateValue(
+                customer.site_survey
+            )
+        );
+
+
+        // =================================================
+        // QUOTATION
+        // =================================================
+
+        setValue(
+            "leadQuotation",
+            dateValue(
+                customer.quotation
+            )
+        );
+
+
+        // =================================================
+        // SALES ASSIGNMENT
+        // =================================================
+
+        setFirstValue(
+            [
+                "leadSales",
+                "leadSalesAssign"
+            ],
+            customer.sales_id || ""
+        );
+
+
+        // =================================================
+        // NOTES
+        // =================================================
+
+        setValue(
+            "leadNotes",
+            customer.notes
+        );
+
+
+        // =================================================
+        // MODAL
+        // =================================================
+
         setModalTitle(
-            "Add Customer"
+            "Edit Customer"
         );
 
 
         setModalDescription(
-            "Enter customer information and pipeline status."
+            "Update customer information and pipeline status."
         );
 
 
         setSaveButtonText(
-            "Save Customer"
+            "Update Customer"
         );
 
 
@@ -1103,1141 +1415,891 @@
 
         }, 100);
 
-    }
 
+    } catch (error) {
 
-    // ========================================================
-    // OPEN EDIT CUSTOMER
-    // ========================================================
+        console.error(
+            "FSI CRM: Open edit customer error:",
+            error
+        );
 
-    async function openEditCustomer(id) {
 
-        const customerId =
-            String(id || "").trim();
+        showToast(
+            error?.message ||
+            "Unable to load customer.",
+            "error"
+        );
 
 
-        if (!customerId) {
+    } finally {
 
-            showToast(
-                "Customer ID not found.",
-                "error"
-            );
-
-            return;
-
-        }
-
-
-        const profile =
-            getProfile();
-
-
-        if (!profile) {
-
-            showToast(
-                "Profile is not ready.",
-                "warning"
-            );
-
-            return;
-
-        }
-
-
-        try {
-
-            showLoading(
-                "Loading customer data..."
-            );
-
-
-            const customer =
-                await loadCustomer(
-                    customerId
-                );
-
-
-            editingCustomerId =
-                customerId;
-
-
-            resetForm();
-
-
-            editingCustomerId =
-                customerId;
-
-
-            // =================================================
-            // ID
-            // =================================================
-
-            setValue(
-                "leadId",
-                customer.id
-            );
-
-
-            // =================================================
-            // BASIC INFORMATION
-            // =================================================
-
-            setValue(
-                "leadCustomerName",
-                customer.customer_name
-            );
-
-
-            setValue(
-                "leadPhone",
-                customer.phone
-            );
-
-
-            // =================================================
-            // LEAD TYPE
-            // =================================================
-
-            const customerLeadType =
-                customer.lead_type || "Customer";
-
-
-            setValue(
-                "leadType",
-                customerLeadType
-            );
-
-
-            // =================================================
-            // BUSINESS
-            // =================================================
-            // Business harus mengikuti Lead Type yang tersimpan.
-            // selectedBusiness digunakan agar Business lama
-            // tetap terpilih saat Edit.
-            // =================================================
-
-            setupBusinessOptions(
-                customerLeadType,
-                customer.business || ""
-            );
-
-
-            // =================================================
-            // LOCATION
-            // =================================================
-
-            setValue(
-                "leadLocation",
-                customer.location
-            );
-
-
-            // =================================================
-            // STATUS
-            // =================================================
-            // Mengikuti 7 status baru dari config.js.
-            //
-            // Jika database masih memiliki status lama,
-            // normalizeLeadStatus() akan mengubah tampilan
-            // ke status baru tanpa melakukan migration DB.
-            // =================================================
-
-            const normalizedStatus =
-                normalizeStatus(
-                    customer.status || "New"
-                );
-
-
-            setValue(
-                "leadStatus",
-                normalizedStatus
-            );
-
-
-            // =================================================
-            // STATUS INPUT DATE
-            // =================================================
-            // Manual date:
-            // Menyimpan tanggal customer masuk
-            // ke status yang sedang dipilih.
-            // =================================================
-
-            setValue(
-                "leadStatusStartedAt",
-                dateValue(
-                    customer.status_started_at
-                )
-            );
-
-
-            // =================================================
-            // APPOINTMENT
-            // =================================================
-
-            setValue(
-                "leadAppointment",
-                dateValue(
-                    customer.appointment
-                )
-            );
-
-
-            // =================================================
-            // SITE SURVEY
-            // =================================================
-
-            setValue(
-                "leadSiteSurvey",
-                dateValue(
-                    customer.site_survey
-                )
-            );
-
-
-            // =================================================
-            // QUOTATION
-            // =================================================
-
-            setValue(
-                "leadQuotation",
-                dateValue(
-                    customer.quotation
-                )
-            );
-
-
-            // =================================================
-            // SALES ASSIGNMENT
-            // =================================================
-
-            setFirstValue(
-                [
-                    "leadSales",
-                    "leadSalesAssign"
-                ],
-                customer.sales_id || ""
-            );
-
-
-            // =================================================
-            // NOTES
-            // =================================================
-
-            setValue(
-                "leadNotes",
-                customer.notes
-            );
-
-
-            // =================================================
-            // MODAL
-            // =================================================
-
-            setModalTitle(
-                "Edit Customer"
-            );
-
-
-            setModalDescription(
-                "Update customer information and pipeline status."
-            );
-
-
-            setSaveButtonText(
-                "Update Customer"
-            );
-
-
-            setupSalesAssignment();
-
-
-            if (!openModal()) {
-                return;
-            }
-
-
-            setTimeout(function () {
-
-                const input =
-                    getElement(
-                        "leadCustomerName"
-                    );
-
-
-                if (input) {
-
-                    input.focus();
-
-                }
-
-            }, 100);
-
-
-        } catch (error) {
-
-            console.error(
-                "FSI CRM: Open edit customer error:",
-                error
-            );
-
-
-            showToast(
-                error?.message ||
-                "Unable to load customer.",
-                "error"
-            );
-
-
-        } finally {
-
-            hideLoading();
-
-        }
+        hideLoading();
 
     }
 
+}
 
-    // ========================================================
-    // BUILD PAYLOAD
-    // ========================================================
 
-    function buildPayload() {
 
-        const profile =
-            getProfile();
+// ========================================================
+// BUILD PAYLOAD
+// ========================================================
 
+function buildPayload() {
 
-        if (!profile) {
+    const profile =
+        getProfile();
 
-            throw new Error(
-                "User profile is not available."
-            );
 
-        }
+    if (!profile) {
 
-
-        const customerName =
-            getValue(
-                "leadCustomerName"
-            );
-
-
-        const phone =
-            getValue(
-                "leadPhone"
-            );
-
-
-        if (!customerName) {
-
-            throw new Error(
-                "Customer Name is required."
-            );
-
-        }
-
-
-        if (!phone) {
-
-            throw new Error(
-                "Phone is required."
-            );
-
-        }
-
-
-        // =====================================================
-        // STATUS
-        // =====================================================
-
-        const rawStatus =
-            getValue(
-                "leadStatus"
-            ) || "New";
-
-
-        const normalizedStatus =
-            normalizeStatus(
-                rawStatus
-            );
-
-
-        // =====================================================
-        // LEAD TYPE
-        // =====================================================
-
-        const leadType =
-            getValue(
-                "leadType"
-            ) || "Customer";
-
-
-        // =====================================================
-        // PAYLOAD
-        // =====================================================
-
-        const payload = {
-
-            customer_name:
-                customerName,
-
-            phone:
-                phone,
-
-            business:
-                getValue(
-                    "leadBusiness"
-                ) || null,
-
-            location:
-                getValue(
-                    "leadLocation"
-                ) || null,
-
-            lead_type:
-                leadType,
-
-            status:
-                normalizedStatus,
-
-
-            // =================================================
-            // STATUS INPUT DATE
-            // =================================================
-            // Manual:
-            // User menentukan sendiri tanggal
-            // customer masuk ke status tersebut.
-            // =================================================
-
-            status_started_at:
-                getValue(
-                    "leadStatusStartedAt"
-                ) || null,
-
-
-            // =================================================
-            // APPOINTMENT
-            // =================================================
-
-            appointment:
-                getValue(
-                    "leadAppointment"
-                ) || null,
-
-
-            // =================================================
-            // SITE SURVEY
-            // =================================================
-
-            site_survey:
-                getValue(
-                    "leadSiteSurvey"
-                ) || null,
-
-
-            // =================================================
-            // QUOTATION
-            // =================================================
-
-            quotation:
-                getValue(
-                    "leadQuotation"
-                ) || null,
-
-
-            // =================================================
-            // NOTES
-            // =================================================
-
-            notes:
-                getValue(
-                    "leadNotes"
-                ) || null
-
-        };
-
-
-        // ----------------------------------------------------
-        // SALES ASSIGNMENT
-        // ----------------------------------------------------
-
-        if (isAdmin()) {
-
-            const selectedSales =
-                getValue(
-                    "leadSales"
-                ) || getValue(
-                    "leadSalesAssign"
-                );
-
-
-            payload.sales_id =
-                selectedSales || null;
-
-        }
-
-
-        if (isSales()) {
-
-            payload.sales_id =
-                profile.id || null;
-
-        }
-
-
-        return payload;
-
-    }
-
-
-    // ========================================================
-    // SAVE CUSTOMER
-    // ========================================================
-
-    async function saveCustomer() {
-
-        if (customerSaving) {
-            return;
-        }
-
-
-        const supabase =
-            getSupabase();
-
-
-        if (!supabase) {
-
-            showToast(
-                "Supabase is not available.",
-                "error"
-            );
-
-            return;
-
-        }
-
-
-        const profile =
-            getProfile();
-
-
-        if (!profile) {
-
-            showToast(
-                "User profile is not available.",
-                "error"
-            );
-
-            return;
-
-        }
-
-
-        try {
-
-            customerSaving = true;
-
-
-            const payload =
-                buildPayload();
-
-
-            const customerId =
-                String(
-                    getValue("leadId") ||
-                    editingCustomerId ||
-                    ""
-                ).trim();
-
-
-            const saveButton =
-                getElement(
-                    "lead-save-button"
-                );
-
-
-            if (saveButton) {
-
-                saveButton.disabled =
-                    true;
-
-            }
-
-
-            showLoading(
-                customerId
-                    ? "Updating customer..."
-                    : "Saving customer..."
-            );
-
-
-            // =================================================
-            // UPDATE EXISTING CUSTOMER
-            // =================================================
-
-            if (customerId) {
-
-                payload.updated_by =
-                    profile.id || null;
-
-
-                // =================================================
-                // IMPORTANT:
-                // UPDATE LAST UPDATED TIME
-                // =================================================
-                //
-                // Every time the customer is edited,
-                // updated_at is changed to the current
-                // date and time.
-                //
-                // This value is used by Customer Profile
-                // to calculate:
-                //
-                // "0 DAYS SINCE UPDATE"
-                // "1 DAY SINCE UPDATE"
-                // "3 DAYS SINCE UPDATE"
-                //
-                // =================================================
-
-                payload.updated_at =
-                    new Date().toISOString();
-
-
-                const result =
-                    await supabase
-                        .from("leads")
-                        .update(payload)
-                        .eq(
-                            "id",
-                            customerId
-                        );
-
-
-                if (result.error) {
-
-                    throw result.error;
-
-                }
-
-
-                showToast(
-                    "Customer updated successfully.",
-                    "success"
-                );
-
-            }
-
-
-            // =================================================
-            // INSERT NEW CUSTOMER
-            // =================================================
-
-            else {
-
-                payload.created_by =
-                    profile.id || null;
-
-
-                payload.updated_by =
-                    profile.id || null;
-
-
-                // =================================================
-                // CREATED / LAST UPDATED
-                // =================================================
-                //
-                // New customer starts with the same
-                // created and updated timestamp.
-                //
-                // =================================================
-
-                const now =
-                    new Date().toISOString();
-
-
-                payload.created_at =
-                    now;
-
-
-                payload.updated_at =
-                    now;
-
-
-                const result =
-                    await supabase
-                        .from("leads")
-                        .insert(payload)
-                        .select("*")
-                        .single();
-
-
-                if (result.error) {
-
-                    throw result.error;
-
-                }
-
-
-                showToast(
-                    "Customer added successfully.",
-                    "success"
-                );
-
-            }
-
-
-            // =================================================
-            // CLOSE
-            // =================================================
-
-            closeModal();
-
-
-            // =================================================
-            // REFRESH CUSTOMER PROFILE
-            // =================================================
-            //
-            // If the user is currently viewing a Customer
-            // Profile, reload it so the new updated_at
-            // immediately appears.
-            //
-            // =================================================
-
-            if (
-                customerId &&
-                typeof window.crmRefreshCustomerProfile ===
-                    "function"
-            ) {
-
-                await window.crmRefreshCustomerProfile();
-
-            }
-
-
-            // =================================================
-            // REFRESH LEADS
-            // =================================================
-
-            if (
-                typeof window.loadLeads === "function"
-            ) {
-
-                await window.loadLeads(
-                    window.currentPage || 1
-                );
-
-            }
-            else if (
-                window.FSILeads &&
-                typeof window.FSILeads.loadLeads === "function"
-            ) {
-
-                await window.FSILeads.loadLeads(
-                    window.currentPage || 1
-                );
-
-            }
-
-
-            // =================================================
-            // REFRESH DASHBOARD
-            // =================================================
-
-            if (
-                window.FSIDashboard &&
-                typeof window.FSIDashboard.loadDashboard === "function"
-            ) {
-
-                await window.FSIDashboard.loadDashboard();
-
-            }
-            else if (
-                typeof window.loadDashboard === "function"
-            ) {
-
-                await window.loadDashboard();
-
-            }
-
-
-            // =================================================
-            // EVENT
-            // =================================================
-
-            document.dispatchEvent(
-                new CustomEvent(
-                    "fsi:lead-changed",
-                    {
-                        detail: {
-
-                            action:
-                                customerId
-                                    ? "update"
-                                    : "insert",
-
-                            id:
-                                customerId || null
-
-                        }
-                    }
-                )
-            );
-
-
-        } catch (error) {
-
-            console.error(
-                "FSI CRM: Save customer error:",
-                error
-            );
-
-
-            showToast(
-                error?.message ||
-                "Unable to save customer.",
-                "error"
-            );
-
-
-        } finally {
-
-            customerSaving = false;
-
-
-            const saveButton =
-                getElement(
-                    "lead-save-button"
-                );
-
-
-            if (saveButton) {
-
-                saveButton.disabled =
-                    false;
-
-            }
-
-
-            hideLoading();
-
-        }
-
-    }
-
-
-    // ========================================================
-    // BUTTON EVENTS
-    // ========================================================
-
-    function bindButtons() {
-
-        const closeButton =
-            getElement(
-                "lead-modal-close"
-            );
-
-
-        if (
-            closeButton &&
-            !closeButton.dataset.customerFormBound
-        ) {
-
-            closeButton.dataset.customerFormBound =
-                "true";
-
-
-            closeButton.addEventListener(
-                "click",
-                function (event) {
-
-                    event.preventDefault();
-
-                    closeModal();
-
-                }
-            );
-
-        }
-
-
-        const cancelButton =
-            getElement(
-                "lead-modal-cancel"
-            );
-
-
-        if (
-            cancelButton &&
-            !cancelButton.dataset.customerFormBound
-        ) {
-
-            cancelButton.dataset.customerFormBound =
-                "true";
-
-
-            cancelButton.addEventListener(
-                "click",
-                function (event) {
-
-                    event.preventDefault();
-
-                    closeModal();
-
-                }
-            );
-
-        }
-
-
-        const form =
-            getForm();
-
-
-        if (
-            form &&
-            !form.dataset.customerFormBound
-        ) {
-
-            form.dataset.customerFormBound =
-                "true";
-
-
-            form.addEventListener(
-                "submit",
-                function (event) {
-
-                    event.preventDefault();
-
-                    saveCustomer();
-
-                }
-            );
-
-        }
-
-
-        const modal =
-            getModal();
-
-
-        if (
-            modal &&
-            !modal.dataset.customerFormBound
-        ) {
-
-            modal.dataset.customerFormBound =
-                "true";
-
-
-            modal.addEventListener(
-                "click",
-                function (event) {
-
-                    if (
-                        event.target === modal
-                    ) {
-
-                        closeModal();
-
-                    }
-
-                }
-            );
-
-        }
-
-
-        // ====================================================
-        // LEAD TYPE → BUSINESS
-        // ====================================================
-        // Ketika Lead Type berubah:
-        //
-        // Customer → Business Customer
-        // Partner  → Business Partner
-        //
-        // Business lama dikosongkan agar tidak membawa
-        // pilihan Business dari Lead Type sebelumnya.
-        // ====================================================
-
-        const leadTypeSelect =
-            getElement("leadType");
-
-
-        if (
-            leadTypeSelect &&
-            !leadTypeSelect.dataset.customerFormBusinessBound
-        ) {
-
-            leadTypeSelect.dataset.customerFormBusinessBound =
-                "true";
-
-
-            leadTypeSelect.addEventListener(
-                "change",
-                function () {
-
-                    setupBusinessOptions(
-                        leadTypeSelect.value,
-                        ""
-                    );
-
-                }
-            );
-
-        }
-
-    }
-
-
-    // ========================================================
-    // ESC KEY
-    // ========================================================
-
-    function bindKeyboard() {
-
-        if (
-            document.body.dataset.customerFormKeyboardBound
-        ) {
-            return;
-        }
-
-
-        document.body.dataset.customerFormKeyboardBound =
-            "true";
-
-
-        document.addEventListener(
-            "keydown",
-            function (event) {
-
-                if (
-                    event.key !== "Escape"
-                ) {
-                    return;
-                }
-
-
-                const modal =
-                    getModal();
-
-
-                if (!modal) {
-                    return;
-                }
-
-
-                if (
-                    modal.classList.contains(
-                        "show"
-                    )
-                ) {
-
-                    closeModal();
-
-                }
-
-            }
+        throw new Error(
+            "User profile is not available."
         );
 
     }
 
 
-    // ========================================================
-    // INITIALIZE
-    // ========================================================
-
-    function initialize() {
-
-        if (customerFormInitialized) {
-            return;
-        }
+    const customerName =
+        getValue(
+            "leadCustomerName"
+        );
 
 
-        customerFormInitialized = true;
+    const phone =
+        getValue(
+            "leadPhone"
+        );
 
 
-        bindButtons();
+    if (!customerName) {
 
-        bindKeyboard();
-
-
-        console.log(
-            "FSI CRM: Customer Form module initialized."
+        throw new Error(
+            "Customer Name is required."
         );
 
     }
 
 
-    // ========================================================
-    // GLOBAL EXPORT
-    // ========================================================
+    if (!phone) {
 
-    window.FSICustomerForm = {
+        throw new Error(
+            "Phone is required."
+        );
 
-        openAddCustomer:
-            openAddCustomer,
+    }
 
-        openEditCustomer:
-            openEditCustomer,
 
-        closeModal:
-            closeModal,
+    // =====================================================
+    // STATUS
+    // =====================================================
 
-        saveCustomer:
-            saveCustomer,
+    const rawStatus =
+        getValue(
+            "leadStatus"
+        ) || "New";
 
-        loadCustomer:
-            loadCustomer
+
+    const normalizedStatus =
+        normalizeStatus(
+            rawStatus
+        );
+
+
+    // =====================================================
+    // LEAD TYPE
+    // =====================================================
+
+    const leadType =
+        getValue(
+            "leadType"
+        ) || "Customer";
+
+
+    // =====================================================
+    // PAYLOAD
+    // =====================================================
+
+    const payload = {
+
+        customer_name:
+            customerName,
+
+        phone:
+            phone,
+
+        business:
+            getValue(
+                "leadBusiness"
+            ) || null,
+
+        location:
+            getValue(
+                "leadLocation"
+            ) || null,
+
+        lead_type:
+            leadType,
+
+        status:
+            normalizedStatus,
+
+
+        // =================================================
+        // STATUS INPUT DATE
+        // =================================================
+        // Manual:
+        // User menentukan sendiri tanggal
+        // customer masuk ke status tersebut.
+        // =================================================
+
+        status_started_at:
+            getValue(
+                "leadStatusStartedAt"
+            ) || null,
+
+
+        // =================================================
+        // APPOINTMENT
+        // =================================================
+
+        appointment:
+            getValue(
+                "leadAppointment"
+            ) || null,
+
+
+        // =================================================
+        // SITE SURVEY
+        // =================================================
+
+        site_survey:
+            getValue(
+                "leadSiteSurvey"
+            ) || null,
+
+
+        // =================================================
+        // QUOTATION
+        // =================================================
+
+        quotation:
+            getValue(
+                "leadQuotation"
+            ) || null,
+
+
+        // =================================================
+        // NOTES
+        // =================================================
+
+        notes:
+            getValue(
+                "leadNotes"
+            ) || null
 
     };
 
 
-    // ========================================================
-    // COMPATIBILITY NAMES
-    // ========================================================
+    // ----------------------------------------------------
+    // SALES ASSIGNMENT
+    // ----------------------------------------------------
 
-    window.crmOpenAddCustomer =
-        openAddCustomer;
+    if (isAdmin()) {
 
-
-    window.crmOpenEditCustomer =
-        openEditCustomer;
-
-
-    window.openAddCustomer =
-        openAddCustomer;
+        const selectedSales =
+            getValue(
+                "leadSales"
+            ) || getValue(
+                "leadSalesAssign"
+            );
 
 
-    window.openEditCustomer =
-        openEditCustomer;
+        payload.sales_id =
+            selectedSales || null;
+
+    }
 
 
-    window.closeCustomerForm =
-        closeModal;
+    if (isSales()) {
+
+        payload.sales_id =
+            profile.id || null;
+
+    }
 
 
-    window.saveCustomer =
-        saveCustomer;
+    return payload;
+
+}
 
 
-    // ========================================================
-    // DOM READY
-    // ========================================================
+
+// ========================================================
+// SAVE CUSTOMER
+// ========================================================
+
+async function saveCustomer() {
+
+    if (customerSaving) {
+        return;
+    }
+
+
+    const supabase =
+        getSupabase();
+
+
+    if (!supabase) {
+
+        showToast(
+            "Supabase is not available.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    const profile =
+        getProfile();
+
+
+    if (!profile) {
+
+        showToast(
+            "User profile is not available.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    try {
+
+        customerSaving = true;
+
+
+        const payload =
+            buildPayload();
+
+
+        const customerId =
+            String(
+                getValue("leadId") ||
+                editingCustomerId ||
+                ""
+            ).trim();
+
+
+        const saveButton =
+            getElement(
+                "lead-save-button"
+            );
+
+
+        if (saveButton) {
+
+            saveButton.disabled =
+                true;
+
+        }
+
+
+        showLoading(
+            customerId
+                ? "Updating customer..."
+                : "Saving customer..."
+        );
+
+
+        // =================================================
+        // UPDATE EXISTING CUSTOMER
+        // =================================================
+
+        if (customerId) {
+
+            payload.updated_by =
+                profile.id || null;
+
+
+            // =================================================
+            // IMPORTANT:
+            // UPDATE LAST UPDATED TIME
+            // =================================================
+            //
+            // Every time the customer is edited,
+            // updated_at is changed to the current
+            // date and time.
+            //
+            // This value is used by Customer Profile
+            // to calculate:
+            //
+            // "0 DAYS SINCE UPDATE"
+            // "1 DAY SINCE UPDATE"
+            // "3 DAYS SINCE UPDATE"
+            //
+            // =================================================
+
+            payload.updated_at =
+                new Date().toISOString();
+
+
+            const result =
+                await supabase
+                    .from("leads")
+                    .update(payload)
+                    .eq(
+                        "id",
+                        customerId
+                    );
+
+
+            if (result.error) {
+
+                throw result.error;
+
+            }
+
+
+            showToast(
+                "Customer updated successfully.",
+                "success"
+            );
+
+        }
+
+
+        // =================================================
+        // INSERT NEW CUSTOMER
+        // =================================================
+
+        else {
+
+            payload.created_by =
+                profile.id || null;
+
+
+            payload.updated_by =
+                profile.id || null;
+
+
+            // =================================================
+            // CREATED / LAST UPDATED
+            // =================================================
+            //
+            // New customer starts with the same
+            // created and updated timestamp.
+            //
+            // =================================================
+
+            const now =
+                new Date().toISOString();
+
+
+            payload.created_at =
+                now;
+
+
+            payload.updated_at =
+                now;
+
+
+            const result =
+                await supabase
+                    .from("leads")
+                    .insert(payload)
+                    .select("*")
+                    .single();
+
+
+            if (result.error) {
+
+                throw result.error;
+
+            }
+
+
+            showToast(
+                "Customer added successfully.",
+                "success"
+            );
+
+        }
+
+
+        // =================================================
+        // CLOSE
+        // =================================================
+
+        closeModal();
+
+
+        // =================================================
+        // REFRESH CUSTOMER PROFILE
+        // =================================================
+        //
+        // If the user is currently viewing a Customer
+        // Profile, reload it so the new updated_at
+        // immediately appears.
+        //
+        // =================================================
+
+        if (
+            customerId &&
+            typeof window.crmRefreshCustomerProfile ===
+                "function"
+        ) {
+
+            await window.crmRefreshCustomerProfile();
+
+        }
+
+
+        // =================================================
+        // REFRESH LEADS
+        // =================================================
+
+        if (
+            typeof window.loadLeads === "function"
+        ) {
+
+            await window.loadLeads(
+                window.currentPage || 1
+            );
+
+        }
+        else if (
+            window.FSILeads &&
+            typeof window.FSILeads.loadLeads === "function"
+        ) {
+
+            await window.FSILeads.loadLeads(
+                window.currentPage || 1
+            );
+
+        }
+
+
+        // =================================================
+        // REFRESH DASHBOARD
+        // =================================================
+
+        if (
+            window.FSIDashboard &&
+            typeof window.FSIDashboard.loadDashboard === "function"
+        ) {
+
+            await window.FSIDashboard.loadDashboard();
+
+        }
+        else if (
+            typeof window.loadDashboard === "function"
+        ) {
+
+            await window.loadDashboard();
+
+        }
+
+
+        // =================================================
+        // EVENT
+        // =================================================
+
+        document.dispatchEvent(
+            new CustomEvent(
+                "fsi:lead-changed",
+                {
+
+                    detail: {
+
+                        action:
+                            customerId
+                                ? "update"
+                                : "insert",
+
+                        id:
+                            customerId || null
+
+                    }
+
+                }
+            )
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "FSI CRM: Save customer error:",
+            error
+        );
+
+
+        showToast(
+            error?.message ||
+            "Unable to save customer.",
+            "error"
+        );
+
+
+    } finally {
+
+        customerSaving = false;
+
+
+        const saveButton =
+            getElement(
+                "lead-save-button"
+            );
+
+
+        if (saveButton) {
+
+            saveButton.disabled =
+                false;
+
+        }
+
+
+        hideLoading();
+
+    }
+
+}
+
+
+
+// ========================================================
+// BUTTON EVENTS
+// ========================================================
+
+function bindButtons() {
+
+    const closeButton =
+        getElement(
+            "lead-modal-close"
+        );
+
 
     if (
-        document.readyState === "loading"
+        closeButton &&
+        !closeButton.dataset.customerFormBound
     ) {
 
-        document.addEventListener(
-            "DOMContentLoaded",
-            initialize
+        closeButton.dataset.customerFormBound =
+            "true";
+
+
+        closeButton.addEventListener(
+            "click",
+            function (event) {
+
+                event.preventDefault();
+
+                closeModal();
+
+            }
         );
 
     }
-    else {
 
-        initialize();
+
+    const cancelButton =
+        getElement(
+            "lead-modal-cancel"
+        );
+
+
+    if (
+        cancelButton &&
+        !cancelButton.dataset.customerFormBound
+    ) {
+
+        cancelButton.dataset.customerFormBound =
+            "true";
+
+
+        cancelButton.addEventListener(
+            "click",
+            function (event) {
+
+                event.preventDefault();
+
+                closeModal();
+
+            }
+        );
 
     }
+
+
+    const form =
+        getForm();
+
+
+    if (
+        form &&
+        !form.dataset.customerFormBound
+    ) {
+
+        form.dataset.customerFormBound =
+            "true";
+
+
+        form.addEventListener(
+            "submit",
+            function (event) {
+
+                event.preventDefault();
+
+                saveCustomer();
+
+            }
+        );
+
+    }
+
+
+    const modal =
+        getModal();
+
+
+    if (
+        modal &&
+        !modal.dataset.customerFormBound
+    ) {
+
+        modal.dataset.customerFormBound =
+            "true";
+
+
+        modal.addEventListener(
+            "click",
+            function (event) {
+
+                if (
+                    event.target === modal
+                ) {
+
+                    closeModal();
+
+                }
+
+            }
+        );
+
+    }
+
+
+    // ====================================================
+    // LEAD TYPE → BUSINESS
+    // ====================================================
+    // Ketika Lead Type berubah:
+    //
+    // Customer → Business Customer
+    // Partner  → Business Partner
+    //
+    // Business lama dikosongkan agar tidak membawa
+    // pilihan Business dari Lead Type sebelumnya.
+    // ====================================================
+
+
+    const leadTypeSelect =
+        getElement("leadType");
+
+
+    if (
+        leadTypeSelect &&
+        !leadTypeSelect.dataset.customerFormBusinessBound
+    ) {
+
+        leadTypeSelect.dataset.customerFormBusinessBound =
+            "true";
+
+
+        leadTypeSelect.addEventListener(
+            "change",
+            function () {
+
+                setupBusinessOptions(
+                    leadTypeSelect.value,
+                    ""
+                );
+
+            }
+        );
+
+    }
+
+}
+
+
+
+// ========================================================
+// ESC KEY
+// ========================================================
+
+function bindKeyboard() {
+
+    if (
+        document.body.dataset.customerFormKeyboardBound
+    ) {
+
+        return;
+
+    }
+
+
+    document.body.dataset.customerFormKeyboardBound =
+        "true";
+
+
+    document.addEventListener(
+        "keydown",
+        function (event) {
+
+            if (
+                event.key !== "Escape"
+            ) {
+
+                return;
+
+            }
+
+
+            const modal =
+                getModal();
+
+
+            if (!modal) {
+
+                return;
+
+            }
+
+
+            if (
+                modal.classList.contains(
+                    "show"
+                )
+            ) {
+
+                closeModal();
+
+            }
+
+        }
+    );
+
+}
+
+
+
+// ========================================================
+// INITIALIZE
+// ========================================================
+
+function initialize() {
+
+    if (customerFormInitialized) {
+
+        return;
+
+    }
+
+
+    customerFormInitialized = true;
+
+
+    bindButtons();
+
+    bindKeyboard();
+
+
+    console.log(
+        "FSI CRM: Customer Form module initialized."
+    );
+
+}
+
+
+
+// ========================================================
+// GLOBAL EXPORT
+// ========================================================
+
+window.FSICustomerForm = {
+
+    openAddCustomer:
+        openAddCustomer,
+
+    openEditCustomer:
+        openEditCustomer,
+
+    closeModal:
+        closeModal,
+
+    saveCustomer:
+        saveCustomer,
+
+    loadCustomer:
+        loadCustomer
+
+};
+
+
+
+// ========================================================
+// COMPATIBILITY NAMES
+// ========================================================
+
+window.crmOpenAddCustomer =
+    openAddCustomer;
+
+
+window.crmOpenEditCustomer =
+    openEditCustomer;
+
+
+window.openAddCustomer =
+    openAddCustomer;
+
+
+window.openEditCustomer =
+    openEditCustomer;
+
+
+window.closeCustomerForm =
+    closeModal;
+
+
+window.saveCustomer =
+    saveCustomer;
+
+
+
+// ========================================================
+// DOM READY
+// ========================================================
+
+if (
+    document.readyState === "loading"
+) {
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        initialize
+    );
+
+}
+else {
+
+    initialize();
+
+}
 
 })();
