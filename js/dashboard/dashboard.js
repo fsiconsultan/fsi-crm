@@ -450,15 +450,16 @@ async function updateDashboard() {
 // GET SELECTED SALES ID
 // ============================================================
 //
-// Fungsi ini membaca Sales yang sedang dipilih oleh Admin.
+// Fungsi ini khusus membaca Sales yang sedang dipilih
+// pada Dashboard.
 //
-// Prioritas utama:
-// 1. #salesFilter
-// 2. #dashboardSalesFilter
-// 3. #topSalesFilter
-// 4. #leadSalesFilter
-// 5. #filter-sales
-// 6. #filterSales
+// Dashboard menggunakan:
+// #salesFilter
+//
+// Filter Leads tetap menggunakan:
+// #filter-sales
+//
+// Keduanya sengaja dipisahkan agar tidak saling mengganggu.
 //
 // Jika value kosong:
 // berarti All Sales.
@@ -470,15 +471,7 @@ function dashboardGetSelectedSalesId() {
 
         "#salesFilter",
 
-        "#dashboardSalesFilter",
-
-        "#topSalesFilter",
-
-        "#leadSalesFilter",
-
-        "#filter-sales",
-
-        "#filterSales"
+        "#dashboardSalesFilter"
 
     ];
 
@@ -513,7 +506,7 @@ function dashboardGetSelectedSalesId() {
 // REFRESH DASHBOARD
 // ============================================================
 //
-// Ketika Admin mengganti Sales:
+// Ketika Admin mengganti Sales pada Dashboard:
 //
 // All Sales
 // Sales A
@@ -529,15 +522,7 @@ function dashboardBindSalesFilterChange() {
 
         "#salesFilter",
 
-        "#dashboardSalesFilter",
-
-        "#topSalesFilter",
-
-        "#leadSalesFilter",
-
-        "#filter-sales",
-
-        "#filterSales"
+        "#dashboardSalesFilter"
 
     ];
 
@@ -988,7 +973,7 @@ document.addEventListener(
 
 
         /*
-         * Bind Sales filter.
+         * Bind Sales filter Dashboard.
          */
         dashboardBindSalesFilterChange();
 
