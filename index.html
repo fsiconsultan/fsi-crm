@@ -776,9 +776,54 @@
                     ></div>
 
 
+                    <!-- =================================================
+                         DASHBOARD SALES FILTER
+                    ================================================== -->
+
+                    <div class="dashboard-filter-bar admin-only">
+
+                        <div class="dashboard-filter-content">
+
+                            <div class="dashboard-filter-label">
+
+                                <i
+                                    data-lucide="users"
+                                    aria-hidden="true"
+                                ></i>
+
+                                <span>
+                                    View Dashboard
+                                </span>
+
+                            </div>
+
+
+                            <select
+                                id="salesFilter"
+                                class="dashboard-sales-filter"
+                                aria-label="Filter Dashboard berdasarkan Sales"
+                            >
+
+                                <option value="">
+                                    All Sales
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- =================================================
+                         MAIN DASHBOARD STATS
+                    ================================================== -->
+
                     <div class="stats-grid">
 
-                        <!-- TOTAL -->
+
+                        <!-- TOTAL LEADS -->
 
                         <article class="stat-card">
 
@@ -791,16 +836,19 @@
 
                             </div>
 
+
                             <div class="stat-details">
 
-                                <span>Total Leads</span>
+                                <span>
+                                    Total Leads
+                                </span>
 
                                 <strong id="statTotal">
                                     0
                                 </strong>
 
                                 <small>
-                                    All customers
+                                    Total customers
                                 </small>
 
                             </div>
@@ -808,7 +856,8 @@
                         </article>
 
 
-                        <!-- 1. NEW -->
+
+                        <!-- NEW -->
 
                         <article class="stat-card">
 
@@ -821,9 +870,12 @@
 
                             </div>
 
+
                             <div class="stat-details">
 
-                                <span>New</span>
+                                <span>
+                                    New
+                                </span>
 
                                 <strong id="statNew">
                                     0
@@ -838,7 +890,8 @@
                         </article>
 
 
-                        <!-- 2. FIRST CONTACT -->
+
+                        <!-- INTERESTED -->
 
                         <article class="stat-card">
 
@@ -851,16 +904,19 @@
 
                             </div>
 
+
                             <div class="stat-details">
 
-                                <span>First Contact</span>
+                                <span>
+                                    Interested
+                                </span>
 
                                 <strong id="statInterested">
                                     0
                                 </strong>
 
                                 <small>
-                                    First contact made
+                                    Interested customers
                                 </small>
 
                             </div>
@@ -868,7 +924,8 @@
                         </article>
 
 
-                        <!-- 3. FIRST MEETING / APPOINTMENT / SITE SURVEY -->
+
+                        <!-- FOLLOW UP -->
 
                         <article class="stat-card">
 
@@ -881,10 +938,11 @@
 
                             </div>
 
+
                             <div class="stat-details">
 
                                 <span>
-                                    First Meeting / Appointment / Site Survey
+                                    Follow Up
                                 </span>
 
                                 <strong id="statFollowUp">
@@ -892,7 +950,7 @@
                                 </strong>
 
                                 <small>
-                                    Meeting or survey stage
+                                    Customers to follow up
                                 </small>
 
                             </div>
@@ -900,74 +958,8 @@
                         </article>
 
 
-                        <!-- 4. QUOTATION -->
 
-                        <article class="stat-card">
-
-                            <div class="stat-icon bg-yellow">
-
-                                <i
-                                    data-lucide="file-text"
-                                    aria-hidden="true"
-                                ></i>
-
-                            </div>
-
-                            <div class="stat-details">
-
-                                <span>
-                                    Quotation
-                                </span>
-
-                                <strong id="statQuotation">
-                                    0
-                                </strong>
-
-                                <small>
-                                    Quotation stage
-                                </small>
-
-                            </div>
-
-                        </article>
-
-
-                        <!-- 5. SECOND APPOINTMENT -->
-
-                        <article class="stat-card">
-
-                            <div class="stat-icon bg-purple">
-
-                                <i
-                                    data-lucide="calendar-clock"
-                                    aria-hidden="true"
-                                ></i>
-
-                            </div>
-
-                            <div class="stat-details">
-
-                                <span>
-                                    Second Appointment
-                                </span>
-
-                                <strong id="statAppointment">
-                                    0
-                                </strong>
-
-                                <small>
-                                    Follow-up meeting
-                                </small>
-
-                            </div>
-
-                        </article>
-
-
-                        <!-- =================================================
-                             INTERNAL ID statSPK KEPT FOR
-                             JAVASCRIPT COMPATIBILITY
-                        ================================================== -->
+                        <!-- CLOSING -->
 
                         <article class="stat-card">
 
@@ -980,18 +972,19 @@
 
                             </div>
 
+
                             <div class="stat-details">
 
                                 <span>
-                                    Deal
+                                    Closing
                                 </span>
 
-                                <strong id="statSPK">
+                                <strong id="statClosing">
                                     0
                                 </strong>
 
                                 <small>
-                                    Successful deals
+                                    Closing customers
                                 </small>
 
                             </div>
@@ -999,40 +992,49 @@
                         </article>
 
 
-                        <!-- 7. NO DEAL -->
 
-                        <article class="stat-card">
-
-                            <div class="stat-icon bg-red">
-
-                                <i
-                                    data-lucide="user-round-x"
-                                    aria-hidden="true"
-                                ></i>
-
-                            </div>
-
-                            <div class="stat-details">
-
-                                <span>
-                                    No Deal
-                                </span>
-
-                                <strong id="statNotInterested">
-                                    0
-                                </strong>
-
-                                <small>
-                                    Customers not continuing
-                                </small>
-
-                            </div>
-
-                        </article>
-
+                        <!-- =================================================
+                             LEGACY IDS
+                             KEPT FOR JAVASCRIPT COMPATIBILITY
+                        ================================================== -->
 
                         <strong
-                            id="statClosing"
+                            id="statFlyerSent"
+                            style="display:none;"
+                        >
+                            0
+                        </strong>
+
+                        <strong
+                            id="statAppointment"
+                            style="display:none;"
+                        >
+                            0
+                        </strong>
+
+                        <strong
+                            id="statSiteSurvey"
+                            style="display:none;"
+                        >
+                            0
+                        </strong>
+
+                        <strong
+                            id="statQuotation"
+                            style="display:none;"
+                        >
+                            0
+                        </strong>
+
+                        <strong
+                            id="statSPK"
+                            style="display:none;"
+                        >
+                            0
+                        </strong>
+
+                        <strong
+                            id="statNotInterested"
                             style="display:none;"
                         >
                             0
@@ -1042,7 +1044,16 @@
 
 
 
+                    <!-- =================================================
+                         DASHBOARD CONTENT
+                    ================================================== -->
+
                     <div class="dashboard-grid">
+
+
+                        <!-- =================================================
+                             SALES PIPELINE
+                        ================================================== -->
 
                         <section class="dashboard-card">
 
@@ -1076,6 +1087,11 @@
 
                         </section>
 
+
+
+                        <!-- =================================================
+                             RECENT LEADS
+                        ================================================== -->
 
                         <section class="dashboard-card">
 
