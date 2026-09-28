@@ -1,3 +1,4 @@
+```css
 /* =========================================================
    DASHBOARD
 ========================================================= */
@@ -8,6 +9,7 @@
     gap: 14px;
     margin-bottom: 18px;
 }
+
 .stat-card {
     min-width: 0;
     display: flex;
@@ -24,11 +26,15 @@
         box-shadow var(--transition),
         border-color var(--transition);
 }
+
 .stat-card:hover {
-    transform: translateY(-2px);
+    transform:
+        translateY(-3px)
+        scale(1.01);
     border-color: #dbe3ef;
     box-shadow: var(--shadow-md);
 }
+
 .stat-icon {
     width: 43px;
     height: 43px;
@@ -37,48 +43,68 @@
     justify-content: center;
     flex-shrink: 0;
     border-radius: 11px;
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease;
 }
+
+.stat-card:hover .stat-icon {
+    transform:
+        scale(1.08)
+        rotate(-2deg);
+}
+
 .stat-icon svg {
     width: 20px;
     height: 20px;
 }
+
 .stat-icon.bg-blue {
     color: var(--primary);
     background: var(--primary-light);
 }
+
 .stat-icon.bg-cyan {
     color: var(--info);
     background: var(--info-light);
 }
+
 .stat-icon.bg-green {
     color: var(--success);
     background: var(--success-light);
 }
+
 .stat-icon.bg-orange {
     color: var(--warning);
     background: var(--warning-light);
 }
+
 .stat-icon.bg-purple {
     color: var(--purple);
     background: var(--purple-light);
 }
+
 .stat-icon.bg-yellow {
     color: var(--yellow);
     background: var(--yellow-light);
 }
+
 .stat-icon.bg-indigo {
     color: var(--indigo);
     background: var(--indigo-light);
 }
+
 .stat-icon.bg-red {
     color: var(--danger);
     background: var(--danger-light);
 }
+
 .stat-details {
     min-width: 0;
     display: flex;
     flex-direction: column;
 }
+
 .stat-details span {
     color: var(--slate-500);
     font-size: 11px;
@@ -87,13 +113,24 @@
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
 .stat-details strong {
+    display: inline-block;
     margin-top: 2px;
     color: var(--slate-900);
     font-size: 23px;
     line-height: 1.2;
     font-weight: 800;
+    transition:
+        transform 0.2s ease;
 }
+
+.stat-card:hover
+.stat-details strong {
+    transform:
+        scale(1.04);
+}
+
 .stat-details small {
     margin-top: 3px;
     color: var(--slate-400);
@@ -111,6 +148,7 @@
         minmax(360px, 0.85fr);
     gap: 18px;
 }
+
 .dashboard-card {
     min-width: 0;
     overflow: hidden;
@@ -118,7 +156,26 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-xs);
+
+    animation:
+        fsiDashboardCardEnter
+        0.55s
+        cubic-bezier(0.22, 1, 0.36, 1)
+        both;
 }
+
+.dashboard-grid
+.dashboard-card:nth-child(1) {
+    animation-delay:
+        0.20s;
+}
+
+.dashboard-grid
+.dashboard-card:nth-child(2) {
+    animation-delay:
+        0.28s;
+}
+
 .card-header {
     display: flex;
     align-items: center;
@@ -126,13 +183,21 @@
     gap: 15px;
     padding: 18px 19px;
     border-bottom: 1px solid var(--slate-100);
+
+    animation:
+        fsiHeaderEnter
+        0.35s
+        ease
+        both;
 }
+
 .card-header h2 {
     margin: 0;
     color: var(--slate-900);
     font-size: 14px;
     font-weight: 800;
 }
+
 .card-header p {
     margin: 4px 0 0;
     color: var(--slate-400);
@@ -146,16 +211,54 @@
 .pipeline-summary {
     padding: 15px 18px;
 }
+
 .pipeline-item {
     display: flex;
     align-items: center;
     gap: 11px;
     padding: 10px 2px;
     border-bottom: 1px solid var(--slate-100);
+
+    opacity: 0;
+
+    transform:
+        translateX(-8px);
+
+    animation:
+        fsiPipelineEnter
+        0.4s
+        ease
+        forwards;
 }
+
 .pipeline-item:last-child {
     border-bottom: 0;
 }
+
+.pipeline-item:nth-child(1) {
+    animation-delay: 0.10s;
+}
+
+.pipeline-item:nth-child(2) {
+    animation-delay: 0.15s;
+}
+
+.pipeline-item:nth-child(3) {
+    animation-delay: 0.20s;
+}
+
+.pipeline-item:nth-child(4) {
+    animation-delay: 0.25s;
+}
+
+.pipeline-item:nth-child(5) {
+    animation-delay: 0.30s;
+}
+
+.pipeline-item:nth-child(6) {
+    animation-delay: 0.35s;
+}
+
 .pipeline-dot {
     width: 9px;
     height: 9px;
@@ -163,16 +266,19 @@
     border-radius: 50%;
     background: var(--primary);
 }
+
 .pipeline-content {
     min-width: 0;
     flex: 1;
 }
+
 .pipeline-label {
     display: block;
     color: var(--slate-600);
     font-size: 11px;
     font-weight: 600;
 }
+
 .pipeline-bar {
     height: 5px;
     margin-top: 6px;
@@ -180,6 +286,7 @@
     border-radius: 99px;
     background: var(--slate-100);
 }
+
 .pipeline-bar-fill {
     height: 100%;
     border-radius: inherit;
@@ -189,7 +296,17 @@
             var(--primary),
             #60a5fa
         );
+
+    transform-origin:
+        left center;
+
+    animation:
+        fsiPipelineBar
+        0.8s
+        cubic-bezier(0.22, 1, 0.36, 1)
+        both;
 }
+
 .pipeline-count {
     min-width: 28px;
     color: var(--slate-800);
@@ -197,11 +314,36 @@
     font-weight: 800;
     text-align: right;
 }
+
 .pipeline-loading {
+    position: relative;
+    overflow: hidden;
     padding: 25px 10px;
     color: var(--slate-400);
     font-size: 12px;
     text-align: center;
+}
+
+.pipeline-loading::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    transform:
+        translateX(-100%);
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.55),
+            transparent
+        );
+
+    animation:
+        fsiLoadingShimmer
+        1.3s
+        infinite;
 }
 
 
@@ -211,6 +353,7 @@
 .recent-leads {
     padding: 7px 18px 13px;
 }
+
 .recent-lead-item {
     display: flex;
     align-items: center;
@@ -218,10 +361,47 @@
     padding: 11px 2px;
     border-bottom: 1px solid var(--slate-100);
     cursor: pointer;
+
+    opacity: 0;
+
+    transform:
+        translateY(8px);
+
+    animation:
+        fsiRecentLeadEnter
+        0.4s
+        ease
+        forwards;
 }
+
 .recent-lead-item:last-child {
     border-bottom: 0;
 }
+
+.recent-lead-item:nth-child(1) {
+    animation-delay: 0.08s;
+}
+
+.recent-lead-item:nth-child(2) {
+    animation-delay: 0.14s;
+}
+
+.recent-lead-item:nth-child(3) {
+    animation-delay: 0.20s;
+}
+
+.recent-lead-item:nth-child(4) {
+    animation-delay: 0.26s;
+}
+
+.recent-lead-item:nth-child(5) {
+    animation-delay: 0.32s;
+}
+
+.recent-lead-item:nth-child(6) {
+    animation-delay: 0.38s;
+}
+
 .recent-lead-avatar {
     width: 35px;
     height: 35px;
@@ -234,11 +414,23 @@
     background: var(--primary-light);
     font-size: 11px;
     font-weight: 800;
+
+    transition:
+        transform 0.22s ease,
+        box-shadow 0.22s ease;
 }
+
+.recent-lead-item:hover
+.recent-lead-avatar {
+    transform:
+        scale(1.08);
+}
+
 .recent-lead-content {
     min-width: 0;
     flex: 1;
 }
+
 .recent-lead-name {
     overflow: hidden;
     color: var(--slate-800);
@@ -247,11 +439,13 @@
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
 .recent-lead-meta {
     margin-top: 2px;
     color: var(--slate-400);
     font-size: 9px;
 }
+
 .recent-lead-status {
     flex-shrink: 0;
 }
@@ -267,6 +461,7 @@
     gap: 10px;
     padding: 17px 19px;
 }
+
 .pipeline-date-item {
     position: relative;
     min-width: 0;
@@ -282,16 +477,49 @@
             #fafbfc,
             #ffffff
         );
+
     transition:
         transform var(--transition),
         border-color var(--transition),
         box-shadow var(--transition);
+
+    animation:
+        fsiDateItemEnter
+        0.4s
+        ease
+        both;
 }
+
 .pipeline-date-item:hover {
     transform: translateY(-1px);
     border-color: #dbe3ef;
     box-shadow: var(--shadow-xs);
 }
+
+.pipeline-date-item:nth-child(1) {
+    animation-delay: 0.05s;
+}
+
+.pipeline-date-item:nth-child(2) {
+    animation-delay: 0.10s;
+}
+
+.pipeline-date-item:nth-child(3) {
+    animation-delay: 0.15s;
+}
+
+.pipeline-date-item:nth-child(4) {
+    animation-delay: 0.20s;
+}
+
+.pipeline-date-item:nth-child(5) {
+    animation-delay: 0.25s;
+}
+
+.pipeline-date-item:nth-child(6) {
+    animation-delay: 0.30s;
+}
+
 .pipeline-date-icon {
     width: 31px;
     height: 31px;
@@ -303,41 +531,49 @@
     color: var(--primary);
     background: var(--primary-light);
 }
+
 .pipeline-date-icon svg {
     width: 15px;
     height: 15px;
 }
+
 .pipeline-date-item:nth-child(2)
 .pipeline-date-icon {
     color: var(--purple);
     background: var(--purple-light);
 }
+
 .pipeline-date-item:nth-child(3)
 .pipeline-date-icon {
     color: var(--info);
     background: var(--info-light);
 }
+
 .pipeline-date-item:nth-child(4)
 .pipeline-date-icon {
     color: var(--warning);
     background: var(--warning-light);
 }
+
 .pipeline-date-item:nth-child(5)
 .pipeline-date-icon {
     color: var(--indigo);
     background: var(--indigo-light);
 }
+
 .pipeline-date-item:nth-child(6)
 .pipeline-date-icon {
     color: var(--success);
     background: var(--success-light);
 }
+
 .pipeline-date-item .pipeline-date-label,
 .pipeline-date-item small {
     color: var(--slate-400);
     font-size: 9px;
     font-weight: 700;
 }
+
 .pipeline-date-item .pipeline-date-value,
 .pipeline-date-item strong {
     margin-top: 3px;
@@ -362,6 +598,249 @@
     color: var(--danger);
     font-size: 12px;
 }
+
 #dashboardError:not(:empty) {
     display: block;
 }
+
+
+/* =========================================================
+   FSI CRM DASHBOARD ANIMATION
+========================================================= */
+
+
+/* =========================================================
+   STAT CARDS - ENTER ANIMATION
+========================================================= */
+
+.stats-grid .stat-card {
+    opacity: 0;
+
+    transform:
+        translateY(14px)
+        scale(0.98);
+
+    animation:
+        fsiStatCardEnter
+        0.45s
+        cubic-bezier(0.22, 1, 0.36, 1)
+        forwards;
+}
+
+.stats-grid .stat-card:nth-child(1) {
+    animation-delay: 0.05s;
+}
+
+.stats-grid .stat-card:nth-child(2) {
+    animation-delay: 0.10s;
+}
+
+.stats-grid .stat-card:nth-child(3) {
+    animation-delay: 0.15s;
+}
+
+.stats-grid .stat-card:nth-child(4) {
+    animation-delay: 0.20s;
+}
+
+.stats-grid .stat-card:nth-child(5) {
+    animation-delay: 0.25s;
+}
+
+
+@keyframes fsiStatCardEnter {
+
+    from {
+        opacity: 0;
+
+        transform:
+            translateY(14px)
+            scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+
+        transform:
+            translateY(0)
+            scale(1);
+    }
+}
+
+
+/* =========================================================
+   DASHBOARD CARD ENTER
+========================================================= */
+
+@keyframes fsiDashboardCardEnter {
+
+    from {
+        opacity: 0;
+
+        transform:
+            translateY(16px);
+    }
+
+    to {
+        opacity: 1;
+
+        transform:
+            translateY(0);
+    }
+}
+
+
+/* =========================================================
+   PIPELINE ENTER
+========================================================= */
+
+@keyframes fsiPipelineEnter {
+
+    from {
+        opacity: 0;
+
+        transform:
+            translateX(-8px);
+    }
+
+    to {
+        opacity: 1;
+
+        transform:
+            translateX(0);
+    }
+}
+
+
+/* =========================================================
+   PIPELINE BAR
+========================================================= */
+
+@keyframes fsiPipelineBar {
+
+    from {
+        transform:
+            scaleX(0);
+    }
+
+    to {
+        transform:
+            scaleX(1);
+    }
+}
+
+
+/* =========================================================
+   RECENT LEAD ENTER
+========================================================= */
+
+@keyframes fsiRecentLeadEnter {
+
+    from {
+        opacity: 0;
+
+        transform:
+            translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+
+        transform:
+            translateY(0);
+    }
+}
+
+
+/* =========================================================
+   PROFILE PIPELINE ENTER
+========================================================= */
+
+@keyframes fsiDateItemEnter {
+
+    from {
+        opacity: 0;
+
+        transform:
+            translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+
+        transform:
+            translateY(0);
+    }
+}
+
+
+/* =========================================================
+   CARD HEADER ENTER
+========================================================= */
+
+@keyframes fsiHeaderEnter {
+
+    from {
+        opacity: 0;
+
+        transform:
+            translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+
+        transform:
+            translateY(0);
+    }
+}
+
+
+/* =========================================================
+   LOADING SHIMMER
+========================================================= */
+
+@keyframes fsiLoadingShimmer {
+
+    100% {
+        transform:
+            translateX(100%);
+    }
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (
+    prefers-reduced-motion: reduce
+) {
+
+    .stats-grid .stat-card,
+    .dashboard-card,
+    .pipeline-item,
+    .recent-lead-item,
+    .pipeline-date-item,
+    .card-header {
+
+        animation:
+            none !important;
+
+        opacity:
+            1 !important;
+
+        transform:
+            none !important;
+    }
+
+    .pipeline-bar-fill {
+
+        animation:
+            none !important;
+
+        transform:
+            scaleX(1) !important;
+    }
+}
+```
