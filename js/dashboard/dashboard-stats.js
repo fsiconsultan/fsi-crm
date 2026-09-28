@@ -4,30 +4,48 @@
 function calculateDashboardStats(
     data
 ) {
+
     const list =
         Array.isArray(data)
             ? data
             : [];
 
+
     /*
      * ========================================================
-     * STATUS PIPELINE BARU
+     * STATISTIK UTAMA DASHBOARD
      * ========================================================
      *
-     * 1. New
-     * 2. First Contact
-     * 3. First Meeting / Appointment / Site Survey
-     * 4. Quotation
-     * 5. Second Appointment
-     * 6. Deal
-     * 7. No Deal
+     * Data yang masuk ke fungsi ini sudah harus merupakan
+     * data yang sesuai scope Dashboard:
      *
-     * Status utama sekarang dihitung langsung
-     * dari kolom `status`.
+     * Admin:
+     *     All Sales -> semua leads
+     *     Sales A   -> leads Sales A
+     *     Sales B   -> leads Sales B
+     *     Sales C   -> leads Sales C
+     *
+     * Sales:
+     *     -> hanya leads miliknya
+     *
+     * Statistik utama:
+     *
+     * 1. Total Leads
+     * 2. New
+     * 3. Interested
+     * 4. Follow Up
+     * 5. Closing
      */
+
+
     const stats = {
+
+        /*
+         * TOTAL LEADS
+         */
         total:
             list.length,
+
 
         /*
          * NEW
@@ -38,115 +56,140 @@ function calculateDashboardStats(
                 "New"
             ),
 
-        /*
-         * FIRST CONTACT
-         */
-        firstContact:
-            dashboardCountStatus(
-                list,
-                "First Contact"
-            ),
 
         /*
-         * FIRST MEETING /
-         * APPOINTMENT /
-         * SITE SURVEY
+         * INTERESTED
          */
-        firstMeeting:
+        interested:
             dashboardCountStatus(
                 list,
-                "First Meeting / Appointment / Site Survey"
+                "Interested"
             ),
 
-        /*
-         * QUOTATION
-         */
-        quotation:
-            dashboardCountStatus(
-                list,
-                "Quotation"
-            ),
 
         /*
-         * SECOND APPOINTMENT
+         * FOLLOW UP
          */
-        secondAppointment:
+        followUp:
             dashboardCountStatus(
                 list,
-                "Second Appointment"
+                "Follow Up"
             ),
 
-        /*
-         * DEAL
-         */
-        deal:
-            dashboardCountStatus(
-                list,
-                "Deal"
-            ),
 
         /*
-         * NO DEAL
+         * CLOSING
+         *
+         * Closing dihitung dari status Closing.
          */
-        noDeal:
+        closing:
             dashboardCountStatus(
                 list,
-                "No Deal"
+                "Closing"
             )
     };
 
-    /*
-     * ========================================================
-     * LEGACY / COMPATIBILITY
-     * ========================================================
-     *
-     * ID lama masih dipakai oleh beberapa bagian Dashboard.
-     * Kita isi dengan mapping ke status baru agar tidak
-     * menyebabkan error pada modul lama.
-     */
 
     /*
-     * Flyer Sent lama
-     * sekarang = First Contact
+     * ========================================================
+     * COMPATIBILITY / LEGACY STATISTICS
+     * ========================================================
+     *
+     * Jangan dihapus karena beberapa modul lama masih
+     * mungkin mengambil nama statistik berikut.
+     */
+
+
+    /*
+     * Flyer Sent
+     *
+     * Tetap dihitung dari status aslinya jika ada.
      */
     stats.flyerSent =
-        stats.firstContact;
+        dashboardCountStatus(
+            list,
+            "Flyer Sent"
+        );
+
 
     /*
-     * Interested lama
-     * sekarang = First Contact
+     * First Contact
      *
-     * ID statInterested di index.html sekarang
-     * ditampilkan sebagai "First Contact".
+     * Tetap dipertahankan karena pipeline lama masih ada.
      */
-    stats.interested =
-        stats.firstContact;
+    stats.firstContact =
+        dashboardCountStatus(
+            list,
+            "First Contact"
+        );
+
 
     /*
-     * Follow Up lama
-     * sekarang = First Meeting / Appointment / Site Survey
+     * First Meeting / Appointment / Site Survey
      *
-     * ID statFollowUp sekarang digunakan untuk
-     * status First Meeting.
+     * Tetap dipertahankan untuk compatibility.
      */
-    stats.followUp =
-        stats.firstMeeting;
+    stats.firstMeeting =
+        dashboardCountStatus(
+            list,
+            "First Meeting / Appointment / Site Survey"
+        );
+
 
     /*
-     * Appointment lama
-     * sekarang = Second Appointment
+     * Quotation
+     */
+    stats.quotation =
+        dashboardCountStatus(
+            list,
+            "Quotation"
+        );
+
+
+    /*
+     * Second Appointment
+     */
+    stats.secondAppointment =
+        dashboardCountStatus(
+            list,
+            "Second Appointment"
+        );
+
+
+    /*
+     * Deal
+     */
+    stats.deal =
+        dashboardCountStatus(
+            list,
+            "Deal"
+        );
+
+
+    /*
+     * No Deal
+     */
+    stats.noDeal =
+        dashboardCountStatus(
+            list,
+            "No Deal"
+        );
+
+
+    /*
+     * Appointment legacy
      *
-     * ID statAppointment sekarang digunakan untuk
-     * status Second Appointment.
+     * Tetap berdasarkan field appointment.
      */
     stats.appointment =
-        stats.secondAppointment;
+        dashboardCountDateField(
+            list,
+            "appointment"
+        );
+
 
     /*
-     * Site Survey lama
-     *
-     * Tetap dihitung sebagai field legacy jika
-     * modul lama masih membutuhkannya.
+     * Site Survey legacy
      */
     stats.siteSurvey =
         dashboardCountDateField(
@@ -154,39 +197,64 @@ function calculateDashboardStats(
             "site_survey"
         );
 
+
     /*
-     * SPK lama
-     * sekarang = Deal
+     * SPK legacy
+     *
+     * Tetap mengikuti field SPK jika tersedia.
      */
     stats.spk =
-        stats.deal;
-
-    /*
-     * Closing lama
-     *
-     * Tetap dihitung untuk compatibility.
-     */
-    stats.closing =
-        dashboardCountClosing(
-            list
+        dashboardCountDateField(
+            list,
+            "spk"
         );
 
+
     /*
-     * Not Interested lama
-     * sekarang = No Deal
+     * Not Interested legacy
+     *
+     * Dashboard utama sekarang menggunakan Closing,
+     * tetapi statistik lama tetap tersedia.
      */
     stats.notInterested =
-        stats.noDeal;
+        dashboardCountStatus(
+            list,
+            "Not Interested"
+        );
+
 
     /*
      * ========================================================
-     * ALIAS STATUS BARU
+     * STATUS SUMMARY
      * ========================================================
      *
-     * Alias ini memudahkan modul Dashboard lain mengambil
-     * statistik menggunakan nama status baru.
+     * Statistik utama yang sekarang dipakai Dashboard.
      */
     stats.statuses = {
+
+        new:
+            stats.new,
+
+        interested:
+            stats.interested,
+
+        followUp:
+            stats.followUp,
+
+        closing:
+            stats.closing
+    };
+
+
+    /*
+     * ========================================================
+     * PIPELINE SUMMARY LEGACY
+     * ========================================================
+     *
+     * Tetap disediakan supaya modul pipeline lama tidak error.
+     */
+    stats.pipeline = {
+
         new:
             stats.new,
 
@@ -209,6 +277,7 @@ function calculateDashboardStats(
             stats.noDeal
     };
 
+
     return stats;
 }
 
@@ -220,14 +289,17 @@ function dashboardSetElementText(
     id,
     value
 ) {
+
     const element =
         document.getElementById(
             id
         );
 
+
     if (!element) {
         return;
     }
+
 
     element.textContent =
         String(
@@ -242,105 +314,87 @@ function dashboardSetElementText(
 function renderDashboardStats(
     stats
 ) {
+
     if (!stats) {
         return;
     }
+
 
     /*
      * ========================================================
      * STAT CARD MAP
      * ========================================================
      *
-     * HTML lama tetap digunakan supaya tidak merusak
-     * index.html.
+     * Kartu utama yang kita inginkan:
      *
-     * ID lama → status baru:
+     * statTotal
+     *      -> Total Leads
      *
      * statNew
-     *      → New
+     *      -> New
      *
      * statInterested
-     *      → First Contact
+     *      -> Interested
      *
      * statFollowUp
-     *      → First Meeting / Appointment / Site Survey
+     *      -> Follow Up
      *
-     * statQuotation
-     *      → Quotation
+     * statClosing
+     *      -> Closing
      *
-     * statAppointment
-     *      → Second Appointment
-     *
-     * statSPK
-     *      → Deal
-     *
-     * statNotInterested
-     *      → No Deal
+     * ID lain tetap dipertahankan untuk compatibility.
      */
     const statMap = {
 
         /*
-         * TOTAL
+         * ====================================================
+         * STATISTIK UTAMA
+         * ====================================================
          */
+
         statTotal:
             stats.total,
 
-        /*
-         * NEW
-         */
         statNew:
             stats.new,
 
-        /*
-         * FIRST CONTACT
-         */
         statInterested:
-            stats.firstContact,
+            stats.interested,
 
-        /*
-         * FIRST MEETING /
-         * APPOINTMENT /
-         * SITE SURVEY
-         */
         statFollowUp:
-            stats.firstMeeting,
+            stats.followUp,
+
+        statClosing:
+            stats.closing,
+
 
         /*
-         * SECOND APPOINTMENT
+         * ====================================================
+         * PIPELINE / LEGACY CARDS
+         * ====================================================
+         *
+         * Tetap dirender supaya HTML lama tidak error.
          */
-        statAppointment:
-            stats.secondAppointment,
 
-        /*
-         * QUOTATION
-         */
-        statQuotation:
-            stats.quotation,
-
-        /*
-         * DEAL
-         */
-        statSPK:
-            stats.deal,
-
-        /*
-         * NO DEAL
-         */
-        statNotInterested:
-            stats.noDeal,
-
-        /*
-         * LEGACY
-         */
         statFlyerSent:
-            stats.firstContact,
+            stats.flyerSent,
+
+        statAppointment:
+            stats.appointment,
 
         statSiteSurvey:
             stats.siteSurvey,
 
-        statClosing:
-            stats.closing
+        statQuotation:
+            stats.quotation,
+
+        statSPK:
+            stats.spk,
+
+        statNotInterested:
+            stats.notInterested
     };
+
 
     /*
      * Set semua angka kartu.
@@ -354,11 +408,13 @@ function renderDashboardStats(
                 typeof window.setText ===
                 "function"
             ) {
+
                 window.setText(
                     id,
                     value
                 );
             }
+
 
             /*
              * Pastikan langsung di-set juga.
@@ -373,41 +429,61 @@ function renderDashboardStats(
 
     /*
      * ========================================================
-     * LEGACY IDs
+     * LEGACY IDS
      * ========================================================
      *
      * Jangan dihapus.
-     *
-     * Modul lama mungkin masih menggunakan ID berikut.
      */
     const alternatives = {
 
+        /*
+         * Total
+         */
         totalLeads:
             stats.total,
 
+
+        /*
+         * New
+         */
         newLeads:
             stats.new,
 
+
         /*
-         * First Contact
+         * Interested
          */
-        flyerSentLeads:
-            stats.firstContact,
-
         interestedLeads:
-            stats.firstContact,
+            stats.interested,
+
 
         /*
-         * First Meeting
+         * Follow Up
          */
         followUpLeads:
-            stats.firstMeeting,
+            stats.followUp,
+
 
         /*
-         * Second Appointment
+         * Closing
+         */
+        closingLeads:
+            stats.closing,
+
+
+        /*
+         * Legacy Flyer Sent
+         */
+        flyerSentLeads:
+            stats.flyerSent,
+
+
+        /*
+         * Legacy Appointment
          */
         appointmentLeads:
-            stats.secondAppointment,
+            stats.appointment,
+
 
         /*
          * Legacy Site Survey
@@ -415,29 +491,26 @@ function renderDashboardStats(
         siteSurveyLeads:
             stats.siteSurvey,
 
+
         /*
          * Quotation
          */
         quotationLeads:
             stats.quotation,
 
+
         /*
-         * Deal
+         * SPK
          */
         spkLeads:
-            stats.deal,
+            stats.spk,
+
 
         /*
-         * Legacy Closing
-         */
-        closingLeads:
-            stats.closing,
-
-        /*
-         * No Deal
+         * Not Interested
          */
         notInterestedLeads:
-            stats.noDeal
+            stats.notInterested
     };
 
 
@@ -456,20 +529,40 @@ function renderDashboardStats(
 
     /*
      * ========================================================
-     * STATUS SUMMARY
+     * GLOBAL STATUS SUMMARY
      * ========================================================
      *
-     * Simpan juga statistik 7 status secara global.
-     * Modul Dashboard lain bisa menggunakan ini.
+     * Statistik utama Dashboard.
      */
     window.FSIDashboard =
         window.FSIDashboard ||
         {};
 
+
     window.FSIDashboard.statusStats = {
+
+        /*
+         * Dashboard utama
+         */
+        total:
+            stats.total,
+
         new:
             stats.new,
 
+        interested:
+            stats.interested,
+
+        followUp:
+            stats.followUp,
+
+        closing:
+            stats.closing,
+
+
+        /*
+         * Pipeline lama
+         */
         firstContact:
             stats.firstContact,
 
@@ -491,13 +584,21 @@ function renderDashboardStats(
 
 
     /*
+     * Simpan stats utama secara global.
+     */
+    window.FSIDashboard.stats =
+        stats;
+
+
+    /*
      * Setelah angka dirender,
-     * pastikan semua kartu kembali interactive.
+     * pastikan kartu interactive.
      */
     if (
         typeof dashboardBindStatCardClicks ===
         "function"
     ) {
+
         dashboardBindStatCardClicks();
     }
 }
