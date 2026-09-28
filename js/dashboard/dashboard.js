@@ -1,4 +1,247 @@
 // ============================================================
+// DASHBOARD GREETING
+// ============================================================
+//
+// Tambahan:
+// Menampilkan sapaan otomatis berdasarkan waktu,
+// nama user, dan role user.
+//
+// Contoh:
+//
+// Good Morning, Andi!
+// Good Afternoon, Budi!
+// Good Evening, Rist!
+//
+// Jika nama tidak tersedia:
+//
+// Welcome, Guest!
+// ============================================================
+
+function dashboardUpdateGreeting(profile) {
+
+    if (!profile) {
+        return;
+    }
+
+
+    /*
+     * ========================================================
+     * AMBIL NAMA USER
+     * ========================================================
+     *
+     * Mendukung beberapa kemungkinan nama field
+     * tanpa mengganggu struktur profile yang sekarang.
+     */
+    const userName =
+        String(
+            profile?.name ||
+            profile?.full_name ||
+            profile?.display_name ||
+            profile?.username ||
+            ""
+        ).trim();
+
+
+    const displayName =
+        userName ||
+        "Guest";
+
+
+    /*
+     * ========================================================
+     * AMBIL ROLE
+     * ========================================================
+     */
+    const role =
+        String(
+            profile?.role ||
+            ""
+        ).trim();
+
+
+    /*
+     * ========================================================
+     * TENTUKAN WAKTU
+     * ========================================================
+     *
+     * 05:00 - 11:59 = Good Morning
+     * 12:00 - 16:59 = Good Afternoon
+     * 17:00 - 04:59 = Good Evening
+     */
+    const hour =
+        new Date().getHours();
+
+
+    let greeting =
+        "Good Evening";
+
+
+    let icon =
+        "🌙";
+
+
+    if (
+        hour >= 5 &&
+        hour < 12
+    ) {
+
+        greeting =
+            "Good Morning";
+
+        icon =
+            "☀️";
+
+    } else if (
+        hour >= 12 &&
+        hour < 17
+    ) {
+
+        greeting =
+            "Good Afternoon";
+
+        icon =
+            "🌤️";
+
+    } else {
+
+        greeting =
+            "Good Evening";
+
+        icon =
+            "🌙";
+    }
+
+
+    /*
+     * ========================================================
+     * BUAT / AMBIL ELEMENT GREETING
+     * ========================================================
+     */
+    let greetingElement =
+        document.getElementById(
+            "dashboardGreeting"
+        );
+
+
+    /*
+     * Jika element belum ada,
+     * buat otomatis.
+     */
+    if (!greetingElement) {
+
+        greetingElement =
+            document.createElement(
+                "div"
+            );
+
+
+        greetingElement.id =
+            "dashboardGreeting";
+
+
+        greetingElement.style.display =
+            "flex";
+
+
+        greetingElement.style.alignItems =
+            "center";
+
+
+        greetingElement.style.gap =
+            "10px";
+
+
+        greetingElement.style.marginBottom =
+            "20px";
+
+
+        greetingElement.style.fontSize =
+            "24px";
+
+
+        greetingElement.style.fontWeight =
+            "600";
+
+
+        greetingElement.style.lineHeight =
+            "1.3";
+
+
+        /*
+         * Cari halaman Dashboard.
+         */
+        const dashboardPage =
+            dashboardFindPage(
+                "dashboard"
+            );
+
+
+        if (dashboardPage) {
+
+            /*
+             * Masukkan greeting
+             * sebagai element pertama.
+             */
+            dashboardPage.prepend(
+                greetingElement
+            );
+        }
+    }
+
+
+    /*
+     * ========================================================
+     * BUAT TEXT GREETING
+     * ========================================================
+     */
+    greetingElement.innerHTML =
+        `
+        <span
+            style="
+                font-size: 28px;
+                line-height: 1;
+            "
+        >
+            ${icon}
+        </span>
+
+        <span>
+            ${greeting}, ${displayName}!
+        </span>
+        `;
+
+
+    /*
+     * ========================================================
+     * ROLE INFO
+     * ========================================================
+     *
+     * Tidak mengubah tampilan utama.
+     * Hanya menyimpan informasi role di dataset
+     * jika nanti dibutuhkan.
+     */
+    greetingElement.dataset.role =
+        role ||
+        "Guest";
+
+
+    greetingElement.dataset.name =
+        displayName;
+
+
+    console.log(
+        "FSI CRM: greeting updated:",
+        {
+            greeting,
+            name: displayName,
+            role: role || "Guest",
+            hour
+        }
+    );
+}
+
+
+// ============================================================
 // UPDATE DASHBOARD
 // ============================================================
 async function updateDashboard() {
@@ -14,6 +257,15 @@ async function updateDashboard() {
 
         return;
     }
+
+
+    // ========================================================
+    // TAMBAHAN GREETING
+    // ========================================================
+    dashboardUpdateGreeting(
+        profile
+    );
+
 
     if (dashboardLoading) {
         return;
@@ -1130,6 +1382,13 @@ window.dashboardBindSalesFilterChange =
 
 
 /*
+ * Greeting export.
+ */
+window.dashboardUpdateGreeting =
+    dashboardUpdateGreeting;
+
+
+/*
  * Statistic popup exports.
  */
 
@@ -1218,6 +1477,11 @@ Object.assign(
         dashboardGetSelectedSalesId,
 
         dashboardBindSalesFilterChange,
+
+        /*
+         * Greeting.
+         */
+        dashboardUpdateGreeting,
 
         dashboardOpenStatPopup,
 
