@@ -1,12 +1,14 @@
+```css
 /* =========================================================
    FSI CRM — LOGIN / PLTS HERO
    File: css/login.css
-   Version: 2026.09 FINAL
+   Version: 2026.09 FUTURISTIC
    ========================================================= */
 
 
 /* =========================================================
    LOGIN PAGE
+   Background TETAP menggunakan logo-hero.jpg
    ========================================================= */
 
 #login-page {
@@ -21,11 +23,6 @@
 
     color: #ffffff;
 
-    /*
-     * PLTS hero background.
-     * login.css berada di /css/
-     * logo-hero.jpg berada di root project.
-     */
     background:
         linear-gradient(
             90deg,
@@ -34,6 +31,48 @@
             rgba(3, 15, 30, 0.78) 100%
         ),
         url("../logo-hero.jpg") center center / cover no-repeat;
+}
+
+
+/* =========================================================
+   FUTURISTIC LIGHT / AMBIENT EFFECT
+   ========================================================= */
+
+#login-page::before {
+    content: "";
+
+    position: absolute;
+    inset: -20%;
+
+    pointer-events: none;
+
+    background:
+        radial-gradient(
+            circle at 72% 50%,
+            rgba(56, 189, 248, 0.14),
+            transparent 28%
+        ),
+        radial-gradient(
+            circle at 85% 30%,
+            rgba(34, 211, 238, 0.10),
+            transparent 25%
+        );
+
+    animation:
+        fsiAmbient 8s ease-in-out infinite alternate;
+}
+
+
+@keyframes fsiAmbient {
+    from {
+        opacity: 0.55;
+        transform: scale(1);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1.05);
+    }
 }
 
 
@@ -59,59 +98,243 @@
 
 
 /* =========================================================
+   FUTURISTIC ORBIT
+   ========================================================= */
+
+#login-page .login-container::before {
+    content: "";
+
+    position: absolute;
+
+    width: 520px;
+    height: 520px;
+
+    right: 5.5vw;
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    border-radius: 50%;
+
+    border:
+        1px solid rgba(255, 255, 255, 0.13);
+
+    box-shadow:
+        0 0 40px rgba(56, 189, 248, 0.05),
+        inset 0 0 40px rgba(56, 189, 248, 0.04);
+
+    pointer-events: none;
+
+    animation:
+        fsiOrbitRotate 22s linear infinite;
+}
+
+
+/* Inner orbit */
+
+#login-page .login-container::after {
+    content: "";
+
+    position: absolute;
+
+    width: 410px;
+    height: 410px;
+
+    right: calc(5.5vw + 55px);
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    border-radius: 50%;
+
+    border:
+        1px dashed rgba(103, 213, 255, 0.14);
+
+    pointer-events: none;
+
+    animation:
+        fsiOrbitReverse 16s linear infinite;
+}
+
+
+@keyframes fsiOrbitRotate {
+    from {
+        transform:
+            translateY(-50%)
+            rotate(0deg);
+    }
+
+    to {
+        transform:
+            translateY(-50%)
+            rotate(360deg);
+    }
+}
+
+
+@keyframes fsiOrbitReverse {
+    from {
+        transform:
+            translateY(-50%)
+            rotate(360deg);
+    }
+
+    to {
+        transform:
+            translateY(-50%)
+            rotate(0deg);
+    }
+}
+
+
+/* =========================================================
    LOGIN CARD
+   Tidak lagi seperti card kotak biasa
    ========================================================= */
 
 #login-page .login-card {
     position: relative;
-    z-index: 1;
+    z-index: 5;
 
     width: 100%;
     max-width: 430px;
 
     box-sizing: border-box;
 
-    padding: 40px;
+    padding: 42px 42px 36px;
 
-    border-radius: 28px;
+    border-radius: 34px;
 
     /*
-     * Glass effect
+     * Floating glass interface
      */
     background:
         linear-gradient(
             145deg,
-            rgba(255, 255, 255, 0.17),
-            rgba(255, 255, 255, 0.07)
+            rgba(8, 28, 48, 0.48),
+            rgba(4, 17, 31, 0.22)
         );
 
-    border: 1px solid rgba(255, 255, 255, 0.22);
+    border:
+        1px solid rgba(255, 255, 255, 0.14);
 
-    backdrop-filter: blur(28px);
-    -webkit-backdrop-filter: blur(28px);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
 
     box-shadow:
-        0 35px 90px rgba(0, 0, 0, 0.45),
-        inset 0 1px 0 rgba(255, 255, 255, 0.18);
+        0 35px 90px rgba(0, 0, 0, 0.42),
+        0 0 60px rgba(56, 189, 248, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.14);
+
+    animation:
+        fsiLoginAppear 0.9s cubic-bezier(.22, 1, .36, 1) both,
+        fsiLoginFloat 6s ease-in-out 1s infinite;
 }
 
 
-/* Glass highlight */
+@keyframes fsiLoginAppear {
+    from {
+        opacity: 0;
+        transform:
+            translateX(50px)
+            scale(0.96);
+    }
+
+    to {
+        opacity: 1;
+        transform:
+            translateX(0)
+            scale(1);
+    }
+}
+
+
+@keyframes fsiLoginFloat {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+
+/* =========================================================
+   CARD TOP SCANNING LINE
+   ========================================================= */
 
 #login-page .login-card::before {
     content: "";
 
     position: absolute;
-    inset: 0;
 
-    border-radius: inherit;
+    top: 0;
+    left: 12%;
+
+    width: 76%;
+    height: 1px;
+
+    border-radius: 100%;
 
     background:
         linear-gradient(
-            135deg,
-            rgba(255, 255, 255, 0.12),
-            transparent 40%
+            90deg,
+            transparent,
+            rgba(103, 213, 255, 0.85),
+            transparent
         );
+
+    box-shadow:
+        0 0 14px rgba(103, 213, 255, 0.65);
+
+    animation:
+        fsiScanLine 4s ease-in-out infinite;
+}
+
+
+@keyframes fsiScanLine {
+    0%,
+    100% {
+        opacity: 0.35;
+        transform: scaleX(0.45);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scaleX(1);
+    }
+}
+
+
+/* =========================================================
+   CARD BOTTOM GLOW
+   ========================================================= */
+
+#login-page .login-card::after {
+    content: "";
+
+    position: absolute;
+
+    width: 130px;
+    height: 1px;
+
+    left: 50%;
+    bottom: 0;
+
+    transform: translateX(-50%);
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(56, 189, 248, 0.75),
+            transparent
+        );
+
+    box-shadow:
+        0 0 18px rgba(56, 189, 248, 0.45);
 
     pointer-events: none;
 }
@@ -125,8 +348,8 @@
     position: relative;
     z-index: 2;
 
-    width: 76px;
-    height: 76px;
+    width: 82px;
+    height: 82px;
 
     margin: 0 auto 22px;
 
@@ -136,26 +359,55 @@
 
     box-sizing: border-box;
 
-    border-radius: 22px;
+    border-radius: 50%;
 
-    background: rgba(255, 255, 255, 0.12);
+    background:
+        radial-gradient(
+            circle,
+            rgba(255, 255, 255, 0.16),
+            rgba(255, 255, 255, 0.035) 65%,
+            transparent 70%
+        );
 
-    border: 1px solid rgba(255, 255, 255, 0.22);
-
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    border:
+        1px solid rgba(255, 255, 255, 0.28);
 
     box-shadow:
-        0 15px 40px rgba(0, 0, 0, 0.25),
-        inset 0 1px 0 rgba(255, 255, 255, 0.18);
+        0 0 0 8px rgba(255, 255, 255, 0.025),
+        0 0 0 16px rgba(56, 189, 248, 0.025),
+        0 15px 40px rgba(0, 0, 0, 0.28),
+        0 0 35px rgba(56, 189, 248, 0.13);
+
+    animation:
+        fsiLogoPulse 4s ease-in-out infinite;
+}
+
+
+@keyframes fsiLogoPulse {
+    0%,
+    100% {
+        box-shadow:
+            0 0 0 8px rgba(255, 255, 255, 0.025),
+            0 0 0 16px rgba(56, 189, 248, 0.025),
+            0 15px 40px rgba(0, 0, 0, 0.28),
+            0 0 35px rgba(56, 189, 248, 0.13);
+    }
+
+    50% {
+        box-shadow:
+            0 0 0 8px rgba(255, 255, 255, 0.04),
+            0 0 0 18px rgba(56, 189, 248, 0.035),
+            0 15px 40px rgba(0, 0, 0, 0.28),
+            0 0 50px rgba(56, 189, 248, 0.24);
+    }
 }
 
 
 #login-page .login-logo img {
     display: block;
 
-    width: 56px;
-    height: 56px;
+    width: 58px;
+    height: 58px;
 
     object-fit: contain;
 
@@ -185,27 +437,69 @@
 
     color: #ffffff;
 
-    font-size: 32px;
+    font-size: 31px;
     line-height: 1.1;
 
     font-weight: 900;
 
-    letter-spacing: -1px;
+    letter-spacing: -0.8px;
 
     text-shadow:
-        0 4px 20px rgba(0, 0, 0, 0.20);
+        0 4px 20px rgba(0, 0, 0, 0.30);
 }
 
 
 #login-page .login-subtitle {
-    margin: 9px 0 0;
+    margin: 10px 0 0;
 
-    color: rgba(255, 255, 255, 0.70);
+    color:
+        rgba(255, 255, 255, 0.66);
 
-    font-size: 14px;
+    font-size: 12px;
     line-height: 1.5;
 
-    font-weight: 500;
+    font-weight: 600;
+
+    letter-spacing: 0.18em;
+
+    text-transform: uppercase;
+}
+
+
+/* =========================================================
+   FUTURISTIC STATUS
+   ========================================================= */
+
+#login-page .login-heading::after {
+    content: "●  SYSTEM READY";
+
+    display: block;
+
+    margin-top: 15px;
+
+    color:
+        rgba(103, 213, 255, 0.62);
+
+    font-size: 8px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.20em;
+
+    animation:
+        fsiStatusPulse 2.5s ease-in-out infinite;
+}
+
+
+@keyframes fsiStatusPulse {
+    0%,
+    100% {
+        opacity: 0.45;
+    }
+
+    50% {
+        opacity: 1;
+    }
 }
 
 
@@ -222,7 +516,7 @@
     display: flex;
     flex-direction: column;
 
-    gap: 18px;
+    gap: 19px;
 }
 
 
@@ -231,82 +525,126 @@
    ========================================================= */
 
 #login-page .form-group {
+    position: relative;
+
     display: flex;
     flex-direction: column;
 
-    gap: 8px;
+    gap: 7px;
 }
 
 
 #login-page .form-group label {
-    color: rgba(255, 255, 255, 0.88);
+    color:
+        rgba(255, 255, 255, 0.62);
 
-    font-size: 13px;
+    font-size: 10px;
     font-weight: 700;
 
     line-height: 1.4;
+
+    letter-spacing: 0.16em;
+
+    text-transform: uppercase;
 }
 
 
 /* =========================================================
    INPUT
+   Tidak lagi kotak besar
    ========================================================= */
 
 #login-page .form-group input {
     width: 100%;
-    height: 54px;
+    height: 48px;
 
     box-sizing: border-box;
 
-    padding: 0 16px;
+    padding: 0 5px;
 
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 0;
 
-    border-radius: 14px;
+    border-bottom:
+        1px solid rgba(255, 255, 255, 0.20);
+
+    border-radius: 0;
 
     outline: none;
 
     color: #ffffff;
 
     background:
-        rgba(0, 20, 40, 0.42);
+        rgba(0, 0, 0, 0.04);
 
     font-family: inherit;
     font-size: 14px;
     font-weight: 500;
 
     transition:
-        border-color 0.2s ease,
-        background 0.2s ease,
-        box-shadow 0.2s ease,
-        transform 0.2s ease;
+        border-color 0.3s ease,
+        background 0.3s ease,
+        box-shadow 0.3s ease;
 }
 
 
 #login-page .form-group input::placeholder {
-    color: rgba(255, 255, 255, 0.38);
+    color:
+        rgba(255, 255, 255, 0.30);
 }
 
 
 #login-page .form-group input:hover {
-    background:
-        rgba(0, 20, 40, 0.52);
+    border-bottom-color:
+        rgba(255, 255, 255, 0.38);
 
-    border-color:
-        rgba(255, 255, 255, 0.22);
+    background:
+        rgba(255, 255, 255, 0.025);
 }
 
 
 #login-page .form-group input:focus {
-    border-color:
-        rgba(56, 189, 248, 0.80);
+    border-bottom-color:
+        rgba(103, 213, 255, 0.95);
 
     background:
-        rgba(0, 20, 40, 0.58);
+        rgba(56, 189, 248, 0.035);
 
     box-shadow:
-        0 0 0 3px rgba(56, 189, 248, 0.10),
-        0 8px 25px rgba(0, 0, 0, 0.15);
+        0 8px 25px -16px rgba(56, 189, 248, 0.9);
+}
+
+
+/* Animated focus beam */
+
+#login-page .form-group::after {
+    content: "";
+
+    position: absolute;
+
+    left: 0;
+    bottom: 0;
+
+    width: 0;
+    height: 1px;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            #67d5ff,
+            transparent
+        );
+
+    box-shadow:
+        0 0 10px rgba(103, 213, 255, 0.65);
+
+    transition:
+        width 0.45s ease;
+}
+
+
+#login-page .form-group:focus-within::after {
+    width: 100%;
 }
 
 
@@ -334,11 +672,6 @@
 }
 
 
-/*
- * Hide empty error container.
- * It still keeps a small minimum space when populated.
- */
-
 #login-page .login-error:empty {
     min-height: 0;
 }
@@ -346,6 +679,7 @@
 
 /* =========================================================
    LOGIN BUTTON
+   Futuristic button
    ========================================================= */
 
 #login-page #login-button {
@@ -353,7 +687,7 @@
     z-index: 2;
 
     width: 100%;
-    min-height: 56px;
+    min-height: 54px;
 
     display: flex;
     align-items: center;
@@ -361,61 +695,110 @@
 
     gap: 10px;
 
-    margin-top: 3px;
+    margin-top: 7px;
 
     padding: 0 20px;
 
-    border: 0;
-    border-radius: 14px;
+    border:
+        1px solid rgba(103, 213, 255, 0.60);
+
+    border-radius: 5px;
 
     cursor: pointer;
 
-    color: #062033;
+    color: #061b2a;
 
     background:
         linear-gradient(
             135deg,
-            #67d5ff 0%,
-            #38bdf8 50%,
+            #b7efff 0%,
+            #67d5ff 45%,
             #22d3ee 100%
         );
 
     font-family: inherit;
-    font-size: 15px;
-    font-weight: 800;
+    font-size: 12px;
+    font-weight: 900;
+
+    letter-spacing: 0.16em;
+
+    text-transform: uppercase;
 
     box-shadow:
-        0 12px 30px rgba(14, 165, 233, 0.30);
+        0 12px 30px rgba(14, 165, 233, 0.25),
+        0 0 0 rgba(103, 213, 255, 0);
+
+    overflow: hidden;
 
     transition:
-        transform 0.2s ease,
-        box-shadow 0.2s ease,
-        filter 0.2s ease;
+        transform 0.25s ease,
+        box-shadow 0.25s ease,
+        filter 0.25s ease;
+}
+
+
+/* Moving light */
+
+#login-page #login-button::before {
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    left: -100%;
+
+    width: 60%;
+    height: 100%;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.65),
+            transparent
+        );
+
+    transform:
+        skewX(-20deg);
+
+    transition:
+        left 0.65s ease;
 }
 
 
 #login-page #login-button:hover {
-    transform: translateY(-2px);
+    transform:
+        translateY(-2px);
 
-    filter: brightness(1.05);
+    filter:
+        brightness(1.06);
 
     box-shadow:
-        0 17px 38px rgba(14, 165, 233, 0.40);
+        0 17px 38px rgba(14, 165, 233, 0.34),
+        0 0 30px rgba(56, 189, 248, 0.15);
+}
+
+
+#login-page #login-button:hover::before {
+    left: 140%;
 }
 
 
 #login-page #login-button:active {
-    transform: translateY(0);
+    transform:
+        translateY(0);
 
     box-shadow:
-        0 8px 20px rgba(14, 165, 233, 0.25);
+        0 8px 20px rgba(14, 165, 233, 0.22);
 }
 
 
 #login-page #login-button:focus-visible {
-    outline: 3px solid rgba(103, 213, 255, 0.30);
+    outline:
+        3px solid rgba(103, 213, 255, 0.30);
 
-    outline-offset: 3px;
+    outline-offset:
+        3px;
 }
 
 
@@ -427,9 +810,6 @@
     transform: none;
 
     filter: none;
-
-    box-shadow:
-        0 8px 20px rgba(14, 165, 233, 0.18);
 }
 
 
@@ -462,9 +842,11 @@
 
     border-radius: 50%;
 
-    border: 2px solid rgba(6, 32, 51, 0.25);
+    border:
+        2px solid rgba(6, 32, 51, 0.25);
 
-    border-top-color: #062033;
+    border-top-color:
+        #062033;
 
     animation:
         fsiLoginSpin 0.7s linear infinite;
@@ -478,11 +860,13 @@
 
 @keyframes fsiLoginSpin {
     from {
-        transform: rotate(0deg);
+        transform:
+            rotate(0deg);
     }
 
     to {
-        transform: rotate(360deg);
+        transform:
+            rotate(360deg);
     }
 }
 
@@ -495,21 +879,23 @@
     position: relative;
     z-index: 2;
 
-    margin-top: 25px;
-    padding-top: 18px;
+    margin-top: 24px;
+    padding-top: 16px;
 
     border-top:
-        1px solid rgba(255, 255, 255, 0.10);
+        1px solid rgba(255, 255, 255, 0.08);
 
     text-align: center;
 
     color:
-        rgba(255, 255, 255, 0.48);
+        rgba(255, 255, 255, 0.40);
 
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 600;
 
     line-height: 1.5;
+
+    letter-spacing: 0.08em;
 }
 
 
@@ -520,13 +906,26 @@
 @media (min-width: 1400px) {
 
     #login-page .login-container {
-        padding-right: 8vw;
+        padding-right:
+            8vw;
     }
 
     #login-page .login-card {
-        max-width: 450px;
+        max-width:
+            450px;
 
-        padding: 44px;
+        padding:
+            46px 44px 38px;
+    }
+
+    #login-page .login-container::before {
+        right:
+            5.7vw;
+    }
+
+    #login-page .login-container::after {
+        right:
+            calc(5.7vw + 55px);
     }
 }
 
@@ -539,14 +938,37 @@
 
     #login-page .login-container {
         padding:
-            40px
-            5vw;
+            40px 5vw;
     }
 
     #login-page .login-card {
-        max-width: 420px;
+        max-width:
+            420px;
 
-        padding: 36px;
+        padding:
+            38px 36px 34px;
+    }
+
+    #login-page .login-container::before {
+        width:
+            470px;
+
+        height:
+            470px;
+
+        right:
+            2vw;
+    }
+
+    #login-page .login-container::after {
+        width:
+            370px;
+
+        height:
+            370px;
+
+        right:
+            calc(2vw + 50px);
     }
 }
 
@@ -570,30 +992,73 @@
 
 
     #login-page .login-container {
-        min-height: 100vh;
+        min-height:
+            100vh;
 
-        justify-content: center;
+        justify-content:
+            center;
 
         padding:
-            30px
-            20px;
+            30px 20px;
 
-        overflow-y: auto;
+        overflow-y:
+            auto;
+    }
+
+
+    /* Smaller orbit */
+
+    #login-page .login-container::before {
+        width:
+            440px;
+
+        height:
+            440px;
+
+        right:
+            50%;
+
+        top:
+            50%;
+
+        transform:
+            translate(50%, -50%);
+    }
+
+
+    #login-page .login-container::after {
+        width:
+            350px;
+
+        height:
+            350px;
+
+        right:
+            50%;
+
+        top:
+            50%;
+
+        transform:
+            translate(50%, -50%);
     }
 
 
     #login-page .login-card {
-        max-width: 500px;
+        max-width:
+            500px;
 
         padding:
-            32px 25px;
+            34px 28px 30px;
 
-        border-radius: 24px;
+        border-radius:
+            30px;
     }
 
 
     #login-page .login-title {
-        font-size: 30px;
+        font-size:
+            29px;
     }
 }
 
@@ -611,69 +1076,110 @@
 
 
     #login-page .login-card {
-        max-width: 100%;
+        max-width:
+            100%;
 
         padding:
-            28px 20px;
+            30px 21px 26px;
 
-        border-radius: 22px;
+        border-radius:
+            27px;
+    }
+
+
+    #login-page .login-container::before {
+        width:
+            380px;
+
+        height:
+            380px;
+    }
+
+
+    #login-page .login-container::after {
+        width:
+            300px;
+
+        height:
+            300px;
     }
 
 
     #login-page .login-logo {
-        width: 68px;
-        height: 68px;
+        width:
+            70px;
 
-        margin-bottom: 20px;
+        height:
+            70px;
 
-        border-radius: 20px;
+        margin-bottom:
+            20px;
     }
 
 
     #login-page .login-logo img {
-        width: 50px;
-        height: 50px;
+        width:
+            50px;
+
+        height:
+            50px;
     }
 
 
     #login-page .login-heading {
-        margin-bottom: 26px;
+        margin-bottom:
+            26px;
     }
 
 
     #login-page .login-title {
-        font-size: 28px;
+        font-size:
+            27px;
     }
 
 
     #login-page .login-subtitle {
-        font-size: 13px;
+        font-size:
+            10px;
+
+        letter-spacing:
+            0.14em;
     }
 
 
     #login-page .login-form {
-        gap: 16px;
+        gap:
+            16px;
     }
 
 
     #login-page .form-group input {
-        height: 52px;
+        height:
+            50px;
 
-        border-radius: 13px;
+        font-size:
+            13px;
     }
 
 
     #login-page #login-button {
-        min-height: 54px;
+        min-height:
+            53px;
 
-        border-radius: 13px;
+        border-radius:
+            4px;
+
+        font-size:
+            11px;
     }
 
 
     #login-page .login-footer {
-        margin-top: 22px;
+        margin-top:
+            20px;
 
-        padding-top: 16px;
+        padding-top:
+            14px;
     }
 }
 
@@ -692,50 +1198,82 @@
 
     #login-page .login-card {
         padding:
-            24px 16px;
+            26px 17px 23px;
 
-        border-radius: 20px;
+        border-radius:
+            24px;
+    }
+
+
+    #login-page .login-container::before {
+        width:
+            330px;
+
+        height:
+            330px;
+    }
+
+
+    #login-page .login-container::after {
+        width:
+            260px;
+
+        height:
+            260px;
     }
 
 
     #login-page .login-logo {
-        width: 62px;
-        height: 62px;
+        width:
+            62px;
+
+        height:
+            62px;
     }
 
 
     #login-page .login-logo img {
-        width: 46px;
-        height: 46px;
+        width:
+            45px;
+
+        height:
+            45px;
     }
 
 
     #login-page .login-title {
-        font-size: 25px;
+        font-size:
+            24px;
     }
 
 
     #login-page .login-subtitle {
-        font-size: 12px;
+        font-size:
+            9px;
     }
 
 
     #login-page .form-group label {
-        font-size: 12px;
+        font-size:
+            9px;
     }
 
 
     #login-page .form-group input {
-        height: 50px;
+        height:
+            48px;
 
-        font-size: 13px;
+        font-size:
+            13px;
     }
 
 
     #login-page #login-button {
-        min-height: 52px;
+        min-height:
+            50px;
 
-        font-size: 14px;
+        font-size:
+            10px;
     }
 }
 
@@ -749,9 +1287,18 @@
     #login-page *,
     #login-page *::before,
     #login-page *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-        scroll-behavior: auto !important;
+
+        animation-duration:
+            0.01ms !important;
+
+        animation-iteration-count:
+            1 !important;
+
+        transition-duration:
+            0.01ms !important;
+
+        scroll-behavior:
+            auto !important;
     }
 }
+```
