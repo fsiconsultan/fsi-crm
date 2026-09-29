@@ -1,12 +1,13 @@
 ```css
 /* =========================================================
-   FSI CRM — GLASS FUTURISTIC LOGIN
-   Hero background tetap JELAS
+   FSI CRM — LOGIN PAGE
+   Hero background tetap terlihat jelas
+   Glass login panel — modern / futuristic / enterprise
    ========================================================= */
 
 
 /* =========================================================
-   HERO BACKGROUND
+   1. LOGIN PAGE — HERO BACKGROUND
    ========================================================= */
 
 #login-page {
@@ -22,49 +23,34 @@
     color: #ffffff;
 
     /*
-       PENTING:
-       Tidak ada overlay gelap.
-       Hero langsung tampil.
+       HERO UTAMA
+       Jangan diberi overlay gelap.
+       logo-hero.jpg harus terlihat penuh.
     */
-    background:
-        url("../logo-hero.jpg")
-        center center /
-        cover
-        no-repeat;
+    background-image: url("../logo-hero.jpg");
+    background-position: center center;
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+
+/*
+   Pastikan tidak ada pseudo-element yang
+   menutup background hero.
+*/
+#login-page::before,
+#login-page::after {
+    content: none !important;
 }
 
 
 /* =========================================================
-   VERY LIGHT ATMOSPHERIC LIGHT
-   Tidak menutup hero
-   ========================================================= */
-
-#login-page::before {
-    content: "";
-
-    position: absolute;
-    inset: 0;
-
-    pointer-events: none;
-
-    background:
-        radial-gradient(
-            circle at 78% 50%,
-            rgba(255, 255, 255, 0.06),
-            transparent 22%
-        );
-
-    opacity: 0.7;
-}
-
-
-/* =========================================================
-   LOGIN CONTAINER
+   2. LOGIN CONTAINER
    ========================================================= */
 
 #login-page .login-container {
     position: relative;
-    z-index: 5;
+    z-index: 10;
 
     width: 100%;
     height: 100vh;
@@ -72,250 +58,135 @@
     box-sizing: border-box;
 
     display: flex;
-
     align-items: center;
-
     justify-content: flex-end;
 
-    padding:
-        30px 8vw 30px 30px;
+    padding: 30px 7vw 30px 30px;
 }
 
 
 /* =========================================================
-   GLASS PANEL
+   3. GLASS LOGIN CARD
    ========================================================= */
 
 #login-page .login-card {
     position: relative;
-    z-index: 10;
+    z-index: 20;
 
     width: 285px;
 
-    padding:
-        30px 28px 25px;
+    padding: 30px 28px 25px;
 
     box-sizing: border-box;
 
     border-radius: 22px;
 
     /*
-       GLASS BENING
-       Jangan terlalu gelap.
+       Transparan supaya background hero
+       tetap terlihat melalui panel.
     */
-    background:
-        rgba(255, 255, 255, 0.10);
+    background: rgba(255, 255, 255, 0.11);
+
+    border: 1px solid rgba(255, 255, 255, 0.30);
 
     /*
-       Glass border
+       Hanya panel yang blur.
+       Background hero di luar panel tetap tajam.
     */
-    border:
-        1px solid
-        rgba(255, 255, 255, 0.32);
+    backdrop-filter: blur(8px) saturate(125%);
+    -webkit-backdrop-filter: blur(8px) saturate(125%);
 
     /*
-       Blur hanya area di belakang kaca.
-       Tidak membuat seluruh hero blur.
-    */
-    backdrop-filter:
-        blur(10px)
-        saturate(120%);
-
-    -webkit-backdrop-filter:
-        blur(10px)
-        saturate(120%);
-
-    /*
-       Shadow sangat lembut
+       Shadow sangat ringan.
+       Tidak menutupi hero.
     */
     box-shadow:
-        0 20px 45px
-        rgba(0, 0, 0, 0.12),
+        0 15px 35px rgba(0, 0, 0, 0.14),
+        inset 0 1px 0 rgba(255, 255, 255, 0.28);
 
-        inset 0 1px 0
-        rgba(255, 255, 255, 0.28);
-
-    animation:
-        glassAppear 0.8s ease-out both;
+    animation: loginCardAppear 0.7s ease-out both;
 }
 
 
-/* =========================================================
-   GLASS HIGHLIGHT
-   ========================================================= */
+/* Glass highlight */
 
 #login-page .login-card::before {
     content: "";
 
     position: absolute;
-
     top: 0;
-    left: 18%;
-    right: 18%;
+    left: 12%;
+    right: 12%;
 
     height: 1px;
 
-    background:
-        linear-gradient(
-            90deg,
-            transparent,
-            rgba(255, 255, 255, 0.85),
-            transparent
-        );
+    background: rgba(255, 255, 255, 0.45);
 
-    opacity: 0.75;
+    opacity: 0.8;
+
+    pointer-events: none;
 }
 
 
 /* =========================================================
-   SMALL FUTURISTIC SIDE LIGHT
-   ========================================================= */
-
-#login-page .login-card::after {
-    content: "";
-
-    position: absolute;
-
-    right: -1px;
-    top: 30px;
-
-    width: 2px;
-    height: 45px;
-
-    background:
-        linear-gradient(
-            transparent,
-            rgba(255, 255, 255, 0.85),
-            transparent
-        );
-
-    opacity: 0.7;
-}
-
-
-/* =========================================================
-   LOGO
+   4. LOGO
    ========================================================= */
 
 #login-page .login-logo {
-    position: relative;
+    display: block;
 
-    width: 62px;
-    height: 62px;
+    width: 72px;
+    height: auto;
 
-    margin:
-        0 auto 20px;
+    margin: 0 auto 18px;
 
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-
-    border-radius: 50%;
+    object-fit: contain;
 
     /*
-       Logo glass
+       Logo FSI tetap jelas.
     */
-    background:
-        rgba(255, 255, 255, 0.14);
+    filter:
+        drop-shadow(0 3px 8px rgba(0, 0, 0, 0.30));
 
-    border:
-        1px solid
-        rgba(255, 255, 255, 0.42);
-
-    box-shadow:
-        0 0 20px
-        rgba(255, 255, 255, 0.10),
-
-        inset 0 1px 8px
-        rgba(255, 255, 255, 0.15);
+    animation: logoFloat 4s ease-in-out infinite;
 }
 
 
-/* Ring */
+/* Jika logo berada di dalam wrapper */
 
-#login-page .login-logo::before {
+#login-page .logo-wrapper {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-bottom: 17px;
+}
+
+
+/* Ring tipis futuristik di sekitar logo */
+
+#login-page .logo-wrapper::before {
     content: "";
 
     position: absolute;
 
-    inset: -6px;
+    width: 88px;
+    height: 88px;
 
     border-radius: 50%;
 
-    border:
-        1px solid
-        rgba(255, 255, 255, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.24);
 
-    border-top-color:
-        rgba(0, 220, 255, 0.9);
+    animation: logoRing 5s linear infinite;
 
-    animation:
-        logoRotate 7s linear infinite;
-}
-
-
-#login-page .login-logo img {
-    position: relative;
-
-    z-index: 2;
-
-    width: 40px;
-    height: 40px;
-
-    object-fit: contain;
+    pointer-events: none;
 }
 
 
 /* =========================================================
-   HEADING
-   ========================================================= */
-
-#login-page .login-heading {
-    text-align: center;
-
-    margin-bottom: 24px;
-}
-
-
-/* System */
-
-#login-page .login-heading::before {
-    content: "SYSTEM READY";
-
-    display: inline-block;
-
-    margin-bottom: 9px;
-
-    padding:
-        4px 9px;
-
-    border:
-        1px solid
-        rgba(255, 255, 255, 0.30);
-
-    border-radius: 20px;
-
-    background:
-        rgba(255, 255, 255, 0.08);
-
-    color:
-        rgba(255, 255, 255, 0.85);
-
-    font-size: 7px;
-
-    font-weight: 700;
-
-    letter-spacing: 2px;
-
-    text-shadow:
-        0 1px 4px
-        rgba(0, 0, 0, 0.45);
-}
-
-
-/* =========================================================
-   TITLE — SUPER CLEAR
+   5. TITLE
    ========================================================= */
 
 #login-page .login-title {
@@ -324,28 +195,31 @@
     color: #ffffff;
 
     font-size: 22px;
-
     line-height: 1.2;
 
     font-weight: 700;
 
     letter-spacing: -0.3px;
 
+    text-align: center;
+
     /*
-       Text tetap jelas walaupun glass transparan
+       Hanya text-shadow kecil supaya tulisan
+       tetap terbaca di atas hero.
     */
     text-shadow:
-        0 2px 5px
-        rgba(0, 0, 0, 0.55);
+        0 2px 5px rgba(0, 0, 0, 0.40);
 }
 
 
-#login-page .login-subtitle {
-    margin:
-        7px 0 0;
+/* =========================================================
+   6. SUBTITLE
+   ========================================================= */
 
-    color:
-        rgba(255, 255, 255, 0.90);
+#login-page .login-subtitle {
+    margin: 7px 0 0;
+
+    color: rgba(255, 255, 255, 0.92);
 
     font-size: 9px;
 
@@ -353,309 +227,305 @@
 
     letter-spacing: 1.2px;
 
+    line-height: 1.5;
+
+    text-align: center;
+
     text-transform: uppercase;
 
     text-shadow:
-        0 1px 4px
-        rgba(0, 0, 0, 0.55);
+        0 1px 4px rgba(0, 0, 0, 0.40);
 }
 
 
 /* =========================================================
-   FORM
+   7. FORM
    ========================================================= */
 
-#login-page .form-group {
-    position: relative;
-
-    margin-bottom: 19px;
+#login-page .login-form {
+    margin-top: 24px;
 }
 
+
+/* Form group */
+
+#login-page .form-group {
+    margin-bottom: 14px;
+}
+
+
+/* Label */
 
 #login-page .form-group label {
     display: block;
 
     margin-bottom: 6px;
 
-    color:
-        rgba(255, 255, 255, 0.92);
+    color: rgba(255, 255, 255, 0.92);
 
-    font-size: 8px;
+    font-size: 10px;
 
-    font-weight: 700;
+    font-weight: 600;
 
-    letter-spacing: 1.2px;
-
-    text-transform: uppercase;
+    letter-spacing: 0.4px;
 
     text-shadow:
-        0 1px 4px
-        rgba(0, 0, 0, 0.5);
+        0 1px 3px rgba(0, 0, 0, 0.35);
 }
 
 
 /* =========================================================
-   INPUT — GLASS
+   8. INPUT
    ========================================================= */
 
 #login-page .form-group input {
     width: 100%;
-
     height: 38px;
 
-    padding:
-        0 11px;
+    padding: 0 11px;
 
     box-sizing: border-box;
 
-    border:
-        1px solid
-        rgba(255, 255, 255, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.28);
 
     border-radius: 9px;
 
     outline: none;
 
-    background:
-        rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.10);
 
     color: #ffffff;
+
+    font-family: inherit;
 
     font-size: 12px;
 
     transition:
-        background 0.25s ease,
-        border-color 0.25s ease,
-        box-shadow 0.25s ease;
+        border-color 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
 
 #login-page .form-group input::placeholder {
-    color:
-        rgba(255, 255, 255, 0.60);
+    color: rgba(255, 255, 255, 0.62);
 }
 
 
 #login-page .form-group input:focus {
-    background:
-        rgba(255, 255, 255, 0.13);
+    background: rgba(255, 255, 255, 0.15);
 
-    border-color:
-        rgba(255, 255, 255, 0.65);
+    border-color: rgba(255, 255, 255, 0.62);
 
     box-shadow:
-        0 0 0 2px
-        rgba(255, 255, 255, 0.06),
-
-        0 0 16px
-        rgba(0, 220, 255, 0.12);
+        0 0 0 3px rgba(255, 255, 255, 0.08);
 }
 
 
 /* =========================================================
-   ERROR
+   9. PASSWORD / INPUT ICON
    ========================================================= */
 
-#login-page .login-error {
-    margin:
-        8px 0 12px;
-
-    padding:
-        8px 10px;
-
-    border:
-        1px solid
-        rgba(255, 100, 100, 0.35);
-
-    border-radius: 7px;
-
-    background:
-        rgba(120, 20, 20, 0.16);
-
-    color:
-        #ffe0e0;
-
-    font-size: 9px;
-
-    text-shadow:
-        0 1px 3px
-        rgba(0, 0, 0, 0.5);
-}
-
-
-/* =========================================================
-   LOGIN BUTTON
-   ========================================================= */
-
-#login-page #login-button {
+#login-page .input-wrapper {
     position: relative;
+}
 
-    width: 100%;
 
-    height: 41px;
+#login-page .input-wrapper input {
+    padding-right: 40px;
+}
 
-    margin-top: 3px;
 
-    border:
-        1px solid
-        rgba(255, 255, 255, 0.35);
+#login-page .password-toggle {
+    position: absolute;
 
-    border-radius: 9px;
+    top: 50%;
+    right: 10px;
 
-    overflow: hidden;
+    transform: translateY(-50%);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 25px;
+    height: 25px;
+
+    border: none;
+
+    background: transparent;
+
+    color: rgba(255, 255, 255, 0.72);
 
     cursor: pointer;
 
-    background:
-        linear-gradient(
-            110deg,
-            rgba(0, 150, 205, 0.82),
-            rgba(0, 210, 240, 0.88)
-        );
+    transition:
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+
+#login-page .password-toggle:hover {
+    color: #ffffff;
+
+    transform:
+        translateY(-50%)
+        scale(1.08);
+}
+
+
+/* =========================================================
+   10. LOGIN BUTTON
+   ========================================================= */
+
+#login-page .login-button {
+    width: 100%;
+
+    height: 40px;
+
+    margin-top: 7px;
+
+    border: 1px solid rgba(255, 255, 255, 0.30);
+
+    border-radius: 10px;
+
+    background: rgba(255, 255, 255, 0.18);
 
     color: #ffffff;
 
-    font-size: 9px;
+    font-family: inherit;
+
+    font-size: 11px;
 
     font-weight: 700;
 
-    letter-spacing: 1.5px;
+    letter-spacing: 0.8px;
 
-    text-transform: uppercase;
-
-    text-shadow:
-        0 1px 3px
-        rgba(0, 0, 0, 0.35);
+    cursor: pointer;
 
     box-shadow:
-        0 8px 20px
-        rgba(0, 170, 220, 0.16);
+        inset 0 1px 0 rgba(255, 255, 255, 0.25);
 
     transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
         transform 0.2s ease,
-        filter 0.2s ease;
+        box-shadow 0.2s ease;
 }
 
 
-#login-page #login-button:hover {
-    transform:
-        translateY(-1px);
+#login-page .login-button:hover {
+    background: rgba(255, 255, 255, 0.26);
 
-    filter:
-        brightness(1.08);
+    border-color: rgba(255, 255, 255, 0.50);
+
+    box-shadow:
+        0 5px 18px rgba(0, 0, 0, 0.14);
+
+    transform: translateY(-1px);
 }
 
 
-/* Light sweep */
-
-#login-page #login-button::before {
-    content: "";
-
-    position: absolute;
-
-    top: 0;
-    bottom: 0;
-
-    left: -40%;
-
-    width: 25%;
-
-    transform: skewX(-20deg);
-
-    background:
-        linear-gradient(
-            90deg,
-            transparent,
-            rgba(255, 255, 255, 0.45),
-            transparent
-        );
-
-    animation:
-        buttonSweep 4s ease-in-out infinite;
+#login-page .login-button:active {
+    transform: translateY(0);
 }
 
 
 /* =========================================================
-   FOOTER
+   11. ERROR MESSAGE
+   ========================================================= */
+
+#login-page .login-error {
+    margin-top: 12px;
+
+    padding: 8px 10px;
+
+    border-radius: 8px;
+
+    background: rgba(255, 70, 70, 0.14);
+
+    border: 1px solid rgba(255, 130, 130, 0.30);
+
+    color: #ffffff;
+
+    font-size: 10px;
+
+    line-height: 1.4;
+
+    text-align: center;
+}
+
+
+/* =========================================================
+   12. FOOTER / SMALL TEXT
    ========================================================= */
 
 #login-page .login-footer {
-    margin-top: 18px;
+    margin-top: 19px;
 
-    color:
-        rgba(255, 255, 255, 0.65);
+    color: rgba(255, 255, 255, 0.68);
 
-    font-size: 7px;
+    font-size: 8px;
 
-    letter-spacing: 0.8px;
+    line-height: 1.5;
 
     text-align: center;
 
+    letter-spacing: 0.3px;
+
     text-shadow:
-        0 1px 4px
-        rgba(0, 0, 0, 0.55);
+        0 1px 3px rgba(0, 0, 0, 0.30);
 }
 
 
 /* =========================================================
-   ANIMATIONS
+   13. ANIMATIONS
    ========================================================= */
 
-@keyframes glassAppear {
-
+@keyframes loginCardAppear {
     from {
         opacity: 0;
-
-        transform:
-            translateX(25px)
-            scale(0.97);
+        transform: translateX(25px);
     }
 
     to {
         opacity: 1;
-
-        transform:
-            translateX(0)
-            scale(1);
+        transform: translateX(0);
     }
 }
 
 
-@keyframes logoRotate {
+@keyframes logoFloat {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
 
+    50% {
+        transform: translateY(-3px);
+    }
+}
+
+
+@keyframes logoRing {
     from {
-        transform:
-            rotate(0deg);
+        transform: rotate(0deg);
     }
 
     to {
-        transform:
-            rotate(360deg);
-    }
-}
-
-
-@keyframes buttonSweep {
-
-    0% {
-        left: -40%;
-    }
-
-    55%,
-    100% {
-        left: 130%;
+        transform: rotate(360deg);
     }
 }
 
 
 /* =========================================================
-   TABLET
+   14. TABLET
    ========================================================= */
 
 @media (max-width: 900px) {
 
     #login-page .login-container {
-        padding-right: 45px;
+        padding-right: 5vw;
     }
 
     #login-page .login-card {
@@ -665,10 +535,15 @@
 
 
 /* =========================================================
-   MOBILE
+   15. MOBILE
    ========================================================= */
 
 @media (max-width: 600px) {
+
+    #login-page {
+        background-position: center center;
+    }
+
 
     #login-page .login-container {
         justify-content: center;
@@ -676,43 +551,52 @@
         padding: 20px;
     }
 
+
     #login-page .login-card {
-        width: 280px;
+        width: min(285px, calc(100vw - 40px));
 
-        padding:
-            27px 24px 23px;
+        padding: 28px 24px 24px;
 
-        background:
-            rgba(20, 35, 48, 0.18);
+        /*
+           Mobile tetap transparan.
+           Tidak memakai dark overlay.
+        */
+        background: rgba(20, 35, 48, 0.13);
+
+        backdrop-filter: blur(7px) saturate(120%);
+        -webkit-backdrop-filter: blur(7px) saturate(120%);
     }
 }
 
 
 /* =========================================================
-   SMALL MOBILE
+   16. SMALL MOBILE
    ========================================================= */
 
 @media (max-width: 380px) {
 
     #login-page .login-card {
-        width: 270px;
+        width: calc(100vw - 30px);
 
-        padding:
-            25px 22px 21px;
+        padding: 25px 20px 21px;
+    }
+
+    #login-page .login-title {
+        font-size: 20px;
     }
 }
 
 
 /* =========================================================
-   REDUCED MOTION
+   17. REDUCED MOTION
    ========================================================= */
 
 @media (prefers-reduced-motion: reduce) {
 
-    #login-page *,
-    #login-page *::before,
-    #login-page *::after {
-        animation: none !important;
+    #login-page .login-card,
+    #login-page .login-logo,
+    #login-page .logo-wrapper::before {
+        animation: none;
     }
 }
 ```
