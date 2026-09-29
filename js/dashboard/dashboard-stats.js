@@ -1,747 +1,623 @@
-// ============================================================
-// CALCULATE DASHBOARD STATS
-// ============================================================
-function calculateDashboardStats(
-    data
-) {
-
-    const list =
-        Array.isArray(data)
-            ? data
-            : [];
+/* =========================================================
+   DASHBOARD STATS
+   + PLAYING CARD CAROUSEL
+========================================================= */
 
 
-    /*
-     * ========================================================
-     * STATISTIK UTAMA DASHBOARD
-     * ========================================================
-     */
+/* =========================================================
+   NUMBER FORMAT
+========================================================= */
 
-    const stats = {
+function dashboardFormatNumber(value) {
+    const number = Number(value) || 0;
 
-        /*
-         * TOTAL LEADS
-         */
-        total:
-            list.length,
-
-
-        /*
-         * NEW
-         */
-        new:
-            dashboardCountStatus(
-                list,
-                "New"
-            ),
-
-
-        /*
-         * INTERESTED
-         */
-        interested:
-            dashboardCountStatus(
-                list,
-                "Interested"
-            ),
-
-
-        /*
-         * FOLLOW UP
-         */
-        followUp:
-            dashboardCountStatus(
-                list,
-                "Follow Up"
-            ),
-
-
-        /*
-         * CLOSING
-         */
-        closing:
-            dashboardCountStatus(
-                list,
-                "Closing"
-            )
-    };
-
-
-    /*
-     * ========================================================
-     * COMPATIBILITY / LEGACY STATISTICS
-     * ========================================================
-     */
-
-    stats.flyerSent =
-        dashboardCountStatus(
-            list,
-            "Flyer Sent"
-        );
-
-
-    stats.firstContact =
-        dashboardCountStatus(
-            list,
-            "First Contact"
-        );
-
-
-    stats.firstMeeting =
-        dashboardCountStatus(
-            list,
-            "First Meeting / Appointment / Site Survey"
-        );
-
-
-    stats.quotation =
-        dashboardCountStatus(
-            list,
-            "Quotation"
-        );
-
-
-    stats.secondAppointment =
-        dashboardCountStatus(
-            list,
-            "Second Appointment"
-        );
-
-
-    stats.deal =
-        dashboardCountStatus(
-            list,
-            "Deal"
-        );
-
-
-    stats.noDeal =
-        dashboardCountStatus(
-            list,
-            "No Deal"
-        );
-
-
-    /*
-     * Appointment legacy
-     */
-    stats.appointment =
-        dashboardCountDateField(
-            list,
-            "appointment"
-        );
-
-
-    /*
-     * Site Survey legacy
-     */
-    stats.siteSurvey =
-        dashboardCountDateField(
-            list,
-            "site_survey"
-        );
-
-
-    /*
-     * SPK legacy
-     */
-    stats.spk =
-        dashboardCountDateField(
-            list,
-            "spk"
-        );
-
-
-    /*
-     * Not Interested legacy
-     */
-    stats.notInterested =
-        dashboardCountStatus(
-            list,
-            "Not Interested"
-        );
-
-
-    /*
-     * ========================================================
-     * STATUS SUMMARY
-     * ========================================================
-     */
-
-    stats.statuses = {
-
-        new:
-            stats.new,
-
-        interested:
-            stats.interested,
-
-        followUp:
-            stats.followUp,
-
-        closing:
-            stats.closing
-    };
-
-
-    /*
-     * ========================================================
-     * PIPELINE SUMMARY LEGACY
-     * ========================================================
-     */
-
-    stats.pipeline = {
-
-        new:
-            stats.new,
-
-        firstContact:
-            stats.firstContact,
-
-        firstMeeting:
-            stats.firstMeeting,
-
-        quotation:
-            stats.quotation,
-
-        secondAppointment:
-            stats.secondAppointment,
-
-        deal:
-            stats.deal,
-
-        noDeal:
-            stats.noDeal
-    };
-
-
-    return stats;
+    return number.toLocaleString("en-US");
 }
 
 
-// ============================================================
-// DASHBOARD COUNT-UP
-// ============================================================
+/* =========================================================
+   ANIMATED NUMBER
+========================================================= */
 
-/*
- * Animasi angka dari angka sebelumnya menuju angka baru.
- *
- * Contoh:
- *
- * 0 -> 2141
- *
- * atau ketika data berubah:
- *
- * 2141 -> 2150
- *
- * Durasi sekitar 1 detik.
- */
 function dashboardAnimateNumber(
     element,
     targetValue,
-    duration = 1000
+    duration = 650
 ) {
+    if (!element) return;
 
-    if (!element) {
-        return;
+    const target = Math.max(
+        0,
+        Number(targetValue) || 0
+    );
+
+    const start = Number(
+        element.dataset.currentValue || 0
+    );
+
+    const startTime = performance.now();
+
+    function easeOutCubic(t) {
+        return 1 - Math.pow(1 - t, 3);
     }
 
-
-    /*
-     * Pastikan target berupa angka.
-     */
-    const target =
-        Number(
-            targetValue
-        ) || 0;
-
-
-    /*
-     * Ambil angka yang sedang tampil.
-     *
-     * Kalau sebelumnya kosong,
-     * mulai dari 0.
-     */
-    const current =
-        Number(
-            String(
-                element.textContent || "0"
-            ).replace(
-                /[^\d-]/g,
-                ""
-            )
-        ) || 0;
-
-
-    /*
-     * Jika angka sama,
-     * tidak perlu animasi.
-     */
-    if (current === target) {
-
-        element.textContent =
-            target.toLocaleString(
-                "en-US"
-            );
-
-        return;
-    }
-
-
-    /*
-     * Batalkan animasi sebelumnya
-     * jika masih berjalan.
-     */
-    if (
-        element._dashboardAnimationFrame
-    ) {
-
-        cancelAnimationFrame(
-            element._dashboardAnimationFrame
-        );
-    }
-
-
-    const startTime =
-        performance.now();
-
-
-    /*
-     * Easing:
-     *
-     * mulai cepat,
-     * kemudian melambat.
-     */
-    function easeOutCubic(
-        progress
-    ) {
-
-        return 1 -
-            Math.pow(
-                1 - progress,
-                3
-            );
-    }
-
-
-    /*
-     * Jalankan animasi.
-     */
-    function animate(
-        currentTime
-    ) {
+    function update(currentTime) {
 
         const elapsed =
-            currentTime -
-            startTime;
+            currentTime - startTime;
 
-
-        let progress =
-            elapsed /
-            duration;
-
-
-        /*
-         * Batasi 0 - 1.
-         */
-        progress =
+        const progress =
             Math.min(
-                Math.max(
-                    progress,
-                    0
-                ),
+                elapsed / duration,
                 1
             );
 
+        const eased =
+            easeOutCubic(progress);
 
-        /*
-         * Apply easing.
-         */
-        const easedProgress =
-            easeOutCubic(
-                progress
-            );
-
-
-        /*
-         * Hitung angka saat ini.
-         */
-        const value =
+        const current =
             Math.round(
-                current +
-                (
-                    target -
-                    current
-                ) *
-                easedProgress
+                start +
+                (target - start) * eased
             );
 
-
-        /*
-         * Tampilkan angka.
-         */
         element.textContent =
-            value.toLocaleString(
-                "en-US"
-            );
+            dashboardFormatNumber(current);
 
+        element.dataset.currentValue =
+            String(current);
 
-        /*
-         * Lanjutkan sampai selesai.
-         */
-        if (
-            progress < 1
-        ) {
-
-            element._dashboardAnimationFrame =
-                requestAnimationFrame(
-                    animate
-                );
-
+        if (progress < 1) {
+            requestAnimationFrame(update);
         } else {
-
-            /*
-             * Pastikan angka akhir
-             * benar-benar sama dengan target.
-             */
             element.textContent =
-                target.toLocaleString(
-                    "en-US"
-                );
+                dashboardFormatNumber(target);
 
-
-            element._dashboardAnimationFrame =
-                null;
+            element.dataset.currentValue =
+                String(target);
         }
     }
 
-
-    /*
-     * Mulai animasi.
-     */
-    element._dashboardAnimationFrame =
-        requestAnimationFrame(
-            animate
-        );
+    requestAnimationFrame(update);
 }
 
 
-// ============================================================
-// SET ELEMENT TEXT
-// ============================================================
+/* =========================================================
+   SET DASHBOARD NUMBER
+========================================================= */
 
-function dashboardSetElementText(
-    id,
-    value
-) {
+function dashboardSetElementText(id, value) {
 
     const element =
-        document.getElementById(
-            id
-        );
+        document.getElementById(id);
 
+    if (!element) return;
 
-    if (!element) {
-        return;
-    }
-
-
-    const numericValue =
-        Number(
-            value
-        ) || 0;
-
-
-    /*
-     * Gunakan count-up untuk
-     * angka dashboard.
-     */
     dashboardAnimateNumber(
         element,
-        numericValue,
-        1000
+        value
     );
 }
 
 
-// ============================================================
-// UPDATE DASHBOARD CARDS
-// ============================================================
+/* =========================================================
+   PLAYING CARD CAROUSEL
+========================================================= */
 
-function renderDashboardStats(
-    stats
+const dashboardStatsCarousel = {
+    currentIndex: 0,
+    cards: [],
+    startX: 0,
+    currentX: 0,
+    isDragging: false,
+    threshold: 45,
+    initialized: false
+};
+
+
+/* =========================================================
+   GET CARDS
+========================================================= */
+
+function dashboardCarouselGetCards() {
+
+    const container =
+        document.querySelector(".stats-grid");
+
+    if (!container) {
+        return [];
+    }
+
+    return Array.from(
+        container.querySelectorAll(".stat-card")
+    );
+}
+
+
+/* =========================================================
+   POSITION CARD
+========================================================= */
+
+function dashboardCarouselPositionCard(
+    card,
+    position
 ) {
 
-    if (!stats) {
+    card.classList.remove(
+        "carousel-center",
+        "carousel-left",
+        "carousel-right",
+        "carousel-far-left",
+        "carousel-far-right",
+        "carousel-hidden"
+    );
+
+    if (position === 0) {
+
+        card.classList.add(
+            "carousel-center"
+        );
+
         return;
     }
 
+    if (position === -1) {
 
-    /*
-     * ========================================================
-     * STAT CARD MAP
-     * ========================================================
-     */
+        card.classList.add(
+            "carousel-left"
+        );
 
-    const statMap = {
+        return;
+    }
 
-        /*
-         * ====================================================
-         * STATISTIK UTAMA
-         * ====================================================
-         */
+    if (position === 1) {
 
-        statTotal:
-            stats.total,
+        card.classList.add(
+            "carousel-right"
+        );
 
-        statNew:
-            stats.new,
+        return;
+    }
 
-        statInterested:
-            stats.interested,
+    if (position === -2) {
 
-        statFollowUp:
-            stats.followUp,
+        card.classList.add(
+            "carousel-far-left"
+        );
 
-        statClosing:
-            stats.closing,
+        return;
+    }
 
+    if (position === 2) {
 
-        /*
-         * ====================================================
-         * PIPELINE / LEGACY CARDS
-         * ====================================================
-         */
+        card.classList.add(
+            "carousel-far-right"
+        );
 
-        statFlyerSent:
-            stats.flyerSent,
+        return;
+    }
 
-        statAppointment:
-            stats.appointment,
-
-        statSiteSurvey:
-            stats.siteSurvey,
-
-        statQuotation:
-            stats.quotation,
-
-        statSPK:
-            stats.spk,
-
-        statNotInterested:
-            stats.notInterested
-    };
+    card.classList.add(
+        "carousel-hidden"
+    );
+}
 
 
-    /*
-     * Set semua angka kartu.
-     */
-    Object.entries(
-        statMap
-    ).forEach(
-        ([id, value]) => {
+/* =========================================================
+   REFRESH CAROUSEL
+========================================================= */
+
+function dashboardCarouselRefresh() {
+
+    const cards =
+        dashboardStatsCarousel.cards;
+
+    const total =
+        cards.length;
+
+    if (!total) return;
+
+    cards.forEach(
+        (card, index) => {
+
+            let difference =
+                index -
+                dashboardStatsCarousel.currentIndex;
 
             /*
-             * Jika helper global tersedia,
-             * tetap jalankan untuk compatibility.
+             * Convert difference into
+             * shortest circular distance.
              */
-            if (
-                typeof window.setText ===
-                "function"
-            ) {
 
-                /*
-                 * Jangan gunakan setText
-                 * untuk angka utama karena
-                 * bisa mematikan count-up.
-                 *
-                 * Count-up dilakukan oleh
-                 * dashboardSetElementText().
-                 */
+            if (difference > total / 2) {
+                difference -= total;
             }
 
+            if (difference < -total / 2) {
+                difference += total;
+            }
 
-            /*
-             * Count-up dashboard.
-             */
-            dashboardSetElementText(
-                id,
-                value
+            dashboardCarouselPositionCard(
+                card,
+                difference
             );
         }
     );
+}
 
 
-    /*
-     * ========================================================
-     * LEGACY IDS
-     * ========================================================
-     */
+/* =========================================================
+   GO TO INDEX
+========================================================= */
 
-    const alternatives = {
+function dashboardCarouselGoTo(index) {
 
-        /*
-         * Total
-         */
-        totalLeads:
-            stats.total,
+    const total =
+        dashboardStatsCarousel.cards.length;
 
+    if (!total) return;
 
-        /*
-         * New
-         */
-        newLeads:
-            stats.new,
+    if (index < 0) {
+        index = total - 1;
+    }
 
+    if (index >= total) {
+        index = 0;
+    }
 
-        /*
-         * Interested
-         */
-        interestedLeads:
-            stats.interested,
+    dashboardStatsCarousel.currentIndex =
+        index;
+
+    dashboardCarouselRefresh();
+}
 
 
-        /*
-         * Follow Up
-         */
-        followUpLeads:
-            stats.followUp,
+/* =========================================================
+   NEXT
+========================================================= */
 
+function dashboardCarouselNext() {
 
-        /*
-         * Closing
-         */
-        closingLeads:
-            stats.closing,
-
-
-        /*
-         * Legacy Flyer Sent
-         */
-        flyerSentLeads:
-            stats.flyerSent,
-
-
-        /*
-         * Legacy Appointment
-         */
-        appointmentLeads:
-            stats.appointment,
-
-
-        /*
-         * Legacy Site Survey
-         */
-        siteSurveyLeads:
-            stats.siteSurvey,
-
-
-        /*
-         * Quotation
-         */
-        quotationLeads:
-            stats.quotation,
-
-
-        /*
-         * SPK
-         */
-        spkLeads:
-            stats.spk,
-
-
-        /*
-         * Not Interested
-         */
-        notInterestedLeads:
-            stats.notInterested
-    };
-
-
-    Object.entries(
-        alternatives
-    ).forEach(
-        ([id, value]) => {
-
-            dashboardSetElementText(
-                id,
-                value
-            );
-        }
+    dashboardCarouselGoTo(
+        dashboardStatsCarousel.currentIndex + 1
     );
+}
 
 
-    /*
-     * ========================================================
-     * GLOBAL STATUS SUMMARY
-     * ========================================================
-     */
+/* =========================================================
+   PREVIOUS
+========================================================= */
 
-    window.FSIDashboard =
-        window.FSIDashboard ||
-        {};
+function dashboardCarouselPrevious() {
 
-
-    window.FSIDashboard.statusStats = {
-
-        /*
-         * Dashboard utama
-         */
-        total:
-            stats.total,
-
-        new:
-            stats.new,
-
-        interested:
-            stats.interested,
-
-        followUp:
-            stats.followUp,
-
-        closing:
-            stats.closing,
+    dashboardCarouselGoTo(
+        dashboardStatsCarousel.currentIndex - 1
+    );
+}
 
 
-        /*
-         * Pipeline lama
-         */
-        firstContact:
-            stats.firstContact,
+/* =========================================================
+   POINTER DOWN
+========================================================= */
 
-        firstMeeting:
-            stats.firstMeeting,
+function dashboardCarouselPointerDown(event) {
 
-        quotation:
-            stats.quotation,
+    dashboardStatsCarousel.isDragging = true;
 
-        secondAppointment:
-            stats.secondAppointment,
+    dashboardStatsCarousel.startX =
+        event.clientX;
 
-        deal:
-            stats.deal,
+    dashboardStatsCarousel.currentX =
+        event.clientX;
 
-        noDeal:
-            stats.noDeal
-    };
+    const container =
+        document.querySelector(".stats-grid");
 
-
-    /*
-     * Simpan stats utama secara global.
-     */
-    window.FSIDashboard.stats =
-        stats;
-
-
-    /*
-     * Setelah angka dirender,
-     * pastikan kartu interactive.
-     */
-    if (
-        typeof dashboardBindStatCardClicks ===
-        "function"
-    ) {
-
-        dashboardBindStatCardClicks();
+    if (container) {
+        container.classList.add(
+            "is-dragging"
+        );
     }
 }
+
+
+/* =========================================================
+   POINTER MOVE
+========================================================= */
+
+function dashboardCarouselPointerMove(event) {
+
+    if (
+        !dashboardStatsCarousel.isDragging
+    ) {
+        return;
+    }
+
+    dashboardStatsCarousel.currentX =
+        event.clientX;
+}
+
+
+/* =========================================================
+   POINTER UP
+========================================================= */
+
+function dashboardCarouselPointerUp() {
+
+    if (
+        !dashboardStatsCarousel.isDragging
+    ) {
+        return;
+    }
+
+    const distance =
+        dashboardStatsCarousel.currentX -
+        dashboardStatsCarousel.startX;
+
+    dashboardStatsCarousel.isDragging =
+        false;
+
+    const container =
+        document.querySelector(".stats-grid");
+
+    if (container) {
+        container.classList.remove(
+            "is-dragging"
+        );
+    }
+
+    if (
+        Math.abs(distance) <
+        dashboardStatsCarousel.threshold
+    ) {
+        return;
+    }
+
+    if (distance < 0) {
+        dashboardCarouselNext();
+    } else {
+        dashboardCarouselPrevious();
+    }
+}
+
+
+/* =========================================================
+   TOUCH SUPPORT
+========================================================= */
+
+function dashboardCarouselTouchStart(event) {
+
+    if (!event.touches?.length) {
+        return;
+    }
+
+    dashboardStatsCarousel.isDragging =
+        true;
+
+    dashboardStatsCarousel.startX =
+        event.touches[0].clientX;
+
+    dashboardStatsCarousel.currentX =
+        event.touches[0].clientX;
+}
+
+
+function dashboardCarouselTouchMove(event) {
+
+    if (
+        !dashboardStatsCarousel.isDragging
+    ) {
+        return;
+    }
+
+    if (!event.touches?.length) {
+        return;
+    }
+
+    dashboardStatsCarousel.currentX =
+        event.touches[0].clientX;
+}
+
+
+function dashboardCarouselTouchEnd() {
+
+    if (
+        !dashboardStatsCarousel.isDragging
+    ) {
+        return;
+    }
+
+    const distance =
+        dashboardStatsCarousel.currentX -
+        dashboardStatsCarousel.startX;
+
+    dashboardStatsCarousel.isDragging =
+        false;
+
+    if (
+        Math.abs(distance) <
+        dashboardStatsCarousel.threshold
+    ) {
+        return;
+    }
+
+    if (distance < 0) {
+        dashboardCarouselNext();
+    } else {
+        dashboardCarouselPrevious();
+    }
+}
+
+
+/* =========================================================
+   MOUSE / TOUCH / KEYBOARD EVENTS
+========================================================= */
+
+function dashboardCarouselBindEvents() {
+
+    const container =
+        document.querySelector(".stats-grid");
+
+    if (!container) return;
+
+
+    /* Pointer */
+
+    container.addEventListener(
+        "pointerdown",
+        dashboardCarouselPointerDown
+    );
+
+    container.addEventListener(
+        "pointermove",
+        dashboardCarouselPointerMove
+    );
+
+    container.addEventListener(
+        "pointerup",
+        dashboardCarouselPointerUp
+    );
+
+    container.addEventListener(
+        "pointercancel",
+        dashboardCarouselPointerUp
+    );
+
+
+    /* Touch */
+
+    container.addEventListener(
+        "touchstart",
+        dashboardCarouselTouchStart,
+        {
+            passive: true
+        }
+    );
+
+    container.addEventListener(
+        "touchmove",
+        dashboardCarouselTouchMove,
+        {
+            passive: true
+        }
+    );
+
+    container.addEventListener(
+        "touchend",
+        dashboardCarouselTouchEnd,
+        {
+            passive: true
+        }
+    );
+
+
+    /* Keyboard */
+
+    document.addEventListener(
+        "keydown",
+        event => {
+
+            /*
+             * Do not interfere with
+             * typing inside inputs.
+             */
+
+            const tag =
+                document.activeElement?.tagName;
+
+            if (
+                tag === "INPUT" ||
+                tag === "TEXTAREA" ||
+                tag === "SELECT"
+            ) {
+                return;
+            }
+
+            if (event.key === "ArrowLeft") {
+
+                dashboardCarouselPrevious();
+
+            } else if (
+                event.key === "ArrowRight"
+            ) {
+
+                dashboardCarouselNext();
+            }
+        }
+    );
+}
+
+
+/* =========================================================
+   INITIALIZE CAROUSEL
+========================================================= */
+
+function dashboardCarouselInit() {
+
+    const container =
+        document.querySelector(".stats-grid");
+
+    if (!container) {
+        return;
+    }
+
+    const cards =
+        dashboardCarouselGetCards();
+
+    if (!cards.length) {
+        return;
+    }
+
+    dashboardStatsCarousel.cards =
+        cards;
+
+    dashboardStatsCarousel.currentIndex =
+        Math.min(
+            dashboardStatsCarousel.currentIndex,
+            cards.length - 1
+        );
+
+    dashboardCarouselRefresh();
+
+    if (
+        !dashboardStatsCarousel.initialized
+    ) {
+
+        dashboardCarouselBindEvents();
+
+        dashboardStatsCarousel.initialized =
+            true;
+    }
+}
+
+
+/* =========================================================
+   REFRESH AFTER DASHBOARD RENDER
+========================================================= */
+
+function dashboardCarouselRefreshAfterRender() {
+
+    /*
+     * Small delay allows dashboard HTML
+     * to finish rendering before measuring
+     * and positioning the cards.
+     */
+
+    requestAnimationFrame(() => {
+        dashboardCarouselInit();
+    });
+}
+
+
+/* =========================================================
+   AUTO INIT
+========================================================= */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        dashboardCarouselInit();
+
+    }
+);
