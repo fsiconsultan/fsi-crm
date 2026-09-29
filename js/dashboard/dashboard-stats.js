@@ -15,28 +15,7 @@ function calculateDashboardStats(
      * ========================================================
      * STATISTIK UTAMA DASHBOARD
      * ========================================================
-     *
-     * Data yang masuk ke fungsi ini sudah harus merupakan
-     * data yang sesuai scope Dashboard:
-     *
-     * Admin:
-     *     All Sales -> semua leads
-     *     Sales A   -> leads Sales A
-     *     Sales B   -> leads Sales B
-     *     Sales C   -> leads Sales C
-     *
-     * Sales:
-     *     -> hanya leads miliknya
-     *
-     * Statistik utama:
-     *
-     * 1. Total Leads
-     * 2. New
-     * 3. Interested
-     * 4. Follow Up
-     * 5. Closing
      */
-
 
     const stats = {
 
@@ -79,8 +58,6 @@ function calculateDashboardStats(
 
         /*
          * CLOSING
-         *
-         * Closing dihitung dari status Closing.
          */
         closing:
             dashboardCountStatus(
@@ -94,17 +71,8 @@ function calculateDashboardStats(
      * ========================================================
      * COMPATIBILITY / LEGACY STATISTICS
      * ========================================================
-     *
-     * Jangan dihapus karena beberapa modul lama masih
-     * mungkin mengambil nama statistik berikut.
      */
 
-
-    /*
-     * Flyer Sent
-     *
-     * Tetap dihitung dari status aslinya jika ada.
-     */
     stats.flyerSent =
         dashboardCountStatus(
             list,
@@ -112,11 +80,6 @@ function calculateDashboardStats(
         );
 
 
-    /*
-     * First Contact
-     *
-     * Tetap dipertahankan karena pipeline lama masih ada.
-     */
     stats.firstContact =
         dashboardCountStatus(
             list,
@@ -124,11 +87,6 @@ function calculateDashboardStats(
         );
 
 
-    /*
-     * First Meeting / Appointment / Site Survey
-     *
-     * Tetap dipertahankan untuk compatibility.
-     */
     stats.firstMeeting =
         dashboardCountStatus(
             list,
@@ -136,9 +94,6 @@ function calculateDashboardStats(
         );
 
 
-    /*
-     * Quotation
-     */
     stats.quotation =
         dashboardCountStatus(
             list,
@@ -146,9 +101,6 @@ function calculateDashboardStats(
         );
 
 
-    /*
-     * Second Appointment
-     */
     stats.secondAppointment =
         dashboardCountStatus(
             list,
@@ -156,9 +108,6 @@ function calculateDashboardStats(
         );
 
 
-    /*
-     * Deal
-     */
     stats.deal =
         dashboardCountStatus(
             list,
@@ -166,9 +115,6 @@ function calculateDashboardStats(
         );
 
 
-    /*
-     * No Deal
-     */
     stats.noDeal =
         dashboardCountStatus(
             list,
@@ -178,8 +124,6 @@ function calculateDashboardStats(
 
     /*
      * Appointment legacy
-     *
-     * Tetap berdasarkan field appointment.
      */
     stats.appointment =
         dashboardCountDateField(
@@ -200,8 +144,6 @@ function calculateDashboardStats(
 
     /*
      * SPK legacy
-     *
-     * Tetap mengikuti field SPK jika tersedia.
      */
     stats.spk =
         dashboardCountDateField(
@@ -212,9 +154,6 @@ function calculateDashboardStats(
 
     /*
      * Not Interested legacy
-     *
-     * Dashboard utama sekarang menggunakan Closing,
-     * tetapi statistik lama tetap tersedia.
      */
     stats.notInterested =
         dashboardCountStatus(
@@ -227,9 +166,8 @@ function calculateDashboardStats(
      * ========================================================
      * STATUS SUMMARY
      * ========================================================
-     *
-     * Statistik utama yang sekarang dipakai Dashboard.
      */
+
     stats.statuses = {
 
         new:
@@ -250,9 +188,8 @@ function calculateDashboardStats(
      * ========================================================
      * PIPELINE SUMMARY LEGACY
      * ========================================================
-     *
-     * Tetap disediakan supaya modul pipeline lama tidak error.
      */
+
     stats.pipeline = {
 
         new:
@@ -283,8 +220,216 @@ function calculateDashboardStats(
 
 
 // ============================================================
+// DASHBOARD COUNT-UP
+// ============================================================
+
+/*
+ * Animasi angka dari angka sebelumnya menuju angka baru.
+ *
+ * Contoh:
+ *
+ * 0 -> 2141
+ *
+ * atau ketika data berubah:
+ *
+ * 2141 -> 2150
+ *
+ * Durasi sekitar 1 detik.
+ */
+function dashboardAnimateNumber(
+    element,
+    targetValue,
+    duration = 1000
+) {
+
+    if (!element) {
+        return;
+    }
+
+
+    /*
+     * Pastikan target berupa angka.
+     */
+    const target =
+        Number(
+            targetValue
+        ) || 0;
+
+
+    /*
+     * Ambil angka yang sedang tampil.
+     *
+     * Kalau sebelumnya kosong,
+     * mulai dari 0.
+     */
+    const current =
+        Number(
+            String(
+                element.textContent || "0"
+            ).replace(
+                /[^\d-]/g,
+                ""
+            )
+        ) || 0;
+
+
+    /*
+     * Jika angka sama,
+     * tidak perlu animasi.
+     */
+    if (current === target) {
+
+        element.textContent =
+            target.toLocaleString(
+                "en-US"
+            );
+
+        return;
+    }
+
+
+    /*
+     * Batalkan animasi sebelumnya
+     * jika masih berjalan.
+     */
+    if (
+        element._dashboardAnimationFrame
+    ) {
+
+        cancelAnimationFrame(
+            element._dashboardAnimationFrame
+        );
+    }
+
+
+    const startTime =
+        performance.now();
+
+
+    /*
+     * Easing:
+     *
+     * mulai cepat,
+     * kemudian melambat.
+     */
+    function easeOutCubic(
+        progress
+    ) {
+
+        return 1 -
+            Math.pow(
+                1 - progress,
+                3
+            );
+    }
+
+
+    /*
+     * Jalankan animasi.
+     */
+    function animate(
+        currentTime
+    ) {
+
+        const elapsed =
+            currentTime -
+            startTime;
+
+
+        let progress =
+            elapsed /
+            duration;
+
+
+        /*
+         * Batasi 0 - 1.
+         */
+        progress =
+            Math.min(
+                Math.max(
+                    progress,
+                    0
+                ),
+                1
+            );
+
+
+        /*
+         * Apply easing.
+         */
+        const easedProgress =
+            easeOutCubic(
+                progress
+            );
+
+
+        /*
+         * Hitung angka saat ini.
+         */
+        const value =
+            Math.round(
+                current +
+                (
+                    target -
+                    current
+                ) *
+                easedProgress
+            );
+
+
+        /*
+         * Tampilkan angka.
+         */
+        element.textContent =
+            value.toLocaleString(
+                "en-US"
+            );
+
+
+        /*
+         * Lanjutkan sampai selesai.
+         */
+        if (
+            progress < 1
+        ) {
+
+            element._dashboardAnimationFrame =
+                requestAnimationFrame(
+                    animate
+                );
+
+        } else {
+
+            /*
+             * Pastikan angka akhir
+             * benar-benar sama dengan target.
+             */
+            element.textContent =
+                target.toLocaleString(
+                    "en-US"
+                );
+
+
+            element._dashboardAnimationFrame =
+                null;
+        }
+    }
+
+
+    /*
+     * Mulai animasi.
+     */
+    element._dashboardAnimationFrame =
+        requestAnimationFrame(
+            animate
+        );
+}
+
+
+// ============================================================
 // SET ELEMENT TEXT
 // ============================================================
+
 function dashboardSetElementText(
     id,
     value
@@ -301,16 +446,28 @@ function dashboardSetElementText(
     }
 
 
-    element.textContent =
-        String(
-            value ?? 0
-        );
+    const numericValue =
+        Number(
+            value
+        ) || 0;
+
+
+    /*
+     * Gunakan count-up untuk
+     * angka dashboard.
+     */
+    dashboardAnimateNumber(
+        element,
+        numericValue,
+        1000
+    );
 }
 
 
 // ============================================================
 // UPDATE DASHBOARD CARDS
 // ============================================================
+
 function renderDashboardStats(
     stats
 ) {
@@ -324,26 +481,8 @@ function renderDashboardStats(
      * ========================================================
      * STAT CARD MAP
      * ========================================================
-     *
-     * Kartu utama yang kita inginkan:
-     *
-     * statTotal
-     *      -> Total Leads
-     *
-     * statNew
-     *      -> New
-     *
-     * statInterested
-     *      -> Interested
-     *
-     * statFollowUp
-     *      -> Follow Up
-     *
-     * statClosing
-     *      -> Closing
-     *
-     * ID lain tetap dipertahankan untuk compatibility.
      */
+
     const statMap = {
 
         /*
@@ -372,8 +511,6 @@ function renderDashboardStats(
          * ====================================================
          * PIPELINE / LEGACY CARDS
          * ====================================================
-         *
-         * Tetap dirender supaya HTML lama tidak error.
          */
 
         statFlyerSent:
@@ -404,20 +541,28 @@ function renderDashboardStats(
     ).forEach(
         ([id, value]) => {
 
+            /*
+             * Jika helper global tersedia,
+             * tetap jalankan untuk compatibility.
+             */
             if (
                 typeof window.setText ===
                 "function"
             ) {
 
-                window.setText(
-                    id,
-                    value
-                );
+                /*
+                 * Jangan gunakan setText
+                 * untuk angka utama karena
+                 * bisa mematikan count-up.
+                 *
+                 * Count-up dilakukan oleh
+                 * dashboardSetElementText().
+                 */
             }
 
 
             /*
-             * Pastikan langsung di-set juga.
+             * Count-up dashboard.
              */
             dashboardSetElementText(
                 id,
@@ -431,9 +576,8 @@ function renderDashboardStats(
      * ========================================================
      * LEGACY IDS
      * ========================================================
-     *
-     * Jangan dihapus.
      */
+
     const alternatives = {
 
         /*
@@ -531,9 +675,8 @@ function renderDashboardStats(
      * ========================================================
      * GLOBAL STATUS SUMMARY
      * ========================================================
-     *
-     * Statistik utama Dashboard.
      */
+
     window.FSIDashboard =
         window.FSIDashboard ||
         {};
