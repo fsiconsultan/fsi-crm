@@ -2,7 +2,6 @@
 // DASHBOARD GREETING
 // ============================================================
 //
-// Tambahan:
 // Menampilkan sapaan otomatis berdasarkan waktu,
 // nama user, dan role user.
 //
@@ -15,6 +14,13 @@
 // Jika nama tidak tersedia:
 //
 // Welcome, Guest!
+//
+// Greeting juga memiliki animasi continuous:
+// - Icon bergerak lembut
+// - Text memiliki soft glow
+// - Nama memiliki efek glow
+// - Light sweep berjalan berkala
+// - Animasi tetap berjalan selama Dashboard terbuka
 // ============================================================
 
 function dashboardUpdateGreeting(profile) {
@@ -193,20 +199,26 @@ function dashboardUpdateGreeting(profile) {
      * ========================================================
      * BUAT TEXT GREETING
      * ========================================================
+     *
+     * Struktur dibuat terpisah agar CSS animation
+     * dapat bekerja dengan halus.
      */
     greetingElement.innerHTML =
         `
         <span
-            style="
-                font-size: 28px;
-                line-height: 1;
-            "
+            class="dashboard-greeting-icon"
+            aria-hidden="true"
         >
             ${icon}
         </span>
 
-        <span>
-            ${greeting}, ${displayName}!
+        <span
+            class="dashboard-greeting-text"
+        >
+            ${greeting},
+            <strong class="dashboard-greeting-name">
+                ${displayName}
+            </strong>!
         </span>
         `;
 
@@ -229,6 +241,51 @@ function dashboardUpdateGreeting(profile) {
         displayName;
 
 
+    /*
+     * ========================================================
+     * ANIMATION CLASS
+     * ========================================================
+     */
+    greetingElement.classList.add(
+        "dashboard-greeting-animated"
+    );
+
+
+    /*
+     * ========================================================
+     * REFRESH ANIMATION
+     * ========================================================
+     *
+     * Ketika Dashboard melakukan update,
+     * greeting tetap memiliki animasi continuous.
+     *
+     * Class refresh hanya digunakan untuk
+     * entrance animation singkat.
+     */
+    greetingElement.classList.remove(
+        "dashboard-greeting-refresh"
+    );
+
+
+    /*
+     * Force browser reflow.
+     *
+     * Ini membuat animation restart dengan benar
+     * ketika greeting diperbarui.
+     */
+    void greetingElement.offsetWidth;
+
+
+    greetingElement.classList.add(
+        "dashboard-greeting-refresh"
+    );
+
+
+    /*
+     * ========================================================
+     * LOG
+     * ========================================================
+     */
     console.log(
         "FSI CRM: greeting updated:",
         {
@@ -244,6 +301,7 @@ function dashboardUpdateGreeting(profile) {
 // ============================================================
 // UPDATE DASHBOARD
 // ============================================================
+
 async function updateDashboard() {
 
     const profile =
@@ -260,8 +318,9 @@ async function updateDashboard() {
 
 
     // ========================================================
-    // TAMBAHAN GREETING
+    // UPDATE GREETING
     // ========================================================
+
     dashboardUpdateGreeting(
         profile
     );
@@ -428,12 +487,6 @@ async function updateDashboard() {
          * PASTIKAN STATISTIK UTAMA BENAR-BENAR
          * MENGGUNAKAN DATA SALES YANG SUDAH TERFILTER
          * ========================================================
-         *
-         * Total Leads
-         * New
-         * Interested
-         * Follow Up
-         * Closing
          */
         stats.total =
             dashboardData.length;
@@ -836,6 +889,7 @@ function dashboardBindSalesFilterChange() {
 // ============================================================
 // REFRESH DASHBOARD
 // ============================================================
+
 async function refreshDashboard() {
 
     if (
