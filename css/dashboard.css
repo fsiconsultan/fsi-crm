@@ -39,7 +39,7 @@
 
 /* =========================================================
    RUNNING LIGHT AROUND CARD
-   Tidak membutuhkan HTML tambahan
+   CSS ONLY — NO HTML / JS CHANGE REQUIRED
 ========================================================= */
 
 /*
@@ -53,7 +53,7 @@
 
 
 /* ---------------------------------------------------------
-   LIGHT BEAM
+   MAIN LIGHT
 --------------------------------------------------------- */
 
 .stat-card::before {
@@ -77,17 +77,17 @@
         linear-gradient(
             90deg,
             transparent 0%,
-            rgba(96, 165, 250, 0.15) 20%,
-            rgba(147, 197, 253, 0.8) 42%,
+            rgba(96, 165, 250, 0.12) 18%,
+            rgba(147, 197, 253, 0.75) 40%,
             #ffffff 50%,
-            rgba(147, 197, 253, 0.8) 58%,
-            rgba(96, 165, 250, 0.15) 80%,
+            rgba(147, 197, 253, 0.75) 60%,
+            rgba(96, 165, 250, 0.12) 82%,
             transparent 100%
         );
 
     box-shadow:
-        0 0 5px rgba(96, 165, 250, 0.8),
-        0 0 12px rgba(96, 165, 250, 0.45);
+        0 0 5px rgba(96, 165, 250, 0.75),
+        0 0 12px rgba(96, 165, 250, 0.40);
 
     animation:
         statCardLightMove
@@ -98,7 +98,7 @@
 
 
 /* ---------------------------------------------------------
-   SOFT GLOW FOLLOWING THE LIGHT
+   SOFT GLOW
 --------------------------------------------------------- */
 
 .stat-card::after {
@@ -122,14 +122,14 @@
         linear-gradient(
             90deg,
             transparent,
-            rgba(96, 165, 250, 0.35),
-            rgba(147, 197, 253, 0.45),
+            rgba(96, 165, 250, 0.30),
+            rgba(147, 197, 253, 0.42),
             transparent
         );
 
     filter: blur(5px);
 
-    opacity: 0.8;
+    opacity: 0.75;
 
     animation:
         statCardLightGlow
@@ -140,7 +140,7 @@
 
 
 /* =========================================================
-   LIGHT BEAM ANIMATION
+   RUNNING LIGHT — MAIN
 ========================================================= */
 
 @keyframes statCardLightMove {
@@ -209,7 +209,7 @@
 
 
 /* =========================================================
-   LIGHT GLOW ANIMATION
+   RUNNING LIGHT — GLOW
 ========================================================= */
 
 @keyframes statCardLightGlow {
@@ -1057,6 +1057,311 @@
 
 
 /* =========================================================
+   DASHBOARD GREETING
+========================================================= */
+
+#dashboardGreeting.dashboard-greeting-animated {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    width: fit-content;
+    max-width: 100%;
+
+    margin-bottom: 20px;
+
+    padding: 2px 4px;
+
+    color: var(--slate-900);
+
+    overflow: hidden;
+
+    isolation: isolate;
+
+    animation:
+        dashboardGreetingFloat
+        4.5s
+        ease-in-out
+        infinite;
+}
+
+
+/* Greeting Icon */
+
+.dashboard-greeting-icon {
+    position: relative;
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    width: 32px;
+    height: 32px;
+
+    font-size: 28px;
+    line-height: 1;
+
+    transform-origin: center;
+
+    animation:
+        dashboardGreetingIcon
+        3.2s
+        ease-in-out
+        infinite;
+}
+
+
+/* Greeting Text */
+
+.dashboard-greeting-text {
+    position: relative;
+
+    display: inline-block;
+
+    color: var(--slate-800);
+
+    font-size: 24px;
+    line-height: 1.3;
+    font-weight: 600;
+
+    letter-spacing: -0.35px;
+
+    animation:
+        dashboardGreetingText
+        4s
+        ease-in-out
+        infinite;
+}
+
+
+/* Greeting Name */
+
+.dashboard-greeting-name {
+    position: relative;
+
+    display: inline-block;
+
+    color: var(--primary);
+
+    font-weight: 800;
+
+    letter-spacing: -0.45px;
+
+    animation:
+        dashboardGreetingName
+        3.5s
+        ease-in-out
+        infinite;
+}
+
+
+/* Greeting Light Sweep */
+
+#dashboardGreeting.dashboard-greeting-animated::after {
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    left: -45%;
+
+    width: 30%;
+    height: 100%;
+
+    pointer-events: none;
+
+    background:
+        linear-gradient(
+            100deg,
+            transparent,
+            rgba(255, 255, 255, 0.72),
+            transparent
+        );
+
+    transform: skewX(-18deg);
+
+    opacity: 0;
+
+    animation:
+        dashboardGreetingSweep
+        5.5s
+        ease-in-out
+        infinite;
+}
+
+
+/* Greeting Refresh */
+
+.dashboard-greeting-refresh {
+    animation:
+        dashboardGreetingRefresh
+        0.65s
+        cubic-bezier(
+            0.22,
+            1,
+            0.36,
+            1
+        ) both,
+        dashboardGreetingFloat
+        4.5s
+        ease-in-out
+        0.65s
+        infinite !important;
+}
+
+
+/* =========================================================
+   GREETING ANIMATIONS
+========================================================= */
+
+@keyframes dashboardGreetingFloat {
+
+    0%,
+    100% {
+        transform:
+            translate3d(
+                0,
+                0,
+                0
+            );
+    }
+
+    50% {
+        transform:
+            translate3d(
+                0,
+                -2px,
+                0
+            );
+    }
+}
+
+
+@keyframes dashboardGreetingIcon {
+
+    0%,
+    100% {
+        transform:
+            translateY(0)
+            rotate(0deg)
+            scale(1);
+    }
+
+    25% {
+        transform:
+            translateY(-2px)
+            rotate(-4deg)
+            scale(1.04);
+    }
+
+    50% {
+        transform:
+            translateY(0)
+            rotate(0deg)
+            scale(1);
+    }
+
+    75% {
+        transform:
+            translateY(-1px)
+            rotate(4deg)
+            scale(1.03);
+    }
+}
+
+
+@keyframes dashboardGreetingText {
+
+    0%,
+    100% {
+        opacity: 1;
+
+        text-shadow:
+            0 0 0
+            rgba(59, 130, 246, 0);
+    }
+
+    50% {
+        opacity: 0.94;
+
+        text-shadow:
+            0 3px 16px
+            rgba(59, 130, 246, 0.10);
+    }
+}
+
+
+@keyframes dashboardGreetingName {
+
+    0%,
+    100% {
+        text-shadow:
+            0 0 0
+            rgba(59, 130, 246, 0);
+    }
+
+    50% {
+        text-shadow:
+            0 0 12px
+            rgba(59, 130, 246, 0.20);
+    }
+}
+
+
+@keyframes dashboardGreetingSweep {
+
+    0% {
+        left: -45%;
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 0;
+    }
+
+    18% {
+        opacity: 0.7;
+    }
+
+    35% {
+        left: 125%;
+        opacity: 0;
+    }
+
+    100% {
+        left: 125%;
+        opacity: 0;
+    }
+}
+
+
+@keyframes dashboardGreetingRefresh {
+
+    from {
+        opacity: 0;
+
+        transform:
+            translateY(8px)
+            scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+
+        transform:
+            translateY(0)
+            scale(1);
+    }
+}
+
+
+/* =========================================================
    DASHBOARD ERROR
 ========================================================= */
 
@@ -1108,7 +1413,13 @@
     .pipeline-date-item,
     .recent-lead-item,
     .pipeline-bar-fill,
-    .pipeline-dot {
+    .pipeline-dot,
+    #dashboardGreeting.dashboard-greeting-animated,
+    #dashboardGreeting.dashboard-greeting-animated::after,
+    .dashboard-greeting-icon,
+    .dashboard-greeting-text,
+    .dashboard-greeting-name,
+    .dashboard-greeting-refresh {
         animation: none !important;
         transition: none !important;
     }
@@ -1130,6 +1441,7 @@
 ========================================================= */
 
 @media (max-width: 1200px) {
+
     .stats-grid {
         grid-template-columns:
             repeat(4, minmax(0, 1fr));
@@ -1141,7 +1453,9 @@
     }
 }
 
+
 @media (max-width: 900px) {
+
     .stats-grid {
         grid-template-columns:
             repeat(3, minmax(0, 1fr));
@@ -1153,10 +1467,13 @@
     }
 }
 
+
 @media (max-width: 640px) {
+
     .stats-grid {
         grid-template-columns:
             repeat(2, minmax(0, 1fr));
+
         gap: 10px;
     }
 
@@ -1200,6 +1517,7 @@
     .profile-pipeline-grid {
         grid-template-columns:
             1fr;
+
         padding: 14px 15px;
     }
 
@@ -1210,9 +1528,22 @@
     .stat-card::after {
         animation-duration: 6s;
     }
+
+    .dashboard-greeting-icon {
+        width: 27px;
+        height: 27px;
+
+        font-size: 23px;
+    }
+
+    .dashboard-greeting-text {
+        font-size: 20px;
+    }
 }
 
+
 @media (max-width: 420px) {
+
     .stats-grid {
         grid-template-columns:
             1fr;
@@ -1220,5 +1551,16 @@
 
     .stat-card {
         min-height: 82px;
+    }
+
+    .dashboard-greeting-text {
+        font-size: 18px;
+    }
+
+    .dashboard-greeting-icon {
+        width: 24px;
+        height: 24px;
+
+        font-size: 20px;
     }
 }
