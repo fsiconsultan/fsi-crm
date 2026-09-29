@@ -45,151 +45,23 @@
 
 
 /* =========================================================
-   CARD CONTENT ABOVE ANIMATION
+   STAT CARD CONTENT
 ========================================================= */
 
 .stat-card > * {
     position: relative;
-    z-index: 5;
+    z-index: 10;
 }
 
 
 /* =========================================================
-   PERIMETER LIGHT
-   Cahaya berjalan mengikuti 4 sisi card
+   RUNNING LIGHT — BASE
 ========================================================= */
 
-.stat-card .card-light {
-    position: absolute;
-
-    width: 7px;
-    height: 7px;
-
-    padding: 0;
-    margin: 0;
-
-    top: -3.5px;
-    left: -3.5px;
-
-    z-index: 4;
-
-    border-radius: 50%;
-
-    background:
-        radial-gradient(
-            circle,
-            #ffffff 0%,
-            #bfdbfe 25%,
-            #60a5fa 55%,
-            rgba(59, 130, 246, 0.15) 100%
-        );
-
-    box-shadow:
-        0 0 5px rgba(96, 165, 250, 0.95),
-        0 0 12px rgba(59, 130, 246, 0.75),
-        0 0 22px rgba(59, 130, 246, 0.35);
-
-    pointer-events: none;
-
-    offset-path: inset(
-        0
-        round
-        var(--radius-lg)
-    );
-
-    -webkit-offset-path: inset(
-        0
-        round
-        var(--radius-lg)
-    );
-
-    offset-distance: 0%;
-
-    animation:
-        dashboardBorderOrbit
-        4s
-        linear
-        infinite;
-}
-
-
-/* =========================================================
-   LIGHT TRAIL
-========================================================= */
-
-.stat-card .card-light::before {
-    content: "";
-
-    position: absolute;
-
-    width: 34px;
-    height: 2px;
-
-    top: 50%;
-    right: 2px;
-
-    transform:
-        translateY(-50%)
-        rotate(0deg);
-
-    transform-origin: right center;
-
-    border-radius: 99px;
-
-    background:
-        linear-gradient(
-            90deg,
-            transparent,
-            rgba(147, 197, 253, 0.2),
-            rgba(96, 165, 250, 0.7),
-            #ffffff
-        );
-
-    filter:
-        blur(0.4px);
-
-    opacity: 0.9;
-}
-
-
-/* =========================================================
-   ORBIT ANIMATION
-   Bergerak:
-   TOP → RIGHT → BOTTOM → LEFT → TOP
-========================================================= */
-
-@keyframes dashboardBorderOrbit {
-
-    0% {
-        offset-distance: 0%;
-        -webkit-offset-distance: 0%;
-    }
-
-    25% {
-        offset-distance: 25%;
-        -webkit-offset-distance: 25%;
-    }
-
-    50% {
-        offset-distance: 50%;
-        -webkit-offset-distance: 50%;
-    }
-
-    75% {
-        offset-distance: 75%;
-        -webkit-offset-distance: 75%;
-    }
-
-    100% {
-        offset-distance: 100%;
-        -webkit-offset-distance: 100%;
-    }
-}
-
-
-/* =========================================================
-   FALLBACK BORDER GLOW
-========================================================= */
+/*
+   Kita menggunakan background border sebagai 1 lapisan
+   dan menggerakkan highlight melewati perimeter card.
+*/
 
 .stat-card::before {
     content: "";
@@ -198,32 +70,56 @@
 
     inset: 0;
 
-    z-index: 1;
+    z-index: 2;
+
+    padding: 1px;
 
     border-radius: inherit;
 
     pointer-events: none;
 
-    border: 1px solid transparent;
-
     background:
         linear-gradient(
-            var(--card-bg),
-            var(--card-bg)
-        ) padding-box,
-        linear-gradient(
-            120deg,
-            transparent,
-            rgba(59, 130, 246, 0.08),
-            transparent
-        ) border-box;
+            90deg,
+            transparent 0%,
+            transparent 42%,
+            rgba(96, 165, 250, 0.05) 44%,
+            rgba(96, 165, 250, 0.95) 49%,
+            #ffffff 50%,
+            rgba(96, 165, 250, 0.95) 51%,
+            rgba(96, 165, 250, 0.05) 56%,
+            transparent 58%,
+            transparent 100%
+        );
 
-    opacity: 0.9;
+    background-size:
+        300% 300%;
+
+    background-position:
+        0% 0%;
+
+    -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+
+    -webkit-mask-composite: xor;
+
+    mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+
+    mask-composite: exclude;
+
+    animation:
+        dashboardCardBorderRun
+        5s
+        linear
+        infinite;
 }
 
 
 /* =========================================================
-   ORIGINAL LIGHT SWEEP
+   SOFT LIGHT GLOW
 ========================================================= */
 
 .stat-card::after {
@@ -231,38 +127,154 @@
 
     position: absolute;
 
-    top: 0;
-    left: -120%;
+    inset: -3px;
 
-    width: 70%;
-    height: 100%;
+    z-index: 1;
+
+    border-radius: inherit;
 
     pointer-events: none;
 
     background:
         linear-gradient(
-            100deg,
-            transparent,
-            rgba(255, 255, 255, 0.38),
-            transparent
+            90deg,
+            transparent 0%,
+            transparent 42%,
+            rgba(59, 130, 246, 0.03) 45%,
+            rgba(96, 165, 250, 0.18) 50%,
+            rgba(59, 130, 246, 0.03) 55%,
+            transparent 58%,
+            transparent 100%
         );
 
-    transform:
-        skewX(-18deg);
+    background-size:
+        300% 300%;
 
-    transition:
-        left 0.65s ease;
+    filter:
+        blur(7px);
 
-    z-index: 2;
-}
+    opacity: 0.8;
 
-.stat-card:hover::after {
-    left: 140%;
+    animation:
+        dashboardCardGlowRun
+        5s
+        linear
+        infinite;
 }
 
 
 /* =========================================================
-   HOVER
+   BORDER RUN
+========================================================= */
+
+/*
+   0%   = TOP LEFT
+   25%  = TOP RIGHT
+   50%  = BOTTOM RIGHT
+   75%  = BOTTOM LEFT
+   100% = TOP LEFT
+
+   Jadi cahaya mengikuti bentuk kotak.
+*/
+
+@keyframes dashboardCardBorderRun {
+
+    /* -------------------------
+       TOP
+    ------------------------- */
+
+    0% {
+        background-position:
+            0% 0%;
+    }
+
+    25% {
+        background-position:
+            100% 0%;
+    }
+
+
+    /* -------------------------
+       RIGHT
+    ------------------------- */
+
+    25.01% {
+        background-position:
+            100% 0%;
+    }
+
+    50% {
+        background-position:
+            100% 100%;
+    }
+
+
+    /* -------------------------
+       BOTTOM
+    ------------------------- */
+
+    50.01% {
+        background-position:
+            100% 100%;
+    }
+
+    75% {
+        background-position:
+            0% 100%;
+    }
+
+
+    /* -------------------------
+       LEFT
+    ------------------------- */
+
+    75.01% {
+        background-position:
+            0% 100%;
+    }
+
+    100% {
+        background-position:
+            0% 0%;
+    }
+}
+
+
+/* =========================================================
+   GLOW RUN
+========================================================= */
+
+@keyframes dashboardCardGlowRun {
+
+    0% {
+        background-position:
+            0% 0%;
+    }
+
+    25% {
+        background-position:
+            100% 0%;
+    }
+
+    50% {
+        background-position:
+            100% 100%;
+    }
+
+    75% {
+        background-position:
+            0% 100%;
+    }
+
+    100% {
+        background-position:
+            0% 0%;
+    }
+}
+
+
+/* =========================================================
+   CARD HOVER
 ========================================================= */
 
 .stat-card:hover {
@@ -274,17 +286,29 @@
 
     box-shadow:
         var(--shadow-md),
-        0 0 18px
-        rgba(59, 130, 246, 0.08);
+        0 0 20px
+        rgba(59, 130, 246, 0.10);
 }
 
-.stat-card:hover .card-light {
-    animation-duration: 2.4s;
+.stat-card:hover::before {
+    animation-duration:
+        2.5s;
 
-    box-shadow:
-        0 0 6px rgba(255, 255, 255, 1),
-        0 0 15px rgba(96, 165, 250, 0.95),
-        0 0 28px rgba(59, 130, 246, 0.45);
+    filter:
+        drop-shadow(
+            0 0 5px
+            rgba(96, 165, 250, 0.85)
+        );
+}
+
+.stat-card:hover::after {
+    animation-duration:
+        2.5s;
+
+    opacity: 1;
+
+    filter:
+        blur(8px);
 }
 
 
@@ -335,14 +359,17 @@
 }
 
 @keyframes dashboardStatIn {
+
     from {
         opacity: 0;
+
         transform:
             translateY(12px);
     }
 
     to {
         opacity: 1;
+
         transform:
             translateY(0);
     }
@@ -523,13 +550,15 @@
 }
 
 .dashboard-card:hover {
-    border-color: #dbe3ef;
+    border-color:
+        #dbe3ef;
 
     box-shadow:
         var(--shadow-md);
 }
 
 @keyframes dashboardCardIn {
+
     from {
         opacity: 0;
 
@@ -650,6 +679,7 @@
 }
 
 @keyframes pipelineItemIn {
+
     from {
         opacity: 0;
 
@@ -688,6 +718,7 @@
 }
 
 @keyframes pipelineDotPulse {
+
     0%,
     100% {
         box-shadow:
@@ -704,6 +735,7 @@
 
 .pipeline-content {
     min-width: 0;
+
     flex: 1;
 }
 
@@ -752,6 +784,7 @@
 }
 
 @keyframes pipelineBarIn {
+
     from {
         opacity: 0;
 
@@ -875,6 +908,7 @@
 }
 
 @keyframes recentLeadIn {
+
     from {
         opacity: 0;
 
@@ -1028,6 +1062,7 @@
 }
 
 @keyframes profilePipelineIn {
+
     from {
         opacity: 0;
 
@@ -1175,6 +1210,7 @@
 }
 
 @keyframes dashboardErrorIn {
+
     from {
         opacity: 0;
 
@@ -1337,19 +1373,29 @@
 }
 
 @keyframes dashboardGreetingFloat {
+
     0%,
     100% {
         transform:
-            translate3d(0, 0, 0);
+            translate3d(
+                0,
+                0,
+                0
+            );
     }
 
     50% {
         transform:
-            translate3d(0, -2px, 0);
+            translate3d(
+                0,
+                -2px,
+                0
+            );
     }
 }
 
 @keyframes dashboardGreetingIcon {
+
     0%,
     100% {
         transform:
@@ -1381,6 +1427,7 @@
 }
 
 @keyframes dashboardGreetingText {
+
     0%,
     100% {
         opacity: 1;
@@ -1400,6 +1447,7 @@
 }
 
 @keyframes dashboardGreetingName {
+
     0%,
     100% {
         text-shadow:
@@ -1415,6 +1463,7 @@
 }
 
 @keyframes dashboardGreetingSweep {
+
     0% {
         left: -45%;
         opacity: 0;
@@ -1440,6 +1489,7 @@
 }
 
 @keyframes dashboardGreetingRefresh {
+
     from {
         opacity: 0;
 
@@ -1546,15 +1596,14 @@
         padding: 14px 15px;
     }
 
-    .stat-card .card-light {
-        width: 6px;
-        height: 6px;
-
-        animation-duration: 4.5s;
+    .stat-card::before {
+        animation-duration:
+            5.5s;
     }
 
-    .stat-card:hover .card-light {
-        animation-duration: 3s;
+    .stat-card::after {
+        animation-duration:
+            5.5s;
     }
 
     .dashboard-greeting-icon {
@@ -1609,7 +1658,6 @@
     .pipeline-dot,
     .stat-card::before,
     .stat-card::after,
-    .stat-card .card-light,
     #dashboardGreeting.dashboard-greeting-animated,
     #dashboardGreeting.dashboard-greeting-animated::after,
     .dashboard-greeting-icon,
@@ -1626,14 +1674,13 @@
     .recent-lead-item {
         opacity: 1;
     }
-
-    .stat-card .card-light {
-        display: none;
-    }
 }
 
 
 /* =========================================================
-   IMPORTANT
-   responsive.css tetap menjadi CSS terakhir di index.html.
+   END DASHBOARD CSS
+
+   IMPORTANT:
+   responsive.css harus tetap menjadi stylesheet
+   PALING TERAKHIR di index.html.
 ========================================================= */
