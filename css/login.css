@@ -2,7 +2,6 @@
    LOGIN PAGE — FSI FUTURISTIC / PROFESSIONAL
    ========================================================= */
 
-/* PAGE */
 #login-page.login-page {
     position: fixed;
     inset: 0;
@@ -17,12 +16,10 @@
         url("../logo-hero.jpg") center center / cover no-repeat;
 
     z-index: 1000;
-
-    /* Subtle entrance */
     animation: loginPageIn 0.8s ease-out both;
 }
 
-/* Very subtle moving light */
+/* Ambient light */
 #login-page.login-page::before {
     content: "";
     position: absolute;
@@ -63,11 +60,12 @@
 }
 
 /* =========================================================
-   LOGIN CARD — HORIZONTAL
+   LOGIN CARD
    ========================================================= */
 
 #login-page .login-card {
     position: relative;
+    isolation: isolate;
 
     width: 100%;
     max-width: 780px;
@@ -100,30 +98,86 @@
         cardFloat 7s 1.2s ease-in-out infinite;
 }
 
-/* Soft animated border glow */
+/* =========================================================
+   ANIMATED BLUE BORDER LIGHT
+   ========================================================= */
+
+/*
+   Blue light berjalan mengelilingi seluruh card.
+   Tidak mengubah isi atau layout card.
+*/
+
 #login-page .login-card::after {
     content: "";
+
     position: absolute;
     inset: -1px;
 
-    border-radius: inherit;
+    border-radius: 27px;
+
+    padding: 1.5px;
 
     background:
-        linear-gradient(
-            120deg,
-            transparent 20%,
-            rgba(255, 255, 255, 0.12) 45%,
-            rgba(59, 130, 246, 0.18) 50%,
-            transparent 75%
+        conic-gradient(
+            from 0deg,
+            transparent 0deg,
+            transparent 275deg,
+            rgba(59, 130, 246, 0.05) 290deg,
+            rgba(59, 130, 246, 0.20) 305deg,
+            rgba(96, 165, 250, 0.95) 320deg,
+            rgba(37, 99, 235, 0.55) 335deg,
+            transparent 350deg,
+            transparent 360deg
         );
 
-    background-size: 220% 100%;
+    -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+
+    -webkit-mask-composite: xor;
+
+    mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+
+    mask-composite: exclude;
 
     pointer-events: none;
 
+    opacity: 0.9;
+
+    filter:
+        drop-shadow(0 0 4px rgba(59, 130, 246, 0.45))
+        drop-shadow(0 0 10px rgba(37, 99, 235, 0.20));
+
+    animation: blueBorderLight 5.5s linear infinite;
+
+    z-index: 10;
+}
+
+/* Soft blue glow behind moving light */
+#login-page .login-card::before {
+    content: "";
+
+    position: absolute;
+    inset: -20px;
+
+    border-radius: 40px;
+
+    background:
+        radial-gradient(
+            ellipse at center,
+            rgba(37, 99, 235, 0.08),
+            transparent 65%
+        );
+
+    pointer-events: none;
+
+    z-index: -1;
+
     opacity: 0.55;
 
-    animation: borderShine 7s linear infinite;
+    animation: borderGlowPulse 4s ease-in-out infinite;
 }
 
 /* =========================================================
@@ -145,6 +199,7 @@
 }
 
 /* LOGO */
+
 #login-page .login-logo {
     display: flex;
     align-items: center;
@@ -224,7 +279,7 @@
 }
 
 /* =========================================================
-   RIGHT FORM
+   FORM
    ========================================================= */
 
 #login-page .login-form {
@@ -239,12 +294,10 @@
     animation: formIn 0.8s 0.4s ease-out both;
 }
 
-/* FORM GROUP */
 #login-page .form-group {
     position: relative;
 }
 
-/* LABEL */
 #login-page .form-group label {
     display: block;
 
@@ -257,6 +310,7 @@
 }
 
 /* INPUT */
+
 #login-page .form-group input {
     width: 100%;
 
@@ -285,7 +339,6 @@
     color: rgba(255, 255, 255, 0.42);
 }
 
-/* INPUT FOCUS */
 #login-page .form-group input:focus {
     background: rgba(3, 15, 30, 0.48);
 
@@ -417,7 +470,6 @@
         filter 0.25s ease;
 }
 
-/* Shine layer */
 #login-page .login-btn::before {
     content: "";
 
@@ -442,7 +494,6 @@
     transition: left 0.6s ease;
 }
 
-/* Button hover */
 #login-page .login-btn:hover {
     transform: translateY(-2px);
 
@@ -457,7 +508,6 @@
     left: 140%;
 }
 
-/* Button active */
 #login-page .login-btn:active {
     transform: translateY(0) scale(0.985);
 
@@ -551,6 +601,31 @@
     }
 }
 
+/* BLUE LIGHT ROTATING AROUND CARD */
+
+@keyframes blueBorderLight {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes borderGlowPulse {
+    0%,
+    100% {
+        opacity: 0.35;
+        transform: scale(0.99);
+    }
+
+    50% {
+        opacity: 0.65;
+        transform: scale(1.01);
+    }
+}
+
 @keyframes brandIn {
     from {
         opacity: 0;
@@ -620,16 +695,6 @@
     }
 }
 
-@keyframes borderShine {
-    0% {
-        background-position: 200% 0;
-    }
-
-    100% {
-        background-position: -200% 0;
-    }
-}
-
 @keyframes errorShake {
     0%,
     100% {
@@ -683,6 +748,10 @@
             inset 0 1px 0 rgba(255, 255, 255, 0.10);
     }
 
+    #login-page .login-card::after {
+        border-radius: 23px;
+    }
+
     #login-page .login-brand {
         animation:
             brandIn 0.7s 0.25s ease-out both;
@@ -734,6 +803,10 @@
         border-radius: 20px;
     }
 
+    #login-page .login-card::after {
+        border-radius: 21px;
+    }
+
     #login-page .login-title {
         font-size: 23px;
     }
@@ -752,7 +825,7 @@
 }
 
 /* =========================================================
-   ACCESSIBILITY — REDUCED MOTION
+   ACCESSIBILITY
    ========================================================= */
 
 @media (prefers-reduced-motion: reduce) {
@@ -760,6 +833,7 @@
     #login-page.login-page,
     #login-page.login-page::before,
     #login-page .login-card,
+    #login-page .login-card::before,
     #login-page .login-card::after,
     #login-page .login-brand,
     #login-page .login-form,
