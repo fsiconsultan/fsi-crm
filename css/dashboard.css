@@ -1,26 +1,4 @@
 /* =========================================================
-   DASHBOARD BACKGROUND
-   Menggunakan logo-hero.jpg yang berada di ROOT project
-========================================================= */
-
-.dashboard {
-    position: relative;
-    min-height: 100vh;
-
-    background:
-        linear-gradient(
-            180deg,
-            rgba(248, 250, 252, 0.86) 0%,
-            rgba(248, 250, 252, 0.93) 45%,
-            rgba(248, 250, 252, 0.98) 100%
-        ),
-        url("../logo-hero.jpg") center top / cover no-repeat;
-
-    background-attachment: fixed;
-}
-
-
-/* =========================================================
    DASHBOARD
 ========================================================= */
 
