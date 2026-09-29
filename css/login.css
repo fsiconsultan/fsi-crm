@@ -25,9 +25,99 @@
         cover
         no-repeat;
 
+    background-size: 105% 105%;
+
     overflow: hidden;
 
-    animation: fsiLoginPageIn 0.7s ease-out both;
+    animation:
+        fsiLoginPageIn 0.7s ease-out both,
+        fsiHeroWave 18s ease-in-out 0.7s infinite alternate;
+}
+
+
+/* =========================================================
+   HERO LIGHT WAVE
+   ========================================================= */
+
+#login-page.login-page::before {
+    content: "";
+
+    position: absolute;
+
+    inset: -15%;
+
+    z-index: 0;
+
+    pointer-events: none;
+
+    background:
+        radial-gradient(
+            ellipse at 15% 45%,
+            rgba(96, 165, 250, 0.10),
+            transparent 38%
+        ),
+        radial-gradient(
+            ellipse at 85% 55%,
+            rgba(59, 130, 246, 0.08),
+            transparent 40%
+        );
+
+    transform:
+        translate3d(-2%, 0, 0)
+        scale(1.05);
+
+    opacity: 0.8;
+
+    animation:
+        fsiHeroLightWave
+        14s
+        ease-in-out
+        infinite alternate;
+}
+
+
+/* =========================================================
+   HERO SHIMMER
+   ========================================================= */
+
+#login-page.login-page::after {
+    content: "";
+
+    position: absolute;
+
+    top: -20%;
+    left: -35%;
+
+    width: 45%;
+    height: 140%;
+
+    pointer-events: none;
+
+    z-index: 1;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(255, 255, 255, 0.025) 35%,
+            rgba(255, 255, 255, 0.07) 50%,
+            rgba(255, 255, 255, 0.025) 65%,
+            transparent 100%
+        );
+
+    transform:
+        skewX(-12deg)
+        translateX(-20%);
+
+    filter: blur(12px);
+
+    opacity: 0.45;
+
+    animation:
+        fsiHeroShimmer
+        16s
+        ease-in-out
+        infinite;
 }
 
 
@@ -42,9 +132,14 @@
     margin: 0 auto;
 
     position: relative;
-    z-index: 2;
 
-    animation: fsiLoginContainerIn 0.75s ease-out both;
+    z-index: 3;
+
+    animation:
+        fsiLoginContainerIn
+        0.75s
+        ease-out
+        both;
 }
 
 
@@ -60,6 +155,7 @@
 
     display: grid;
     grid-template-columns: 0.85fr 1.15fr;
+
     gap: 38px;
 
     align-items: center;
@@ -68,30 +164,43 @@
 
     border-radius: 26px;
 
-    background: rgba(8, 25, 42, 0.24);
+    background:
+        rgba(8, 25, 42, 0.24);
 
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.18);
 
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
 
     box-shadow:
-        0 14px 35px rgba(0, 0, 0, 0.16),
-        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        0 14px 35px
+        rgba(0, 0, 0, 0.16),
+
+        inset 0 1px 0
+        rgba(255, 255, 255, 0.12);
 
     position: relative;
 
     overflow: hidden;
 
     animation:
-        fsiLoginCardIn 0.85s ease-out both,
-        fsiLoginCardFloat 7s ease-in-out 1.2s infinite;
+        fsiLoginCardIn
+        0.85s
+        ease-out
+        both,
+
+        fsiLoginCardFloat
+        7s
+        ease-in-out
+        1.2s
+        infinite;
 }
 
 
 /* =========================================================
    SUBTLE CARD LIGHT
-   No rotating border.
    ========================================================= */
 
 #login-page .login-card::after {
@@ -135,17 +244,32 @@
 
     border-radius: 24px;
 
-    background: rgba(255, 255, 255, 0.08);
+    background:
+        rgba(255, 255, 255, 0.08);
 
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.14);
 
     box-shadow:
-        0 8px 25px rgba(0, 0, 0, 0.12),
-        inset 0 1px 0 rgba(255, 255, 255, 0.10);
+        0 8px 25px
+        rgba(0, 0, 0, 0.12),
+
+        inset 0 1px 0
+        rgba(255, 255, 255, 0.10);
 
     animation:
-        fsiLogoFloat 5s ease-in-out 1s infinite,
-        fsiLogoPulse 3.5s ease-in-out 1.2s infinite;
+        fsiLogoFloat
+        5s
+        ease-in-out
+        1s
+        infinite,
+
+        fsiLogoPulse
+        3.5s
+        ease-in-out
+        1.2s
+        infinite;
 }
 
 
@@ -187,6 +311,7 @@
     color: #ffffff;
 
     font-size: 30px;
+
     line-height: 1.15;
 
     font-weight: 800;
@@ -209,7 +334,8 @@
 #login-page .login-subtitle {
     margin: 8px 0 0;
 
-    color: rgba(255, 255, 255, 0.82);
+    color:
+        rgba(255, 255, 255, 0.82);
 
     font-size: 14px;
 
@@ -225,6 +351,7 @@
 
 #login-page .login-form {
     display: flex;
+
     flex-direction: column;
 
     gap: 16px;
@@ -252,7 +379,8 @@
 
     margin-bottom: 7px;
 
-    color: rgba(255, 255, 255, 0.88);
+    color:
+        rgba(255, 255, 255, 0.88);
 
     font-size: 13px;
 
@@ -274,9 +402,12 @@
 
     border-radius: 11px;
 
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.18);
 
-    background: rgba(4, 18, 32, 0.42);
+    background:
+        rgba(4, 18, 32, 0.42);
 
     color: #ffffff;
 
@@ -296,21 +427,28 @@
 
 #login-page .form-group input[type="text"]::placeholder,
 #login-page .form-group input[type="password"]::placeholder {
-    color: rgba(255, 255, 255, 0.48);
+    color:
+        rgba(255, 255, 255, 0.48);
 }
 
 
 #login-page .form-group input[type="text"]:focus,
 #login-page .form-group input[type="password"]:focus {
-    border-color: rgba(96, 165, 250, 0.75);
+    border-color:
+        rgba(96, 165, 250, 0.75);
 
-    background: rgba(4, 18, 32, 0.52);
+    background:
+        rgba(4, 18, 32, 0.52);
 
     box-shadow:
-        0 0 0 3px rgba(59, 130, 246, 0.12),
-        0 0 18px rgba(59, 130, 246, 0.10);
+        0 0 0 3px
+        rgba(59, 130, 246, 0.12),
 
-    transform: translateY(-1px);
+        0 0 18px
+        rgba(59, 130, 246, 0.10);
+
+    transform:
+        translateY(-1px);
 }
 
 
@@ -319,7 +457,8 @@
    ========================================================= */
 
 #login-page #toggle-login-password {
-    color: rgba(255, 255, 255, 0.62) !important;
+    color:
+        rgba(255, 255, 255, 0.62) !important;
 
     transition:
         color 0.2s ease,
@@ -331,7 +470,8 @@
 #login-page #toggle-login-password:hover {
     color: #ffffff !important;
 
-    background: rgba(255, 255, 255, 0.08) !important;
+    background:
+        rgba(255, 255, 255, 0.08) !important;
 }
 
 
@@ -353,7 +493,8 @@
 
     margin-top: -2px;
 
-    color: rgba(255, 255, 255, 0.74);
+    color:
+        rgba(255, 255, 255, 0.74);
 
     font-size: 13px;
 }
@@ -380,9 +521,12 @@
 
     border-radius: 10px;
 
-    background: rgba(220, 38, 38, 0.16);
+    background:
+        rgba(220, 38, 38, 0.16);
 
-    border: 1px solid rgba(248, 113, 113, 0.32);
+    border:
+        1px solid
+        rgba(248, 113, 113, 0.32);
 
     color: #fecaca;
 
@@ -441,7 +585,8 @@
     cursor: pointer;
 
     box-shadow:
-        0 8px 20px rgba(37, 99, 235, 0.24);
+        0 8px 20px
+        rgba(37, 99, 235, 0.24);
 
     position: relative;
 
@@ -473,7 +618,8 @@
             transparent
         );
 
-    transform: skewX(-20deg);
+    transform:
+        skewX(-20deg);
 
     transition:
         left 0.55s ease;
@@ -481,13 +627,15 @@
 
 
 #login-page #login-button:hover {
-    transform: translateY(-2px);
+    transform:
+        translateY(-2px);
 
     box-shadow:
         0 11px 25px
         rgba(37, 99, 235, 0.30);
 
-    filter: brightness(1.05);
+    filter:
+        brightness(1.05);
 }
 
 
@@ -497,7 +645,8 @@
 
 
 #login-page #login-button:active {
-    transform: translateY(0);
+    transform:
+        translateY(0);
 }
 
 
@@ -510,75 +659,12 @@
 
     text-align: center;
 
-    color: rgba(255, 255, 255, 0.48);
+    color:
+        rgba(255, 255, 255, 0.48);
 
     font-size: 11px;
 
     letter-spacing: 0.2px;
-}
-
-
-/* =========================================================
-   AMBIENT LIGHT
-   ========================================================= */
-
-#login-page::before {
-    content: "";
-
-    position: absolute;
-
-    width: 360px;
-    height: 360px;
-
-    left: -150px;
-    bottom: -170px;
-
-    border-radius: 50%;
-
-    background:
-        radial-gradient(
-            circle,
-            rgba(59, 130, 246, 0.13),
-            transparent 70%
-        );
-
-    pointer-events: none;
-
-    animation:
-        fsiAmbientLeft
-        8s
-        ease-in-out
-        infinite;
-}
-
-
-#login-page::after {
-    content: "";
-
-    position: absolute;
-
-    width: 320px;
-    height: 320px;
-
-    right: -130px;
-    top: -150px;
-
-    border-radius: 50%;
-
-    background:
-        radial-gradient(
-            circle,
-            rgba(96, 165, 250, 0.11),
-            transparent 70%
-        );
-
-    pointer-events: none;
-
-    animation:
-        fsiAmbientRight
-        9s
-        ease-in-out
-        infinite;
 }
 
 
@@ -606,8 +692,11 @@
             rgba(3, 15, 30, 0.72)
         );
 
-    backdrop-filter: blur(3px);
-    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter:
+        blur(3px);
+
+    -webkit-backdrop-filter:
+        blur(3px);
 
     pointer-events: none;
 
@@ -632,7 +721,8 @@
 
     text-align: center;
 
-    transform: translateY(8px);
+    transform:
+        translateY(8px);
 
     animation:
         fsiSplashContent
@@ -773,12 +863,16 @@
 
     from {
         opacity: 0;
-        transform: scale(0.985);
+
+        transform:
+            scale(0.985);
     }
 
     to {
         opacity: 1;
-        transform: scale(1);
+
+        transform:
+            scale(1);
     }
 
 }
@@ -809,11 +903,13 @@
 
     0%,
     100% {
-        transform: translateY(0);
+        transform:
+            translateY(0);
     }
 
     50% {
-        transform: translateY(-3px);
+        transform:
+            translateY(-3px);
     }
 
 }
@@ -823,12 +919,16 @@
 
     from {
         opacity: 0;
-        transform: translateX(-14px);
+
+        transform:
+            translateX(-14px);
     }
 
     to {
         opacity: 1;
-        transform: translateX(0);
+
+        transform:
+            translateX(0);
     }
 
 }
@@ -838,12 +938,16 @@
 
     from {
         opacity: 0;
-        transform: translateX(14px);
+
+        transform:
+            translateX(14px);
     }
 
     to {
         opacity: 1;
-        transform: translateX(0);
+
+        transform:
+            translateX(0);
     }
 
 }
@@ -853,11 +957,13 @@
 
     0%,
     100% {
-        transform: translateY(0);
+        transform:
+            translateY(0);
     }
 
     50% {
-        transform: translateY(-4px);
+        transform:
+            translateY(-4px);
     }
 
 }
@@ -912,47 +1018,179 @@
 
     0%,
     100% {
-        transform: translateX(0);
+        transform:
+            translateX(0);
     }
 
     25% {
-        transform: translateX(-4px);
+        transform:
+            translateX(-4px);
     }
 
     75% {
-        transform: translateX(4px);
+        transform:
+            translateX(4px);
     }
 
 }
 
+
+/* =========================================================
+   HERO WAVE
+   ========================================================= */
+
+@keyframes fsiHeroWave {
+
+    0% {
+        background-position:
+            48% 50%;
+
+        background-size:
+            105% 105%;
+    }
+
+    50% {
+        background-position:
+            52% 48%;
+
+        background-size:
+            107% 107%;
+    }
+
+    100% {
+        background-position:
+            48% 52%;
+
+        background-size:
+            105% 105%;
+    }
+
+}
+
+
+/* =========================================================
+   HERO LIGHT WAVE
+   ========================================================= */
+
+@keyframes fsiHeroLightWave {
+
+    0% {
+        transform:
+            translate3d(-3%, -1%, 0)
+            scale(1.04);
+
+        opacity:
+            0.55;
+    }
+
+    50% {
+        transform:
+            translate3d(2%, 2%, 0)
+            scale(1.08);
+
+        opacity:
+            0.85;
+    }
+
+    100% {
+        transform:
+            translate3d(-1%, -2%, 0)
+            scale(1.05);
+
+        opacity:
+            0.65;
+    }
+
+}
+
+
+/* =========================================================
+   HERO SHIMMER
+   ========================================================= */
+
+@keyframes fsiHeroShimmer {
+
+    0% {
+        left:
+            -40%;
+
+        opacity:
+            0;
+    }
+
+    20% {
+        opacity:
+            0.15;
+    }
+
+    50% {
+        opacity:
+            0.45;
+    }
+
+    80% {
+        opacity:
+            0.12;
+    }
+
+    100% {
+        left:
+            110%;
+
+        opacity:
+            0;
+    }
+
+}
+
+
+/* =========================================================
+   AMBIENT LIGHT — LEFT
+   ========================================================= */
 
 @keyframes fsiAmbientLeft {
 
     0%,
     100% {
-        transform: translate(0, 0);
-        opacity: 0.8;
+        transform:
+            translate(0, 0);
+
+        opacity:
+            0.8;
     }
 
     50% {
-        transform: translate(25px, -20px);
-        opacity: 1;
+        transform:
+            translate(25px, -20px);
+
+        opacity:
+            1;
     }
 
 }
 
 
+/* =========================================================
+   AMBIENT LIGHT — RIGHT
+   ========================================================= */
+
 @keyframes fsiAmbientRight {
 
     0%,
     100% {
-        transform: translate(0, 0);
-        opacity: 0.7;
+        transform:
+            translate(0, 0);
+
+        opacity:
+            0.7;
     }
 
     50% {
-        transform: translate(-20px, 20px);
-        opacity: 1;
+        transform:
+            translate(-20px, 20px);
+
+        opacity:
+            1;
     }
 
 }
@@ -964,16 +1202,19 @@
 
 /*
    Timeline:
+
    0.0s  → mulai muncul
-   0.8s  → logo/content sudah terlihat
+   0.8s  → logo/content terlihat
    0.8–2.8s → tampil stabil
    2.8–4.0s → fade out perlahan
 */
 
+
 @keyframes fsiSplashContent {
 
     0% {
-        opacity: 0;
+        opacity:
+            0;
 
         transform:
             translateY(14px)
@@ -981,7 +1222,8 @@
     }
 
     24% {
-        opacity: 1;
+        opacity:
+            1;
 
         transform:
             translateY(0)
@@ -989,7 +1231,8 @@
     }
 
     78% {
-        opacity: 1;
+        opacity:
+            1;
 
         transform:
             translateY(0)
@@ -997,7 +1240,8 @@
     }
 
     100% {
-        opacity: 0;
+        opacity:
+            0;
 
         transform:
             translateY(-5px)
@@ -1010,28 +1254,32 @@
 @keyframes fsiSplashLogo {
 
     0% {
-        opacity: 0;
+        opacity:
+            0;
 
         transform:
             scale(0.82);
     }
 
     27% {
-        opacity: 1;
+        opacity:
+            1;
 
         transform:
             scale(1);
     }
 
     78% {
-        opacity: 1;
+        opacity:
+            1;
 
         transform:
             scale(1.02);
     }
 
     100% {
-        opacity: 0;
+        opacity:
+            0;
 
         transform:
             scale(1.04);
@@ -1044,13 +1292,19 @@
 
     0%,
     70% {
-        opacity: 1;
-        visibility: visible;
+        opacity:
+            1;
+
+        visibility:
+            visible;
     }
 
     100% {
-        opacity: 0;
-        visibility: hidden;
+        opacity:
+            0;
+
+        visibility:
+            hidden;
     }
 
 }
@@ -1063,49 +1317,68 @@
 @media (max-width: 720px) {
 
     #login-page.login-page {
-        padding: 18px;
+        padding:
+            18px;
+
+        background-size:
+            auto 105%;
     }
 
 
     #login-page .login-card {
-        max-width: 520px;
+        max-width:
+            520px;
 
-        min-height: auto;
+        min-height:
+            auto;
 
-        grid-template-columns: 1fr;
+        grid-template-columns:
+            1fr;
 
-        gap: 22px;
+        gap:
+            22px;
 
-        padding: 28px;
+        padding:
+            28px;
     }
 
 
     #login-page .login-logo {
-        width: 82px;
-        height: 82px;
+        width:
+            82px;
 
-        margin-bottom: 15px;
+        height:
+            82px;
+
+        margin-bottom:
+            15px;
     }
 
 
     #login-page .login-logo img {
-        width: 64px;
-        height: 64px;
+        width:
+            64px;
+
+        height:
+            64px;
     }
 
 
     #login-page .login-heading {
-        margin-bottom: 20px;
+        margin-bottom:
+            20px;
     }
 
 
     #login-page .login-title {
-        font-size: 27px;
+        font-size:
+            27px;
     }
 
 
     #login-page .login-form {
-        gap: 15px;
+        gap:
+            15px;
     }
 
 }
@@ -1118,82 +1391,111 @@
 @media (max-width: 420px) {
 
     #login-page.login-page {
-        padding: 14px;
+        padding:
+            14px;
+
+        background-size:
+            auto 105%;
     }
 
 
     #login-page .login-card {
-        padding: 22px;
+        padding:
+            22px;
 
-        border-radius: 21px;
+        border-radius:
+            21px;
 
-        gap: 18px;
+        gap:
+            18px;
     }
 
 
     #login-page .login-logo {
-        width: 72px;
-        height: 72px;
+        width:
+            72px;
 
-        margin-bottom: 12px;
+        height:
+            72px;
 
-        border-radius: 20px;
+        margin-bottom:
+            12px;
+
+        border-radius:
+            20px;
     }
 
 
     #login-page .login-logo img {
-        width: 56px;
-        height: 56px;
+        width:
+            56px;
+
+        height:
+            56px;
     }
 
 
     #login-page .login-title {
-        font-size: 25px;
+        font-size:
+            25px;
     }
 
 
     #login-page .login-subtitle {
-        font-size: 13px;
+        font-size:
+            13px;
     }
 
 
     #login-page .form-group input[type="text"],
     #login-page .form-group input[type="password"] {
-        min-height: 44px;
+        min-height:
+            44px;
     }
 
 
     #login-page #login-button {
-        min-height: 45px;
+        min-height:
+            45px;
     }
 
 
     .fsi-splash-logo {
-        width: 72px;
-        height: 72px;
+        width:
+            72px;
 
-        margin-bottom: 15px;
+        height:
+            72px;
+
+        margin-bottom:
+            15px;
     }
 
 
     .fsi-splash-logo img {
-        width: 56px;
-        height: 56px;
+        width:
+            56px;
+
+        height:
+            56px;
     }
 
 
     .fsi-splash-title {
-        font-size: 26px;
+        font-size:
+            26px;
     }
 
 
     .fsi-splash-subtitle {
-        font-size: 13px;
+        font-size:
+            13px;
     }
 
 
     .fsi-splash-tagline {
-        font-size: 11px;
+        font-size:
+            11px;
     }
 
 }
@@ -1218,12 +1520,14 @@
     .fsi-splash-content,
     .fsi-splash-logo {
 
-        animation: none !important;
+        animation:
+            none !important;
     }
 
 
     #fsi-splash {
-        display: none;
+        display:
+            none;
     }
 
 }
