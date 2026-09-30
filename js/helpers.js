@@ -742,6 +742,24 @@ function isAdminRole(profile) {
 }
 
 
+// ============================================================
+// SALES-LIKE ROLE HELPERS
+// ============================================================
+
+/*
+ * Sales-like operational roles
+ *
+ * These roles share the same operational Lead workflow:
+ *
+ * - Sales
+ * - Secretary
+ * - Digital Marketing
+ *
+ * IMPORTANT:
+ * This does NOT give Admin permission.
+ * Admin / Owner / Administrator remain separate.
+ */
+
 function isSalesRole(profile) {
 
     if (!profile) {
@@ -755,7 +773,9 @@ function isSalesRole(profile) {
 
     return (
         role === "sales" ||
-        role === "salesperson"
+        role === "salesperson" ||
+        role === "secretary" ||
+        role === "digital_marketing"
     );
 }
 
