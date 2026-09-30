@@ -1,6 +1,29 @@
 // ============================================================
 // CALCULATE DASHBOARD STATS
 // ============================================================
+//
+// PIPELINE DASHBOARD:
+//
+// 1. New
+// 2. First Contact
+// 3. First Meeting / Appointment / Site Survey
+// 4. Quotation
+// 5. Second Appointment
+// 6. Deal
+// 7. No Deal
+//
+// Status lama tetap didukung sebagai alias:
+//
+// Interested      → First Contact
+// Follow Up       → First Meeting / Appointment / Site Survey
+// Appointment     → First Meeting / Appointment / Site Survey
+// Site Survey     → First Meeting / Appointment / Site Survey
+// SPK             → Deal
+// Closing         → Deal
+// Not Interested  → No Deal
+//
+// ============================================================
+
 function calculateDashboardStats(
     data
 ) {
@@ -11,67 +34,175 @@ function calculateDashboardStats(
             : [];
 
 
-    /*
-     * ========================================================
-     * STATISTIK UTAMA DASHBOARD
-     * ========================================================
-     */
+    // ========================================================
+    // PIPELINE HELPER
+    // ========================================================
+    //
+    // Gunakan fungsi dari dashboard-pipeline.js.
+    //
+    // Ini penting karena pipeline sudah memiliki
+    // mapping status lama → status baru.
+    //
+    function countPipelineStage(
+        label
+    ) {
+
+        if (
+            typeof window.dashboardGetPipelineStageCount !==
+            "function"
+        ) {
+
+            return 0;
+        }
+
+
+        if (
+            typeof window.dashboardGetPipelineStage !==
+            "function"
+        ) {
+
+            return 0;
+        }
+
+
+        const stage =
+            window.dashboardGetPipelineStage(
+                label
+            );
+
+
+        if (!stage) {
+            return 0;
+        }
+
+
+        return window.dashboardGetPipelineStageCount(
+            list,
+            stage
+        );
+    }
+
+
+    // ========================================================
+    // MAIN PIPELINE STATISTICS
+    // ========================================================
 
     const stats = {
 
-        /*
-         * TOTAL LEADS
-         */
+        // ----------------------------------------------------
+        // TOTAL
+        // ----------------------------------------------------
+
         total:
             list.length,
 
 
-        /*
-         * NEW
-         */
+        // ----------------------------------------------------
+        // NEW
+        // ----------------------------------------------------
+
         new:
-            dashboardCountStatus(
-                list,
+            countPipelineStage(
                 "New"
             ),
 
 
-        /*
-         * INTERESTED
-         */
-        interested:
-            dashboardCountStatus(
-                list,
-                "Interested"
+        // ----------------------------------------------------
+        // FIRST CONTACT
+        // ----------------------------------------------------
+
+        firstContact:
+            countPipelineStage(
+                "First Contact"
             ),
 
 
-        /*
-         * FOLLOW UP
-         */
-        followUp:
-            dashboardCountStatus(
-                list,
-                "Follow Up"
+        // ----------------------------------------------------
+        // FIRST MEETING / APPOINTMENT / SITE SURVEY
+        // ----------------------------------------------------
+
+        firstMeeting:
+            countPipelineStage(
+                "First Meeting / Appointment / Site Survey"
             ),
 
 
-        /*
-         * CLOSING
-         */
-        closing:
-            dashboardCountStatus(
-                list,
-                "Closing"
+        // ----------------------------------------------------
+        // QUOTATION
+        // ----------------------------------------------------
+
+        quotation:
+            countPipelineStage(
+                "Quotation"
+            ),
+
+
+        // ----------------------------------------------------
+        // SECOND APPOINTMENT
+        // ----------------------------------------------------
+
+        secondAppointment:
+            countPipelineStage(
+                "Second Appointment"
+            ),
+
+
+        // ----------------------------------------------------
+        // DEAL
+        // ----------------------------------------------------
+
+        deal:
+            countPipelineStage(
+                "Deal"
+            ),
+
+
+        // ----------------------------------------------------
+        // NO DEAL
+        // ----------------------------------------------------
+
+        noDeal:
+            countPipelineStage(
+                "No Deal"
             )
     };
 
 
-    /*
-     * ========================================================
-     * COMPATIBILITY / LEGACY STATISTICS
-     * ========================================================
-     */
+    // ========================================================
+    // LEGACY COMPATIBILITY
+    // ========================================================
+    //
+    // Kita tetap simpan property lama supaya modul lain
+    // yang masih membaca:
+    //
+    // stats.interested
+    // stats.followUp
+    // stats.closing
+    //
+    // tidak langsung rusak.
+    //
+    // Tetapi nilai tersebut sekarang mengambil dari
+    // Pipeline baru.
+    // ========================================================
+
+    stats.interested =
+        stats.firstContact;
+
+
+    stats.followUp =
+        stats.firstMeeting;
+
+
+    stats.closing =
+        stats.deal;
+
+
+    // ========================================================
+    // LEGACY DATA
+    // ========================================================
+    //
+    // Tetap tersedia untuk modul lama.
+    // ========================================================
 
     stats.flyerSent =
         dashboardCountStatus(
@@ -80,51 +211,14 @@ function calculateDashboardStats(
         );
 
 
-    stats.firstContact =
-        dashboardCountStatus(
-            list,
-            "First Contact"
-        );
+    // --------------------------------------------------------
+    // Appointment legacy
+    // --------------------------------------------------------
+    //
+    // Ini hanya informasi tambahan dari field tanggal.
+    // Tidak digunakan sebagai Pipeline utama.
+    // --------------------------------------------------------
 
-
-    stats.firstMeeting =
-        dashboardCountStatus(
-            list,
-            "First Meeting / Appointment / Site Survey"
-        );
-
-
-    stats.quotation =
-        dashboardCountStatus(
-            list,
-            "Quotation"
-        );
-
-
-    stats.secondAppointment =
-        dashboardCountStatus(
-            list,
-            "Second Appointment"
-        );
-
-
-    stats.deal =
-        dashboardCountStatus(
-            list,
-            "Deal"
-        );
-
-
-    stats.noDeal =
-        dashboardCountStatus(
-            list,
-            "No Deal"
-        );
-
-
-    /*
-     * Appointment legacy
-     */
     stats.appointment =
         dashboardCountDateField(
             list,
@@ -132,9 +226,10 @@ function calculateDashboardStats(
         );
 
 
-    /*
-     * Site Survey legacy
-     */
+    // --------------------------------------------------------
+    // Site Survey legacy
+    // --------------------------------------------------------
+
     stats.siteSurvey =
         dashboardCountDateField(
             list,
@@ -142,9 +237,10 @@ function calculateDashboardStats(
         );
 
 
-    /*
-     * SPK legacy
-     */
+    // --------------------------------------------------------
+    // SPK legacy
+    // --------------------------------------------------------
+
     stats.spk =
         dashboardCountDateField(
             list,
@@ -152,9 +248,10 @@ function calculateDashboardStats(
         );
 
 
-    /*
-     * Not Interested legacy
-     */
+    // --------------------------------------------------------
+    // Not Interested legacy
+    // --------------------------------------------------------
+
     stats.notInterested =
         dashboardCountStatus(
             list,
@@ -162,33 +259,38 @@ function calculateDashboardStats(
         );
 
 
-    /*
-     * ========================================================
-     * STATUS SUMMARY
-     * ========================================================
-     */
+    // ========================================================
+    // STATUS SUMMARY
+    // ========================================================
 
     stats.statuses = {
 
         new:
             stats.new,
 
-        interested:
-            stats.interested,
+        firstContact:
+            stats.firstContact,
 
-        followUp:
-            stats.followUp,
+        firstMeeting:
+            stats.firstMeeting,
 
-        closing:
-            stats.closing
+        quotation:
+            stats.quotation,
+
+        secondAppointment:
+            stats.secondAppointment,
+
+        deal:
+            stats.deal,
+
+        noDeal:
+            stats.noDeal
     };
 
 
-    /*
-     * ========================================================
-     * PIPELINE SUMMARY LEGACY
-     * ========================================================
-     */
+    // ========================================================
+    // PIPELINE SUMMARY
+    // ========================================================
 
     stats.pipeline = {
 
@@ -215,27 +317,25 @@ function calculateDashboardStats(
     };
 
 
+    // ========================================================
+    // DEBUG
+    // ========================================================
+
+    console.log(
+        "FSI CRM: Dashboard Pipeline Stats",
+        stats.pipeline
+    );
+
+
     return stats;
 }
+
 
 
 // ============================================================
 // DASHBOARD COUNT-UP
 // ============================================================
 
-/*
- * Animasi angka dari angka sebelumnya menuju angka baru.
- *
- * Contoh:
- *
- * 0 -> 2141
- *
- * atau ketika data berubah:
- *
- * 2141 -> 2150
- *
- * Durasi sekitar 1 detik.
- */
 function dashboardAnimateNumber(
     element,
     targetValue,
@@ -247,21 +347,12 @@ function dashboardAnimateNumber(
     }
 
 
-    /*
-     * Pastikan target berupa angka.
-     */
     const target =
         Number(
             targetValue
         ) || 0;
 
 
-    /*
-     * Ambil angka yang sedang tampil.
-     *
-     * Kalau sebelumnya kosong,
-     * mulai dari 0.
-     */
     const current =
         Number(
             String(
@@ -273,11 +364,9 @@ function dashboardAnimateNumber(
         ) || 0;
 
 
-    /*
-     * Jika angka sama,
-     * tidak perlu animasi.
-     */
-    if (current === target) {
+    if (
+        current === target
+    ) {
 
         element.textContent =
             target.toLocaleString(
@@ -288,10 +377,6 @@ function dashboardAnimateNumber(
     }
 
 
-    /*
-     * Batalkan animasi sebelumnya
-     * jika masih berjalan.
-     */
     if (
         element._dashboardAnimationFrame
     ) {
@@ -306,12 +391,6 @@ function dashboardAnimateNumber(
         performance.now();
 
 
-    /*
-     * Easing:
-     *
-     * mulai cepat,
-     * kemudian melambat.
-     */
     function easeOutCubic(
         progress
     ) {
@@ -324,9 +403,6 @@ function dashboardAnimateNumber(
     }
 
 
-    /*
-     * Jalankan animasi.
-     */
     function animate(
         currentTime
     ) {
@@ -341,9 +417,6 @@ function dashboardAnimateNumber(
             duration;
 
 
-        /*
-         * Batasi 0 - 1.
-         */
         progress =
             Math.min(
                 Math.max(
@@ -354,18 +427,12 @@ function dashboardAnimateNumber(
             );
 
 
-        /*
-         * Apply easing.
-         */
         const easedProgress =
             easeOutCubic(
                 progress
             );
 
 
-        /*
-         * Hitung angka saat ini.
-         */
         const value =
             Math.round(
                 current +
@@ -377,18 +444,12 @@ function dashboardAnimateNumber(
             );
 
 
-        /*
-         * Tampilkan angka.
-         */
         element.textContent =
             value.toLocaleString(
                 "en-US"
             );
 
 
-        /*
-         * Lanjutkan sampai selesai.
-         */
         if (
             progress < 1
         ) {
@@ -400,10 +461,6 @@ function dashboardAnimateNumber(
 
         } else {
 
-            /*
-             * Pastikan angka akhir
-             * benar-benar sama dengan target.
-             */
             element.textContent =
                 target.toLocaleString(
                     "en-US"
@@ -416,14 +473,12 @@ function dashboardAnimateNumber(
     }
 
 
-    /*
-     * Mulai animasi.
-     */
     element._dashboardAnimationFrame =
         requestAnimationFrame(
             animate
         );
 }
+
 
 
 // ============================================================
@@ -452,16 +507,13 @@ function dashboardSetElementText(
         ) || 0;
 
 
-    /*
-     * Gunakan count-up untuk
-     * angka dashboard.
-     */
     dashboardAnimateNumber(
         element,
         numericValue,
         1000
     );
 }
+
 
 
 // ============================================================
@@ -477,19 +529,15 @@ function renderDashboardStats(
     }
 
 
-    /*
-     * ========================================================
-     * STAT CARD MAP
-     * ========================================================
-     */
+    // ========================================================
+    // STAT CARD MAP
+    // ========================================================
 
     const statMap = {
 
-        /*
-         * ====================================================
-         * STATISTIK UTAMA
-         * ====================================================
-         */
+        // ----------------------------------------------------
+        // MAIN PIPELINE
+        // ----------------------------------------------------
 
         statTotal:
             stats.total,
@@ -498,72 +546,47 @@ function renderDashboardStats(
             stats.new,
 
         statInterested:
-            stats.interested,
+            stats.firstContact,
 
         statFollowUp:
-            stats.followUp,
-
-        statClosing:
-            stats.closing,
-
-
-        /*
-         * ====================================================
-         * PIPELINE / LEGACY CARDS
-         * ====================================================
-         */
-
-        statFlyerSent:
-            stats.flyerSent,
-
-        statAppointment:
-            stats.appointment,
-
-        statSiteSurvey:
-            stats.siteSurvey,
+            stats.firstMeeting,
 
         statQuotation:
             stats.quotation,
 
+        statAppointment:
+            stats.secondAppointment,
+
         statSPK:
-            stats.spk,
+            stats.deal,
 
         statNotInterested:
-            stats.notInterested
+            stats.noDeal,
+
+        // ----------------------------------------------------
+        // LEGACY
+        // ----------------------------------------------------
+
+        statClosing:
+            stats.deal,
+
+        statFlyerSent:
+            stats.flyerSent,
+
+        statSiteSurvey:
+            stats.siteSurvey
     };
 
 
-    /*
-     * Set semua angka kartu.
-     */
+    // ========================================================
+    // RENDER MAIN CARDS
+    // ========================================================
+
     Object.entries(
         statMap
     ).forEach(
         ([id, value]) => {
 
-            /*
-             * Jika helper global tersedia,
-             * tetap jalankan untuk compatibility.
-             */
-            if (
-                typeof window.setText ===
-                "function"
-            ) {
-
-                /*
-                 * Jangan gunakan setText
-                 * untuk angka utama karena
-                 * bisa mematikan count-up.
-                 *
-                 * Count-up dilakukan oleh
-                 * dashboardSetElementText().
-                 */
-            }
-
-
-            /*
-             * Count-up dashboard.
-             */
             dashboardSetElementText(
                 id,
                 value
@@ -572,89 +595,44 @@ function renderDashboardStats(
     );
 
 
-    /*
-     * ========================================================
-     * LEGACY IDS
-     * ========================================================
-     */
+    // ========================================================
+    // LEGACY IDS
+    // ========================================================
 
     const alternatives = {
 
-        /*
-         * Total
-         */
         totalLeads:
             stats.total,
 
-
-        /*
-         * New
-         */
         newLeads:
             stats.new,
 
-
-        /*
-         * Interested
-         */
         interestedLeads:
-            stats.interested,
+            stats.firstContact,
 
-
-        /*
-         * Follow Up
-         */
         followUpLeads:
-            stats.followUp,
+            stats.firstMeeting,
 
-
-        /*
-         * Closing
-         */
         closingLeads:
-            stats.closing,
+            stats.deal,
 
-
-        /*
-         * Legacy Flyer Sent
-         */
         flyerSentLeads:
             stats.flyerSent,
 
-
-        /*
-         * Legacy Appointment
-         */
         appointmentLeads:
-            stats.appointment,
+            stats.secondAppointment,
 
-
-        /*
-         * Legacy Site Survey
-         */
         siteSurveyLeads:
             stats.siteSurvey,
 
-
-        /*
-         * Quotation
-         */
         quotationLeads:
             stats.quotation,
 
-
-        /*
-         * SPK
-         */
         spkLeads:
-            stats.spk,
+            stats.deal,
 
-
-        /*
-         * Not Interested
-         */
         notInterestedLeads:
-            stats.notInterested
+            stats.noDeal
     };
 
 
@@ -671,11 +649,9 @@ function renderDashboardStats(
     );
 
 
-    /*
-     * ========================================================
-     * GLOBAL STATUS SUMMARY
-     * ========================================================
-     */
+    // ========================================================
+    // GLOBAL STATUS SUMMARY
+    // ========================================================
 
     window.FSIDashboard =
         window.FSIDashboard ||
@@ -684,28 +660,12 @@ function renderDashboardStats(
 
     window.FSIDashboard.statusStats = {
 
-        /*
-         * Dashboard utama
-         */
         total:
             stats.total,
 
         new:
             stats.new,
 
-        interested:
-            stats.interested,
-
-        followUp:
-            stats.followUp,
-
-        closing:
-            stats.closing,
-
-
-        /*
-         * Pipeline lama
-         */
         firstContact:
             stats.firstContact,
 
@@ -726,17 +686,18 @@ function renderDashboardStats(
     };
 
 
-    /*
-     * Simpan stats utama secara global.
-     */
+    // ========================================================
+    // SAVE FULL STATS
+    // ========================================================
+
     window.FSIDashboard.stats =
         stats;
 
 
-    /*
-     * Setelah angka dirender,
-     * pastikan kartu interactive.
-     */
+    // ========================================================
+    // INTERACTIVE STAT CARDS
+    // ========================================================
+
     if (
         typeof dashboardBindStatCardClicks ===
         "function"
