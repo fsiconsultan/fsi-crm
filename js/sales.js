@@ -64,9 +64,7 @@
 
     function getSupabase() {
 
-        if (
-            window.supabaseClient
-        ) {
+        if (window.supabaseClient) {
             return window.supabaseClient;
         }
 
@@ -93,9 +91,7 @@
 
     function salesGetProfile() {
 
-        if (
-            window.currentProfile
-        ) {
+        if (window.currentProfile) {
             return window.currentProfile;
         }
 
@@ -118,9 +114,7 @@
 
     function getCurrentUser() {
 
-        if (
-            window.currentUser
-        ) {
+        if (window.currentUser) {
             return window.currentUser;
         }
 
@@ -160,12 +154,36 @@
     // ========================================================
     // ROLE
     // ========================================================
+    //
+    // IMPORTANT:
+    //
+    // Supabase may contain:
+    //
+    // sales
+    // salesperson
+    // secretary
+    // digital marketing
+    //
+    // We normalize spaces and hyphens to "_".
+    //
+    // Examples:
+    //
+    // "digital marketing"
+    // "Digital Marketing"
+    // "digital-marketing"
+    // "Digital_Marketing"
+    //
+    // All become:
+    //
+    // "digital_marketing"
+    // ========================================================
 
     function normalizeRole(role) {
 
         return String(role || "")
             .trim()
-            .toLowerCase();
+            .toLowerCase()
+            .replace(/[\s-]+/g, "_");
     }
 
     // ========================================================
@@ -177,9 +195,8 @@
     // - sales
     // - salesperson
     // - secretary
-    // - digital_marketing
+    // - digital marketing
     //
-    // IMPORTANT:
     // These roles are NOT Admin.
     // They only share Sales operational behavior.
     // ========================================================
@@ -196,6 +213,10 @@
             normalized === "digital_marketing"
         );
     }
+
+    // ========================================================
+    // ADMIN ROLE
+    // ========================================================
 
     function salesIsAdmin() {
 
@@ -227,6 +248,10 @@
             role === "administrator"
         );
     }
+
+    // ========================================================
+    // SALES ROLE
+    // ========================================================
 
     function salesIsSales() {
 
@@ -423,17 +448,6 @@
     // ========================================================
     // GET ACTIVE SALES-LIKE USERS
     // ========================================================
-    //
-    // Includes:
-    // - Sales
-    // - Salesperson
-    // - Secretary
-    // - Digital Marketing
-    //
-    // Only Active users are included.
-    //
-    // Admin / Owner are NOT included here.
-    // ========================================================
 
     function getActiveSales() {
 
@@ -489,17 +503,14 @@
     // GET LEAD ASSIGNABLE USERS
     // ========================================================
     //
-    // Used for Lead ownership / PIC.
-    //
     // Includes:
     // - Active Admin
     // - Active Owner
+    // - Active Administrator
     // - Active Sales
     // - Active Salesperson
     // - Active Secretary
     // - Active Digital Marketing
-    //
-    // Admin/Owner remain separate from Sales-like roles.
     // ========================================================
 
     function getLeadAssignableUsers() {
@@ -1129,7 +1140,6 @@
     async function loadSalesUsers() {
 
         if (!salesIsAdmin()) {
-
             return [];
         }
 
