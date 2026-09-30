@@ -1,7 +1,7 @@
 // ============================================================
 // FSI CRM - SALES MANAGEMENT
 // File: js/sales.js
-// Version: 2026.09.21
+// Version: 2026.10.01
 // ============================================================
 
 "use strict";
@@ -168,6 +168,35 @@
             .toLowerCase();
     }
 
+    // ========================================================
+    // SALES-LIKE ROLE
+    // ========================================================
+    //
+    // Roles that behave like Sales:
+    //
+    // - sales
+    // - salesperson
+    // - secretary
+    // - digital_marketing
+    //
+    // IMPORTANT:
+    // These roles are NOT Admin.
+    // They only share Sales operational behavior.
+    // ========================================================
+
+    function isSalesLikeRole(role) {
+
+        const normalized =
+            normalizeRole(role);
+
+        return (
+            normalized === "sales" ||
+            normalized === "salesperson" ||
+            normalized === "secretary" ||
+            normalized === "digital_marketing"
+        );
+    }
+
     function salesIsAdmin() {
 
         const profile =
@@ -194,7 +223,8 @@
 
         return (
             role === "admin" ||
-            role === "owner"
+            role === "owner" ||
+            role === "administrator"
         );
     }
 
@@ -217,10 +247,8 @@
             );
         }
 
-        return (
-            normalizeRole(
-                profile.role
-            ) === "sales"
+        return isSalesLikeRole(
+            profile.role
         );
     }
 
@@ -393,7 +421,18 @@
     }
 
     // ========================================================
-    // GET ACTIVE SALES
+    // GET ACTIVE SALES-LIKE USERS
+    // ========================================================
+    //
+    // Includes:
+    // - Sales
+    // - Salesperson
+    // - Secretary
+    // - Digital Marketing
+    //
+    // Only Active users are included.
+    //
+    // Admin / Owner are NOT included here.
     // ========================================================
 
     function getActiveSales() {
@@ -420,7 +459,9 @@
                         );
 
                     return (
-                        role === "sales" &&
+                        isSalesLikeRole(
+                            role
+                        ) &&
                         status === "Active"
                     );
                 }
@@ -447,15 +488,18 @@
     // ========================================================
     // GET LEAD ASSIGNABLE USERS
     // ========================================================
-    // Used only for Lead ownership / PIC.
+    //
+    // Used for Lead ownership / PIC.
     //
     // Includes:
     // - Active Admin
     // - Active Owner
     // - Active Sales
+    // - Active Salesperson
+    // - Active Secretary
+    // - Active Digital Marketing
     //
-    // Manage Sales list still uses getActiveSales(),
-    // so Admin/Owner will NOT appear as Sales accounts.
+    // Admin/Owner remain separate from Sales-like roles.
     // ========================================================
 
     function getLeadAssignableUsers() {
@@ -481,17 +525,19 @@
                             user.status
                         );
 
+                    if (
+                        status !==
+                        "Active"
+                    ) {
+                        return false;
+                    }
+
                     return (
-                        (
-                            (
-                                role === "admin" ||
-                                role === "owner"
-                            ) &&
-                            status === "Active"
-                        ) ||
-                        (
-                            role === "sales" &&
-                            status === "Active"
+                        role === "admin" ||
+                        role === "owner" ||
+                        role === "administrator" ||
+                        isSalesLikeRole(
+                            role
                         )
                     );
                 }
@@ -585,13 +631,6 @@
     // ========================================================
     // POPULATE LEAD SALES FILTER
     // ========================================================
-    //
-    // KHUSUS FILTER LEADS.
-    //
-    // IMPORTANT:
-    // #salesFilter TIDAK digunakan di sini karena
-    // sekarang #salesFilter adalah filter Dashboard.
-    // ========================================================
 
     function populateLeadSalesFilter(
         activeSales
@@ -670,19 +709,6 @@
     // ========================================================
     // POPULATE DASHBOARD SALES FILTER
     // ========================================================
-    //
-    // KHUSUS DASHBOARD ADMIN.
-    //
-    // #salesFilter:
-    //
-    // All Sales
-    // Sales A
-    // Sales B
-    // Sales C
-    //
-    // Hanya Active Sales.
-    // Admin / Owner tidak dimasukkan sebagai pilihan Sales.
-    // ========================================================
 
     function populateDashboardSalesFilter(
         activeSales
@@ -702,10 +728,6 @@
 
         salesFilter.innerHTML = "";
 
-        // ----------------------------------------------------
-        // ALL SALES
-        // ----------------------------------------------------
-
         const allOption =
             document.createElement(
                 "option"
@@ -719,10 +741,6 @@
         salesFilter.appendChild(
             allOption
         );
-
-        // ----------------------------------------------------
-        // ACTIVE SALES
-        // ----------------------------------------------------
 
         const salesList =
             Array.isArray(activeSales)
@@ -750,10 +768,6 @@
                 );
             }
         );
-
-        // ----------------------------------------------------
-        // RESTORE CURRENT VALUE
-        // ----------------------------------------------------
 
         const exists =
             salesList.some(
@@ -793,10 +807,6 @@
 
         menu.innerHTML = "";
 
-        // ----------------------------------------------------
-        // ALL SALES
-        // ----------------------------------------------------
-
         const allButton =
             document.createElement(
                 "button"
@@ -830,10 +840,6 @@
         menu.appendChild(
             allButton
         );
-
-        // ----------------------------------------------------
-        // ACTIVE SALES / ADMIN
-        // ----------------------------------------------------
 
         activeSales.forEach(
             function (sales) {
@@ -1005,37 +1011,17 @@
         const leadAssignableUsers =
             getLeadAssignableUsers();
 
-        // ----------------------------------------------------
-        // LEAD FILTER
-        // Admin + Active Sales
-        // ----------------------------------------------------
-
         populateLeadSalesFilter(
             leadAssignableUsers
         );
 
-        // ----------------------------------------------------
-        // TOP HEADER DROPDOWN
-        // Admin + Active Sales
-        // ----------------------------------------------------
-
         populateTopSalesDropdown(
-            leadAssignableUsers
+            activeSales
         );
-
-        // ----------------------------------------------------
-        // DASHBOARD FILTER
-        // Admin + Active Sales
-        // ----------------------------------------------------
 
         populateDashboardSalesFilter(
             activeSales
         );
-
-        // ----------------------------------------------------
-        // LEAD ASSIGNMENT
-        // Admin + Active Sales
-        // ----------------------------------------------------
 
         populateLeadAssignment(
             leadAssignableUsers
@@ -1090,7 +1076,7 @@
         }
 
         // ----------------------------------------------------
-        // SALES
+        // SALES-LIKE
         // ----------------------------------------------------
 
         if (salesIsSales()) {
@@ -1311,10 +1297,6 @@
                 "salesTable"
             );
 
-        /*
-         * If salesTable itself is a tbody,
-         * use it directly.
-         */
         if (
             table &&
             table.tagName &&
@@ -1336,10 +1318,6 @@
             Array.isArray(data)
                 ? data
                 : [];
-
-        // ----------------------------------------------------
-        // EMPTY
-        // ----------------------------------------------------
 
         if (
             salesList.length === 0
@@ -1377,10 +1355,6 @@
 
             return;
         }
-
-        // ----------------------------------------------------
-        // ROWS
-        // ----------------------------------------------------
 
         salesList.forEach(
             function (sales) {
@@ -1429,10 +1403,6 @@
                             sales.created_at
                         );
                 }
-
-                // ------------------------------------------------
-                // NAME
-                // ------------------------------------------------
 
                 const nameTd =
                     document.createElement(
@@ -1492,10 +1462,6 @@
                     userCell
                 );
 
-                // ------------------------------------------------
-                // USERNAME
-                // ------------------------------------------------
-
                 const usernameTd =
                     document.createElement(
                         "td"
@@ -1504,10 +1470,6 @@
                 usernameTd.textContent =
                     username;
 
-                // ------------------------------------------------
-                // ROLE
-                // ------------------------------------------------
-
                 const roleTd =
                     document.createElement(
                         "td"
@@ -1515,10 +1477,6 @@
 
                 roleTd.textContent =
                     role;
-
-                // ------------------------------------------------
-                // STATUS
-                // ------------------------------------------------
 
                 const statusTd =
                     document.createElement(
@@ -1543,10 +1501,6 @@
                     statusBadge
                 );
 
-                // ------------------------------------------------
-                // CREATED
-                // ------------------------------------------------
-
                 const dateTd =
                     document.createElement(
                         "td"
@@ -1554,10 +1508,6 @@
 
                 dateTd.textContent =
                     formattedDate;
-
-                // ------------------------------------------------
-                // ACTION
-                // ------------------------------------------------
 
                 const actionTd =
                     document.createElement(
@@ -1604,10 +1554,6 @@
                 actionTd.appendChild(
                     actionWrapper
                 );
-
-                // ------------------------------------------------
-                // APPEND
-                // ------------------------------------------------
 
                 tr.appendChild(
                     nameTd
@@ -1967,10 +1913,6 @@
             passwordInput?.value ||
             "";
 
-        // ----------------------------------------------------
-        // VALIDATION
-        // ----------------------------------------------------
-
         if (
             !name ||
             !username ||
@@ -2015,10 +1957,6 @@
             return;
         }
 
-        // ----------------------------------------------------
-        // CONFIRM
-        // ----------------------------------------------------
-
         const confirmText =
             'Create Sales account "' +
             name +
@@ -2049,10 +1987,6 @@
         if (!confirmed) {
             return;
         }
-
-        // ----------------------------------------------------
-        // BUTTON
-        // ----------------------------------------------------
 
         const createButton =
             document.querySelector(
@@ -2086,16 +2020,6 @@
                 "Creating Sales account...",
                 "info"
             );
-
-            // ------------------------------------------------
-            // IMPORTANT
-            // ------------------------------------------------
-            // Auth user creation must happen through a
-            // secure Edge Function. Do NOT use
-            // supabase.auth.signUp() here because that would
-            // create the Sales user under the Admin's browser
-            // authentication context.
-            // ------------------------------------------------
 
             const response =
                 await supabase.functions.invoke(
@@ -2161,10 +2085,6 @@
                 return;
             }
 
-            // ------------------------------------------------
-            // EDGE FUNCTION RETURNED ERROR
-            // ------------------------------------------------
-
             if (
                 data &&
                 (
@@ -2195,10 +2115,6 @@
                 return;
             }
 
-            // ------------------------------------------------
-            // SUCCESS
-            // ------------------------------------------------
-
             closeSalesModal();
 
             clearSalesForm();
@@ -2216,15 +2132,7 @@
                 );
             }
 
-            // ------------------------------------------------
-            // REFRESH SALES DATA
-            // ------------------------------------------------
-
             await refreshSalesData();
-
-            // ------------------------------------------------
-            // REFRESH DASHBOARD
-            // ------------------------------------------------
 
             if (
                 typeof window.updateDashboard ===
@@ -2243,10 +2151,6 @@
                     );
                 }
             }
-
-            // ------------------------------------------------
-            // EVENT
-            // ------------------------------------------------
 
             document.dispatchEvent(
                 new CustomEvent(
@@ -2435,12 +2339,6 @@
     // ========================================================
     // TOP SALES FILTER
     // ========================================================
-    //
-    // FILTER INI KHUSUS UNTUK LEADS.
-    //
-    // #salesFilter TIDAK digunakan karena sekarang
-    // dipakai khusus Dashboard.
-    // ========================================================
 
     function applyTopSalesFilter(
         salesId
@@ -2482,9 +2380,6 @@
 
     // ========================================================
     // SELECT SALES FILTER
-    // ========================================================
-    //
-    // FILTER INI KHUSUS UNTUK LEADS.
     // ========================================================
 
     function selectSalesFilter(
@@ -2533,7 +2428,7 @@
     }
 
     // ========================================================
-    // UPDATE TOP DROPDOWN FROM CURRENT LEAD FILTER
+    // UPDATE TOP DROPDOWN
     // ========================================================
 
     function updateSalesDropdownButtonFromFilter() {
@@ -2772,12 +2667,6 @@
 
     async function refreshSalesData() {
 
-        /*
-         * Always refresh the lookup first.
-         * This is what makes newly created Sales
-         * appear inside dropdowns.
-         */
-
         const lookup =
             await loadSalesLookup();
 
@@ -2789,10 +2678,6 @@
 
         } else {
 
-            /*
-             * If Sales page is not available to
-             * non-admin, at least refresh dropdowns.
-             */
             populateSalesDropdowns();
         }
 
@@ -2920,13 +2805,6 @@
                 );
             }
         );
-
-        /*
-         * Some HTML versions use a button with
-         * text "Add Sales" but no ID/data-action.
-         * We only bind it when it is clearly inside
-         * the Sales management section.
-         */
 
         const salesPage =
             salesElement(
@@ -3078,10 +2956,6 @@
 
         salesEventsBound = true;
 
-        // ----------------------------------------------------
-        // ESC
-        // ----------------------------------------------------
-
         document.addEventListener(
             "keydown",
             function (event) {
@@ -3115,21 +2989,11 @@
             }
         );
 
-        // ----------------------------------------------------
-        // PROFILE READY
-        // ----------------------------------------------------
-
         document.addEventListener(
             "fsi:profile-ready",
             async function () {
 
                 setupSalesAssignmentAccess();
-
-                /*
-                 * Important:
-                 * Once profile is ready, reload Sales
-                 * list so Admin gets actual names.
-                 */
 
                 if (salesIsAdmin()) {
 
@@ -3143,10 +3007,6 @@
                 }
             }
         );
-
-        // ----------------------------------------------------
-        // AUTH READY
-        // ----------------------------------------------------
 
         document.addEventListener(
             "fsi:auth-ready",
@@ -3167,27 +3027,13 @@
             }
         );
 
-        // ----------------------------------------------------
-        // SALES CHANGED
-        // ----------------------------------------------------
-
         document.addEventListener(
             "fsi:sales-changed",
             async function () {
 
-                /*
-                 * Prevent excessive duplicate work
-                 * when this event is triggered after
-                 * an internal refresh.
-                 */
-
                 await refreshSalesData();
             }
         );
-
-        // ----------------------------------------------------
-        // NAVIGATION CHANGED
-        // ----------------------------------------------------
 
         document.addEventListener(
             "fsi:navigation-changed",
@@ -3239,11 +3085,6 @@
         bindSalesCloseButtons();
 
         setupSalesAssignmentAccess();
-
-        /*
-         * Do not block page initialization.
-         * Profile/auth may still be loading.
-         */
 
         setTimeout(
             async function () {
