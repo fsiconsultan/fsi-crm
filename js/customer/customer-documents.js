@@ -1,546 +1,452 @@
-// ============================================================
-// FSI CRM - CUSTOMER DOCUMENTS
-// ============================================================
-// Fungsi:
-// 1. Upload PDF customer
-// 2. List dokumen customer
-// 3. Preview PDF
-// 4. Download PDF
-// 5. Delete PDF
-//
-// Storage:
-// - Supabase Storage
-// - Bucket: customer-documents
-//
-// Database:
-// - customer_documents
-//
-// Document Types:
-// - Quotation
-// - Proposal
-// - Company Profile
-// - Other
-// ============================================================
+/* =========================================================
+   FSI CRM — CUSTOMER DOCUMENTS
+   PDF Upload / Preview / Download / Delete
+========================================================= */
 
 (function () {
-
     "use strict";
 
+    /* =========================================================
+       CONFIG
+    ========================================================= */
 
-    // ========================================================
-    // CONFIG
-    // ========================================================
-
-    const BUCKET_NAME =
-        "customer-documents";
-
-    const SIGNED_URL_SECONDS =
-        600;
-
-    const MAX_FILE_SIZE =
-        10 * 1024 * 1024;
+    const BUCKET_NAME = "customer-documents";
+    const TABLE_NAME = "customer_documents";
+    const SIGNED_URL_SECONDS = 600;
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
 
-    // ========================================================
-    // HELPERS
-    // ========================================================
+    /* =========================================================
+       DOCUMENT TYPES
+    ========================================================= */
+
+    const DOCUMENT_TYPES = [
+        "Quotation",
+        "Proposal",
+        "Company Profile",
+        "Other"
+    ];
+
+
+    /* =========================================================
+       SUPABASE
+    ========================================================= */
 
     function getSupabase() {
-
         return window.supabaseClient || null;
-
     }
 
 
-    function escapeHTML(value) {
+    /* =========================================================
+       HELPERS
+    ========================================================= */
 
+    function escapeHTML(value) {
         return String(value ?? "")
             .replace(/&/g, "&amp;")
             .replace(/</g, "&lt;")
             .replace(/>/g, "&gt;")
             .replace(/"/g, "&quot;")
             .replace(/'/g, "&#039;");
-
     }
 
 
     function formatFileSize(bytes) {
-
-        const size =
-            Number(bytes || 0);
+        const size = Number(bytes || 0);
 
         if (size < 1024) {
-
-            return size + " B";
-
+            return `${size} B`;
         }
 
         if (size < 1024 * 1024) {
-
-            return (
-                (size / 1024).toFixed(1) +
-                " KB"
-            );
-
+            return `${(size / 1024).toFixed(1)} KB`;
         }
 
-        return (
-            (size / (1024 * 1024)).toFixed(1) +
-            " MB"
-        );
-
+        return `${(size / (1024 * 1024)).toFixed(2)} MB`;
     }
 
 
     function formatDate(value) {
-
         if (!value) {
             return "-";
         }
 
-        try {
+        const date = new Date(value);
 
-            const date =
-                new Date(value);
-
-            if (Number.isNaN(date.getTime())) {
-
-                return String(value);
-
-            }
-
-            return new Intl.DateTimeFormat(
-                "id-ID",
-                {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit"
-                }
-            ).format(date);
-
-        } catch (error) {
-
-            return String(value);
-
+        if (Number.isNaN(date.getTime())) {
+            return "-";
         }
 
+        return date.toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric"
+        });
     }
 
 
     function getCustomerId() {
-
         return (
             window.crmCurrentCustomerId ||
             window.crmCurrentCustomer?.id ||
             null
         );
-
     }
 
 
     function getCurrentRole() {
-
         return String(
             window.currentProfile?.role || ""
-        )
-            .trim()
-            .toLowerCase();
+        ).trim();
+    }
 
+
+    /*
+     * DELETE PDF:
+     * Admin + Sales diperbolehkan.
+     */
+    function canDeleteDocuments() {
+        const role = getCurrentRole().toLowerCase();
+
+        return (
+            role === "admin" ||
+            role === "sales" ||
+            role === "owner" ||
+            role === "administrator"
+        );
     }
 
 
     function isAdmin() {
-
-        const role =
-            getCurrentRole();
+        const role = getCurrentRole().toLowerCase();
 
         return (
             role === "admin" ||
             role === "owner" ||
             role === "administrator"
         );
-
     }
 
 
-    function showMessage(
-        message,
-        type
-    ) {
+    function isSales() {
+        return getCurrentRole().toLowerCase() === "sales";
+    }
 
+
+    function showMessage(message, type = "info") {
         if (
             window.FSIHelpers &&
-            typeof window.FSIHelpers.showToast ===
-            "function"
+            typeof window.FSIHelpers.showToast === "function"
         ) {
-
-            window.FSIHelpers.showToast(
-                message,
-                type || "info"
-            );
-
+            window.FSIHelpers.showToast(message, type);
             return;
-
         }
 
-        if (
-            typeof window.showToast ===
-            "function"
-        ) {
-
-            window.showToast(
-                message,
-                type || "info"
-            );
-
+        if (typeof window.showToast === "function") {
+            window.showToast(message, type);
             return;
-
         }
 
-        console.log(
-            "FSI CRM:",
-            message
-        );
-
+        alert(message);
     }
 
 
-    // ========================================================
-    // CSS
-    // ========================================================
+    function getProfileContainer() {
+        return document.getElementById(
+            "customer-profile-container"
+        );
+    }
+
+
+    /* =========================================================
+       STYLES
+    ========================================================= */
 
     function injectStyles() {
-
-        if (
-            document.getElementById(
-                "fsi-customer-documents-styles"
-            )
-        ) {
-
+        if (document.getElementById("fsi-customer-documents-styles")) {
             return;
-
         }
 
+        const style = document.createElement("style");
 
-        const style =
-            document.createElement("style");
-
-        style.id =
-            "fsi-customer-documents-styles";
-
+        style.id = "fsi-customer-documents-styles";
 
         style.textContent = `
-
             .fsi-documents-card {
                 margin-top: 20px;
+                padding: 20px;
+                border-radius: 16px;
+                background: #ffffff;
+                border: 1px solid #e5e7eb;
+                box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
             }
 
             .fsi-documents-header {
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                gap: 16px;
-                flex-wrap: wrap;
-            }
-
-            .fsi-documents-header-left {
-                min-width: 0;
+                gap: 12px;
+                margin-bottom: 18px;
             }
 
             .fsi-documents-title {
-                margin: 0;
+                display: flex;
+                align-items: center;
+                gap: 10px;
                 font-size: 18px;
                 font-weight: 700;
+                color: #111827;
             }
 
-            .fsi-documents-subtitle {
-                margin: 5px 0 0;
-                color: #64748b;
-                font-size: 13px;
+            .fsi-documents-title-icon {
+                width: 38px;
+                height: 38px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 10px;
+                background: rgba(239, 68, 68, 0.10);
+                color: #dc2626;
             }
 
-            .fsi-documents-upload-grid {
+            .fsi-documents-upload {
                 display: grid;
-                grid-template-columns:
-                    minmax(180px, 220px)
-                    minmax(220px, 1fr)
-                    auto;
+                grid-template-columns: 180px minmax(0, 1fr) auto;
                 gap: 12px;
                 align-items: end;
-                margin-top: 18px;
+                padding: 16px;
+                margin-bottom: 18px;
+                border-radius: 12px;
+                background: #f8fafc;
+                border: 1px solid #e5e7eb;
             }
 
             .fsi-documents-field {
                 display: flex;
                 flex-direction: column;
-                gap: 7px;
+                gap: 6px;
             }
 
             .fsi-documents-field label {
                 font-size: 12px;
-                font-weight: 700;
-                color: #334155;
+                font-weight: 600;
+                color: #475569;
             }
 
-            .fsi-documents-field input,
-            .fsi-documents-field select {
+            .fsi-documents-field select,
+            .fsi-documents-field input[type="file"] {
                 width: 100%;
                 min-height: 42px;
-                border: 1px solid #dbe3ef;
-                border-radius: 10px;
-                padding: 10px 12px;
-                background: #fff;
-                color: #0f172a;
+                padding: 9px 11px;
+                border: 1px solid #d1d5db;
+                border-radius: 9px;
+                background: #ffffff;
+                font-size: 13px;
                 box-sizing: border-box;
             }
 
-            .fsi-documents-actions {
-                display: flex;
-                gap: 8px;
+            .fsi-document-btn {
+                min-height: 40px;
+                display: inline-flex;
                 align-items: center;
+                justify-content: center;
+                gap: 7px;
+                padding: 8px 13px;
+                border: 0;
+                border-radius: 8px;
+                background: #111827;
+                color: #ffffff;
+                font-size: 13px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: 0.2s ease;
+            }
+
+            .fsi-document-btn:hover {
+                transform: translateY(-1px);
+                opacity: 0.92;
+            }
+
+            .fsi-document-btn:disabled {
+                opacity: 0.55;
+                cursor: not-allowed;
+                transform: none;
+            }
+
+            .fsi-document-btn.secondary {
+                background: #f1f5f9;
+                color: #334155;
+                border: 1px solid #e2e8f0;
+            }
+
+            .fsi-document-btn.danger {
+                background: #dc2626;
+                color: #ffffff;
+            }
+
+            .fsi-document-btn svg {
+                width: 15px;
+                height: 15px;
             }
 
             .fsi-document-list {
-                margin-top: 20px;
                 display: flex;
                 flex-direction: column;
                 gap: 10px;
             }
 
-            .fsi-document-empty {
-                border: 1px dashed #cbd5e1;
-                border-radius: 12px;
-                padding: 22px;
-                text-align: center;
-                color: #64748b;
-                background: #f8fafc;
-            }
-
             .fsi-document-item {
-                display: grid;
-                grid-template-columns: 42px minmax(0, 1fr) auto;
-                gap: 12px;
-                align-items: center;
-                padding: 12px 14px;
-                border: 1px solid #e2e8f0;
-                border-radius: 12px;
-                background: #fff;
-            }
-
-            .fsi-document-icon {
-                width: 42px;
-                height: 42px;
-                border-radius: 10px;
                 display: flex;
                 align-items: center;
-                justify-content: center;
-                background: #eff6ff;
-                color: #2563eb;
-                font-size: 17px;
-                font-weight: 800;
+                justify-content: space-between;
+                gap: 14px;
+                padding: 13px 14px;
+                border: 1px solid #e5e7eb;
+                border-radius: 11px;
+                background: #ffffff;
             }
 
-            .fsi-document-main {
+            .fsi-document-info {
                 min-width: 0;
+                flex: 1;
             }
 
             .fsi-document-name {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                min-width: 0;
                 font-size: 14px;
-                font-weight: 700;
-                color: #0f172a;
-                word-break: break-word;
+                font-weight: 600;
+                color: #111827;
+            }
+
+            .fsi-document-name span {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .fsi-document-name svg {
+                flex: 0 0 auto;
+                width: 18px;
+                height: 18px;
+                color: #dc2626;
             }
 
             .fsi-document-meta {
-                margin-top: 4px;
-                display: flex;
-                gap: 8px;
-                flex-wrap: wrap;
+                margin-top: 5px;
+                font-size: 11px;
                 color: #64748b;
-                font-size: 12px;
             }
 
-            .fsi-document-type {
-                color: #2563eb;
-                font-weight: 700;
-            }
-
-            .fsi-document-buttons {
+            .fsi-document-actions {
                 display: flex;
-                gap: 7px;
-                flex-wrap: wrap;
+                align-items: center;
                 justify-content: flex-end;
+                flex-wrap: wrap;
+                gap: 7px;
             }
 
-            .fsi-document-btn {
-                border: 1px solid #dbe3ef;
-                background: #fff;
-                color: #1e293b;
-                border-radius: 8px;
-                padding: 8px 10px;
-                cursor: pointer;
-                font-size: 12px;
-                font-weight: 700;
-            }
-
-            .fsi-document-btn:hover {
+            .fsi-documents-empty {
+                padding: 25px 15px;
+                text-align: center;
+                color: #64748b;
+                font-size: 13px;
+                border: 1px dashed #cbd5e1;
+                border-radius: 11px;
                 background: #f8fafc;
-            }
-
-            .fsi-document-btn.primary {
-                border-color: #2563eb;
-                background: #2563eb;
-                color: #fff;
-            }
-
-            .fsi-document-btn.danger {
-                color: #dc2626;
-                border-color: #fecaca;
-                background: #fff;
             }
 
             .fsi-documents-loading {
                 padding: 20px;
                 text-align: center;
                 color: #64748b;
+                font-size: 13px;
             }
 
-            @media (max-width: 800px) {
-
-                .fsi-documents-upload-grid {
+            @media (max-width: 768px) {
+                .fsi-documents-upload {
                     grid-template-columns: 1fr;
                 }
 
                 .fsi-document-item {
-                    grid-template-columns:
-                        42px
-                        minmax(0, 1fr);
+                    align-items: flex-start;
+                    flex-direction: column;
                 }
 
-                .fsi-document-buttons {
-                    grid-column: 1 / -1;
+                .fsi-document-actions {
+                    width: 100%;
                     justify-content: flex-start;
                 }
 
+                .fsi-document-actions .fsi-document-btn {
+                    flex: 1;
+                }
             }
-
         `;
 
         document.head.appendChild(style);
-
     }
 
 
-    // ========================================================
-    // GET PROFILE CONTAINER
-    // ========================================================
-
-    function getProfileContainer() {
-
-        return document.getElementById(
-            "customer-profile-container"
-        );
-
-    }
-
-
-    // ========================================================
-    // RENDER SECTION
-    // ========================================================
+    /* =========================================================
+       RENDER DOCUMENT SECTION
+    ========================================================= */
 
     function renderDocumentsSection() {
-
-        const container =
-            getProfileContainer();
+        const container = getProfileContainer();
 
         if (!container) {
-            return false;
+            return;
         }
 
+        /*
+         * Jangan duplicate section.
+         */
+        let section = document.getElementById(
+            "fsiCustomerDocuments"
+        );
 
-        const existing =
-            document.getElementById(
-                "fsiCustomerDocuments"
-            );
-
-        if (existing) {
-
+        if (section) {
             loadDocuments();
-
-            return true;
-
+            return;
         }
 
+        section = document.createElement("section");
 
-        const wrapper =
-            document.createElement("section");
+        section.id = "fsiCustomerDocuments";
+        section.className = "fsi-documents-card";
 
-        wrapper.id =
-            "fsiCustomerDocuments";
-
-        wrapper.className =
-            "profile-card fsi-documents-card";
-
-
-        wrapper.innerHTML = `
-
+        section.innerHTML = `
             <div class="fsi-documents-header">
-
-                <div class="fsi-documents-header-left">
-
-                    <div class="eyebrow">
-                        CUSTOMER DOCUMENTS
+                <div class="fsi-documents-title">
+                    <div class="fsi-documents-title-icon">
+                        <i data-lucide="file-text"></i>
                     </div>
 
-                    <h3 class="fsi-documents-title">
-                        Customer Documents
-                    </h3>
-
-                    <p class="fsi-documents-subtitle">
-                        Upload quotation, proposal, company profile,
-                        or other customer documents.
-                    </p>
-
+                    <span>Customer Documents</span>
                 </div>
-
             </div>
 
-
-            <div class="fsi-documents-upload-grid">
+            <div class="fsi-documents-upload">
 
                 <div class="fsi-documents-field">
-
                     <label for="fsiDocumentType">
                         Document Type
                     </label>
 
                     <select id="fsiDocumentType">
-
-                        <option value="Quotation">
-                            Quotation
-                        </option>
-
-                        <option value="Proposal">
-                            Proposal
-                        </option>
-
-                        <option value="Company Profile">
-                            Company Profile
-                        </option>
-
-                        <option value="Other">
-                            Other
-                        </option>
-
+                        ${DOCUMENT_TYPES.map(
+                            type =>
+                                `<option value="${escapeHTML(type)}">
+                                    ${escapeHTML(type)}
+                                </option>`
+                        ).join("")}
                     </select>
-
                 </div>
 
-
                 <div class="fsi-documents-field">
-
                     <label for="fsiDocumentFile">
                         PDF File
                     </label>
@@ -549,736 +455,117 @@
                         id="fsiDocumentFile"
                         type="file"
                         accept="application/pdf,.pdf"
-                    >
-
+                    />
                 </div>
 
-
-                <div class="fsi-documents-actions">
-
-                    <button
-                        type="button"
-                        id="fsiDocumentUploadBtn"
-                        class="primary-btn"
-                    >
-                        Upload PDF
-                    </button>
-
-                </div>
+                <button
+                    type="button"
+                    class="fsi-document-btn"
+                    id="fsiUploadDocumentBtn"
+                >
+                    <i data-lucide="upload"></i>
+                    <span>Upload PDF</span>
+                </button>
 
             </div>
-
 
             <div
                 id="fsiDocumentList"
                 class="fsi-document-list"
             >
-
                 <div class="fsi-documents-loading">
                     Loading documents...
                 </div>
-
             </div>
-
         `;
 
+        container.appendChild(section);
 
-        container.appendChild(
-            wrapper
+        const uploadButton = document.getElementById(
+            "fsiUploadDocumentBtn"
         );
 
-
-        const uploadButton =
-            document.getElementById(
-                "fsiDocumentUploadBtn"
-            );
-
-
         if (uploadButton) {
-
             uploadButton.addEventListener(
                 "click",
                 uploadDocument
             );
-
         }
 
+        refreshLucideIcons();
 
         loadDocuments();
-
-        return true;
-
     }
 
 
-    // ========================================================
-    // LOAD DOCUMENTS
-    // ========================================================
+    /* =========================================================
+       LUCIDE
+    ========================================================= */
+
+    function refreshLucideIcons() {
+        try {
+            if (
+                window.lucide &&
+                typeof window.lucide.createIcons === "function"
+            ) {
+                window.lucide.createIcons();
+            }
+        } catch (error) {
+            console.warn(
+                "Lucide icon refresh failed:",
+                error
+            );
+        }
+    }
+
+
+    /* =========================================================
+       LOAD DOCUMENTS
+    ========================================================= */
 
     async function loadDocuments() {
+        const supabase = getSupabase();
+        const customerId = getCustomerId();
 
-        const customerId =
-            getCustomerId();
-
-        const list =
-            document.getElementById(
-                "fsiDocumentList"
-            );
-
+        const list = document.getElementById(
+            "fsiDocumentList"
+        );
 
         if (!list) {
             return;
         }
 
+        if (!supabase) {
+            list.innerHTML = `
+                <div class="fsi-documents-empty">
+                    Supabase client is not available.
+                </div>
+            `;
+            return;
+        }
 
         if (!customerId) {
-
             list.innerHTML = `
-
-                <div class="fsi-document-empty">
-                    Customer belum dipilih.
+                <div class="fsi-documents-empty">
+                    Customer ID not found.
                 </div>
-
             `;
-
             return;
-
         }
-
-
-        const supabase =
-            getSupabase();
-
-
-        if (!supabase) {
-
-            list.innerHTML = `
-
-                <div class="fsi-document-empty">
-                    Supabase belum tersedia.
-                </div>
-
-            `;
-
-            return;
-
-        }
-
 
         list.innerHTML = `
-
             <div class="fsi-documents-loading">
                 Loading documents...
             </div>
-
         `;
 
-
         try {
-
-            const result =
-                await supabase
-                    .from("customer_documents")
-                    .select(
-                        `
-                        id,
-                        customer_id,
-                        document_type,
-                        file_name,
-                        file_path,
-                        file_size,
-                        mime_type,
-                        uploaded_by,
-                        uploaded_at
-                        `
-                    )
-                    .eq(
-                        "customer_id",
-                        customerId
-                    )
-                    .order(
-                        "uploaded_at",
-                        {
-                            ascending: false
-                        }
-                    );
-
-
-            if (result.error) {
-
-                throw result.error;
-
-            }
-
-
-            const documents =
-                Array.isArray(result.data)
-                    ? result.data
-                    : [];
-
-
-            renderDocumentList(
-                documents
-            );
-
-        } catch (error) {
-
-            console.error(
-                "FSI CRM: Load customer documents error:",
+            const {
+                data,
                 error
-            );
-
-
-            list.innerHTML = `
-
-                <div class="fsi-document-empty">
-
-                    Failed to load documents.
-
-                    <br>
-
-                    <small>
-                        ${escapeHTML(
-                            error?.message ||
-                            "Unknown error"
-                        )}
-                    </small>
-
-                </div>
-
-            `;
-
-        }
-
-    }
-
-
-    // ========================================================
-    // RENDER DOCUMENT LIST
-    // ========================================================
-
-    function renderDocumentList(
-        documents
-    ) {
-
-        const list =
-            document.getElementById(
-                "fsiDocumentList"
-            );
-
-
-        if (!list) {
-            return;
-        }
-
-
-        if (!documents.length) {
-
-            list.innerHTML = `
-
-                <div class="fsi-document-empty">
-                    Belum ada document untuk customer ini.
-                </div>
-
-            `;
-
-            return;
-
-        }
-
-
-        list.innerHTML =
-            documents
-                .map(function (docRecord) {
-
-                    return `
-
-                        <div
-                            class="fsi-document-item"
-                            data-document-id="${escapeHTML(
-                                docRecord.id
-                            )}"
-                        >
-
-                            <div class="fsi-document-icon">
-                                PDF
-                            </div>
-
-
-                            <div class="fsi-document-main">
-
-                                <div class="fsi-document-name">
-
-                                    ${escapeHTML(
-                                        docRecord.file_name
-                                    )}
-
-                                </div>
-
-
-                                <div class="fsi-document-meta">
-
-                                    <span class="fsi-document-type">
-
-                                        ${escapeHTML(
-                                            docRecord.document_type
-                                        )}
-
-                                    </span>
-
-                                    <span>
-                                        ${formatFileSize(
-                                            docRecord.file_size
-                                        )}
-                                    </span>
-
-                                    <span>
-                                        ${formatDate(
-                                            docRecord.uploaded_at
-                                        )}
-                                    </span>
-
-                                </div>
-
-                            </div>
-
-
-                            <div class="fsi-document-buttons">
-
-                                <button
-                                    type="button"
-                                    class="fsi-document-btn primary"
-                                    data-document-view="${escapeHTML(
-                                        docRecord.id
-                                    )}"
-                                >
-                                    Preview
-                                </button>
-
-
-                                <button
-                                    type="button"
-                                    class="fsi-document-btn"
-                                    data-document-download="${escapeHTML(
-                                        docRecord.id
-                                    )}"
-                                >
-                                    Download
-                                </button>
-
-
-                                ${
-                                    isAdmin()
-                                    ? `
-                                        <button
-                                            type="button"
-                                            class="fsi-document-btn danger"
-                                            data-document-delete="${escapeHTML(
-                                                docRecord.id
-                                            )}"
-                                        >
-                                            Delete
-                                        </button>
-                                    `
-                                    : ""
-                                }
-
-                            </div>
-
-                        </div>
-
-                    `;
-
-                })
-                .join("");
-
-
-        list
-            .querySelectorAll(
-                "[data-document-view]"
-            )
-            .forEach(function (button) {
-
-                button.addEventListener(
-                    "click",
-                    function () {
-
-                        openDocument(
-                            button.dataset.documentView
-                        );
-
-                    }
-                );
-
-            });
-
-
-        list
-            .querySelectorAll(
-                "[data-document-download]"
-            )
-            .forEach(function (button) {
-
-                button.addEventListener(
-                    "click",
-                    function () {
-
-                        downloadDocument(
-                            button.dataset.documentDownload
-                        );
-
-                    }
-                );
-
-            });
-
-
-        list
-            .querySelectorAll(
-                "[data-document-delete]"
-            )
-            .forEach(function (button) {
-
-                button.addEventListener(
-                    "click",
-                    function () {
-
-                        deleteDocument(
-                            button.dataset.documentDelete
-                        );
-
-                    }
-                );
-
-            });
-
-    }
-
-
-    // ========================================================
-    // UPLOAD
-    // ========================================================
-
-    async function uploadDocument() {
-
-        const supabase =
-            getSupabase();
-
-
-        if (!supabase) {
-
-            showMessage(
-                "Supabase belum tersedia.",
-                "error"
-            );
-
-            return;
-
-        }
-
-
-        const customerId =
-            getCustomerId();
-
-
-        if (!customerId) {
-
-            showMessage(
-                "Customer belum dipilih.",
-                "error"
-            );
-
-            return;
-
-        }
-
-
-        const fileInput =
-            document.getElementById(
-                "fsiDocumentFile"
-            );
-
-
-        const typeInput =
-            document.getElementById(
-                "fsiDocumentType"
-            );
-
-
-        if (!fileInput) {
-            return;
-        }
-
-
-        const file =
-            fileInput.files?.[0];
-
-
-        if (!file) {
-
-            showMessage(
-                "Pilih file PDF terlebih dahulu.",
-                "warning"
-            );
-
-            return;
-
-        }
-
-
-        const lowerName =
-            String(
-                file.name || ""
-            ).toLowerCase();
-
-
-        const isPDF =
-            file.type === "application/pdf" ||
-            lowerName.endsWith(".pdf");
-
-
-        if (!isPDF) {
-
-            showMessage(
-                "Hanya file PDF yang diperbolehkan.",
-                "error"
-            );
-
-            return;
-
-        }
-
-
-        if (
-            Number(file.size || 0) >
-            MAX_FILE_SIZE
-        ) {
-
-            showMessage(
-                "Ukuran PDF maksimal 10 MB.",
-                "error"
-            );
-
-            return;
-
-        }
-
-
-        const type =
-            typeInput?.value ||
-            "Quotation";
-
-
-        const uploadButton =
-            document.getElementById(
-                "fsiDocumentUploadBtn"
-            );
-
-
-        try {
-
-            if (uploadButton) {
-
-                uploadButton.disabled = true;
-
-                uploadButton.textContent =
-                    "Uploading...";
-
-            }
-
-
-            const authResult =
-                await supabase.auth.getUser();
-
-
-            if (
-                authResult.error ||
-                !authResult.data?.user
-            ) {
-
-                throw (
-                    authResult.error ||
-                    new Error(
-                        "User login tidak ditemukan."
-                    )
-                );
-
-            }
-
-
-            const user =
-                authResult.data.user;
-
-
-            const safeFileName =
-                file.name
-                    .replace(
-                        /[^a-zA-Z0-9._-]/g,
-                        "_"
-                    );
-
-
-            const uniqueName =
-                [
-                    Date.now(),
-                    crypto.randomUUID(),
-                    safeFileName
-                ].join("_");
-
-
-            const filePath =
-                String(customerId) +
-                "/" +
-                uniqueName;
-
-
-            // ------------------------------------------------
-            // STORAGE UPLOAD
-            // ------------------------------------------------
-
-            const uploadResult =
-                await supabase.storage
-                    .from(BUCKET_NAME)
-                    .upload(
-                        filePath,
-                        file,
-                        {
-                            contentType:
-                                "application/pdf",
-
-                            cacheControl:
-                                "3600",
-
-                            upsert:
-                                false
-                        }
-                    );
-
-
-            if (uploadResult.error) {
-
-                throw uploadResult.error;
-
-            }
-
-
-            // ------------------------------------------------
-            // DATABASE RECORD
-            // ------------------------------------------------
-
-            const insertResult =
-                await supabase
-                    .from(
-                        "customer_documents"
-                    )
-                    .insert({
-
-                        customer_id:
-                            customerId,
-
-                        document_type:
-                            type,
-
-                        file_name:
-                            file.name,
-
-                        file_path:
-                            filePath,
-
-                        file_size:
-                            file.size,
-
-                        mime_type:
-                            "application/pdf",
-
-                        uploaded_by:
-                            user.id
-
-                    });
-
-
-            if (insertResult.error) {
-
-                await supabase.storage
-                    .from(BUCKET_NAME)
-                    .remove([
-                        filePath
-                    ]);
-
-
-                throw insertResult.error;
-
-            }
-
-
-            fileInput.value = "";
-
-
-            showMessage(
-                "PDF berhasil di-upload.",
-                "success"
-            );
-
-
-            await loadDocuments();
-
-        } catch (error) {
-
-            console.error(
-                "FSI CRM: Upload customer document error:",
-                error
-            );
-
-
-            showMessage(
-                error?.message ||
-                "Gagal upload PDF.",
-                "error"
-            );
-
-        } finally {
-
-            if (uploadButton) {
-
-                uploadButton.disabled =
-                    false;
-
-                uploadButton.textContent =
-                    "Upload PDF";
-
-            }
-
-        }
-
-    }
-
-
-    // ========================================================
-    // GET DOCUMENT
-    // ========================================================
-
-    async function getDocument(
-        documentId
-    ) {
-
-        const supabase =
-            getSupabase();
-
-
-        if (!supabase) {
-
-            throw new Error(
-                "Supabase belum tersedia."
-            );
-
-        }
-
-
-        const result =
-            await supabase
-                .from("customer_documents")
-                .select(
-                    `
+            } = await supabase
+                .from(TABLE_NAME)
+                .select(`
                     id,
                     customer_id,
                     document_type,
@@ -1288,95 +575,553 @@
                     mime_type,
                     uploaded_by,
                     uploaded_at
-                    `
-                )
-                .eq(
-                    "id",
-                    documentId
-                )
-                .single();
+                `)
+                .eq("customer_id", customerId)
+                .order("uploaded_at", {
+                    ascending: false
+                });
 
+            if (error) {
+                throw error;
+            }
 
-        if (result.error) {
+            renderDocumentList(data || []);
 
-            throw result.error;
-
-        }
-
-
-        if (!result.data) {
-
-            throw new Error(
-                "Document tidak ditemukan."
+        } catch (error) {
+            console.error(
+                "Load customer documents error:",
+                error
             );
 
+            list.innerHTML = `
+                <div class="fsi-documents-empty">
+                    Failed to load documents.
+                </div>
+            `;
+
+            showMessage(
+                error?.message ||
+                "Failed to load documents.",
+                "error"
+            );
         }
-
-
-        return result.data;
-
     }
 
 
-    // ========================================================
-    // PREVIEW
-    // ========================================================
+    /* =========================================================
+       RENDER DOCUMENT LIST
+    ========================================================= */
 
-    async function openDocument(
-        documentId
-    ) {
+    function renderDocumentList(documents) {
+        const list = document.getElementById(
+            "fsiDocumentList"
+        );
 
-        const supabase =
-            getSupabase();
+        if (!list) {
+            return;
+        }
 
-
-        if (!supabase) {
-
-            showMessage(
-                "Supabase belum tersedia.",
-                "error"
-            );
+        if (!documents || documents.length === 0) {
+            list.innerHTML = `
+                <div class="fsi-documents-empty">
+                    No PDF documents uploaded yet.
+                </div>
+            `;
 
             return;
+        }
 
+        const allowDelete = canDeleteDocuments();
+
+        list.innerHTML = documents
+            .map(doc => {
+
+                const deleteButton = allowDelete
+                    ? `
+                        <button
+                            type="button"
+                            class="fsi-document-btn danger"
+                            data-document-delete="${escapeHTML(doc.id)}"
+                        >
+                            <i data-lucide="trash-2"></i>
+                            <span>Delete</span>
+                        </button>
+                    `
+                    : "";
+
+                return `
+                    <div
+                        class="fsi-document-item"
+                        data-document-id="${escapeHTML(doc.id)}"
+                    >
+
+                        <div class="fsi-document-info">
+
+                            <div class="fsi-document-name">
+                                <i data-lucide="file-text"></i>
+
+                                <span title="${escapeHTML(doc.file_name)}">
+                                    ${escapeHTML(doc.file_name)}
+                                </span>
+                            </div>
+
+                            <div class="fsi-document-meta">
+                                ${escapeHTML(doc.document_type || "Other")}
+                                &nbsp;•&nbsp;
+                                ${formatFileSize(doc.file_size)}
+                                &nbsp;•&nbsp;
+                                ${formatDate(doc.uploaded_at)}
+                            </div>
+
+                        </div>
+
+                        <div class="fsi-document-actions">
+
+                            <button
+                                type="button"
+                                class="fsi-document-btn secondary"
+                                data-document-preview="${escapeHTML(doc.id)}"
+                            >
+                                <i data-lucide="eye"></i>
+                                <span>Preview</span>
+                            </button>
+
+                            <button
+                                type="button"
+                                class="fsi-document-btn secondary"
+                                data-document-download="${escapeHTML(doc.id)}"
+                            >
+                                <i data-lucide="download"></i>
+                                <span>Download</span>
+                            </button>
+
+                            ${deleteButton}
+
+                        </div>
+
+                    </div>
+                `;
+            })
+            .join("");
+
+        /*
+         * Preview
+         */
+        list
+            .querySelectorAll(
+                "[data-document-preview]"
+            )
+            .forEach(button => {
+
+                button.addEventListener(
+                    "click",
+                    () => {
+                        openDocument(
+                            button.dataset.documentPreview
+                        );
+                    }
+                );
+
+            });
+
+
+        /*
+         * Download
+         */
+        list
+            .querySelectorAll(
+                "[data-document-download]"
+            )
+            .forEach(button => {
+
+                button.addEventListener(
+                    "click",
+                    () => {
+                        downloadDocument(
+                            button.dataset.documentDownload
+                        );
+                    }
+                );
+
+            });
+
+
+        /*
+         * DELETE
+         *
+         * Admin + Sales
+         */
+        list
+            .querySelectorAll(
+                "[data-document-delete]"
+            )
+            .forEach(button => {
+
+                button.addEventListener(
+                    "click",
+                    () => {
+                        deleteDocument(
+                            button.dataset.documentDelete,
+                            button
+                        );
+                    }
+                );
+
+            });
+
+
+        refreshLucideIcons();
+    }
+
+
+    /* =========================================================
+       UPLOAD DOCUMENT
+    ========================================================= */
+
+    async function uploadDocument() {
+        const supabase = getSupabase();
+        const customerId = getCustomerId();
+
+        const typeInput = document.getElementById(
+            "fsiDocumentType"
+        );
+
+        const fileInput = document.getElementById(
+            "fsiDocumentFile"
+        );
+
+        const uploadButton = document.getElementById(
+            "fsiUploadDocumentBtn"
+        );
+
+        if (!supabase) {
+            showMessage(
+                "Supabase client is not available.",
+                "error"
+            );
+            return;
+        }
+
+        if (!customerId) {
+            showMessage(
+                "Customer ID not found.",
+                "error"
+            );
+            return;
+        }
+
+        const file =
+            fileInput?.files?.[0] || null;
+
+        if (!file) {
+            showMessage(
+                "Please select a PDF file.",
+                "error"
+            );
+            return;
+        }
+
+        /*
+         * PDF validation
+         */
+        const isPDF =
+            file.type === "application/pdf" ||
+            file.name
+                .toLowerCase()
+                .endsWith(".pdf");
+
+        if (!isPDF) {
+            showMessage(
+                "Only PDF files are allowed.",
+                "error"
+            );
+            return;
+        }
+
+
+        /*
+         * File size validation
+         */
+        if (file.size > MAX_FILE_SIZE) {
+            showMessage(
+                "Maximum PDF file size is 10 MB.",
+                "error"
+            );
+            return;
         }
 
 
         try {
+            /*
+             * Get authenticated user
+             */
+            const {
+                data: authData,
+                error: authError
+            } = await supabase.auth.getUser();
 
-            const docRecord =
-                await getDocument(
-                    documentId
+            if (authError) {
+                throw authError;
+            }
+
+            const user =
+                authData?.user || null;
+
+            if (!user) {
+                showMessage(
+                    "You are not logged in.",
+                    "error"
+                );
+                return;
+            }
+
+
+            /*
+             * Disable upload button
+             */
+            if (uploadButton) {
+                uploadButton.disabled = true;
+
+                uploadButton.innerHTML = `
+                    <i data-lucide="loader-2"></i>
+                    <span>Uploading...</span>
+                `;
+
+                refreshLucideIcons();
+            }
+
+
+            /*
+             * Safe filename
+             */
+            const safeFileName =
+                file.name
+                    .replace(/[^a-zA-Z0-9._-]/g, "_")
+                    .replace(/_+/g, "_");
+
+
+            /*
+             * Storage path
+             */
+            const uniqueId =
+                typeof crypto !== "undefined" &&
+                typeof crypto.randomUUID === "function"
+                    ? crypto.randomUUID()
+                    : `${Date.now()}_${Math.random()
+                          .toString(36)
+                          .slice(2)}`;
+
+            const filePath =
+                `${customerId}/${Date.now()}_${uniqueId}_${safeFileName}`;
+
+
+            /*
+             * Upload to Storage
+             */
+            const {
+                error: uploadError
+            } = await supabase
+                .storage
+                .from(BUCKET_NAME)
+                .upload(
+                    filePath,
+                    file,
+                    {
+                        contentType: "application/pdf",
+                        upsert: false
+                    }
                 );
 
+            if (uploadError) {
+                throw uploadError;
+            }
 
-            const result =
-                await supabase.storage
-                    .from(BUCKET_NAME)
-                    .createSignedUrl(
-                        docRecord.file_path,
-                        SIGNED_URL_SECONDS
+
+            /*
+             * Insert DB record
+             */
+            const {
+                error: insertError
+            } = await supabase
+                .from(TABLE_NAME)
+                .insert({
+                    customer_id: customerId,
+                    document_type:
+                        typeInput?.value || "Other",
+                    file_name: file.name,
+                    file_path: filePath,
+                    file_size: file.size,
+                    mime_type:
+                        file.type || "application/pdf",
+                    uploaded_by: user.id
+                });
+
+            /*
+             * If database insert fails,
+             * remove uploaded Storage file.
+             */
+            if (insertError) {
+
+                try {
+                    await supabase
+                        .storage
+                        .from(BUCKET_NAME)
+                        .remove([
+                            filePath
+                        ]);
+                } catch (cleanupError) {
+                    console.warn(
+                        "Storage cleanup failed:",
+                        cleanupError
                     );
+                }
 
-
-            if (result.error) {
-
-                throw result.error;
-
+                throw insertError;
             }
 
 
-            if (!result.data?.signedUrl) {
+            /*
+             * Reset input
+             */
+            if (fileInput) {
+                fileInput.value = "";
+            }
 
-                throw new Error(
-                    "Signed URL tidak tersedia."
+            showMessage(
+                "PDF uploaded successfully.",
+                "success"
+            );
+
+            await loadDocuments();
+
+        } catch (error) {
+
+            console.error(
+                "Upload document error:",
+                error
+            );
+
+            showMessage(
+                error?.message ||
+                "Failed to upload PDF.",
+                "error"
+            );
+
+        } finally {
+
+            /*
+             * Restore upload button
+             */
+            if (uploadButton) {
+
+                uploadButton.disabled = false;
+
+                uploadButton.innerHTML = `
+                    <i data-lucide="upload"></i>
+                    <span>Upload PDF</span>
+                `;
+
+                refreshLucideIcons();
+            }
+        }
+    }
+
+
+    /* =========================================================
+       GET DOCUMENT
+    ========================================================= */
+
+    async function getDocument(documentId) {
+        const supabase = getSupabase();
+
+        if (!supabase) {
+            throw new Error(
+                "Supabase client is not available."
+            );
+        }
+
+        if (!documentId) {
+            throw new Error(
+                "Document ID is missing."
+            );
+        }
+
+        const {
+            data,
+            error
+        } = await supabase
+            .from(TABLE_NAME)
+            .select(`
+                id,
+                customer_id,
+                document_type,
+                file_name,
+                file_path,
+                file_size,
+                mime_type,
+                uploaded_by,
+                uploaded_at
+            `)
+            .eq("id", documentId)
+            .single();
+
+        if (error) {
+            throw error;
+        }
+
+        if (!data) {
+            throw new Error(
+                "Document not found."
+            );
+        }
+
+        return data;
+    }
+
+
+    /* =========================================================
+       PREVIEW DOCUMENT
+    ========================================================= */
+
+    async function openDocument(documentId) {
+        const supabase = getSupabase();
+
+        if (!supabase) {
+            showMessage(
+                "Supabase client is not available.",
+                "error"
+            );
+            return;
+        }
+
+        try {
+
+            const doc =
+                await getDocument(documentId);
+
+            const {
+                data,
+                error
+            } = await supabase
+                .storage
+                .from(BUCKET_NAME)
+                .createSignedUrl(
+                    doc.file_path,
+                    SIGNED_URL_SECONDS
                 );
 
+            if (error) {
+                throw error;
             }
 
+            if (!data?.signedUrl) {
+                throw new Error(
+                    "Could not create PDF preview URL."
+                );
+            }
 
             window.open(
-                result.data.signedUrl,
+                data.signedUrl,
                 "_blank",
                 "noopener,noreferrer"
             );
@@ -1384,273 +1129,338 @@
         } catch (error) {
 
             console.error(
-                "FSI CRM: Preview document error:",
+                "Preview document error:",
                 error
             );
 
-
             showMessage(
                 error?.message ||
-                "Gagal membuka PDF.",
+                "Failed to preview PDF.",
                 "error"
             );
-
         }
-
     }
 
 
-    // ========================================================
-    // DOWNLOAD
-    // ========================================================
+    /* =========================================================
+       DOWNLOAD DOCUMENT
+    ========================================================= */
 
-    async function downloadDocument(
-        documentId
-    ) {
-
-        const supabase =
-            getSupabase();
-
+    async function downloadDocument(documentId) {
+        const supabase = getSupabase();
 
         if (!supabase) {
-
             showMessage(
-                "Supabase belum tersedia.",
+                "Supabase client is not available.",
                 "error"
             );
-
             return;
-
         }
-
 
         try {
 
-            const docRecord =
-                await getDocument(
-                    documentId
+            const doc =
+                await getDocument(documentId);
+
+            const {
+                data,
+                error
+            } = await supabase
+                .storage
+                .from(BUCKET_NAME)
+                .download(
+                    doc.file_path
                 );
 
+            if (error) {
+                throw error;
+            }
 
-            const result =
-                await supabase.storage
-                    .from(BUCKET_NAME)
-                    .download(
-                        docRecord.file_path
-                    );
-
-
-            if (result.error) {
-
-                throw result.error;
-
+            if (!data) {
+                throw new Error(
+                    "PDF file could not be downloaded."
+                );
             }
 
 
-            const blob =
-                result.data;
-
-
-            const url =
-                URL.createObjectURL(
-                    blob
-                );
-
+            /*
+             * Create temporary browser URL
+             */
+            const objectUrl =
+                URL.createObjectURL(data);
 
             const anchor =
-                window.document.createElement(
-                    "a"
-                );
+                document.createElement("a");
 
-            anchor.href =
-                url;
+            anchor.href = objectUrl;
 
             anchor.download =
-                docRecord.file_name ||
-                "customer-document.pdf";
+                doc.file_name ||
+                "document.pdf";
 
-            window.document.body.appendChild(
-                anchor
-            );
+            document.body.appendChild(anchor);
 
             anchor.click();
 
             anchor.remove();
 
-
-            setTimeout(
-                function () {
-
-                    URL.revokeObjectURL(
-                        url
-                    );
-
-                },
-                1000
-            );
+            /*
+             * Cleanup
+             */
+            setTimeout(() => {
+                URL.revokeObjectURL(
+                    objectUrl
+                );
+            }, 1000);
 
         } catch (error) {
 
             console.error(
-                "FSI CRM: Download document error:",
+                "Download document error:",
                 error
             );
 
-
             showMessage(
                 error?.message ||
-                "Gagal download PDF.",
+                "Failed to download PDF.",
                 "error"
             );
-
         }
-
     }
 
 
-    // ========================================================
-    // DELETE
-    // ========================================================
+    /* =========================================================
+       DELETE DOCUMENT
+    ========================================================= */
 
     async function deleteDocument(
-        documentId
+        documentId,
+        clickedButton = null
     ) {
 
-        const supabase =
-            getSupabase();
+        const supabase = getSupabase();
+
+        /*
+         * DELETE hanya untuk Admin + Sales
+         */
+        if (!canDeleteDocuments()) {
+
+            showMessage(
+                "You do not have permission to delete documents.",
+                "error"
+            );
+
+            return;
+        }
 
 
         if (!supabase) {
 
             showMessage(
-                "Supabase belum tersedia.",
+                "Supabase client is not available.",
                 "error"
             );
 
             return;
-
         }
 
 
-        if (!isAdmin()) {
+        if (!documentId) {
 
             showMessage(
-                "Hanya Admin yang dapat menghapus document.",
+                "Document ID is missing.",
                 "error"
             );
 
             return;
+        }
 
+
+        /*
+         * Prevent double click
+         */
+        if (
+            clickedButton &&
+            clickedButton.disabled
+        ) {
+            return;
         }
 
 
         try {
 
-            const docRecord =
-                await getDocument(
-                    documentId
-                );
+            /*
+             * Get document record first
+             */
+            const doc =
+                await getDocument(documentId);
 
 
+            /*
+             * Confirmation
+             */
             const confirmed =
                 window.confirm(
-                    "Hapus document \"" +
-                    docRecord.file_name +
-                    "\"?"
+                    `Hapus document "${doc.file_name}"?`
                 );
-
 
             if (!confirmed) {
                 return;
             }
 
 
-            const storageResult =
-                await supabase.storage
-                    .from(BUCKET_NAME)
-                    .remove([
-                        docRecord.file_path
-                    ]);
+            /*
+             * Disable clicked button
+             */
+            if (clickedButton) {
 
+                clickedButton.disabled = true;
 
-            if (storageResult.error) {
+                clickedButton.innerHTML = `
+                    <i data-lucide="loader-2"></i>
+                    <span>Deleting...</span>
+                `;
 
-                throw storageResult.error;
-
+                refreshLucideIcons();
             }
 
 
-            const deleteResult =
-                await supabase
-                    .from(
-                        "customer_documents"
-                    )
-                    .delete()
-                    .eq(
-                        "id",
-                        documentId
-                    );
+            /*
+             * =================================================
+             * DELETE DATABASE RECORD FIRST
+             *
+             * This keeps the record operation controlled.
+             * If DB deletion fails, the Storage file remains.
+             * =================================================
+             */
+
+            const {
+                error: deleteDbError
+            } = await supabase
+                .from(TABLE_NAME)
+                .delete()
+                .eq("id", documentId);
 
 
-            if (deleteResult.error) {
-
-                throw deleteResult.error;
-
+            if (deleteDbError) {
+                throw deleteDbError;
             }
 
 
+            /*
+             * =================================================
+             * DELETE STORAGE FILE
+             * =================================================
+             */
+
+            const {
+                error: deleteStorageError
+            } = await supabase
+                .storage
+                .from(BUCKET_NAME)
+                .remove([
+                    doc.file_path
+                ]);
+
+
+            /*
+             * Important:
+             * DB record has already been deleted.
+             *
+             * If Storage deletion fails, the PDF can become
+             * an orphan file in Storage, but the CRM record
+             * will not remain pointing to a missing file.
+             */
+            if (deleteStorageError) {
+
+                console.error(
+                    "Storage delete failed:",
+                    deleteStorageError
+                );
+
+                showMessage(
+                    "Document record deleted, but the Storage file could not be removed. Please contact Admin to clean up the file.",
+                    "warning"
+                );
+
+                await loadDocuments();
+
+                return;
+            }
+
+
+            /*
+             * Success
+             */
             showMessage(
-                "Document berhasil dihapus.",
+                "PDF deleted successfully.",
                 "success"
             );
 
 
+            /*
+             * Refresh list
+             */
             await loadDocuments();
 
         } catch (error) {
 
             console.error(
-                "FSI CRM: Delete document error:",
+                "Delete document error:",
                 error
             );
 
-
             showMessage(
                 error?.message ||
-                "Gagal menghapus document.",
+                "Failed to delete PDF.",
                 "error"
             );
 
-        }
+        } finally {
 
+            /*
+             * Restore button only if it still exists.
+             */
+            if (
+                clickedButton &&
+                document.body.contains(clickedButton)
+            ) {
+
+                clickedButton.disabled = false;
+
+                clickedButton.innerHTML = `
+                    <i data-lucide="trash-2"></i>
+                    <span>Delete</span>
+                `;
+
+                refreshLucideIcons();
+            }
+        }
     }
 
 
-    // ========================================================
-    // ATTACH TO CUSTOMER PROFILE
-    // ========================================================
+    /* =========================================================
+       ATTACH TO CUSTOMER PROFILE
+    ========================================================= */
 
     function attachToCustomerProfile() {
-
-        injectStyles();
-
 
         if (
             typeof window.crmOpenCustomerProfile !==
             "function"
         ) {
-
             return false;
-
         }
 
 
+        /*
+         * Jangan wrap berkali-kali.
+         */
         if (
-            window.crmCustomerDocumentsWrapped
+            window.crmOpenCustomerProfile
+                .__fsiDocumentsAttached
         ) {
-
             return true;
-
         }
 
 
@@ -1658,163 +1468,120 @@
             window.crmOpenCustomerProfile;
 
 
+        async function wrappedOpenCustomerProfile(
+            customerId
+        ) {
+
+            const result =
+                await originalOpen(customerId);
+
+
+            /*
+             * Wait until Customer Profile DOM
+             * has finished rendering.
+             */
+            setTimeout(() => {
+
+                renderDocumentsSection();
+
+            }, 100);
+
+
+            return result;
+        }
+
+
+        wrappedOpenCustomerProfile
+            .__fsiDocumentsAttached = true;
+
+
         window.crmOpenCustomerProfile =
-            async function (customerId) {
-
-                const result =
-                    await originalOpen(
-                        customerId
-                    );
+            wrappedOpenCustomerProfile;
 
 
-                setTimeout(
-                    function () {
+        /*
+         * Keep aliases synchronized.
+         */
+        window.openCustomerProfile =
+            wrappedOpenCustomerProfile;
 
-                        renderDocumentsSection();
-
-                    },
-                    0
-                );
-
-
-                return result;
-
-            };
+        window.crmOpenShelter =
+            wrappedOpenCustomerProfile;
 
 
-        window.crmCustomerDocumentsWrapped =
-            true;
-
-
-        if (
-            typeof window.openCustomerProfile ===
-            "function"
-        ) {
-
-            window.openCustomerProfile =
-                window.crmOpenCustomerProfile;
-
-        }
-
-
-        if (
-            typeof window.crmOpenShelter ===
-            "function"
-        ) {
-
-            window.crmOpenShelter =
-                window.crmOpenCustomerProfile;
-
-        }
-
-
-        if (
-            window.FSICustomerProfile
-        ) {
+        if (window.FSICustomerProfile) {
 
             window.FSICustomerProfile.open =
-                window.crmOpenCustomerProfile;
-
+                wrappedOpenCustomerProfile;
         }
 
 
         return true;
-
     }
 
+
+    /* =========================================================
+       INIT
+    ========================================================= */
 
     function init() {
 
         injectStyles();
 
-
-        if (
-            attachToCustomerProfile()
-        ) {
-
-            return;
-
-        }
-
-
+        /*
+         * Customer Profile may load after this file.
+         * Retry attachment.
+         */
         let attempts = 0;
 
+        const maxAttempts = 50;
 
         const timer =
-            setInterval(
-                function () {
+            setInterval(() => {
 
-                    attempts++;
+                attempts++;
 
+                const attached =
+                    attachToCustomerProfile();
 
-                    if (
-                        attachToCustomerProfile()
-                    ) {
+                if (
+                    attached ||
+                    attempts >= maxAttempts
+                ) {
+                    clearInterval(timer);
+                }
 
-                        clearInterval(
-                            timer
-                        );
-
-                        return;
-
-                    }
-
-
-                    if (
-                        attempts >= 50
-                    ) {
-
-                        clearInterval(
-                            timer
-                        );
-
-                        console.warn(
-                            "FSI CRM: Customer profile function not found."
-                        );
-
-                    }
-
-                },
-                200
-            );
-
+            }, 200);
     }
 
 
-    // ========================================================
-    // GLOBAL API
-    // ========================================================
+    /* =========================================================
+       PUBLIC API
+    ========================================================= */
 
     window.FSICustomerDocuments = {
 
-        load:
-            loadDocuments,
+        load: loadDocuments,
 
-        upload:
-            uploadDocument,
+        upload: uploadDocument,
 
-        preview:
-            openDocument,
+        preview: openDocument,
 
-        download:
-            downloadDocument,
+        download: downloadDocument,
 
-        remove:
-            deleteDocument,
+        remove: deleteDocument,
 
-        render:
-            renderDocumentsSection
+        render: renderDocumentsSection
 
     };
 
 
-    // ========================================================
-    // INITIALIZE
-    // ========================================================
+    /* =========================================================
+       DOM READY
+    ========================================================= */
 
     if (
-        document.readyState ===
-        "loading"
+        document.readyState === "loading"
     ) {
 
         document.addEventListener(
