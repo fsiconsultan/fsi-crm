@@ -1,1578 +1,1190 @@
-// ============================================================
-// DASHBOARD GREETING
-// ============================================================
-//
-// Menampilkan sapaan otomatis berdasarkan waktu,
-// nama user, dan role user.
-//
-// Contoh:
-//
-// Good Morning, Andi!
-// Good Afternoon, Budi!
-// Good Evening, Rist!
-//
-// Jika nama tidak tersedia:
-//
-// Welcome, Guest!
-//
-// Greeting juga memiliki animasi continuous:
-// - Icon bergerak lembut
-// - Text memiliki soft glow
-// - Nama memiliki efek glow
-// - Light sweep berjalan berkala
-// - Animasi tetap berjalan selama Dashboard terbuka
-// ============================================================
+/* =========================================================
+   FSI CRM — DASHBOARD
+   File: js/dashboard/dashboard.js
+
+   Responsibilities:
+   - Dashboard navigation
+   - Greeting
+   - Dashboard data loading
+   - Dashboard statistics
+   - Sales filter
+   - Pipeline
+   - Recent leads
+   - Dashboard refresh
+========================================================= */
+
+
+/* =========================================================
+   DASHBOARD STATUS
+========================================================= */
+
+const DASHBOARD_STATUSES = [
+    "New",
+    "First Contact",
+    "First Meeting / Appointment / Site Survey",
+    "Quotation",
+    "Second Appointment",
+    "Deal",
+    "No Deal"
+];
+
+
+/* =========================================================
+   ROLE HELPERS
+========================================================= */
+
+function dashboardNormalizeRole(role) {
+    if (typeof window.authNormalizeRole === "function") {
+        return window.authNormalizeRole(role);
+    }
+
+    if (typeof window.normalizeRole === "function") {
+        return window.normalizeRole(role);
+    }
+
+    return String(role || "")
+        .trim()
+        .toLowerCase();
+}
+
+
+function dashboardIsAdmin(profile = window.currentProfile) {
+    const role = dashboardNormalizeRole(profile?.role);
+
+    return [
+        "admin",
+        "owner",
+        "administrator"
+    ].includes(role);
+}
+
+
+function dashboardIsSales(profile = window.currentProfile) {
+    const role = dashboardNormalizeRole(profile?.role);
+
+    return [
+        "sales",
+        "salesperson"
+    ].includes(role);
+}
+
+
+/* =========================================================
+   PAGE HELPERS
+========================================================= */
+
+function dashboardFindPage(type) {
+    const pageMap = {
+        dashboard: "view-dashboard",
+        leads: "view-leads",
+        sales: "view-sales",
+        customerProfile: "view-customer-profile"
+    };
+
+    const id = pageMap[type];
+
+    return id
+        ? document.getElementById(id)
+        : null;
+}
+
+
+function dashboardHideAllPages() {
+    const pages = [
+        dashboardFindPage("dashboard"),
+        dashboardFindPage("leads"),
+        dashboardFindPage("sales"),
+        dashboardFindPage("customerProfile")
+    ];
+
+    pages.forEach(page => {
+        if (!page) return;
+
+        page.classList.remove("active");
+        page.classList.add("hidden");
+
+        page.style.display = "none";
+        page.setAttribute("aria-hidden", "true");
+    });
+}
+
+
+function dashboardShowPage(type) {
+    const page = dashboardFindPage(type);
+
+    if (!page) return false;
+
+    dashboardHideAllPages();
+
+    page.classList.remove("hidden");
+    page.classList.add("active");
+
+    page.style.display = "block";
+    page.style.visibility = "visible";
+    page.style.opacity = "1";
+
+    page.setAttribute("aria-hidden", "false");
+
+    return true;
+}
+
+
+/* =========================================================
+   PAGE TITLE
+========================================================= */
+
+function dashboardSetPageTitle(title, description = "") {
+    const titleElement =
+        document.getElementById("page-title");
+
+    const descriptionElement =
+        document.getElementById("page-description");
+
+    if (titleElement) {
+        titleElement.textContent = title || "Dashboard";
+    }
+
+    if (descriptionElement) {
+        descriptionElement.textContent =
+            description || "";
+    }
+}
+
+
+function dashboardSetActiveNav(type) {
+    const navItems =
+        document.querySelectorAll(
+            "[data-page], [data-nav]"
+        );
+
+    navItems.forEach(item => {
+        const itemPage =
+            item.dataset.page ||
+            item.dataset.nav;
+
+        item.classList.toggle(
+            "active",
+            itemPage === type
+        );
+    });
+}
+
+
+/* =========================================================
+   GREETING
+========================================================= */
 
 function dashboardUpdateGreeting(profile) {
+    const greetingElement =
+        document.getElementById("dashboardGreeting");
 
-    if (!profile) {
+    if (!greetingElement) {
         return;
     }
 
+    const now = new Date();
+    const hour = now.getHours();
 
-    /*
-     * ========================================================
-     * AMBIL NAMA USER
-     * ========================================================
-     *
-     * Mendukung beberapa kemungkinan nama field
-     * tanpa mengganggu struktur profile yang sekarang.
-     */
-    const userName =
-        String(
-            profile?.name ||
-            profile?.full_name ||
-            profile?.display_name ||
-            profile?.username ||
-            ""
-        ).trim();
+    let greeting = "Good Evening";
+    let icon = "🌙";
 
+    if (hour >= 5 && hour < 12) {
+        greeting = "Good Morning";
+        icon = "☀️";
+    } else if (hour >= 12 && hour < 18) {
+        greeting = "Good Afternoon";
+        icon = "🌤️";
+    }
 
-    const displayName =
-        userName ||
-        "Guest";
+    const name =
+        profile?.full_name ||
+        profile?.name ||
+        profile?.username ||
+        profile?.email ||
+        "User";
 
-
-    /*
-     * ========================================================
-     * AMBIL ROLE
-     * ========================================================
-     */
     const role =
-        String(
-            profile?.role ||
-            ""
-        ).trim();
+        profile?.role || "";
 
+    greetingElement.innerHTML = `
+        <div class="dashboard-greeting-content">
+            <div class="dashboard-greeting-icon">
+                ${icon}
+            </div>
 
-    /*
-     * ========================================================
-     * TENTUKAN WAKTU
-     * ========================================================
-     *
-     * 05:00 - 11:59 = Good Morning
-     * 12:00 - 16:59 = Good Afternoon
-     * 17:00 - 04:59 = Good Evening
-     */
-    const hour =
-        new Date().getHours();
+            <div class="dashboard-greeting-text">
+                <div class="dashboard-greeting-title">
+                    ${escapeDashboardHtml(greeting)},
+                    ${escapeDashboardHtml(name)}
+                </div>
 
-
-    let greeting =
-        "Good Evening";
-
-
-    let icon =
-        "🌙";
-
-
-    if (
-        hour >= 5 &&
-        hour < 12
-    ) {
-
-        greeting =
-            "Good Morning";
-
-        icon =
-            "☀️";
-
-    } else if (
-        hour >= 12 &&
-        hour < 17
-    ) {
-
-        greeting =
-            "Good Afternoon";
-
-        icon =
-            "🌤️";
-
-    } else {
-
-        greeting =
-            "Good Evening";
-
-        icon =
-            "🌙";
-    }
-
-
-    /*
-     * ========================================================
-     * BUAT / AMBIL ELEMENT GREETING
-     * ========================================================
-     */
-    let greetingElement =
-        document.getElementById(
-            "dashboardGreeting"
-        );
-
-
-    /*
-     * Jika element belum ada,
-     * buat otomatis.
-     */
-    if (!greetingElement) {
-
-        greetingElement =
-            document.createElement(
-                "div"
-            );
-
-
-        greetingElement.id =
-            "dashboardGreeting";
-
-
-        greetingElement.style.display =
-            "flex";
-
-
-        greetingElement.style.alignItems =
-            "center";
-
-
-        greetingElement.style.gap =
-            "10px";
-
-
-        greetingElement.style.marginBottom =
-            "20px";
-
-
-        greetingElement.style.fontSize =
-            "24px";
-
-
-        greetingElement.style.fontWeight =
-            "600";
-
-
-        greetingElement.style.lineHeight =
-            "1.3";
-
-
-        /*
-         * Cari halaman Dashboard.
-         */
-        const dashboardPage =
-            dashboardFindPage(
-                "dashboard"
-            );
-
-
-        if (dashboardPage) {
-
-            /*
-             * Masukkan greeting
-             * sebagai element pertama.
-             */
-            dashboardPage.prepend(
-                greetingElement
-            );
-        }
-    }
-
-
-    /*
-     * ========================================================
-     * BUAT TEXT GREETING
-     * ========================================================
-     *
-     * Struktur dibuat terpisah agar CSS animation
-     * dapat bekerja dengan halus.
-     */
-    greetingElement.innerHTML =
-        `
-        <span
-            class="dashboard-greeting-icon"
-            aria-hidden="true"
-        >
-            ${icon}
-        </span>
-
-        <span
-            class="dashboard-greeting-text"
-        >
-            ${greeting},
-            <strong class="dashboard-greeting-name">
-                ${displayName}
-            </strong>!
-        </span>
-        `;
-
-
-    /*
-     * ========================================================
-     * ROLE INFO
-     * ========================================================
-     *
-     * Tidak mengubah tampilan utama.
-     * Hanya menyimpan informasi role di dataset
-     * jika nanti dibutuhkan.
-     */
-    greetingElement.dataset.role =
-        role ||
-        "Guest";
-
-
-    greetingElement.dataset.name =
-        displayName;
-
-
-    /*
-     * ========================================================
-     * ANIMATION CLASS
-     * ========================================================
-     */
-    greetingElement.classList.add(
-        "dashboard-greeting-animated"
-    );
-
-
-    /*
-     * ========================================================
-     * REFRESH ANIMATION
-     * ========================================================
-     *
-     * Ketika Dashboard melakukan update,
-     * greeting tetap memiliki animasi continuous.
-     *
-     * Class refresh hanya digunakan untuk
-     * entrance animation singkat.
-     */
-    greetingElement.classList.remove(
-        "dashboard-greeting-refresh"
-    );
-
-
-    /*
-     * Force browser reflow.
-     *
-     * Ini membuat animation restart dengan benar
-     * ketika greeting diperbarui.
-     */
-    void greetingElement.offsetWidth;
-
+                <div class="dashboard-greeting-subtitle">
+                    ${escapeDashboardHtml(role)}
+                </div>
+            </div>
+        </div>
+    `;
 
     greetingElement.classList.add(
-        "dashboard-greeting-refresh"
-    );
-
-
-    /*
-     * ========================================================
-     * LOG
-     * ========================================================
-     */
-    console.log(
-        "FSI CRM: greeting updated:",
-        {
-            greeting,
-            name: displayName,
-            role: role || "Guest",
-            hour
-        }
+        "dashboard-greeting-visible"
     );
 }
 
 
-// ============================================================
-// UPDATE DASHBOARD
-// ============================================================
+/* =========================================================
+   HTML ESCAPE
+========================================================= */
 
-async function updateDashboard() {
+function escapeDashboardHtml(value) {
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
 
+
+/* =========================================================
+   SHOW DASHBOARD
+========================================================= */
+
+async function showDashboard() {
+    try {
+        const profile =
+            window.currentProfile || null;
+
+        dashboardShowPage("dashboard");
+
+        dashboardSetPageTitle(
+            "Dashboard",
+            dashboardIsAdmin(profile)
+                ? "Overview of your sales activity"
+                : "Overview of your customer activity"
+        );
+
+        dashboardSetActiveNav("dashboard");
+
+        /*
+         * Greeting tetap digunakan.
+         */
+        dashboardUpdateGreeting(profile);
+
+        bindDashboardStatClicks();
+
+        await updateDashboard();
+
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
+
+    } catch (error) {
+        console.error(
+            "showDashboard error:",
+            error
+        );
+    }
+}
+
+
+/* =========================================================
+   SHOW LEADS
+========================================================= */
+
+function showLeads() {
+    dashboardShowPage("leads");
+
+    dashboardSetPageTitle(
+        "Leads",
+        "Manage and follow up your customers"
+    );
+
+    dashboardSetActiveNav("leads");
+
+    if (typeof window.initLeads === "function") {
+        window.initLeads();
+    }
+
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+}
+
+
+/* =========================================================
+   SHOW SALES
+========================================================= */
+
+function showSales() {
     const profile =
-        dashboardGetProfile();
+        window.currentProfile || null;
 
-    if (!profile) {
-
+    if (!dashboardIsAdmin(profile)) {
         console.warn(
-            "FSI CRM: tidak bisa update dashboard karena profile belum tersedia."
+            "Only Admin can open Sales management."
         );
 
         return;
     }
 
+    dashboardShowPage("sales");
 
-    // ========================================================
-    // UPDATE GREETING
-    // ========================================================
-
-    dashboardUpdateGreeting(
-        profile
+    dashboardSetPageTitle(
+        "Sales Management",
+        "Manage sales users and assignments"
     );
 
+    dashboardSetActiveNav("sales");
 
+    if (typeof window.initSales === "function") {
+        window.initSales();
+    }
+
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+}
+
+
+/* =========================================================
+   SHOW CUSTOMER PROFILE
+========================================================= */
+
+function showCustomerProfile(customerId = null) {
+    dashboardShowPage("customerProfile");
+
+    dashboardSetPageTitle(
+        "Customer Profile",
+        "Customer information and activity"
+    );
+
+    dashboardSetActiveNav(
+        "customerProfile"
+    );
+
+    if (
+        typeof window.openCustomerProfile ===
+        "function"
+    ) {
+        window.openCustomerProfile(customerId);
+    }
+
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+}
+
+
+/* =========================================================
+   SELECTED SALES
+========================================================= */
+
+function dashboardGetSelectedSalesId() {
+    const salesFilter =
+        document.getElementById(
+            "salesFilter"
+        );
+
+    if (
+        salesFilter &&
+        salesFilter.value
+    ) {
+        return salesFilter.value;
+    }
+
+    const dashboardSalesFilter =
+        document.getElementById(
+            "dashboardSalesFilter"
+        );
+
+    if (
+        dashboardSalesFilter &&
+        dashboardSalesFilter.value
+    ) {
+        return dashboardSalesFilter.value;
+    }
+
+    return "";
+}
+
+
+/* =========================================================
+   UPDATE DASHBOARD
+========================================================= */
+
+let dashboardLoading = false;
+
+async function updateDashboard() {
     if (dashboardLoading) {
         return;
     }
 
     dashboardLoading = true;
 
-    dashboardShowLoading();
-
     try {
+        const profile =
+            window.currentProfile || null;
 
-        console.log(
-            "FSI CRM Dashboard: loading leads..."
-        );
+        if (!profile) {
+            console.warn(
+                "Dashboard: current profile not found."
+            );
 
-
-        /*
-         * ========================================================
-         * LOAD LEADS
-         * ========================================================
-         */
-        const data =
-            await dashboardFetchLeads();
-
-
-        const rawDashboardData =
-            Array.isArray(data)
-                ? data
-                : [];
-
+            return;
+        }
 
         /*
-         * ========================================================
-         * FILTER DATA DASHBOARD BERDASARKAN SALES
-         * ========================================================
-         *
-         * Sales biasa:
-         * dashboardFetchLeads() sudah membatasi
-         * berdasarkan sales_id miliknya.
-         *
-         * Admin:
-         *
-         * All Sales
-         *      -> semua leads
-         *
-         * Sales A
-         *      -> hanya leads Sales A
-         *
-         * Sales B
-         *      -> hanya leads Sales B
-         *
-         * Sales C
-         *      -> hanya leads Sales C
+         * Greeting tetap diperbarui setiap dashboard
+         * melakukan refresh.
          */
-        let scopedDashboardData =
-            [...rawDashboardData];
+        dashboardUpdateGreeting(profile);
 
 
-        const isAdmin =
-            dashboardIsAdmin();
+        /* -------------------------------------------------
+           FETCH LEADS
+        ------------------------------------------------- */
 
-
-        const selectedSalesId =
-            dashboardGetSelectedSalesId();
-
+        let dashboardData = [];
 
         if (
-            isAdmin &&
-            selectedSalesId
+            typeof window.dashboardFetchLeads ===
+            "function"
         ) {
-
-            scopedDashboardData =
-                rawDashboardData.filter(
-                    lead => {
-
-                        return String(
-                            lead?.sales_id ?? ""
-                        ).trim() ===
-                        String(
-                            selectedSalesId
-                        ).trim();
-
-                    }
-                );
+            dashboardData =
+                await window.dashboardFetchLeads();
+        } else if (
+            typeof dashboardFetchLeads ===
+            "function"
+        ) {
+            dashboardData =
+                await dashboardFetchLeads();
         }
 
 
-        console.log(
-            "FSI CRM Dashboard: data scope:",
-            {
-                totalLoaded:
-                    rawDashboardData.length,
+        if (!Array.isArray(dashboardData)) {
+            dashboardData = [];
+        }
 
-                totalDashboard:
-                    scopedDashboardData.length,
 
-                role:
-                    profile.role,
+        /* -------------------------------------------------
+           ADMIN SALES FILTER
+        ------------------------------------------------- */
 
-                selectedSalesId:
-                    selectedSalesId || "ALL"
+        if (dashboardIsAdmin(profile)) {
+            const selectedSalesId =
+                dashboardGetSelectedSalesId();
+
+            if (selectedSalesId) {
+                dashboardData =
+                    dashboardData.filter(
+                        lead =>
+                            String(
+                                lead.sales_id || ""
+                            ) ===
+                            String(
+                                selectedSalesId
+                            )
+                    );
             }
-        );
+        }
 
 
         /*
-         * Simpan data global.
+         * Store dashboard data globally.
+         * Pipeline dan Recent Leads menggunakan data
+         * yang sama.
          */
-        dashboardData =
-            scopedDashboardData;
+        window.dashboardData =
+            dashboardData;
 
+
+        if (!window.FSIDashboard) {
+            window.FSIDashboard = {};
+        }
 
         window.FSIDashboard.data =
             dashboardData;
 
-
-        /*
-         * ========================================================
-         * STATUS PIPELINE BARU
-         * ========================================================
-         *
-         * Tetap dipertahankan agar tidak menghilangkan
-         * fungsi Dashboard yang sudah berjalan.
-         */
-        if (!window.FSIDashboard.statuses) {
-
-            window.FSIDashboard.statuses = [
-
-                "New",
-
-                "First Contact",
-
-                "First Meeting / Appointment / Site Survey",
-
-                "Quotation",
-
-                "Second Appointment",
-
-                "Deal",
-
-                "No Deal"
-
-            ];
-        }
+        window.FSIDashboard.statuses =
+            [...DASHBOARD_STATUSES];
 
 
-        /*
-         * ========================================================
-         * HITUNG STATISTIK
-         * ========================================================
-         */
-        const stats =
-            calculateDashboardStats(
-                dashboardData
-            );
+        /* -------------------------------------------------
+           CALCULATE STATS
+        ------------------------------------------------- */
 
-
-        /*
-         * ========================================================
-         * PASTIKAN STATISTIK UTAMA BENAR-BENAR
-         * MENGGUNAKAN DATA SALES YANG SUDAH TERFILTER
-         * ========================================================
-         */
-        stats.total =
-            dashboardData.length;
-
+        let stats = null;
 
         if (
-            typeof dashboardNormalizeStatus ===
+            typeof window.dashboardCalculateStats ===
             "function"
         ) {
-
-            stats.new =
-                dashboardData.filter(
-                    lead =>
-                        dashboardNormalizeStatus(
-                            lead?.status
-                        ) === "New"
-                ).length;
-
-
-            stats.interested =
-                dashboardData.filter(
-                    lead =>
-                        dashboardNormalizeStatus(
-                            lead?.status
-                        ) === "Interested"
-                ).length;
-
-
-            stats.followUp =
-                dashboardData.filter(
-                    lead =>
-                        dashboardNormalizeStatus(
-                            lead?.status
-                        ) === "Follow Up"
-                ).length;
-
-
-            /*
-             * Closing dihitung berdasarkan STATUS Closing,
-             * bukan hanya karena field tanggal closing terisi.
-             */
-            stats.closing =
-                dashboardData.filter(
-                    lead =>
-                        dashboardNormalizeStatus(
-                            lead?.status
-                        ) === "Closing"
-                ).length;
+            stats =
+                window.dashboardCalculateStats(
+                    dashboardData
+                );
+        } else if (
+            typeof dashboardCalculateStats ===
+            "function"
+        ) {
+            stats =
+                dashboardCalculateStats(
+                    dashboardData
+                );
         }
 
 
-        dashboardStats =
-            stats;
+        if (!stats) {
+            stats = {
+                total: dashboardData.length,
+                new: 0,
+                firstContact: 0,
+                firstMeeting: 0,
+                quotation: 0,
+                secondAppointment: 0,
+                deal: 0,
+                noDeal: 0
+            };
+        }
 
 
-        window.FSIDashboard.stats =
-            stats;
+        /* -------------------------------------------------
+           RENDER STATS
+        ------------------------------------------------- */
+
+        if (
+            typeof window.renderDashboardStats ===
+            "function"
+        ) {
+            window.renderDashboardStats(stats);
+        } else if (
+            typeof renderDashboardStats ===
+            "function"
+        ) {
+            renderDashboardStats(stats);
+        }
 
 
-        /*
-         * ========================================================
-         * RENDER KARTU STATISTIK
-         * ========================================================
-         */
-        renderDashboardStats(
-            stats
-        );
+        /* -------------------------------------------------
+           RENDER PIPELINE
+        ------------------------------------------------- */
+
+        if (
+            typeof window.renderDashboardPipeline ===
+            "function"
+        ) {
+            window.renderDashboardPipeline(
+                dashboardData
+            );
+        } else if (
+            typeof renderDashboardPipeline ===
+            "function"
+        ) {
+            renderDashboardPipeline(
+                dashboardData
+            );
+        }
 
 
-        /*
-         * ========================================================
-         * RENDER PIPELINE
-         * ========================================================
-         */
-        renderDashboardPipeline(
-            dashboardData
-        );
+        /* -------------------------------------------------
+           RENDER RECENT LEADS
+        ------------------------------------------------- */
+
+        if (
+            typeof window.renderDashboardRecentLeads ===
+            "function"
+        ) {
+            window.renderDashboardRecentLeads(
+                dashboardData
+            );
+        } else if (
+            typeof renderDashboardRecentLeads ===
+            "function"
+        ) {
+            renderDashboardRecentLeads(
+                dashboardData
+            );
+        }
 
 
-        /*
-         * ========================================================
-         * RENDER RECENT LEADS
-         * ========================================================
-         */
-        renderDashboardRecentLeads(
-            dashboardData
-        );
+        /* -------------------------------------------------
+           STAT CLICK EVENTS
+        ------------------------------------------------- */
+
+        bindDashboardStatClicks();
 
 
-        /*
-         * Pastikan kartu interactive
-         * setelah seluruh Dashboard selesai dirender.
-         */
-        dashboardBindStatCardClicks();
+        /* -------------------------------------------------
+           OPTIONAL CHART
+        ------------------------------------------------- */
 
-
-        /*
-         * Callback tambahan jika ada.
-         */
         if (
             typeof window.renderDashboardCharts ===
             "function"
         ) {
-
-            try {
-
-                window.renderDashboardCharts(
-                    dashboardData,
-                    stats
-                );
-
-            } catch (error) {
-
-                console.warn(
-                    "FSI CRM: dashboard chart render error:",
-                    error
-                );
-            }
-        }
-
-
-        /*
-         * ========================================================
-         * HILANGKAN PESAN ERROR
-         * ========================================================
-         */
-        const errorElement =
-            document.getElementById(
-                "dashboardError"
+            window.renderDashboardCharts(
+                dashboardData
             );
-
-
-        if (errorElement) {
-
-            errorElement.textContent =
-                "";
-
-            errorElement.style.display =
-                "none";
         }
 
 
-        dashboardInitialized =
-            true;
+        /* -------------------------------------------------
+           REFRESH ICONS
+        ------------------------------------------------- */
+
+        if (
+            window.lucide &&
+            typeof window.lucide.createIcons ===
+            "function"
+        ) {
+            window.lucide.createIcons();
+        }
 
 
-        console.log(
-            "FSI CRM Dashboard: update berhasil.",
-            stats
-        );
-
+        return dashboardData;
 
     } catch (error) {
-
         console.error(
-            "FSI CRM Dashboard: gagal mengambil data leads:",
+            "updateDashboard error:",
             error
         );
 
-
-        const message =
-            typeof window.getSupabaseErrorMessage ===
-            "function"
-
-                ? window.getSupabaseErrorMessage(
-                    error,
-                    "Gagal memuat data Dashboard."
-                )
-
-                : (
-                    error?.message ||
-                    "Gagal memuat data Dashboard."
-                );
-
-
-        const errorElement =
+        const pipeline =
             document.getElementById(
-                "dashboardError"
+                "pipeline-summary"
             );
 
+        if (pipeline) {
+            pipeline.innerHTML = `
+                <div class="dashboard-error">
+                    <div class="dashboard-error-icon">
+                        <i data-lucide="alert-circle"></i>
+                    </div>
 
-        if (errorElement) {
+                    <div>
+                        <strong>
+                            Unable to load dashboard
+                        </strong>
 
-            errorElement.textContent =
-                message;
-
-            errorElement.style.display =
-                "";
+                        <p>
+                            Please refresh the dashboard
+                            and try again.
+                        </p>
+                    </div>
+                </div>
+            `;
         }
-
-
-        /*
-         * Tetap tampilkan 0 jika query gagal,
-         * supaya dashboard tidak terlihat rusak.
-         */
-        dashboardData =
-            [];
-
-
-        window.FSIDashboard.data =
-            [];
-
-
-        const emptyStats =
-            calculateDashboardStats(
-                []
-            );
-
-
-        dashboardStats =
-            emptyStats;
-
-
-        window.FSIDashboard.stats =
-            emptyStats;
-
-
-        renderDashboardStats(
-            emptyStats
-        );
-
-
-        renderDashboardPipeline(
-            []
-        );
-
-
-        renderDashboardRecentLeads(
-            []
-        );
-
 
         if (
-            typeof window.showToast ===
+            window.lucide &&
+            typeof window.lucide.createIcons ===
             "function"
         ) {
-
-            window.showToast(
-                message,
-                "error"
-            );
+            window.lucide.createIcons();
         }
 
+        return [];
 
     } finally {
-
-        dashboardLoading =
-            false;
-
-
-        dashboardHideLoading();
-
-
-        if (
-            typeof window.refreshIcons ===
-            "function"
-        ) {
-
-            window.refreshIcons();
-        }
+        dashboardLoading = false;
     }
 }
 
 
-// ============================================================
-// GET SELECTED SALES ID
-// ============================================================
-//
-// Fungsi ini khusus membaca Sales yang sedang dipilih
-// pada Dashboard.
-//
-// Dashboard menggunakan:
-// #salesFilter
-//
-// Filter Leads tetap menggunakan:
-// #filter-sales
-//
-// Keduanya sengaja dipisahkan agar tidak saling mengganggu.
-//
-// Jika value kosong:
-// berarti All Sales.
-// ============================================================
+/* =========================================================
+   BIND STAT CARD CLICKS
+========================================================= */
 
-function dashboardGetSelectedSalesId() {
+let dashboardStatClicksBound = false;
 
-    const selectors = [
-
-        "#salesFilter",
-
-        "#dashboardSalesFilter"
-
-    ];
-
-
-    for (
-        const selector
-        of selectors
-    ) {
-
-        const element =
-            document.querySelector(
-                selector
-            );
-
-
-        if (!element) {
-            continue;
-        }
-
-
-        return String(
-            element.value || ""
-        ).trim();
+function bindDashboardStatClicks() {
+    if (dashboardStatClicksBound) {
+        return;
     }
 
+    dashboardStatClicksBound = true;
 
-    return "";
-}
-
-
-// ============================================================
-// REFRESH DASHBOARD
-// ============================================================
-//
-// Ketika Admin mengganti Sales pada Dashboard:
-//
-// All Sales
-// Sales A
-// Sales B
-// Sales C
-//
-// Dashboard langsung menghitung ulang.
-// ============================================================
-
-function dashboardBindSalesFilterChange() {
-
-    const selectors = [
-
-        "#salesFilter",
-
-        "#dashboardSalesFilter"
-
-    ];
+    const statMap = {
+        statTotal: "",
+        statNew: "New",
+        statInterested: "First Contact",
+        statFollowUp:
+            "First Meeting / Appointment / Site Survey",
+        statQuotation: "Quotation",
+        statAppointment: "Second Appointment",
+        statSPK: "Deal",
+        statNotInterested: "No Deal",
+        statClosing: "Deal"
+    };
 
 
-    document.addEventListener(
-        "change",
-        function (event) {
-
-            const target =
-                event.target;
-
-
-            if (!target) {
-                return;
-            }
-
-
-            const isSalesFilter =
-                selectors.some(
-                    selector =>
-                        target.matches(
-                            selector
-                        )
+    Object.entries(statMap).forEach(
+        ([elementId, status]) => {
+            const element =
+                document.getElementById(
+                    elementId
                 );
 
-
-            if (!isSalesFilter) {
+            if (!element) {
                 return;
             }
 
-
-            /*
-             * Hanya Admin yang menggunakan
-             * filter Sales Dashboard.
-             */
-            if (
-                !dashboardIsAdmin()
-            ) {
-                return;
-            }
-
-
-            /*
-             * Refresh Dashboard
-             * dengan Sales yang baru dipilih.
-             */
-            updateDashboard();
-
-        }
-    );
-
-
-    console.log(
-        "FSI CRM: Dashboard Sales filter binding ready."
-    );
-}
-
-
-// ============================================================
-// REFRESH DASHBOARD
-// ============================================================
-
-async function refreshDashboard() {
-
-    if (
-        dashboardLoading
-    ) {
-
-        return;
-    }
-
-
-    await updateDashboard();
-}
-
-
-// ============================================================
-// DASHBOARD QUICK ACTIONS
-// ============================================================
-
-async function dashboardOpenLeads() {
-
-    await showLeads();
-}
-
-
-async function dashboardOpenSales() {
-
-    if (!dashboardIsAdmin()) {
-
-        if (
-            typeof window.showToast ===
-            "function"
-        ) {
-
-            window.showToast(
-                "Only Admin can manage Sales.",
-                "warning"
-            );
-        }
-
-        return;
-    }
-
-
-    await showSales();
-}
-
-
-// ============================================================
-// DASHBOARD STATE GETTERS
-// ============================================================
-
-function isDashboardInitialized() {
-
-    return dashboardInitialized;
-}
-
-
-function isDashboardLoading() {
-
-    return dashboardLoading;
-}
-
-
-function getDashboardData() {
-
-    return dashboardData;
-}
-
-
-function getDashboardStats() {
-
-    return dashboardStats;
-}
-
-
-// ============================================================
-// VIEW ALL BUTTON
-// ============================================================
-//
-// index.html terbaru:
-//
-// <button
-//     type="button"
-//     class="btn-outline"
-//     data-page="leads"
-// >
-//     <span>View All</span>
-//     ...
-// </button>
-//
-// Dashboard tetap mendukung navigation.js.
-// Binding ini hanya menjadi fallback.
-// ============================================================
-
-let dashboardViewAllBound =
-    false;
-
-
-function dashboardBindViewAllButton() {
-
-    if (
-        dashboardViewAllBound
-    ) {
-
-        return;
-    }
-
-
-    const buttons =
-        document.querySelectorAll(
-            'button[data-page="leads"]'
-        );
-
-
-    if (
-        !buttons.length
-    ) {
-
-        return;
-    }
-
-
-    buttons.forEach(
-        button => {
-
-            if (
-                button.dataset.dashboardViewAllBound ===
-                "true"
-            ) {
-
-                return;
-            }
-
-
-            button.dataset.dashboardViewAllBound =
-                "true";
-
-
-            button.addEventListener(
+            element.addEventListener(
                 "click",
-                async function (event) {
-
-                    /*
-                     * Jika navigation.js sudah bekerja,
-                     * event tetap aman.
-                     */
-                    event.preventDefault();
-
-
-                    try {
-
-                        await showLeads();
-
-                    } catch (error) {
-
-                        console.error(
-                            "FSI CRM: View All -> Leads error:",
-                            error
+                () => {
+                    if (
+                        typeof window.filterLeadsByStatus ===
+                        "function"
+                    ) {
+                        window.filterLeadsByStatus(
+                            status
                         );
+                    } else if (
+                        typeof window.showLeads ===
+                        "function"
+                    ) {
+                        window.showLeads();
+                    } else {
+                        showLeads();
                     }
                 }
             );
         }
     );
+}
 
 
-    dashboardViewAllBound =
-        true;
+/* =========================================================
+   SALES FILTER
+========================================================= */
 
+function bindDashboardSalesFilter() {
+    const salesFilter =
+        document.getElementById(
+            "salesFilter"
+        );
 
-    console.log(
-        "FSI CRM: View All button bound."
+    if (!salesFilter) {
+        return;
+    }
+
+    if (
+        salesFilter.dataset.dashboardBound ===
+        "true"
+    ) {
+        return;
+    }
+
+    salesFilter.dataset.dashboardBound =
+        "true";
+
+    salesFilter.addEventListener(
+        "change",
+        async () => {
+            await updateDashboard();
+        }
     );
 }
 
 
-// ============================================================
-// LISTEN FOR LEAD CHANGES
-// ============================================================
+/* =========================================================
+   REFRESH DASHBOARD
+========================================================= */
+
+async function refreshDashboard() {
+    const button =
+        document.getElementById(
+            "dashboardRefresh"
+        );
+
+    if (button) {
+        button.classList.add("loading");
+        button.disabled = true;
+    }
+
+    try {
+        await updateDashboard();
+
+    } finally {
+        if (button) {
+            button.classList.remove(
+                "loading"
+            );
+
+            button.disabled = false;
+        }
+    }
+}
+
+
+/* =========================================================
+   QUICK ACTIONS
+========================================================= */
+
+function bindDashboardQuickActions() {
+    const addCustomerButton =
+        document.getElementById(
+            "dashboardAddCustomer"
+        );
+
+    if (
+        addCustomerButton &&
+        !addCustomerButton.dataset.bound
+    ) {
+        addCustomerButton.dataset.bound =
+            "true";
+
+        addCustomerButton.addEventListener(
+            "click",
+            () => {
+                if (
+                    typeof window.openCustomerForm ===
+                    "function"
+                ) {
+                    window.openCustomerForm();
+                }
+            }
+        );
+    }
+
+
+    const viewAllButton =
+        document.getElementById(
+            "dashboardViewAllLeads"
+        );
+
+    if (
+        viewAllButton &&
+        !viewAllButton.dataset.bound
+    ) {
+        viewAllButton.dataset.bound =
+            "true";
+
+        viewAllButton.addEventListener(
+            "click",
+            () => {
+                showLeads();
+            }
+        );
+    }
+}
+
+
+/* =========================================================
+   DASHBOARD GETTERS
+========================================================= */
+
+function getDashboardData() {
+    return Array.isArray(
+        window.dashboardData
+    )
+        ? window.dashboardData
+        : [];
+}
+
+
+function getDashboardStatuses() {
+    return [...DASHBOARD_STATUSES];
+}
+
+
+/* =========================================================
+   EVENT: LEAD CHANGED
+========================================================= */
 
 document.addEventListener(
     "fsi:lead-changed",
-    function () {
-
-        /*
-         * Jika user sedang berada di Dashboard,
-         * langsung refresh angka.
-         */
-        const page =
+    async () => {
+        const dashboardPage =
             dashboardFindPage(
                 "dashboard"
             );
 
-
-        if (!page) {
-            return;
-        }
-
-
-        const isVisible =
-            page.classList.contains("active") &&
-            !page.classList.contains("hidden");
-
-
         if (
-            isVisible &&
-            dashboardGetProfile()
+            dashboardPage &&
+            dashboardPage.classList.contains(
+                "active"
+            )
         ) {
-
-            updateDashboard();
+            await updateDashboard();
         }
     }
 );
 
 
-// ============================================================
-// LISTEN FOR PROFILE READY
-// ============================================================
+/* =========================================================
+   EVENT: PROFILE READY
+========================================================= */
 
 document.addEventListener(
     "fsi:profile-ready",
-    function () {
-
-        dashboardInitialized =
-            false;
-
-
-        dashboardData =
-            [];
-
-
-        dashboardStats =
-            null;
-
-
-        /*
-         * Tutup popup jika user profile berubah.
-         */
-        dashboardCloseStatPopup();
-
-
-        console.log(
-            "FSI CRM Dashboard: profile ready."
-        );
-    }
-);
-
-
-// ============================================================
-// LISTEN FOR APP READY
-// ============================================================
-
-document.addEventListener(
-    "fsi:app-ready",
-    function () {
-
-        console.log(
-            "FSI CRM Dashboard: app ready."
-        );
-
-
-        /*
-         * Jangan langsung query jika profile belum siap.
-         * Auth module akan memanggil showDashboard()
-         * setelah profile berhasil dimuat.
-         */
+    async event => {
         const profile =
-            dashboardGetProfile();
+            event.detail?.profile ||
+            window.currentProfile;
 
+        if (!profile) {
+            return;
+        }
 
-        if (
-            profile &&
+        dashboardUpdateGreeting(
+            profile
+        );
+
+        const dashboardPage =
             dashboardFindPage(
                 "dashboard"
+            );
+
+        if (
+            dashboardPage &&
+            dashboardPage.classList.contains(
+                "active"
             )
         ) {
-
-            setTimeout(
-                function () {
-
-                    const dashboardPage =
-                        dashboardFindPage(
-                            "dashboard"
-                        );
-
-
-                    if (
-                        dashboardPage &&
-                        dashboardPage.classList.contains(
-                            "active"
-                        )
-                    ) {
-
-                        dashboardBindStatCardClicks();
-
-                        updateDashboard();
-                    }
-
-
-                    dashboardBindViewAllButton();
-
-                },
-                100
-            );
-
-        } else {
-
-            dashboardBindViewAllButton();
-
-
-            setTimeout(
-                function () {
-
-                    dashboardBindStatCardClicks();
-
-                },
-                300
-            );
+            await updateDashboard();
         }
     }
 );
 
 
-// ============================================================
-// DOM READY
-// ============================================================
+/* =========================================================
+   EVENT: APP READY
+========================================================= */
 
 document.addEventListener(
-    "DOMContentLoaded",
-    function () {
+    "fsi:app-ready",
+    async () => {
+        bindDashboardSalesFilter();
+        bindDashboardQuickActions();
 
-        dashboardInitialized =
-            false;
+        const dashboardPage =
+            dashboardFindPage(
+                "dashboard"
+            );
 
-
-        dashboardData =
-            [];
-
-
-        dashboardStats =
-            null;
-
-
-        /*
-         * Status Dashboard.
-         */
-        window.FSIDashboard =
-            window.FSIDashboard ||
-            {};
-
-
-        window.FSIDashboard.statuses = [
-
-            "New",
-
-            "First Contact",
-
-            "First Meeting / Appointment / Site Survey",
-
-            "Quotation",
-
-            "Second Appointment",
-
-            "Deal",
-
-            "No Deal"
-
-        ];
-
-
-        /*
-         * Siapkan style popup.
-         */
-        dashboardEnsureStatPopupStyles();
-
-
-        /*
-         * Bind kartu statistik.
-         */
-        dashboardBindStatCardClicks();
-
-
-        /*
-         * Bind tombol View All.
-         */
-        dashboardBindViewAllButton();
-
-
-        /*
-         * Bind Sales filter Dashboard.
-         */
-        dashboardBindSalesFilterChange();
-
-
-        /*
-         * Jika navigation/auth selesai setelah DOM ready,
-         * coba bind sekali lagi sebentar kemudian.
-         */
-        setTimeout(
-            function () {
-
-                dashboardBindViewAllButton();
-
-                dashboardBindStatCardClicks();
-
-            },
-            300
-        );
-
-
-        console.log(
-            "FSI CRM dashboard.js loaded successfully."
-        );
+        if (
+            dashboardPage &&
+            dashboardPage.classList.contains(
+                "active"
+            )
+        ) {
+            await updateDashboard();
+        }
     }
 );
 
 
-// ============================================================
-// GLOBAL EXPORTS
-// ============================================================
+/* =========================================================
+   DOM READY
+========================================================= */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+        /*
+         * Make the new 7-stage system available
+         * globally.
+         */
+        if (!window.FSIDashboard) {
+            window.FSIDashboard = {};
+        }
+
+        window.FSIDashboard.statuses =
+            [...DASHBOARD_STATUSES];
+
+
+        bindDashboardSalesFilter();
+        bindDashboardQuickActions();
+        bindDashboardStatClicks();
+
+
+        /*
+         * Initial dashboard visibility.
+         */
+        const dashboardPage =
+            dashboardFindPage(
+                "dashboard"
+            );
+
+        if (dashboardPage) {
+            dashboardPage.classList.add(
+                "active"
+            );
+
+            dashboardPage.classList.remove(
+                "hidden"
+            );
+
+            dashboardPage.style.display =
+                "block";
+
+            dashboardPage.setAttribute(
+                "aria-hidden",
+                "false"
+            );
+        }
+
+
+        /*
+         * Make sure other pages are hidden.
+         */
+        [
+            "leads",
+            "sales",
+            "customerProfile"
+        ].forEach(type => {
+            const page =
+                dashboardFindPage(type);
+
+            if (!page) {
+                return;
+            }
+
+            page.classList.remove(
+                "active"
+            );
+
+            page.classList.add(
+                "hidden"
+            );
+
+            page.style.display =
+                "none";
+
+            page.setAttribute(
+                "aria-hidden",
+                "true"
+            );
+        });
+
+
+        /*
+         * Greeting is initialized when profile
+         * is already available.
+         */
+        if (window.currentProfile) {
+            dashboardUpdateGreeting(
+                window.currentProfile
+            );
+        }
+
+
+        /*
+         * Initialize Lucide icons.
+         */
+        if (
+            window.lucide &&
+            typeof window.lucide.createIcons ===
+            "function"
+        ) {
+            window.lucide.createIcons();
+        }
+    }
+);
+
+
+/* =========================================================
+   GLOBAL EXPORTS
+========================================================= */
 
 window.showDashboard =
     showDashboard;
 
-
 window.showLeads =
     showLeads;
-
 
 window.showSales =
     showSales;
 
-
 window.showCustomerProfile =
     showCustomerProfile;
-
-
-window.hideAllPages =
-    hideAllPages;
-
 
 window.updateDashboard =
     updateDashboard;
 
-
 window.refreshDashboard =
     refreshDashboard;
-
-
-window.dashboardOpenLeads =
-    dashboardOpenLeads;
-
-
-window.dashboardOpenSales =
-    dashboardOpenSales;
-
-
-window.dashboardFindPage =
-    dashboardFindPage;
-
-
-window.dashboardShowPage =
-    dashboardShowPage;
-
-
-window.dashboardSetPageTitle =
-    dashboardSetPageTitle;
-
-
-window.dashboardSetActiveNav =
-    dashboardSetActiveNav;
-
-
-window.dashboardFetchLeads =
-    dashboardFetchLeads;
-
-
-window.calculateDashboardStats =
-    calculateDashboardStats;
-
-
-window.renderDashboardStats =
-    renderDashboardStats;
-
-
-window.renderDashboardPipeline =
-    renderDashboardPipeline;
-
-
-window.renderDashboardRecentLeads =
-    renderDashboardRecentLeads;
-
-
-window.dashboardFindPipelineContainer =
-    dashboardFindPipelineContainer;
-
-
-window.dashboardFindRecentLeadsContainer =
-    dashboardFindRecentLeadsContainer;
-
-
-window.dashboardGetProfile =
-    dashboardGetProfile;
-
-
-window.dashboardGetUser =
-    dashboardGetUser;
-
-
-window.dashboardIsAdmin =
-    dashboardIsAdmin;
-
-
-window.dashboardIsSales =
-    dashboardIsSales;
-
-
-window.isDashboardInitialized =
-    isDashboardInitialized;
-
-
-window.isDashboardLoading =
-    isDashboardLoading;
-
-
-window.getDashboardData =
-    getDashboardData;
-
-
-window.getDashboardStats =
-    getDashboardStats;
-
-
-window.dashboardBindViewAllButton =
-    dashboardBindViewAllButton;
-
 
 window.dashboardGetSelectedSalesId =
     dashboardGetSelectedSalesId;
 
+window.dashboardIsAdmin =
+    dashboardIsAdmin;
 
-window.dashboardBindSalesFilterChange =
-    dashboardBindSalesFilterChange;
+window.dashboardIsSales =
+    dashboardIsSales;
 
+window.dashboardNormalizeRole =
+    dashboardNormalizeRole;
 
-/*
- * Greeting export.
- */
+window.dashboardFindPage =
+    dashboardFindPage;
+
+window.dashboardShowPage =
+    dashboardShowPage;
+
+window.dashboardHideAllPages =
+    dashboardHideAllPages;
+
+window.dashboardSetPageTitle =
+    dashboardSetPageTitle;
+
+window.dashboardSetActiveNav =
+    dashboardSetActiveNav;
+
 window.dashboardUpdateGreeting =
     dashboardUpdateGreeting;
 
+window.getDashboardData =
+    getDashboardData;
 
-/*
- * Statistic popup exports.
- */
-
-window.dashboardOpenStatPopup =
-    dashboardOpenStatPopup;
+window.getDashboardStatuses =
+    getDashboardStatuses;
 
 
-window.dashboardCloseStatPopup =
-    dashboardCloseStatPopup;
+/* =========================================================
+   FSI DASHBOARD NAMESPACE
+========================================================= */
 
-
-window.dashboardBindStatCardClicks =
-    dashboardBindStatCardClicks;
-
-
-window.dashboardFilterDataForStat =
-    dashboardFilterDataForStat;
-
-
-// ============================================================
-// FSI DASHBOARD NAMESPACE
-// ============================================================
+window.FSIDashboard =
+    window.FSIDashboard || {};
 
 Object.assign(
     window.FSIDashboard,
     {
+        statuses:
+            [...DASHBOARD_STATUSES],
 
-        showDashboard,
+        getData:
+            getDashboardData,
 
-        showLeads,
+        update:
+            updateDashboard,
 
-        showSales,
+        refresh:
+            refreshDashboard,
 
-        showCustomerProfile,
+        showDashboard:
+            showDashboard,
 
-        hideAllPages,
+        showLeads:
+            showLeads,
 
-        updateDashboard,
+        showSales:
+            showSales,
 
-        refreshDashboard,
+        showCustomerProfile:
+            showCustomerProfile,
 
-        dashboardOpenLeads,
+        isAdmin:
+            dashboardIsAdmin,
 
-        dashboardOpenSales,
-
-        dashboardFindPage,
-
-        dashboardShowPage,
-
-        dashboardSetPageTitle,
-
-        dashboardSetActiveNav,
-
-        dashboardFetchLeads,
-
-        calculateDashboardStats,
-
-        renderDashboardStats,
-
-        renderDashboardPipeline,
-
-        renderDashboardRecentLeads,
-
-        dashboardFindPipelineContainer,
-
-        dashboardFindRecentLeadsContainer,
-
-        dashboardGetProfile,
-
-        dashboardGetUser,
-
-        dashboardIsAdmin,
-
-        dashboardIsSales,
-
-        isDashboardInitialized,
-
-        isDashboardLoading,
-
-        getDashboardData,
-
-        getDashboardStats,
-
-        dashboardBindViewAllButton,
-
-        dashboardGetSelectedSalesId,
-
-        dashboardBindSalesFilterChange,
-
-        /*
-         * Greeting.
-         */
-        dashboardUpdateGreeting,
-
-        dashboardOpenStatPopup,
-
-        dashboardCloseStatPopup,
-
-        dashboardBindStatCardClicks,
-
-        dashboardFilterDataForStat,
-
-        /*
-         * Status pipeline baru.
-         */
-        statuses: [
-
-            "New",
-
-            "First Contact",
-
-            "First Meeting / Appointment / Site Survey",
-
-            "Quotation",
-
-            "Second Appointment",
-
-            "Deal",
-
-            "No Deal"
-
-        ]
+        isSales:
+            dashboardIsSales
     }
-);
-
-
-// ============================================================
-// INITIAL STATE
-// ============================================================
-
-console.log(
-    "FSI CRM: Dashboard module initialized."
 );
