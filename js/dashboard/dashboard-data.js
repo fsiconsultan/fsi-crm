@@ -4,16 +4,15 @@
 // File : js/dashboard/dashboard-data.js
 //
 // Fungsi:
-// 1. Mengambil seluruh data leads untuk Dashboard
-// 2. Membatasi data Sales hanya ke leads miliknya
-// 3. Normalisasi status
-// 4. Helper perhitungan status
-// 5. Helper perhitungan field aktivitas
+// 1. Mengambil data leads untuk Dashboard
+// 2. Admin  -> semua leads
+// 3. Sales  -> hanya leads miliknya
+// 4. Normalisasi status
+// 5. Helper perhitungan Dashboard
 //
 // IMPORTANT:
-// - Admin  : melihat seluruh leads
-// - Sales  : hanya melihat leads dengan sales_id miliknya
-// - Status mengikuti sistem CRM terbaru
+// Jangan membuat const global DASHBOARD_BATCH_SIZE.
+// File lain mungkin sudah menggunakan nama tersebut.
 // ============================================================
 
 
@@ -22,30 +21,26 @@
 // ============================================================
 
 if (
-    typeof window.DASHBOARD_BATCH_SIZE === "undefined"
+    typeof window.DASHBOARD_BATCH_SIZE !== "number"
 ) {
     window.DASHBOARD_BATCH_SIZE = 1000;
 }
-
-const DASHBOARD_BATCH_SIZE =
-    window.DASHBOARD_BATCH_SIZE;
 
 
 // ============================================================
 // GET SUPABASE CLIENT
 // ============================================================
 
-function dashboardGetSupabase() {
+function dashboardDataGetSupabase() {
 
     if (
-        typeof window.supabaseClient !== "undefined" &&
-        window.supabaseClient
+        window.supabaseClient &&
+        typeof window.supabaseClient.from === "function"
     ) {
         return window.supabaseClient;
     }
 
     if (
-        typeof window.supabase !== "undefined" &&
         window.supabase &&
         typeof window.supabase.from === "function"
     ) {
@@ -60,7 +55,7 @@ function dashboardGetSupabase() {
 // GET CURRENT PROFILE
 // ============================================================
 
-function dashboardGetProfile() {
+function dashboardDataGetProfile() {
 
     if (
         typeof window.getCurrentProfile === "function"
@@ -86,16 +81,12 @@ function dashboardGetProfile() {
     }
 
 
-    if (
-        window.currentProfile
-    ) {
+    if (window.currentProfile) {
         return window.currentProfile;
     }
 
 
-    if (
-        window.currentUserProfile
-    ) {
+    if (window.currentUserProfile) {
         return window.currentUserProfile;
     }
 
@@ -113,10 +104,10 @@ function dashboardGetProfile() {
 
 
 // ============================================================
-// ROLE CHECK
+// ROLE NORMALIZER
 // ============================================================
 
-function dashboardNormalizeRole(role) {
+function dashboardDataNormalizeRole(role) {
 
     return String(
         role || ""
@@ -126,19 +117,25 @@ function dashboardNormalizeRole(role) {
 }
 
 
-function dashboardIsAdmin() {
+// ============================================================
+// IS ADMIN
+// ============================================================
+
+function dashboardDataIsAdmin() {
 
     const profile =
-        dashboardGetProfile();
+        dashboardDataGetProfile();
 
     if (!profile) {
         return false;
     }
 
+
     const role =
-        dashboardNormalizeRole(
+        dashboardDataNormalizeRole(
             profile.role
         );
+
 
     return (
         role === "admin" ||
@@ -147,32 +144,39 @@ function dashboardIsAdmin() {
 }
 
 
-function dashboardIsSales() {
+// ============================================================
+// IS SALES
+// ============================================================
+
+function dashboardDataIsSales() {
 
     const profile =
-        dashboardGetProfile();
+        dashboardDataGetProfile();
 
     if (!profile) {
         return false;
     }
 
+
     const role =
-        dashboardNormalizeRole(
+        dashboardDataNormalizeRole(
             profile.role
         );
+
 
     return role === "sales";
 }
 
 
 // ============================================================
-// FETCH LEADS
+// FETCH DASHBOARD LEADS
 // ============================================================
 
 async function dashboardFetchLeads() {
 
     const client =
-        dashboardGetSupabase();
+        dashboardDataGetSupabase();
+
 
     if (!client) {
         throw new Error(
@@ -182,7 +186,8 @@ async function dashboardFetchLeads() {
 
 
     const profile =
-        dashboardGetProfile();
+        dashboardDataGetProfile();
+
 
     if (!profile) {
         throw new Error(
@@ -192,14 +197,15 @@ async function dashboardFetchLeads() {
 
 
     const isAdmin =
-        dashboardIsAdmin();
+        dashboardDataIsAdmin();
+
 
     const isSales =
-        dashboardIsSales();
+        dashboardDataIsSales();
 
 
     // --------------------------------------------------------
-    // FETCH ONE BATCH
+    // FETCH BATCH
     // --------------------------------------------------------
 
     async function fetchBatch(
@@ -224,7 +230,7 @@ async function dashboardFetchLeads() {
 
 
         // ----------------------------------------------------
-        // SALES ONLY SEES OWN LEADS
+        // SALES ONLY
         // ----------------------------------------------------
 
         if (
@@ -248,19 +254,17 @@ async function dashboardFetchLeads() {
         }
 
 
-        const {
-            data,
-            error
-        } = await query;
+        const result =
+            await query;
 
 
-        if (error) {
-            throw error;
+        if (result.error) {
+            throw result.error;
         }
 
 
-        return Array.isArray(data)
-            ? data
+        return Array.isArray(result.data)
+            ? result.data
             : [];
     }
 
@@ -278,7 +282,7 @@ async function dashboardFetchLeads() {
 
         const end =
             start +
-            DASHBOARD_BATCH_SIZE -
+            window.DASHBOARD_BATCH_SIZE -
             1;
 
 
@@ -301,14 +305,14 @@ async function dashboardFetchLeads() {
 
         if (
             batch.length <
-            DASHBOARD_BATCH_SIZE
+            window.DASHBOARD_BATCH_SIZE
         ) {
             break;
         }
 
 
         start +=
-            DASHBOARD_BATCH_SIZE;
+            window.DASHBOARD_BATCH_SIZE;
 
 
         // Safety limit
@@ -344,18 +348,6 @@ async function dashboardFetchLeads() {
 // ============================================================
 // NORMALIZE STATUS
 // ============================================================
-// Status CRM terbaru:
-//
-// New
-// First Contact
-// First Meeting / Appointment / Site Survey
-// Quotation
-// Second Appointment
-// Deal
-// No Deal
-//
-// Legacy status tetap dikenali agar data lama tidak hilang.
-// ============================================================
 
 function dashboardNormalizeStatus(
     status
@@ -373,10 +365,7 @@ function dashboardNormalizeStatus(
     }
 
 
-    // --------------------------------------------------------
-    // Gunakan normalizer utama apabila tersedia
-    // --------------------------------------------------------
-
+    // Gunakan normalizer utama CRM jika tersedia
     if (
         typeof window.normalizeLeadStatus ===
         "function"
@@ -402,7 +391,7 @@ function dashboardNormalizeStatus(
 
 
     // --------------------------------------------------------
-    // Local fallback
+    // FALLBACK NORMALIZER
     // --------------------------------------------------------
 
     const key =
@@ -493,7 +482,7 @@ function dashboardHasValue(
 
 
 // ============================================================
-// COUNT NORMALIZED STATUS
+// COUNT STATUS
 // ============================================================
 
 function dashboardCountStatus(
@@ -522,15 +511,10 @@ function dashboardCountStatus(
             }
 
 
-            const currentStatus =
+            return (
                 dashboardNormalizeStatus(
                     item.status
-                );
-
-
-            return (
-                currentStatus ===
-                target
+                ) === target
             );
         }
     ).length;
@@ -538,7 +522,7 @@ function dashboardCountStatus(
 
 
 // ============================================================
-// COUNT DATE / ACTIVITY FIELD
+// COUNT DATE FIELD
 // ============================================================
 
 function dashboardCountDateField(
@@ -553,9 +537,7 @@ function dashboardCountDateField(
     }
 
 
-    if (
-        !field
-    ) {
+    if (!field) {
         return 0;
     }
 
@@ -578,12 +560,6 @@ function dashboardCountDateField(
 
 // ============================================================
 // COUNT CLOSING / DEAL
-// ============================================================
-// Mengikuti status CRM terbaru:
-//
-// Deal
-//
-// Field `closing` tetap dibaca sebagai fallback untuk data lama.
 // ============================================================
 
 function dashboardCountClosing(
@@ -611,7 +587,7 @@ function dashboardCountClosing(
                 );
 
 
-            // Status terbaru
+            // Status CRM terbaru
             if (
                 status === "Deal"
             ) {
@@ -619,7 +595,7 @@ function dashboardCountClosing(
             }
 
 
-            // Data lama
+            // Legacy
             if (
                 status === "Closing"
             ) {
@@ -627,7 +603,7 @@ function dashboardCountClosing(
             }
 
 
-            // Fallback untuk data lama
+            // Legacy field
             if (
                 dashboardHasValue(
                     item.closing
@@ -644,12 +620,10 @@ function dashboardCountClosing(
 
 
 // ============================================================
-// COUNT NEW
+// STATUS COUNTERS
 // ============================================================
 
-function dashboardCountNew(
-    list
-) {
+function dashboardCountNew(list) {
 
     return dashboardCountStatus(
         list,
@@ -658,13 +632,7 @@ function dashboardCountNew(
 }
 
 
-// ============================================================
-// COUNT FIRST CONTACT
-// ============================================================
-
-function dashboardCountFirstContact(
-    list
-) {
+function dashboardCountFirstContact(list) {
 
     return dashboardCountStatus(
         list,
@@ -673,13 +641,7 @@ function dashboardCountFirstContact(
 }
 
 
-// ============================================================
-// COUNT FIRST MEETING / APPOINTMENT
-// ============================================================
-
-function dashboardCountAppointment(
-    list
-) {
+function dashboardCountAppointment(list) {
 
     return dashboardCountStatus(
         list,
@@ -688,13 +650,7 @@ function dashboardCountAppointment(
 }
 
 
-// ============================================================
-// COUNT SECOND APPOINTMENT
-// ============================================================
-
-function dashboardCountSecondAppointment(
-    list
-) {
+function dashboardCountSecondAppointment(list) {
 
     return dashboardCountStatus(
         list,
@@ -703,13 +659,7 @@ function dashboardCountSecondAppointment(
 }
 
 
-// ============================================================
-// COUNT QUOTATION
-// ============================================================
-
-function dashboardCountQuotation(
-    list
-) {
+function dashboardCountQuotation(list) {
 
     return dashboardCountStatus(
         list,
@@ -718,13 +668,7 @@ function dashboardCountQuotation(
 }
 
 
-// ============================================================
-// COUNT DEAL
-// ============================================================
-
-function dashboardCountDeal(
-    list
-) {
+function dashboardCountDeal(list) {
 
     return dashboardCountStatus(
         list,
@@ -733,13 +677,7 @@ function dashboardCountDeal(
 }
 
 
-// ============================================================
-// COUNT NO DEAL
-// ============================================================
-
-function dashboardCountNoDeal(
-    list
-) {
+function dashboardCountNoDeal(list) {
 
     return dashboardCountStatus(
         list,
@@ -749,15 +687,10 @@ function dashboardCountNoDeal(
 
 
 // ============================================================
-// COUNT SITE SURVEY
-// ============================================================
-// Site Survey merupakan activity/date field,
-// bukan status utama.
+// ACTIVITY COUNTERS
 // ============================================================
 
-function dashboardCountSiteSurvey(
-    list
-) {
+function dashboardCountSiteSurvey(list) {
 
     return dashboardCountDateField(
         list,
@@ -766,13 +699,7 @@ function dashboardCountSiteSurvey(
 }
 
 
-// ============================================================
-// COUNT FOLLOW UP
-// ============================================================
-
-function dashboardCountFollowUp(
-    list
-) {
+function dashboardCountFollowUp(list) {
 
     return dashboardCountDateField(
         list,
@@ -781,13 +708,7 @@ function dashboardCountFollowUp(
 }
 
 
-// ============================================================
-// COUNT APPOINTMENT FIELD
-// ============================================================
-
-function dashboardCountAppointmentField(
-    list
-) {
+function dashboardCountAppointmentField(list) {
 
     return dashboardCountDateField(
         list,
@@ -796,13 +717,7 @@ function dashboardCountAppointmentField(
 }
 
 
-// ============================================================
-// COUNT QUOTATION FIELD
-// ============================================================
-
-function dashboardCountQuotationField(
-    list
-) {
+function dashboardCountQuotationField(list) {
 
     return dashboardCountDateField(
         list,
@@ -811,13 +726,7 @@ function dashboardCountQuotationField(
 }
 
 
-// ============================================================
-// COUNT CLOSING FIELD
-// ============================================================
-
-function dashboardCountClosingField(
-    list
-) {
+function dashboardCountClosingField(list) {
 
     return dashboardCountDateField(
         list,
@@ -827,7 +736,7 @@ function dashboardCountClosingField(
 
 
 // ============================================================
-// GET STATUS COUNTS
+// GET ALL STATUS COUNTS
 // ============================================================
 
 function dashboardGetStatusCounts(
@@ -899,62 +808,80 @@ function dashboardGetStatusCounts(
 
 
 // ============================================================
-// EXPORT GLOBAL FUNCTIONS
+// GLOBAL EXPORTS
 // ============================================================
 
 window.dashboardFetchLeads =
     dashboardFetchLeads;
 
+
 window.dashboardNormalizeStatus =
     dashboardNormalizeStatus;
+
 
 window.dashboardHasValue =
     dashboardHasValue;
 
+
 window.dashboardCountStatus =
     dashboardCountStatus;
+
 
 window.dashboardCountDateField =
     dashboardCountDateField;
 
+
 window.dashboardCountClosing =
     dashboardCountClosing;
+
 
 window.dashboardCountNew =
     dashboardCountNew;
 
+
 window.dashboardCountFirstContact =
     dashboardCountFirstContact;
+
 
 window.dashboardCountAppointment =
     dashboardCountAppointment;
 
+
 window.dashboardCountSecondAppointment =
     dashboardCountSecondAppointment;
+
 
 window.dashboardCountQuotation =
     dashboardCountQuotation;
 
+
 window.dashboardCountDeal =
     dashboardCountDeal;
+
 
 window.dashboardCountNoDeal =
     dashboardCountNoDeal;
 
+
 window.dashboardCountSiteSurvey =
     dashboardCountSiteSurvey;
+
 
 window.dashboardCountFollowUp =
     dashboardCountFollowUp;
 
+
 window.dashboardCountAppointmentField =
     dashboardCountAppointmentField;
+
 
 window.dashboardCountQuotationField =
     dashboardCountQuotationField;
 
+
 window.dashboardCountClosingField =
     dashboardCountClosingField;
+
 
 window.dashboardGetStatusCounts =
     dashboardGetStatusCounts;
@@ -968,17 +895,31 @@ window.FSIDashboardData =
     window.FSIDashboardData ||
     {};
 
+
 window.FSIDashboardData.fetchLeads =
     dashboardFetchLeads;
+
 
 window.FSIDashboardData.normalizeStatus =
     dashboardNormalizeStatus;
 
+
 window.FSIDashboardData.countStatus =
     dashboardCountStatus;
+
 
 window.FSIDashboardData.countClosing =
     dashboardCountClosing;
 
+
 window.FSIDashboardData.getStatusCounts =
     dashboardGetStatusCounts;
+
+
+// ============================================================
+// READY LOG
+// ============================================================
+
+console.log(
+    "FSI CRM: dashboard-data.js berhasil dimuat."
+);
