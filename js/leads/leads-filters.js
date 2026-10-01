@@ -12,12 +12,13 @@
 // 7. Search query
 // 8. Dashboard -> Leads filter integration
 //
-// ADMIN:
-// - Sales dropdown di halaman Leads disembunyikan.
-// - Admin tetap dapat melihat seluruh Leads.
+// IMPORTANT:
+// - ADMIN dapat menggunakan Sales dropdown.
+// - Admin memilih Sales A/B/C -> hanya Lead Sales tersebut.
+// - Admin memilih All Sales -> seluruh Leads.
+// - SALES biasa tetap menggunakan Sales ID miliknya.
 // - Tidak mengubah Supabase RLS.
 // - Tidak mengubah struktur database.
-// - Tidak menghapus fungsi internal Dashboard.
 // ============================================================
 
 
@@ -26,10 +27,6 @@
 // ============================================================
 
 function getSelectedSalesId() {
-
-    if (!leadIsAdmin()) {
-        return "";
-    }
 
     const value =
         window.crmSelectedSalesId;
@@ -71,30 +68,86 @@ function getSelectedSalesName() {
 
 function applySelectedSalesFilter() {
 
-    /*
-     * Sales filter UI tidak digunakan lagi
-     * untuk Admin.
-     *
-     * Admin melihat seluruh Leads.
-     */
-    if (leadIsAdmin()) {
-
-        window.currentSalesFilter = "";
-
-        const salesSelect =
-            leadElement("salesFilter");
-
-        if (salesSelect) {
-            salesSelect.value = "";
-        }
-
-        return "";
-    }
-
-
     const salesSelect =
         leadElement("salesFilter");
 
+    /*
+     * Admin:
+     * Sales dropdown tetap aktif.
+     * Nilai dropdown harus berupa sales_users.id.
+     */
+    if (leadIsAdmin()) {
+
+        const selectedValue =
+            String(
+                salesSelect?.value || ""
+            ).trim();
+
+        window.crmSelectedSalesId =
+            selectedValue;
+
+        window.currentSalesFilter =
+            selectedValue;
+
+        /*
+         * Update nama Sales
+         */
+        if (selectedValue) {
+
+            try {
+
+                const salesData =
+                    typeof leadGetSalesData ===
+                    "function"
+                        ? leadGetSalesData()
+                        : [];
+
+                const selected =
+                    Array.isArray(salesData)
+                        ? salesData.find(
+                            sales =>
+                                String(
+                                    sales?.id || ""
+                                ).trim() ===
+                                selectedValue
+                        )
+                        : null;
+
+                window.crmSelectedSalesName =
+                    selected
+                        ? (
+                            selected.name ||
+                            selected.full_name ||
+                            selected.username ||
+                            ""
+                        )
+                        : "";
+
+            } catch (error) {
+
+                console.warn(
+                    "FSI CRM: gagal mendapatkan Sales name:",
+                    error
+                );
+
+                window.crmSelectedSalesName =
+                    "";
+            }
+
+        } else {
+
+            window.crmSelectedSalesName =
+                "";
+        }
+
+        return selectedValue;
+    }
+
+
+    /*
+     * Sales biasa:
+     * Tetap menggunakan Sales ID miliknya.
+     */
     const selectedSalesId =
         getSelectedSalesId();
 
@@ -114,40 +167,10 @@ function applySelectedSalesFilter() {
 // ============================================================
 // APPLY DASHBOARD SALES FILTER
 // ============================================================
-//
-// Untuk Admin:
-// - Sales filter dari Dashboard tidak diterapkan ke Leads.
-// - Admin tetap melihat semua Leads.
-//
-// ============================================================
 
 function applyDashboardSalesFilter(
     salesId
 ) {
-
-    /*
-     * ADMIN
-     *
-     * Jangan filter Leads berdasarkan Sales.
-     */
-    if (leadIsAdmin()) {
-
-        window.crmSelectedSalesId = "";
-
-        window.crmSelectedSalesName = "";
-
-        window.currentSalesFilter = "";
-
-        const salesSelect =
-            leadElement("salesFilter");
-
-        if (salesSelect) {
-            salesSelect.value = "";
-        }
-
-        return "";
-    }
-
 
     const value =
         String(
@@ -155,6 +178,10 @@ function applyDashboardSalesFilter(
         ).trim();
 
 
+    /*
+     * Dashboard sekarang boleh mengirim
+     * Sales ID untuk Admin maupun Sales.
+     */
     window.crmSelectedSalesId =
         value;
 
@@ -170,6 +197,9 @@ function applyDashboardSalesFilter(
     }
 
 
+    /*
+     * Cari nama Sales berdasarkan ID.
+     */
     if (value) {
 
         try {
@@ -177,26 +207,19 @@ function applyDashboardSalesFilter(
             const salesData =
                 typeof leadGetSalesData ===
                 "function"
-
                     ? leadGetSalesData()
-
                     : [];
 
-
             const selected =
-                Array.isArray(
-                    salesData
-                )
+                Array.isArray(salesData)
                     ? salesData.find(
                         sales =>
                             String(
-                                sales?.id ||
-                                ""
+                                sales?.id || ""
                             ).trim() ===
                             value
                     )
                     : null;
-
 
             window.crmSelectedSalesName =
                 selected
@@ -323,7 +346,7 @@ function applyDashboardLeadFilters(
 
 
     // ========================================================
-    // CONTEXT
+    // UPDATE CONTEXT
     // ========================================================
 
     if (
@@ -346,10 +369,8 @@ function applyDashboardLeadFilters(
 
 
     return {
-        salesId:
-            leadIsAdmin()
-                ? ""
-                : salesId,
+
+        salesId,
 
         status
     };
@@ -357,7 +378,15 @@ function applyDashboardLeadFilters(
 
 
 // ============================================================
-// HIDE SALES FILTER FOR ADMIN
+// SALES FILTER VISIBILITY
+// ============================================================
+//
+// ADMIN:
+// - Sales dropdown TETAP terlihat.
+//
+// SALES:
+// - Sales dropdown tetap terlihat jika memang ada di UI.
+//
 // ============================================================
 
 function updateSalesFilterVisibility() {
@@ -371,17 +400,8 @@ function updateSalesFilterVisibility() {
     }
 
 
-    const isAdmin =
-        typeof leadIsAdmin === "function"
-            ? leadIsAdmin()
-            : false;
-
-
     /*
      * Cari container dropdown Sales.
-     *
-     * Mendukung beberapa kemungkinan
-     * struktur HTML.
      */
     const salesContainer =
         salesSelect.closest(
@@ -401,26 +421,14 @@ function updateSalesFilterVisibility() {
         salesSelect;
 
 
-    if (isAdmin) {
+    /*
+     * Admin SEKARANG TIDAK disembunyikan.
+     */
+    target.style.display = "";
 
-        target.style.display =
-            "none";
-
-        target.setAttribute(
-            "data-admin-sales-filter-hidden",
-            "true"
-        );
-
-        salesSelect.value = "";
-
-    } else {
-
-        target.style.display = "";
-
-        target.removeAttribute(
-            "data-admin-sales-filter-hidden"
-        );
-    }
+    target.removeAttribute(
+        "data-admin-sales-filter-hidden"
+    );
 }
 
 
@@ -555,10 +563,6 @@ async function loadFilterOptions() {
             "function"
         ) {
 
-            /*
-             * Tetap jalankan fungsi existing
-             * supaya modul lain tidak rusak.
-             */
             try {
 
                 window.populateSalesDropdowns();
@@ -574,7 +578,7 @@ async function loadFilterOptions() {
 
 
         // ====================================================
-        // HIDE SALES FILTER
+        // SHOW SALES FILTER
         // ====================================================
 
         updateSalesFilterVisibility();
@@ -609,7 +613,6 @@ async function loadFilterOptions() {
 
 
         populateBusinessFilter([]);
-
 
         updateSalesFilterVisibility();
 
@@ -898,25 +901,40 @@ function getLeadFilters() {
         );
 
 
+    /*
+     * Ambil langsung dari dropdown Sales.
+     *
+     * Nilai yang digunakan harus:
+     * sales_users.id
+     */
     let salesFilter =
-        salesInput?.value || "";
+        String(
+            salesInput?.value || ""
+        ).trim();
 
 
     // ========================================================
-    // ADMIN
-    // ========================================================
-    //
-    // Admin tidak lagi menggunakan Sales filter.
-    // Admin selalu melihat seluruh Leads.
-    //
+    // SALES
     // ========================================================
 
     if (leadIsAdmin()) {
 
-        salesFilter = "";
+        /*
+         * ADMIN:
+         * Gunakan Sales yang dipilih dari dropdown.
+         */
+        window.crmSelectedSalesId =
+            salesFilter;
+
+        window.currentSalesFilter =
+            salesFilter;
 
     } else {
 
+        /*
+         * SALES:
+         * Tetap pakai Sales ID miliknya.
+         */
         const selectedSalesId =
             getSelectedSalesId();
 
@@ -927,7 +945,16 @@ function getLeadFilters() {
 
             salesFilter =
                 selectedSalesId;
+
+            if (salesInput) {
+
+                salesInput.value =
+                    selectedSalesId;
+            }
         }
+
+        window.currentSalesFilter =
+            salesFilter;
     }
 
 
