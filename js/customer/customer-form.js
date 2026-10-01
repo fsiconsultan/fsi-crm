@@ -10,6 +10,8 @@
 // 5. Update customer
 // 6. Update updated_at automatically
 // 7. Close popup
+// 8. Save Email Customer
+// 9. Load Email Customer saat Edit
 //
 // STATUS SYSTEM:
 // 1. New
@@ -23,6 +25,7 @@
 // CUSTOMER FORM:
 // - Customer Name
 // - Phone
+// - Email
 // - Business
 // - Lead Type
 // - Location
@@ -1113,6 +1116,21 @@ function openAddCustomer() {
     );
 
 
+    // ====================================================
+    // EMAIL
+    // ====================================================
+    //
+    // Pastikan field Email selalu kosong
+    // saat membuka Add Customer.
+    //
+    // ====================================================
+
+    setValue(
+        "leadEmail",
+        ""
+    );
+
+
     setModalTitle(
         "Add Customer"
     );
@@ -1246,6 +1264,16 @@ async function openEditCustomer(id) {
         setValue(
             "leadPhone",
             customer.phone
+        );
+
+
+        // =================================================
+        // EMAIL
+        // =================================================
+
+        setValue(
+            "leadEmail",
+            customer.email
         );
 
 
@@ -1478,6 +1506,16 @@ function buildPayload() {
         );
 
 
+    // =====================================================
+    // EMAIL
+    // =====================================================
+
+    const email =
+        getValue(
+            "leadEmail"
+        );
+
+
     if (!customerName) {
 
         throw new Error(
@@ -1533,6 +1571,9 @@ function buildPayload() {
 
         phone:
             phone,
+
+        email:
+            email || null,
 
         business:
             getValue(
@@ -1633,11 +1674,6 @@ function buildPayload() {
     // ====================================================
     // DEBUG
     // ====================================================
-    //
-    // Informasi ini sengaja ditampilkan di Console
-    // untuk memeriksa RLS.
-    //
-    // ====================================================
 
     console.log(
         "================================================"
@@ -1660,6 +1696,11 @@ function buildPayload() {
     console.log(
         "Sales ID:",
         payload.sales_id
+    );
+
+    console.log(
+        "Email:",
+        payload.email
     );
 
     console.log(
@@ -1915,6 +1956,11 @@ async function saveCustomer() {
             console.log(
                 "Role:",
                 profile.role || null
+            );
+
+            console.log(
+                "Email:",
+                payload.email || null
             );
 
             console.log(
