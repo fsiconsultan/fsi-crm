@@ -1,4 +1,3 @@
-```javascript
 // ============================================================
 // FSI CRM - DASHBOARD NAVIGATION MODULE
 // ============================================================
@@ -1088,4 +1087,3 @@ Object.assign(
 console.log(
     "FSI CRM: dashboard-navigation.js loaded successfully."
 );
-```
