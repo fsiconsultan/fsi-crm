@@ -2,7 +2,7 @@
 // FSI CRM - DASHBOARD NAVIGATION MODULE
 // ============================================================
 //
-// Fungsi utama:
+// Fungsi:
 // 1. Role helpers
 // 2. Page finder
 // 3. Hide all pages
@@ -16,14 +16,9 @@
 // 11. Scroll top
 //
 // IMPORTANT:
-// - Dashboard module hanya mengatur navigasi halaman.
-// - Loading data Leads ditangani oleh leads-init.js.
-// - showLeads() TIDAK memanggil loadFilterOptions()
-//   atau loadLeads() secara langsung.
-//
-// Tujuan:
-// Mencegah double loading / race condition ketika user
-// klik Sales Card atau Stat Card dari Dashboard.
+// - Module ini hanya mengatur navigasi.
+// - Loading Leads ditangani oleh leads-init.js.
+// - showLeads() TIDAK memanggil loadLeads().
 // ============================================================
 
 
@@ -34,32 +29,63 @@
 function dashboardNormalizeRole(role) {
 
     if (
-        typeof window.authNormalizeRole ===
-        "function"
+        typeof window.authNormalizeRole === "function"
     ) {
-
-        return window.authNormalizeRole(
-            role
-        );
+        return window.authNormalizeRole(role);
     }
-
 
     if (
-        typeof window.normalizeRole ===
-        "function"
+        typeof window.normalizeRole === "function"
     ) {
-
-        return window.normalizeRole(
-            role
-        );
+        return window.normalizeRole(role);
     }
 
-
-    return String(
-        role || ""
-    )
+    return String(role || "")
         .trim()
         .toLowerCase();
+}
+
+
+// ============================================================
+// GET PROFILE
+// ============================================================
+
+function dashboardGetProfile() {
+
+    // Prioritas: fungsi global yang sudah disediakan auth.js
+    if (
+        typeof window.getCurrentProfile === "function"
+    ) {
+        return window.getCurrentProfile();
+    }
+
+    if (
+        typeof window.getCurrentUserProfile === "function"
+    ) {
+        return window.getCurrentUserProfile();
+    }
+
+    // Fallback ke state global yang umum digunakan CRM
+    if (
+        window.currentProfile
+    ) {
+        return window.currentProfile;
+    }
+
+    if (
+        window.currentUserProfile
+    ) {
+        return window.currentUserProfile;
+    }
+
+    if (
+        window.FSICRM &&
+        window.FSICRM.currentProfile
+    ) {
+        return window.FSICRM.currentProfile;
+    }
+
+    return null;
 }
 
 
@@ -69,20 +95,15 @@ function dashboardNormalizeRole(role) {
 
 function dashboardIsAdmin() {
 
-    const profile =
-        dashboardGetProfile();
-
+    var profile = dashboardGetProfile();
 
     if (!profile) {
         return false;
     }
 
-
-    const role =
-        dashboardNormalizeRole(
-            profile.role
-        );
-
+    var role = dashboardNormalizeRole(
+        profile.role
+    );
 
     return (
         role === "admin" ||
@@ -94,20 +115,15 @@ function dashboardIsAdmin() {
 
 function dashboardIsSales() {
 
-    const profile =
-        dashboardGetProfile();
-
+    var profile = dashboardGetProfile();
 
     if (!profile) {
         return false;
     }
 
-
-    const role =
-        dashboardNormalizeRole(
-            profile.role
-        );
-
+    var role = dashboardNormalizeRole(
+        profile.role
+    );
 
     return (
         role === "sales" ||
@@ -120,11 +136,9 @@ function dashboardIsSales() {
 // PAGE ELEMENT FINDER
 // ============================================================
 
-function dashboardFindPage(
-    type
-) {
+function dashboardFindPage(type) {
 
-    const pageMap = {
+    var pageMap = {
 
         dashboard: [
             "view-dashboard",
@@ -156,28 +170,22 @@ function dashboardFindPage(
 
     };
 
-
-    const ids =
-        pageMap[type] || [];
-
+    var ids = pageMap[type] || [];
 
     for (
-        const id
-        of ids
+        var i = 0;
+        i < ids.length;
+        i++
     ) {
 
-        const element =
-            document.getElementById(
-                id
-            );
-
+        var element = document.getElementById(
+            ids[i]
+        );
 
         if (element) {
-
             return element;
         }
     }
-
 
     return null;
 }
@@ -189,46 +197,26 @@ function dashboardFindPage(
 
 function hideAllPages() {
 
-    const pageTypes = [
-
+    var pageTypes = [
         "dashboard",
-
         "leads",
-
         "sales",
-
         "customerProfile"
-
     ];
 
-
     pageTypes.forEach(
-        type => {
+        function (type) {
 
-            const element =
-                dashboardFindPage(
-                    type
-                );
-
+            var element = dashboardFindPage(type);
 
             if (!element) {
                 return;
             }
 
+            element.classList.add("hidden");
+            element.classList.remove("active");
 
-            element.classList.add(
-                "hidden"
-            );
-
-
-            element.classList.remove(
-                "active"
-            );
-
-
-            element.style.display =
-                "none";
-
+            element.style.display = "none";
 
             element.setAttribute(
                 "aria-hidden",
@@ -243,65 +231,32 @@ function hideAllPages() {
 // SHOW PAGE
 // ============================================================
 
-function dashboardShowPage(
-    type
-) {
+function dashboardShowPage(type) {
 
-    const page =
-        dashboardFindPage(
-            type
-        );
-
+    var page = dashboardFindPage(type);
 
     if (!page) {
 
         console.warn(
-            `FSI CRM: page "${type}" tidak ditemukan.`
+            "FSI CRM: page tidak ditemukan: " + type
         );
-
 
         return null;
     }
 
-
-    // ========================================================
-    // HIDE PAGE LAIN
-    // ========================================================
-
     hideAllPages();
 
+    page.classList.remove("hidden");
+    page.classList.add("active");
 
-    // ========================================================
-    // SHOW TARGET PAGE
-    // ========================================================
-
-    page.classList.remove(
-        "hidden"
-    );
-
-
-    page.classList.add(
-        "active"
-    );
-
-
-    page.style.display =
-        "block";
-
-
-    page.style.visibility =
-        "visible";
-
-
-    page.style.opacity =
-        "1";
-
+    page.style.display = "block";
+    page.style.visibility = "visible";
+    page.style.opacity = "1";
 
     page.setAttribute(
         "aria-hidden",
         "false"
     );
-
 
     return page;
 }
@@ -311,47 +266,30 @@ function dashboardShowPage(
 // PAGE TITLE
 // ============================================================
 
-function dashboardSetPageTitle(
-    title
-) {
+function dashboardSetPageTitle(title) {
 
     if (
-        typeof window.setPageTitle ===
-        "function"
+        typeof window.setPageTitle === "function"
     ) {
 
-        window.setPageTitle(
-            title
-        );
+        window.setPageTitle(title);
 
         return;
     }
 
-
-    const titleIds = [
-
+    var titleIds = [
         "current-page-title",
-
         "pageTitle",
-
         "page-title"
-
     ];
 
-
     titleIds.forEach(
-        id => {
+        function (id) {
 
-            const element =
-                document.getElementById(
-                    id
-                );
-
+            var element = document.getElementById(id);
 
             if (element) {
-
-                element.textContent =
-                    title;
+                element.textContent = title;
             }
         }
     );
@@ -362,37 +300,28 @@ function dashboardSetPageTitle(
 // PAGE DESCRIPTION
 // ============================================================
 
-function dashboardSetPageDescription(
-    description
-) {
+function dashboardSetPageDescription(description) {
 
-    const ids = [
-
+    var ids = [
         "current-page-description",
-
         "pageDescription",
-
         "page-description"
-
     ];
 
-
     for (
-        const id
-        of ids
+        var i = 0;
+        i < ids.length;
+        i++
     ) {
 
-        const element =
-            document.getElementById(
-                id
-            );
-
+        var element = document.getElementById(
+            ids[i]
+        );
 
         if (element) {
 
             element.textContent =
                 description || "";
-
 
             return;
         }
@@ -401,33 +330,26 @@ function dashboardSetPageDescription(
 
 
 // ============================================================
-// UPDATE ACTIVE NAVIGATION
+// ACTIVE NAVIGATION
 // ============================================================
 
-function dashboardSetActiveNav(
-    target
-) {
+function dashboardSetActiveNav(target) {
 
-    const links =
-        document.querySelectorAll(
-            [
-                ".nav-link",
-                ".nav-dropdown-item",
-                "[data-page]",
-                "[data-view]",
-                "[data-nav]",
-                "[data-crm-nav]"
-            ].join(",")
-        );
-
+    var links = document.querySelectorAll(
+        [
+            ".nav-link",
+            ".nav-dropdown-item",
+            "[data-page]",
+            "[data-view]",
+            "[data-nav]",
+            "[data-crm-nav]"
+        ].join(",")
+    );
 
     links.forEach(
-        link => {
+        function (link) {
 
-            link.classList.remove(
-                "active"
-            );
-
+            link.classList.remove("active");
 
             link.removeAttribute(
                 "aria-current"
@@ -435,34 +357,24 @@ function dashboardSetActiveNav(
         }
     );
 
-
-    const selectors = [
-
-        `[data-page="${target}"]`,
-
-        `[data-view="${target}"]`,
-
-        `[data-nav="${target}"]`,
-
-        `[data-crm-nav="${target}"]`
-
+    var selectors = [
+        '[data-page="' + target + '"]',
+        '[data-view="' + target + '"]',
+        '[data-nav="' + target + '"]',
+        '[data-crm-nav="' + target + '"]'
     ];
 
-
     selectors.forEach(
-        selector => {
+        function (selector) {
 
             document
-                .querySelectorAll(
-                    selector
-                )
+                .querySelectorAll(selector)
                 .forEach(
-                    element => {
+                    function (element) {
 
                         element.classList.add(
                             "active"
                         );
-
 
                         element.setAttribute(
                             "aria-current",
@@ -481,9 +393,7 @@ function dashboardSetActiveNav(
 
 async function showDashboard() {
 
-    const profile =
-        dashboardGetProfile();
-
+    var profile = dashboardGetProfile();
 
     if (!profile) {
 
@@ -491,96 +401,75 @@ async function showDashboard() {
             "FSI CRM: profile belum siap. Dashboard belum dapat dimuat."
         );
 
-
         return false;
     }
 
-
-    // ========================================================
-    // OPEN DASHBOARD PAGE
-    // ========================================================
-
-    const page =
-        dashboardShowPage(
-            "dashboard"
-        );
-
+    var page = dashboardShowPage(
+        "dashboard"
+    );
 
     if (!page) {
-
         return false;
     }
-
-
-    // ========================================================
-    // TITLE
-    // ========================================================
 
     dashboardSetPageTitle(
         "Dashboard"
     );
 
+    if (dashboardIsAdmin()) {
 
-    // ========================================================
-    // DESCRIPTION
-    // ========================================================
+        dashboardSetPageDescription(
+            "Overview seluruh aktivitas dan pipeline sales."
+        );
 
-    dashboardSetPageDescription(
+    } else {
 
-        dashboardIsAdmin()
-
-            ? "Overview seluruh aktivitas dan pipeline sales."
-
-            : "Overview aktivitas dan pipeline customer Anda."
-
-    );
-
-
-    // ========================================================
-    // ACTIVE NAV
-    // ========================================================
+        dashboardSetPageDescription(
+            "Overview aktivitas dan pipeline customer Anda."
+        );
+    }
 
     dashboardSetActiveNav(
         "dashboard"
     );
 
-
-    // ========================================================
-    // STAT CARD BINDING
-    // ========================================================
-
     if (
-        typeof dashboardBindStatCardClicks ===
+        typeof window.dashboardBindStatCardClicks ===
         "function"
     ) {
 
-        dashboardBindStatCardClicks();
+        try {
+
+            window.dashboardBindStatCardClicks();
+
+        } catch (error) {
+
+            console.error(
+                "FSI CRM: gagal bind Dashboard Stat Card:",
+                error
+            );
+        }
     }
 
+    if (
+        typeof window.updateDashboard ===
+        "function"
+    ) {
 
-    // ========================================================
-    // UPDATE DASHBOARD
-    // ========================================================
+        try {
 
-    try {
+            await window.updateDashboard();
 
-        await updateDashboard();
+        } catch (error) {
 
-    } catch (error) {
-
-        console.error(
-            "FSI CRM: update Dashboard error:",
-            error
-        );
+            console.error(
+                "FSI CRM: update Dashboard error:",
+                error
+            );
+        }
     }
-
-
-    // ========================================================
-    // SCROLL TOP
-    // ========================================================
 
     dashboardScrollTop();
-
 
     return true;
 }
@@ -591,30 +480,15 @@ async function showDashboard() {
 // ============================================================
 //
 // IMPORTANT:
+// Tidak memanggil loadLeads().
+// Tidak memanggil loadFilterOptions().
 //
-// Fungsi ini HANYA:
-// - membuka halaman Leads
-// - mengatur title
-// - mengatur description
-// - mengatur active navigation
-//
-// Jangan loadFilterOptions() di sini.
-// Jangan loadLeads() di sini.
-//
-// Leads module / leads-init.js yang bertanggung jawab
-// untuk memproses sessionStorage filter dan mengambil data.
-//
+// leads-init.js yang menangani loading data.
 // ============================================================
 
 async function showLeads() {
 
-    const profile =
-        dashboardGetProfile();
-
-
-    // ========================================================
-    // PROFILE CHECK
-    // ========================================================
+    var profile = dashboardGetProfile();
 
     if (!profile) {
 
@@ -622,20 +496,12 @@ async function showLeads() {
             "FSI CRM: profile belum siap, Leads tidak dibuka."
         );
 
-
         return false;
     }
 
-
-    // ========================================================
-    // OPEN LEADS PAGE
-    // ========================================================
-
-    const page =
-        dashboardShowPage(
-            "leads"
-        );
-
+    var page = dashboardShowPage(
+        "leads"
+    );
 
     if (!page) {
 
@@ -643,91 +509,53 @@ async function showLeads() {
             "FSI CRM: halaman Leads tidak ditemukan."
         );
 
-
         return false;
     }
 
+    var isAdmin = dashboardIsAdmin();
 
-    // ========================================================
-    // ROLE
-    // ========================================================
+    if (isAdmin) {
 
-    const isAdmin =
-        dashboardIsAdmin();
+        dashboardSetPageTitle(
+            "All Leads"
+        );
 
+        dashboardSetPageDescription(
+            "Kelola seluruh database customer dan lead."
+        );
 
-    // ========================================================
-    // PAGE TITLE
-    // ========================================================
+    } else {
 
-    dashboardSetPageTitle(
+        dashboardSetPageTitle(
+            "My Leads"
+        );
 
-        isAdmin
-            ? "All Leads"
-            : "My Leads"
-
-    );
-
-
-    // ========================================================
-    // PAGE DESCRIPTION
-    // ========================================================
-
-    dashboardSetPageDescription(
-
-        isAdmin
-
-            ? "Kelola seluruh database customer dan lead."
-
-            : "Kelola database customer dan lead Anda."
-
-    );
-
-
-    // ========================================================
-    // ACTIVE NAVIGATION
-    // ========================================================
+        dashboardSetPageDescription(
+            "Kelola database customer dan lead Anda."
+        );
+    }
 
     dashboardSetActiveNav(
         "leads"
     );
 
-
-    // ========================================================
-    // NOTIFY LEADS MODULE
-    // ========================================================
-    //
-    // Leads-init.js dapat mendengar event ini jika diperlukan.
-    //
-    // Event ini TIDAK memanggil loadLeads secara langsung.
-    //
-    // ========================================================
-
+    // Beri tahu leads-init.js bahwa halaman dibuka.
     document.dispatchEvent(
-
         new CustomEvent(
             "fsi:leads-page-opened",
             {
                 detail: {
-                    source: "dashboard"
+                    source: "dashboard-navigation"
                 }
             }
         )
-
     );
 
-
-    // ========================================================
-    // SCROLL TOP
-    // ========================================================
-
     dashboardScrollTop();
-
 
     console.log(
         "FSI CRM: Leads page opened successfully."
     );
-
 
     return true;
 }
@@ -739,13 +567,7 @@ async function showLeads() {
 
 async function showSales() {
 
-    // ========================================================
-    // ADMIN CHECK
-    // ========================================================
-
-    if (
-        !dashboardIsAdmin()
-    ) {
+    if (!dashboardIsAdmin()) {
 
         if (
             typeof window.showToast ===
@@ -764,57 +586,28 @@ async function showSales() {
             );
         }
 
-
         return false;
     }
 
-
-    // ========================================================
-    // OPEN SALES PAGE
-    // ========================================================
-
-    const page =
-        dashboardShowPage(
-            "sales"
-        );
-
+    var page = dashboardShowPage(
+        "sales"
+    );
 
     if (!page) {
-
         return false;
     }
-
-
-    // ========================================================
-    // TITLE
-    // ========================================================
 
     dashboardSetPageTitle(
         "Manage Sales"
     );
 
-
-    // ========================================================
-    // DESCRIPTION
-    // ========================================================
-
     dashboardSetPageDescription(
         "Kelola user Sales, status akun, dan akses tim."
     );
 
-
-    // ========================================================
-    // ACTIVE NAV
-    // ========================================================
-
     dashboardSetActiveNav(
         "sales"
     );
-
-
-    // ========================================================
-    // LOAD SALES USERS
-    // ========================================================
 
     if (
         typeof window.loadSalesUsers ===
@@ -834,13 +627,7 @@ async function showSales() {
         }
     }
 
-
-    // ========================================================
-    // SCROLL TOP
-    // ========================================================
-
     dashboardScrollTop();
-
 
     return true;
 }
@@ -850,13 +637,9 @@ async function showSales() {
 // SHOW CUSTOMER PROFILE
 // ============================================================
 
-async function showCustomerProfile(
-    leadId
-) {
+async function showCustomerProfile(leadId) {
 
-    const profile =
-        dashboardGetProfile();
-
+    var profile = dashboardGetProfile();
 
     if (!profile) {
 
@@ -864,57 +647,28 @@ async function showCustomerProfile(
             "FSI CRM: profile belum siap."
         );
 
-
         return false;
     }
 
-
-    // ========================================================
-    // OPEN PROFILE PAGE
-    // ========================================================
-
-    const page =
-        dashboardShowPage(
-            "customerProfile"
-        );
-
+    var page = dashboardShowPage(
+        "customerProfile"
+    );
 
     if (!page) {
-
         return false;
     }
-
-
-    // ========================================================
-    // TITLE
-    // ========================================================
 
     dashboardSetPageTitle(
         "Customer Profile"
     );
 
-
-    // ========================================================
-    // DESCRIPTION
-    // ========================================================
-
     dashboardSetPageDescription(
         "Detail customer, pipeline, aktivitas, dan follow-up."
     );
 
-
-    // ========================================================
-    // ACTIVE NAV
-    // ========================================================
-
     dashboardSetActiveNav(
         "customerProfile"
     );
-
-
-    // ========================================================
-    // OPEN CUSTOMER PROFILE DATA
-    // ========================================================
 
     if (
         leadId &&
@@ -937,13 +691,7 @@ async function showCustomerProfile(
         }
     }
 
-
-    // ========================================================
-    // SCROLL TOP
-    // ========================================================
-
     dashboardScrollTop();
-
 
     return true;
 }
@@ -958,11 +706,8 @@ function dashboardScrollTop() {
     try {
 
         window.scrollTo({
-
             top: 0,
-
             behavior: "smooth"
-
         });
 
     } catch (error) {
@@ -982,100 +727,105 @@ function dashboardScrollTop() {
 window.dashboardNormalizeRole =
     dashboardNormalizeRole;
 
+window.dashboardGetProfile =
+    dashboardGetProfile;
 
 window.dashboardIsAdmin =
     dashboardIsAdmin;
 
-
 window.dashboardIsSales =
     dashboardIsSales;
-
 
 window.dashboardFindPage =
     dashboardFindPage;
 
-
 window.hideAllPages =
     hideAllPages;
-
 
 window.dashboardShowPage =
     dashboardShowPage;
 
-
 window.dashboardSetPageTitle =
     dashboardSetPageTitle;
-
 
 window.dashboardSetPageDescription =
     dashboardSetPageDescription;
 
-
 window.dashboardSetActiveNav =
     dashboardSetActiveNav;
-
 
 window.showDashboard =
     showDashboard;
 
-
 window.showLeads =
     showLeads;
-
 
 window.showSales =
     showSales;
 
-
 window.showCustomerProfile =
     showCustomerProfile;
-
 
 window.dashboardScrollTop =
     dashboardScrollTop;
 
 
 // ============================================================
-// FSI DASHBOARD NAMESPACE
+// FSI CRM NAMESPACE
 // ============================================================
 
 window.FSIDashboard =
     window.FSIDashboard ||
     {};
 
-
 Object.assign(
     window.FSIDashboard,
     {
 
-        dashboardNormalizeRole,
+        dashboardNormalizeRole:
+            dashboardNormalizeRole,
 
-        dashboardIsAdmin,
+        dashboardGetProfile:
+            dashboardGetProfile,
 
-        dashboardIsSales,
+        dashboardIsAdmin:
+            dashboardIsAdmin,
 
-        dashboardFindPage,
+        dashboardIsSales:
+            dashboardIsSales,
 
-        hideAllPages,
+        dashboardFindPage:
+            dashboardFindPage,
 
-        dashboardShowPage,
+        hideAllPages:
+            hideAllPages,
 
-        dashboardSetPageTitle,
+        dashboardShowPage:
+            dashboardShowPage,
 
-        dashboardSetPageDescription,
+        dashboardSetPageTitle:
+            dashboardSetPageTitle,
 
-        dashboardSetActiveNav,
+        dashboardSetPageDescription:
+            dashboardSetPageDescription,
 
-        showDashboard,
+        dashboardSetActiveNav:
+            dashboardSetActiveNav,
 
-        showLeads,
+        showDashboard:
+            showDashboard,
 
-        showSales,
+        showLeads:
+            showLeads,
 
-        showCustomerProfile,
+        showSales:
+            showSales,
 
-        dashboardScrollTop
+        showCustomerProfile:
+            showCustomerProfile,
 
+        dashboardScrollTop:
+            dashboardScrollTop
     }
 );
 
