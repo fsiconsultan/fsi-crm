@@ -1,7 +1,7 @@
 // ============================================================
 // FSI CRM - CUSTOMER FORM MODULE
 // ============================================================
-
+//
 // Fungsi:
 // 1. Add Customer popup
 // 2. Edit Customer popup
@@ -20,15 +20,6 @@
 // 6. Deal
 // 7. No Deal
 //
-// TIDAK menangani:
-// - Customer Profile
-// - Delete
-// - Search
-// - Filter
-// - Pagination
-// - Dashboard
-// - Manage Sales
-//
 // CUSTOMER FORM:
 // - Customer Name
 // - Phone
@@ -43,24 +34,14 @@
 // - Assign Sales
 // - Notes
 //
-// FIELD LAMA YANG TIDAK LAGI DIGUNAKAN DI FORM:
-// - Follow Up Date
-// - Last Follow Up
-// - SPK / Deposit Date
-// - Closing
-//
-// CATATAN:
-// Field database lama tetap ada.
-// File ini hanya tidak lagi membaca / menulis field tersebut
-// dari Add / Edit Customer Form.
-//
-// LEAD TYPE:
-// - Customer
-// - Partner
-//
 // UPDATED_AT:
 // - Customer baru → updated_at = waktu dibuat
 // - Edit Customer → updated_at = waktu update
+//
+// IMPORTANT RLS:
+// - Admin → sales_id berasal dari Sales yang dipilih
+// - Sales → sales_id HARUS menggunakan sales_users.id
+// - BUKAN auth.users.id
 // ============================================================
 
 (function () {
@@ -118,12 +99,26 @@ function getProfile() {
 
 
 // ========================================================
+// CURRENT USER
+// ========================================================
+
+function getCurrentUser() {
+
+    return window.currentUser || null;
+
+}
+
+
+
+// ========================================================
 // ROLE
 // ========================================================
 
 function isAdmin() {
 
-    const profile = getProfile();
+    const profile =
+        getProfile();
+
 
     if (!profile) {
 
@@ -131,10 +126,12 @@ function isAdmin() {
 
     }
 
+
     const role =
         String(profile.role || "")
             .trim()
             .toLowerCase();
+
 
     return (
         role === "admin" ||
@@ -148,7 +145,9 @@ function isAdmin() {
 
 function isSales() {
 
-    const profile = getProfile();
+    const profile =
+        getProfile();
+
 
     if (!profile) {
 
@@ -156,10 +155,12 @@ function isSales() {
 
     }
 
+
     const role =
         String(profile.role || "")
             .trim()
             .toLowerCase();
+
 
     return (
         role === "sales" ||
@@ -181,7 +182,8 @@ function normalizeStatus(status) {
 
 
     if (
-        typeof window.normalizeLeadStatus === "function"
+        typeof window.normalizeLeadStatus ===
+        "function"
     ) {
 
         return window.normalizeLeadStatus(
@@ -205,7 +207,8 @@ function showToast(message, type) {
 
     if (
         window.FSIHelpers &&
-        typeof window.FSIHelpers.showToast === "function"
+        typeof window.FSIHelpers.showToast ===
+        "function"
     ) {
 
         window.FSIHelpers.showToast(
@@ -218,7 +221,8 @@ function showToast(message, type) {
 
 
     if (
-        typeof window.showToast === "function"
+        typeof window.showToast ===
+        "function"
     ) {
 
         window.showToast(
@@ -247,7 +251,8 @@ function showLoading(message) {
 
     if (
         window.FSIHelpers &&
-        typeof window.FSIHelpers.showLoading === "function"
+        typeof window.FSIHelpers.showLoading ===
+        "function"
     ) {
 
         window.FSIHelpers.showLoading(
@@ -259,7 +264,8 @@ function showLoading(message) {
 
 
     if (
-        typeof window.showLoading === "function"
+        typeof window.showLoading ===
+        "function"
     ) {
 
         window.showLoading(
@@ -276,7 +282,8 @@ function hideLoading() {
 
     if (
         window.FSIHelpers &&
-        typeof window.FSIHelpers.hideLoading === "function"
+        typeof window.FSIHelpers.hideLoading ===
+        "function"
     ) {
 
         window.FSIHelpers.hideLoading();
@@ -286,7 +293,8 @@ function hideLoading() {
 
 
     if (
-        typeof window.hideLoading === "function"
+        typeof window.hideLoading ===
+        "function"
     ) {
 
         window.hideLoading();
@@ -311,7 +319,8 @@ function getModal() {
 
 function openModal() {
 
-    const modal = getModal();
+    const modal =
+        getModal();
 
 
     if (!modal) {
@@ -350,7 +359,8 @@ function openModal() {
 
     if (
         window.lucide &&
-        typeof window.lucide.createIcons === "function"
+        typeof window.lucide.createIcons ===
+        "function"
     ) {
 
         window.lucide.createIcons();
@@ -366,11 +376,14 @@ function openModal() {
 
 function closeModal() {
 
-    const modal = getModal();
+    const modal =
+        getModal();
 
 
     if (!modal) {
+
         return;
+
     }
 
 
@@ -419,7 +432,8 @@ function getForm() {
 
 function resetForm() {
 
-    const form = getForm();
+    const form =
+        getForm();
 
 
     if (form) {
@@ -453,7 +467,9 @@ function setValue(id, value) {
 
 
     if (!element) {
+
         return;
+
     }
 
 
@@ -504,7 +520,9 @@ function getValue(id) {
 
 
     if (!element) {
+
         return "";
+
     }
 
 
@@ -519,35 +537,6 @@ function getValue(id) {
 // ========================================================
 // BUSINESS OPTIONS
 // ========================================================
-
-// Business mengikuti Lead Type.
-//
-// Customer:
-// - Residential
-// - Villa
-// - Hotel
-// - Restaurant
-// - Office
-// - Factory
-// - Commercial
-// - EPC
-// - Other
-//
-// Partner:
-// - Real Estate
-// - Kontraktor
-// - Arsitek
-// - Developer
-// - Interior
-// - Property Agent
-// - Villa Management
-// - Hotel / HOREKA
-// - Electrical Contractor
-// - Supplier
-// - EPC
-// - Other
-// ========================================================
-
 
 const CUSTOMER_BUSINESS_OPTIONS = [
 
@@ -613,7 +602,9 @@ function setupBusinessOptions(
 
 
     if (!select) {
+
         return;
+
     }
 
 
@@ -622,7 +613,8 @@ function setupBusinessOptions(
             leadType || "Customer"
         )
             .trim()
-            .toLowerCase() === "partner"
+            .toLowerCase() ===
+        "partner"
             ? "Partner"
             : "Customer";
 
@@ -641,15 +633,13 @@ function setupBusinessOptions(
             : CUSTOMER_BUSINESS_OPTIONS;
 
 
-    // Hapus semua option lama.
-
     select.innerHTML = "";
 
 
-    // Placeholder.
-
     const placeholder =
-        document.createElement("option");
+        document.createElement(
+            "option"
+        );
 
 
     placeholder.value = "";
@@ -662,8 +652,6 @@ function setupBusinessOptions(
         placeholder
     );
 
-
-    // Tambahkan Business sesuai Lead Type.
 
     options.forEach(
         function (business) {
@@ -690,13 +678,7 @@ function setupBusinessOptions(
     );
 
 
-    // ====================================================
-    // COMPATIBILITY
-    // ====================================================
-    // Kalau ada data Business lama yang tidak ada
-    // di daftar baru, jangan sampai data lama hilang
-    // ketika Edit Customer.
-    // ====================================================
+    // Compatibility dengan data lama.
 
     if (
         currentValue &&
@@ -740,7 +722,9 @@ function setupBusinessOptions(
 function dateValue(value) {
 
     if (!value) {
+
         return "";
+
     }
 
 
@@ -771,7 +755,9 @@ function dateValue(value) {
 function setModalTitle(title) {
 
     const titleElement =
-        getElement("lead-modal-title");
+        getElement(
+            "lead-modal-title"
+        );
 
 
     if (titleElement) {
@@ -782,11 +768,10 @@ function setModalTitle(title) {
     }
 
 
-    // Compatibility dengan ID
-    // yang mungkin digunakan JS lama.
-
     const alternateTitle =
-        getElement("leadModalTitle");
+        getElement(
+            "leadModalTitle"
+        );
 
 
     if (alternateTitle) {
@@ -800,10 +785,14 @@ function setModalTitle(title) {
 
 
 
-function setModalDescription(description) {
+function setModalDescription(
+    description
+) {
 
     const element =
-        getElement("lead-modal-description");
+        getElement(
+            "lead-modal-description"
+        );
 
 
     if (element) {
@@ -820,7 +809,9 @@ function setModalDescription(description) {
 function setSaveButtonText(text) {
 
     const element =
-        getElement("lead-save-text");
+        getElement(
+            "lead-save-text"
+        );
 
 
     if (element) {
@@ -834,16 +825,22 @@ function setSaveButtonText(text) {
 
 
     const button =
-        getElement("lead-save-button");
+        getElement(
+            "lead-save-button"
+        );
 
 
     if (!button) {
+
         return;
+
     }
 
 
     const span =
-        button.querySelector("span");
+        button.querySelector(
+            "span"
+        );
 
 
     if (span) {
@@ -868,11 +865,15 @@ function setupSalesAssignment() {
 
 
     const group =
-        getElement("lead-sales-group");
+        getElement(
+            "lead-sales-group"
+        );
 
 
     if (!select) {
+
         return;
+
     }
 
 
@@ -881,9 +882,15 @@ function setupSalesAssignment() {
 
 
     if (!profile) {
+
         return;
+
     }
 
+
+    // ====================================================
+    // ADMIN
+    // ====================================================
 
     if (isAdmin()) {
 
@@ -900,10 +907,15 @@ function setupSalesAssignment() {
 
         select.disabled = false;
 
+
         return;
 
     }
 
+
+    // ====================================================
+    // SALES
+    // ====================================================
 
     if (isSales()) {
 
@@ -942,26 +954,33 @@ function findLocalCustomer(id) {
 
 
     if (!customerId) {
+
         return null;
+
     }
 
 
     const data =
-        Array.isArray(window.leadsData)
+        Array.isArray(
+            window.leadsData
+        )
             ? window.leadsData
             : [];
 
 
     return (
-        data.find(function (item) {
+        data.find(
+            function (item) {
 
-            return (
-                String(
-                    item?.id || ""
-                ).trim() === customerId
-            );
+                return (
+                    String(
+                        item?.id || ""
+                    ).trim() ===
+                    customerId
+                );
 
-        }) || null
+            }
+        ) || null
     );
 
 }
@@ -987,9 +1006,6 @@ async function loadCustomer(id) {
     }
 
 
-    // Coba data yang sudah ada
-    // terlebih dahulu.
-
     const localCustomer =
         findLocalCustomer(
             customerId
@@ -1002,9 +1018,6 @@ async function loadCustomer(id) {
 
     }
 
-
-    // Kalau tidak ada di halaman
-    // sekarang, ambil dari Supabase.
 
     const supabase =
         getSupabase();
@@ -1023,7 +1036,10 @@ async function loadCustomer(id) {
         await supabase
             .from("leads")
             .select("*")
-            .eq("id", customerId)
+            .eq(
+                "id",
+                customerId
+            )
             .single();
 
 
@@ -1077,20 +1093,11 @@ function openAddCustomer() {
     resetForm();
 
 
-    // Pastikan Lead Type awal selalu Customer.
-
     setValue(
         "leadType",
         "Customer"
     );
 
-
-    // ====================================================
-    // BUSINESS
-    // ====================================================
-    // Saat Add Customer, Business otomatis menggunakan
-    // daftar Business untuk Lead Type Customer.
-    // ====================================================
 
     setupBusinessOptions(
         "Customer",
@@ -1098,11 +1105,11 @@ function openAddCustomer() {
     );
 
 
-    // Pastikan status awal selalu New.
-
     setValue(
         "leadStatus",
-        normalizeStatus("New")
+        normalizeStatus(
+            "New"
+        )
     );
 
 
@@ -1125,25 +1132,30 @@ function openAddCustomer() {
 
 
     if (!openModal()) {
+
         return;
+
     }
 
 
-    setTimeout(function () {
+    setTimeout(
+        function () {
 
-        const input =
-            getElement(
-                "leadCustomerName"
-            );
+            const input =
+                getElement(
+                    "leadCustomerName"
+                );
 
 
-        if (input) {
+            if (input) {
 
-            input.focus();
+                input.focus();
 
-        }
+            }
 
-    }, 100);
+        },
+        100
+    );
 
 }
 
@@ -1242,7 +1254,8 @@ async function openEditCustomer(id) {
         // =================================================
 
         const customerLeadType =
-            customer.lead_type || "Customer";
+            customer.lead_type ||
+            "Customer";
 
 
         setValue(
@@ -1253,10 +1266,6 @@ async function openEditCustomer(id) {
 
         // =================================================
         // BUSINESS
-        // =================================================
-        // Business harus mengikuti Lead Type yang tersimpan.
-        // selectedBusiness digunakan agar Business lama
-        // tetap terpilih saat Edit.
         // =================================================
 
         setupBusinessOptions(
@@ -1278,16 +1287,11 @@ async function openEditCustomer(id) {
         // =================================================
         // STATUS
         // =================================================
-        // Mengikuti 7 status baru dari config.js.
-        //
-        // Jika database masih memiliki status lama,
-        // normalizeLeadStatus() akan mengubah tampilan
-        // ke status baru tanpa melakukan migration DB.
-        // =================================================
 
         const normalizedStatus =
             normalizeStatus(
-                customer.status || "New"
+                customer.status ||
+                "New"
             );
 
 
@@ -1298,11 +1302,7 @@ async function openEditCustomer(id) {
 
 
         // =================================================
-        // STATUS INPUT DATE
-        // =================================================
-        // Manual date:
-        // Menyimpan tanggal customer masuk
-        // ke status yang sedang dipilih.
+        // STATUS STARTED DATE
         // =================================================
 
         setValue(
@@ -1395,28 +1395,34 @@ async function openEditCustomer(id) {
 
 
         if (!openModal()) {
+
             return;
+
         }
 
 
-        setTimeout(function () {
+        setTimeout(
+            function () {
 
-            const input =
-                getElement(
-                    "leadCustomerName"
-                );
-
-
-            if (input) {
-
-                input.focus();
-
-            }
-
-        }, 100);
+                const input =
+                    getElement(
+                        "leadCustomerName"
+                    );
 
 
-    } catch (error) {
+                if (input) {
+
+                    input.focus();
+
+                }
+
+            },
+            100
+        );
+
+
+    }
+    catch (error) {
 
         console.error(
             "FSI CRM: Open edit customer error:",
@@ -1430,8 +1436,8 @@ async function openEditCustomer(id) {
             "error"
         );
 
-
-    } finally {
+    }
+    finally {
 
         hideLoading();
 
@@ -1544,54 +1550,25 @@ function buildPayload() {
         status:
             normalizedStatus,
 
-
-        // =================================================
-        // STATUS INPUT DATE
-        // =================================================
-        // Manual:
-        // User menentukan sendiri tanggal
-        // customer masuk ke status tersebut.
-        // =================================================
-
         status_started_at:
             getValue(
                 "leadStatusStartedAt"
             ) || null,
-
-
-        // =================================================
-        // APPOINTMENT
-        // =================================================
 
         appointment:
             getValue(
                 "leadAppointment"
             ) || null,
 
-
-        // =================================================
-        // SITE SURVEY
-        // =================================================
-
         site_survey:
             getValue(
                 "leadSiteSurvey"
             ) || null,
 
-
-        // =================================================
-        // QUOTATION
-        // =================================================
-
         quotation:
             getValue(
                 "leadQuotation"
             ) || null,
-
-
-        // =================================================
-        // NOTES
-        // =================================================
 
         notes:
             getValue(
@@ -1601,16 +1578,31 @@ function buildPayload() {
     };
 
 
-    // ----------------------------------------------------
+    // ====================================================
     // SALES ASSIGNMENT
-    // ----------------------------------------------------
+    // ====================================================
+    //
+    // ADMIN:
+    //   Ambil Sales yang dipilih dari form.
+    //
+    // SALES:
+    //   WAJIB menggunakan profile.id.
+    //
+    // profile.id = sales_users.id
+    //
+    // BUKAN:
+    // profile."auth_user-id"
+    // auth.users.id
+    //
+    // ====================================================
 
     if (isAdmin()) {
 
         const selectedSales =
             getValue(
                 "leadSales"
-            ) || getValue(
+            ) ||
+            getValue(
                 "leadSalesAssign"
             );
 
@@ -1623,10 +1615,66 @@ function buildPayload() {
 
     if (isSales()) {
 
+        if (!profile.id) {
+
+            throw new Error(
+                "Sales profile ID tidak ditemukan."
+            );
+
+        }
+
+
         payload.sales_id =
-            profile.id || null;
+            profile.id;
 
     }
+
+
+    // ====================================================
+    // DEBUG
+    // ====================================================
+    //
+    // Informasi ini sengaja ditampilkan di Console
+    // untuk memeriksa RLS.
+    //
+    // ====================================================
+
+    console.log(
+        "================================================"
+    );
+
+    console.log(
+        "FSI CRM - SAVE CUSTOMER DEBUG"
+    );
+
+    console.log(
+        "Role:",
+        profile.role
+    );
+
+    console.log(
+        "Profile ID:",
+        profile.id
+    );
+
+    console.log(
+        "Sales ID:",
+        payload.sales_id
+    );
+
+    console.log(
+        "Auth User:",
+        getCurrentUser()?.id || null
+    );
+
+    console.log(
+        "Payload:",
+        payload
+    );
+
+    console.log(
+        "================================================"
+    );
 
 
     return payload;
@@ -1642,7 +1690,9 @@ function buildPayload() {
 async function saveCustomer() {
 
     if (customerSaving) {
+
         return;
+
     }
 
 
@@ -1683,9 +1733,17 @@ async function saveCustomer() {
         customerSaving = true;
 
 
+        // =================================================
+        // BUILD PAYLOAD
+        // =================================================
+
         const payload =
             buildPayload();
 
+
+        // =================================================
+        // CUSTOMER ID
+        // =================================================
 
         const customerId =
             String(
@@ -1694,6 +1752,38 @@ async function saveCustomer() {
                 ""
             ).trim();
 
+
+        // =================================================
+        // VALIDATE SALES ID
+        // =================================================
+        //
+        // Untuk Sales:
+        // sales_id WAJIB ada.
+        //
+        // Ini penting karena policy RLS:
+        //
+        // sales_id =
+        // sales_users.id
+        //
+        // berdasarkan auth.uid().
+        //
+        // =================================================
+
+        if (
+            isSales() &&
+            !payload.sales_id
+        ) {
+
+            throw new Error(
+                "Sales ID tidak ditemukan. Silakan logout dan login kembali."
+            );
+
+        }
+
+
+        // =================================================
+        // SAVE BUTTON
+        // =================================================
 
         const saveButton =
             getElement(
@@ -1708,6 +1798,10 @@ async function saveCustomer() {
 
         }
 
+
+        // =================================================
+        // LOADING
+        // =================================================
 
         showLoading(
             customerId
@@ -1726,26 +1820,17 @@ async function saveCustomer() {
                 profile.id || null;
 
 
-            // =================================================
-            // IMPORTANT:
-            // UPDATE LAST UPDATED TIME
-            // =================================================
-            //
-            // Every time the customer is edited,
-            // updated_at is changed to the current
-            // date and time.
-            //
-            // This value is used by Customer Profile
-            // to calculate:
-            //
-            // "0 DAYS SINCE UPDATE"
-            // "1 DAY SINCE UPDATE"
-            // "3 DAYS SINCE UPDATE"
-            //
-            // =================================================
-
             payload.updated_at =
                 new Date().toISOString();
+
+
+            console.log(
+                "FSI CRM: Updating lead:",
+                {
+                    id: customerId,
+                    payload: payload
+                }
+            );
 
 
             const result =
@@ -1759,6 +1844,12 @@ async function saveCustomer() {
 
 
             if (result.error) {
+
+                console.error(
+                    "FSI CRM: UPDATE ERROR:",
+                    result.error
+                );
+
 
                 throw result.error;
 
@@ -1787,15 +1878,6 @@ async function saveCustomer() {
                 profile.id || null;
 
 
-            // =================================================
-            // CREATED / LAST UPDATED
-            // =================================================
-            //
-            // New customer starts with the same
-            // created and updated timestamp.
-            //
-            // =================================================
-
             const now =
                 new Date().toISOString();
 
@@ -1808,15 +1890,93 @@ async function saveCustomer() {
                 now;
 
 
+            // =================================================
+            // FINAL INSERT DEBUG
+            // =================================================
+
+            console.log(
+                "================================================"
+            );
+
+            console.log(
+                "FSI CRM - INSERT LEAD"
+            );
+
+            console.log(
+                "Auth User ID:",
+                getCurrentUser()?.id || null
+            );
+
+            console.log(
+                "Profile ID:",
+                profile.id || null
+            );
+
+            console.log(
+                "Role:",
+                profile.role || null
+            );
+
+            console.log(
+                "Payload.sales_id:",
+                payload.sales_id || null
+            );
+
+            console.log(
+                "Full INSERT Payload:",
+                payload
+            );
+
+            console.log(
+                "================================================"
+            );
+
+
+            // =================================================
+            // IMPORTANT
+            // =================================================
+            //
+            // Sengaja TIDAK menggunakan:
+            //
+            // .select("*")
+            // .single()
+            //
+            // supaya kita menguji INSERT RLS
+            // secara langsung.
+            //
+            // =================================================
+
             const result =
                 await supabase
                     .from("leads")
-                    .insert(payload)
-                    .select("*")
-                    .single();
+                    .insert(payload);
 
 
             if (result.error) {
+
+                console.error(
+                    "FSI CRM: INSERT ERROR:",
+                    result.error
+                );
+
+
+                console.error(
+                    "FSI CRM: INSERT ERROR DETAILS:",
+                    {
+                        code:
+                            result.error.code,
+
+                        message:
+                            result.error.message,
+
+                        details:
+                            result.error.details,
+
+                        hint:
+                            result.error.hint
+                    }
+                );
+
 
                 throw result.error;
 
@@ -1832,7 +1992,7 @@ async function saveCustomer() {
 
 
         // =================================================
-        // CLOSE
+        // CLOSE MODAL
         // =================================================
 
         closeModal();
@@ -1841,17 +2001,11 @@ async function saveCustomer() {
         // =================================================
         // REFRESH CUSTOMER PROFILE
         // =================================================
-        //
-        // If the user is currently viewing a Customer
-        // Profile, reload it so the new updated_at
-        // immediately appears.
-        //
-        // =================================================
 
         if (
             customerId &&
             typeof window.crmRefreshCustomerProfile ===
-                "function"
+            "function"
         ) {
 
             await window.crmRefreshCustomerProfile();
@@ -1864,7 +2018,8 @@ async function saveCustomer() {
         // =================================================
 
         if (
-            typeof window.loadLeads === "function"
+            typeof window.loadLeads ===
+            "function"
         ) {
 
             await window.loadLeads(
@@ -1874,7 +2029,8 @@ async function saveCustomer() {
         }
         else if (
             window.FSILeads &&
-            typeof window.FSILeads.loadLeads === "function"
+            typeof window.FSILeads.loadLeads ===
+            "function"
         ) {
 
             await window.FSILeads.loadLeads(
@@ -1890,14 +2046,16 @@ async function saveCustomer() {
 
         if (
             window.FSIDashboard &&
-            typeof window.FSIDashboard.loadDashboard === "function"
+            typeof window.FSIDashboard.loadDashboard ===
+            "function"
         ) {
 
             await window.FSIDashboard.loadDashboard();
 
         }
         else if (
-            typeof window.loadDashboard === "function"
+            typeof window.loadDashboard ===
+            "function"
         ) {
 
             await window.loadDashboard();
@@ -1913,7 +2071,6 @@ async function saveCustomer() {
             new CustomEvent(
                 "fsi:lead-changed",
                 {
-
                     detail: {
 
                         action:
@@ -1922,16 +2079,17 @@ async function saveCustomer() {
                                 : "insert",
 
                         id:
-                            customerId || null
+                            customerId ||
+                            null
 
                     }
-
                 }
             )
         );
 
 
-    } catch (error) {
+    }
+    catch (error) {
 
         console.error(
             "FSI CRM: Save customer error:",
@@ -1945,8 +2103,8 @@ async function saveCustomer() {
             "error"
         );
 
-
-    } finally {
+    }
+    finally {
 
         customerSaving = false;
 
@@ -2098,18 +2256,11 @@ function bindButtons() {
     // ====================================================
     // LEAD TYPE → BUSINESS
     // ====================================================
-    // Ketika Lead Type berubah:
-    //
-    // Customer → Business Customer
-    // Partner  → Business Partner
-    //
-    // Business lama dikosongkan agar tidak membawa
-    // pilihan Business dari Lead Type sebelumnya.
-    // ====================================================
-
 
     const leadTypeSelect =
-        getElement("leadType");
+        getElement(
+            "leadType"
+        );
 
 
     if (
@@ -2287,7 +2438,8 @@ window.saveCustomer =
 // ========================================================
 
 if (
-    document.readyState === "loading"
+    document.readyState ===
+    "loading"
 ) {
 
     document.addEventListener(
