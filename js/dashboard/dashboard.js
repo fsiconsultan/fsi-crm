@@ -7,12 +7,13 @@
 // 2. Load dashboard leads
 // 3. Role-based dashboard scope
 // 4. Admin Sales selector
-// 5. Sales hanya melihat customer sendiri
-// 6. Dashboard statistics
-// 7. Dashboard pipeline
-// 8. Recent activity
-// 9. Dashboard navigation
-// 10. Dashboard refresh
+// 5. Admin Sales cards
+// 6. Sales hanya melihat customer sendiri
+// 7. Dashboard statistics
+// 8. Dashboard pipeline
+// 9. Recent activity
+// 10. Dashboard navigation
+// 11. Dashboard refresh
 //
 // ROLE RULE:
 //
@@ -35,16 +36,6 @@
 
 // ============================================================
 // DASHBOARD GREETING
-// ============================================================
-//
-// Menampilkan sapaan otomatis berdasarkan waktu,
-// nama user, dan role user.
-//
-// Contoh:
-//
-// Good Morning, Andi!
-// Good Afternoon, Budi!
-// Good Evening, Rist!
 // ============================================================
 
 function dashboardUpdateGreeting(profile) {
@@ -297,8 +288,6 @@ function dashboardEscapeGreetingHTML(value) {
 // DASHBOARD SALES SELECTOR VISIBILITY
 // ============================================================
 //
-// BAGIAN INI SANGAT PENTING.
-//
 // ADMIN:
 // - Sales selector tampil
 // - ALL SALES tampil
@@ -310,7 +299,6 @@ function dashboardEscapeGreetingHTML(value) {
 // - daftar Sales disembunyikan
 // - pesan "Select a Sales..." disembunyikan
 //
-// Dashboard Sales tetap menampilkan data miliknya sendiri.
 // ============================================================
 
 function dashboardUpdateSalesSelectorVisibility() {
@@ -409,12 +397,6 @@ function dashboardUpdateSalesSelectorVisibility() {
     // ========================================================
     // CARI PESAN "SELECT A SALES..."
     // ========================================================
-    //
-    // Ini untuk mengatasi HTML lama yang mungkin masih
-    // memiliki teks tersebut walaupun ID/class berbeda.
-    //
-    // Hanya dijalankan untuk Sales.
-    // ========================================================
 
     if (!isAdmin) {
 
@@ -480,6 +462,957 @@ function dashboardUpdateSalesSelectorVisibility() {
         isAdmin
             ? "ADMIN → SHOW"
             : "SALES → HIDE"
+    );
+}
+
+
+// ============================================================
+// DASHBOARD SALES DISPLAY NAME
+// ============================================================
+
+function dashboardGetSalesDisplayName(
+    sales
+) {
+
+    if (!sales) {
+        return "Sales";
+    }
+
+
+    return String(
+
+        sales.name ||
+
+        sales.full_name ||
+
+        sales.display_name ||
+
+        sales.username ||
+
+        sales.email ||
+
+        "Sales"
+
+    ).trim();
+}
+
+
+// ============================================================
+// DASHBOARD SALES INITIAL
+// ============================================================
+
+function dashboardGetSalesInitial(
+    name
+) {
+
+    const text =
+        String(
+            name ||
+            ""
+        ).trim();
+
+
+    if (!text) {
+        return "S";
+    }
+
+
+    const parts =
+        text
+            .split(/\s+/)
+            .filter(Boolean);
+
+
+    if (
+        parts.length === 1
+    ) {
+
+        return parts[0]
+            .substring(0, 2)
+            .toUpperCase();
+    }
+
+
+    return (
+
+        String(
+            parts[0][0]
+        ) +
+
+        String(
+            parts[1][0]
+        )
+
+    ).toUpperCase();
+}
+
+
+// ============================================================
+// DASHBOARD SALES ROLE CHECK
+// ============================================================
+//
+// Digunakan supaya Dashboard tidak salah membaca Admin sebagai
+// Sales.
+// ============================================================
+
+function dashboardIsSalesUser(
+    sales
+) {
+
+    if (!sales) {
+        return false;
+    }
+
+
+    const role =
+        String(
+            sales.role ||
+            ""
+        )
+        .trim()
+        .toLowerCase()
+        .replace(/[\s-]+/g, "_");
+
+
+    return [
+
+        "sales",
+
+        "salesperson",
+
+        "secretary",
+
+        "digital_marketing"
+
+    ].includes(role);
+}
+
+
+// ============================================================
+// DASHBOARD SALES ACTIVE CHECK
+// ============================================================
+//
+// Jika status kosong/null, tetap dianggap valid untuk Dashboard
+// agar Sales tidak hilang hanya karena kolom status belum diisi.
+//
+// Jika status jelas "Inactive", user tidak ditampilkan.
+// ============================================================
+
+function dashboardIsSalesActive(
+    sales
+) {
+
+    if (!sales) {
+        return false;
+    }
+
+
+    const status =
+        String(
+            sales.status ??
+            ""
+        )
+        .trim()
+        .toLowerCase();
+
+
+    if (!status) {
+        return true;
+    }
+
+
+    return status !== "inactive";
+}
+
+
+// ============================================================
+// GET DASHBOARD SALES USERS
+// ============================================================
+//
+// Sumber utama:
+// window.salesUsersData
+//
+// Fallback:
+// window.getActiveSales()
+//
+// Tidak melakukan query database baru.
+// ============================================================
+
+function dashboardGetSalesUsers() {
+
+    let users = [];
+
+
+    // ========================================================
+    // SUMBER UTAMA
+    // ========================================================
+
+    if (
+        Array.isArray(
+            window.salesUsersData
+        )
+    ) {
+
+        users =
+            window.salesUsersData.slice();
+
+    }
+
+
+    // ========================================================
+    // FALLBACK
+    // ========================================================
+
+    if (
+        !users.length &&
+        typeof window.getActiveSales ===
+        "function"
+    ) {
+
+        try {
+
+            const activeSales =
+                window.getActiveSales();
+
+
+            if (
+                Array.isArray(activeSales)
+            ) {
+
+                users =
+                    activeSales.slice();
+            }
+
+        } catch (error) {
+
+            console.warn(
+                "FSI CRM: getActiveSales fallback gagal:",
+                error
+            );
+        }
+    }
+
+
+    // ========================================================
+    // FILTER SALES
+    // ========================================================
+
+    users =
+        users.filter(
+            sales => {
+
+                return (
+                    dashboardIsSalesUser(
+                        sales
+                    ) &&
+                    dashboardIsSalesActive(
+                        sales
+                    )
+                );
+
+            }
+        );
+
+
+    // ========================================================
+    // REMOVE DUPLICATE
+    // ========================================================
+
+    const seen =
+        new Set();
+
+
+    users =
+        users.filter(
+            sales => {
+
+                const id =
+                    String(
+                        sales?.id ??
+                        ""
+                    ).trim();
+
+
+                if (!id) {
+                    return false;
+                }
+
+
+                if (
+                    seen.has(id)
+                ) {
+
+                    return false;
+                }
+
+
+                seen.add(id);
+
+
+                return true;
+            }
+        );
+
+
+    // ========================================================
+    // SORT BY NAME
+    // ========================================================
+
+    users.sort(
+        (
+            a,
+            b
+        ) => {
+
+            const nameA =
+                dashboardGetSalesDisplayName(
+                    a
+                ).toLowerCase();
+
+
+            const nameB =
+                dashboardGetSalesDisplayName(
+                    b
+                ).toLowerCase();
+
+
+            return nameA.localeCompare(
+                nameB
+            );
+        }
+    );
+
+
+    return users;
+}
+
+
+// ============================================================
+// RENDER DASHBOARD SALES CARDS
+// ============================================================
+//
+// ADMIN:
+// - ALL SALES
+// - I Gde Ristyawan
+// - I Wayan Pradnya
+// - Jihad Chakir
+// - Killian
+// - Presty Paulina
+// - Tanau
+//
+// Setiap card menghitung lead berdasarkan:
+// lead.sales_id === sales_users.id
+//
+// ============================================================
+
+function dashboardRenderSalesCards(
+    leads
+) {
+
+    // ========================================================
+    // HANYA ADMIN
+    // ========================================================
+
+    if (
+        !dashboardIsAdmin()
+    ) {
+
+        return;
+    }
+
+
+    // ========================================================
+    // CARI CONTAINER
+    // ========================================================
+
+    const containers =
+        [];
+
+
+    const selectors = [
+
+        "#dashboardSalesCards",
+
+        "#dashboardSalesCardsDynamic"
+
+    ];
+
+
+    selectors.forEach(
+        selector => {
+
+            document
+                .querySelectorAll(
+                    selector
+                )
+                .forEach(
+                    element => {
+
+                        if (
+                            element &&
+                            !containers.includes(
+                                element
+                            )
+                        ) {
+
+                            containers.push(
+                                element
+                            );
+                        }
+
+                    }
+                );
+        }
+    );
+
+
+    if (
+        !containers.length
+    ) {
+
+        console.warn(
+            "FSI CRM: Dashboard Sales Cards container tidak ditemukan."
+        );
+
+        return;
+    }
+
+
+    // ========================================================
+    // DATA LEADS
+    // ========================================================
+
+    const dashboardLeads =
+        Array.isArray(leads)
+            ? leads
+            : [];
+
+
+    // ========================================================
+    // SALES USERS
+    // ========================================================
+
+    const salesUsers =
+        dashboardGetSalesUsers();
+
+
+    // ========================================================
+    // HITUNG LEAD PER SALES
+    // ========================================================
+
+    const salesLeadCounts =
+        {};
+
+
+    dashboardLeads.forEach(
+        lead => {
+
+            const salesId =
+                String(
+                    lead?.sales_id ??
+                    ""
+                ).trim();
+
+
+            if (!salesId) {
+                return;
+            }
+
+
+            salesLeadCounts[salesId] =
+                (
+                    salesLeadCounts[salesId] ||
+                    0
+                ) + 1;
+        }
+    );
+
+
+    // ========================================================
+    // SELECTED SALES
+    // ========================================================
+
+    const selectedSalesId =
+        dashboardGetSelectedSalesId();
+
+
+    // ========================================================
+    // CREATE CARD
+    // ========================================================
+
+    function createSalesCard({
+        id,
+        name,
+        count,
+        isAll = false
+    }) {
+
+        const card =
+            document.createElement(
+                "button"
+            );
+
+
+        card.type =
+            "button";
+
+
+        card.className =
+            "dashboard-sales-card";
+
+
+        card.dataset.salesId =
+            id;
+
+
+        card.dataset.salesName =
+            name;
+
+
+        // ====================================================
+        // ACTIVE
+        // ====================================================
+
+        if (
+            (
+                isAll &&
+                !selectedSalesId
+            ) ||
+            (
+                !isAll &&
+                String(
+                    selectedSalesId
+                ) ===
+                String(
+                    id
+                )
+            )
+        ) {
+
+            card.classList.add(
+                "active"
+            );
+        }
+
+
+        // ====================================================
+        // ICON
+        // ====================================================
+
+        const icon =
+            isAll
+                ? "👥"
+                : "👤";
+
+
+        // ====================================================
+        // INITIAL
+        // ====================================================
+
+        const initial =
+            dashboardGetSalesInitial(
+                name
+            );
+
+
+        // ====================================================
+        // RENDER
+        // ====================================================
+
+        card.innerHTML =
+            `
+            <span
+                class="dashboard-sales-card-icon"
+                aria-hidden="true"
+            >
+                ${icon}
+            </span>
+
+            <span
+                class="dashboard-sales-card-content"
+            >
+
+                <span
+                    class="dashboard-sales-card-name"
+                >
+                    ${dashboardEscapeGreetingHTML(name)}
+                </span>
+
+                <span
+                    class="dashboard-sales-card-count"
+                >
+                    ${Number(count || 0).toLocaleString("id-ID")}
+
+                    <span>
+                        Lead${Number(count || 0) === 1 ? "" : "s"}
+                    </span>
+                </span>
+
+            </span>
+
+            ${
+                isAll
+                    ? ""
+                    : `
+                    <span
+                        class="dashboard-sales-card-initial"
+                        aria-hidden="true"
+                    >
+                        ${dashboardEscapeGreetingHTML(initial)}
+                    </span>
+                    `
+            }
+            `;
+
+
+        // ====================================================
+        // CLICK
+        // ====================================================
+
+        card.addEventListener(
+            "click",
+            async function () {
+
+                // --------------------------------------------
+                // ALL SALES
+                // --------------------------------------------
+
+                if (isAll) {
+
+                    dashboardSetSelectedSales(
+                        ""
+                    );
+
+                }
+
+                // --------------------------------------------
+                // SALES TERTENTU
+                // --------------------------------------------
+
+                else {
+
+                    dashboardSetSelectedSales(
+                        id
+                    );
+                }
+
+
+                // --------------------------------------------
+                // REFRESH DASHBOARD
+                // --------------------------------------------
+
+                await updateDashboard();
+
+            }
+        );
+
+
+        return card;
+    }
+
+
+    // ========================================================
+    // RENDER KE CONTAINER
+    // ========================================================
+
+    containers.forEach(
+        container => {
+
+            // ------------------------------------------------
+            // CARI / BUAT GRID
+            // ------------------------------------------------
+
+            let grid =
+                container.querySelector(
+                    ".dashboard-sales-cards-grid"
+                );
+
+
+            if (!grid) {
+
+                grid =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                grid.className =
+                    "dashboard-sales-cards-grid";
+
+
+                container.appendChild(
+                    grid
+                );
+            }
+
+
+            // ------------------------------------------------
+            // CLEAR CARD LAMA
+            // ------------------------------------------------
+
+            grid.innerHTML =
+                "";
+
+
+            // ------------------------------------------------
+            // ALL SALES
+            // ------------------------------------------------
+
+            const allCard =
+                createSalesCard({
+
+                    id: "",
+
+                    name: "ALL SALES",
+
+                    count:
+                        dashboardLeads.length,
+
+                    isAll: true
+
+                });
+
+
+            grid.appendChild(
+                allCard
+            );
+
+
+            // ------------------------------------------------
+            // SALES INDIVIDUAL
+            // ------------------------------------------------
+
+            salesUsers.forEach(
+                sales => {
+
+                    const id =
+                        String(
+                            sales?.id ??
+                            ""
+                        ).trim();
+
+
+                    if (!id) {
+                        return;
+                    }
+
+
+                    const name =
+                        dashboardGetSalesDisplayName(
+                            sales
+                        );
+
+
+                    const count =
+                        salesLeadCounts[id] ||
+                        0;
+
+
+                    const card =
+                        createSalesCard({
+
+                            id,
+
+                            name,
+
+                            count,
+
+                            isAll: false
+
+                        });
+
+
+                    grid.appendChild(
+                        card
+                    );
+
+                }
+            );
+
+
+            // ------------------------------------------------
+            // EMPTY
+            // ------------------------------------------------
+
+            if (
+                !salesUsers.length
+            ) {
+
+                const empty =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                empty.className =
+                    "dashboard-sales-empty";
+
+
+                empty.textContent =
+                    "No active Sales users found.";
+
+
+                grid.appendChild(
+                    empty
+                );
+            }
+
+        }
+    );
+
+
+    // ========================================================
+    // REFRESH ICON
+    // ========================================================
+
+    if (
+        typeof window.refreshIcons ===
+        "function"
+    ) {
+
+        window.refreshIcons();
+    }
+
+
+    console.log(
+        "FSI CRM: Dashboard Sales Cards rendered:",
+        {
+            salesCount:
+                salesUsers.length,
+
+            totalLeads:
+                dashboardLeads.length,
+
+            selectedSalesId:
+                selectedSalesId ||
+                "ALL SALES",
+
+            salesUsers:
+                salesUsers.map(
+                    sales => ({
+                        id:
+                            sales?.id,
+
+                        name:
+                            dashboardGetSalesDisplayName(
+                                sales
+                            ),
+
+                        role:
+                            sales?.role,
+
+                        status:
+                            sales?.status,
+
+                        leads:
+                            salesLeadCounts[
+                                String(
+                                    sales?.id
+                                )
+                            ] || 0
+                    })
+                )
+        }
+    );
+}
+
+
+// ============================================================
+// SET SELECTED SALES
+// ============================================================
+
+function dashboardSetSelectedSales(
+    salesId
+) {
+
+    if (
+        !dashboardIsAdmin()
+    ) {
+
+        return;
+    }
+
+
+    const value =
+        String(
+            salesId ||
+            ""
+        ).trim();
+
+
+    // ========================================================
+    // UPDATE SELECT ELEMENT
+    // ========================================================
+
+    const selectors = [
+
+        "#salesFilter",
+
+        "#dashboardSalesFilter"
+
+    ];
+
+
+    selectors.forEach(
+        selector => {
+
+            document
+                .querySelectorAll(
+                    selector
+                )
+                .forEach(
+                    element => {
+
+                        element.value =
+                            value;
+
+                    }
+                );
+        }
+    );
+
+
+    // ========================================================
+    // UPDATE CARD ACTIVE
+    // ========================================================
+
+    document
+        .querySelectorAll(
+            ".dashboard-sales-card"
+        )
+        .forEach(
+            card => {
+
+                const cardId =
+                    String(
+                        card.dataset.salesId ||
+                        ""
+                    ).trim();
+
+
+                if (
+                    cardId ===
+                    value
+                ) {
+
+                    card.classList.add(
+                        "active"
+                    );
+
+                } else {
+
+                    card.classList.remove(
+                        "active"
+                    );
+                }
+            }
+        );
+
+
+    console.log(
+        "FSI CRM: Dashboard Sales selected:",
+        value ||
+        "ALL SALES"
     );
 }
 
@@ -570,18 +1503,31 @@ async function updateDashboard() {
 
 
         // ====================================================
-        // DATA SCOPE
+        // RENDER SALES CARDS
         // ====================================================
         //
-        // SALES:
-        // dashboardFetchLeads() sudah membatasi:
+        // Penting:
+        // Sales cards harus menggunakan rawDashboardData,
+        // bukan dashboardData yang sudah di-filter.
         //
-        // sales_id = profile.id
+        // Dengan demikian:
         //
-        // ADMIN:
-        // dashboardFetchLeads() mengambil semua leads.
+        // ALL SALES = semua lead
+        // Sales A = semua lead Sales A
+        // Sales B = semua lead Sales B
         //
-        // Admin kemudian bisa memilih Sales tertentu.
+        // ====================================================
+
+        if (isAdmin) {
+
+            dashboardRenderSalesCards(
+                rawDashboardData
+            );
+        }
+
+
+        // ====================================================
+        // DATA SCOPE
         // ====================================================
 
         let scopedDashboardData =
@@ -619,14 +1565,15 @@ async function updateDashboard() {
 
         } else {
 
-            /*
-             * SALES:
-             *
-             * Jangan pernah mengambil Sales selector.
-             * Jangan pernah menerapkan selectedSalesId.
-             *
-             * Data sudah dibatasi oleh dashboardFetchLeads().
-             */
+            // ------------------------------------------------
+            // SALES
+            // ------------------------------------------------
+            //
+            // Data sudah dibatasi oleh RLS / query.
+            //
+            // Sales tidak boleh memiliki Sales selector.
+            //
+
             selectedSalesId =
                 "";
         }
@@ -677,7 +1624,7 @@ async function updateDashboard() {
 
 
         // ====================================================
-        // STATUS PIPELINE BARU
+        // STATUS PIPELINE
         // ====================================================
 
         const dashboardStatuses = [
@@ -714,7 +1661,7 @@ async function updateDashboard() {
 
 
         // ====================================================
-        // TOTAL HARUS SESUAI DATA YANG SUDAH DI-SCOPE
+        // TOTAL
         // ====================================================
 
         stats.total =
@@ -723,19 +1670,6 @@ async function updateDashboard() {
 
         // ====================================================
         // LEGACY COMPATIBILITY
-        // ====================================================
-        //
-        // Beberapa bagian lama Dashboard mungkin masih
-        // membaca:
-        //
-        // stats.new
-        // stats.interested
-        // stats.followUp
-        // stats.closing
-        //
-        // Jangan gunakan field lama sebagai sumber utama.
-        // Statistik utama tetap berasal dari
-        // calculateDashboardStats().
         // ====================================================
 
         if (
@@ -1007,7 +1941,7 @@ async function updateDashboard() {
 
 
         // ====================================================
-        // ROLE UI DIKEMBALIKAN KE KONDISI YANG BENAR
+        // ROLE UI
         // ====================================================
 
         dashboardUpdateSalesSelectorVisibility();
@@ -1034,19 +1968,13 @@ async function updateDashboard() {
 //
 // KHUSUS ADMIN.
 //
-// Jika user adalah Sales:
-// return ""
-//
-// Jika Admin:
-// membaca Sales yang dipilih.
-//
 // Kosong = ALL SALES.
 // ============================================================
 
 function dashboardGetSelectedSalesId() {
 
     // ========================================================
-    // SALES TIDAK BOLEH MEMILIKI SALES FILTER
+    // SALES TIDAK BOLEH MEMILIKI FILTER
     // ========================================================
 
     if (
@@ -1094,11 +2022,6 @@ function dashboardGetSelectedSalesId() {
 
 // ============================================================
 // DASHBOARD SALES FILTER CHANGE
-// ============================================================
-//
-// Hanya Admin.
-//
-// Sales tidak melakukan apa pun ketika ada event filter.
 // ============================================================
 
 function dashboardBindSalesFilterChange() {
@@ -1197,9 +2120,6 @@ async function dashboardOpenLeads() {
 
 // ============================================================
 // OPEN MANAGE SALES
-// ============================================================
-//
-// Hanya Admin.
 // ============================================================
 
 async function dashboardOpenSales() {
@@ -1554,7 +2474,7 @@ document.addEventListener(
 
 
         // ====================================================
-        // STATUS PIPELINE BARU
+        // STATUS PIPELINE
         // ====================================================
 
         window.FSIDashboard.statuses = [
@@ -1773,6 +2693,30 @@ window.dashboardUpdateGreeting =
 
 
 // ============================================================
+// SALES CARDS EXPORTS
+// ============================================================
+
+window.dashboardRenderSalesCards =
+    dashboardRenderSalesCards;
+
+
+window.dashboardGetSalesDisplayName =
+    dashboardGetSalesDisplayName;
+
+
+window.dashboardGetSalesInitial =
+    dashboardGetSalesInitial;
+
+
+window.dashboardGetSalesUsers =
+    dashboardGetSalesUsers;
+
+
+window.dashboardSetSelectedSales =
+    dashboardSetSelectedSales;
+
+
+// ============================================================
 // STATISTIC POPUP EXPORTS
 // ============================================================
 
@@ -1866,6 +2810,24 @@ Object.assign(
 
         dashboardUpdateGreeting,
 
+        // -----------------------------------------------
+        // SALES CARDS
+        // -----------------------------------------------
+
+        dashboardRenderSalesCards,
+
+        dashboardGetSalesDisplayName,
+
+        dashboardGetSalesInitial,
+
+        dashboardGetSalesUsers,
+
+        dashboardSetSelectedSales,
+
+        // -----------------------------------------------
+        // POPUP
+        // -----------------------------------------------
+
         dashboardOpenStatPopup,
 
         dashboardCloseStatPopup,
@@ -1873,6 +2835,10 @@ Object.assign(
         dashboardBindStatCardClicks,
 
         dashboardFilterDataForStat,
+
+        // -----------------------------------------------
+        // STATUS
+        // -----------------------------------------------
 
         statuses: [
 
