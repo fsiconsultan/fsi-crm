@@ -12,11 +12,12 @@
 // 7. Search query
 // 8. Dashboard -> Leads filter integration
 //
-// IMPORTANT:
+// ADMIN:
+// - Sales dropdown di halaman Leads disembunyikan.
+// - Admin tetap dapat melihat seluruh Leads.
 // - Tidak mengubah Supabase RLS.
 // - Tidak mengubah struktur database.
-// - Tidak menghapus filter existing.
-// - Mendukung Dashboard -> Leads.
+// - Tidak menghapus fungsi internal Dashboard.
 // ============================================================
 
 
@@ -26,30 +27,21 @@
 
 function getSelectedSalesId() {
 
-    if (
-        !leadIsAdmin()
-    ) {
-
+    if (!leadIsAdmin()) {
         return "";
     }
 
-
     const value =
         window.crmSelectedSalesId;
-
 
     if (
         value === null ||
         value === undefined
     ) {
-
         return "";
     }
 
-
-    return String(
-        value
-    ).trim();
+    return String(value).trim();
 }
 
 
@@ -62,19 +54,14 @@ function getSelectedSalesName() {
     const value =
         window.crmSelectedSalesName;
 
-
     if (
         value === null ||
         value === undefined
     ) {
-
         return "";
     }
 
-
-    return String(
-        value
-    ).trim();
+    return String(value).trim();
 }
 
 
@@ -84,28 +71,41 @@ function getSelectedSalesName() {
 
 function applySelectedSalesFilter() {
 
-    const salesSelect =
-        leadElement(
-            "salesFilter"
-        );
+    /*
+     * Sales filter UI tidak digunakan lagi
+     * untuk Admin.
+     *
+     * Admin melihat seluruh Leads.
+     */
+    if (leadIsAdmin()) {
 
+        window.currentSalesFilter = "";
+
+        const salesSelect =
+            leadElement("salesFilter");
+
+        if (salesSelect) {
+            salesSelect.value = "";
+        }
+
+        return "";
+    }
+
+
+    const salesSelect =
+        leadElement("salesFilter");
 
     const selectedSalesId =
         getSelectedSalesId();
 
-
     if (salesSelect) {
 
         salesSelect.value =
-            selectedSalesId ||
-            "";
+            selectedSalesId || "";
     }
 
-
     window.currentSalesFilter =
-        selectedSalesId ||
-        "";
-
+        selectedSalesId || "";
 
     return selectedSalesId;
 }
@@ -115,19 +115,9 @@ function applySelectedSalesFilter() {
 // APPLY DASHBOARD SALES FILTER
 // ============================================================
 //
-// Dipakai ketika:
-//
-// Dashboard
-//    ↓
-// klik Sales
-//    ↓
-// Leads
-//
-// Dashboard menyimpan:
-// {
-//     salesId: "...",
-//     status: ""
-// }
+// Untuk Admin:
+// - Sales filter dari Dashboard tidak diterapkan ke Leads.
+// - Admin tetap melihat semua Leads.
 //
 // ============================================================
 
@@ -135,9 +125,25 @@ function applyDashboardSalesFilter(
     salesId
 ) {
 
-    if (
-        !leadIsAdmin()
-    ) {
+    /*
+     * ADMIN
+     *
+     * Jangan filter Leads berdasarkan Sales.
+     */
+    if (leadIsAdmin()) {
+
+        window.crmSelectedSalesId = "";
+
+        window.crmSelectedSalesName = "";
+
+        window.currentSalesFilter = "";
+
+        const salesSelect =
+            leadElement("salesFilter");
+
+        if (salesSelect) {
+            salesSelect.value = "";
+        }
 
         return "";
     }
@@ -145,27 +151,16 @@ function applyDashboardSalesFilter(
 
     const value =
         String(
-            salesId ||
-            ""
+            salesId || ""
         ).trim();
 
-
-    // ========================================================
-    // GLOBAL STATE
-    // ========================================================
 
     window.crmSelectedSalesId =
         value;
 
 
-    // ========================================================
-    // SALES DROPDOWN
-    // ========================================================
-
     const salesSelect =
-        leadElement(
-            "salesFilter"
-        );
+        leadElement("salesFilter");
 
 
     if (salesSelect) {
@@ -174,10 +169,6 @@ function applyDashboardSalesFilter(
             value;
     }
 
-
-    // ========================================================
-    // SALES NAME
-    // ========================================================
 
     if (value) {
 
@@ -224,7 +215,6 @@ function applyDashboardSalesFilter(
                 error
             );
 
-
             window.crmSelectedSalesName =
                 "";
         }
@@ -235,10 +225,6 @@ function applyDashboardSalesFilter(
             "";
     }
 
-
-    // ========================================================
-    // CURRENT FILTER
-    // ========================================================
 
     window.currentSalesFilter =
         value;
@@ -251,14 +237,6 @@ function applyDashboardSalesFilter(
 // ============================================================
 // APPLY DASHBOARD STATUS FILTER
 // ============================================================
-//
-// Dashboard Pipeline / Stat
-//    ↓
-// Leads
-//    ↓
-// Status otomatis dipilih
-//
-// ============================================================
 
 function applyDashboardStatusFilter(
     status
@@ -266,8 +244,7 @@ function applyDashboardStatusFilter(
 
     const value =
         String(
-            status ||
-            ""
+            status || ""
         ).trim();
 
 
@@ -297,15 +274,6 @@ function applyDashboardStatusFilter(
 // ============================================================
 // APPLY DASHBOARD FILTER DIRECTLY
 // ============================================================
-//
-// Fungsi ini juga bisa dipakai langsung oleh modul lain:
-//
-// applyDashboardLeadFilters({
-//     salesId: "...",
-//     status: "Quotation"
-// });
-//
-// ============================================================
 
 function applyDashboardLeadFilters(
     filters = {}
@@ -313,15 +281,13 @@ function applyDashboardLeadFilters(
 
     const salesId =
         String(
-            filters?.salesId ||
-            ""
+            filters?.salesId || ""
         ).trim();
 
 
     const status =
         String(
-            filters?.status ||
-            ""
+            filters?.status || ""
         ).trim();
 
 
@@ -352,9 +318,7 @@ function applyDashboardLeadFilters(
         "function"
     ) {
 
-        leadSetCurrentPage(
-            1
-        );
+        leadSetCurrentPage(1);
     }
 
 
@@ -382,9 +346,81 @@ function applyDashboardLeadFilters(
 
 
     return {
-        salesId,
+        salesId:
+            leadIsAdmin()
+                ? ""
+                : salesId,
+
         status
     };
+}
+
+
+// ============================================================
+// HIDE SALES FILTER FOR ADMIN
+// ============================================================
+
+function updateSalesFilterVisibility() {
+
+    const salesSelect =
+        leadElement("salesFilter");
+
+
+    if (!salesSelect) {
+        return;
+    }
+
+
+    const isAdmin =
+        typeof leadIsAdmin === "function"
+            ? leadIsAdmin()
+            : false;
+
+
+    /*
+     * Cari container dropdown Sales.
+     *
+     * Mendukung beberapa kemungkinan
+     * struktur HTML.
+     */
+    const salesContainer =
+        salesSelect.closest(
+            [
+                ".filter-group",
+                ".filter-item",
+                ".filter-control",
+                ".form-group",
+                ".sales-filter",
+                "[data-sales-filter]"
+            ].join(", ")
+        );
+
+
+    const target =
+        salesContainer ||
+        salesSelect;
+
+
+    if (isAdmin) {
+
+        target.style.display =
+            "none";
+
+        target.setAttribute(
+            "data-admin-sales-filter-hidden",
+            "true"
+        );
+
+        salesSelect.value = "";
+
+    } else {
+
+        target.style.display = "";
+
+        target.removeAttribute(
+            "data-admin-sales-filter-hidden"
+        );
+    }
 }
 
 
@@ -404,13 +440,12 @@ async function loadFilterOptions() {
             "FSI CRM: Supabase client is not ready."
         );
 
-
         return;
     }
 
 
     // ========================================================
-    // CHECK DASHBOARD FILTER BEFORE LOADING
+    // CHECK DASHBOARD FILTER
     // ========================================================
 
     let dashboardFilter =
@@ -428,9 +463,7 @@ async function loadFilterOptions() {
         if (raw) {
 
             dashboardFilter =
-                JSON.parse(
-                    raw
-                );
+                JSON.parse(raw);
         }
 
     } catch (error) {
@@ -477,9 +510,7 @@ async function loadFilterOptions() {
         } =
             await client
                 .from("leads")
-                .select(
-                    "business"
-                );
+                .select("business");
 
 
         if (error) {
@@ -490,16 +521,12 @@ async function loadFilterOptions() {
             );
 
 
-            populateBusinessFilter(
-                []
-            );
+            populateBusinessFilter([]);
 
         } else {
 
             const leads =
-                Array.isArray(
-                    data
-                )
+                Array.isArray(data)
                     ? data
                     : [];
 
@@ -528,6 +555,10 @@ async function loadFilterOptions() {
             "function"
         ) {
 
+            /*
+             * Tetap jalankan fungsi existing
+             * supaya modul lain tidak rusak.
+             */
             try {
 
                 window.populateSalesDropdowns();
@@ -543,14 +574,14 @@ async function loadFilterOptions() {
 
 
         // ====================================================
-        // IMPORTANT
+        // HIDE SALES FILTER
         // ====================================================
-        //
-        // Kalau datang dari Dashboard,
-        // jangan langsung menjalankan
-        // applySelectedSalesFilter()
-        // karena itu bisa menimpa filter Dashboard.
-        //
+
+        updateSalesFilterVisibility();
+
+
+        // ====================================================
+        // DASHBOARD FILTER
         // ====================================================
 
         if (
@@ -577,14 +608,11 @@ async function loadFilterOptions() {
         );
 
 
-        populateBusinessFilter(
-            []
-        );
+        populateBusinessFilter([]);
 
 
-        // ====================================================
-        // Tetap apply Dashboard filter
-        // ====================================================
+        updateSalesFilterVisibility();
+
 
         if (
             dashboardFilter &&
@@ -697,9 +725,8 @@ function uniqueSortedValues(
                             value ?? ""
                         ).trim()
                 )
-                .filter(
-                    Boolean
-                )
+                .filter(Boolean)
+
         )
 
     ].sort(
@@ -730,9 +757,7 @@ function populateFilter(
 ) {
 
     const idList =
-        Array.isArray(
-            ids
-        )
+        Array.isArray(ids)
             ? ids
             : [ids];
 
@@ -742,33 +767,27 @@ function populateFilter(
 
 
     for (
-        const id
-        of idList
+        const id of idList
     ) {
 
         select =
-            document.getElementById(
-                id
-            );
+            document.getElementById(id);
 
 
         if (select) {
-
             break;
         }
     }
 
 
     if (!select) {
-
         return;
     }
 
 
     const currentValue =
         String(
-            select.value ||
-            ""
+            select.value || ""
         ).trim();
 
 
@@ -797,9 +816,7 @@ function populateFilter(
 
     const safeValues =
         uniqueSortedValues(
-            Array.isArray(
-                values
-            )
+            Array.isArray(values)
                 ? values
                 : []
         );
@@ -882,29 +899,34 @@ function getLeadFilters() {
 
 
     let salesFilter =
-        salesInput?.value ||
-        "";
+        salesInput?.value || "";
 
 
     // ========================================================
-    // ADMIN SALES FILTER
+    // ADMIN
+    // ========================================================
+    //
+    // Admin tidak lagi menggunakan Sales filter.
+    // Admin selalu melihat seluruh Leads.
+    //
     // ========================================================
 
-    if (
-        leadIsAdmin()
-    ) {
+    if (leadIsAdmin()) {
 
-        const headerSalesId =
+        salesFilter = "";
+
+    } else {
+
+        const selectedSalesId =
             getSelectedSalesId();
 
 
         if (
-            headerSalesId !==
-            ""
+            selectedSalesId !== ""
         ) {
 
             salesFilter =
-                headerSalesId;
+                selectedSalesId;
         }
     }
 
@@ -925,7 +947,6 @@ function getLeadFilters() {
 
         salesFilter:
             salesFilter
-
     };
 }
 
@@ -940,15 +961,12 @@ function buildSearchQuery(
 ) {
 
     if (!search) {
-
         return query;
     }
 
 
     const safeSearch =
-        String(
-            search
-        )
+        String(search)
             .replace(
                 /\\/g,
                 "\\\\"
@@ -983,9 +1001,7 @@ function buildSearchQuery(
 
 
     return query.or(
-        searchConditions.join(
-            ","
-        )
+        searchConditions.join(",")
     );
 }
 
@@ -1016,6 +1032,10 @@ window.applyDashboardStatusFilter =
 
 window.applyDashboardLeadFilters =
     applyDashboardLeadFilters;
+
+
+window.updateSalesFilterVisibility =
+    updateSalesFilterVisibility;
 
 
 window.loadFilterOptions =
@@ -1070,6 +1090,8 @@ Object.assign(
         applyDashboardStatusFilter,
 
         applyDashboardLeadFilters,
+
+        updateSalesFilterVisibility,
 
         loadFilterOptions,
 
