@@ -1,4 +1,39 @@
 // ============================================================
+// FSI CRM - DASHBOARD MODULE
+// ============================================================
+//
+// Fungsi utama:
+// 1. Dashboard greeting
+// 2. Load dashboard leads
+// 3. Role-based dashboard scope
+// 4. Admin Sales selector
+// 5. Sales hanya melihat customer sendiri
+// 6. Dashboard statistics
+// 7. Dashboard pipeline
+// 8. Recent activity
+// 9. Dashboard navigation
+// 10. Dashboard refresh
+//
+// ROLE RULE:
+//
+// ADMIN
+// - Bisa melihat semua Sales
+// - Bisa memilih ALL SALES
+// - Bisa memilih Sales tertentu
+// - Bisa melihat seluruh customer
+//
+// SALES
+// - Tidak melihat Sales selector
+// - Tidak melihat ALL SALES
+// - Tidak melihat Sales lain
+// - Hanya melihat lead miliknya sendiri
+//
+// IMPORTANT:
+// Jangan mengubah RLS Supabase hanya untuk kebutuhan Dashboard.
+// ============================================================
+
+
+// ============================================================
 // DASHBOARD GREETING
 // ============================================================
 //
@@ -10,17 +45,6 @@
 // Good Morning, Andi!
 // Good Afternoon, Budi!
 // Good Evening, Rist!
-//
-// Jika nama tidak tersedia:
-//
-// Welcome, Guest!
-//
-// Greeting juga memiliki animasi continuous:
-// - Icon bergerak lembut
-// - Text memiliki soft glow
-// - Nama memiliki efek glow
-// - Light sweep berjalan berkala
-// - Animasi tetap berjalan selama Dashboard terbuka
 // ============================================================
 
 function dashboardUpdateGreeting(profile) {
@@ -30,14 +54,10 @@ function dashboardUpdateGreeting(profile) {
     }
 
 
-    /*
-     * ========================================================
-     * AMBIL NAMA USER
-     * ========================================================
-     *
-     * Mendukung beberapa kemungkinan nama field
-     * tanpa mengganggu struktur profile yang sekarang.
-     */
+    // ========================================================
+    // AMBIL NAMA USER
+    // ========================================================
+
     const userName =
         String(
             profile?.name ||
@@ -53,11 +73,10 @@ function dashboardUpdateGreeting(profile) {
         "Guest";
 
 
-    /*
-     * ========================================================
-     * AMBIL ROLE
-     * ========================================================
-     */
+    // ========================================================
+    // AMBIL ROLE
+    // ========================================================
+
     const role =
         String(
             profile?.role ||
@@ -65,15 +84,10 @@ function dashboardUpdateGreeting(profile) {
         ).trim();
 
 
-    /*
-     * ========================================================
-     * TENTUKAN WAKTU
-     * ========================================================
-     *
-     * 05:00 - 11:59 = Good Morning
-     * 12:00 - 16:59 = Good Afternoon
-     * 17:00 - 04:59 = Good Evening
-     */
+    // ========================================================
+    // TENTUKAN WAKTU
+    // ========================================================
+
     const hour =
         new Date().getHours();
 
@@ -118,21 +132,20 @@ function dashboardUpdateGreeting(profile) {
     }
 
 
-    /*
-     * ========================================================
-     * BUAT / AMBIL ELEMENT GREETING
-     * ========================================================
-     */
+    // ========================================================
+    // CARI ELEMENT GREETING
+    // ========================================================
+
     let greetingElement =
         document.getElementById(
             "dashboardGreeting"
         );
 
 
-    /*
-     * Jika element belum ada,
-     * buat otomatis.
-     */
+    // ========================================================
+    // BUAT ELEMENT JIKA BELUM ADA
+    // ========================================================
+
     if (!greetingElement) {
 
         greetingElement =
@@ -173,9 +186,6 @@ function dashboardUpdateGreeting(profile) {
             "1.3";
 
 
-        /*
-         * Cari halaman Dashboard.
-         */
         const dashboardPage =
             dashboardFindPage(
                 "dashboard"
@@ -184,10 +194,6 @@ function dashboardUpdateGreeting(profile) {
 
         if (dashboardPage) {
 
-            /*
-             * Masukkan greeting
-             * sebagai element pertama.
-             */
             dashboardPage.prepend(
                 greetingElement
             );
@@ -195,14 +201,10 @@ function dashboardUpdateGreeting(profile) {
     }
 
 
-    /*
-     * ========================================================
-     * BUAT TEXT GREETING
-     * ========================================================
-     *
-     * Struktur dibuat terpisah agar CSS animation
-     * dapat bekerja dengan halus.
-     */
+    // ========================================================
+    // RENDER GREETING
+    // ========================================================
+
     greetingElement.innerHTML =
         `
         <span
@@ -217,21 +219,16 @@ function dashboardUpdateGreeting(profile) {
         >
             ${greeting},
             <strong class="dashboard-greeting-name">
-                ${displayName}
+                ${dashboardEscapeGreetingHTML(displayName)}
             </strong>!
         </span>
         `;
 
 
-    /*
-     * ========================================================
-     * ROLE INFO
-     * ========================================================
-     *
-     * Tidak mengubah tampilan utama.
-     * Hanya menyimpan informasi role di dataset
-     * jika nanti dibutuhkan.
-     */
+    // ========================================================
+    // ROLE DATASET
+    // ========================================================
+
     greetingElement.dataset.role =
         role ||
         "Guest";
@@ -241,38 +238,20 @@ function dashboardUpdateGreeting(profile) {
         displayName;
 
 
-    /*
-     * ========================================================
-     * ANIMATION CLASS
-     * ========================================================
-     */
+    // ========================================================
+    // ANIMATION
+    // ========================================================
+
     greetingElement.classList.add(
         "dashboard-greeting-animated"
     );
 
 
-    /*
-     * ========================================================
-     * REFRESH ANIMATION
-     * ========================================================
-     *
-     * Ketika Dashboard melakukan update,
-     * greeting tetap memiliki animasi continuous.
-     *
-     * Class refresh hanya digunakan untuk
-     * entrance animation singkat.
-     */
     greetingElement.classList.remove(
         "dashboard-greeting-refresh"
     );
 
 
-    /*
-     * Force browser reflow.
-     *
-     * Ini membuat animation restart dengan benar
-     * ketika greeting diperbarui.
-     */
     void greetingElement.offsetWidth;
 
 
@@ -281,11 +260,6 @@ function dashboardUpdateGreeting(profile) {
     );
 
 
-    /*
-     * ========================================================
-     * LOG
-     * ========================================================
-     */
     console.log(
         "FSI CRM: greeting updated:",
         {
@@ -299,6 +273,218 @@ function dashboardUpdateGreeting(profile) {
 
 
 // ============================================================
+// ESCAPE GREETING HTML
+// ============================================================
+
+function dashboardEscapeGreetingHTML(value) {
+
+    const text =
+        String(
+            value ?? ""
+        );
+
+
+    return text
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+
+// ============================================================
+// DASHBOARD SALES SELECTOR VISIBILITY
+// ============================================================
+//
+// BAGIAN INI SANGAT PENTING.
+//
+// ADMIN:
+// - Sales selector tampil
+// - ALL SALES tampil
+// - Sales cards tampil
+//
+// SALES:
+// - Sales selector disembunyikan
+// - ALL SALES disembunyikan
+// - daftar Sales disembunyikan
+// - pesan "Select a Sales..." disembunyikan
+//
+// Dashboard Sales tetap menampilkan data miliknya sendiri.
+// ============================================================
+
+function dashboardUpdateSalesSelectorVisibility() {
+
+    const isAdmin =
+        dashboardIsAdmin();
+
+
+    // ========================================================
+    // ELEMENT SALES SELECTOR YANG DIKENAL
+    // ========================================================
+
+    const selectorSelectors = [
+
+        "#dashboardSalesCards",
+
+        "#dashboardSalesCardsDynamic",
+
+        "#salesFilter",
+
+        "#dashboardSalesFilter",
+
+        "#dashboardSalesSection",
+
+        "#dashboard-sales-section",
+
+        "#sales-selector-section",
+
+        "#sales-selector",
+
+        ".dashboard-sales-selector",
+
+        ".dashboard-sales-section",
+
+        ".sales-selector-section"
+
+    ];
+
+
+    const elements =
+        new Set();
+
+
+    selectorSelectors.forEach(
+        selector => {
+
+            document
+                .querySelectorAll(selector)
+                .forEach(
+                    element => {
+
+                        elements.add(
+                            element
+                        );
+                    }
+                );
+        }
+    );
+
+
+    // ========================================================
+    // SEMBUNYIKAN / TAMPILKAN
+    // ========================================================
+
+    elements.forEach(
+        element => {
+
+            if (!element) {
+                return;
+            }
+
+
+            if (isAdmin) {
+
+                element.style.display =
+                    "";
+
+                element.removeAttribute(
+                    "aria-hidden"
+                );
+
+            } else {
+
+                element.style.display =
+                    "none";
+
+                element.setAttribute(
+                    "aria-hidden",
+                    "true"
+                );
+            }
+        }
+    );
+
+
+    // ========================================================
+    // CARI PESAN "SELECT A SALES..."
+    // ========================================================
+    //
+    // Ini untuk mengatasi HTML lama yang mungkin masih
+    // memiliki teks tersebut walaupun ID/class berbeda.
+    //
+    // Hanya dijalankan untuk Sales.
+    // ========================================================
+
+    if (!isAdmin) {
+
+        const allElements =
+            document.querySelectorAll(
+                "p, span, div, small, h3, h4"
+            );
+
+
+        allElements.forEach(
+            element => {
+
+                const text =
+                    String(
+                        element.textContent || ""
+                    )
+                    .replace(/\s+/g, " ")
+                    .trim()
+                    .toLowerCase();
+
+
+                if (
+                    text ===
+                    "select a sales to view their customer activity."
+                ) {
+
+                    const parent =
+                        element.closest(
+                            [
+                                ".dashboard-sales-selector",
+                                ".dashboard-sales-section",
+                                ".sales-selector-section",
+                                ".dashboard-card",
+                                ".card",
+                                "section"
+                            ].join(",")
+                        );
+
+
+                    if (parent) {
+
+                        parent.style.display =
+                            "none";
+
+                        parent.setAttribute(
+                            "aria-hidden",
+                            "true"
+                        );
+
+                    } else {
+
+                        element.style.display =
+                            "none";
+                    }
+                }
+            }
+        );
+    }
+
+
+    console.log(
+        "FSI CRM: Sales selector visibility:",
+        isAdmin
+            ? "ADMIN → SHOW"
+            : "SALES → HIDE"
+    );
+}
+
+
+// ============================================================
 // UPDATE DASHBOARD
 // ============================================================
 
@@ -306,6 +492,7 @@ async function updateDashboard() {
 
     const profile =
         dashboardGetProfile();
+
 
     if (!profile) {
 
@@ -318,7 +505,14 @@ async function updateDashboard() {
 
 
     // ========================================================
-    // UPDATE GREETING
+    // ROLE-BASED UI
+    // ========================================================
+
+    dashboardUpdateSalesSelectorVisibility();
+
+
+    // ========================================================
+    // GREETING
     // ========================================================
 
     dashboardUpdateGreeting(
@@ -326,13 +520,21 @@ async function updateDashboard() {
     );
 
 
+    // ========================================================
+    // PREVENT DOUBLE LOADING
+    // ========================================================
+
     if (dashboardLoading) {
         return;
     }
 
-    dashboardLoading = true;
+
+    dashboardLoading =
+        true;
+
 
     dashboardShowLoading();
+
 
     try {
 
@@ -341,11 +543,10 @@ async function updateDashboard() {
         );
 
 
-        /*
-         * ========================================================
-         * LOAD LEADS
-         * ========================================================
-         */
+        // ====================================================
+        // LOAD LEADS
+        // ====================================================
+
         const data =
             await dashboardFetchLeads();
 
@@ -356,61 +557,84 @@ async function updateDashboard() {
                 : [];
 
 
-        /*
-         * ========================================================
-         * FILTER DATA DASHBOARD BERDASARKAN SALES
-         * ========================================================
-         *
-         * Sales biasa:
-         * dashboardFetchLeads() sudah membatasi
-         * berdasarkan sales_id miliknya.
-         *
-         * Admin:
-         *
-         * All Sales
-         *      -> semua leads
-         *
-         * Sales A
-         *      -> hanya leads Sales A
-         *
-         * Sales B
-         *      -> hanya leads Sales B
-         *
-         * Sales C
-         *      -> hanya leads Sales C
-         */
-        let scopedDashboardData =
-            [...rawDashboardData];
-
+        // ====================================================
+        // ROLE
+        // ====================================================
 
         const isAdmin =
             dashboardIsAdmin();
 
 
-        const selectedSalesId =
-            dashboardGetSelectedSalesId();
+        const isSales =
+            dashboardIsSales();
 
 
-        if (
-            isAdmin &&
-            selectedSalesId
-        ) {
+        // ====================================================
+        // DATA SCOPE
+        // ====================================================
+        //
+        // SALES:
+        // dashboardFetchLeads() sudah membatasi:
+        //
+        // sales_id = profile.id
+        //
+        // ADMIN:
+        // dashboardFetchLeads() mengambil semua leads.
+        //
+        // Admin kemudian bisa memilih Sales tertentu.
+        // ====================================================
 
-            scopedDashboardData =
-                rawDashboardData.filter(
-                    lead => {
+        let scopedDashboardData =
+            [
+                ...rawDashboardData
+            ];
 
-                        return String(
-                            lead?.sales_id ?? ""
-                        ).trim() ===
-                        String(
-                            selectedSalesId
-                        ).trim();
 
-                    }
-                );
+        let selectedSalesId =
+            "";
+
+
+        if (isAdmin) {
+
+            selectedSalesId =
+                dashboardGetSelectedSalesId();
+
+
+            if (selectedSalesId) {
+
+                scopedDashboardData =
+                    rawDashboardData.filter(
+                        lead => {
+
+                            return String(
+                                lead?.sales_id ?? ""
+                            ).trim() ===
+                            String(
+                                selectedSalesId
+                            ).trim();
+
+                        }
+                    );
+            }
+
+        } else {
+
+            /*
+             * SALES:
+             *
+             * Jangan pernah mengambil Sales selector.
+             * Jangan pernah menerapkan selectedSalesId.
+             *
+             * Data sudah dibatasi oleh dashboardFetchLeads().
+             */
+            selectedSalesId =
+                "";
         }
 
+
+        // ====================================================
+        // LOG DATA SCOPE
+        // ====================================================
 
         console.log(
             "FSI CRM Dashboard: data scope:",
@@ -424,119 +648,151 @@ async function updateDashboard() {
                 role:
                     profile.role,
 
+                isAdmin,
+
+                isSales,
+
                 selectedSalesId:
-                    selectedSalesId || "ALL"
+                    selectedSalesId ||
+                    "ALL OWN DATA"
             }
         );
 
 
-        /*
-         * Simpan data global.
-         */
+        // ====================================================
+        // SIMPAN DATA GLOBAL
+        // ====================================================
+
         dashboardData =
             scopedDashboardData;
+
+
+        window.FSIDashboard =
+            window.FSIDashboard ||
+            {};
 
 
         window.FSIDashboard.data =
             dashboardData;
 
 
-        /*
-         * ========================================================
-         * STATUS PIPELINE BARU
-         * ========================================================
-         *
-         * Tetap dipertahankan agar tidak menghilangkan
-         * fungsi Dashboard yang sudah berjalan.
-         */
-        if (!window.FSIDashboard.statuses) {
+        // ====================================================
+        // STATUS PIPELINE BARU
+        // ====================================================
 
-            window.FSIDashboard.statuses = [
+        const dashboardStatuses = [
 
-                "New",
+            "New Customer",
 
-                "First Contact",
+            "First Contact",
 
-                "First Meeting / Appointment / Site Survey",
+            "Appointment",
 
-                "Quotation",
+            "Site Survey",
 
-                "Second Appointment",
+            "Quotation",
 
-                "Deal",
+            "Deal / Closing",
 
-                "No Deal"
+            "No Deal"
 
-            ];
-        }
+        ];
 
 
-        /*
-         * ========================================================
-         * HITUNG STATISTIK
-         * ========================================================
-         */
+        window.FSIDashboard.statuses =
+            dashboardStatuses;
+
+
+        // ====================================================
+        // HITUNG STATISTIK
+        // ====================================================
+
         const stats =
             calculateDashboardStats(
                 dashboardData
             );
 
 
-        /*
-         * ========================================================
-         * PASTIKAN STATISTIK UTAMA BENAR-BENAR
-         * MENGGUNAKAN DATA SALES YANG SUDAH TERFILTER
-         * ========================================================
-         */
+        // ====================================================
+        // TOTAL HARUS SESUAI DATA YANG SUDAH DI-SCOPE
+        // ====================================================
+
         stats.total =
             dashboardData.length;
 
 
+        // ====================================================
+        // LEGACY COMPATIBILITY
+        // ====================================================
+        //
+        // Beberapa bagian lama Dashboard mungkin masih
+        // membaca:
+        //
+        // stats.new
+        // stats.interested
+        // stats.followUp
+        // stats.closing
+        //
+        // Jangan gunakan field lama sebagai sumber utama.
+        // Statistik utama tetap berasal dari
+        // calculateDashboardStats().
+        // ====================================================
+
         if (
-            typeof dashboardNormalizeStatus ===
-            "function"
+            typeof stats.new ===
+            "undefined"
         ) {
 
             stats.new =
-                dashboardData.filter(
-                    lead =>
-                        dashboardNormalizeStatus(
-                            lead?.status
-                        ) === "New"
-                ).length;
-
-
-            stats.interested =
-                dashboardData.filter(
-                    lead =>
-                        dashboardNormalizeStatus(
-                            lead?.status
-                        ) === "Interested"
-                ).length;
-
-
-            stats.followUp =
-                dashboardData.filter(
-                    lead =>
-                        dashboardNormalizeStatus(
-                            lead?.status
-                        ) === "Follow Up"
-                ).length;
-
-
-            /*
-             * Closing dihitung berdasarkan STATUS Closing,
-             * bukan hanya karena field tanggal closing terisi.
-             */
-            stats.closing =
-                dashboardData.filter(
-                    lead =>
-                        dashboardNormalizeStatus(
-                            lead?.status
-                        ) === "Closing"
-                ).length;
+                Number(
+                    stats.newCustomer ||
+                    0
+                );
         }
 
+
+        if (
+            typeof stats.interested ===
+            "undefined"
+        ) {
+
+            stats.interested =
+                Number(
+                    stats.firstContact ||
+                    0
+                );
+        }
+
+
+        if (
+            typeof stats.followUp ===
+            "undefined"
+        ) {
+
+            stats.followUp =
+                Number(
+                    stats.appointment ||
+                    0
+                );
+        }
+
+
+        if (
+            typeof stats.closing ===
+            "undefined"
+        ) {
+
+            stats.closing =
+                Number(
+                    stats.dealClosing ||
+                    0
+                );
+        }
+
+
+        // ====================================================
+        // SIMPAN STATS GLOBAL
+        // ====================================================
 
         dashboardStats =
             stats;
@@ -546,46 +802,44 @@ async function updateDashboard() {
             stats;
 
 
-        /*
-         * ========================================================
-         * RENDER KARTU STATISTIK
-         * ========================================================
-         */
+        // ====================================================
+        // RENDER STATISTICS
+        // ====================================================
+
         renderDashboardStats(
             stats
         );
 
 
-        /*
-         * ========================================================
-         * RENDER PIPELINE
-         * ========================================================
-         */
+        // ====================================================
+        // RENDER PIPELINE
+        // ====================================================
+
         renderDashboardPipeline(
             dashboardData
         );
 
 
-        /*
-         * ========================================================
-         * RENDER RECENT LEADS
-         * ========================================================
-         */
+        // ====================================================
+        // RENDER RECENT ACTIVITY
+        // ====================================================
+
         renderDashboardRecentLeads(
             dashboardData
         );
 
 
-        /*
-         * Pastikan kartu interactive
-         * setelah seluruh Dashboard selesai dirender.
-         */
+        // ====================================================
+        // STAT CARD INTERACTION
+        // ====================================================
+
         dashboardBindStatCardClicks();
 
 
-        /*
-         * Callback tambahan jika ada.
-         */
+        // ====================================================
+        // OPTIONAL CHART CALLBACK
+        // ====================================================
+
         if (
             typeof window.renderDashboardCharts ===
             "function"
@@ -608,11 +862,10 @@ async function updateDashboard() {
         }
 
 
-        /*
-         * ========================================================
-         * HILANGKAN PESAN ERROR
-         * ========================================================
-         */
+        // ====================================================
+        // HILANGKAN ERROR
+        // ====================================================
+
         const errorElement =
             document.getElementById(
                 "dashboardError"
@@ -628,6 +881,10 @@ async function updateDashboard() {
                 "none";
         }
 
+
+        // ====================================================
+        // DASHBOARD SELESAI
+        // ====================================================
 
         dashboardInitialized =
             true;
@@ -678,12 +935,17 @@ async function updateDashboard() {
         }
 
 
-        /*
-         * Tetap tampilkan 0 jika query gagal,
-         * supaya dashboard tidak terlihat rusak.
-         */
+        // ====================================================
+        // EMPTY DASHBOARD FALLBACK
+        // ====================================================
+
         dashboardData =
             [];
+
+
+        window.FSIDashboard =
+            window.FSIDashboard ||
+            {};
 
 
         window.FSIDashboard.data =
@@ -733,12 +995,27 @@ async function updateDashboard() {
 
     } finally {
 
+        // ====================================================
+        // FINISH LOADING
+        // ====================================================
+
         dashboardLoading =
             false;
 
 
         dashboardHideLoading();
 
+
+        // ====================================================
+        // ROLE UI DIKEMBALIKAN KE KONDISI YANG BENAR
+        // ====================================================
+
+        dashboardUpdateSalesSelectorVisibility();
+
+
+        // ====================================================
+        // REFRESH ICON
+        // ====================================================
 
         if (
             typeof window.refreshIcons ===
@@ -755,22 +1032,30 @@ async function updateDashboard() {
 // GET SELECTED SALES ID
 // ============================================================
 //
-// Fungsi ini khusus membaca Sales yang sedang dipilih
-// pada Dashboard.
+// KHUSUS ADMIN.
 //
-// Dashboard menggunakan:
-// #salesFilter
+// Jika user adalah Sales:
+// return ""
 //
-// Filter Leads tetap menggunakan:
-// #filter-sales
+// Jika Admin:
+// membaca Sales yang dipilih.
 //
-// Keduanya sengaja dipisahkan agar tidak saling mengganggu.
-//
-// Jika value kosong:
-// berarti All Sales.
+// Kosong = ALL SALES.
 // ============================================================
 
 function dashboardGetSelectedSalesId() {
+
+    // ========================================================
+    // SALES TIDAK BOLEH MEMILIKI SALES FILTER
+    // ========================================================
+
+    if (
+        !dashboardIsAdmin()
+    ) {
+
+        return "";
+    }
+
 
     const selectors = [
 
@@ -808,17 +1093,12 @@ function dashboardGetSelectedSalesId() {
 
 
 // ============================================================
-// REFRESH DASHBOARD
+// DASHBOARD SALES FILTER CHANGE
 // ============================================================
 //
-// Ketika Admin mengganti Sales pada Dashboard:
+// Hanya Admin.
 //
-// All Sales
-// Sales A
-// Sales B
-// Sales C
-//
-// Dashboard langsung menghitung ulang.
+// Sales tidak melakukan apa pun ketika ada event filter.
 // ============================================================
 
 function dashboardBindSalesFilterChange() {
@@ -859,21 +1139,22 @@ function dashboardBindSalesFilterChange() {
             }
 
 
-            /*
-             * Hanya Admin yang menggunakan
-             * filter Sales Dashboard.
-             */
+            // =================================================
+            // HANYA ADMIN
+            // =================================================
+
             if (
                 !dashboardIsAdmin()
             ) {
+
                 return;
             }
 
 
-            /*
-             * Refresh Dashboard
-             * dengan Sales yang baru dipilih.
-             */
+            // =================================================
+            // REFRESH DASHBOARD
+            // =================================================
+
             updateDashboard();
 
         }
@@ -914,9 +1195,18 @@ async function dashboardOpenLeads() {
 }
 
 
+// ============================================================
+// OPEN MANAGE SALES
+// ============================================================
+//
+// Hanya Admin.
+// ============================================================
+
 async function dashboardOpenSales() {
 
-    if (!dashboardIsAdmin()) {
+    if (
+        !dashboardIsAdmin()
+    ) {
 
         if (
             typeof window.showToast ===
@@ -968,21 +1258,6 @@ function getDashboardStats() {
 // ============================================================
 // VIEW ALL BUTTON
 // ============================================================
-//
-// index.html terbaru:
-//
-// <button
-//     type="button"
-//     class="btn-outline"
-//     data-page="leads"
-// >
-//     <span>View All</span>
-//     ...
-// </button>
-//
-// Dashboard tetap mendukung navigation.js.
-// Binding ini hanya menjadi fallback.
-// ============================================================
 
 let dashboardViewAllBound =
     false;
@@ -1032,10 +1307,6 @@ function dashboardBindViewAllButton() {
                 "click",
                 async function (event) {
 
-                    /*
-                     * Jika navigation.js sudah bekerja,
-                     * event tetap aman.
-                     */
                     event.preventDefault();
 
 
@@ -1074,10 +1345,6 @@ document.addEventListener(
     "fsi:lead-changed",
     function () {
 
-        /*
-         * Jika user sedang berada di Dashboard,
-         * langsung refresh angka.
-         */
         const page =
             dashboardFindPage(
                 "dashboard"
@@ -1125,9 +1392,47 @@ document.addEventListener(
             null;
 
 
-        /*
-         * Tutup popup jika user profile berubah.
-         */
+        // ====================================================
+        // RESET SALES SELECTOR
+        // ====================================================
+
+        const salesFilter =
+            document.querySelector(
+                "#salesFilter"
+            );
+
+
+        if (salesFilter) {
+
+            salesFilter.value =
+                "";
+        }
+
+
+        const dashboardSalesFilter =
+            document.querySelector(
+                "#dashboardSalesFilter"
+            );
+
+
+        if (dashboardSalesFilter) {
+
+            dashboardSalesFilter.value =
+                "";
+        }
+
+
+        // ====================================================
+        // UPDATE ROLE UI
+        // ====================================================
+
+        dashboardUpdateSalesSelectorVisibility();
+
+
+        // ====================================================
+        // CLOSE POPUP
+        // ====================================================
+
         dashboardCloseStatPopup();
 
 
@@ -1151,13 +1456,15 @@ document.addEventListener(
         );
 
 
-        /*
-         * Jangan langsung query jika profile belum siap.
-         * Auth module akan memanggil showDashboard()
-         * setelah profile berhasil dimuat.
-         */
         const profile =
             dashboardGetProfile();
+
+
+        // ====================================================
+        // ROLE UI
+        // ====================================================
+
+        dashboardUpdateSalesSelectorVisibility();
 
 
         if (
@@ -1183,6 +1490,8 @@ document.addEventListener(
                         )
                     ) {
 
+                        dashboardUpdateSalesSelectorVisibility();
+
                         dashboardBindStatCardClicks();
 
                         updateDashboard();
@@ -1202,6 +1511,8 @@ document.addEventListener(
 
             setTimeout(
                 function () {
+
+                    dashboardUpdateSalesSelectorVisibility();
 
                     dashboardBindStatCardClicks();
 
@@ -1233,63 +1544,81 @@ document.addEventListener(
             null;
 
 
-        /*
-         * Status Dashboard.
-         */
+        // ====================================================
+        // FSI DASHBOARD OBJECT
+        // ====================================================
+
         window.FSIDashboard =
             window.FSIDashboard ||
             {};
 
 
+        // ====================================================
+        // STATUS PIPELINE BARU
+        // ====================================================
+
         window.FSIDashboard.statuses = [
 
-            "New",
+            "New Customer",
 
             "First Contact",
 
-            "First Meeting / Appointment / Site Survey",
+            "Appointment",
+
+            "Site Survey",
 
             "Quotation",
 
-            "Second Appointment",
-
-            "Deal",
+            "Deal / Closing",
 
             "No Deal"
 
         ];
 
 
-        /*
-         * Siapkan style popup.
-         */
+        // ====================================================
+        // ROLE-BASED SALES UI
+        // ====================================================
+
+        dashboardUpdateSalesSelectorVisibility();
+
+
+        // ====================================================
+        // POPUP STYLES
+        // ====================================================
+
         dashboardEnsureStatPopupStyles();
 
 
-        /*
-         * Bind kartu statistik.
-         */
+        // ====================================================
+        // STAT CARD
+        // ====================================================
+
         dashboardBindStatCardClicks();
 
 
-        /*
-         * Bind tombol View All.
-         */
+        // ====================================================
+        // VIEW ALL
+        // ====================================================
+
         dashboardBindViewAllButton();
 
 
-        /*
-         * Bind Sales filter Dashboard.
-         */
+        // ====================================================
+        // SALES FILTER
+        // ====================================================
+
         dashboardBindSalesFilterChange();
 
 
-        /*
-         * Jika navigation/auth selesai setelah DOM ready,
-         * coba bind sekali lagi sebentar kemudian.
-         */
+        // ====================================================
+        // DELAYED BIND
+        // ====================================================
+
         setTimeout(
             function () {
+
+                dashboardUpdateSalesSelectorVisibility();
 
                 dashboardBindViewAllButton();
 
@@ -1435,16 +1764,17 @@ window.dashboardBindSalesFilterChange =
     dashboardBindSalesFilterChange;
 
 
-/*
- * Greeting export.
- */
+window.dashboardUpdateSalesSelectorVisibility =
+    dashboardUpdateSalesSelectorVisibility;
+
+
 window.dashboardUpdateGreeting =
     dashboardUpdateGreeting;
 
 
-/*
- * Statistic popup exports.
- */
+// ============================================================
+// STATISTIC POPUP EXPORTS
+// ============================================================
 
 window.dashboardOpenStatPopup =
     dashboardOpenStatPopup;
@@ -1532,9 +1862,8 @@ Object.assign(
 
         dashboardBindSalesFilterChange,
 
-        /*
-         * Greeting.
-         */
+        dashboardUpdateSalesSelectorVisibility,
+
         dashboardUpdateGreeting,
 
         dashboardOpenStatPopup,
@@ -1545,22 +1874,19 @@ Object.assign(
 
         dashboardFilterDataForStat,
 
-        /*
-         * Status pipeline baru.
-         */
         statuses: [
 
-            "New",
+            "New Customer",
 
             "First Contact",
 
-            "First Meeting / Appointment / Site Survey",
+            "Appointment",
+
+            "Site Survey",
 
             "Quotation",
 
-            "Second Appointment",
-
-            "Deal",
+            "Deal / Closing",
 
             "No Deal"
 
