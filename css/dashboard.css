@@ -1,1557 +1,1513 @@
-/* =========================================================
-   FSI CRM — DASHBOARD SALES MANAGEMENT
-   =========================================================
+/* ============================================================
+   FSI CRM - DASHBOARD STYLES
+   File : css/dashboard.css
+   Version : 2026.10.01
+
    Fungsi:
-   1. Sales cards
-   2. Active Sales card
-   3. Customer / Lead list
-   4. Search
-   5. Pagination
-   6. Status badge
-   7. View customer button
-   8. Empty state
-   9. Loading state
-   10. Responsive support
+   1. Dashboard greeting
+   2. Dashboard statistics
+   3. Sales cards
+   4. Sales selection state
+   5. Sales pipeline
+   6. Recent activity
+   7. Customer / Lead list
+   8. Dashboard popup
+   9. Loading / empty / error state
+   10. Responsive dashboard base
 
    IMPORTANT:
-   - Jangan hapus CSS dashboard sebelumnya.
    - responsive.css tetap menjadi CSS terakhir.
-========================================================= */
+   - Jangan menghapus responsive.css dari index.html.
+============================================================ */
 
 
-/* =========================================================
-   SALES CARDS WRAPPER
-========================================================= */
+/* ============================================================
+   1. DASHBOARD ROOT
+============================================================ */
 
-.dashboard-sales-cards-grid {
-    display: grid;
-
-    grid-template-columns:
-        repeat(4, minmax(0, 1fr));
-
-    gap: 12px;
-
+.dashboard-page,
+.dashboard-container,
+.dashboard-main,
+#dashboardPage,
+#dashboard {
     width: 100%;
+    min-width: 0;
+}
 
-    margin-top: 12px;
+.dashboard-page {
+    animation: dashboardPageFadeIn 0.35s ease both;
+}
+
+@keyframes dashboardPageFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 
-/* =========================================================
-   SALES CARD
-========================================================= */
+/* ============================================================
+   2. DASHBOARD GREETING
+============================================================ */
 
-.dashboard-sales-card {
-    position: relative;
-
-    display: flex;
-
-    align-items: center;
-
+.dashboard-greeting {
     width: 100%;
+    margin-bottom: 24px;
+    animation: dashboardGreetingIn 0.45s ease both;
+}
 
+.dashboard-greeting h1,
+.dashboard-greeting-title {
+    margin: 0;
+    font-size: clamp(24px, 3vw, 32px);
+    line-height: 1.2;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    color: #111827;
+}
+
+.dashboard-greeting p,
+.dashboard-greeting-subtitle {
+    margin: 8px 0 0;
+    max-width: 760px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #6b7280;
+}
+
+@keyframes dashboardGreetingIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* ============================================================
+   3. DASHBOARD HEADER / SECTION
+============================================================ */
+
+.dashboard-section {
+    width: 100%;
+    margin-bottom: 28px;
+}
+
+.dashboard-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 14px;
+}
+
+.dashboard-section-title {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 800;
+    color: #111827;
+}
+
+.dashboard-section-subtitle {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.dashboard-section-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+
+/* ============================================================
+   4. DASHBOARD STATISTICS
+============================================================ */
+
+.dashboard-stats,
+.dashboard-stats-grid,
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    width: 100%;
+    margin-bottom: 28px;
+}
+
+.dashboard-stat-card,
+.stat-card,
+.dashboard-stat {
+    position: relative;
     min-width: 0;
-
-    padding: 14px;
-
-    border:
-        1px solid var(--border);
-
-    border-radius:
-        var(--radius-lg);
-
+    overflow: hidden;
+    padding: 20px;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    border-radius: 18px;
     background:
         linear-gradient(
-            135deg,
-            #ffffff 0%,
-            #f8fafc 100%
+            145deg,
+            rgba(255, 255, 255, 0.98),
+            rgba(248, 250, 252, 0.96)
         );
-
     box-shadow:
-        var(--shadow-xs);
-
-    cursor: pointer;
-
-    appearance: none;
-
-    text-align: left;
-
-    font-family: inherit;
-
+        0 8px 25px rgba(15, 23, 42, 0.06),
+        0 2px 6px rgba(15, 23, 42, 0.03);
     transition:
         transform 0.22s ease,
         box-shadow 0.22s ease,
+        border-color 0.22s ease;
+}
+
+.dashboard-stat-card::before,
+.stat-card::before,
+.dashboard-stat::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(
+        90deg,
+        #f59e0b,
+        #f97316,
+        #ef4444
+    );
+    opacity: 0.85;
+}
+
+.dashboard-stat-card:hover,
+.stat-card:hover,
+.dashboard-stat:hover {
+    transform: translateY(-3px);
+    border-color: rgba(203, 213, 225, 0.95);
+    box-shadow:
+        0 14px 34px rgba(15, 23, 42, 0.09),
+        0 4px 10px rgba(15, 23, 42, 0.04);
+}
+
+.dashboard-stat-card.clickable,
+.stat-card.clickable {
+    cursor: pointer;
+}
+
+.dashboard-stat-card-header,
+.stat-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.dashboard-stat-card-label,
+.stat-card-label {
+    min-width: 0;
+    font-size: 11px;
+    line-height: 1.4;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #64748b;
+}
+
+.dashboard-stat-card-icon,
+.stat-card-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: #f8fafc;
+    color: #f59e0b;
+}
+
+.dashboard-stat-card-value,
+.stat-card-value,
+.dashboard-stat-value {
+    display: block;
+    margin-top: 12px;
+    font-size: clamp(25px, 3vw, 34px);
+    line-height: 1;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: #0f172a;
+}
+
+.dashboard-stat-card-description,
+.stat-card-description {
+    margin-top: 8px;
+    font-size: 12px;
+    line-height: 1.45;
+    color: #94a3b8;
+}
+
+
+/* ============================================================
+   5. STAT CARD INTERACTION
+============================================================ */
+
+.dashboard-stat-card.is-active,
+.stat-card.is-active,
+.dashboard-stat-card.active,
+.stat-card.active {
+    border-color: rgba(245, 158, 11, 0.5);
+    box-shadow:
+        0 12px 30px rgba(245, 158, 11, 0.12),
+        0 0 0 3px rgba(245, 158, 11, 0.08);
+}
+
+
+/* ============================================================
+   6. DASHBOARD MAIN GRID
+============================================================ */
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(300px, 0.9fr);
+    gap: 20px;
+    width: 100%;
+}
+
+.dashboard-grid-full {
+    grid-column: 1 / -1;
+}
+
+.dashboard-card {
+    min-width: 0;
+    border: 1px solid #e5e7eb;
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow:
+        0 8px 24px rgba(15, 23, 42, 0.05),
+        0 2px 5px rgba(15, 23, 42, 0.025);
+}
+
+.dashboard-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 18px 20px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.dashboard-card-title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 800;
+    color: #111827;
+}
+
+.dashboard-card-subtitle {
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+.dashboard-card-body {
+    padding: 20px;
+}
+
+
+/* ============================================================
+   7. SALES SECTION
+============================================================ */
+
+.dashboard-sales-section {
+    width: 100%;
+    margin-bottom: 28px;
+}
+
+.dashboard-sales-section-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 14px;
+}
+
+.dashboard-sales-section-title {
+    margin: 0;
+    font-size: 18px;
+    line-height: 1.25;
+    font-weight: 800;
+    color: #111827;
+}
+
+.dashboard-sales-section-subtitle {
+    margin: 5px 0 0;
+    font-size: 13px;
+    color: #64748b;
+}
+
+
+/* ============================================================
+   8. SALES CARDS GRID
+============================================================ */
+
+.dashboard-sales-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    width: 100%;
+}
+
+
+/* ============================================================
+   9. SALES CARD
+============================================================ */
+
+.dashboard-sales-card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    width: 100%;
+    min-width: 0;
+    min-height: 102px;
+    padding: 15px;
+    overflow: hidden;
+
+    border: 1px solid #e2e8f0;
+    border-radius: 17px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255, 255, 255, 0.98),
+            rgba(248, 250, 252, 0.98)
+        );
+
+    box-shadow:
+        0 7px 20px rgba(15, 23, 42, 0.055),
+        0 2px 5px rgba(15, 23, 42, 0.025);
+
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+
+    transition:
+        transform 0.22s ease,
         border-color 0.22s ease,
+        box-shadow 0.22s ease,
         background 0.22s ease;
 }
 
-
-/* =========================================================
-   SALES CARD HOVER
-========================================================= */
+.dashboard-sales-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(
+        180deg,
+        #f59e0b,
+        #f97316
+    );
+    opacity: 0;
+    transition: opacity 0.22s ease;
+}
 
 .dashboard-sales-card:hover {
-    transform:
-        translateY(-3px);
-
-    border-color:
-        rgba(59, 130, 246, 0.32);
-
+    transform: translateY(-3px);
+    border-color: rgba(245, 158, 11, 0.35);
     box-shadow:
-        0 10px 25px
-        rgba(15, 23, 42, 0.08);
+        0 14px 30px rgba(15, 23, 42, 0.09),
+        0 4px 10px rgba(15, 23, 42, 0.035);
+}
+
+.dashboard-sales-card:hover::before {
+    opacity: 1;
+}
+
+.dashboard-sales-card:focus-visible {
+    outline: none;
+    border-color: rgba(245, 158, 11, 0.7);
+    box-shadow:
+        0 0 0 4px rgba(245, 158, 11, 0.12),
+        0 10px 24px rgba(15, 23, 42, 0.08);
+}
+
+.dashboard-sales-card.is-active,
+.dashboard-sales-card.active {
+    border-color: rgba(245, 158, 11, 0.65);
+    background:
+        linear-gradient(
+            145deg,
+            #fffdf7,
+            #ffffff
+        );
+    box-shadow:
+        0 14px 32px rgba(245, 158, 11, 0.12),
+        0 0 0 3px rgba(245, 158, 11, 0.07);
+}
+
+.dashboard-sales-card.is-active::before,
+.dashboard-sales-card.active::before {
+    opacity: 1;
 }
 
 
-/* =========================================================
-   SALES CARD ACTIVE
-========================================================= */
+/* ============================================================
+   10. SALES CARD ICON
+============================================================ */
 
-.dashboard-sales-card.is-active {
-    border-color:
-        var(--primary);
+.dashboard-sales-card-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+
+    width: 46px;
+    height: 46px;
+
+    border-radius: 14px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #fff7ed,
+            #ffedd5
+        );
+
+    color: #ea580c;
+
+    box-shadow:
+        inset 0 0 0 1px rgba(234, 88, 12, 0.08);
+}
+
+.dashboard-sales-card-icon svg {
+    width: 21px;
+    height: 21px;
+}
+
+
+/* ============================================================
+   11. SALES CARD CONTENT
+============================================================ */
+
+.dashboard-sales-card-content {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.dashboard-sales-card-name {
+    overflow: hidden;
+    margin: 0;
+
+    font-size: 13px;
+    line-height: 1.35;
+    font-weight: 800;
+
+    color: #1e293b;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dashboard-sales-card-label {
+    margin-top: 3px;
+
+    font-size: 10px;
+    line-height: 1.35;
+    font-weight: 600;
+
+    color: #94a3b8;
+
+    text-transform: uppercase;
+    letter-spacing: 0.055em;
+}
+
+.dashboard-sales-card-count-wrapper {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+    margin-top: 7px;
+}
+
+.dashboard-sales-card-count {
+    font-size: 20px;
+    line-height: 1;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    color: #0f172a;
+}
+
+.dashboard-sales-card-count-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: #94a3b8;
+}
+
+
+/* ============================================================
+   12. SALES CARD ARROW
+============================================================ */
+
+.dashboard-sales-card-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex: 0 0 auto;
+
+    width: 28px;
+    height: 28px;
+
+    border-radius: 9px;
+
+    color: #94a3b8;
+
+    transition:
+        transform 0.22s ease,
+        color 0.22s ease,
+        background 0.22s ease;
+}
+
+.dashboard-sales-card:hover .dashboard-sales-card-arrow {
+    transform: translateX(3px);
+    color: #ea580c;
+    background: #fff7ed;
+}
+
+.dashboard-sales-card.is-active .dashboard-sales-card-arrow,
+.dashboard-sales-card.active .dashboard-sales-card-arrow {
+    color: #ea580c;
+    background: #fff7ed;
+}
+
+
+/* ============================================================
+   13. SALES CARD ENTRANCE ANIMATION
+============================================================ */
+
+.dashboard-sales-card {
+    animation: dashboardSalesCardIn 0.35s ease both;
+}
+
+.dashboard-sales-card:nth-child(1) {
+    animation-delay: 0.02s;
+}
+
+.dashboard-sales-card:nth-child(2) {
+    animation-delay: 0.05s;
+}
+
+.dashboard-sales-card:nth-child(3) {
+    animation-delay: 0.08s;
+}
+
+.dashboard-sales-card:nth-child(4) {
+    animation-delay: 0.11s;
+}
+
+.dashboard-sales-card:nth-child(5) {
+    animation-delay: 0.14s;
+}
+
+.dashboard-sales-card:nth-child(6) {
+    animation-delay: 0.17s;
+}
+
+.dashboard-sales-card:nth-child(7) {
+    animation-delay: 0.20s;
+}
+
+@keyframes dashboardSalesCardIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* ============================================================
+   14. SALES FILTER
+============================================================ */
+
+.dashboard-sales-filter-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dashboard-sales-filter-wrapper label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #64748b;
+}
+
+#salesFilter,
+#dashboardSalesFilter {
+    min-width: 190px;
+    height: 38px;
+    padding: 0 34px 0 12px;
+
+    border: 1px solid #dbe3ec;
+    border-radius: 10px;
+
+    background-color: #ffffff;
+    color: #334155;
+
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+#salesFilter:focus,
+#dashboardSalesFilter:focus {
+    outline: none;
+    border-color: #f59e0b;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+}
+
+
+/* ============================================================
+   15. SALES PIPELINE
+============================================================ */
+
+.dashboard-pipeline,
+.sales-pipeline {
+    width: 100%;
+}
+
+.dashboard-pipeline-grid,
+.sales-pipeline-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 10px;
+    width: 100%;
+}
+
+.dashboard-pipeline-stage,
+.sales-pipeline-stage,
+.pipeline-stage {
+    position: relative;
+    min-width: 0;
+    padding: 14px 12px;
+
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+
+    background: #ffffff;
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.dashboard-pipeline-stage:hover,
+.sales-pipeline-stage:hover,
+.pipeline-stage:hover {
+    transform: translateY(-2px);
+    border-color: #cbd5e1;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+}
+
+.dashboard-pipeline-stage-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.dashboard-pipeline-stage-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 24px;
+    height: 24px;
+
+    border-radius: 8px;
+
+    background: #f8fafc;
+    color: #64748b;
+
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.dashboard-pipeline-stage-title,
+.pipeline-stage-title {
+    margin: 10px 0 0;
+
+    font-size: 11px;
+    line-height: 1.4;
+    font-weight: 800;
+
+    color: #334155;
+}
+
+.dashboard-pipeline-stage-count,
+.pipeline-stage-count {
+    margin-top: 8px;
+
+    font-size: 22px;
+    line-height: 1;
+    font-weight: 800;
+
+    color: #0f172a;
+}
+
+.dashboard-pipeline-stage-description {
+    margin-top: 5px;
+
+    font-size: 10px;
+    line-height: 1.45;
+
+    color: #94a3b8;
+}
+
+
+/* ============================================================
+   16. PIPELINE STAGE STATES
+============================================================ */
+
+.dashboard-pipeline-stage.is-new,
+.pipeline-stage.is-new {
+    border-color: rgba(59, 130, 246, 0.2);
+}
+
+.dashboard-pipeline-stage.is-contact,
+.pipeline-stage.is-contact {
+    border-color: rgba(139, 92, 246, 0.2);
+}
+
+.dashboard-pipeline-stage.is-appointment,
+.pipeline-stage.is-appointment {
+    border-color: rgba(245, 158, 11, 0.25);
+}
+
+.dashboard-pipeline-stage.is-survey,
+.pipeline-stage.is-survey {
+    border-color: rgba(14, 165, 233, 0.25);
+}
+
+.dashboard-pipeline-stage.is-quotation,
+.pipeline-stage.is-quotation {
+    border-color: rgba(249, 115, 22, 0.25);
+}
+
+.dashboard-pipeline-stage.is-deal,
+.pipeline-stage.is-deal {
+    border-color: rgba(34, 197, 94, 0.25);
+}
+
+.dashboard-pipeline-stage.is-no-deal,
+.pipeline-stage.is-no-deal {
+    border-color: rgba(239, 68, 68, 0.2);
+}
+
+
+/* ============================================================
+   17. RECENT ACTIVITY
+============================================================ */
+
+.dashboard-recent-activity {
+    width: 100%;
+}
+
+.dashboard-activity-list {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.dashboard-activity-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 13px 0;
+
+    border-bottom: 1px solid #f1f5f9;
+
+    transition:
+        background 0.18s ease,
+        transform 0.18s ease;
+}
+
+.dashboard-activity-item:last-child {
+    border-bottom: 0;
+}
+
+.dashboard-activity-item:hover {
+    transform: translateX(2px);
+}
+
+.dashboard-activity-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex: 0 0 auto;
+
+    width: 34px;
+    height: 34px;
+
+    border-radius: 10px;
+
+    background: #f8fafc;
+    color: #64748b;
+}
+
+.dashboard-activity-content {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.dashboard-activity-title {
+    margin: 0;
+
+    font-size: 12px;
+    line-height: 1.4;
+    font-weight: 700;
+
+    color: #334155;
+}
+
+.dashboard-activity-description {
+    margin: 3px 0 0;
+
+    font-size: 11px;
+    line-height: 1.45;
+
+    color: #94a3b8;
+}
+
+.dashboard-activity-time {
+    flex: 0 0 auto;
+
+    font-size: 10px;
+    line-height: 1.4;
+    font-weight: 600;
+
+    color: #94a3b8;
+}
+
+
+/* ============================================================
+   18. PROFILE PIPELINE
+============================================================ */
+
+.profile-pipeline {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 8px;
+    width: 100%;
+}
+
+.profile-pipeline-item {
+    position: relative;
+    min-width: 0;
+    padding: 10px;
+
+    border: 1px solid #e5e7eb;
+    border-radius: 11px;
+
+    background: #ffffff;
+}
+
+.profile-pipeline-item.active {
+    border-color: rgba(245, 158, 11, 0.45);
+    background: #fffbeb;
+}
+
+.profile-pipeline-item-title {
+    font-size: 10px;
+    line-height: 1.35;
+    font-weight: 700;
+    color: #64748b;
+}
+
+.profile-pipeline-item-value {
+    margin-top: 6px;
+    font-size: 16px;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+
+/* ============================================================
+   19. SELECTED SALES LEAD LIST
+============================================================ */
+
+.dashboard-sales-lead-list-section {
+    width: 100%;
+    margin-top: 24px;
+    margin-bottom: 28px;
+
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 10px 28px rgba(15, 23, 42, 0.055),
+        0 2px 6px rgba(15, 23, 42, 0.025);
+
+    overflow: hidden;
+
+    animation: dashboardLeadSectionIn 0.3s ease both;
+}
+
+@keyframes dashboardLeadSectionIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* ============================================================
+   20. LEAD LIST HEADER
+============================================================ */
+
+.dashboard-sales-lead-list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+
+    padding: 20px;
+
+    border-bottom: 1px solid #eef2f7;
 
     background:
         linear-gradient(
             135deg,
-            #eff6ff 0%,
-            #ffffff 100%
+            #ffffff,
+            #fafafa
+        );
+}
+
+.dashboard-sales-lead-list-heading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    min-width: 0;
+}
+
+.dashboard-sales-lead-list-title-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex: 0 0 auto;
+
+    width: 42px;
+    height: 42px;
+
+    border-radius: 12px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #fff7ed,
+            #ffedd5
         );
 
-    box-shadow:
-        0 0 0 2px
-        rgba(59, 130, 246, 0.08),
+    color: #ea580c;
+}
 
-        0 10px 25px
-        rgba(59, 130, 246, 0.10);
+.dashboard-sales-lead-list-title-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.dashboard-sales-lead-list-title {
+    margin: 0;
+
+    font-size: 17px;
+    line-height: 1.3;
+    font-weight: 800;
+
+    color: #111827;
+}
+
+.dashboard-sales-lead-list-subtitle {
+    margin: 4px 0 0;
+
+    font-size: 12px;
+    line-height: 1.45;
+
+    color: #64748b;
+}
+
+.dashboard-sales-lead-list-count {
+    flex: 0 0 auto;
+
+    padding: 7px 10px;
+
+    border: 1px solid #fed7aa;
+    border-radius: 10px;
+
+    background: #fff7ed;
+
+    color: #c2410c;
+
+    font-size: 11px;
+    line-height: 1;
+    font-weight: 800;
 }
 
 
-/* =========================================================
-   SALES CARD ICON
-========================================================= */
+/* ============================================================
+   21. LEAD LIST TOOLBAR
+============================================================ */
 
-.dashboard-sales-card-icon {
-    width: 40px;
+.dashboard-sales-lead-list-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+
+    padding: 14px 20px;
+
+    border-bottom: 1px solid #f1f5f9;
+
+    background: #ffffff;
+}
+
+.dashboard-sales-lead-search-wrap {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 180px;
+    max-width: 520px;
+}
+
+.dashboard-sales-lead-search-icon {
+    position: absolute;
+    top: 50%;
+    left: 12px;
+
+    width: 16px;
+    height: 16px;
+
+    transform: translateY(-50%);
+
+    color: #94a3b8;
+
+    pointer-events: none;
+}
+
+.dashboard-sales-lead-search {
+    width: 100%;
+    height: 40px;
+
+    padding: 0 13px 0 38px;
+
+    border: 1px solid #dbe3ec;
+    border-radius: 11px;
+
+    background: #f8fafc;
+
+    color: #1e293b;
+
+    font: inherit;
+    font-size: 12px;
+
+    transition:
+        border-color 0.18s ease,
+        background 0.18s ease,
+        box-shadow 0.18s ease;
+}
+
+.dashboard-sales-lead-search::placeholder {
+    color: #94a3b8;
+}
+
+.dashboard-sales-lead-search:hover {
+    background: #ffffff;
+}
+
+.dashboard-sales-lead-search:focus {
+    outline: none;
+    background: #ffffff;
+
+    border-color: #f59e0b;
+
+    box-shadow:
+        0 0 0 3px rgba(245, 158, 11, 0.1);
+}
+
+.dashboard-sales-lead-page-size {
+    flex: 0 0 auto;
 
     height: 40px;
 
-    display: flex;
+    padding: 0 32px 0 11px;
 
-    align-items: center;
-
-    justify-content: center;
-
-    flex-shrink: 0;
-
-    margin-right: 11px;
-
+    border: 1px solid #dbe3ec;
     border-radius: 11px;
 
-    color:
-        var(--primary);
+    background: #ffffff;
 
-    background:
-        var(--primary-light);
+    color: #475569;
 
-    font-size:
-        12px;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
 
-    line-height:
-        1;
+    cursor: pointer;
+}
 
-    font-weight:
-        800;
+.dashboard-sales-lead-page-size:focus {
+    outline: none;
+    border-color: #f59e0b;
 
-    transition:
-        transform 0.22s ease,
-        background 0.22s ease,
-        color 0.22s ease;
+    box-shadow:
+        0 0 0 3px rgba(245, 158, 11, 0.1);
 }
 
 
-.dashboard-sales-card:hover
-.dashboard-sales-card-icon {
-    transform:
-        scale(1.06);
-}
+/* ============================================================
+   22. LEAD TABLE WRAPPER
+============================================================ */
 
-
-.dashboard-sales-card.is-active
-.dashboard-sales-card-icon {
-    color:
-        #ffffff;
-
-    background:
-        var(--primary);
-}
-
-
-/* =========================================================
-   SALES CARD CONTENT
-========================================================= */
-
-.dashboard-sales-card-content {
-    min-width: 0;
-
-    flex: 1;
-}
-
-
-.dashboard-sales-card-name {
-    display: block;
-
+.dashboard-sales-lead-table-wrap {
     width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+.dashboard-sales-lead-table {
+    width: 100%;
+    min-width: 940px;
+
+    border-collapse: separate;
+    border-spacing: 0;
+
+    font-size: 12px;
+}
+
+.dashboard-sales-lead-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+
+    padding: 12px 14px;
+
+    border-bottom: 1px solid #e5e7eb;
+
+    background: #f8fafc;
+
+    color: #64748b;
+
+    font-size: 10px;
+    line-height: 1.3;
+    font-weight: 800;
+
+    letter-spacing: 0.055em;
+    text-transform: uppercase;
+
+    text-align: left;
+    white-space: nowrap;
+}
+
+.dashboard-sales-lead-table tbody td {
+    padding: 13px 14px;
+
+    border-bottom: 1px solid #f1f5f9;
+
+    vertical-align: middle;
+
+    color: #475569;
+}
+
+.dashboard-sales-lead-table tbody tr {
+    transition:
+        background 0.16s ease;
+}
+
+.dashboard-sales-lead-table tbody tr:hover {
+    background: #fffaf4;
+}
+
+.dashboard-sales-lead-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+
+/* ============================================================
+   23. LEAD TABLE COLUMN WIDTHS
+============================================================ */
+
+.dashboard-sales-lead-table th:nth-child(1),
+.dashboard-sales-lead-table td:nth-child(1) {
+    min-width: 190px;
+}
+
+.dashboard-sales-lead-table th:nth-child(2),
+.dashboard-sales-lead-table td:nth-child(2) {
+    min-width: 130px;
+}
+
+.dashboard-sales-lead-table th:nth-child(3),
+.dashboard-sales-lead-table td:nth-child(3) {
+    min-width: 125px;
+}
+
+.dashboard-sales-lead-table th:nth-child(4),
+.dashboard-sales-lead-table td:nth-child(4) {
+    min-width: 130px;
+}
+
+.dashboard-sales-lead-table th:nth-child(5),
+.dashboard-sales-lead-table td:nth-child(5) {
+    min-width: 110px;
+}
+
+.dashboard-sales-lead-table th:nth-child(6),
+.dashboard-sales-lead-table td:nth-child(6) {
+    min-width: 115px;
+}
+
+.dashboard-sales-lead-table th:nth-child(7),
+.dashboard-sales-lead-table td:nth-child(7) {
+    min-width: 105px;
+}
+
+.dashboard-sales-lead-table th:nth-child(8),
+.dashboard-sales-lead-table td:nth-child(8) {
+    width: 80px;
+}
+
+
+/* ============================================================
+   24. CUSTOMER CELL
+============================================================ */
+
+.dashboard-sales-lead-customer {
+    min-width: 0;
+}
+
+.dashboard-sales-lead-customer-name {
+    display: block;
 
     overflow: hidden;
 
-    color:
-        var(--slate-800);
+    font-size: 12px;
+    line-height: 1.4;
+    font-weight: 800;
 
-    font-size:
-        11px;
+    color: #1e293b;
 
-    line-height:
-        1.35;
-
-    font-weight:
-        800;
-
-    white-space:
-        nowrap;
-
-    text-overflow:
-        ellipsis;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
-
-
-.dashboard-sales-card-label {
-    display: block;
-
-    margin-top:
-        3px;
-
-    color:
-        var(--slate-400);
-
-    font-size:
-        8px;
-
-    line-height:
-        1.3;
-
-    font-weight:
-        600;
-}
-
-
-/* =========================================================
-   SALES CARD COUNT
-========================================================= */
-
-.dashboard-sales-card-count-wrapper {
-    flex-shrink: 0;
-
-    margin-left:
-        8px;
-
-    text-align:
-        right;
-}
-
-
-.dashboard-sales-card-count {
-    display: block;
-
-    color:
-        var(--slate-900);
-
-    font-size:
-        18px;
-
-    line-height:
-        1;
-
-    font-weight:
-        850;
-}
-
-
-.dashboard-sales-card-count-label {
-    display: block;
-
-    margin-top:
-        3px;
-
-    color:
-        var(--slate-400);
-
-    font-size:
-        7px;
-
-    line-height:
-        1;
-
-    font-weight:
-        600;
-}
-
-
-/* =========================================================
-   SALES CARD ARROW
-========================================================= */
-
-.dashboard-sales-card-arrow {
-    width:
-        22px;
-
-    height:
-        22px;
-
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    justify-content:
-        center;
-
-    flex-shrink:
-        0;
-
-    margin-left:
-        7px;
-
-    color:
-        var(--slate-300);
-
-    transition:
-        transform 0.22s ease,
-        color 0.22s ease;
-}
-
-
-.dashboard-sales-card:hover
-.dashboard-sales-card-arrow {
-    color:
-        var(--primary);
-
-    transform:
-        translateX(3px);
-}
-
-
-.dashboard-sales-card.is-active
-.dashboard-sales-card-arrow {
-    color:
-        var(--primary);
-
-    transform:
-        translateX(3px);
-}
-
-
-.dashboard-sales-card-arrow svg {
-    width:
-        14px;
-
-    height:
-        14px;
-}
-
-
-/* =========================================================
-   SALES CARD ENTRANCE
-========================================================= */
-
-.dashboard-sales-card {
-    opacity:
-        0;
-
-    animation:
-        dashboardSalesCardIn
-        0.45s
-        ease-out
-        forwards;
-}
-
-
-.dashboard-sales-card:nth-child(1) {
-    animation-delay:
-        0.05s;
-}
-
-.dashboard-sales-card:nth-child(2) {
-    animation-delay:
-        0.10s;
-}
-
-.dashboard-sales-card:nth-child(3) {
-    animation-delay:
-        0.15s;
-}
-
-.dashboard-sales-card:nth-child(4) {
-    animation-delay:
-        0.20s;
-}
-
-.dashboard-sales-card:nth-child(5) {
-    animation-delay:
-        0.25s;
-}
-
-.dashboard-sales-card:nth-child(6) {
-    animation-delay:
-        0.30s;
-}
-
-.dashboard-sales-card:nth-child(7) {
-    animation-delay:
-        0.35s;
-}
-
-
-@keyframes dashboardSalesCardIn {
-
-    from {
-        opacity:
-            0;
-
-        transform:
-            translateY(8px);
-    }
-
-    to {
-        opacity:
-            1;
-
-        transform:
-            translateY(0);
-    }
-}
-
-
-/* =========================================================
-   SELECTED SALES CUSTOMER SECTION
-========================================================= */
-
-.dashboard-sales-lead-list-section {
-    width:
-        100%;
-
-    margin-top:
-        18px;
-
-    overflow:
-        hidden;
-
-    background:
-        #ffffff;
-
-    border:
-        1px solid var(--border);
-
-    border-radius:
-        var(--radius-lg);
-
-    box-shadow:
-        var(--shadow-xs);
-
-    scroll-margin-top:
-        90px;
-
-    animation:
-        dashboardLeadListIn
-        0.4s
-        ease-out
-        both;
-}
-
-
-@keyframes dashboardLeadListIn {
-
-    from {
-        opacity:
-            0;
-
-        transform:
-            translateY(10px);
-    }
-
-    to {
-        opacity:
-            1;
-
-        transform:
-            translateY(0);
-    }
-}
-
-
-/* =========================================================
-   LEAD LIST HEADER
-========================================================= */
-
-.dashboard-sales-lead-list-header {
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    justify-content:
-        space-between;
-
-    gap:
-        15px;
-
-    padding:
-        17px 19px;
-
-    border-bottom:
-        1px solid var(--slate-100);
-}
-
-
-.dashboard-sales-lead-list-heading {
-    min-width:
-        0;
-}
-
-
-.dashboard-sales-lead-list-title {
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    gap:
-        7px;
-
-    margin:
-        0;
-
-    color:
-        var(--slate-900);
-
-    font-size:
-        14px;
-
-    line-height:
-        1.3;
-
-    font-weight:
-        800;
-}
-
-
-.dashboard-sales-lead-list-title-icon {
-    width:
-        27px;
-
-    height:
-        27px;
-
-    display:
-        inline-flex;
-
-    align-items:
-        center;
-
-    justify-content:
-        center;
-
-    flex-shrink:
-        0;
-
-    border-radius:
-        8px;
-
-    color:
-        var(--primary);
-
-    background:
-        var(--primary-light);
-}
-
-
-.dashboard-sales-lead-list-title-icon svg {
-    width:
-        14px;
-
-    height:
-        14px;
-}
-
-
-.dashboard-sales-lead-list-subtitle {
-    margin:
-        4px 0 0;
-
-    color:
-        var(--slate-400);
-
-    font-size:
-        9px;
-
-    line-height:
-        1.4;
-}
-
-
-/* =========================================================
-   TOTAL LEADS BADGE
-========================================================= */
-
-.dashboard-sales-lead-list-count {
-    flex-shrink:
-        0;
-
-    padding:
-        6px 10px;
-
-    border-radius:
-        999px;
-
-    color:
-        var(--primary);
-
-    background:
-        var(--primary-light);
-
-    font-size:
-        9px;
-
-    line-height:
-        1;
-
-    font-weight:
-        800;
-
-    white-space:
-        nowrap;
-}
-
-
-/* =========================================================
-   TOOLBAR
-========================================================= */
-
-.dashboard-sales-lead-list-toolbar {
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    gap:
-        9px;
-
-    padding:
-        12px 18px;
-
-    border-bottom:
-        1px solid var(--slate-100);
-
-    background:
-        #fcfdff;
-}
-
-
-/* =========================================================
-   SEARCH WRAPPER
-========================================================= */
-
-.dashboard-sales-lead-search-wrap {
-    position:
-        relative;
-
-    min-width:
-        0;
-
-    flex:
-        1;
-}
-
-
-/* =========================================================
-   SEARCH ICON
-========================================================= */
-
-.dashboard-sales-lead-search-icon {
-    position:
-        absolute;
-
-    top:
-        50%;
-
-    left:
-        11px;
-
-    width:
-        14px;
-
-    height:
-        14px;
-
-    color:
-        var(--slate-400);
-
-    pointer-events:
-        none;
-
-    transform:
-        translateY(-50%);
-}
-
-
-.dashboard-sales-lead-search-icon svg {
-    width:
-        14px;
-
-    height:
-        14px;
-}
-
-
-/* =========================================================
-   SEARCH INPUT
-========================================================= */
-
-.dashboard-sales-lead-search {
-    width:
-        100%;
-
-    min-height:
-        36px;
-
-    padding:
-        8px 11px 8px 32px;
-
-    border:
-        1px solid var(--slate-200);
-
-    border-radius:
-        9px;
-
-    outline:
-        none;
-
-    background:
-        #ffffff;
-
-    color:
-        var(--slate-800);
-
-    font-family:
-        inherit;
-
-    font-size:
-        10px;
-
-    transition:
-        border-color 0.2s ease,
-        box-shadow 0.2s ease;
-}
-
-
-.dashboard-sales-lead-search::placeholder {
-    color:
-        var(--slate-400);
-}
-
-
-.dashboard-sales-lead-search:focus {
-    border-color:
-        rgba(59, 130, 246, 0.55);
-
-    box-shadow:
-        0 0 0 3px
-        rgba(59, 130, 246, 0.08);
-}
-
-
-/* =========================================================
-   PAGE SIZE SELECT
-========================================================= */
-
-.dashboard-sales-lead-page-size {
-    min-height:
-        36px;
-
-    padding:
-        8px 10px;
-
-    border:
-        1px solid var(--slate-200);
-
-    border-radius:
-        9px;
-
-    outline:
-        none;
-
-    background:
-        #ffffff;
-
-    color:
-        var(--slate-700);
-
-    font-family:
-        inherit;
-
-    font-size:
-        10px;
-
-    cursor:
-        pointer;
-}
-
-
-/* =========================================================
-   TABLE WRAPPER
-========================================================= */
-
-.dashboard-sales-lead-table-wrap {
-    width:
-        100%;
-
-    overflow-x:
-        auto;
-
-    overscroll-behavior-x:
-        contain;
-
-    scrollbar-width:
-        thin;
-}
-
-
-/* =========================================================
-   TABLE
-========================================================= */
-
-.dashboard-sales-lead-table {
-    width:
-        100%;
-
-    min-width:
-        920px;
-
-    border-collapse:
-        collapse;
-
-    table-layout:
-        fixed;
-}
-
-
-/* =========================================================
-   TABLE HEADER
-========================================================= */
-
-.dashboard-sales-lead-table thead {
-    background:
-        #f8fafc;
-}
-
-
-.dashboard-sales-lead-table th {
-    padding:
-        10px 12px;
-
-    border-bottom:
-        1px solid var(--slate-200);
-
-    color:
-        var(--slate-500);
-
-    font-size:
-        8px;
-
-    line-height:
-        1.2;
-
-    font-weight:
-        800;
-
-    letter-spacing:
-        0.02em;
-
-    text-align:
-        left;
-
-    text-transform:
-        uppercase;
-
-    white-space:
-        nowrap;
-}
-
-
-/* =========================================================
-   TABLE WIDTHS
-========================================================= */
-
-.dashboard-sales-lead-table th:nth-child(1) {
-    width:
-        19%;
-}
-
-.dashboard-sales-lead-table th:nth-child(2) {
-    width:
-        12%;
-}
-
-.dashboard-sales-lead-table th:nth-child(3) {
-    width:
-        13%;
-}
-
-.dashboard-sales-lead-table th:nth-child(4) {
-    width:
-        14%;
-}
-
-.dashboard-sales-lead-table th:nth-child(5) {
-    width:
-        12%;
-}
-
-.dashboard-sales-lead-table th:nth-child(6) {
-    width:
-        11%;
-}
-
-.dashboard-sales-lead-table th:nth-child(7) {
-    width:
-        11%;
-}
-
-.dashboard-sales-lead-table th:nth-child(8) {
-    width:
-        8%;
-}
-
-
-/* =========================================================
-   TABLE BODY
-========================================================= */
-
-.dashboard-sales-lead-table td {
-    padding:
-        11px 12px;
-
-    border-bottom:
-        1px solid var(--slate-100);
-
-    color:
-        var(--slate-600);
-
-    font-size:
-        9px;
-
-    line-height:
-        1.35;
-
-    vertical-align:
-        middle;
-}
-
-
-.dashboard-sales-lead-table tbody tr {
-    cursor:
-        pointer;
-
-    transition:
-        background 0.18s ease;
-}
-
-
-.dashboard-sales-lead-table tbody tr:hover {
-    background:
-        #f8fbff;
-}
-
-
-.dashboard-sales-lead-table tbody tr:last-child td {
-    border-bottom:
-        0;
-}
-
-
-/* =========================================================
-   CUSTOMER NAME
-========================================================= */
-
-.dashboard-sales-lead-customer {
-    min-width:
-        0;
-}
-
-
-.dashboard-sales-lead-customer-name {
-    display:
-        block;
-
-    overflow:
-        hidden;
-
-    color:
-        var(--slate-800);
-
-    font-size:
-        10px;
-
-    line-height:
-        1.3;
-
-    font-weight:
-        800;
-
-    white-space:
-        nowrap;
-
-    text-overflow:
-        ellipsis;
-}
-
 
 .dashboard-sales-lead-customer-email {
-    display:
-        block;
+    display: block;
 
-    margin-top:
-        2px;
+    overflow: hidden;
 
-    overflow:
-        hidden;
+    margin-top: 3px;
 
-    color:
-        var(--slate-400);
+    font-size: 10px;
+    line-height: 1.35;
 
-    font-size:
-        8px;
+    color: #94a3b8;
 
-    line-height:
-        1.25;
-
-    white-space:
-        nowrap;
-
-    text-overflow:
-        ellipsis;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 
-/* =========================================================
-   BUSINESS
-========================================================= */
+/* ============================================================
+   25. LEAD BUSINESS
+============================================================ */
 
 .dashboard-sales-lead-business {
-    overflow:
-        hidden;
+    display: block;
 
-    color:
-        var(--slate-700);
+    overflow: hidden;
 
-    font-weight:
-        700;
+    font-size: 11px;
+    line-height: 1.4;
+    font-weight: 650;
 
-    white-space:
-        nowrap;
+    color: #475569;
 
-    text-overflow:
-        ellipsis;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 
-/* =========================================================
-   PHONE
-========================================================= */
+/* ============================================================
+   26. LEAD PHONE
+============================================================ */
 
 .dashboard-sales-lead-phone {
-    overflow:
-        hidden;
-
-    color:
-        var(--slate-500);
-
-    font-family:
-        ui-monospace,
-        SFMono-Regular,
-        Menlo,
-        Monaco,
-        Consolas,
-        monospace;
-
-    font-size:
-        8px;
-
-    white-space:
-        nowrap;
-
-    text-overflow:
-        ellipsis;
+    font-size: 11px;
+    line-height: 1.4;
+    color: #475569;
+    white-space: nowrap;
 }
 
 
-/* =========================================================
-   LOCATION
-========================================================= */
+/* ============================================================
+   27. LEAD LOCATION
+============================================================ */
 
 .dashboard-sales-lead-location {
-    overflow:
-        hidden;
+    display: block;
 
-    color:
-        var(--slate-500);
+    overflow: hidden;
 
-    white-space:
-        nowrap;
+    max-width: 190px;
 
-    text-overflow:
-        ellipsis;
+    font-size: 11px;
+    line-height: 1.4;
+
+    color: #64748b;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 
-/* =========================================================
-   STATUS
-========================================================= */
+/* ============================================================
+   28. LEAD STATUS
+============================================================ */
 
 .dashboard-sales-lead-status {
-    display:
-        inline-flex;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 
-    align-items:
-        center;
+    min-height: 24px;
+    padding: 4px 8px;
 
-    max-width:
-        100%;
+    border: 1px solid transparent;
+    border-radius: 999px;
 
-    padding:
-        4px 7px;
+    font-size: 9px;
+    line-height: 1.2;
+    font-weight: 800;
 
-    overflow:
-        hidden;
+    white-space: nowrap;
+}
 
-    border-radius:
-        999px;
+.dashboard-sales-lead-status-new {
+    background: #eff6ff;
+    border-color: #dbeafe;
+    color: #2563eb;
+}
 
-    color:
-        var(--slate-600);
+.dashboard-sales-lead-status-first-contact {
+    background: #f5f3ff;
+    border-color: #ede9fe;
+    color: #7c3aed;
+}
 
-    background:
-        var(--slate-100);
+.dashboard-sales-lead-status-appointment {
+    background: #fffbeb;
+    border-color: #fef3c7;
+    color: #b45309;
+}
 
-    font-size:
-        7.5px;
+.dashboard-sales-lead-status-site-survey {
+    background: #ecfeff;
+    border-color: #cffafe;
+    color: #0891b2;
+}
 
-    line-height:
-        1.1;
+.dashboard-sales-lead-status-quotation {
+    background: #fff7ed;
+    border-color: #ffedd5;
+    color: #c2410c;
+}
 
-    font-weight:
-        800;
+.dashboard-sales-lead-status-deal,
+.dashboard-sales-lead-status-closing {
+    background: #f0fdf4;
+    border-color: #dcfce7;
+    color: #15803d;
+}
 
-    white-space:
-        nowrap;
+.dashboard-sales-lead-status-no-deal,
+.dashboard-sales-lead-status-not-interested {
+    background: #fef2f2;
+    border-color: #fee2e2;
+    color: #dc2626;
+}
 
-    text-overflow:
-        ellipsis;
+.dashboard-sales-lead-status-default {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+    color: #64748b;
 }
 
 
-.dashboard-sales-lead-status.status-new {
-    color:
-        var(--primary);
-
-    background:
-        var(--primary-light);
-}
-
-
-.dashboard-sales-lead-status.status-first-contact {
-    color:
-        var(--info);
-
-    background:
-        var(--info-light);
-}
-
-
-.dashboard-sales-lead-status.status-appointment {
-    color:
-        var(--purple);
-
-    background:
-        var(--purple-light);
-}
-
-
-.dashboard-sales-lead-status.status-site-survey {
-    color:
-        var(--info);
-
-    background:
-        var(--info-light);
-}
-
-
-.dashboard-sales-lead-status.status-quotation {
-    color:
-        var(--warning);
-
-    background:
-        var(--warning-light);
-}
-
-
-.dashboard-sales-lead-status.status-deal-closing {
-    color:
-        var(--success);
-
-    background:
-        var(--success-light);
-}
-
-
-.dashboard-sales-lead-status.status-no-deal {
-    color:
-        var(--danger);
-
-    background:
-        var(--danger-light);
-}
-
-
-/* =========================================================
-   DATE
-========================================================= */
+/* ============================================================
+   29. LEAD DATE
+============================================================ */
 
 .dashboard-sales-lead-date {
-    color:
-        var(--slate-500);
-
-    font-size:
-        8px;
-
-    white-space:
-        nowrap;
+    font-size: 10px;
+    line-height: 1.45;
+    color: #64748b;
+    white-space: nowrap;
 }
 
 
-.dashboard-sales-lead-date.empty {
-    color:
-        var(--slate-300);
-}
-
-
-/* =========================================================
-   VIEW BUTTON
-========================================================= */
+/* ============================================================
+   30. LEAD VIEW BUTTON
+============================================================ */
 
 .dashboard-sales-lead-view {
-    display:
-        inline-flex;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
 
-    align-items:
-        center;
+    min-height: 30px;
+    padding: 6px 9px;
 
-    justify-content:
-        center;
+    border: 1px solid #e2e8f0;
+    border-radius: 9px;
 
-    gap:
-        4px;
+    background: #ffffff;
 
-    min-height:
-        28px;
+    color: #475569;
 
-    padding:
-        5px 8px;
+    font: inherit;
+    font-size: 10px;
+    line-height: 1;
+    font-weight: 800;
 
-    border:
-        1px solid var(--slate-200);
-
-    border-radius:
-        7px;
-
-    background:
-        #ffffff;
-
-    color:
-        var(--primary);
-
-    font-family:
-        inherit;
-
-    font-size:
-        8px;
-
-    font-weight:
-        800;
-
-    cursor:
-        pointer;
-
-    transition:
-        background 0.18s ease,
-        border-color 0.18s ease,
-        transform 0.18s ease;
-}
-
-
-.dashboard-sales-lead-view:hover {
-    border-color:
-        rgba(59, 130, 246, 0.35);
-
-    background:
-        var(--primary-light);
-
-    transform:
-        translateY(-1px);
-}
-
-
-.dashboard-sales-lead-view svg {
-    width:
-        12px;
-
-    height:
-        12px;
-}
-
-
-/* =========================================================
-   EMPTY STATE
-========================================================= */
-
-.dashboard-sales-lead-empty {
-    min-height:
-        180px;
-
-    display:
-        flex;
-
-    flex-direction:
-        column;
-
-    align-items:
-        center;
-
-    justify-content:
-        center;
-
-    padding:
-        30px 20px;
-
-    color:
-        var(--slate-400);
-
-    text-align:
-        center;
-}
-
-
-.dashboard-sales-lead-empty-icon {
-    width:
-        42px;
-
-    height:
-        42px;
-
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    justify-content:
-        center;
-
-    margin-bottom:
-        10px;
-
-    border-radius:
-        12px;
-
-    color:
-        var(--slate-400);
-
-    background:
-        var(--slate-100);
-}
-
-
-.dashboard-sales-lead-empty-icon svg {
-    width:
-        19px;
-
-    height:
-        19px;
-}
-
-
-.dashboard-sales-lead-empty-title {
-    color:
-        var(--slate-700);
-
-    font-size:
-        11px;
-
-    font-weight:
-        800;
-}
-
-
-.dashboard-sales-lead-empty-text {
-    max-width:
-        400px;
-
-    margin-top:
-        4px;
-
-    color:
-        var(--slate-400);
-
-    font-size:
-        9px;
-
-    line-height:
-        1.5;
-}
-
-
-/* =========================================================
-   LOADING
-========================================================= */
-
-.dashboard-sales-lead-loading {
-    min-height:
-        180px;
-
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    justify-content:
-        center;
-
-    color:
-        var(--slate-400);
-
-    font-size:
-        10px;
-}
-
-
-/* =========================================================
-   PAGINATION
-========================================================= */
-
-.dashboard-sales-lead-pagination {
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    justify-content:
-        space-between;
-
-    gap:
-        12px;
-
-    padding:
-        11px 18px;
-
-    border-top:
-        1px solid var(--slate-100);
-
-    background:
-        #fcfdff;
-}
-
-
-.dashboard-sales-lead-pagination-info {
-    color:
-        var(--slate-400);
-
-    font-size:
-        8px;
-
-    line-height:
-        1.3;
-}
-
-
-.dashboard-sales-lead-pagination-info strong {
-    color:
-        var(--slate-600);
-
-    font-weight:
-        800;
-}
-
-
-.dashboard-sales-lead-pagination-buttons {
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    gap:
-        4px;
-}
-
-
-.dashboard-sales-lead-page-button {
-    min-width:
-        28px;
-
-    height:
-        28px;
-
-    display:
-        inline-flex;
-
-    align-items:
-        center;
-
-    justify-content:
-        center;
-
-    padding:
-        0 7px;
-
-    border:
-        1px solid var(--slate-200);
-
-    border-radius:
-        7px;
-
-    background:
-        #ffffff;
-
-    color:
-        var(--slate-600);
-
-    font-family:
-        inherit;
-
-    font-size:
-        8px;
-
-    font-weight:
-        700;
-
-    cursor:
-        pointer;
+    cursor: pointer;
 
     transition:
         background 0.18s ease,
@@ -1560,73 +1516,815 @@
         transform 0.18s ease;
 }
 
+.dashboard-sales-lead-view:hover {
+    transform: translateY(-1px);
+
+    border-color: #fdba74;
+
+    background: #fff7ed;
+
+    color: #c2410c;
+}
+
+.dashboard-sales-lead-view:focus-visible {
+    outline: none;
+
+    border-color: #f59e0b;
+
+    box-shadow:
+        0 0 0 3px rgba(245, 158, 11, 0.12);
+}
+
+.dashboard-sales-lead-view svg {
+    width: 13px;
+    height: 13px;
+}
+
+
+/* ============================================================
+   31. LEAD EMPTY STATE
+============================================================ */
+
+.dashboard-sales-lead-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 220px;
+
+    padding: 30px;
+
+    text-align: center;
+}
+
+.dashboard-sales-lead-empty-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 48px;
+    height: 48px;
+
+    margin-bottom: 12px;
+
+    border-radius: 14px;
+
+    background: #f8fafc;
+    color: #94a3b8;
+}
+
+.dashboard-sales-lead-empty-title {
+    margin: 0;
+
+    font-size: 14px;
+    line-height: 1.4;
+    font-weight: 800;
+
+    color: #334155;
+}
+
+.dashboard-sales-lead-empty-text {
+    max-width: 420px;
+
+    margin: 6px 0 0;
+
+    font-size: 12px;
+    line-height: 1.5;
+
+    color: #94a3b8;
+}
+
+
+/* ============================================================
+   32. LEAD LOADING STATE
+============================================================ */
+
+.dashboard-sales-lead-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 180px;
+
+    padding: 30px;
+
+    color: #64748b;
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.dashboard-sales-lead-loading::before {
+    content: "";
+
+    width: 18px;
+    height: 18px;
+
+    margin-right: 9px;
+
+    border: 2px solid #e2e8f0;
+    border-top-color: #f59e0b;
+
+    border-radius: 50%;
+
+    animation: dashboardSpinner 0.7s linear infinite;
+}
+
+@keyframes dashboardSpinner {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+
+/* ============================================================
+   33. LEAD PAGINATION
+============================================================ */
+
+.dashboard-sales-lead-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+
+    padding: 14px 20px;
+
+    border-top: 1px solid #eef2f7;
+
+    background: #fafafa;
+}
+
+.dashboard-sales-lead-pagination-info {
+    font-size: 11px;
+    line-height: 1.4;
+    font-weight: 600;
+
+    color: #64748b;
+}
+
+.dashboard-sales-lead-pagination-buttons {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.dashboard-sales-lead-page-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 30px;
+    height: 30px;
+
+    padding: 0 8px;
+
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+
+    background: #ffffff;
+
+    color: #64748b;
+
+    font: inherit;
+    font-size: 10px;
+    font-weight: 800;
+
+    cursor: pointer;
+
+    transition:
+        background 0.18s ease,
+        color 0.18s ease,
+        border-color 0.18s ease;
+}
 
 .dashboard-sales-lead-page-button:hover:not(:disabled) {
-    color:
-        var(--primary);
-
-    border-color:
-        rgba(59, 130, 246, 0.30);
-
-    background:
-        var(--primary-light);
-
-    transform:
-        translateY(-1px);
+    border-color: #fdba74;
+    background: #fff7ed;
+    color: #c2410c;
 }
 
-
+.dashboard-sales-lead-page-button.is-active,
 .dashboard-sales-lead-page-button.active {
-    color:
-        #ffffff;
-
-    border-color:
-        var(--primary);
-
-    background:
-        var(--primary);
+    border-color: #f59e0b;
+    background: #f59e0b;
+    color: #ffffff;
 }
-
 
 .dashboard-sales-lead-page-button:disabled {
-    opacity:
-        0.45;
-
-    cursor:
-        not-allowed;
+    opacity: 0.45;
+    cursor: not-allowed;
 }
 
 
-/* =========================================================
-   MOBILE CARD SUPPORT
-========================================================= */
+/* ============================================================
+   34. MOBILE LEAD CARDS
+============================================================ */
 
 .dashboard-sales-lead-mobile-card {
-    display:
-        none;
+    display: none;
+
+    padding: 15px;
+
+    border-bottom: 1px solid #f1f5f9;
+
+    background: #ffffff;
+}
+
+.dashboard-sales-lead-mobile-card:last-child {
+    border-bottom: 0;
+}
+
+.dashboard-sales-lead-mobile-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.dashboard-sales-lead-mobile-card-name {
+    margin: 0;
+
+    font-size: 13px;
+    line-height: 1.35;
+    font-weight: 800;
+
+    color: #1e293b;
+}
+
+.dashboard-sales-lead-mobile-card-row {
+    display: flex;
+    gap: 7px;
+
+    margin-top: 8px;
+
+    font-size: 11px;
+    line-height: 1.4;
+
+    color: #64748b;
+}
+
+.dashboard-sales-lead-mobile-card-label {
+    flex: 0 0 70px;
+
+    font-size: 9px;
+    font-weight: 800;
+
+    color: #94a3b8;
+
+    text-transform: uppercase;
+}
+
+.dashboard-sales-lead-mobile-card-value {
+    min-width: 0;
+    overflow: hidden;
+
+    text-overflow: ellipsis;
 }
 
 
-/* =========================================================
-   REDUCED MOTION
-========================================================= */
+/* ============================================================
+   35. DASHBOARD POPUP
+============================================================ */
+
+.dashboard-stat-popup,
+.dashboard-popup {
+    position: fixed;
+
+    z-index: 9999;
+
+    width: min(420px, calc(100vw - 32px));
+
+    padding: 18px;
+
+    border: 1px solid rgba(226, 232, 240, 0.95);
+    border-radius: 18px;
+
+    background: rgba(255, 255, 255, 0.98);
+
+    box-shadow:
+        0 24px 70px rgba(15, 23, 42, 0.18),
+        0 6px 18px rgba(15, 23, 42, 0.08);
+
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+
+    animation: dashboardPopupIn 0.2s ease both;
+}
+
+@keyframes dashboardPopupIn {
+    from {
+        opacity: 0;
+        transform: translateY(7px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.dashboard-popup-title {
+    margin: 0;
+
+    font-size: 15px;
+    line-height: 1.4;
+    font-weight: 800;
+
+    color: #111827;
+}
+
+.dashboard-popup-content {
+    margin-top: 10px;
+
+    font-size: 12px;
+    line-height: 1.6;
+
+    color: #64748b;
+}
+
+.dashboard-popup-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 30px;
+    height: 30px;
+
+    border: 0;
+    border-radius: 8px;
+
+    background: #f8fafc;
+
+    color: #64748b;
+
+    cursor: pointer;
+}
+
+.dashboard-popup-close:hover {
+    background: #f1f5f9;
+    color: #334155;
+}
+
+
+/* ============================================================
+   36. DASHBOARD ERROR
+============================================================ */
+
+.dashboard-error {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+
+    width: 100%;
+
+    margin-bottom: 20px;
+    padding: 14px 16px;
+
+    border: 1px solid #fecaca;
+    border-radius: 14px;
+
+    background: #fef2f2;
+
+    color: #991b1b;
+
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.dashboard-error-icon {
+    flex: 0 0 auto;
+    margin-top: 1px;
+}
+
+.dashboard-error-message {
+    min-width: 0;
+}
+
+
+/* ============================================================
+   37. DASHBOARD LOADING OVERLAY
+============================================================ */
+
+.dashboard-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 180px;
+
+    color: #64748b;
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.dashboard-loading-spinner {
+    width: 20px;
+    height: 20px;
+
+    margin-right: 9px;
+
+    border: 2px solid #e2e8f0;
+    border-top-color: #f59e0b;
+
+    border-radius: 50%;
+
+    animation: dashboardSpinner 0.7s linear infinite;
+}
+
+
+/* ============================================================
+   38. DASHBOARD BUTTONS
+============================================================ */
+
+.dashboard-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+
+    min-height: 36px;
+
+    padding: 8px 12px;
+
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+
+    background: #ffffff;
+
+    color: #475569;
+
+    font: inherit;
+    font-size: 11px;
+    font-weight: 800;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.18s ease,
+        border-color 0.18s ease,
+        background 0.18s ease,
+        color 0.18s ease;
+}
+
+.dashboard-btn:hover {
+    transform: translateY(-1px);
+
+    border-color: #fdba74;
+
+    background: #fff7ed;
+
+    color: #c2410c;
+}
+
+.dashboard-btn-primary {
+    border-color: #f59e0b;
+
+    background: #f59e0b;
+
+    color: #ffffff;
+}
+
+.dashboard-btn-primary:hover {
+    border-color: #d97706;
+    background: #d97706;
+    color: #ffffff;
+}
+
+
+/* ============================================================
+   39. DASHBOARD "VIEW ALL"
+============================================================ */
+
+.dashboard-view-all,
+#dashboardViewAll {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+
+    border: 0;
+
+    background: transparent;
+
+    color: #ea580c;
+
+    font: inherit;
+    font-size: 11px;
+    font-weight: 800;
+
+    cursor: pointer;
+}
+
+.dashboard-view-all:hover,
+#dashboardViewAll:hover {
+    color: #c2410c;
+}
+
+.dashboard-view-all svg,
+#dashboardViewAll svg {
+    transition: transform 0.18s ease;
+}
+
+.dashboard-view-all:hover svg,
+#dashboardViewAll:hover svg {
+    transform: translateX(3px);
+}
+
+
+/* ============================================================
+   40. HIDDEN / ROLE BASED STATES
+============================================================ */
+
+.dashboard-hidden {
+    display: none !important;
+}
+
+.admin-only.dashboard-hidden,
+.sales-only.dashboard-hidden {
+    display: none !important;
+}
+
+
+/* ============================================================
+   41. SCROLLBAR
+============================================================ */
+
+.dashboard-sales-lead-table-wrap::-webkit-scrollbar {
+    height: 8px;
+}
+
+.dashboard-sales-lead-table-wrap::-webkit-scrollbar-track {
+    background: #f8fafc;
+}
+
+.dashboard-sales-lead-table-wrap::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: #cbd5e1;
+}
+
+.dashboard-sales-lead-table-wrap::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+
+/* ============================================================
+   42. BASE RESPONSIVE - 1200PX
+   responsive.css tetap boleh override bagian ini.
+============================================================ */
+
+@media (max-width: 1200px) {
+
+    .dashboard-stats,
+    .dashboard-stats-grid,
+    .stats-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .dashboard-sales-cards-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .dashboard-pipeline-grid,
+    .sales-pipeline-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .profile-pipeline {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+
+/* ============================================================
+   43. BASE RESPONSIVE - 900PX
+============================================================ */
+
+@media (max-width: 900px) {
+
+    .dashboard-stats,
+    .dashboard-stats-grid,
+    .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .dashboard-sales-cards-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-grid-full {
+        grid-column: auto;
+    }
+
+    .dashboard-pipeline-grid,
+    .sales-pipeline-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .profile-pipeline {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+
+/* ============================================================
+   44. BASE RESPONSIVE - 700PX
+============================================================ */
+
+@media (max-width: 700px) {
+
+    .dashboard-stats,
+    .dashboard-stats-grid,
+    .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .dashboard-sales-cards-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .dashboard-sales-card {
+        min-height: 92px;
+    }
+
+    .dashboard-sales-lead-list-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .dashboard-sales-lead-list-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .dashboard-sales-lead-search-wrap {
+        max-width: none;
+    }
+
+    .dashboard-sales-lead-page-size {
+        width: 100%;
+    }
+
+    .dashboard-sales-lead-pagination {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .dashboard-sales-lead-pagination-buttons {
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 2px;
+    }
+
+    .dashboard-pipeline-grid,
+    .sales-pipeline-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .profile-pipeline {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+
+/* ============================================================
+   45. BASE RESPONSIVE - 600PX
+============================================================ */
+
+@media (max-width: 600px) {
+
+    .dashboard-stats,
+    .dashboard-stats-grid,
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .dashboard-stat-card,
+    .stat-card,
+    .dashboard-stat {
+        padding: 15px;
+        border-radius: 14px;
+    }
+
+    .dashboard-stat-card-value,
+    .stat-card-value,
+    .dashboard-stat-value {
+        font-size: 25px;
+    }
+
+    .dashboard-greeting h1,
+    .dashboard-greeting-title {
+        font-size: 24px;
+    }
+
+    .dashboard-card-header {
+        padding: 15px;
+    }
+
+    .dashboard-card-body {
+        padding: 15px;
+    }
+
+    .dashboard-sales-lead-list-header {
+        padding: 15px;
+    }
+
+    .dashboard-sales-lead-list-toolbar {
+        padding: 12px 15px;
+    }
+
+    .dashboard-sales-lead-pagination {
+        padding: 12px 15px;
+    }
+}
+
+
+/* ============================================================
+   46. BASE RESPONSIVE - 420PX
+============================================================ */
+
+@media (max-width: 420px) {
+
+    .dashboard-stats,
+    .dashboard-stats-grid,
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-sales-card {
+        padding: 13px;
+    }
+
+    .dashboard-sales-card-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+    }
+
+    .dashboard-sales-card-count {
+        font-size: 18px;
+    }
+
+    .dashboard-pipeline-grid,
+    .sales-pipeline-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-pipeline {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-sales-lead-list-title {
+        font-size: 15px;
+    }
+
+    .dashboard-sales-lead-list-count {
+        align-self: flex-start;
+    }
+
+    .dashboard-sales-lead-page-button {
+        min-width: 28px;
+        height: 28px;
+    }
+}
+
+
+/* ============================================================
+   47. REDUCED MOTION
+============================================================ */
 
 @media (prefers-reduced-motion: reduce) {
 
+    .dashboard-page,
+    .dashboard-greeting,
     .dashboard-sales-card,
-    .dashboard-sales-lead-list-section {
-
-        animation:
-            none !important;
-
-        transition:
-            none !important;
+    .dashboard-sales-lead-list-section,
+    .dashboard-stat-popup,
+    .dashboard-popup {
+        animation: none !important;
     }
 
-
-    .dashboard-sales-card {
-
-        opacity:
-            1;
+    .dashboard-stat-card,
+    .stat-card,
+    .dashboard-stat,
+    .dashboard-sales-card,
+    .dashboard-pipeline-stage,
+    .sales-pipeline-stage,
+    .pipeline-stage,
+    .dashboard-activity-item,
+    .dashboard-btn,
+    .dashboard-sales-lead-view {
+        transition: none !important;
     }
 }
+
+
+/* ============================================================
+   END OF DASHBOARD.CSS
+============================================================ */
