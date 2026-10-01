@@ -1,3 +1,4 @@
+```javascript
 // ============================================================
 // FSI CRM - LEADS INITIALIZATION
 // ============================================================
@@ -11,13 +12,278 @@
 // 6. Load filter options
 // 7. Apply Dashboard filter
 // 8. Support Dashboard -> Leads navigation
+// 9. Prevent duplicate Leads loading
 //
 // IMPORTANT:
 // - Tidak mengubah sistem filter existing.
 // - Tidak mengubah RLS.
 // - Tidak mengubah query database.
-// - Dashboard hanya mengirim filter melalui sessionStorage.
+// - Dashboard mengirim filter melalui sessionStorage.
+// - Loading Leads dikontrol oleh file ini.
+// - Dashboard navigation hanya membuka halaman Leads.
+//
 // ============================================================
+
+
+// ============================================================
+// STATE
+// ============================================================
+
+let leadsInitialized = false;
+
+let leadsLoadingPromise = null;
+
+let leadsFilterOptionsLoadingPromise = null;
+
+let leadsLastLoadedKey = "";
+
+let leadsDashboardFilterApplied = false;
+
+let leadsPageOpenedListenerBound = false;
+
+
+// ============================================================
+// CREATE LEADS LOAD KEY
+// ============================================================
+//
+// Digunakan untuk mengetahui apakah request yang sama
+// sedang diminta berulang kali.
+//
+// Contoh:
+//
+// page 1
+// search ""
+// status ""
+// business ""
+// sales ""
+//
+// akan memiliki key yang sama.
+//
+
+function leadsCreateLoadKey(page = 1) {
+
+    let search = "";
+    let status = "";
+    let business = "";
+    let sales = "";
+
+    try {
+
+        const searchElement =
+            leadElement(
+                "lead-search",
+                "leadSearch",
+                "leadsSearch"
+            );
+
+        const statusElement =
+            leadElement(
+                "filter-status",
+                "statusFilter",
+                "leadStatusFilter"
+            );
+
+        const businessElement =
+            leadElement(
+                "filter-business",
+                "businessFilter"
+            );
+
+        const salesElement =
+            leadElement(
+                "salesFilter"
+            );
+
+        search =
+            String(
+                searchElement?.value ||
+                ""
+            ).trim();
+
+        status =
+            String(
+                statusElement?.value ||
+                ""
+            ).trim();
+
+        business =
+            String(
+                businessElement?.value ||
+                ""
+            ).trim();
+
+        sales =
+            String(
+                salesElement?.value ||
+                ""
+            ).trim();
+
+    } catch (error) {
+
+        console.warn(
+            "FSI CRM: gagal membuat Leads load key:",
+            error
+        );
+
+    }
+
+    return [
+        String(page || 1),
+        search,
+        status,
+        business,
+        sales
+    ].join("|");
+}
+
+
+// ============================================================
+// SAFE LOAD LEADS
+// ============================================================
+//
+// Semua loading Leads dari event/navigation diarahkan ke
+// fungsi ini.
+//
+// Tujuan utama:
+// - mencegah double request
+// - mencegah request bertumpuk
+// - tetap mengizinkan filter/page baru
+//
+// ============================================================
+
+async function leadsSafeLoad(
+    page = 1,
+    options = {}
+) {
+
+    const force =
+        options &&
+        options.force === true;
+
+    const reason =
+        options?.reason ||
+        "unknown";
+
+    const normalizedPage =
+        Number(page) > 0
+            ? Number(page)
+            : 1;
+
+    const loadKey =
+        leadsCreateLoadKey(
+            normalizedPage
+        );
+
+    console.log(
+        "FSI CRM: Leads load request:",
+        {
+            page: normalizedPage,
+            key: loadKey,
+            reason,
+            force
+        }
+    );
+
+
+    // ========================================================
+    // REQUEST SEDANG BERJALAN
+    // ========================================================
+
+    if (leadsLoadingPromise) {
+
+        console.log(
+            "FSI CRM: Leads load masih berjalan. Request tambahan ditahan."
+        );
+
+        return leadsLoadingPromise;
+    }
+
+
+    // ========================================================
+    // REQUEST SAMA SUDAH SELESAI
+    // ========================================================
+
+    if (
+        !force &&
+        leadsLastLoadedKey === loadKey
+    ) {
+
+        console.log(
+            "FSI CRM: Leads dengan filter yang sama sudah dimuat. Skip."
+        );
+
+        return true;
+    }
+
+
+    // ========================================================
+    // LOAD
+    // ========================================================
+
+    if (
+        typeof window.loadLeads !==
+        "function"
+    ) {
+
+        console.warn(
+            "FSI CRM: window.loadLeads belum tersedia."
+        );
+
+        return false;
+    }
+
+
+    leadsLoadingPromise =
+        (async function () {
+
+            try {
+
+                await window.loadLeads(
+                    normalizedPage
+                );
+
+                leadsLastLoadedKey =
+                    leadsCreateLoadKey(
+                        normalizedPage
+                    );
+
+                return true;
+
+            } catch (error) {
+
+                console.error(
+                    "FSI CRM: Leads load error:",
+                    error
+                );
+
+                throw error;
+
+            } finally {
+
+                leadsLoadingPromise =
+                    null;
+            }
+
+        })();
+
+
+    return leadsLoadingPromise;
+}
+
+
+// ============================================================
+// RESET LEADS LOAD CACHE
+// ============================================================
+
+function resetLeadsLoadCache() {
+
+    leadsLastLoadedKey =
+        "";
+
+    console.log(
+        "FSI CRM: Leads load cache reset."
+    );
+}
 
 
 // ============================================================
@@ -26,20 +292,23 @@
 
 function initializeLeads() {
 
+    // ========================================================
+    // ALREADY INITIALIZED
+    // ========================================================
+
     if (leadsInitialized) {
 
-        // ----------------------------------------------------
-        // IMPORTANT
-        // ----------------------------------------------------
-        // Walaupun Leads sudah pernah initialize,
-        // kita tetap cek apakah ada filter dari Dashboard.
-        // ----------------------------------------------------
-
-        applyDashboardLeadsFilter();
+        console.log(
+            "FSI CRM: Leads already initialized."
+        );
 
         return;
     }
 
+
+    // ========================================================
+    // MARK INITIALIZED
+    // ========================================================
 
     leadsInitialized =
         true;
@@ -112,9 +381,9 @@ function initializeLeads() {
                 "change",
                 function () {
 
-                    // ====================================================
+                    // ============================================
                     // SALES FILTER
-                    // ====================================================
+                    // ============================================
 
                     if (
                         element.id ===
@@ -151,20 +420,28 @@ function initializeLeads() {
                     }
 
 
-                    // ====================================================
+                    // ============================================
+                    // FILTER BERUBAH
+                    // ============================================
+
+                    resetLeadsLoadCache();
+
+
+                    // ============================================
                     // RESET PAGE
-                    // ====================================================
+                    // ============================================
 
                     leadSetCurrentPage(
                         1
                     );
 
 
-                    // ====================================================
+                    // ============================================
                     // APPLY FILTER
-                    // ====================================================
+                    // ============================================
 
                     filterLeads();
+
                 }
             );
         }
@@ -188,9 +465,12 @@ function initializeLeads() {
             "click",
             function () {
 
+                resetLeadsLoadCache();
+
                 changePage(
                     -1
                 );
+
             }
         );
     }
@@ -213,9 +493,12 @@ function initializeLeads() {
             "click",
             function () {
 
+                resetLeadsLoadCache();
+
                 changePage(
                     1
                 );
+
             }
         );
     }
@@ -236,7 +519,13 @@ function initializeLeads() {
 
         clearFilterBtn.addEventListener(
             "click",
-            clearLeadFilters
+            function () {
+
+                resetLeadsLoadCache();
+
+                clearLeadFilters();
+
+            }
         );
     }
 
@@ -289,6 +578,7 @@ function initializeLeads() {
                 } else {
 
                     closeLeadModal();
+
                 }
             }
         }
@@ -327,6 +617,7 @@ function initializeLeads() {
                     } else {
 
                         closeLeadModal();
+
                     }
                 }
             }
@@ -345,39 +636,108 @@ function initializeLeads() {
 
 
     // ========================================================
+    // BIND DASHBOARD -> LEADS EVENT
+    // ========================================================
+
+    bindDashboardLeadsNavigation();
+
+
+    // ========================================================
     // FILTER OPTIONS
     // ========================================================
 
-    loadFilterOptions()
-        .then(
-            function () {
+    loadFilterOptionsOnce({
+        reason: "initialize"
+    });
 
-                // ------------------------------------------------
-                // IMPORTANT
-                // ------------------------------------------------
-                // Setelah option Sales + Status selesai dimuat,
-                // baru kita apply filter dari Dashboard.
-                // ------------------------------------------------
 
-                applyDashboardLeadsFilter();
-            }
-        )
-        .catch(
-            error => {
+    console.log(
+        "FSI CRM: Leads initialized successfully."
+    );
+}
+
+
+// ============================================================
+// LOAD FILTER OPTIONS ONCE
+// ============================================================
+//
+// Sama seperti Leads loading, filter options juga tidak boleh
+// dipanggil bersamaan berkali-kali.
+//
+
+function loadFilterOptionsOnce(
+    options = {}
+) {
+
+    const reason =
+        options?.reason ||
+        "unknown";
+
+
+    // ========================================================
+    // REQUEST SEDANG BERJALAN
+    // ========================================================
+
+    if (
+        leadsFilterOptionsLoadingPromise
+    ) {
+
+        console.log(
+            "FSI CRM: filter options masih loading. Reuse request."
+        );
+
+        return leadsFilterOptionsLoadingPromise;
+    }
+
+
+    if (
+        typeof window.loadFilterOptions !==
+        "function"
+    ) {
+
+        console.warn(
+            "FSI CRM: window.loadFilterOptions belum tersedia."
+        );
+
+        return Promise.resolve(
+            false
+        );
+    }
+
+
+    leadsFilterOptionsLoadingPromise =
+        (async function () {
+
+            try {
+
+                console.log(
+                    "FSI CRM: loading filter options:",
+                    reason
+                );
+
+                await window.loadFilterOptions();
+
+                return true;
+
+            } catch (error) {
 
                 console.warn(
-                    "FSI CRM: initial filter options load failed:",
+                    "FSI CRM: filter options load failed:",
                     error
                 );
 
+                return false;
 
-                // ------------------------------------------------
-                // Tetap coba apply Dashboard filter.
-                // ------------------------------------------------
+            } finally {
 
-                applyDashboardLeadsFilter();
+                leadsFilterOptionsLoadingPromise =
+                    null;
             }
-        );
+
+        })();
+
+
+    return leadsFilterOptionsLoadingPromise;
 }
 
 
@@ -397,16 +757,19 @@ function initializeLeads() {
 // fsi_dashboard_leads_filter
 //
 // Fungsi ini membaca data tersebut lalu mengisi:
+//
 // - Sales filter
 // - Status filter
 //
-// Setelah itu loadLeads() dipanggil.
+// Setelah itu Leads dimuat satu kali.
 //
-// ============================================================
 
-function applyDashboardLeadsFilter() {
+async function applyDashboardLeadsFilter(
+    options = {}
+) {
 
-    let rawFilter = null;
+    let rawFilter =
+        null;
 
 
     // ========================================================
@@ -427,8 +790,7 @@ function applyDashboardLeadsFilter() {
             error
         );
 
-
-        return;
+        return false;
     }
 
 
@@ -438,7 +800,7 @@ function applyDashboardLeadsFilter() {
 
     if (!rawFilter) {
 
-        return;
+        return false;
     }
 
 
@@ -479,7 +841,7 @@ function applyDashboardLeadsFilter() {
         }
 
 
-        return;
+        return false;
     }
 
 
@@ -489,7 +851,7 @@ function applyDashboardLeadsFilter() {
         "object"
     ) {
 
-        return;
+        return false;
     }
 
 
@@ -532,25 +894,13 @@ function applyDashboardLeadsFilter() {
 
     if (salesSelect) {
 
-        // ----------------------------------------------------
-        // Set selected Sales
-        // ----------------------------------------------------
-
         salesSelect.value =
             salesId;
 
 
-        // ----------------------------------------------------
-        // Global state
-        // ----------------------------------------------------
-
         window.crmSelectedSalesId =
             salesId;
 
-
-        // ----------------------------------------------------
-        // Sales name
-        // ----------------------------------------------------
 
         if (salesId) {
 
@@ -600,6 +950,7 @@ function applyDashboardLeadsFilter() {
 
                 window.crmSelectedSalesName =
                     "";
+
             }
 
         } else {
@@ -662,14 +1013,15 @@ function applyDashboardLeadsFilter() {
 
 
     // ========================================================
-    // REMOVE SESSION FILTER
+    // MARK FILTER APPLIED
     // ========================================================
-    //
-    // Setelah dibaca, hapus.
-    //
-    // Supaya ketika user nanti membuka Dashboard biasa
-    // tidak membawa filter lama secara tidak sengaja.
-    //
+
+    leadsDashboardFilterApplied =
+        true;
+
+
+    // ========================================================
+    // REMOVE SESSION FILTER
     // ========================================================
 
     try {
@@ -688,11 +1040,159 @@ function applyDashboardLeadsFilter() {
 
 
     // ========================================================
+    // RESET LOAD CACHE
+    // ========================================================
+
+    resetLeadsLoadCache();
+
+
+    // ========================================================
     // LOAD LEADS
     // ========================================================
 
-    loadLeads(
-        1
+    await leadsSafeLoad(
+        1,
+        {
+            force: true,
+            reason:
+                options?.reason ||
+                "dashboard-filter"
+        }
+    );
+
+
+    return true;
+}
+
+
+// ============================================================
+// HANDLE DASHBOARD -> LEADS PAGE OPENED
+// ============================================================
+//
+// Event dikirim oleh:
+//
+// dashboard-navigation.js
+//
+// setelah halaman Leads berhasil dibuka.
+//
+// ============================================================
+
+async function handleLeadsPageOpened() {
+
+    console.log(
+        "FSI CRM: menerima event fsi:leads-page-opened."
+    );
+
+
+    // ========================================================
+    // PASTIKAN INITIALIZED
+    // ========================================================
+
+    if (!leadsInitialized) {
+
+        initializeLeads();
+    }
+
+
+    // ========================================================
+    // CEK DASHBOARD FILTER
+    // ========================================================
+
+    const hasDashboardFilter =
+        (() => {
+
+            try {
+
+                return Boolean(
+                    sessionStorage.getItem(
+                        "fsi_dashboard_leads_filter"
+                    )
+                );
+
+            } catch (error) {
+
+                return false;
+            }
+
+        })();
+
+
+    if (hasDashboardFilter) {
+
+        await loadFilterOptionsOnce({
+            reason:
+                "dashboard-navigation"
+        });
+
+
+        await applyDashboardLeadsFilter({
+            reason:
+                "dashboard-navigation"
+        });
+
+
+        return;
+    }
+
+
+    // ========================================================
+    // TANPA DASHBOARD FILTER
+    // ========================================================
+    //
+    // Jika Leads dibuka dari menu/header biasa,
+    // cukup load data sekali.
+    //
+
+    await leadsSafeLoad(
+        1,
+        {
+            reason:
+                "leads-navigation"
+        }
+    );
+}
+
+
+// ============================================================
+// BIND DASHBOARD NAVIGATION EVENT
+// ============================================================
+
+function bindDashboardLeadsNavigation() {
+
+    if (
+        leadsPageOpenedListenerBound
+    ) {
+
+        return;
+    }
+
+
+    leadsPageOpenedListenerBound =
+        true;
+
+
+    document.addEventListener(
+        "fsi:leads-page-opened",
+        function () {
+
+            handleLeadsPageOpened()
+                .catch(
+                    error => {
+
+                        console.error(
+                            "FSI CRM: Leads page navigation error:",
+                            error
+                        );
+
+                    }
+                );
+
+        }
+    );
+
+
+    console.log(
+        "FSI CRM: Dashboard -> Leads listener bound."
     );
 }
 
@@ -712,16 +1212,22 @@ function handleProfileReady() {
     bindAddCustomerButtons();
 
 
-    loadFilterOptions()
+    // ========================================================
+    // LOAD FILTER OPTIONS
+    // ========================================================
+
+    loadFilterOptionsOnce({
+        reason:
+            "profile-ready"
+    })
         .then(
             function () {
 
-                // ------------------------------------------------
-                // Dashboard filter bisa saja sudah dikirim
-                // sebelum profile selesai ready.
-                // ------------------------------------------------
+                applyDashboardLeadsFilter({
+                    reason:
+                        "profile-ready"
+                });
 
-                applyDashboardLeadsFilter();
             }
         )
         .catch(
@@ -732,8 +1238,6 @@ function handleProfileReady() {
                     error
                 );
 
-
-                applyDashboardLeadsFilter();
             }
         );
 }
@@ -829,12 +1333,34 @@ function handleSalesSelected(
 
 
     // ========================================================
+    // RESET CACHE
+    // ========================================================
+
+    resetLeadsLoadCache();
+
+
+    // ========================================================
     // LOAD
     // ========================================================
 
-    loadLeads(
-        1
-    );
+    leadsSafeLoad(
+        1,
+        {
+            force: true,
+            reason:
+                "header-sales-selected"
+        }
+    )
+        .catch(
+            error => {
+
+                console.error(
+                    "FSI CRM: header Sales selection load error:",
+                    error
+                );
+
+            }
+        );
 }
 
 
@@ -856,11 +1382,22 @@ function handleAppReady() {
     bindAddCustomerButtons();
 
 
-    loadFilterOptions()
+    // ========================================================
+    // FILTER OPTIONS
+    // ========================================================
+
+    loadFilterOptionsOnce({
+        reason:
+            "app-ready"
+    })
         .then(
             function () {
 
-                applyDashboardLeadsFilter();
+                applyDashboardLeadsFilter({
+                    reason:
+                        "app-ready"
+                });
+
             }
         )
         .catch(
@@ -871,8 +1408,6 @@ function handleAppReady() {
                     error
                 );
 
-
-                applyDashboardLeadsFilter();
             }
         );
 }
@@ -967,11 +1502,27 @@ window.bindAddCustomerButtons =
 
 
 // ============================================================
-// NEW DASHBOARD FILTER FUNCTION
+// DASHBOARD FILTER FUNCTION
 // ============================================================
 
 window.applyDashboardLeadsFilter =
     applyDashboardLeadsFilter;
+
+
+// ============================================================
+// LEADS LOAD CONTROL
+// ============================================================
+
+window.leadsSafeLoad =
+    leadsSafeLoad;
+
+
+window.resetLeadsLoadCache =
+    resetLeadsLoadCache;
+
+
+window.handleLeadsPageOpened =
+    handleLeadsPageOpened;
 
 
 // ============================================================
@@ -1022,7 +1573,14 @@ window.FSILeads = {
 
     bindAddCustomerButtons,
 
-    applyDashboardLeadsFilter
+    applyDashboardLeadsFilter,
+
+    leadsSafeLoad,
+
+    resetLeadsLoadCache,
+
+    handleLeadsPageOpened
+
 };
 
 
@@ -1034,12 +1592,15 @@ document.addEventListener(
     "DOMContentLoaded",
     function () {
 
+        bindDashboardLeadsNavigation();
+
         initializeLeads();
 
 
         console.log(
             "FSI CRM: Leads module loaded successfully."
         );
+
     }
 );
 
@@ -1053,6 +1614,7 @@ document.addEventListener(
     function () {
 
         handleProfileReady();
+
     }
 );
 
@@ -1066,6 +1628,7 @@ document.addEventListener(
     function () {
 
         handleAppReady();
+
     }
 );
 
@@ -1081,6 +1644,7 @@ document.addEventListener(
         handleSalesSelected(
             event
         );
+
     }
 );
 
@@ -1095,6 +1659,16 @@ document.addEventListener(
 
         // ----------------------------------------------------
         // Save/delete melakukan refresh sendiri.
+        // Tidak melakukan load ulang otomatis di sini.
         // ----------------------------------------------------
+
+        resetLeadsLoadCache();
+
     }
 );
+
+
+console.log(
+    "FSI CRM: leads-init.js loaded successfully."
+);
+```
