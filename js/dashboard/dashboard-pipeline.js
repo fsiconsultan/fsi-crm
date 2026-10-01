@@ -1,43 +1,24 @@
 // ============================================================
 // FSI CRM — DASHBOARD PIPELINE
 // ============================================================
-//
 // File:
 // js/dashboard/dashboard-pipeline.js
 //
-// FUNGSI:
-// - Menampilkan Sales Pipeline di Dashboard
-// - Membaca status dari leads.status
-// - Mendukung status CRM BARU
-// - Tetap kompatibel dengan status LAMA
+// PIPELINE:
 //
-// PIPELINE BARU:
-//
-// 1. New
+// 1. New Customer
 // 2. First Contact
-// 3. First Meeting / Appointment / Site Survey
-// 4. Quotation
-// 5. Second Appointment
-// 6. Deal
+// 3. Appointment
+// 4. Site Survey
+// 5. Quotation
+// 6. Deal / Closing
 // 7. No Deal
 //
 // ============================================================
 
 
-
 // ============================================================
 // FIND PIPELINE CONTAINER
-// ============================================================
-//
-// index.html terbaru:
-//
-//     pipeline-summary
-//
-// Versi lama:
-//
-//     dashboard-pipeline
-//
-// Kita support semuanya agar tidak merusak versi lama.
 // ============================================================
 
 function dashboardFindPipelineContainer() {
@@ -66,63 +47,40 @@ function dashboardFindPipelineContainer() {
 }
 
 
-
 // ============================================================
-// DASHBOARD PIPELINE STAGES
-// ============================================================
-//
-// Pipeline CRM terbaru.
-//
-// Setiap stage memiliki:
-// - label
-// - className
-// - aliases
-//
-// aliases digunakan untuk membaca status lama dari database.
-//
-// Contoh:
-//
-// Interested
-//      ↓
-// First Contact
-//
-// Follow Up
-// Appointment
-// Site Survey
-//      ↓
-// First Meeting / Appointment / Site Survey
-//
-// SPK
-// Closing
-//      ↓
-// Deal
-//
-// Not Interested
-//      ↓
-// No Deal
+// PIPELINE STAGES
 // ============================================================
 
 const DASHBOARD_PIPELINE_STAGES = [
 
     {
-        label:
-            "New",
+        key: "newCustomer",
 
-        className:
-            "status-new",
+        label: "New Customer",
+
+        className: "status-new",
+
+        icon: "user-plus",
+
+        description: "New customers",
 
         aliases: [
+            "New Customer",
             "New"
         ]
     },
 
 
     {
-        label:
-            "First Contact",
+        key: "firstContact",
 
-        className:
-            "status-first-contact",
+        label: "First Contact",
+
+        className: "status-first-contact",
+
+        icon: "phone-call",
+
+        description: "First contact made",
 
         aliases: [
             "First Contact",
@@ -132,28 +90,52 @@ const DASHBOARD_PIPELINE_STAGES = [
 
 
     {
-        label:
-            "First Meeting / Appointment / Site Survey",
+        key: "appointment",
 
-        className:
-            "status-first-meeting",
+        label: "Appointment",
+
+        className: "status-appointment",
+
+        icon: "calendar-check",
+
+        description: "Customer appointment",
 
         aliases: [
-            "First Meeting / Appointment / Site Survey",
-            "First Meeting",
             "Appointment",
-            "Site Survey",
+            "First Meeting",
+            "First Meeting / Appointment / Site Survey",
             "Follow Up"
         ]
     },
 
 
     {
-        label:
-            "Quotation",
+        key: "siteSurvey",
 
-        className:
-            "status-quotation",
+        label: "Site Survey",
+
+        className: "status-site-survey",
+
+        icon: "map-pin",
+
+        description: "Site survey activity",
+
+        aliases: [
+            "Site Survey"
+        ]
+    },
+
+
+    {
+        key: "quotation",
+
+        label: "Quotation",
+
+        className: "status-quotation",
+
+        icon: "file-text",
+
+        description: "Quotation sent",
 
         aliases: [
             "Quotation"
@@ -162,39 +144,35 @@ const DASHBOARD_PIPELINE_STAGES = [
 
 
     {
-        label:
-            "Second Appointment",
+        key: "dealClosing",
 
-        className:
-            "status-second-appointment",
+        label: "Deal / Closing",
+
+        className: "status-deal",
+
+        icon: "handshake",
+
+        description: "Successful deals",
 
         aliases: [
-            "Second Appointment"
+            "Deal / Closing",
+            "Deal",
+            "Closing",
+            "SPK"
         ]
     },
 
 
     {
-        label:
-            "Deal",
+        key: "noDeal",
 
-        className:
-            "status-deal",
+        label: "No Deal",
 
-        aliases: [
-            "Deal",
-            "SPK",
-            "Closing"
-        ]
-    },
+        className: "status-no-deal",
 
+        icon: "user-round-x",
 
-    {
-        label:
-            "No Deal",
-
-        className:
-            "status-no-deal",
+        description: "Customer did not continue",
 
         aliases: [
             "No Deal",
@@ -205,20 +183,8 @@ const DASHBOARD_PIPELINE_STAGES = [
 ];
 
 
-
 // ============================================================
 // NORMALIZE STATUS
-// ============================================================
-//
-// Membuat perbandingan status lebih aman.
-//
-// Contoh:
-//
-// "Interested"
-// " interested "
-// "INTERESTED"
-//
-// semuanya dianggap sama.
 // ============================================================
 
 function dashboardNormalizePipelineStatus(
@@ -240,7 +206,6 @@ function dashboardNormalizePipelineStatus(
 }
 
 
-
 // ============================================================
 // GET PIPELINE STAGES
 // ============================================================
@@ -248,32 +213,52 @@ function dashboardNormalizePipelineStatus(
 function dashboardGetPipelineStages() {
 
     return DASHBOARD_PIPELINE_STAGES.map(
-        stage => ({
-            ...stage,
+        function (stage) {
 
-            aliases:
-                Array.isArray(stage.aliases)
-                    ? [...stage.aliases]
-                    : []
-        })
+            return {
+
+                ...stage,
+
+                aliases:
+                    Array.isArray(stage.aliases)
+                        ? [...stage.aliases]
+                        : []
+
+            };
+        }
     );
 }
 
 
+// ============================================================
+// HAS VALUE
+// ============================================================
+
+function dashboardPipelineHasValue(
+    value
+) {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+        return false;
+    }
+
+
+    if (
+        typeof value === "string"
+    ) {
+        return value.trim() !== "";
+    }
+
+
+    return true;
+}
+
 
 // ============================================================
-// CHECK STATUS MATCH
-// ============================================================
-//
-// Contoh:
-//
-// lead.status = "Interested"
-//
-// stage = First Contact
-//
-// hasil:
-//
-// true
+// STATUS MATCH
 // ============================================================
 
 function dashboardPipelineStatusMatches(
@@ -281,9 +266,7 @@ function dashboardPipelineStatusMatches(
     stage
 ) {
 
-    if (
-        !stage
-    ) {
+    if (!stage) {
         return false;
     }
 
@@ -294,9 +277,7 @@ function dashboardPipelineStatusMatches(
         );
 
 
-    if (
-        !normalizedLeadStatus
-    ) {
+    if (!normalizedLeadStatus) {
         return false;
     }
 
@@ -308,41 +289,196 @@ function dashboardPipelineStatusMatches(
 
 
     return aliases.some(
-        alias =>
-            dashboardNormalizePipelineStatus(
-                alias
-            ) === normalizedLeadStatus
+        function (alias) {
+
+            return (
+                dashboardNormalizePipelineStatus(
+                    alias
+                ) ===
+                normalizedLeadStatus
+            );
+
+        }
     );
 }
 
 
+// ============================================================
+// GET STAGE FOR LEAD
+// ============================================================
+//
+// Status adalah sumber utama untuk current pipeline stage.
+//
+// Untuk Appointment / Site Survey / Quotation / Closing,
+// activity field digunakan sebagai fallback jika status
+// belum menggunakan status baru.
+// ============================================================
+
+function dashboardGetPipelineStageForLead(
+    lead
+) {
+
+    if (!lead) {
+        return null;
+    }
+
+
+    const status =
+        dashboardNormalizePipelineStatus(
+            lead.status
+        );
+
+
+    // --------------------------------------------------------
+    // 1. NO DEAL
+    // --------------------------------------------------------
+
+    if (
+        dashboardPipelineStatusMatches(
+            lead.status,
+            DASHBOARD_PIPELINE_STAGES[6]
+        )
+    ) {
+        return DASHBOARD_PIPELINE_STAGES[6];
+    }
+
+
+    // --------------------------------------------------------
+    // 2. DEAL / CLOSING
+    // --------------------------------------------------------
+
+    if (
+        dashboardPipelineStatusMatches(
+            lead.status,
+            DASHBOARD_PIPELINE_STAGES[5]
+        )
+    ) {
+        return DASHBOARD_PIPELINE_STAGES[5];
+    }
+
+
+    /*
+     * Closing field.
+     */
+
+    if (
+        dashboardPipelineHasValue(
+            lead.closing
+        )
+    ) {
+        return DASHBOARD_PIPELINE_STAGES[5];
+    }
+
+
+    // --------------------------------------------------------
+    // 3. QUOTATION
+    // --------------------------------------------------------
+
+    if (
+        dashboardPipelineStatusMatches(
+            lead.status,
+            DASHBOARD_PIPELINE_STAGES[4]
+        )
+    ) {
+        return DASHBOARD_PIPELINE_STAGES[4];
+    }
+
+
+    if (
+        dashboardPipelineHasValue(
+            lead.quotation
+        )
+    ) {
+        return DASHBOARD_PIPELINE_STAGES[4];
+    }
+
+
+    // --------------------------------------------------------
+    // 4. SITE SURVEY
+    // --------------------------------------------------------
+
+    if (
+        dashboardPipelineStatusMatches(
+            lead.status,
+            DASHBOARD_PIPELINE_STAGES[3]
+        )
+    ) {
+        return DASHBOARD_PIPELINE_STAGES[3];
+    }
+
+
+    if (
+        dashboardPipelineHasValue(
+            lead.site_survey
+        )
+    ) {
+        return DASHBOARD_PIPELINE_STAGES[3];
+    }
+
+
+    // --------------------------------------------------------
+    // 5. APPOINTMENT
+    // --------------------------------------------------------
+
+    if (
+        dashboardPipelineStatusMatches(
+            lead.status,
+            DASHBOARD_PIPELINE_STAGES[2]
+        )
+    ) {
+        return DASHBOARD_PIPELINE_STAGES[2];
+    }
+
+
+    if (
+        dashboardPipelineHasValue(
+            lead.appointment
+        )
+    ) {
+        return DASHBOARD_PIPELINE_STAGES[2];
+    }
+
+
+    // --------------------------------------------------------
+    // 6. FIRST CONTACT
+    // --------------------------------------------------------
+
+    if (
+        dashboardPipelineStatusMatches(
+            lead.status,
+            DASHBOARD_PIPELINE_STAGES[1]
+        )
+    ) {
+        return DASHBOARD_PIPELINE_STAGES[1];
+    }
+
+
+    // --------------------------------------------------------
+    // 7. NEW CUSTOMER
+    // --------------------------------------------------------
+
+    if (
+        dashboardPipelineStatusMatches(
+            lead.status,
+            DASHBOARD_PIPELINE_STAGES[0]
+        )
+    ) {
+        return DASHBOARD_PIPELINE_STAGES[0];
+    }
+
+
+    /*
+     * Unknown status.
+     *
+     * Jangan memaksakan lead ke pipeline.
+     */
+
+    return null;
+}
+
 
 // ============================================================
 // GET PIPELINE STAGE COUNT
-// ============================================================
-//
-// PENTING:
-//
-// Fungsi ini sengaja TIDAK lagi langsung menggunakan:
-//
-//     dashboardCountStatus()
-//
-// Karena dashboardCountStatus() hanya mencocokkan nama status
-// secara langsung.
-//
-// Sekarang kita menggunakan aliases.
-//
-// Contoh:
-//
-// database:
-//
-// Interested
-//
-// dashboard:
-//
-// First Contact
-//
-// tetap dihitung.
 // ============================================================
 
 function dashboardGetPipelineStageCount(
@@ -357,34 +493,37 @@ function dashboardGetPipelineStageCount(
     }
 
 
-    if (
-        !stage ||
-        !stage.label
-    ) {
+    if (!stage) {
         return 0;
     }
 
 
     return list.filter(
-        lead => {
+        function (lead) {
 
-            if (!lead) {
+            const currentStage =
+                dashboardGetPipelineStageForLead(
+                    lead
+                );
+
+
+            if (!currentStage) {
                 return false;
             }
 
 
-            return dashboardPipelineStatusMatches(
-                lead.status,
-                stage
+            return (
+                currentStage.key ===
+                stage.key
             );
+
         }
     ).length;
 }
 
 
-
 // ============================================================
-// GET TOTAL PIPELINE
+// GET TOTAL
 // ============================================================
 
 function dashboardGetPipelineTotal(
@@ -397,9 +536,8 @@ function dashboardGetPipelineTotal(
 }
 
 
-
 // ============================================================
-// GET PIPELINE PERCENTAGE
+// GET PERCENTAGE
 // ============================================================
 
 function dashboardGetPipelinePercentage(
@@ -429,7 +567,6 @@ function dashboardGetPipelinePercentage(
 }
 
 
-
 // ============================================================
 // FORMAT PERCENTAGE
 // ============================================================
@@ -442,16 +579,12 @@ function dashboardFormatPipelinePercentage(
         Number(percentage) || 0;
 
 
-    if (
-        value <= 0
-    ) {
+    if (value <= 0) {
         return "0%";
     }
 
 
-    if (
-        value >= 100
-    ) {
+    if (value >= 100) {
         return "100%";
     }
 
@@ -464,7 +597,6 @@ function dashboardFormatPipelinePercentage(
 
     return `${rounded}%`;
 }
-
 
 
 // ============================================================
@@ -481,17 +613,6 @@ function dashboardPipelineEscapeHTML(
     ) {
 
         return window.dashboardEscapeHTML(
-            value
-        );
-    }
-
-
-    if (
-        typeof dashboardEscapeHTML ===
-        "function"
-    ) {
-
-        return dashboardEscapeHTML(
             value
         );
     }
@@ -523,25 +644,18 @@ function dashboardPipelineEscapeHTML(
 }
 
 
-
 // ============================================================
-// ICON HELPER
+// ICON
 // ============================================================
 
 function dashboardPipelineIcon(
     iconName
 ) {
 
-    const icon =
-        String(
-            iconName || "circle"
-        );
-
-
     return `
         <i
             data-lucide="${dashboardPipelineEscapeHTML(
-                icon
+                iconName || "circle"
             )}"
             aria-hidden="true"
         ></i>
@@ -549,9 +663,8 @@ function dashboardPipelineIcon(
 }
 
 
-
 // ============================================================
-// RENDER EMPTY PIPELINE
+// EMPTY PIPELINE
 // ============================================================
 
 function dashboardRenderEmptyPipeline(
@@ -568,9 +681,7 @@ function dashboardRenderEmptyPipeline(
         <div class="pipeline-loading">
 
             <div class="pipeline-empty-icon">
-                ${dashboardPipelineIcon(
-                    "inbox"
-                )}
+                ${dashboardPipelineIcon("inbox")}
             </div>
 
             <div class="pipeline-empty-title">
@@ -594,7 +705,6 @@ function dashboardRenderEmptyPipeline(
         window.refreshIcons();
     }
 }
-
 
 
 // ============================================================
@@ -636,7 +746,7 @@ function renderDashboardPipeline(
 
 
     // --------------------------------------------------------
-    // EMPTY STATE
+    // EMPTY
     // --------------------------------------------------------
 
     if (
@@ -651,17 +761,16 @@ function renderDashboardPipeline(
     }
 
 
-
     // --------------------------------------------------------
-    // RENDER STAGES
+    // RENDER
     // --------------------------------------------------------
 
     const html =
         stages.map(
-            (
+            function (
                 stage,
                 index
-            ) => {
+            ) {
 
                 const count =
                     dashboardGetPipelineStageCount(
@@ -683,6 +792,25 @@ function renderDashboardPipeline(
                     );
 
 
+                let progressWidth =
+                    percentage;
+
+
+                if (
+                    count > 0 &&
+                    progressWidth < 4
+                ) {
+                    progressWidth = 4;
+                }
+
+
+                if (
+                    progressWidth > 100
+                ) {
+                    progressWidth = 100;
+                }
+
+
                 const safeLabel =
                     dashboardPipelineEscapeHTML(
                         stage.label
@@ -695,41 +823,13 @@ function renderDashboardPipeline(
                     );
 
 
-                const terminal =
-                    stage.label === "Deal" ||
-                    stage.label === "No Deal";
-
-
-                let progressWidth =
-                    percentage;
-
-
-                /*
-                 * Jika ada customer tetapi
-                 * persentasenya sangat kecil,
-                 * tetap tampil sedikit agar
-                 * progress bar terlihat.
-                 */
-
-                if (
-                    count > 0 &&
-                    progressWidth < 4
-                ) {
-
-                    progressWidth = 4;
-                }
-
-
-                if (
-                    progressWidth > 100
-                ) {
-
-                    progressWidth = 100;
-                }
-
-
                 const ariaLabel =
                     `${stage.label}: ${count} customer${count === 1 ? "" : "s"}, ${percentageText} of total leads`;
+
+
+                const terminal =
+                    stage.key === "dealClosing" ||
+                    stage.key === "noDeal";
 
 
                 return `
@@ -747,6 +847,10 @@ function renderDashboardPipeline(
 
                         data-pipeline-status="${safeLabel}"
 
+                        data-pipeline-key="${dashboardPipelineEscapeHTML(
+                            stage.key
+                        )}"
+
                         data-pipeline-count="${count}"
 
                         data-pipeline-percentage="${percentage}"
@@ -756,111 +860,42 @@ function renderDashboardPipeline(
                         )}"
                     >
 
-
-                        <!-- ICON -->
-
                         <div
                             class="pipeline-stage-icon"
                             aria-hidden="true"
                         >
-
                             ${dashboardPipelineIcon(
-                                stage.label === "New"
-                                    ? "user-plus"
-
-                                    : stage.label === "First Contact"
-                                        ? "phone-call"
-
-                                    : stage.label === "First Meeting / Appointment / Site Survey"
-                                        ? "calendar-check"
-
-                                    : stage.label === "Quotation"
-                                        ? "file-text"
-
-                                    : stage.label === "Second Appointment"
-                                        ? "calendar-clock"
-
-                                    : stage.label === "Deal"
-                                        ? "badge-check"
-
-                                    : "circle-x"
+                                stage.icon
                             )}
-
                         </div>
 
 
-
-                        <!-- CONTENT -->
-
                         <div class="pipeline-content">
-
 
                             <div class="pipeline-stage-top">
 
-
                                 <div class="pipeline-stage-text">
 
-                                    <span
-                                        class="pipeline-label"
-                                    >
+                                    <span class="pipeline-label">
                                         ${safeLabel}
                                     </span>
 
-
-                                    <small
-                                        class="pipeline-description"
-                                    >
-
-                                        ${
-                                            stage.label === "New"
-
-                                                ? "New customers"
-
-                                            : stage.label === "First Contact"
-
-                                                ? "First contact made"
-
-                                            : stage.label === "First Meeting / Appointment / Site Survey"
-
-                                                ? "Meeting, appointment or survey"
-
-                                            : stage.label === "Quotation"
-
-                                                ? "Quotation sent"
-
-                                            : stage.label === "Second Appointment"
-
-                                                ? "Second appointment"
-
-                                            : stage.label === "Deal"
-
-                                                ? "Successful deals"
-
-                                            : "Closed without deal"
-                                        }
-
+                                    <small class="pipeline-description">
+                                        ${dashboardPipelineEscapeHTML(
+                                            stage.description
+                                        )}
                                     </small>
 
                                 </div>
 
 
+                                <div class="pipeline-stage-number">
 
-                                <!-- NUMBER -->
-
-                                <div
-                                    class="pipeline-stage-number"
-                                >
-
-                                    <strong
-                                        class="pipeline-count"
-                                    >
+                                    <strong class="pipeline-count">
                                         ${count}
                                     </strong>
 
-
-                                    <span
-                                        class="pipeline-percentage"
-                                    >
+                                    <span class="pipeline-percentage">
                                         ${percentageText}
                                     </span>
 
@@ -868,9 +903,6 @@ function renderDashboardPipeline(
 
                             </div>
 
-
-
-                            <!-- PROGRESS BAR -->
 
                             <div
                                 class="pipeline-bar"
@@ -894,35 +926,27 @@ function renderDashboardPipeline(
                                     class="pipeline-bar-fill"
 
                                     style="
-                                        width:
-                                        ${progressWidth}%;
+                                        width: ${progressWidth}%;
                                     "
                                 ></div>
 
                             </div>
 
-
                         </div>
 
 
-
-                        <!-- TERMINAL INDICATOR -->
-
                         ${
                             terminal
-
                                 ? `
 
                                     <div
-                                        class="
-                                            pipeline-terminal-indicator
-                                        "
-
+                                        class="pipeline-terminal-indicator"
                                         aria-hidden="true"
                                     >
 
                                         ${dashboardPipelineIcon(
-                                            stage.label === "Deal"
+                                            stage.key ===
+                                            "dealClosing"
                                                 ? "check"
                                                 : "x"
                                         )}
@@ -930,7 +954,6 @@ function renderDashboardPipeline(
                                     </div>
 
                                 `
-
                                 : ""
                         }
 
@@ -945,10 +968,6 @@ function renderDashboardPipeline(
         html;
 
 
-    // --------------------------------------------------------
-    // REFRESH LUCIDE ICONS
-    // --------------------------------------------------------
-
     if (
         typeof window.refreshIcons ===
         "function"
@@ -957,7 +976,6 @@ function renderDashboardPipeline(
         window.refreshIcons();
     }
 }
-
 
 
 // ============================================================
@@ -985,7 +1003,7 @@ function getDashboardPipelineSummary(
 
 
     return stages.map(
-        stage => {
+        function (stage) {
 
             const count =
                 dashboardGetPipelineStageCount(
@@ -1003,11 +1021,17 @@ function getDashboardPipelineSummary(
 
             return {
 
+                key:
+                    stage.key,
+
                 label:
                     stage.label,
 
                 className:
                     stage.className,
+
+                icon:
+                    stage.icon,
 
                 aliases:
                     stage.aliases,
@@ -1025,12 +1049,10 @@ function getDashboardPipelineSummary(
                     dashboardFormatPipelinePercentage(
                         percentage
                     )
-
             };
         }
     );
 }
-
 
 
 // ============================================================
@@ -1047,19 +1069,30 @@ function dashboardGetPipelineStage(
         );
 
 
+    if (!normalizedStatus) {
+        return null;
+    }
+
+
     return DASHBOARD_PIPELINE_STAGES.find(
-        stage => {
+        function (stage) {
 
             return stage.aliases.some(
-                alias =>
-                    dashboardNormalizePipelineStatus(
-                        alias
-                    ) === normalizedStatus
+                function (alias) {
+
+                    return (
+                        dashboardNormalizePipelineStatus(
+                            alias
+                        ) ===
+                        normalizedStatus
+                    );
+
+                }
             );
+
         }
     ) || null;
 }
-
 
 
 // ============================================================
@@ -1080,7 +1113,6 @@ function dashboardGetPipelineClass(
         ? stage.className
         : "";
 }
-
 
 
 // ============================================================
@@ -1112,7 +1144,7 @@ function dashboardBindPipelineClicks() {
 
     container.addEventListener(
         "click",
-        event => {
+        function (event) {
 
             const item =
                 event.target.closest(
@@ -1160,11 +1192,6 @@ function dashboardBindPipelineClicks() {
             }
 
 
-            /*
-             * Jika tidak ada fungsi filter,
-             * buka Leads.
-             */
-
             if (
                 typeof window.showLeads ===
                 "function"
@@ -1178,9 +1205,8 @@ function dashboardBindPipelineClicks() {
 }
 
 
-
 // ============================================================
-// INITIALIZE PIPELINE
+// INITIALIZE
 // ============================================================
 
 function dashboardInitializePipeline() {
@@ -1207,7 +1233,6 @@ function dashboardInitializePipeline() {
 }
 
 
-
 // ============================================================
 // GLOBAL EXPORTS
 // ============================================================
@@ -1215,58 +1240,47 @@ function dashboardInitializePipeline() {
 window.dashboardFindPipelineContainer =
     dashboardFindPipelineContainer;
 
-
 window.dashboardGetPipelineStages =
     dashboardGetPipelineStages;
-
 
 window.dashboardNormalizePipelineStatus =
     dashboardNormalizePipelineStatus;
 
-
 window.dashboardPipelineStatusMatches =
     dashboardPipelineStatusMatches;
 
+window.dashboardGetPipelineStageForLead =
+    dashboardGetPipelineStageForLead;
 
 window.dashboardGetPipelineStageCount =
     dashboardGetPipelineStageCount;
 
-
 window.dashboardGetPipelineTotal =
     dashboardGetPipelineTotal;
-
 
 window.dashboardGetPipelinePercentage =
     dashboardGetPipelinePercentage;
 
-
 window.dashboardFormatPipelinePercentage =
     dashboardFormatPipelinePercentage;
-
 
 window.dashboardGetPipelineStage =
     dashboardGetPipelineStage;
 
-
 window.dashboardGetPipelineClass =
     dashboardGetPipelineClass;
-
 
 window.renderDashboardPipeline =
     renderDashboardPipeline;
 
-
 window.getDashboardPipelineSummary =
     getDashboardPipelineSummary;
-
 
 window.dashboardBindPipelineClicks =
     dashboardBindPipelineClicks;
 
-
 window.dashboardInitializePipeline =
     dashboardInitializePipeline;
-
 
 
 // ============================================================
@@ -1287,6 +1301,8 @@ Object.assign(
         dashboardNormalizePipelineStatus,
 
         dashboardPipelineStatusMatches,
+
+        dashboardGetPipelineStageForLead,
 
         dashboardGetPipelineStageCount,
 
@@ -1312,7 +1328,6 @@ Object.assign(
 );
 
 
-
 // ============================================================
 // DOM READY
 // ============================================================
@@ -1331,7 +1346,6 @@ if (
 
     dashboardInitializePipeline();
 }
-
 
 
 // ============================================================
