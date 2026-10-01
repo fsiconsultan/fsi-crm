@@ -11,15 +11,16 @@
 // 4. Quotation
 // 5. Deal / Closing
 // 6. No Deal
-// 7. Menjaga compatibility dengan ID lama
+// 7. Compatibility dengan modul Dashboard lama
 // ============================================================
 
 (function () {
+
     "use strict";
 
 
     // ========================================================
-    // SAFE HELPERS
+    // GET LEADS
     // ========================================================
 
     function getLeads() {
@@ -39,6 +40,10 @@
     }
 
 
+    // ========================================================
+    // NORMALIZE STATUS
+    // ========================================================
+
     function normalize(value) {
 
         if (
@@ -52,6 +57,10 @@
             .toLowerCase();
     }
 
+
+    // ========================================================
+    // HAS VALUE
+    // ========================================================
 
     function hasValue(value) {
 
@@ -70,21 +79,33 @@
     }
 
 
+    // ========================================================
+    // STATUS CHECK
+    // ========================================================
+
     function statusIs(lead, statuses) {
 
         if (!lead) {
             return false;
         }
 
-        const current = normalize(lead.status);
+        const currentStatus =
+            normalize(lead.status);
 
         return statuses.some(function (status) {
 
-            return current === normalize(status);
+            return (
+                currentStatus ===
+                normalize(status)
+            );
 
         });
     }
 
+
+    // ========================================================
+    // COUNT STATUS
+    // ========================================================
 
     function countStatus(leads, statuses) {
 
@@ -98,6 +119,10 @@
         }).length;
     }
 
+
+    // ========================================================
+    // COUNT FIELD
+    // ========================================================
 
     function countField(leads, field) {
 
@@ -166,14 +191,6 @@
     // ========================================================
     // APPOINTMENT
     // ========================================================
-    //
-    // Prioritas:
-    //
-    // 1. appointment field
-    // 2. status Appointment
-    // 3. legacy First Meeting / Follow Up
-    //
-    // ========================================================
 
     function isAppointment(lead) {
 
@@ -182,12 +199,20 @@
         }
 
 
+        /*
+         * Appointment field.
+         */
+
         if (
             hasValue(lead.appointment)
         ) {
             return true;
         }
 
+
+        /*
+         * New status.
+         */
 
         if (
             statusIs(
@@ -202,11 +227,7 @@
 
 
         /*
-         * Compatibility dengan status lama.
-         *
-         * Jangan menggunakan "Site Survey"
-         * di sini karena Site Survey sekarang
-         * merupakan kategori terpisah.
+         * Legacy status.
          */
 
         return statusIs(
@@ -315,21 +336,12 @@
         }
 
 
-        /*
-         * Closing date adalah indikator utama.
-         */
-
         if (
             hasValue(lead.closing)
         ) {
             return true;
         }
 
-
-        /*
-         * Compatibility dengan status lama
-         * dan status baru.
-         */
 
         return statusIs(
             lead,
@@ -380,23 +392,23 @@
 
 
     // ========================================================
-    // CALCULATE DASHBOARD STATS
+    // CALCULATE STATS
     // ========================================================
 
     function calculateDashboardStats(leads) {
 
-        const list = Array.isArray(leads)
-            ? leads
-            : [];
+        const list =
+            Array.isArray(leads)
+                ? leads
+                : [];
 
 
         const stats = {
 
-            // ------------------------------------------------
-            // MAIN DASHBOARD
-            // ------------------------------------------------
+            // Main statistics
 
-            total: list.length,
+            total:
+                list.length,
 
             newCustomer:
                 countNewCustomer(list),
@@ -420,34 +432,37 @@
                 countNoDeal(list),
 
 
-            // ------------------------------------------------
-            // ACTIVITY COUNTS
-            // ------------------------------------------------
+            // Activity fields
 
             appointmentActivity:
-                countField(list, "appointment"),
+                countField(
+                    list,
+                    "appointment"
+                ),
 
             siteSurveyActivity:
-                countField(list, "site_survey"),
+                countField(
+                    list,
+                    "site_survey"
+                ),
 
             quotationActivity:
-                countField(list, "quotation"),
+                countField(
+                    list,
+                    "quotation"
+                ),
 
             closingActivity:
-                countField(list, "closing")
+                countField(
+                    list,
+                    "closing"
+                )
         };
 
 
         // ====================================================
         // LEGACY COMPATIBILITY
         // ====================================================
-
-        /*
-         * Jangan dihapus.
-         *
-         * Beberapa modul CRM lama mungkin masih
-         * menggunakan nama property ini.
-         */
 
         stats.new =
             stats.newCustomer;
@@ -467,7 +482,6 @@
         stats.notInterested =
             stats.noDeal;
 
-
         stats.flyerSent =
             countStatus(
                 list,
@@ -478,7 +492,7 @@
 
 
         // ====================================================
-        // SAVE GLOBAL STATE
+        // GLOBAL STATE
         // ====================================================
 
         if (!window.FSIDashboard) {
@@ -499,24 +513,13 @@
 
 
     // ========================================================
-    // FIND ELEMENT
-    // ========================================================
-
-    function findElement(id) {
-
-        return document.getElementById(id);
-
-    }
-
-
-    // ========================================================
-    // SET ELEMENT VALUE
+    // SET VALUE
     // ========================================================
 
     function setValue(id, value) {
 
         const element =
-            findElement(id);
+            document.getElementById(id);
 
 
         if (!element) {
@@ -531,7 +534,7 @@
 
 
     // ========================================================
-    // RENDER DASHBOARD STATS
+    // RENDER STATS
     // ========================================================
 
     function renderDashboardStats(
@@ -540,16 +543,6 @@
 
         let stats;
 
-
-        /*
-         * Support:
-         *
-         * renderDashboardStats(leads)
-         *
-         * atau:
-         *
-         * renderDashboardStats(stats)
-         */
 
         if (
             leadsOrStats &&
@@ -581,7 +574,7 @@
 
 
         // ====================================================
-        // NEW DASHBOARD IDS
+        // NEW DASHBOARD
         // ====================================================
 
         setValue(
@@ -633,7 +626,7 @@
 
 
         // ====================================================
-        // NEW OPTIONAL IDS
+        // OPTIONAL NEW IDS
         // ====================================================
 
         setValue(
@@ -683,7 +676,7 @@
 
 
         // ====================================================
-        // SALES ALL COUNT
+        // SALES COUNT
         // ====================================================
 
         setValue(
@@ -703,7 +696,7 @@
 
 
     // ========================================================
-    // UPDATE DASHBOARD STATS
+    // UPDATE STATS
     // ========================================================
 
     function updateDashboardStats(leads) {
@@ -715,7 +708,9 @@
 
 
         const stats =
-            calculateDashboardStats(list);
+            calculateDashboardStats(
+                list
+            );
 
 
         renderDashboardStats(
@@ -728,7 +723,7 @@
 
 
     // ========================================================
-    // GET STAT CATEGORY
+    // STAT CATEGORY
     // ========================================================
 
     function dashboardGetStatCategory(
@@ -744,86 +739,78 @@
 
         switch (category) {
 
-            // ------------------------------------------------
-            // TOTAL
-            // ------------------------------------------------
-
             case "total":
 
                 return list;
 
-
-            // ------------------------------------------------
-            // NEW CUSTOMER
-            // ------------------------------------------------
 
             case "new":
             case "newCustomer":
 
                 return list.filter(
                     function (lead) {
-                        return isNewCustomer(lead);
+
+                        return isNewCustomer(
+                            lead
+                        );
+
                     }
                 );
 
-
-            // ------------------------------------------------
-            // FIRST CONTACT
-            // ------------------------------------------------
 
             case "firstContact":
             case "interested":
 
                 return list.filter(
                     function (lead) {
-                        return isFirstContact(lead);
+
+                        return isFirstContact(
+                            lead
+                        );
+
                     }
                 );
 
-
-            // ------------------------------------------------
-            // APPOINTMENT
-            // ------------------------------------------------
 
             case "appointment":
             case "followUp":
 
                 return list.filter(
                     function (lead) {
-                        return isAppointment(lead);
+
+                        return isAppointment(
+                            lead
+                        );
+
                     }
                 );
 
-
-            // ------------------------------------------------
-            // SITE SURVEY
-            // ------------------------------------------------
 
             case "siteSurvey":
 
                 return list.filter(
                     function (lead) {
-                        return isSiteSurvey(lead);
+
+                        return isSiteSurvey(
+                            lead
+                        );
+
                     }
                 );
 
-
-            // ------------------------------------------------
-            // QUOTATION
-            // ------------------------------------------------
 
             case "quotation":
 
                 return list.filter(
                     function (lead) {
-                        return isQuotation(lead);
+
+                        return isQuotation(
+                            lead
+                        );
+
                     }
                 );
 
-
-            // ------------------------------------------------
-            // DEAL / CLOSING
-            // ------------------------------------------------
 
             case "closing":
             case "deal":
@@ -832,28 +819,28 @@
 
                 return list.filter(
                     function (lead) {
-                        return isDealClosing(lead);
+
+                        return isDealClosing(
+                            lead
+                        );
+
                     }
                 );
 
-
-            // ------------------------------------------------
-            // NO DEAL
-            // ------------------------------------------------
 
             case "noDeal":
             case "notInterested":
 
                 return list.filter(
                     function (lead) {
-                        return isNoDeal(lead);
+
+                        return isNoDeal(
+                            lead
+                        );
+
                     }
                 );
 
-
-            // ------------------------------------------------
-            // LEGACY FLYER SENT
-            // ------------------------------------------------
 
             case "flyerSent":
 
@@ -870,10 +857,6 @@
                     }
                 );
 
-
-            // ------------------------------------------------
-            // UNKNOWN
-            // ------------------------------------------------
 
             default:
 
