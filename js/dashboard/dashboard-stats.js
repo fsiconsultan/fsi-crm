@@ -2,6 +2,21 @@
 // FSI CRM - DASHBOARD STATS
 // ============================================================
 // File : js/dashboard/dashboard-stats.js
+//
+// Fungsi:
+// 1. Calculate dashboard statistics
+// 2. Render dashboard statistics
+// 3. Get leads by statistic category
+// 4. Handle statistic card click
+// 5. Open Leads page with selected filters
+// 6. Preserve selected Sales filter
+// 7. Legacy compatibility
+//
+// IMPORTANT:
+// - Stat card TIDAK membuka popup
+// - Stat card TIDAK menjalankan updateDashboard()
+// - Stat card langsung menuju Leads
+// - Filter Sales dari Dashboard tetap dipertahankan
 // ============================================================
 
 
@@ -341,6 +356,10 @@ function calculateDashboardStats(
 
     const stats = {
 
+        // ====================================================
+        // MAIN STATISTICS
+        // ====================================================
+
         total:
             list.length,
 
@@ -380,7 +399,9 @@ function calculateDashboardStats(
             ).length,
 
 
-        // Activity fields
+        // ====================================================
+        // ACTIVITY FIELDS
+        // ====================================================
 
         appointmentActivity:
             dashboardStatsCountField(
@@ -611,7 +632,10 @@ function renderDashboardStats(
 
 
     // ========================================================
-    // SALES COUNT
+    // LEGACY SALES COUNT
+    //
+    // Tetap di-render untuk compatibility.
+    // ALL SALES card sendiri sudah dihapus dari dashboard.js.
     // ========================================================
 
     dashboardStatsSetValue(
@@ -675,10 +699,18 @@ function dashboardGetStatCategory(
 
     switch (category) {
 
+        // ====================================================
+        // TOTAL
+        // ====================================================
+
         case "total":
 
             return list;
 
+
+        // ====================================================
+        // NEW CUSTOMER
+        // ====================================================
 
         case "new":
         case "newCustomer":
@@ -688,6 +720,10 @@ function dashboardGetStatCategory(
             );
 
 
+        // ====================================================
+        // FIRST CONTACT
+        // ====================================================
+
         case "firstContact":
         case "interested":
 
@@ -695,6 +731,10 @@ function dashboardGetStatCategory(
                 dashboardStatsIsFirstContact
             );
 
+
+        // ====================================================
+        // APPOINTMENT
+        // ====================================================
 
         case "appointment":
         case "followUp":
@@ -704,6 +744,10 @@ function dashboardGetStatCategory(
             );
 
 
+        // ====================================================
+        // SITE SURVEY
+        // ====================================================
+
         case "siteSurvey":
 
             return list.filter(
@@ -711,12 +755,20 @@ function dashboardGetStatCategory(
             );
 
 
+        // ====================================================
+        // QUOTATION
+        // ====================================================
+
         case "quotation":
 
             return list.filter(
                 dashboardStatsIsQuotation
             );
 
+
+        // ====================================================
+        // DEAL / CLOSING
+        // ====================================================
 
         case "closing":
         case "deal":
@@ -728,6 +780,10 @@ function dashboardGetStatCategory(
             );
 
 
+        // ====================================================
+        // NO DEAL
+        // ====================================================
+
         case "noDeal":
         case "notInterested":
 
@@ -735,6 +791,10 @@ function dashboardGetStatCategory(
                 dashboardStatsIsNoDeal
             );
 
+
+        // ====================================================
+        // FLYER SENT
+        // ====================================================
 
         case "flyerSent":
 
@@ -752,10 +812,964 @@ function dashboardGetStatCategory(
             );
 
 
+        // ====================================================
+        // UNKNOWN
+        // ====================================================
+
         default:
 
             return [];
     }
+}
+
+
+// ============================================================
+// DASHBOARD SELECTED SALES
+// ============================================================
+
+function dashboardStatsGetSelectedSalesId() {
+
+    // --------------------------------------------------------
+    // Primary source:
+    // dashboard.js
+    // --------------------------------------------------------
+
+    if (
+        typeof window.dashboardGetSelectedSalesId ===
+        "function"
+    ) {
+
+        const value =
+            window.dashboardGetSelectedSalesId();
+
+        if (
+            value !== null &&
+            value !== undefined &&
+            String(value).trim() !== ""
+        ) {
+            return String(value).trim();
+        }
+    }
+
+
+    // --------------------------------------------------------
+    // Secondary source:
+    // global state
+    // --------------------------------------------------------
+
+    if (
+        window.crmSelectedSalesId !== null &&
+        window.crmSelectedSalesId !== undefined &&
+        String(window.crmSelectedSalesId).trim() !== ""
+    ) {
+
+        return String(
+            window.crmSelectedSalesId
+        ).trim();
+    }
+
+
+    // --------------------------------------------------------
+    // No Sales selected
+    // --------------------------------------------------------
+
+    return "";
+}
+
+
+// ============================================================
+// NORMALIZE DASHBOARD STAT FILTER
+// ============================================================
+
+function dashboardStatsNormalizeFilterStatus(
+    status
+) {
+
+    if (
+        status === null ||
+        status === undefined
+    ) {
+        return "";
+    }
+
+    return String(status)
+        .trim();
+}
+
+
+// ============================================================
+// OPEN LEADS WITH STAT FILTER
+// ============================================================
+//
+// IMPORTANT:
+// Jangan:
+// - updateDashboard()
+// - reload Dashboard
+// - popup
+// - render customer list
+//
+// Langsung simpan filter ke sessionStorage lalu buka Leads.
+// ============================================================
+
+function dashboardStatsOpenLeadsWithFilters(
+    options
+) {
+
+    const config =
+        options &&
+        typeof options === "object"
+            ? options
+            : {};
+
+
+    const salesId =
+        config.salesId !== undefined &&
+        config.salesId !== null
+            ? String(config.salesId).trim()
+            : "";
+
+
+    const status =
+        dashboardStatsNormalizeFilterStatus(
+            config.status
+        );
+
+
+    // ========================================================
+    // USE EXISTING DASHBOARD NAVIGATION FUNCTION
+    // ========================================================
+    //
+    // dashboard.js sudah mempunyai fungsi:
+    // dashboardOpenLeadsWithFilters()
+    //
+    // Kita gunakan itu kalau tersedia.
+    // Ini menjaga semua logic existing tetap satu pintu.
+    // ========================================================
+
+    if (
+        typeof window.dashboardOpenLeadsWithFilters ===
+        "function"
+    ) {
+
+        window.dashboardOpenLeadsWithFilters({
+            salesId:
+                salesId,
+
+            status:
+                status
+        });
+
+        return true;
+    }
+
+
+    // ========================================================
+    // FALLBACK
+    // ========================================================
+    //
+    // Kalau dashboard.js belum termuat, tetap simpan filter.
+    // ========================================================
+
+    try {
+
+        sessionStorage.setItem(
+            "fsi_dashboard_leads_filter",
+            JSON.stringify({
+
+                salesId:
+                    salesId,
+
+                status:
+                    status
+            })
+        );
+
+    } catch (error) {
+
+        console.error(
+            "FSI CRM: unable to save dashboard Leads filter.",
+            error
+        );
+
+    }
+
+
+    // ========================================================
+    // FALLBACK NAVIGATION
+    // ========================================================
+
+    try {
+
+        if (
+            typeof window.navigateTo ===
+            "function"
+        ) {
+
+            window.navigateTo(
+                "leads"
+            );
+
+            return true;
+        }
+
+
+        if (
+            typeof window.showPage ===
+            "function"
+        ) {
+
+            window.showPage(
+                "leads"
+            );
+
+            return true;
+        }
+
+
+        // ----------------------------------------------------
+        // Last fallback
+        // ----------------------------------------------------
+
+        const currentPath =
+            String(
+                window.location.pathname || ""
+            );
+
+
+        if (
+            currentPath.endsWith(
+                "leads.html"
+            )
+        ) {
+
+            window.location.reload();
+
+            return true;
+        }
+
+
+        window.location.href =
+            "pages/leads.html";
+
+        return true;
+
+    } catch (error) {
+
+        console.error(
+            "FSI CRM: failed to open Leads from dashboard stat.",
+            error
+        );
+
+        return false;
+    }
+}
+
+
+// ============================================================
+// OPEN LEADS FROM STAT CARD
+// ============================================================
+
+function dashboardStatsOpenCategory(
+    category
+) {
+
+    const normalizedCategory =
+        String(
+            category || ""
+        )
+            .trim()
+            .toLowerCase();
+
+
+    // ========================================================
+    // TOTAL
+    // ========================================================
+
+    if (
+        normalizedCategory ===
+        "total"
+    ) {
+
+        dashboardStatsOpenLeadsWithFilters({
+
+            salesId:
+                dashboardStatsGetSelectedSalesId(),
+
+            status:
+                ""
+        });
+
+        return;
+    }
+
+
+    // ========================================================
+    // NEW CUSTOMER
+    // ========================================================
+
+    if (
+        normalizedCategory === "new" ||
+        normalizedCategory === "newcustomer"
+    ) {
+
+        dashboardStatsOpenLeadsWithFilters({
+
+            salesId:
+                dashboardStatsGetSelectedSalesId(),
+
+            status:
+                "New Customer"
+        });
+
+        return;
+    }
+
+
+    // ========================================================
+    // FIRST CONTACT
+    // ========================================================
+
+    if (
+        normalizedCategory === "firstcontact" ||
+        normalizedCategory === "interested"
+    ) {
+
+        dashboardStatsOpenLeadsWithFilters({
+
+            salesId:
+                dashboardStatsGetSelectedSalesId(),
+
+            status:
+                "First Contact"
+        });
+
+        return;
+    }
+
+
+    // ========================================================
+    // APPOINTMENT
+    // ========================================================
+
+    if (
+        normalizedCategory === "appointment" ||
+        normalizedCategory === "followup"
+    ) {
+
+        dashboardStatsOpenLeadsWithFilters({
+
+            salesId:
+                dashboardStatsGetSelectedSalesId(),
+
+            status:
+                "Appointment"
+        });
+
+        return;
+    }
+
+
+    // ========================================================
+    // SITE SURVEY
+    // ========================================================
+
+    if (
+        normalizedCategory === "sitesurvey"
+    ) {
+
+        dashboardStatsOpenLeadsWithFilters({
+
+            salesId:
+                dashboardStatsGetSelectedSalesId(),
+
+            status:
+                "Site Survey"
+        });
+
+        return;
+    }
+
+
+    // ========================================================
+    // QUOTATION
+    // ========================================================
+
+    if (
+        normalizedCategory === "quotation"
+    ) {
+
+        dashboardStatsOpenLeadsWithFilters({
+
+            salesId:
+                dashboardStatsGetSelectedSalesId(),
+
+            status:
+                "Quotation"
+        });
+
+        return;
+    }
+
+
+    // ========================================================
+    // DEAL / CLOSING
+    // ========================================================
+
+    if (
+        normalizedCategory === "deal" ||
+        normalizedCategory === "dealclosing" ||
+        normalizedCategory === "closing" ||
+        normalizedCategory === "spk"
+    ) {
+
+        dashboardStatsOpenLeadsWithFilters({
+
+            salesId:
+                dashboardStatsGetSelectedSalesId(),
+
+            status:
+                "Deal / Closing"
+        });
+
+        return;
+    }
+
+
+    // ========================================================
+    // NO DEAL
+    // ========================================================
+
+    if (
+        normalizedCategory === "nodeal" ||
+        normalizedCategory === "notinterested"
+    ) {
+
+        dashboardStatsOpenLeadsWithFilters({
+
+            salesId:
+                dashboardStatsGetSelectedSalesId(),
+
+            status:
+                "No Deal"
+        });
+
+        return;
+    }
+
+
+    // ========================================================
+    // UNKNOWN CATEGORY
+    // ========================================================
+
+    console.warn(
+        "FSI CRM: unknown dashboard stat category:",
+        category
+    );
+}
+
+
+// ============================================================
+// GET CATEGORY FROM STAT ELEMENT
+// ============================================================
+
+function dashboardStatsGetCategoryFromElement(
+    element
+) {
+
+    if (!element) {
+        return "";
+    }
+
+
+    // ========================================================
+    // DATA ATTRIBUTES
+    // ========================================================
+
+    const dataCategory =
+        element.getAttribute(
+            "data-stat"
+        ) ||
+        element.getAttribute(
+            "data-category"
+        ) ||
+        element.getAttribute(
+            "data-stat-category"
+        );
+
+
+    if (dataCategory) {
+        return dataCategory;
+    }
+
+
+    // ========================================================
+    // ID MAPPING
+    // ========================================================
+
+    const id =
+        element.id || "";
+
+
+    const idMap = {
+
+        statTotal:
+            "total",
+
+        statNew:
+            "newCustomer",
+
+        statNewCustomer:
+            "newCustomer",
+
+        statInterested:
+            "firstContact",
+
+        statFirstContact:
+            "firstContact",
+
+        statAppointment:
+            "appointment",
+
+        statSiteSurvey:
+            "siteSurvey",
+
+        statQuotation:
+            "quotation",
+
+        statSPK:
+            "dealClosing",
+
+        statDealClosing:
+            "dealClosing",
+
+        statNotInterested:
+            "noDeal",
+
+        statNoDeal:
+            "noDeal",
+
+        statFollowUp:
+            "appointment",
+
+        statClosing:
+            "dealClosing",
+
+        statFlyerSent:
+            "flyerSent"
+    };
+
+
+    if (
+        Object.prototype.hasOwnProperty.call(
+            idMap,
+            id
+        )
+    ) {
+
+        return idMap[id];
+    }
+
+
+    return "";
+}
+
+
+// ============================================================
+// FIND STAT CARD
+// ============================================================
+
+function dashboardStatsFindCard(
+    element
+) {
+
+    if (!element) {
+        return null;
+    }
+
+
+    // ========================================================
+    // Direct known selectors
+    // ========================================================
+
+    const directCard =
+        element.closest(
+            [
+                "[data-stat-card]",
+                ".stat-card",
+                ".dashboard-stat-card",
+                ".stat-item",
+                ".stat-box",
+                ".overview-stat",
+                ".dashboard-stat"
+            ].join(",")
+        );
+
+
+    if (directCard) {
+        return directCard;
+    }
+
+
+    // ========================================================
+    // If element itself is a card
+    // ========================================================
+
+    if (
+        element.matches &&
+        element.matches(
+            [
+                "[data-stat-card]",
+                ".stat-card",
+                ".dashboard-stat-card",
+                ".stat-item",
+                ".stat-box",
+                ".overview-stat",
+                ".dashboard-stat"
+            ].join(",")
+        )
+    ) {
+
+        return element;
+    }
+
+
+    return null;
+}
+
+
+// ============================================================
+// BIND STAT CARD CLICKS
+// ============================================================
+//
+// This function is deliberately event-delegated.
+//
+// Advantages:
+// - tidak perlu bind satu-satu
+// - aman kalau card di-render ulang
+// - tidak menyebabkan duplicate listener
+// - tidak menjalankan updateDashboard()
+// ============================================================
+
+let dashboardStatsClickBound =
+    false;
+
+
+function dashboardBindStatCardClicks() {
+
+    if (dashboardStatsClickBound) {
+        return;
+    }
+
+
+    dashboardStatsClickBound =
+        true;
+
+
+    document.addEventListener(
+        "click",
+        function (event) {
+
+            if (!event) {
+                return;
+            }
+
+
+            const target =
+                event.target;
+
+
+            if (!target) {
+                return;
+            }
+
+
+            const card =
+                dashboardStatsFindCard(
+                    target
+                );
+
+
+            if (!card) {
+                return;
+            }
+
+
+            // ------------------------------------------------
+            // Jangan menangkap click dari button/link internal
+            // ------------------------------------------------
+
+            const internalInteractive =
+                target.closest(
+                    "button, a, input, select, textarea"
+                );
+
+
+            if (
+                internalInteractive &&
+                internalInteractive !== card
+            ) {
+
+                return;
+            }
+
+
+            // ------------------------------------------------
+            // Get category
+            // ------------------------------------------------
+
+            let category =
+                dashboardStatsGetCategoryFromElement(
+                    card
+                );
+
+
+            // ------------------------------------------------
+            // Kalau tidak ada di card,
+            // cari dari target
+            // ------------------------------------------------
+
+            if (!category) {
+
+                category =
+                    dashboardStatsGetCategoryFromElement(
+                        target
+                    );
+            }
+
+
+            if (!category) {
+                return;
+            }
+
+
+            // ------------------------------------------------
+            // Stop default behavior
+            // ------------------------------------------------
+
+            event.preventDefault();
+            event.stopPropagation();
+
+
+            // ------------------------------------------------
+            // IMPORTANT:
+            // Tidak menjalankan updateDashboard()
+            // Tidak membuka popup
+            // ------------------------------------------------
+
+            dashboardStatsOpenCategory(
+                category
+            );
+
+        },
+        false
+    );
+}
+
+
+// ============================================================
+// APPLY CLICKABLE STATE TO STAT CARDS
+// ============================================================
+
+function dashboardStatsPrepareCards() {
+
+    const selectors = [
+
+        "[data-stat-card]",
+
+        ".stat-card",
+
+        ".dashboard-stat-card",
+
+        ".stat-item",
+
+        ".stat-box",
+
+        ".overview-stat",
+
+        ".dashboard-stat"
+
+    ];
+
+
+    const cards =
+        document.querySelectorAll(
+            selectors.join(",")
+        );
+
+
+    cards.forEach(
+        function (card) {
+
+            const category =
+                dashboardStatsGetCategoryFromElement(
+                    card
+                );
+
+
+            if (!category) {
+                return;
+            }
+
+
+            card.setAttribute(
+                "data-stat-clickable",
+                "true"
+            );
+
+
+            // ------------------------------------------------
+            // Accessibility
+            // ------------------------------------------------
+
+            if (
+                !card.hasAttribute(
+                    "role"
+                )
+            ) {
+
+                card.setAttribute(
+                    "role",
+                    "button"
+                );
+            }
+
+
+            if (
+                !card.hasAttribute(
+                    "tabindex"
+                )
+            ) {
+
+                card.setAttribute(
+                    "tabindex",
+                    "0"
+                );
+            }
+
+        }
+    );
+}
+
+
+// ============================================================
+// KEYBOARD SUPPORT
+// ============================================================
+
+let dashboardStatsKeyboardBound =
+    false;
+
+
+function dashboardBindStatCardKeyboard() {
+
+    if (dashboardStatsKeyboardBound) {
+        return;
+    }
+
+
+    dashboardStatsKeyboardBound =
+        true;
+
+
+    document.addEventListener(
+        "keydown",
+        function (event) {
+
+            if (!event) {
+                return;
+            }
+
+
+            if (
+                event.key !== "Enter" &&
+                event.key !== " "
+            ) {
+
+                return;
+            }
+
+
+            const target =
+                event.target;
+
+
+            if (!target) {
+                return;
+            }
+
+
+            const card =
+                dashboardStatsFindCard(
+                    target
+                );
+
+
+            if (!card) {
+                return;
+            }
+
+
+            const category =
+                dashboardStatsGetCategoryFromElement(
+                    card
+                );
+
+
+            if (!category) {
+                return;
+            }
+
+
+            event.preventDefault();
+
+
+            dashboardStatsOpenCategory(
+                category
+            );
+
+        },
+        false
+    );
+}
+
+
+// ============================================================
+// INITIALIZE STAT CARD INTERACTIONS
+// ============================================================
+
+function dashboardInitializeStatCards() {
+
+    dashboardBindStatCardClicks();
+
+    dashboardBindStatCardKeyboard();
+
+    dashboardStatsPrepareCards();
+}
+
+
+// ============================================================
+// AUTO INITIALIZE
+// ============================================================
+//
+// DOMContentLoaded:
+// Dashboard HTML sudah tersedia.
+// ============================================================
+
+if (
+    document.readyState === "loading"
+) {
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        function () {
+
+            dashboardInitializeStatCards();
+
+        }
+    );
+
+} else {
+
+    dashboardInitializeStatCards();
 }
 
 
@@ -801,12 +1815,30 @@ window.dashboardIsNoDeal =
 
 
 // ============================================================
+// STAT CARD NAVIGATION EXPORTS
+// ============================================================
+
+window.dashboardStatsOpenCategory =
+    dashboardStatsOpenCategory;
+
+window.dashboardStatsOpenLeadsWithFilters =
+    dashboardStatsOpenLeadsWithFilters;
+
+window.dashboardBindStatCardClicks =
+    dashboardBindStatCardClicks;
+
+window.dashboardInitializeStatCards =
+    dashboardInitializeStatCards;
+
+
+// ============================================================
 // FSIDashboard NAMESPACE
 // ============================================================
 
 if (!window.FSIDashboard) {
     window.FSIDashboard = {};
 }
+
 
 window.FSIDashboard.calculateStats =
     calculateDashboardStats;
@@ -819,3 +1851,9 @@ window.FSIDashboard.updateStats =
 
 window.FSIDashboard.getStatCategory =
     dashboardGetStatCategory;
+
+window.FSIDashboard.openStatCategory =
+    dashboardStatsOpenCategory;
+
+window.FSIDashboard.openLeadsWithFilters =
+    dashboardStatsOpenLeadsWithFilters;
