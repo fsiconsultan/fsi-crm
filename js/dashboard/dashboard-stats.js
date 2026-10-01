@@ -3,50 +3,49 @@
 // ============================================================
 // File : js/dashboard/dashboard-stats.js
 //
-// Fungsi:
-// 1. Calculate dashboard statistics
-// 2. Render dashboard statistics
-// 3. Get leads by statistic category
-// 4. Handle statistic card click
-// 5. Open Leads page with selected filters
-// 6. Preserve selected Sales filter
-// 7. Support current CRM status system
-// 8. Legacy compatibility
+// Dashboard statistics + stat card navigation
 //
-// CURRENT CRM STATUS SYSTEM:
-// - New
-// - First Contact
-// - First Meeting / Appointment / Site Survey
-// - Quotation
-// - Second Appointment
-// - Deal
-// - No Deal
+// CURRENT STATUS:
+// New
+// First Contact
+// First Meeting / Appointment / Site Survey
+// Quotation
+// Second Appointment
+// Deal
+// No Deal
 //
 // IMPORTANT:
-// - Dashboard status cards menggunakan lead.status
-// - Field activity TIDAK mengubah status utama
-// - Stat card langsung menuju Leads
-// - Tidak membuka popup
-// - Tidak menjalankan updateDashboard()
+// - Card tidak memanggil updateDashboard()
+// - Card tidak memanggil loadLeads() langsung
+// - Card hanya mengirim filter ke Leads
+// - Tidak ada recursive dashboard navigation
 // ============================================================
 
 
 // ============================================================
-// GET LEADS
+// GET DASHBOARD LEADS
 // ============================================================
 
 function dashboardStatsGetLeads() {
 
     if (
         window.FSIDashboard &&
-        Array.isArray(window.FSIDashboard.leads)
+        Array.isArray(
+            window.FSIDashboard.leads
+        )
     ) {
         return window.FSIDashboard.leads;
     }
 
-    if (Array.isArray(window.leadsData)) {
+
+    if (
+        Array.isArray(
+            window.leadsData
+        )
+    ) {
         return window.leadsData;
     }
+
 
     return [];
 }
@@ -56,19 +55,30 @@ function dashboardStatsGetLeads() {
 // NORMALIZE STATUS
 // ============================================================
 
-function dashboardStatsNormalize(value) {
+function dashboardStatsNormalize(
+    value
+) {
 
     if (
         typeof window.dashboardNormalizeStatus ===
         "function"
     ) {
-        return window.dashboardNormalizeStatus(value);
+
+        return window.dashboardNormalizeStatus(
+            value
+        );
     }
 
-    return String(value || "")
+
+    return String(
+        value || ""
+    )
         .trim()
         .toLowerCase()
-        .replace(/\s+/g, " ");
+        .replace(
+            /\s+/g,
+            " "
+        );
 }
 
 
@@ -76,7 +86,9 @@ function dashboardStatsNormalize(value) {
 // HAS VALUE
 // ============================================================
 
-function dashboardStatsHasValue(value) {
+function dashboardStatsHasValue(
+    value
+) {
 
     if (
         value === null ||
@@ -85,9 +97,16 @@ function dashboardStatsHasValue(value) {
         return false;
     }
 
-    if (typeof value === "string") {
-        return value.trim() !== "";
+
+    if (
+        typeof value === "string"
+    ) {
+
+        return (
+            value.trim() !== ""
+        );
     }
+
 
     return true;
 }
@@ -102,21 +121,28 @@ function dashboardStatsStatusIs(
     statuses
 ) {
 
-    if (!lead) {
+    if (
+        !lead ||
+        !Array.isArray(statuses)
+    ) {
         return false;
     }
+
 
     const currentStatus =
         dashboardStatsNormalize(
             lead.status
         );
 
+
     return statuses.some(
         function (status) {
 
             return (
                 currentStatus ===
-                dashboardStatsNormalize(status)
+                dashboardStatsNormalize(
+                    status
+                )
             );
 
         }
@@ -133,9 +159,12 @@ function dashboardStatsCountStatus(
     statuses
 ) {
 
-    if (!Array.isArray(leads)) {
+    if (
+        !Array.isArray(leads)
+    ) {
         return 0;
     }
+
 
     return leads.filter(
         function (lead) {
@@ -153,25 +182,25 @@ function dashboardStatsCountStatus(
 // ============================================================
 // COUNT FIELD
 // ============================================================
-//
-// Ini hanya untuk activity statistics.
-// Tidak digunakan untuk menentukan status utama.
-// ============================================================
 
 function dashboardStatsCountField(
     leads,
     field
 ) {
 
-    if (!Array.isArray(leads)) {
+    if (
+        !Array.isArray(leads)
+    ) {
         return 0;
     }
+
 
     return leads.filter(
         function (lead) {
 
             return dashboardStatsHasValue(
-                lead && lead[field]
+                lead &&
+                lead[field]
             );
 
         }
@@ -180,13 +209,7 @@ function dashboardStatsCountField(
 
 
 // ============================================================
-// NEW CUSTOMER
-// ============================================================
-//
-// Current database status:
-// New
-//
-// "New Customer" tetap didukung untuk compatibility.
+// NEW
 // ============================================================
 
 function dashboardStatsIsNewCustomer(
@@ -206,12 +229,6 @@ function dashboardStatsIsNewCustomer(
 // ============================================================
 // FIRST CONTACT
 // ============================================================
-//
-// Current database status:
-// First Contact
-//
-// "Interested" hanya compatibility legacy.
-// ============================================================
 
 function dashboardStatsIsFirstContact(
     lead
@@ -230,16 +247,6 @@ function dashboardStatsIsFirstContact(
 // ============================================================
 // APPOINTMENT
 // ============================================================
-//
-// Current CRM:
-// First Meeting / Appointment / Site Survey
-// Second Appointment
-// Appointment
-//
-// IMPORTANT:
-// Jangan menggunakan lead.appointment di sini.
-// Dashboard status harus berdasarkan lead.status.
-// ============================================================
 
 function dashboardStatsIsAppointment(
     lead
@@ -251,8 +258,6 @@ function dashboardStatsIsAppointment(
             "First Meeting / Appointment / Site Survey",
             "Second Appointment",
             "Appointment",
-
-            // Legacy compatibility
             "First Meeting",
             "Follow Up"
         ]
@@ -263,18 +268,6 @@ function dashboardStatsIsAppointment(
 // ============================================================
 // SITE SURVEY
 // ============================================================
-//
-// IMPORTANT:
-// Site Survey sebagai STAT STATUS tidak lagi dipisahkan
-// dari status utama "First Meeting / Appointment / Site Survey".
-//
-// Karena itu kartu Site Survey menggunakan activity field.
-//
-// Dengan cara ini:
-// - Appointment = status pipeline
-// - Site Survey = activity yang benar-benar diisi
-//
-// ============================================================
 
 function dashboardStatsIsSiteSurvey(
     lead
@@ -284,7 +277,7 @@ function dashboardStatsIsSiteSurvey(
         return false;
     }
 
-    // Activity field
+
     if (
         dashboardStatsHasValue(
             lead.site_survey
@@ -293,7 +286,7 @@ function dashboardStatsIsSiteSurvey(
         return true;
     }
 
-    // Compatibility jika ada status lama
+
     return dashboardStatsStatusIs(
         lead,
         [
@@ -306,24 +299,10 @@ function dashboardStatsIsSiteSurvey(
 // ============================================================
 // QUOTATION
 // ============================================================
-//
-// Main dashboard status:
-// Quotation
-//
-// Jika quotation field terisi tetapi status belum Quotation,
-// kita TIDAK mengubah kategori status utama.
-//
-// Untuk compatibility, fungsi ini tetap mengenali
-// quotation activity.
-// ============================================================
 
 function dashboardStatsIsQuotation(
     lead
 ) {
-
-    if (!lead) {
-        return false;
-    }
 
     return dashboardStatsStatusIs(
         lead,
@@ -335,19 +314,7 @@ function dashboardStatsIsQuotation(
 
 
 // ============================================================
-// DEAL / CLOSING
-// ============================================================
-//
-// Current CRM status:
-// Deal
-//
-// Legacy:
-// Deal / Closing
-// Closing
-// SPK
-//
-// IMPORTANT:
-// closing field tidak menentukan status utama.
+// DEAL
 // ============================================================
 
 function dashboardStatsIsDealClosing(
@@ -385,7 +352,7 @@ function dashboardStatsIsNoDeal(
 
 
 // ============================================================
-// CALCULATE DASHBOARD STATS
+// CALCULATE STATS
 // ============================================================
 
 function calculateDashboardStats(
@@ -398,26 +365,11 @@ function calculateDashboardStats(
             : [];
 
 
-    // ========================================================
-    // MAIN STATUS STATISTICS
-    // ========================================================
-    //
-    // Semua angka pipeline utama dihitung dari lead.status.
-    // ========================================================
-
     const stats = {
-
-        // ----------------------------------------------------
-        // TOTAL
-        // ----------------------------------------------------
 
         total:
             list.length,
 
-
-        // ----------------------------------------------------
-        // NEW
-        // ----------------------------------------------------
 
         newCustomer:
             list.filter(
@@ -425,19 +377,11 @@ function calculateDashboardStats(
             ).length,
 
 
-        // ----------------------------------------------------
-        // FIRST CONTACT
-        // ----------------------------------------------------
-
         firstContact:
             list.filter(
                 dashboardStatsIsFirstContact
             ).length,
 
-
-        // ----------------------------------------------------
-        // APPOINTMENT
-        // ----------------------------------------------------
 
         appointment:
             list.filter(
@@ -445,22 +389,11 @@ function calculateDashboardStats(
             ).length,
 
 
-        // ----------------------------------------------------
-        // SITE SURVEY
-        // ----------------------------------------------------
-        //
-        // Activity count.
-        // ----------------------------------------------------
-
         siteSurvey:
             list.filter(
                 dashboardStatsIsSiteSurvey
             ).length,
 
-
-        // ----------------------------------------------------
-        // QUOTATION
-        // ----------------------------------------------------
 
         quotation:
             list.filter(
@@ -468,19 +401,11 @@ function calculateDashboardStats(
             ).length,
 
 
-        // ----------------------------------------------------
-        // DEAL
-        // ----------------------------------------------------
-
         dealClosing:
             list.filter(
                 dashboardStatsIsDealClosing
             ).length,
 
-
-        // ----------------------------------------------------
-        // NO DEAL
-        // ----------------------------------------------------
 
         noDeal:
             list.filter(
@@ -488,15 +413,12 @@ function calculateDashboardStats(
             ).length,
 
 
-        // ====================================================
-        // ACTIVITY COUNTS
-        // ====================================================
-
         appointmentActivity:
             dashboardStatsCountField(
                 list,
                 "appointment"
             ),
+
 
         siteSurveyActivity:
             dashboardStatsCountField(
@@ -504,11 +426,13 @@ function calculateDashboardStats(
                 "site_survey"
             ),
 
+
         quotationActivity:
             dashboardStatsCountField(
                 list,
                 "quotation"
             ),
+
 
         closingActivity:
             dashboardStatsCountField(
@@ -518,10 +442,7 @@ function calculateDashboardStats(
     };
 
 
-    // ========================================================
-    // LEGACY COMPATIBILITY
-    // ========================================================
-
+    // Legacy
     stats.new =
         stats.newCustomer;
 
@@ -550,16 +471,14 @@ function calculateDashboardStats(
         );
 
 
-    // ========================================================
-    // SAVE GLOBAL STATE
-    // ========================================================
-
     if (!window.FSIDashboard) {
         window.FSIDashboard = {};
     }
 
+
     window.FSIDashboard.stats =
         stats;
+
 
     window.FSIDashboard.statusStats =
         stats;
@@ -570,7 +489,7 @@ function calculateDashboardStats(
 
 
 // ============================================================
-// SET DASHBOARD VALUE
+// SET VALUE
 // ============================================================
 
 function dashboardStatsSetValue(
@@ -579,20 +498,27 @@ function dashboardStatsSetValue(
 ) {
 
     const element =
-        document.getElementById(id);
+        document.getElementById(
+            id
+        );
+
 
     if (!element) {
         return;
     }
 
+
     element.textContent =
-        Number(value || 0)
-            .toLocaleString("en-US");
+        Number(
+            value || 0
+        ).toLocaleString(
+            "en-US"
+        );
 }
 
 
 // ============================================================
-// RENDER DASHBOARD STATS
+// RENDER
 // ============================================================
 
 function renderDashboardStats(
@@ -619,7 +545,9 @@ function renderDashboardStats(
 
         stats =
             calculateDashboardStats(
-                Array.isArray(leadsOrStats)
+                Array.isArray(
+                    leadsOrStats
+                )
                     ? leadsOrStats
                     : dashboardStatsGetLeads()
             );
@@ -631,44 +559,47 @@ function renderDashboardStats(
     }
 
 
-    // ========================================================
-    // MAIN DASHBOARD
-    // ========================================================
-
     dashboardStatsSetValue(
         "statTotal",
         stats.total
     );
+
 
     dashboardStatsSetValue(
         "statNew",
         stats.newCustomer
     );
 
+
     dashboardStatsSetValue(
         "statInterested",
         stats.firstContact
     );
+
 
     dashboardStatsSetValue(
         "statAppointment",
         stats.appointment
     );
 
+
     dashboardStatsSetValue(
         "statSiteSurvey",
         stats.siteSurvey
     );
+
 
     dashboardStatsSetValue(
         "statQuotation",
         stats.quotation
     );
 
+
     dashboardStatsSetValue(
         "statSPK",
         stats.dealClosing
     );
+
 
     dashboardStatsSetValue(
         "statNotInterested",
@@ -676,24 +607,24 @@ function renderDashboardStats(
     );
 
 
-    // ========================================================
-    // OPTIONAL NEW IDS
-    // ========================================================
-
+    // New IDs
     dashboardStatsSetValue(
         "statNewCustomer",
         stats.newCustomer
     );
+
 
     dashboardStatsSetValue(
         "statFirstContact",
         stats.firstContact
     );
 
+
     dashboardStatsSetValue(
         "statDealClosing",
         stats.dealClosing
     );
+
 
     dashboardStatsSetValue(
         "statNoDeal",
@@ -701,19 +632,18 @@ function renderDashboardStats(
     );
 
 
-    // ========================================================
-    // LEGACY IDS
-    // ========================================================
-
+    // Legacy
     dashboardStatsSetValue(
         "statFollowUp",
         stats.appointment
     );
 
+
     dashboardStatsSetValue(
         "statClosing",
         stats.dealClosing
     );
+
 
     dashboardStatsSetValue(
         "statFlyerSent",
@@ -721,14 +651,11 @@ function renderDashboardStats(
     );
 
 
-    // ========================================================
-    // LEGACY SALES COUNT
-    // ========================================================
-
     dashboardStatsSetValue(
         "dashboardSalesAllCount",
         stats.total
     );
+
 
     dashboardStatsSetValue(
         "dashboardAllSalesCount",
@@ -741,7 +668,7 @@ function renderDashboardStats(
 
 
 // ============================================================
-// UPDATE DASHBOARD STATS
+// UPDATE STATS
 // ============================================================
 
 function updateDashboardStats(
@@ -770,7 +697,7 @@ function updateDashboardStats(
 
 
 // ============================================================
-// GET STAT CATEGORY
+// GET CATEGORY
 // ============================================================
 
 function dashboardGetStatCategory(
@@ -784,20 +711,22 @@ function dashboardGetStatCategory(
             : dashboardStatsGetLeads();
 
 
-    switch (
-        String(category || "")
+    const key =
+        String(
+            category || ""
+        )
             .trim()
-            .toLowerCase()
-    ) {
+            .toLowerCase();
+
+
+    switch (key) {
 
         case "total":
-
             return list;
 
 
         case "new":
         case "newcustomer":
-
             return list.filter(
                 dashboardStatsIsNewCustomer
             );
@@ -805,7 +734,6 @@ function dashboardGetStatCategory(
 
         case "firstcontact":
         case "interested":
-
             return list.filter(
                 dashboardStatsIsFirstContact
             );
@@ -813,21 +741,18 @@ function dashboardGetStatCategory(
 
         case "appointment":
         case "followup":
-
             return list.filter(
                 dashboardStatsIsAppointment
             );
 
 
         case "sitesurvey":
-
             return list.filter(
                 dashboardStatsIsSiteSurvey
             );
 
 
         case "quotation":
-
             return list.filter(
                 dashboardStatsIsQuotation
             );
@@ -837,7 +762,6 @@ function dashboardGetStatCategory(
         case "deal":
         case "dealclosing":
         case "spk":
-
             return list.filter(
                 dashboardStatsIsDealClosing
             );
@@ -845,44 +769,22 @@ function dashboardGetStatCategory(
 
         case "nodeal":
         case "notinterested":
-
             return list.filter(
                 dashboardStatsIsNoDeal
             );
 
 
-        case "flyersent":
-
-            return list.filter(
-                function (lead) {
-
-                    return dashboardStatsStatusIs(
-                        lead,
-                        [
-                            "Flyer Sent"
-                        ]
-                    );
-
-                }
-            );
-
-
         default:
-
             return [];
     }
 }
 
 
 // ============================================================
-// DASHBOARD SELECTED SALES
+// GET SELECTED SALES
 // ============================================================
 
 function dashboardStatsGetSelectedSalesId() {
-
-    // --------------------------------------------------------
-    // Primary source
-    // --------------------------------------------------------
 
     if (
         typeof window.dashboardGetSelectedSalesId ===
@@ -892,25 +794,26 @@ function dashboardStatsGetSelectedSalesId() {
         const value =
             window.dashboardGetSelectedSalesId();
 
+
         if (
             value !== null &&
             value !== undefined &&
             String(value).trim() !== ""
         ) {
 
-            return String(value).trim();
+            return String(
+                value
+            ).trim();
         }
     }
 
 
-    // --------------------------------------------------------
-    // Secondary source
-    // --------------------------------------------------------
-
     if (
         window.crmSelectedSalesId !== null &&
         window.crmSelectedSalesId !== undefined &&
-        String(window.crmSelectedSalesId).trim() !== ""
+        String(
+            window.crmSelectedSalesId
+        ).trim() !== ""
     ) {
 
         return String(
@@ -924,27 +827,7 @@ function dashboardStatsGetSelectedSalesId() {
 
 
 // ============================================================
-// NORMALIZE DASHBOARD STAT FILTER
-// ============================================================
-
-function dashboardStatsNormalizeFilterStatus(
-    status
-) {
-
-    if (
-        status === null ||
-        status === undefined
-    ) {
-        return "";
-    }
-
-    return String(status)
-        .trim();
-}
-
-
-// ============================================================
-// OPEN LEADS WITH STAT FILTER
+// OPEN LEADS WITH FILTER
 // ============================================================
 
 function dashboardStatsOpenLeadsWithFilters(
@@ -959,146 +842,121 @@ function dashboardStatsOpenLeadsWithFilters(
 
 
     const salesId =
-        config.salesId !== undefined &&
-        config.salesId !== null
-            ? String(config.salesId).trim()
+        config.salesId
+            ? String(
+                config.salesId
+            ).trim()
             : "";
 
 
     const status =
-        dashboardStatsNormalizeFilterStatus(
-            config.status
-        );
+        config.status
+            ? String(
+                config.status
+            ).trim()
+            : "";
 
 
-    // ========================================================
-    // PRIMARY NAVIGATION
-    // ========================================================
+    // --------------------------------------------------------
+    // IMPORTANT:
+    // Hanya kirim event/filter.
+    // Jangan memanggil showDashboard().
+    // Jangan memanggil updateDashboard().
+    // --------------------------------------------------------
 
-    if (
-        typeof window.dashboardOpenLeadsWithFilters ===
-        "function"
-    ) {
+    window.FSIDashboardLeadFilter = {
 
-        window.dashboardOpenLeadsWithFilters({
+        salesId:
+            salesId,
 
-            salesId:
-                salesId,
+        status:
+            status,
 
-            status:
-                status
+        source:
+            "dashboard-stat-card",
 
-        });
+        timestamp:
+            Date.now()
+    };
 
-        return true;
-    }
-
-
-    // ========================================================
-    // FALLBACK SESSION STORAGE
-    // ========================================================
 
     try {
 
         sessionStorage.setItem(
             "fsi_dashboard_leads_filter",
-            JSON.stringify({
-
-                salesId:
-                    salesId,
-
-                status:
-                    status
-
-            })
+            JSON.stringify(
+                window.FSIDashboardLeadFilter
+            )
         );
 
     } catch (error) {
 
-        console.error(
-            "FSI CRM: unable to save dashboard Leads filter.",
+        console.warn(
+            "FSI CRM: gagal menyimpan dashboard filter.",
             error
         );
-
     }
 
 
-    // ========================================================
-    // FALLBACK NAVIGATION
-    // ========================================================
+    // --------------------------------------------------------
+    // Navigate directly to Leads
+    // --------------------------------------------------------
 
-    try {
+    if (
+        typeof window.showLeads ===
+        "function"
+    ) {
 
-        if (
-            typeof window.navigateTo ===
-            "function"
-        ) {
-
-            window.navigateTo(
-                "leads"
-            );
-
-            return true;
-        }
-
-
-        if (
-            typeof window.showPage ===
-            "function"
-        ) {
-
-            window.showPage(
-                "leads"
-            );
-
-            return true;
-        }
-
-
-        const currentPath =
-            String(
-                window.location.pathname || ""
-            );
-
-
-        if (
-            currentPath.endsWith(
-                "leads.html"
-            )
-        ) {
-
-            window.location.reload();
-
-            return true;
-        }
-
-
-        window.location.href =
-            "pages/leads.html";
+        window.showLeads();
 
         return true;
+    }
 
-    } catch (error) {
 
-        console.error(
-            "FSI CRM: failed to open Leads from dashboard stat.",
-            error
+    if (
+        typeof window.navigateDashboard ===
+        "function"
+    ) {
+
+        window.navigateDashboard(
+            "leads"
         );
 
-        return false;
+        return true;
     }
+
+
+    if (
+        typeof window.crmNavigate ===
+        "function"
+    ) {
+
+        window.crmNavigate(
+            "leads"
+        );
+
+        return true;
+    }
+
+
+    console.warn(
+        "FSI CRM: fungsi navigasi Leads tidak ditemukan."
+    );
+
+
+    return false;
 }
 
 
 // ============================================================
-// OPEN LEADS FROM STAT CARD
+// OPEN CATEGORY
 // ============================================================
 
 function dashboardStatsOpenCategory(
     category
 ) {
 
-    const normalizedCategory =
+    const key =
         String(
             category || ""
         )
@@ -1106,231 +964,181 @@ function dashboardStatsOpenCategory(
             .toLowerCase();
 
 
-    const selectedSalesId =
+    const salesId =
         dashboardStatsGetSelectedSalesId();
 
 
-    // ========================================================
-    // TOTAL
-    // ========================================================
+    let status = "";
 
-    if (
-        normalizedCategory ===
-        "total"
-    ) {
 
-        dashboardStatsOpenLeadsWithFilters({
+    switch (key) {
 
-            salesId:
-                selectedSalesId,
+        case "total":
 
-            status:
-                ""
+            status = "";
+            break;
 
-        });
 
-        return;
+        case "new":
+        case "newcustomer":
+
+            status = "New";
+            break;
+
+
+        case "firstcontact":
+        case "interested":
+
+            status = "First Contact";
+            break;
+
+
+        case "appointment":
+        case "followup":
+
+            status =
+                "First Meeting / Appointment / Site Survey";
+
+            break;
+
+
+        case "sitesurvey":
+
+            // Activity field.
+            // Jangan pakai status Site Survey.
+            status = "";
+
+            break;
+
+
+        case "quotation":
+
+            status = "Quotation";
+            break;
+
+
+        case "deal":
+        case "dealclosing":
+        case "closing":
+        case "spk":
+
+            status = "Deal";
+            break;
+
+
+        case "nodeal":
+        case "notinterested":
+
+            status = "No Deal";
+            break;
+
+
+        default:
+
+            console.warn(
+                "FSI CRM: kategori Dashboard tidak dikenal:",
+                category
+            );
+
+            return false;
     }
 
 
-    // ========================================================
-    // NEW CUSTOMER
-    // ========================================================
-    //
-    // Database status = New
-    // ========================================================
+    return dashboardStatsOpenLeadsWithFilters({
 
-    if (
-        normalizedCategory === "new" ||
-        normalizedCategory === "newcustomer"
-    ) {
+        salesId:
+            salesId,
 
-        dashboardStatsOpenLeadsWithFilters({
+        status:
+            status
 
-            salesId:
-                selectedSalesId,
-
-            status:
-                "New"
-
-        });
-
-        return;
-    }
-
-
-    // ========================================================
-    // FIRST CONTACT
-    // ========================================================
-    //
-    // Database status = First Contact
-    // ========================================================
-
-    if (
-        normalizedCategory === "firstcontact" ||
-        normalizedCategory === "interested"
-    ) {
-
-        dashboardStatsOpenLeadsWithFilters({
-
-            salesId:
-                selectedSalesId,
-
-            status:
-                "First Contact"
-
-        });
-
-        return;
-    }
-
-
-    // ========================================================
-    // APPOINTMENT
-    // ========================================================
-    //
-    // Dashboard appointment mewakili dua status:
-    //
-    // First Meeting / Appointment / Site Survey
-    // Second Appointment
-    //
-    // Karena filter Leads hanya menerima satu status,
-    // gunakan status pertama sebagai default.
-    // ========================================================
-
-    if (
-        normalizedCategory === "appointment" ||
-        normalizedCategory === "followup"
-    ) {
-
-        dashboardStatsOpenLeadsWithFilters({
-
-            salesId:
-                selectedSalesId,
-
-            status:
-                "First Meeting / Appointment / Site Survey"
-
-        });
-
-        return;
-    }
-
-
-    // ========================================================
-    // SITE SURVEY
-    // ========================================================
-    //
-    // Site Survey merupakan activity field.
-    //
-    // Leads filter berbasis status tidak bisa secara langsung
-    // memfilter field site_survey.
-    //
-    // Karena itu kita buka Leads tanpa memaksakan status yang
-    // salah.
-    // ========================================================
-
-    if (
-        normalizedCategory === "sitesurvey"
-    ) {
-
-        dashboardStatsOpenLeadsWithFilters({
-
-            salesId:
-                selectedSalesId,
-
-            status:
-                ""
-
-        });
-
-        return;
-    }
-
-
-    // ========================================================
-    // QUOTATION
-    // ========================================================
-
-    if (
-        normalizedCategory === "quotation"
-    ) {
-
-        dashboardStatsOpenLeadsWithFilters({
-
-            salesId:
-                selectedSalesId,
-
-            status:
-                "Quotation"
-
-        });
-
-        return;
-    }
-
-
-    // ========================================================
-    // DEAL / CLOSING
-    // ========================================================
-
-    if (
-        normalizedCategory === "deal" ||
-        normalizedCategory === "dealclosing" ||
-        normalizedCategory === "closing" ||
-        normalizedCategory === "spk"
-    ) {
-
-        dashboardStatsOpenLeadsWithFilters({
-
-            salesId:
-                selectedSalesId,
-
-            status:
-                "Deal"
-
-        });
-
-        return;
-    }
-
-
-    // ========================================================
-    // NO DEAL
-    // ========================================================
-
-    if (
-        normalizedCategory === "nodeal" ||
-        normalizedCategory === "notinterested"
-    ) {
-
-        dashboardStatsOpenLeadsWithFilters({
-
-            salesId:
-                selectedSalesId,
-
-            status:
-                "No Deal"
-
-        });
-
-        return;
-    }
-
-
-    // ========================================================
-    // UNKNOWN
-    // ========================================================
-
-    console.warn(
-        "FSI CRM: unknown dashboard stat category:",
-        category
-    );
+    });
 }
 
 
 // ============================================================
-// GET CATEGORY FROM STAT ELEMENT
+// FIND STAT CARD
+// ============================================================
+
+function dashboardStatsFindCard(
+    element
+) {
+
+    if (!element) {
+        return null;
+    }
+
+
+    const card =
+        element.closest(
+            "[data-stat-card]"
+        );
+
+
+    if (card) {
+        return card;
+    }
+
+
+    // Fallback hanya berdasarkan ID statistik.
+    const statIds = [
+
+        "statTotal",
+        "statNew",
+        "statNewCustomer",
+        "statInterested",
+        "statFirstContact",
+        "statAppointment",
+        "statSiteSurvey",
+        "statQuotation",
+        "statSPK",
+        "statDealClosing",
+        "statNotInterested",
+        "statNoDeal",
+        "statFollowUp",
+        "statClosing"
+    ];
+
+
+    let current =
+        element;
+
+
+    while (
+        current &&
+        current !== document.body
+    ) {
+
+        if (
+            current.querySelector &&
+            statIds.some(
+                function (id) {
+
+                    return Boolean(
+                        current.querySelector(
+                            "#" + id
+                        )
+                    );
+
+                }
+            )
+        ) {
+
+            return current;
+        }
+
+
+        current =
+            current.parentElement;
+    }
+
+
+    return null;
+}
+
+
+// ============================================================
+// GET CATEGORY FROM CARD
 // ============================================================
 
 function dashboardStatsGetCategoryFromElement(
@@ -1341,10 +1149,6 @@ function dashboardStatsGetCategoryFromElement(
         return "";
     }
 
-
-    // ========================================================
-    // DATA ATTRIBUTES
-    // ========================================================
 
     const dataCategory =
         element.getAttribute(
@@ -1363,15 +1167,39 @@ function dashboardStatsGetCategoryFromElement(
     }
 
 
-    // ========================================================
-    // ID MAPPING
-    // ========================================================
+    const statElement =
+        element.querySelector
+            ? element.querySelector(
+                [
+                    "#statTotal",
+                    "#statNew",
+                    "#statNewCustomer",
+                    "#statInterested",
+                    "#statFirstContact",
+                    "#statAppointment",
+                    "#statSiteSurvey",
+                    "#statQuotation",
+                    "#statSPK",
+                    "#statDealClosing",
+                    "#statNotInterested",
+                    "#statNoDeal",
+                    "#statFollowUp",
+                    "#statClosing"
+                ].join(",")
+            )
+            : null;
+
+
+    const target =
+        statElement ||
+        element;
+
 
     const id =
-        element.id || "";
+        target.id || "";
 
 
-    const idMap = {
+    const map = {
 
         statTotal:
             "total",
@@ -1413,80 +1241,16 @@ function dashboardStatsGetCategoryFromElement(
             "appointment",
 
         statClosing:
-            "dealClosing",
-
-        statFlyerSent:
-            "flyerSent"
+            "dealClosing"
     };
 
 
-    if (
-        Object.prototype.hasOwnProperty.call(
-            idMap,
-            id
-        )
-    ) {
-
-        return idMap[id];
-    }
-
-
-    return "";
+    return map[id] || "";
 }
 
 
 // ============================================================
-// FIND STAT CARD
-// ============================================================
-
-function dashboardStatsFindCard(
-    element
-) {
-
-    if (!element) {
-        return null;
-    }
-
-
-    const selectors = [
-        "[data-stat-card]",
-        ".stat-card",
-        ".dashboard-stat-card",
-        ".stat-item",
-        ".stat-box",
-        ".overview-stat",
-        ".dashboard-stat"
-    ].join(",");
-
-
-    const directCard =
-        element.closest(
-            selectors
-        );
-
-
-    if (directCard) {
-        return directCard;
-    }
-
-
-    if (
-        element.matches &&
-        element.matches(
-            selectors
-        )
-    ) {
-
-        return element;
-    }
-
-
-    return null;
-}
-
-
-// ============================================================
-// BIND STAT CARD CLICKS
+// BIND CARD CLICK
 // ============================================================
 
 let dashboardStatsClickBound =
@@ -1495,7 +1259,9 @@ let dashboardStatsClickBound =
 
 function dashboardBindStatCardClicks() {
 
-    if (dashboardStatsClickBound) {
+    if (
+        dashboardStatsClickBound
+    ) {
         return;
     }
 
@@ -1533,37 +1299,28 @@ function dashboardBindStatCardClicks() {
             }
 
 
-            const internalInteractive =
-                target.closest(
-                    "button, a, input, select, textarea"
-                );
-
-
-            if (
-                internalInteractive &&
-                internalInteractive !== card
-            ) {
-
-                return;
-            }
-
-
-            let category =
+            const category =
                 dashboardStatsGetCategoryFromElement(
                     card
                 );
 
 
             if (!category) {
-
-                category =
-                    dashboardStatsGetCategoryFromElement(
-                        target
-                    );
+                return;
             }
 
 
-            if (!category) {
+            // Jangan menangkap tombol/link internal.
+            const interactive =
+                target.closest(
+                    "button, a, input, select, textarea"
+                );
+
+
+            if (
+                interactive &&
+                interactive !== card
+            ) {
                 return;
             }
 
@@ -1583,33 +1340,14 @@ function dashboardBindStatCardClicks() {
 
 
 // ============================================================
-// APPLY CLICKABLE STATE
+// PREPARE CARDS
 // ============================================================
 
 function dashboardStatsPrepareCards() {
 
-    const selectors = [
-
-        "[data-stat-card]",
-
-        ".stat-card",
-
-        ".dashboard-stat-card",
-
-        ".stat-item",
-
-        ".stat-box",
-
-        ".overview-stat",
-
-        ".dashboard-stat"
-
-    ];
-
-
     const cards =
         document.querySelectorAll(
-            selectors.join(",")
+            "[data-stat-card]"
         );
 
 
@@ -1657,14 +1395,13 @@ function dashboardStatsPrepareCards() {
                     "0"
                 );
             }
-
         }
     );
 }
 
 
 // ============================================================
-// KEYBOARD SUPPORT
+// KEYBOARD
 // ============================================================
 
 let dashboardStatsKeyboardBound =
@@ -1673,7 +1410,9 @@ let dashboardStatsKeyboardBound =
 
 function dashboardBindStatCardKeyboard() {
 
-    if (dashboardStatsKeyboardBound) {
+    if (
+        dashboardStatsKeyboardBound
+    ) {
         return;
     }
 
@@ -1686,32 +1425,17 @@ function dashboardBindStatCardKeyboard() {
         "keydown",
         function (event) {
 
-            if (!event) {
-                return;
-            }
-
-
             if (
                 event.key !== "Enter" &&
                 event.key !== " "
             ) {
-
-                return;
-            }
-
-
-            const target =
-                event.target;
-
-
-            if (!target) {
                 return;
             }
 
 
             const card =
                 dashboardStatsFindCard(
-                    target
+                    event.target
                 );
 
 
@@ -1745,7 +1469,7 @@ function dashboardBindStatCardKeyboard() {
 
 
 // ============================================================
-// INITIALIZE STAT CARDS
+// INITIALIZE
 // ============================================================
 
 function dashboardInitializeStatCards() {
@@ -1759,11 +1483,12 @@ function dashboardInitializeStatCards() {
 
 
 // ============================================================
-// AUTO INITIALIZE
+// DOM READY
 // ============================================================
 
 if (
-    document.readyState === "loading"
+    document.readyState ===
+    "loading"
 ) {
 
     document.addEventListener(
@@ -1822,10 +1547,6 @@ window.dashboardIsNoDeal =
     dashboardStatsIsNoDeal;
 
 
-// ============================================================
-// STAT CARD NAVIGATION EXPORTS
-// ============================================================
-
 window.dashboardStatsOpenCategory =
     dashboardStatsOpenCategory;
 
@@ -1843,9 +1564,9 @@ window.dashboardInitializeStatCards =
 // FSI DASHBOARD NAMESPACE
 // ============================================================
 
-if (!window.FSIDashboard) {
-    window.FSIDashboard = {};
-}
+window.FSIDashboard =
+    window.FSIDashboard ||
+    {};
 
 
 window.FSIDashboard.calculateStats =
