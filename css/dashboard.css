@@ -1,62 +1,18 @@
 /* ============================================================
    FSI CRM - DASHBOARD STYLES
    File    : css/dashboard.css
-   Version : 2026.10.01 - Professional Dashboard
+   Version : 2026.10.01 - Professional Dashboard UI
 
-   Fungsi:
-   1. Dashboard root
-   2. Dashboard greeting
-   3. Dashboard section
-   4. Dashboard statistics
-   5. Stat card interaction
-   6. Dashboard main grid
-   7. Sales section
-   8. Sales cards grid
-   9. Sales card
-   10. Sales card icon
-   11. Sales card content
-   12. Sales card arrow
-   13. Sales card animation
-   14. Sales filter
-   15. Professional sales pipeline
-   16. Pipeline stage states
-   17. Recent activity timeline
-   18. Profile pipeline
-   19. Selected Sales lead list
-   20. Lead list header
-   21. Lead list toolbar
-   22. Lead table
-   23. Lead table widths
-   24. Customer cell
-   25. Business
-   26. Phone
-   27. Location
-   28. Status
-   29. Date
-   30. View button
-   31. Empty state
-   32. Loading state
-   33. Pagination
-   34. Mobile lead cards
-   35. Dashboard popup
-   36. Dashboard error
-   37. Dashboard loading
-   38. Dashboard buttons
-   39. View all
-   40. Role states
-   41. Scrollbar
-   42. Responsive 1200px
-   43. Responsive 900px
-   44. Responsive 700px
-   45. Responsive 600px
-   46. Responsive 420px
-   47. Reduced motion
-
-   IMPORTANT:
-   - Jangan menghapus responsive.css dari index.html.
-   - responsive.css tetap menjadi CSS terakhir.
-   - Jangan menghapus class lama karena JS dashboard
-     masih menggunakan beberapa selector legacy.
+   Fokus:
+   - Modern professional CRM dashboard
+   - Clean visual hierarchy
+   - Premium cards
+   - Sales cards lebih compact
+   - Pipeline lebih menarik
+   - Recent Activity timeline
+   - Responsive
+   - Tetap kompatibel dengan selector/class lama
+   - Tidak membutuhkan perubahan JS
 ============================================================ */
 
 
@@ -74,13 +30,13 @@
 }
 
 .dashboard-page {
-    animation: dashboardPageFadeIn 0.35s ease both;
+    animation: fsiDashboardFadeIn 0.35s ease both;
 }
 
-@keyframes dashboardPageFadeIn {
+@keyframes fsiDashboardFadeIn {
     from {
         opacity: 0;
-        transform: translateY(6px);
+        transform: translateY(8px);
     }
 
     to {
@@ -96,44 +52,37 @@
 
 .dashboard-greeting {
     width: 100%;
-    margin-bottom: 26px;
-    animation: dashboardGreetingIn 0.45s ease both;
+    margin: 0 0 28px;
 }
 
 .dashboard-greeting h1,
 .dashboard-greeting-title {
     margin: 0;
-    font-size: clamp(24px, 3vw, 32px);
-    line-height: 1.2;
+
+    font-size: clamp(25px, 3vw, 34px);
+    line-height: 1.15;
+
     font-weight: 800;
-    letter-spacing: -0.03em;
-    color: #111827;
+    letter-spacing: -0.04em;
+
+    color: #0f172a;
 }
 
 .dashboard-greeting p,
 .dashboard-greeting-subtitle {
+    max-width: 760px;
+
     margin: 8px 0 0;
-    max-width: 780px;
+
     font-size: 14px;
     line-height: 1.6;
-    color: #6b7280;
-}
 
-@keyframes dashboardGreetingIn {
-    from {
-        opacity: 0;
-        transform: translateY(-8px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    color: #64748b;
 }
 
 
 /* ============================================================
-   3. DASHBOARD HEADER / SECTION
+   3. SECTION
 ============================================================ */
 
 .dashboard-section {
@@ -145,71 +94,93 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+
     gap: 16px;
+
     margin-bottom: 15px;
 }
 
 .dashboard-section-title {
     margin: 0;
+
     font-size: 17px;
+    line-height: 1.3;
+
     font-weight: 800;
-    color: #111827;
+
+    color: #0f172a;
 }
 
 .dashboard-section-subtitle {
-    margin: 4px 0 0;
+    margin: 5px 0 0;
+
     font-size: 13px;
-    color: #6b7280;
+    line-height: 1.45;
+
+    color: #64748b;
 }
 
 .dashboard-section-actions {
     display: flex;
     align-items: center;
+
     gap: 8px;
 }
 
 
 /* ============================================================
-   4. DASHBOARD STATISTICS
+   4. STATISTICS
 ============================================================ */
 
 .dashboard-stats,
 .dashboard-stats-grid,
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+
     gap: 16px;
+
     width: 100%;
+
     margin-bottom: 30px;
 }
+
+
+/* ============================================================
+   STAT CARD
+============================================================ */
 
 .dashboard-stat-card,
 .stat-card,
 .dashboard-stat {
     position: relative;
+
     min-width: 0;
-    overflow: hidden;
 
     padding: 20px;
 
-    border: 1px solid rgba(226, 232, 240, 0.95);
+    overflow: hidden;
+
+    border: 1px solid #e5e7eb;
     border-radius: 18px;
 
     background:
         linear-gradient(
             145deg,
-            rgba(255, 255, 255, 0.99),
-            rgba(248, 250, 252, 0.97)
+            #ffffff 0%,
+            #fbfcfe 100%
         );
 
     box-shadow:
-        0 8px 25px rgba(15, 23, 42, 0.055),
+        0 8px 25px rgba(15, 23, 42, 0.045),
         0 2px 6px rgba(15, 23, 42, 0.025);
 
     transition:
-        transform 0.22s ease,
-        box-shadow 0.22s ease,
-        border-color 0.22s ease;
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
 }
 
 .dashboard-stat-card::before,
@@ -218,6 +189,7 @@
     content: "";
 
     position: absolute;
+
     top: 0;
     left: 0;
     right: 0;
@@ -229,10 +201,8 @@
             90deg,
             #f59e0b,
             #f97316,
-            #ef4444
+            #ea580c
         );
-
-    opacity: 0.85;
 }
 
 .dashboard-stat-card:hover,
@@ -240,11 +210,11 @@
 .dashboard-stat:hover {
     transform: translateY(-3px);
 
-    border-color: rgba(203, 213, 225, 0.95);
+    border-color: #dbe2ea;
 
     box-shadow:
-        0 15px 35px rgba(15, 23, 42, 0.09),
-        0 4px 10px rgba(15, 23, 42, 0.035);
+        0 16px 36px rgba(15, 23, 42, 0.075),
+        0 4px 10px rgba(15, 23, 42, 0.025);
 }
 
 .dashboard-stat-card.clickable,
@@ -252,11 +222,17 @@
     cursor: pointer;
 }
 
+
+/* ============================================================
+   STAT HEADER
+============================================================ */
+
 .dashboard-stat-card-header,
 .stat-card-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
+
     gap: 12px;
 }
 
@@ -264,8 +240,9 @@
 .stat-card-label {
     min-width: 0;
 
-    font-size: 11px;
+    font-size: 10px;
     line-height: 1.4;
+
     font-weight: 800;
 
     letter-spacing: 0.08em;
@@ -273,6 +250,11 @@
 
     color: #64748b;
 }
+
+
+/* ============================================================
+   STAT ICON
+============================================================ */
 
 .dashboard-stat-card-icon,
 .stat-card-icon {
@@ -282,13 +264,22 @@
 
     flex: 0 0 auto;
 
-    width: 40px;
-    height: 40px;
+    width: 42px;
+    height: 42px;
 
-    border-radius: 12px;
+    border-radius: 13px;
 
-    background: #fff7ed;
-    color: #f59e0b;
+    background:
+        linear-gradient(
+            145deg,
+            #fff7ed,
+            #ffedd5
+        );
+
+    color: #ea580c;
+
+    box-shadow:
+        inset 0 0 0 1px rgba(234, 88, 12, 0.07);
 }
 
 .dashboard-stat-card-icon svg,
@@ -297,18 +288,24 @@
     height: 19px;
 }
 
+
+/* ============================================================
+   STAT VALUE
+============================================================ */
+
 .dashboard-stat-card-value,
 .stat-card-value,
 .dashboard-stat-value {
     display: block;
 
-    margin-top: 12px;
+    margin-top: 14px;
 
-    font-size: clamp(25px, 3vw, 34px);
+    font-size: clamp(27px, 3vw, 36px);
     line-height: 1;
 
     font-weight: 800;
-    letter-spacing: -0.035em;
+
+    letter-spacing: -0.045em;
 
     color: #0f172a;
 }
@@ -317,7 +314,7 @@
 .stat-card-description {
     margin-top: 8px;
 
-    font-size: 12px;
+    font-size: 11px;
     line-height: 1.45;
 
     color: #94a3b8;
@@ -325,7 +322,7 @@
 
 
 /* ============================================================
-   5. STAT CARD INTERACTION
+   STAT ACTIVE
 ============================================================ */
 
 .dashboard-stat-card.is-active,
@@ -335,22 +332,24 @@
     border-color: rgba(245, 158, 11, 0.5);
 
     box-shadow:
-        0 12px 30px rgba(245, 158, 11, 0.12),
-        0 0 0 3px rgba(245, 158, 11, 0.08);
+        0 14px 32px rgba(245, 158, 11, 0.1),
+        0 0 0 3px rgba(245, 158, 11, 0.07);
 }
 
 
 /* ============================================================
-   6. DASHBOARD MAIN GRID
+   5. MAIN GRID
 ============================================================ */
 
 .dashboard-grid {
     display: grid;
+
     grid-template-columns:
         minmax(0, 1.5fr)
         minmax(300px, 0.9fr);
 
     gap: 20px;
+
     width: 100%;
 }
 
@@ -358,17 +357,24 @@
     grid-column: 1 / -1;
 }
 
+
+/* ============================================================
+   DASHBOARD CARD
+============================================================ */
+
 .dashboard-card {
     min-width: 0;
 
+    overflow: hidden;
+
     border: 1px solid #e5e7eb;
-    border-radius: 18px;
+    border-radius: 20px;
 
     background: #ffffff;
 
     box-shadow:
-        0 8px 24px rgba(15, 23, 42, 0.05),
-        0 2px 5px rgba(15, 23, 42, 0.025);
+        0 8px 25px rgba(15, 23, 42, 0.045),
+        0 2px 6px rgba(15, 23, 42, 0.02);
 }
 
 .dashboard-card-header {
@@ -378,7 +384,7 @@
 
     gap: 14px;
 
-    padding: 18px 20px;
+    padding: 19px 21px;
 
     border-bottom: 1px solid #f1f5f9;
 }
@@ -387,15 +393,18 @@
     margin: 0;
 
     font-size: 15px;
+    line-height: 1.35;
+
     font-weight: 800;
 
-    color: #111827;
+    color: #0f172a;
 }
 
 .dashboard-card-subtitle {
     margin: 4px 0 0;
 
     font-size: 12px;
+    line-height: 1.4;
 
     color: #94a3b8;
 }
@@ -406,12 +415,12 @@
 
 
 /* ============================================================
-   7. SALES SECTION
+   6. SALES SECTION
 ============================================================ */
 
 .dashboard-sales-section {
     width: 100%;
-    margin-bottom: 30px;
+    margin-bottom: 32px;
 }
 
 .dashboard-sales-section-header {
@@ -432,20 +441,21 @@
 
     font-weight: 800;
 
-    color: #111827;
+    color: #0f172a;
 }
 
 .dashboard-sales-section-subtitle {
     margin: 5px 0 0;
 
     font-size: 13px;
+    line-height: 1.45;
 
     color: #64748b;
 }
 
 
 /* ============================================================
-   8. SALES CARDS GRID
+   7. SALES CARDS
 ============================================================ */
 
 .dashboard-sales-cards-grid {
@@ -461,7 +471,7 @@
 
 
 /* ============================================================
-   9. SALES CARD
+   SALES CARD
 ============================================================ */
 
 .dashboard-sales-card {
@@ -472,11 +482,10 @@
 
     gap: 13px;
 
-    width: 100%;
     min-width: 0;
-    min-height: 104px;
+    min-height: 108px;
 
-    padding: 15px;
+    padding: 16px;
 
     overflow: hidden;
 
@@ -486,13 +495,12 @@
     background:
         linear-gradient(
             145deg,
-            rgba(255, 255, 255, 0.99),
-            rgba(248, 250, 252, 0.98)
+            #ffffff,
+            #f8fafc
         );
 
     box-shadow:
-        0 7px 20px rgba(15, 23, 42, 0.055),
-        0 2px 5px rgba(15, 23, 42, 0.025);
+        0 7px 20px rgba(15, 23, 42, 0.045);
 
     cursor: pointer;
 
@@ -501,10 +509,9 @@
     font: inherit;
 
     transition:
-        transform 0.22s ease,
-        border-color 0.22s ease,
-        box-shadow 0.22s ease,
-        background 0.22s ease;
+        transform 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
 .dashboard-sales-card::before {
@@ -522,52 +529,40 @@
         linear-gradient(
             180deg,
             #f59e0b,
-            #f97316
+            #ea580c
         );
 
     opacity: 0;
 
-    transition: opacity 0.22s ease;
+    transition: opacity 0.2s ease;
 }
 
 .dashboard-sales-card:hover {
     transform: translateY(-3px);
 
-    border-color: rgba(245, 158, 11, 0.35);
+    border-color: #fed7aa;
 
     box-shadow:
-        0 15px 32px rgba(15, 23, 42, 0.09),
-        0 4px 10px rgba(15, 23, 42, 0.035);
+        0 16px 32px rgba(15, 23, 42, 0.075);
 }
 
 .dashboard-sales-card:hover::before {
     opacity: 1;
 }
 
-.dashboard-sales-card:focus-visible {
-    outline: none;
-
-    border-color: rgba(245, 158, 11, 0.7);
-
-    box-shadow:
-        0 0 0 4px rgba(245, 158, 11, 0.12),
-        0 10px 24px rgba(15, 23, 42, 0.08);
-}
-
 .dashboard-sales-card.is-active,
 .dashboard-sales-card.active {
-    border-color: rgba(245, 158, 11, 0.65);
+    border-color: rgba(245, 158, 11, 0.55);
 
     background:
         linear-gradient(
             145deg,
-            #fffdf7,
+            #fffdf8,
             #ffffff
         );
 
     box-shadow:
-        0 14px 32px rgba(245, 158, 11, 0.12),
-        0 0 0 3px rgba(245, 158, 11, 0.07);
+        0 14px 32px rgba(245, 158, 11, 0.1);
 }
 
 .dashboard-sales-card.is-active::before,
@@ -575,9 +570,18 @@
     opacity: 1;
 }
 
+.dashboard-sales-card:focus-visible {
+    outline: none;
+
+    border-color: #f59e0b;
+
+    box-shadow:
+        0 0 0 4px rgba(245, 158, 11, 0.12);
+}
+
 
 /* ============================================================
-   10. SALES CARD ICON
+   SALES CARD ICON
 ============================================================ */
 
 .dashboard-sales-card-icon {
@@ -587,8 +591,8 @@
 
     flex: 0 0 auto;
 
-    width: 46px;
-    height: 46px;
+    width: 47px;
+    height: 47px;
 
     border-radius: 14px;
 
@@ -602,7 +606,7 @@
     color: #ea580c;
 
     box-shadow:
-        inset 0 0 0 1px rgba(234, 88, 12, 0.08);
+        inset 0 0 0 1px rgba(234, 88, 12, 0.07);
 }
 
 .dashboard-sales-card-icon svg {
@@ -612,7 +616,7 @@
 
 
 /* ============================================================
-   11. SALES CARD CONTENT
+   SALES CONTENT
 ============================================================ */
 
 .dashboard-sales-card-content {
@@ -644,20 +648,19 @@
 .dashboard-sales-card-label {
     margin-top: 3px;
 
-    font-size: 10px;
-    line-height: 1.35;
+    font-size: 9px;
+    line-height: 1.3;
 
-    font-weight: 600;
+    font-weight: 700;
 
     color: #94a3b8;
 
+    letter-spacing: 0.06em;
     text-transform: uppercase;
-    letter-spacing: 0.055em;
 }
 
 .dashboard-sales-card-count-wrapper {
     display: flex;
-
     align-items: baseline;
 
     gap: 5px;
@@ -666,12 +669,12 @@
 }
 
 .dashboard-sales-card-count {
-    font-size: 20px;
+    font-size: 21px;
     line-height: 1;
 
     font-weight: 800;
 
-    letter-spacing: -0.025em;
+    letter-spacing: -0.03em;
 
     color: #0f172a;
 }
@@ -686,28 +689,27 @@
 
 
 /* ============================================================
-   12. SALES CARD ARROW
+   SALES ARROW
 ============================================================ */
 
 .dashboard-sales-card-arrow {
     display: flex;
-
     align-items: center;
     justify-content: center;
 
     flex: 0 0 auto;
 
-    width: 28px;
-    height: 28px;
+    width: 29px;
+    height: 29px;
 
     border-radius: 9px;
 
     color: #94a3b8;
 
     transition:
-        transform 0.22s ease,
-        color 0.22s ease,
-        background 0.22s ease;
+        transform 0.2s ease,
+        background 0.2s ease,
+        color 0.2s ease;
 }
 
 .dashboard-sales-card:hover .dashboard-sales-card-arrow {
@@ -727,11 +729,11 @@
 
 
 /* ============================================================
-   13. SALES CARD ENTRANCE ANIMATION
+   SALES ANIMATION
 ============================================================ */
 
 .dashboard-sales-card {
-    animation: dashboardSalesCardIn 0.35s ease both;
+    animation: fsiSalesCardIn 0.35s ease both;
 }
 
 .dashboard-sales-card:nth-child(1) {
@@ -762,7 +764,7 @@
     animation-delay: 0.20s;
 }
 
-@keyframes dashboardSalesCardIn {
+@keyframes fsiSalesCardIn {
     from {
         opacity: 0;
         transform: translateY(8px);
@@ -776,12 +778,11 @@
 
 
 /* ============================================================
-   14. SALES FILTER
+   8. SALES FILTER
 ============================================================ */
 
 .dashboard-sales-filter-wrapper {
     display: flex;
-
     align-items: center;
 
     gap: 10px;
@@ -805,12 +806,11 @@
     border: 1px solid #dbe3ec;
     border-radius: 10px;
 
-    background-color: #ffffff;
+    background: #ffffff;
 
     color: #334155;
 
     font: inherit;
-
     font-size: 12px;
     font-weight: 600;
 
@@ -829,18 +829,13 @@
 
 
 /* ============================================================
-   15. PROFESSIONAL SALES PIPELINE
+   9. PROFESSIONAL SALES PIPELINE
 ============================================================ */
 
 .dashboard-pipeline,
 .sales-pipeline {
     width: 100%;
 }
-
-/*
-   Pipeline dibuat sebagai horizontal process flow.
-   Tetap menggunakan selector lama agar JS tidak rusak.
-*/
 
 .dashboard-pipeline-grid,
 .sales-pipeline-grid {
@@ -849,18 +844,19 @@
     grid-template-columns:
         repeat(7, minmax(0, 1fr));
 
-    gap: 0;
+    gap: 8px;
 
     width: 100%;
 
-    position: relative;
+    padding: 6px 0 4px;
 
-    padding: 6px 0 2px;
+    position: relative;
 }
 
-/*
-   Garis progress di belakang semua stage.
-*/
+
+/* ============================================================
+   PIPELINE CONNECTOR
+============================================================ */
 
 .dashboard-pipeline-grid::before,
 .sales-pipeline-grid::before {
@@ -868,21 +864,22 @@
 
     position: absolute;
 
-    top: 27px;
-    left: 5%;
-    right: 5%;
+    top: 30px;
+
+    left: 6%;
+    right: 6%;
 
     height: 2px;
 
     background:
         linear-gradient(
             90deg,
-            #dbeafe 0%,
-            #ede9fe 20%,
-            #fef3c7 40%,
-            #cffafe 60%,
-            #ffedd5 75%,
-            #dcfce7 100%
+            #dbeafe,
+            #ede9fe,
+            #fef3c7,
+            #cffafe,
+            #ffedd5,
+            #dcfce7
         );
 
     z-index: 0;
@@ -900,15 +897,14 @@
 
     min-width: 0;
 
-    padding: 0 7px 4px;
+    padding: 0 4px 4px;
 
     border: 0;
 
     background: transparent;
 
     transition:
-        transform 0.2s ease,
-        opacity 0.2s ease;
+        transform 0.2s ease;
 }
 
 .dashboard-pipeline-stage:hover,
@@ -919,40 +915,37 @@
 
 
 /* ============================================================
-   PIPELINE STAGE HEADER
+   PIPELINE HEADER
 ============================================================ */
 
 .dashboard-pipeline-stage-header {
     position: relative;
 
     display: flex;
-
     align-items: center;
     justify-content: center;
 
-    min-height: 54px;
+    min-height: 55px;
 
     z-index: 2;
 }
 
 
-/*
-   Number / icon circle.
-*/
+/* ============================================================
+   PIPELINE NUMBER
+============================================================ */
 
 .dashboard-pipeline-stage-number {
     position: relative;
 
     display: flex;
-
     align-items: center;
     justify-content: center;
 
-    width: 46px;
-    height: 46px;
+    width: 47px;
+    height: 47px;
 
     border: 3px solid #ffffff;
-
     border-radius: 50%;
 
     background: #f8fafc;
@@ -960,34 +953,30 @@
     color: #64748b;
 
     font-size: 11px;
-
     font-weight: 800;
 
     box-shadow:
         0 4px 12px rgba(15, 23, 42, 0.08),
-        0 0 0 1px rgba(226, 232, 240, 0.9);
+        0 0 0 1px #e2e8f0;
 
     z-index: 2;
 
     transition:
         transform 0.2s ease,
-        box-shadow 0.2s ease,
-        background 0.2s ease,
-        color 0.2s ease;
+        box-shadow 0.2s ease;
 }
 
-.dashboard-pipeline-stage:hover
-.dashboard-pipeline-stage-number {
-    transform: scale(1.06);
+.dashboard-pipeline-stage:hover .dashboard-pipeline-stage-number {
+    transform: scale(1.07);
 
     box-shadow:
-        0 7px 18px rgba(15, 23, 42, 0.12),
-        0 0 0 1px rgba(226, 232, 240, 1);
+        0 8px 20px rgba(15, 23, 42, 0.12),
+        0 0 0 1px #cbd5e1;
 }
 
 
 /* ============================================================
-   PIPELINE STAGE BODY
+   PIPELINE BODY
 ============================================================ */
 
 .dashboard-pipeline-stage::after {
@@ -997,17 +986,22 @@
 
     width: 100%;
 
-    margin-top: 10px;
+    margin-top: 9px;
 
-    padding-top: 11px;
+    padding-top: 12px;
 
     border: 1px solid #e5e7eb;
-    border-radius: 14px;
+    border-radius: 15px;
 
-    background: #ffffff;
+    background:
+        linear-gradient(
+            145deg,
+            #ffffff,
+            #fbfcfd
+        );
 
     box-shadow:
-        0 5px 16px rgba(15, 23, 42, 0.045);
+        0 5px 16px rgba(15, 23, 42, 0.04);
 
     transition:
         border-color 0.2s ease,
@@ -1018,13 +1012,13 @@
     border-color: #cbd5e1;
 
     box-shadow:
-        0 10px 24px rgba(15, 23, 42, 0.075);
+        0 10px 24px rgba(15, 23, 42, 0.065);
 }
 
 
-/*
-   Content ditempatkan di atas pseudo body.
-*/
+/* ============================================================
+   PIPELINE CONTENT
+============================================================ */
 
 .dashboard-pipeline-stage-title,
 .dashboard-pipeline-stage-count,
@@ -1034,228 +1028,138 @@
     z-index: 2;
 }
 
-
-/* ============================================================
-   PIPELINE TITLE
-============================================================ */
-
 .dashboard-pipeline-stage-title,
 .pipeline-stage-title {
-    margin: -39px 8px 0;
-
-    min-height: 32px;
-
     display: flex;
-
     align-items: center;
     justify-content: center;
+
+    min-height: 31px;
+
+    margin: -40px 7px 0;
 
     text-align: center;
 
     font-size: 10px;
-
-    line-height: 1.35;
+    line-height: 1.3;
 
     font-weight: 800;
 
     color: #334155;
-
-    letter-spacing: -0.005em;
 }
-
-
-/* ============================================================
-   PIPELINE COUNT
-============================================================ */
 
 .dashboard-pipeline-stage-count,
 .pipeline-stage-count {
-    margin: 9px 8px 0;
+    margin: 9px 7px 0;
 
     text-align: center;
 
-    font-size: 24px;
-
+    font-size: 25px;
     line-height: 1;
 
-    font-weight: 850;
+    font-weight: 800;
 
-    letter-spacing: -0.035em;
+    letter-spacing: -0.04em;
 
     color: #0f172a;
 }
 
-
-/* ============================================================
-   PIPELINE DESCRIPTION
-============================================================ */
-
 .dashboard-pipeline-stage-description {
-    margin: 7px 8px 12px;
+    min-height: 29px;
 
-    min-height: 28px;
+    margin: 7px 7px 12px;
 
     text-align: center;
 
     font-size: 9px;
-
-    line-height: 1.45;
+    line-height: 1.4;
 
     color: #94a3b8;
 }
 
 
 /* ============================================================
-   PIPELINE STAGE COLORS
+   PIPELINE COLORS
 ============================================================ */
 
-/* New */
-
-.dashboard-pipeline-stage.is-new
-.dashboard-pipeline-stage-number,
-.pipeline-stage.is-new
-.dashboard-pipeline-stage-number {
+.dashboard-pipeline-stage.is-new .dashboard-pipeline-stage-number,
+.pipeline-stage.is-new .dashboard-pipeline-stage-number {
     background: #eff6ff;
     color: #2563eb;
 }
 
-.dashboard-pipeline-stage.is-new::after {
-    border-color: rgba(59, 130, 246, 0.22);
-}
-
-
-/* First Contact */
-
-.dashboard-pipeline-stage.is-contact
-.dashboard-pipeline-stage-number,
-.pipeline-stage.is-contact
-.dashboard-pipeline-stage-number {
+.dashboard-pipeline-stage.is-contact .dashboard-pipeline-stage-number,
+.pipeline-stage.is-contact .dashboard-pipeline-stage-number {
     background: #f5f3ff;
     color: #7c3aed;
 }
 
-.dashboard-pipeline-stage.is-contact::after {
-    border-color: rgba(139, 92, 246, 0.22);
-}
-
-
-/* Appointment */
-
-.dashboard-pipeline-stage.is-appointment
-.dashboard-pipeline-stage-number,
-.pipeline-stage.is-appointment
-.dashboard-pipeline-stage-number {
+.dashboard-pipeline-stage.is-appointment .dashboard-pipeline-stage-number,
+.pipeline-stage.is-appointment .dashboard-pipeline-stage-number {
     background: #fffbeb;
     color: #b45309;
 }
 
-.dashboard-pipeline-stage.is-appointment::after {
-    border-color: rgba(245, 158, 11, 0.25);
-}
-
-
-/* Site Survey */
-
-.dashboard-pipeline-stage.is-survey
-.dashboard-pipeline-stage-number,
-.pipeline-stage.is-survey
-.dashboard-pipeline-stage-number {
+.dashboard-pipeline-stage.is-survey .dashboard-pipeline-stage-number,
+.pipeline-stage.is-survey .dashboard-pipeline-stage-number {
     background: #ecfeff;
     color: #0891b2;
 }
 
-.dashboard-pipeline-stage.is-survey::after {
-    border-color: rgba(14, 165, 233, 0.24);
-}
-
-
-/* Quotation */
-
-.dashboard-pipeline-stage.is-quotation
-.dashboard-pipeline-stage-number,
-.pipeline-stage.is-quotation
-.dashboard-pipeline-stage-number {
+.dashboard-pipeline-stage.is-quotation .dashboard-pipeline-stage-number,
+.pipeline-stage.is-quotation .dashboard-pipeline-stage-number {
     background: #fff7ed;
     color: #c2410c;
 }
 
-.dashboard-pipeline-stage.is-quotation::after {
-    border-color: rgba(249, 115, 22, 0.25);
-}
-
-
-/* Deal */
-
-.dashboard-pipeline-stage.is-deal
-.dashboard-pipeline-stage-number,
-.pipeline-stage.is-deal
-.dashboard-pipeline-stage-number {
+.dashboard-pipeline-stage.is-deal .dashboard-pipeline-stage-number,
+.pipeline-stage.is-deal .dashboard-pipeline-stage-number {
     background: #f0fdf4;
     color: #15803d;
 }
 
-.dashboard-pipeline-stage.is-deal::after {
-    border-color: rgba(34, 197, 94, 0.25);
-}
-
-
-/* No Deal */
-
-.dashboard-pipeline-stage.is-no-deal
-.dashboard-pipeline-stage-number,
-.pipeline-stage.is-no-deal
-.dashboard-pipeline-stage-number {
+.dashboard-pipeline-stage.is-no-deal .dashboard-pipeline-stage-number,
+.pipeline-stage.is-no-deal .dashboard-pipeline-stage-number {
     background: #fef2f2;
     color: #dc2626;
 }
 
-.dashboard-pipeline-stage.is-no-deal::after {
-    border-color: rgba(239, 68, 68, 0.2);
-}
-
 
 /* ============================================================
-   PIPELINE LEGACY SUPPORT
+   PIPELINE BORDER STATES
 ============================================================ */
 
-.dashboard-pipeline-stage.is-new,
-.pipeline-stage.is-new {
-    border-color: rgba(59, 130, 246, 0.2);
+.dashboard-pipeline-stage.is-new::after {
+    border-color: #dbeafe;
 }
 
-.dashboard-pipeline-stage.is-contact,
-.pipeline-stage.is-contact {
-    border-color: rgba(139, 92, 246, 0.2);
+.dashboard-pipeline-stage.is-contact::after {
+    border-color: #ede9fe;
 }
 
-.dashboard-pipeline-stage.is-appointment,
-.pipeline-stage.is-appointment {
-    border-color: rgba(245, 158, 11, 0.25);
+.dashboard-pipeline-stage.is-appointment::after {
+    border-color: #fef3c7;
 }
 
-.dashboard-pipeline-stage.is-survey,
-.pipeline-stage.is-survey {
-    border-color: rgba(14, 165, 233, 0.25);
+.dashboard-pipeline-stage.is-survey::after {
+    border-color: #cffafe;
 }
 
-.dashboard-pipeline-stage.is-quotation,
-.pipeline-stage.is-quotation {
-    border-color: rgba(249, 115, 22, 0.25);
+.dashboard-pipeline-stage.is-quotation::after {
+    border-color: #ffedd5;
 }
 
-.dashboard-pipeline-stage.is-deal,
-.pipeline-stage.is-deal {
-    border-color: rgba(34, 197, 94, 0.25);
+.dashboard-pipeline-stage.is-deal::after {
+    border-color: #dcfce7;
 }
 
-.dashboard-pipeline-stage.is-no-deal,
-.pipeline-stage.is-no-deal {
-    border-color: rgba(239, 68, 68, 0.2);
+.dashboard-pipeline-stage.is-no-deal::after {
+    border-color: #fee2e2;
 }
 
 
 /* ============================================================
-   16. PIPELINE STAGE STATES
+   PIPELINE ACTIVE
 ============================================================ */
 
 .dashboard-pipeline-stage.is-active,
@@ -1272,7 +1176,7 @@
 
 
 /* ============================================================
-   17. RECENT ACTIVITY
+   10. RECENT ACTIVITY
 ============================================================ */
 
 .dashboard-recent-activity {
@@ -1283,30 +1187,29 @@
     position: relative;
 
     display: flex;
-
     flex-direction: column;
 
     width: 100%;
 
-    padding: 4px 0 4px 2px;
+    padding: 4px 0;
 }
 
 
-/*
-   Vertical timeline.
-*/
+/* ============================================================
+   TIMELINE LINE
+============================================================ */
 
 .dashboard-activity-list::before {
     content: "";
 
     position: absolute;
 
-    top: 15px;
-    bottom: 15px;
+    top: 18px;
+    bottom: 18px;
 
-    left: 19px;
+    left: 20px;
 
-    width: 1px;
+    width: 2px;
 
     background:
         linear-gradient(
@@ -1324,19 +1227,21 @@
 .dashboard-activity-item {
     position: relative;
 
-    display: flex;
+    display: grid;
 
-    align-items: flex-start;
+    grid-template-columns: 42px minmax(0, 1fr) auto;
+
+    align-items: start;
 
     gap: 12px;
 
-    min-height: 64px;
+    min-height: 70px;
 
-    padding: 9px 4px;
+    padding: 9px 6px;
 
     border-bottom: 1px solid #f1f5f9;
 
-    border-radius: 10px;
+    border-radius: 12px;
 
     transition:
         background 0.18s ease,
@@ -1348,9 +1253,9 @@
 }
 
 .dashboard-activity-item:hover {
-    transform: translateX(2px);
-
     background: #fafafa;
+
+    transform: translateX(2px);
 }
 
 
@@ -1362,14 +1267,11 @@
     position: relative;
 
     display: flex;
-
     align-items: center;
     justify-content: center;
 
-    flex: 0 0 auto;
-
-    width: 38px;
-    height: 38px;
+    width: 40px;
+    height: 40px;
 
     border: 3px solid #ffffff;
 
@@ -1385,7 +1287,7 @@
     color: #64748b;
 
     box-shadow:
-        0 2px 8px rgba(15, 23, 42, 0.07),
+        0 3px 9px rgba(15, 23, 42, 0.07),
         0 0 0 1px #e2e8f0;
 
     z-index: 2;
@@ -1402,33 +1304,37 @@
 ============================================================ */
 
 .dashboard-activity-content {
-    flex: 1 1 auto;
-
     min-width: 0;
 
     padding-top: 2px;
 }
 
 .dashboard-activity-title {
+    overflow: hidden;
+
     margin: 0;
 
     font-size: 12px;
-
-    line-height: 1.45;
+    line-height: 1.4;
 
     font-weight: 800;
 
     color: #1e293b;
+
+    text-overflow: ellipsis;
 }
 
 .dashboard-activity-description {
-    margin: 3px 0 0;
+    overflow: hidden;
+
+    margin: 4px 0 0;
 
     font-size: 11px;
-
-    line-height: 1.45;
+    line-height: 1.4;
 
     color: #64748b;
+
+    text-overflow: ellipsis;
 }
 
 .dashboard-activity-description strong {
@@ -1445,11 +1351,10 @@
 .dashboard-activity-time {
     flex: 0 0 auto;
 
-    padding-top: 3px;
+    padding-top: 4px;
 
     font-size: 10px;
-
-    line-height: 1.4;
+    line-height: 1.35;
 
     font-weight: 700;
 
@@ -1463,60 +1368,52 @@
    ACTIVITY TYPES
 ============================================================ */
 
-.dashboard-activity-item.activity-new
-.dashboard-activity-icon {
+.dashboard-activity-item.activity-new .dashboard-activity-icon {
     background: #eff6ff;
     color: #2563eb;
 }
 
-.dashboard-activity-item.activity-contact
-.dashboard-activity-icon {
+.dashboard-activity-item.activity-contact .dashboard-activity-icon {
     background: #f5f3ff;
     color: #7c3aed;
 }
 
-.dashboard-activity-item.activity-appointment
-.dashboard-activity-icon {
+.dashboard-activity-item.activity-appointment .dashboard-activity-icon {
     background: #fffbeb;
     color: #b45309;
 }
 
-.dashboard-activity-item.activity-survey
-.dashboard-activity-icon {
+.dashboard-activity-item.activity-survey .dashboard-activity-icon {
     background: #ecfeff;
     color: #0891b2;
 }
 
-.dashboard-activity-item.activity-quotation
-.dashboard-activity-icon {
+.dashboard-activity-item.activity-quotation .dashboard-activity-icon {
     background: #fff7ed;
     color: #c2410c;
 }
 
-.dashboard-activity-item.activity-deal
-.dashboard-activity-icon {
+.dashboard-activity-item.activity-deal .dashboard-activity-icon {
     background: #f0fdf4;
     color: #15803d;
 }
 
-.dashboard-activity-item.activity-no-deal
-.dashboard-activity-icon {
+.dashboard-activity-item.activity-no-deal .dashboard-activity-icon {
     background: #fef2f2;
     color: #dc2626;
 }
 
 
 /* ============================================================
-   RECENT EMPTY
+   ACTIVITY EMPTY
 ============================================================ */
 
 .dashboard-activity-empty {
     display: flex;
-
     align-items: center;
     justify-content: center;
 
-    min-height: 150px;
+    min-height: 160px;
 
     padding: 25px;
 
@@ -1529,7 +1426,7 @@
 
 
 /* ============================================================
-   18. PROFILE PIPELINE
+   11. PROFILE PIPELINE
 ============================================================ */
 
 .profile-pipeline {
@@ -1548,11 +1445,10 @@
 
     min-width: 0;
 
-    padding: 10px;
+    padding: 11px;
 
     border: 1px solid #e5e7eb;
-
-    border-radius: 11px;
+    border-radius: 12px;
 
     background: #ffffff;
 
@@ -1568,7 +1464,7 @@
     border-color: #cbd5e1;
 
     box-shadow:
-        0 6px 15px rgba(15, 23, 42, 0.06);
+        0 7px 16px rgba(15, 23, 42, 0.055);
 }
 
 .profile-pipeline-item.active {
@@ -1582,7 +1478,6 @@
 
 .profile-pipeline-item-title {
     font-size: 10px;
-
     line-height: 1.35;
 
     font-weight: 700;
@@ -1593,7 +1488,8 @@
 .profile-pipeline-item-value {
     margin-top: 6px;
 
-    font-size: 16px;
+    font-size: 17px;
+    line-height: 1;
 
     font-weight: 800;
 
@@ -1602,7 +1498,7 @@
 
 
 /* ============================================================
-   19. SELECTED SALES LEAD LIST
+   12. SELECTED SALES LEAD LIST
 ============================================================ */
 
 .dashboard-sales-lead-list-section {
@@ -1611,23 +1507,21 @@
     margin-top: 24px;
     margin-bottom: 30px;
 
-    border: 1px solid #e2e8f0;
+    overflow: hidden;
 
+    border: 1px solid #e2e8f0;
     border-radius: 20px;
 
     background: #ffffff;
 
     box-shadow:
-        0 10px 28px rgba(15, 23, 42, 0.055),
-        0 2px 6px rgba(15, 23, 42, 0.025);
-
-    overflow: hidden;
+        0 10px 28px rgba(15, 23, 42, 0.05);
 
     animation:
-        dashboardLeadSectionIn 0.3s ease both;
+        fsiLeadSectionIn 0.3s ease both;
 }
 
-@keyframes dashboardLeadSectionIn {
+@keyframes fsiLeadSectionIn {
     from {
         opacity: 0;
         transform: translateY(8px);
@@ -1641,12 +1535,11 @@
 
 
 /* ============================================================
-   20. LEAD LIST HEADER
+   LEAD HEADER
 ============================================================ */
 
 .dashboard-sales-lead-list-header {
     display: flex;
-
     align-items: center;
     justify-content: space-between;
 
@@ -1666,7 +1559,6 @@
 
 .dashboard-sales-lead-list-heading {
     display: flex;
-
     align-items: center;
 
     gap: 12px;
@@ -1676,7 +1568,6 @@
 
 .dashboard-sales-lead-list-title-icon {
     display: flex;
-
     align-items: center;
     justify-content: center;
 
@@ -1706,7 +1597,6 @@
     margin: 0;
 
     font-size: 17px;
-
     line-height: 1.3;
 
     font-weight: 800;
@@ -1718,7 +1608,6 @@
     margin: 4px 0 0;
 
     font-size: 12px;
-
     line-height: 1.45;
 
     color: #64748b;
@@ -1727,10 +1616,9 @@
 .dashboard-sales-lead-list-count {
     flex: 0 0 auto;
 
-    padding: 7px 10px;
+    padding: 7px 11px;
 
     border: 1px solid #fed7aa;
-
     border-radius: 10px;
 
     background: #fff7ed;
@@ -1738,20 +1626,16 @@
     color: #c2410c;
 
     font-size: 11px;
-
-    line-height: 1;
-
     font-weight: 800;
 }
 
 
 /* ============================================================
-   21. LEAD LIST TOOLBAR
+   LEAD TOOLBAR
 ============================================================ */
 
 .dashboard-sales-lead-list-toolbar {
     display: flex;
-
     align-items: center;
     justify-content: space-between;
 
@@ -1791,13 +1675,11 @@
 
 .dashboard-sales-lead-search {
     width: 100%;
-
     height: 40px;
 
     padding: 0 13px 0 38px;
 
     border: 1px solid #dbe3ec;
-
     border-radius: 11px;
 
     background: #f8fafc;
@@ -1805,7 +1687,6 @@
     color: #1e293b;
 
     font: inherit;
-
     font-size: 12px;
 
     transition:
@@ -1816,10 +1697,6 @@
 
 .dashboard-sales-lead-search::placeholder {
     color: #94a3b8;
-}
-
-.dashboard-sales-lead-search:hover {
-    background: #ffffff;
 }
 
 .dashboard-sales-lead-search:focus {
@@ -1841,7 +1718,6 @@
     padding: 0 32px 0 11px;
 
     border: 1px solid #dbe3ec;
-
     border-radius: 11px;
 
     background: #ffffff;
@@ -1849,26 +1725,15 @@
     color: #475569;
 
     font: inherit;
-
     font-size: 12px;
-
     font-weight: 600;
 
     cursor: pointer;
 }
 
-.dashboard-sales-lead-page-size:focus {
-    outline: none;
-
-    border-color: #f59e0b;
-
-    box-shadow:
-        0 0 0 3px rgba(245, 158, 11, 0.1);
-}
-
 
 /* ============================================================
-   22. LEAD TABLE WRAPPER
+   LEAD TABLE
 ============================================================ */
 
 .dashboard-sales-lead-table-wrap {
@@ -1886,7 +1751,6 @@
     min-width: 940px;
 
     border-collapse: separate;
-
     border-spacing: 0;
 
     font-size: 12px;
@@ -1908,9 +1772,6 @@
     color: #64748b;
 
     font-size: 10px;
-
-    line-height: 1.3;
-
     font-weight: 800;
 
     letter-spacing: 0.055em;
@@ -1946,7 +1807,7 @@
 
 
 /* ============================================================
-   23. LEAD TABLE COLUMN WIDTHS
+   COLUMN WIDTHS
 ============================================================ */
 
 .dashboard-sales-lead-table th:nth-child(1),
@@ -1991,7 +1852,7 @@
 
 
 /* ============================================================
-   24. CUSTOMER CELL
+   CUSTOMER
 ============================================================ */
 
 .dashboard-sales-lead-customer {
@@ -2004,7 +1865,6 @@
     overflow: hidden;
 
     font-size: 12px;
-
     line-height: 1.4;
 
     font-weight: 800;
@@ -2012,7 +1872,6 @@
     color: #1e293b;
 
     text-overflow: ellipsis;
-
     white-space: nowrap;
 }
 
@@ -2025,18 +1884,15 @@
 
     font-size: 10px;
 
-    line-height: 1.35;
-
     color: #94a3b8;
 
     text-overflow: ellipsis;
-
     white-space: nowrap;
 }
 
 
 /* ============================================================
-   25. LEAD BUSINESS
+   BUSINESS / PHONE / LOCATION
 ============================================================ */
 
 .dashboard-sales-lead-business {
@@ -2046,36 +1902,21 @@
 
     font-size: 11px;
 
-    line-height: 1.4;
-
     font-weight: 650;
 
     color: #475569;
 
     text-overflow: ellipsis;
-
     white-space: nowrap;
 }
 
-
-/* ============================================================
-   26. LEAD PHONE
-============================================================ */
-
 .dashboard-sales-lead-phone {
     font-size: 11px;
-
-    line-height: 1.4;
 
     color: #475569;
 
     white-space: nowrap;
 }
-
-
-/* ============================================================
-   27. LEAD LOCATION
-============================================================ */
 
 .dashboard-sales-lead-location {
     display: block;
@@ -2086,23 +1927,19 @@
 
     font-size: 11px;
 
-    line-height: 1.4;
-
     color: #64748b;
 
     text-overflow: ellipsis;
-
     white-space: nowrap;
 }
 
 
 /* ============================================================
-   28. LEAD STATUS
+   STATUS
 ============================================================ */
 
 .dashboard-sales-lead-status {
     display: inline-flex;
-
     align-items: center;
     justify-content: center;
 
@@ -2111,11 +1948,9 @@
     padding: 4px 8px;
 
     border: 1px solid transparent;
-
     border-radius: 999px;
 
     font-size: 9px;
-
     line-height: 1.2;
 
     font-weight: 800;
@@ -2125,78 +1960,61 @@
 
 .dashboard-sales-lead-status-new {
     background: #eff6ff;
-
     border-color: #dbeafe;
-
     color: #2563eb;
 }
 
 .dashboard-sales-lead-status-first-contact {
     background: #f5f3ff;
-
     border-color: #ede9fe;
-
     color: #7c3aed;
 }
 
 .dashboard-sales-lead-status-appointment {
     background: #fffbeb;
-
     border-color: #fef3c7;
-
     color: #b45309;
 }
 
 .dashboard-sales-lead-status-site-survey {
     background: #ecfeff;
-
     border-color: #cffafe;
-
     color: #0891b2;
 }
 
 .dashboard-sales-lead-status-quotation {
     background: #fff7ed;
-
     border-color: #ffedd5;
-
     color: #c2410c;
 }
 
 .dashboard-sales-lead-status-deal,
 .dashboard-sales-lead-status-closing {
     background: #f0fdf4;
-
     border-color: #dcfce7;
-
     color: #15803d;
 }
 
 .dashboard-sales-lead-status-no-deal,
 .dashboard-sales-lead-status-not-interested {
     background: #fef2f2;
-
     border-color: #fee2e2;
-
     color: #dc2626;
 }
 
 .dashboard-sales-lead-status-default {
     background: #f8fafc;
-
     border-color: #e2e8f0;
-
     color: #64748b;
 }
 
 
 /* ============================================================
-   29. LEAD DATE
+   DATE
 ============================================================ */
 
 .dashboard-sales-lead-date {
     font-size: 10px;
-
     line-height: 1.45;
 
     color: #64748b;
@@ -2206,12 +2024,11 @@
 
 
 /* ============================================================
-   30. LEAD VIEW BUTTON
+   VIEW BUTTON
 ============================================================ */
 
 .dashboard-sales-lead-view {
     display: inline-flex;
-
     align-items: center;
     justify-content: center;
 
@@ -2222,7 +2039,6 @@
     padding: 6px 9px;
 
     border: 1px solid #e2e8f0;
-
     border-radius: 9px;
 
     background: #ffffff;
@@ -2230,20 +2046,16 @@
     color: #475569;
 
     font: inherit;
-
     font-size: 10px;
-
-    line-height: 1;
-
     font-weight: 800;
 
     cursor: pointer;
 
     transition:
+        transform 0.18s ease,
         background 0.18s ease,
-        color 0.18s ease,
         border-color 0.18s ease,
-        transform 0.18s ease;
+        color 0.18s ease;
 }
 
 .dashboard-sales-lead-view:hover {
@@ -2272,12 +2084,11 @@
 
 
 /* ============================================================
-   31. LEAD EMPTY STATE
+   EMPTY
 ============================================================ */
 
 .dashboard-sales-lead-empty {
     display: flex;
-
     flex-direction: column;
 
     align-items: center;
@@ -2292,7 +2103,6 @@
 
 .dashboard-sales-lead-empty-icon {
     display: flex;
-
     align-items: center;
     justify-content: center;
 
@@ -2318,8 +2128,6 @@
 
     font-size: 14px;
 
-    line-height: 1.4;
-
     font-weight: 800;
 
     color: #334155;
@@ -2331,7 +2139,6 @@
     margin: 6px 0 0;
 
     font-size: 12px;
-
     line-height: 1.5;
 
     color: #94a3b8;
@@ -2339,12 +2146,12 @@
 
 
 /* ============================================================
-   32. LEAD LOADING STATE
+   LOADING
 ============================================================ */
 
-.dashboard-sales-lead-loading {
+.dashboard-sales-lead-loading,
+.dashboard-loading {
     display: flex;
-
     align-items: center;
     justify-content: center;
 
@@ -2355,7 +2162,6 @@
     color: #64748b;
 
     font-size: 12px;
-
     font-weight: 700;
 }
 
@@ -2368,16 +2174,30 @@
     margin-right: 9px;
 
     border: 2px solid #e2e8f0;
-
     border-top-color: #f59e0b;
 
     border-radius: 50%;
 
     animation:
-        dashboardSpinner 0.7s linear infinite;
+        fsiDashboardSpinner 0.7s linear infinite;
 }
 
-@keyframes dashboardSpinner {
+.dashboard-loading-spinner {
+    width: 20px;
+    height: 20px;
+
+    margin-right: 9px;
+
+    border: 2px solid #e2e8f0;
+    border-top-color: #f59e0b;
+
+    border-radius: 50%;
+
+    animation:
+        fsiDashboardSpinner 0.7s linear infinite;
+}
+
+@keyframes fsiDashboardSpinner {
     to {
         transform: rotate(360deg);
     }
@@ -2385,12 +2205,11 @@
 
 
 /* ============================================================
-   33. LEAD PAGINATION
+   PAGINATION
 ============================================================ */
 
 .dashboard-sales-lead-pagination {
     display: flex;
-
     align-items: center;
     justify-content: space-between;
 
@@ -2406,8 +2225,6 @@
 .dashboard-sales-lead-pagination-info {
     font-size: 11px;
 
-    line-height: 1.4;
-
     font-weight: 600;
 
     color: #64748b;
@@ -2415,7 +2232,6 @@
 
 .dashboard-sales-lead-pagination-buttons {
     display: flex;
-
     align-items: center;
 
     gap: 5px;
@@ -2423,7 +2239,6 @@
 
 .dashboard-sales-lead-page-button {
     display: inline-flex;
-
     align-items: center;
     justify-content: center;
 
@@ -2433,7 +2248,6 @@
     padding: 0 8px;
 
     border: 1px solid #e2e8f0;
-
     border-radius: 8px;
 
     background: #ffffff;
@@ -2441,9 +2255,7 @@
     color: #64748b;
 
     font: inherit;
-
     font-size: 10px;
-
     font-weight: 800;
 
     cursor: pointer;
@@ -2479,7 +2291,7 @@
 
 
 /* ============================================================
-   34. MOBILE LEAD CARDS
+   MOBILE LEAD CARDS
 ============================================================ */
 
 .dashboard-sales-lead-mobile-card {
@@ -2498,7 +2310,6 @@
 
 .dashboard-sales-lead-mobile-card-header {
     display: flex;
-
     align-items: flex-start;
     justify-content: space-between;
 
@@ -2509,9 +2320,6 @@
     margin: 0;
 
     font-size: 13px;
-
-    line-height: 1.35;
-
     font-weight: 800;
 
     color: #1e293b;
@@ -2526,8 +2334,6 @@
 
     font-size: 11px;
 
-    line-height: 1.4;
-
     color: #64748b;
 }
 
@@ -2535,7 +2341,6 @@
     flex: 0 0 70px;
 
     font-size: 9px;
-
     font-weight: 800;
 
     color: #94a3b8;
@@ -2553,7 +2358,7 @@
 
 
 /* ============================================================
-   35. DASHBOARD POPUP
+   POPUP
 ============================================================ */
 
 .dashboard-stat-popup,
@@ -2567,7 +2372,6 @@
     padding: 18px;
 
     border: 1px solid rgba(226, 232, 240, 0.95);
-
     border-radius: 18px;
 
     background: rgba(255, 255, 255, 0.98);
@@ -2577,28 +2381,21 @@
         0 6px 18px rgba(15, 23, 42, 0.08);
 
     backdrop-filter: blur(16px);
-
     -webkit-backdrop-filter: blur(16px);
 
     animation:
-        dashboardPopupIn 0.2s ease both;
+        fsiPopupIn 0.2s ease both;
 }
 
-@keyframes dashboardPopupIn {
+@keyframes fsiPopupIn {
     from {
         opacity: 0;
-
-        transform:
-            translateY(7px)
-            scale(0.98);
+        transform: translateY(7px) scale(0.98);
     }
 
     to {
         opacity: 1;
-
-        transform:
-            translateY(0)
-            scale(1);
+        transform: translateY(0) scale(1);
     }
 }
 
@@ -2606,9 +2403,6 @@
     margin: 0;
 
     font-size: 15px;
-
-    line-height: 1.4;
-
     font-weight: 800;
 
     color: #111827;
@@ -2618,7 +2412,6 @@
     margin-top: 10px;
 
     font-size: 12px;
-
     line-height: 1.6;
 
     color: #64748b;
@@ -2626,7 +2419,6 @@
 
 .dashboard-popup-close {
     display: inline-flex;
-
     align-items: center;
     justify-content: center;
 
@@ -2634,7 +2426,6 @@
     height: 30px;
 
     border: 0;
-
     border-radius: 8px;
 
     background: #f8fafc;
@@ -2652,12 +2443,11 @@
 
 
 /* ============================================================
-   36. DASHBOARD ERROR
+   ERROR
 ============================================================ */
 
 .dashboard-error {
     display: flex;
-
     align-items: flex-start;
 
     gap: 12px;
@@ -2669,7 +2459,6 @@
     padding: 14px 16px;
 
     border: 1px solid #fecaca;
-
     border-radius: 14px;
 
     background: #fef2f2;
@@ -2677,14 +2466,11 @@
     color: #991b1b;
 
     font-size: 12px;
-
     line-height: 1.5;
 }
 
 .dashboard-error-icon {
     flex: 0 0 auto;
-
-    margin-top: 1px;
 }
 
 .dashboard-error-message {
@@ -2693,48 +2479,11 @@
 
 
 /* ============================================================
-   37. DASHBOARD LOADING OVERLAY
-============================================================ */
-
-.dashboard-loading {
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-
-    min-height: 180px;
-
-    color: #64748b;
-
-    font-size: 12px;
-
-    font-weight: 700;
-}
-
-.dashboard-loading-spinner {
-    width: 20px;
-    height: 20px;
-
-    margin-right: 9px;
-
-    border: 2px solid #e2e8f0;
-
-    border-top-color: #f59e0b;
-
-    border-radius: 50%;
-
-    animation:
-        dashboardSpinner 0.7s linear infinite;
-}
-
-
-/* ============================================================
-   38. DASHBOARD BUTTONS
+   BUTTONS
 ============================================================ */
 
 .dashboard-btn {
     display: inline-flex;
-
     align-items: center;
     justify-content: center;
 
@@ -2745,7 +2494,6 @@
     padding: 8px 12px;
 
     border: 1px solid #e2e8f0;
-
     border-radius: 10px;
 
     background: #ffffff;
@@ -2753,9 +2501,7 @@
     color: #475569;
 
     font: inherit;
-
     font-size: 11px;
-
     font-weight: 800;
 
     cursor: pointer;
@@ -2795,13 +2541,12 @@
 
 
 /* ============================================================
-   39. DASHBOARD "VIEW ALL"
+   VIEW ALL
 ============================================================ */
 
 .dashboard-view-all,
 #dashboardViewAll {
     display: inline-flex;
-
     align-items: center;
 
     gap: 6px;
@@ -2813,9 +2558,7 @@
     color: #ea580c;
 
     font: inherit;
-
     font-size: 11px;
-
     font-weight: 800;
 
     cursor: pointer;
@@ -2839,7 +2582,7 @@
 
 
 /* ============================================================
-   40. HIDDEN / ROLE BASED STATES
+   HIDDEN / ROLE
 ============================================================ */
 
 .dashboard-hidden {
@@ -2853,7 +2596,7 @@
 
 
 /* ============================================================
-   41. SCROLLBAR
+   SCROLLBAR
 ============================================================ */
 
 .dashboard-sales-lead-table-wrap::-webkit-scrollbar {
@@ -2876,7 +2619,7 @@
 
 
 /* ============================================================
-   42. BASE RESPONSIVE - 1200PX
+   RESPONSIVE 1200
 ============================================================ */
 
 @media (max-width: 1200px) {
@@ -2898,24 +2641,12 @@
         grid-template-columns:
             repeat(4, minmax(0, 1fr));
 
-        gap: 10px;
+        gap: 12px;
     }
 
     .dashboard-pipeline-grid::before,
     .sales-pipeline-grid::before {
         display: none;
-    }
-
-    .dashboard-pipeline-stage {
-        padding: 4px;
-    }
-
-    .dashboard-pipeline-stage::after {
-        padding-top: 8px;
-    }
-
-    .dashboard-pipeline-stage-title {
-        margin-top: -36px;
     }
 
     .profile-pipeline {
@@ -2926,7 +2657,7 @@
 
 
 /* ============================================================
-   43. BASE RESPONSIVE - 900PX
+   RESPONSIVE 900
 ============================================================ */
 
 @media (max-width: 900px) {
@@ -2959,31 +2690,17 @@
         gap: 12px;
     }
 
-    .dashboard-pipeline-stage {
-        padding: 3px;
-    }
-
-    .dashboard-pipeline-stage-header {
-        min-height: 48px;
-    }
-
     .dashboard-pipeline-stage-number {
-        width: 40px;
-        height: 40px;
-
-        font-size: 10px;
+        width: 42px;
+        height: 42px;
     }
 
     .dashboard-pipeline-stage-title {
-        margin-top: -33px;
-
-        min-height: 36px;
-
-        font-size: 10px;
+        font-size: 9px;
     }
 
     .dashboard-pipeline-stage-count {
-        font-size: 21px;
+        font-size: 22px;
     }
 
     .profile-pipeline {
@@ -2994,7 +2711,7 @@
 
 
 /* ============================================================
-   44. BASE RESPONSIVE - 700PX
+   RESPONSIVE 700
 ============================================================ */
 
 @media (max-width: 700px) {
@@ -3003,29 +2720,18 @@
         margin-bottom: 24px;
     }
 
-    .dashboard-stats,
-    .dashboard-stats-grid,
-    .stats-grid {
-        grid-template-columns:
-            repeat(2, minmax(0, 1fr));
-
-        gap: 10px;
-    }
-
-    .dashboard-sales-cards-grid {
-        grid-template-columns: 1fr;
-
-        gap: 10px;
-    }
-
-    .dashboard-sales-card {
-        min-height: 92px;
-    }
-
     .dashboard-sales-section-header {
         align-items: flex-start;
 
         flex-direction: column;
+    }
+
+    .dashboard-sales-cards-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-sales-card {
+        min-height: 94px;
     }
 
     .dashboard-sales-lead-list-header {
@@ -3058,14 +2764,7 @@
         width: 100%;
 
         overflow-x: auto;
-
-        padding-bottom: 2px;
     }
-
-    /*
-       Pipeline mobile/tablet:
-       2 columns agar setiap stage tetap readable.
-    */
 
     .dashboard-pipeline-grid,
     .sales-pipeline-grid {
@@ -3075,46 +2774,33 @@
         gap: 12px;
     }
 
-    .dashboard-pipeline-stage {
-        padding: 4px;
-    }
-
-    .dashboard-pipeline-stage::after {
-        padding-top: 8px;
-    }
-
-    .dashboard-pipeline-stage-header {
-        min-height: 46px;
-    }
-
     .dashboard-pipeline-stage-number {
         width: 40px;
         height: 40px;
     }
 
     .dashboard-pipeline-stage-title {
-        margin-top: -32px;
+        margin-top: -34px;
 
-        min-height: 32px;
+        min-height: 35px;
     }
 
     .dashboard-pipeline-stage-count {
-        margin-top: 8px;
-
-        font-size: 22px;
-    }
-
-    .dashboard-pipeline-stage-description {
-        min-height: auto;
-
-        margin-bottom: 10px;
+        font-size: 21px;
     }
 
     .dashboard-activity-item {
+        grid-template-columns:
+            38px minmax(0, 1fr);
+
         gap: 10px;
     }
 
     .dashboard-activity-time {
+        grid-column: 2;
+
+        padding-top: 0;
+
         font-size: 9px;
     }
 
@@ -3126,7 +2812,7 @@
 
 
 /* ============================================================
-   45. BASE RESPONSIVE - 600PX
+   RESPONSIVE 600
 ============================================================ */
 
 @media (max-width: 600px) {
@@ -3135,7 +2821,9 @@
     .dashboard-stats-grid,
     .stats-grid {
         grid-template-columns:
-            1fr 1fr;
+            repeat(2, minmax(0, 1fr));
+
+        gap: 10px;
     }
 
     .dashboard-stat-card,
@@ -3143,7 +2831,13 @@
     .dashboard-stat {
         padding: 15px;
 
-        border-radius: 14px;
+        border-radius: 15px;
+    }
+
+    .dashboard-stat-card-icon,
+    .stat-card-icon {
+        width: 36px;
+        height: 36px;
     }
 
     .dashboard-stat-card-value,
@@ -3178,7 +2872,7 @@
     }
 
     .dashboard-activity-item {
-        min-height: 58px;
+        min-height: 64px;
 
         padding: 8px 2px;
     }
@@ -3198,17 +2892,9 @@
         font-size: 10px;
     }
 
-    .dashboard-activity-time {
-        display: none;
-    }
-
     .dashboard-activity-list::before {
         left: 17px;
     }
-
-    /*
-       Di layar kecil pipeline menjadi card grid.
-    */
 
     .dashboard-pipeline-grid,
     .sales-pipeline-grid {
@@ -3216,10 +2902,6 @@
             repeat(2, minmax(0, 1fr));
 
         gap: 10px;
-    }
-
-    .dashboard-pipeline-stage::after {
-        margin-top: 8px;
     }
 
     .dashboard-pipeline-stage-title {
@@ -3237,7 +2919,7 @@
 
 
 /* ============================================================
-   46. BASE RESPONSIVE - 420PX
+   RESPONSIVE 420
 ============================================================ */
 
 @media (max-width: 420px) {
@@ -3255,17 +2937,11 @@
     .dashboard-sales-card-icon {
         width: 42px;
         height: 42px;
-
-        border-radius: 12px;
     }
 
     .dashboard-sales-card-count {
         font-size: 18px;
     }
-
-    /*
-       Pipeline satu kolom untuk layar sangat kecil.
-    */
 
     .dashboard-pipeline-grid,
     .sales-pipeline-grid {
@@ -3277,16 +2953,16 @@
     .dashboard-pipeline-stage {
         display: grid;
 
-        grid-template-columns: 48px minmax(0, 1fr);
+        grid-template-columns:
+            48px minmax(0, 1fr);
 
         align-items: center;
 
         column-gap: 10px;
 
-        padding: 7px 8px;
+        padding: 8px;
 
         border: 1px solid #e5e7eb;
-
         border-radius: 14px;
 
         background: #ffffff;
@@ -3352,7 +3028,6 @@
 
     .dashboard-sales-lead-page-button {
         min-width: 28px;
-
         height: 28px;
     }
 
@@ -3372,13 +3047,12 @@
 
 
 /* ============================================================
-   47. REDUCED MOTION
+   REDUCED MOTION
 ============================================================ */
 
 @media (prefers-reduced-motion: reduce) {
 
     .dashboard-page,
-    .dashboard-greeting,
     .dashboard-sales-card,
     .dashboard-sales-lead-list-section,
     .dashboard-stat-popup,
