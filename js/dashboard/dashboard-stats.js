@@ -1,708 +1,774 @@
 // ============================================================
-// CALCULATE DASHBOARD STATS
+// FSI CRM - DASHBOARD STATS
 // ============================================================
+// File : js/dashboard/dashboard-stats.js
 //
-// PIPELINE DASHBOARD:
-//
-// 1. New
-// 2. First Contact
-// 3. First Meeting / Appointment / Site Survey
-// 4. Quotation
-// 5. Second Appointment
-// 6. Deal
-// 7. No Deal
-//
-// Status lama tetap didukung sebagai alias:
-//
-// Interested      → First Contact
-// Follow Up       → First Meeting / Appointment / Site Survey
-// Appointment     → First Meeting / Appointment / Site Survey
-// Site Survey     → First Meeting / Appointment / Site Survey
-// SPK             → Deal
-// Closing         → Deal
-// Not Interested  → No Deal
-//
+// Fungsi:
+// 1. Menghitung statistik Dashboard
+// 2. Mendukung Admin dan Sales
+// 3. Appointment dan Site Survey terpisah
+// 4. Deal / Closing
+// 5. No Deal
+// 6. Menjaga compatibility dengan ID lama
 // ============================================================
 
-function calculateDashboardStats(
-    data
-) {
+(function () {
+    "use strict";
 
-    const list =
-        Array.isArray(data)
-            ? data
+
+    // ========================================================
+    // SAFE HELPERS
+    // ========================================================
+
+    function getLeads() {
+        if (
+            window.FSIDashboard &&
+            Array.isArray(window.FSIDashboard.leads)
+        ) {
+            return window.FSIDashboard.leads;
+        }
+
+        if (Array.isArray(window.leadsData)) {
+            return window.leadsData;
+        }
+
+        return [];
+    }
+
+
+    function normalize(value) {
+        if (typeof window.dashboardNormalizeStatus === "function") {
+            return window.dashboardNormalizeStatus(value);
+        }
+
+        return String(value || "")
+            .trim()
+            .toLowerCase();
+    }
+
+
+    function hasValue(value) {
+        if (
+            value === null ||
+            value === undefined
+        ) {
+            return false;
+        }
+
+        if (typeof value === "string") {
+            return value.trim() !== "";
+        }
+
+        return true;
+    }
+
+
+    function statusIs(lead, statuses) {
+        const current = normalize(lead && lead.status);
+
+        return statuses.some(function (status) {
+            return current === normalize(status);
+        });
+    }
+
+
+    function countStatus(leads, statuses) {
+        return leads.filter(function (lead) {
+            return statusIs(lead, statuses);
+        }).length;
+    }
+
+
+    function countField(leads, field) {
+        return leads.filter(function (lead) {
+            return hasValue(lead && lead[field]);
+        }).length;
+    }
+
+
+    // ========================================================
+    // NEW CUSTOMER
+    // ========================================================
+
+    function isNewCustomer(lead) {
+
+        if (!lead) {
+            return false;
+        }
+
+        return statusIs(lead, [
+            "New Customer",
+            "New"
+        ]);
+    }
+
+
+    function countNewCustomer(leads) {
+
+        return leads.filter(function (lead) {
+            return isNewCustomer(lead);
+        }).length;
+
+    }
+
+
+    // ========================================================
+    // FIRST CONTACT
+    // ========================================================
+
+    function isFirstContact(lead) {
+
+        if (!lead) {
+            return false;
+        }
+
+        return statusIs(lead, [
+            "First Contact",
+            "Interested"
+        ]);
+
+    }
+
+
+    function countFirstContact(leads) {
+
+        return leads.filter(function (lead) {
+            return isFirstContact(lead);
+        }).length;
+
+    }
+
+
+    // ========================================================
+    // APPOINTMENT
+    // ========================================================
+
+    function isAppointment(lead) {
+
+        if (!lead) {
+            return false;
+        }
+
+        /*
+         * Prioritas:
+         *
+         * 1. appointment field
+         * 2. status Appointment
+         * 3. legacy First Meeting / Follow Up
+         */
+
+        if (hasValue(lead.appointment)) {
+            return true;
+        }
+
+        if (
+            statusIs(lead, [
+                "Appointment"
+            ])
+        ) {
+            return true;
+        }
+
+        return statusIs(lead, [
+            "First Meeting",
+            "First Meeting / Appointment / Site Survey",
+            "Follow Up"
+        ]);
+    }
+
+
+    function countAppointment(leads) {
+
+        return leads.filter(function (lead) {
+            return isAppointment(lead);
+        }).length;
+
+    }
+
+
+    // ========================================================
+    // SITE SURVEY
+    // ========================================================
+
+    function isSiteSurvey(lead) {
+
+        if (!lead) {
+            return false;
+        }
+
+        if (hasValue(lead.site_survey)) {
+            return true;
+        }
+
+        return statusIs(lead, [
+            "Site Survey"
+        ]);
+    }
+
+
+    function countSiteSurvey(leads) {
+
+        return leads.filter(function (lead) {
+            return isSiteSurvey(lead);
+        }).length;
+
+    }
+
+
+    // ========================================================
+    // QUOTATION
+    // ========================================================
+
+    function isQuotation(lead) {
+
+        if (!lead) {
+            return false;
+        }
+
+        if (hasValue(lead.quotation)) {
+            return true;
+        }
+
+        return statusIs(lead, [
+            "Quotation"
+        ]);
+    }
+
+
+    function countQuotation(leads) {
+
+        return leads.filter(function (lead) {
+            return isQuotation(lead);
+        }).length;
+
+    }
+
+
+    // ========================================================
+    // DEAL / CLOSING
+    // ========================================================
+
+    function isDealClosing(lead) {
+
+        if (!lead) {
+            return false;
+        }
+
+        /*
+         * Closing field adalah indikator utama
+         * jika field tersebut sudah terisi.
+         */
+
+        if (hasValue(lead.closing)) {
+            return true;
+        }
+
+        return statusIs(lead, [
+            "Deal",
+            "Deal / Closing",
+            "Closing",
+            "SPK"
+        ]);
+    }
+
+
+    function countDealClosing(leads) {
+
+        return leads.filter(function (lead) {
+            return isDealClosing(lead);
+        }).length;
+
+    }
+
+
+    // ========================================================
+    // NO DEAL
+    // ========================================================
+
+    function isNoDeal(lead) {
+
+        if (!lead) {
+            return false;
+        }
+
+        return statusIs(lead, [
+            "No Deal",
+            "Not Interested"
+        ]);
+    }
+
+
+    function countNoDeal(leads) {
+
+        return leads.filter(function (lead) {
+            return isNoDeal(lead);
+        }).length;
+
+    }
+
+
+    // ========================================================
+    // CALCULATE DASHBOARD STATS
+    // ========================================================
+
+    function calculateDashboardStats(leads) {
+
+        const list = Array.isArray(leads)
+            ? leads
             : [];
 
 
-    // ========================================================
-    // PIPELINE HELPER
-    // ========================================================
-    //
-    // Gunakan fungsi dari dashboard-pipeline.js.
-    //
-    // Ini penting karena pipeline sudah memiliki
-    // mapping status lama → status baru.
-    //
-    function countPipelineStage(
-        label
-    ) {
+        const stats = {
 
-        if (
-            typeof window.dashboardGetPipelineStageCount !==
-            "function"
-        ) {
+            total: list.length,
 
-            return 0;
+            newCustomer:
+                countNewCustomer(list),
+
+            firstContact:
+                countFirstContact(list),
+
+            appointment:
+                countAppointment(list),
+
+            siteSurvey:
+                countSiteSurvey(list),
+
+            quotation:
+                countQuotation(list),
+
+            dealClosing:
+                countDealClosing(list),
+
+            noDeal:
+                countNoDeal(list)
+        };
+
+
+        /*
+         * Legacy compatibility.
+         *
+         * Beberapa bagian CRM lama mungkin masih membaca
+         * nama property lama.
+         */
+
+        stats.new = stats.newCustomer;
+
+        stats.interested = stats.firstContact;
+
+        stats.followUp = stats.appointment;
+
+        stats.closing = stats.dealClosing;
+
+        stats.spk = stats.dealClosing;
+
+        stats.notInterested = stats.noDeal;
+
+        stats.flyerSent =
+            countStatus(list, [
+                "Flyer Sent"
+            ]);
+
+
+        /*
+         * Save global state.
+         */
+
+        if (!window.FSIDashboard) {
+            window.FSIDashboard = {};
         }
 
+        window.FSIDashboard.stats = stats;
 
-        if (
-            typeof window.dashboardGetPipelineStage !==
-            "function"
-        ) {
-
-            return 0;
-        }
+        window.FSIDashboard.statusStats = stats;
 
 
-        const stage =
-            window.dashboardGetPipelineStage(
-                label
-            );
-
-
-        if (!stage) {
-            return 0;
-        }
-
-
-        return window.dashboardGetPipelineStageCount(
-            list,
-            stage
-        );
+        return stats;
     }
 
 
     // ========================================================
-    // MAIN PIPELINE STATISTICS
+    // FIND ELEMENT
     // ========================================================
 
-    const stats = {
+    function findElement(id) {
 
-        // ----------------------------------------------------
-        // TOTAL
-        // ----------------------------------------------------
+        return document.getElementById(id);
 
-        total:
-            list.length,
+    }
 
 
-        // ----------------------------------------------------
-        // NEW
-        // ----------------------------------------------------
+    // ========================================================
+    // SET ELEMENT VALUE
+    // ========================================================
 
-        new:
-            countPipelineStage(
-                "New"
-            ),
+    function setValue(id, value) {
 
+        const element = findElement(id);
 
-        // ----------------------------------------------------
-        // FIRST CONTACT
-        // ----------------------------------------------------
+        if (!element) {
+            return;
+        }
 
-        firstContact:
-            countPipelineStage(
-                "First Contact"
-            ),
+        element.textContent = Number(value || 0).toLocaleString(
+            "en-US"
+        );
 
-
-        // ----------------------------------------------------
-        // FIRST MEETING / APPOINTMENT / SITE SURVEY
-        // ----------------------------------------------------
-
-        firstMeeting:
-            countPipelineStage(
-                "First Meeting / Appointment / Site Survey"
-            ),
+    }
 
 
-        // ----------------------------------------------------
-        // QUOTATION
-        // ----------------------------------------------------
+    // ========================================================
+    // RENDER DASHBOARD STATS
+    // ========================================================
 
-        quotation:
-            countPipelineStage(
-                "Quotation"
-            ),
+    function renderDashboardStats(
+        leadsOrStats
+    ) {
 
-
-        // ----------------------------------------------------
-        // SECOND APPOINTMENT
-        // ----------------------------------------------------
-
-        secondAppointment:
-            countPipelineStage(
-                "Second Appointment"
-            ),
+        let stats;
 
 
-        // ----------------------------------------------------
-        // DEAL
-        // ----------------------------------------------------
+        /*
+         * Fungsi bisa dipanggil dengan:
+         *
+         * renderDashboardStats(leads)
+         *
+         * atau:
+         *
+         * renderDashboardStats(stats)
+         */
 
-        deal:
-            countPipelineStage(
-                "Deal"
-            ),
-
-
-        // ----------------------------------------------------
-        // NO DEAL
-        // ----------------------------------------------------
-
-        noDeal:
-            countPipelineStage(
-                "No Deal"
+        if (
+            leadsOrStats &&
+            typeof leadsOrStats === "object" &&
+            !Array.isArray(leadsOrStats) &&
+            Object.prototype.hasOwnProperty.call(
+                leadsOrStats,
+                "total"
             )
-    };
-
-
-    // ========================================================
-    // LEGACY COMPATIBILITY
-    // ========================================================
-    //
-    // Kita tetap simpan property lama supaya modul lain
-    // yang masih membaca:
-    //
-    // stats.interested
-    // stats.followUp
-    // stats.closing
-    //
-    // tidak langsung rusak.
-    //
-    // Tetapi nilai tersebut sekarang mengambil dari
-    // Pipeline baru.
-    // ========================================================
-
-    stats.interested =
-        stats.firstContact;
-
-
-    stats.followUp =
-        stats.firstMeeting;
-
-
-    stats.closing =
-        stats.deal;
-
-
-    // ========================================================
-    // LEGACY DATA
-    // ========================================================
-    //
-    // Tetap tersedia untuk modul lama.
-    // ========================================================
-
-    stats.flyerSent =
-        dashboardCountStatus(
-            list,
-            "Flyer Sent"
-        );
-
-
-    // --------------------------------------------------------
-    // Appointment legacy
-    // --------------------------------------------------------
-    //
-    // Ini hanya informasi tambahan dari field tanggal.
-    // Tidak digunakan sebagai Pipeline utama.
-    // --------------------------------------------------------
-
-    stats.appointment =
-        dashboardCountDateField(
-            list,
-            "appointment"
-        );
-
-
-    // --------------------------------------------------------
-    // Site Survey legacy
-    // --------------------------------------------------------
-
-    stats.siteSurvey =
-        dashboardCountDateField(
-            list,
-            "site_survey"
-        );
-
-
-    // --------------------------------------------------------
-    // SPK legacy
-    // --------------------------------------------------------
-
-    stats.spk =
-        dashboardCountDateField(
-            list,
-            "spk"
-        );
-
-
-    // --------------------------------------------------------
-    // Not Interested legacy
-    // --------------------------------------------------------
-
-    stats.notInterested =
-        dashboardCountStatus(
-            list,
-            "Not Interested"
-        );
-
-
-    // ========================================================
-    // STATUS SUMMARY
-    // ========================================================
-
-    stats.statuses = {
-
-        new:
-            stats.new,
-
-        firstContact:
-            stats.firstContact,
-
-        firstMeeting:
-            stats.firstMeeting,
-
-        quotation:
-            stats.quotation,
-
-        secondAppointment:
-            stats.secondAppointment,
-
-        deal:
-            stats.deal,
-
-        noDeal:
-            stats.noDeal
-    };
-
-
-    // ========================================================
-    // PIPELINE SUMMARY
-    // ========================================================
-
-    stats.pipeline = {
-
-        new:
-            stats.new,
-
-        firstContact:
-            stats.firstContact,
-
-        firstMeeting:
-            stats.firstMeeting,
-
-        quotation:
-            stats.quotation,
-
-        secondAppointment:
-            stats.secondAppointment,
-
-        deal:
-            stats.deal,
-
-        noDeal:
-            stats.noDeal
-    };
-
-
-    // ========================================================
-    // DEBUG
-    // ========================================================
-
-    console.log(
-        "FSI CRM: Dashboard Pipeline Stats",
-        stats.pipeline
-    );
-
-
-    return stats;
-}
-
-
-
-// ============================================================
-// DASHBOARD COUNT-UP
-// ============================================================
-
-function dashboardAnimateNumber(
-    element,
-    targetValue,
-    duration = 1000
-) {
-
-    if (!element) {
-        return;
-    }
-
-
-    const target =
-        Number(
-            targetValue
-        ) || 0;
-
-
-    const current =
-        Number(
-            String(
-                element.textContent || "0"
-            ).replace(
-                /[^\d-]/g,
-                ""
-            )
-        ) || 0;
-
-
-    if (
-        current === target
-    ) {
-
-        element.textContent =
-            target.toLocaleString(
-                "en-US"
-            );
-
-        return;
-    }
-
-
-    if (
-        element._dashboardAnimationFrame
-    ) {
-
-        cancelAnimationFrame(
-            element._dashboardAnimationFrame
-        );
-    }
-
-
-    const startTime =
-        performance.now();
-
-
-    function easeOutCubic(
-        progress
-    ) {
-
-        return 1 -
-            Math.pow(
-                1 - progress,
-                3
-            );
-    }
-
-
-    function animate(
-        currentTime
-    ) {
-
-        const elapsed =
-            currentTime -
-            startTime;
-
-
-        let progress =
-            elapsed /
-            duration;
-
-
-        progress =
-            Math.min(
-                Math.max(
-                    progress,
-                    0
-                ),
-                1
-            );
-
-
-        const easedProgress =
-            easeOutCubic(
-                progress
-            );
-
-
-        const value =
-            Math.round(
-                current +
-                (
-                    target -
-                    current
-                ) *
-                easedProgress
-            );
-
-
-        element.textContent =
-            value.toLocaleString(
-                "en-US"
-            );
-
-
-        if (
-            progress < 1
         ) {
 
-            element._dashboardAnimationFrame =
-                requestAnimationFrame(
-                    animate
-                );
+            stats = leadsOrStats;
 
         } else {
 
-            element.textContent =
-                target.toLocaleString(
-                    "en-US"
-                );
+            stats = calculateDashboardStats(
+                Array.isArray(leadsOrStats)
+                    ? leadsOrStats
+                    : getLeads()
+            );
 
-
-            element._dashboardAnimationFrame =
-                null;
         }
-    }
 
 
-    element._dashboardAnimationFrame =
-        requestAnimationFrame(
-            animate
-        );
-}
+        if (!stats) {
+            return;
+        }
 
 
+        // ====================================================
+        // NEW DASHBOARD
+        // ====================================================
 
-// ============================================================
-// SET ELEMENT TEXT
-// ============================================================
-
-function dashboardSetElementText(
-    id,
-    value
-) {
-
-    const element =
-        document.getElementById(
-            id
+        setValue(
+            "statTotal",
+            stats.total
         );
 
 
-    if (!element) {
-        return;
-    }
+        setValue(
+            "statNew",
+            stats.newCustomer
+        );
 
 
-    const numericValue =
-        Number(
-            value
-        ) || 0;
+        setValue(
+            "statInterested",
+            stats.firstContact
+        );
 
 
-    dashboardAnimateNumber(
-        element,
-        numericValue,
-        1000
-    );
-}
+        setValue(
+            "statAppointment",
+            stats.appointment
+        );
 
 
-
-// ============================================================
-// UPDATE DASHBOARD CARDS
-// ============================================================
-
-function renderDashboardStats(
-    stats
-) {
-
-    if (!stats) {
-        return;
-    }
-
-
-    // ========================================================
-    // STAT CARD MAP
-    // ========================================================
-
-    const statMap = {
-
-        // ----------------------------------------------------
-        // MAIN PIPELINE
-        // ----------------------------------------------------
-
-        statTotal:
-            stats.total,
-
-        statNew:
-            stats.new,
-
-        statInterested:
-            stats.firstContact,
-
-        statFollowUp:
-            stats.firstMeeting,
-
-        statQuotation:
-            stats.quotation,
-
-        statAppointment:
-            stats.secondAppointment,
-
-        statSPK:
-            stats.deal,
-
-        statNotInterested:
-            stats.noDeal,
-
-        // ----------------------------------------------------
-        // LEGACY
-        // ----------------------------------------------------
-
-        statClosing:
-            stats.deal,
-
-        statFlyerSent:
-            stats.flyerSent,
-
-        statSiteSurvey:
+        setValue(
+            "statSiteSurvey",
             stats.siteSurvey
-    };
+        );
 
 
-    // ========================================================
-    // RENDER MAIN CARDS
-    // ========================================================
-
-    Object.entries(
-        statMap
-    ).forEach(
-        ([id, value]) => {
-
-            dashboardSetElementText(
-                id,
-                value
-            );
-        }
-    );
+        setValue(
+            "statQuotation",
+            stats.quotation
+        );
 
 
-    // ========================================================
-    // LEGACY IDS
-    // ========================================================
+        setValue(
+            "statSPK",
+            stats.dealClosing
+        );
 
-    const alternatives = {
 
-        totalLeads:
-            stats.total,
-
-        newLeads:
-            stats.new,
-
-        interestedLeads:
-            stats.firstContact,
-
-        followUpLeads:
-            stats.firstMeeting,
-
-        closingLeads:
-            stats.deal,
-
-        flyerSentLeads:
-            stats.flyerSent,
-
-        appointmentLeads:
-            stats.secondAppointment,
-
-        siteSurveyLeads:
-            stats.siteSurvey,
-
-        quotationLeads:
-            stats.quotation,
-
-        spkLeads:
-            stats.deal,
-
-        notInterestedLeads:
+        setValue(
+            "statNotInterested",
             stats.noDeal
-    };
+        );
 
 
-    Object.entries(
-        alternatives
-    ).forEach(
-        ([id, value]) => {
+        // ====================================================
+        // LEGACY IDS
+        // ====================================================
 
-            dashboardSetElementText(
-                id,
-                value
-            );
-        }
-    );
+        setValue(
+            "statFollowUp",
+            stats.appointment
+        );
 
 
-    // ========================================================
-    // GLOBAL STATUS SUMMARY
-    // ========================================================
-
-    window.FSIDashboard =
-        window.FSIDashboard ||
-        {};
+        setValue(
+            "statClosing",
+            stats.dealClosing
+        );
 
 
-    window.FSIDashboard.statusStats = {
+        setValue(
+            "statFlyerSent",
+            stats.flyerSent
+        );
 
-        total:
-            stats.total,
 
-        new:
-            stats.new,
+        // ====================================================
+        // OTHER POSSIBLE IDS
+        // ====================================================
 
-        firstContact:
-            stats.firstContact,
+        setValue(
+            "statNewCustomer",
+            stats.newCustomer
+        );
 
-        firstMeeting:
-            stats.firstMeeting,
 
-        quotation:
-            stats.quotation,
+        setValue(
+            "statFirstContact",
+            stats.firstContact
+        );
 
-        secondAppointment:
-            stats.secondAppointment,
 
-        deal:
-            stats.deal,
+        setValue(
+            "statDealClosing",
+            stats.dealClosing
+        );
 
-        noDeal:
+
+        setValue(
+            "statNoDeal",
             stats.noDeal
-    };
+        );
+
+
+        // ====================================================
+        // SALES ALL COUNT
+        // ====================================================
+
+        setValue(
+            "dashboardSalesAllCount",
+            stats.total
+        );
+
+
+        return stats;
+
+    }
 
 
     // ========================================================
-    // SAVE FULL STATS
+    // UPDATE DASHBOARD STATS
     // ========================================================
 
-    window.FSIDashboard.stats =
-        stats;
-
-
-    // ========================================================
-    // INTERACTIVE STAT CARDS
-    // ========================================================
-
-    if (
-        typeof dashboardBindStatCardClicks ===
-        "function"
+    function updateDashboardStats(
+        leads
     ) {
 
-        dashboardBindStatCardClicks();
+        const list = Array.isArray(leads)
+            ? leads
+            : getLeads();
+
+
+        const stats =
+            calculateDashboardStats(list);
+
+
+        renderDashboardStats(stats);
+
+
+        return stats;
+
     }
-}
+
+
+    // ========================================================
+    // GET STAT CATEGORY
+    // ========================================================
+
+    function dashboardGetStatCategory(
+        category,
+        leads
+    ) {
+
+        const list = Array.isArray(leads)
+            ? leads
+            : getLeads();
+
+
+        switch (category) {
+
+            case "total":
+                return list;
+
+
+            case "new":
+            case "newCustomer":
+                return list.filter(function (lead) {
+                    return isNewCustomer(lead);
+                });
+
+
+            case "firstContact":
+            case "interested":
+                return list.filter(function (lead) {
+                    return isFirstContact(lead);
+                });
+
+
+            case "appointment":
+            case "followUp":
+                return list.filter(function (lead) {
+                    return isAppointment(lead);
+                });
+
+
+            case "siteSurvey":
+                return list.filter(function (lead) {
+                    return isSiteSurvey(lead);
+                });
+
+
+            case "quotation":
+                return list.filter(function (lead) {
+                    return isQuotation(lead);
+                });
+
+
+            case "closing":
+            case "deal":
+            case "dealClosing":
+            case "spk":
+                return list.filter(function (lead) {
+                    return isDealClosing(lead);
+                });
+
+
+            case "noDeal":
+            case "notInterested":
+                return list.filter(function (lead) {
+                    return isNoDeal(lead);
+                });
+
+
+            case "flyerSent":
+                return list.filter(function (lead) {
+                    return statusIs(
+                        lead,
+                        ["Flyer Sent"]
+                    );
+                });
+
+
+            default:
+                return [];
+
+        }
+
+    }
+
+
+    // ========================================================
+    // GLOBAL EXPORTS
+    // ========================================================
+
+    window.dashboardCalculateStats =
+        calculateDashboardStats;
+
+
+    window.calculateDashboardStats =
+        calculateDashboardStats;
+
+
+    window.renderDashboardStats =
+        renderDashboardStats;
+
+
+    window.updateDashboardStats =
+        updateDashboardStats;
+
+
+    window.dashboardGetStatCategory =
+        dashboardGetStatCategory;
+
+
+    window.dashboardIsNewCustomer =
+        isNewCustomer;
+
+
+    window.dashboardIsFirstContact =
+        isFirstContact;
+
+
+    window.dashboardIsAppointment =
+        isAppointment;
+
+
+    window.dashboardIsSiteSurvey =
+        isSiteSurvey;
+
+
+    window.dashboardIsQuotation =
+        isQuotation;
+
+
+    window.dashboardIsDealClosing =
+        isDealClosing;
+
+
+    window.dashboardIsNoDeal =
+        isNoDeal;
+
+
+    // ========================================================
+    // FSIDashboard NAMESPACE
+    // ========================================================
+
+    if (!window.FSIDashboard) {
+        window.FSIDashboard = {};
+    }
+
+
+    window.FSIDashboard.calculateStats =
+        calculateDashboardStats;
+
+
+    window.FSIDashboard.renderStats =
+        renderDashboardStats;
+
+
+    window.FSIDashboard.updateStats =
+        updateDashboardStats;
+
+
+    window.FSIDashboard.getStatCategory =
+        dashboardGetStatCategory;
+
+
+})();
