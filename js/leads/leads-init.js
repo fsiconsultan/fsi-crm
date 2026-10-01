@@ -1,4 +1,3 @@
-```javascript
 // ============================================================
 // FSI CRM - LEADS INITIALIZATION
 // ============================================================
@@ -1671,4 +1670,3 @@ document.addEventListener(
 console.log(
     "FSI CRM: leads-init.js loaded successfully."
 );
-```
