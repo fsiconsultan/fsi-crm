@@ -1,9 +1,88 @@
 // ============================================================
+// FSI CRM - DASHBOARD STAT POPUP
+// ============================================================
+// File : js/dashboard/dashboard-popup.js
+//
+// Fungsi:
+// 1. Stat card popup
+// 2. Search customer di popup
+// 3. View All / Show Less
+// 4. Filter berdasarkan kategori statistik
+// 5. HTML escaping untuk data customer
+// 6. Responsive popup
+// 7. Keyboard Escape
+// 8. Click / keyboard stat card
+//
+// IMPORTANT:
+// - Tidak melakukan navigasi ke halaman Leads.
+// - Tidak memanggil updateDashboard() saat popup dibuka.
+// - Data berasal dari dashboardData.
+// ============================================================
+
+
+// ============================================================
+// HTML ESCAPE HELPER
+// ============================================================
+//
+// WAJIB tersedia sebelum dashboardRenderStatPopup()
+// dipanggil.
+//
+// Data customer berasal dari database dan dimasukkan
+// ke innerHTML. Fungsi ini memastikan karakter HTML
+// tidak merusak struktur popup.
+// ============================================================
+
+function dashboardEscapeHTML(
+    value
+) {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+        return "";
+    }
+
+    return String(value)
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+}
+
+
+// ============================================================
+// EXPORT HTML ESCAPE HELPER
+// ============================================================
+
+window.dashboardEscapeHTML =
+    dashboardEscapeHTML;
+
+
+// ============================================================
 // FIND STAT CARD ELEMENT
 // ============================================================
+
 function dashboardFindStatCardElement(
     statElement
 ) {
+
     if (!statElement) {
         return null;
     }
@@ -30,8 +109,8 @@ function dashboardFindStatCardElement(
 
     /*
      * Fallback:
-     * cari parent terdekat yang class-nya mengandung
-     * kata "stat".
+     * cari parent terdekat yang class-nya
+     * mengandung kata "stat".
      */
     let parent =
         statElement.parentElement;
@@ -43,6 +122,7 @@ function dashboardFindStatCardElement(
         parent &&
         level < 5
     ) {
+
         const className =
             typeof parent.className === "string"
                 ? parent.className
@@ -74,146 +154,221 @@ function dashboardFindStatCardElement(
 // ============================================================
 // STAT POPUP CATEGORY CONFIG
 // ============================================================
+
 const DASHBOARD_STAT_CATEGORIES = {
 
     total: {
         statId: "statTotal",
+
         legacyIds: [
             "totalLeads"
         ],
+
         title: "All Leads",
+
         description:
             "Seluruh customer dan lead yang dapat Anda akses.",
+
         icon: "users",
+
         filterType: "all"
     },
 
+
     new: {
         statId: "statNew",
+
         legacyIds: [
             "newLeads"
         ],
+
         title: "New Leads",
+
         description:
             "Customer dengan status New.",
+
         icon: "sparkles",
+
         filterType: "status",
+
         value: "New"
     },
 
+
     flyerSent: {
         statId: "statFlyerSent",
+
         legacyIds: [
             "flyerSentLeads"
         ],
+
         title: "Flyer Sent",
+
         description:
             "Customer dengan status Flyer Sent.",
+
         icon: "send",
+
         filterType: "status",
+
         value: "Flyer Sent"
     },
 
+
     interested: {
         statId: "statInterested",
+
         legacyIds: [
             "interestedLeads"
         ],
+
         title: "Interested Leads",
+
         description:
             "Customer dengan status Interested.",
+
         icon: "heart",
+
         filterType: "status",
+
         value: "Interested"
     },
 
+
     followUp: {
         statId: "statFollowUp",
+
         legacyIds: [
             "followUpLeads"
         ],
+
         title: "Follow Up",
+
         description:
             "Customer dengan status Follow Up.",
+
         icon: "phone-call",
+
         filterType: "status",
+
         value: "Follow Up"
     },
 
+
     appointment: {
         statId: "statAppointment",
+
         legacyIds: [
             "appointmentLeads"
         ],
+
         title: "Appointment",
+
         description:
             "Customer yang memiliki jadwal appointment.",
+
         icon: "calendar-check",
+
         filterType: "field",
+
         value: "appointment"
     },
 
+
     siteSurvey: {
         statId: "statSiteSurvey",
+
         legacyIds: [
             "siteSurveyLeads"
         ],
+
         title: "Site Survey",
+
         description:
             "Customer yang memiliki jadwal site survey.",
+
         icon: "map-pin",
+
         filterType: "field",
+
         value: "site_survey"
     },
 
+
     quotation: {
         statId: "statQuotation",
+
         legacyIds: [
             "quotationLeads"
         ],
+
         title: "Quotation",
+
         description:
             "Customer yang memiliki quotation.",
+
         icon: "file-text",
+
         filterType: "field",
+
         value: "quotation"
     },
 
+
     spk: {
         statId: "statSPK",
+
         legacyIds: [
             "spkLeads"
         ],
+
         title: "SPK",
+
         description:
             "Customer yang memiliki SPK.",
+
         icon: "file-check",
+
         filterType: "field",
+
         value: "spk"
     },
 
+
     closing: {
         statId: "statClosing",
+
         legacyIds: [
             "closingLeads"
         ],
+
         title: "Closing",
+
         description:
             "Customer yang sudah mencapai Closing.",
+
         icon: "badge-check",
+
         filterType: "closing"
     },
 
+
     notInterested: {
         statId: "statNotInterested",
+
         legacyIds: [
             "notInterestedLeads"
         ],
+
         title: "Not Interested",
+
         description:
             "Customer dengan status Not Interested.",
+
         icon: "x-circle",
+
         filterType: "status",
+
         value: "Not Interested"
     }
 };
@@ -222,9 +377,11 @@ const DASHBOARD_STAT_CATEGORIES = {
 // ============================================================
 // GET STAT CATEGORY FROM ELEMENT
 // ============================================================
+
 function dashboardGetStatCategoryFromElement(
     element
 ) {
+
     if (!element) {
         return null;
     }
@@ -241,6 +398,7 @@ function dashboardGetStatCategoryFromElement(
             DASHBOARD_STAT_CATEGORIES
         )
     ) {
+
         if (
             config.statId === statId
         ) {
@@ -266,10 +424,12 @@ function dashboardGetStatCategoryFromElement(
 // ============================================================
 // FILTER DATA FOR STAT CATEGORY
 // ============================================================
+
 function dashboardFilterDataForStat(
     data,
     category
 ) {
+
     const list =
         Array.isArray(data)
             ? data
@@ -287,40 +447,54 @@ function dashboardFilterDataForStat(
     if (
         config.filterType === "all"
     ) {
+
         return [
             ...list
         ];
     }
 
+
     if (
         config.filterType === "status"
     ) {
+
         return list.filter(
-            lead =>
-                dashboardNormalizeStatus(
-                    lead.status
-                ) === config.value
+            lead => {
+
+                return (
+                    dashboardNormalizeStatus(
+                        lead.status
+                    ) === config.value
+                );
+            }
         );
     }
+
 
     if (
         config.filterType === "field"
     ) {
+
         return list.filter(
-            lead =>
-                dashboardHasValue(
+            lead => {
+
+                return dashboardHasValue(
                     lead[
                         config.value
                     ]
-                )
+                );
+            }
         );
     }
+
 
     if (
         config.filterType === "closing"
     ) {
+
         return list.filter(
             lead => {
+
                 const status =
                     dashboardNormalizeStatus(
                         lead.status
@@ -328,6 +502,7 @@ function dashboardFilterDataForStat(
 
                 return (
                     status === "Closing" ||
+                    status === "Deal" ||
                     dashboardHasValue(
                         lead.closing
                     )
@@ -343,9 +518,11 @@ function dashboardFilterDataForStat(
 // ============================================================
 // SORT POPUP LEADS
 // ============================================================
+
 function dashboardSortPopupLeads(
     list
 ) {
+
     return [
         ...(
             Array.isArray(list)
@@ -357,6 +534,7 @@ function dashboardSortPopupLeads(
             a,
             b
         ) => {
+
             const dateA =
                 new Date(
                     a.updated_at ||
@@ -381,14 +559,11 @@ function dashboardSortPopupLeads(
 // ============================================================
 // GET LEAD SALES NAME
 // ============================================================
-//
-// Kita tidak mengasumsikan struktur sales tertentu.
-// Jika data sudah memiliki sales_name / sales / sales_user_name,
-// gunakan nilai tersebut.
-// ============================================================
+
 function dashboardGetLeadSalesName(
     lead
 ) {
+
     if (!lead) {
         return "-";
     }
@@ -405,11 +580,13 @@ function dashboardGetLeadSalesName(
         const field
         of possibleFields
     ) {
+
         if (
             dashboardHasValue(
                 lead[field]
             )
         ) {
+
             return String(
                 lead[field]
             );
@@ -423,9 +600,11 @@ function dashboardGetLeadSalesName(
 // ============================================================
 // FORMAT POPUP DATE
 // ============================================================
+
 function dashboardFormatPopupDate(
     value
 ) {
+
     if (!value) {
         return "-";
     }
@@ -433,16 +612,21 @@ function dashboardFormatPopupDate(
     if (
         typeof window.formatDateTime === "function"
     ) {
+
         try {
+
             return window.formatDateTime(
                 value
             );
+
         } catch (error) {
             // fallback
         }
     }
 
+
     try {
+
         const date =
             new Date(value);
 
@@ -464,6 +648,7 @@ function dashboardFormatPopupDate(
         );
 
     } catch (error) {
+
         return "-";
     }
 }
@@ -472,20 +657,26 @@ function dashboardFormatPopupDate(
 // ============================================================
 // GET POPUP STATUS CLASS
 // ============================================================
+
 function dashboardGetPopupStatusClass(
     status
 ) {
+
     if (
         typeof window.getStatusClass === "function"
     ) {
+
         try {
+
             return window.getStatusClass(
                 status
             );
+
         } catch (error) {
             // fallback
         }
     }
+
 
     const normalized =
         String(
@@ -498,6 +689,7 @@ function dashboardGetPopupStatusClass(
                 "-"
             );
 
+
     return (
         `status-${normalized}`
     );
@@ -507,10 +699,7 @@ function dashboardGetPopupStatusClass(
 // ============================================================
 // CREATE STAT POPUP STYLES
 // ============================================================
-//
-// Style dibuat dari JS supaya kita tidak perlu menyentuh
-// CSS atau index.html pada tahap ini.
-// ============================================================
+
 function dashboardEnsureStatPopupStyles() {
 
     if (
@@ -521,13 +710,16 @@ function dashboardEnsureStatPopupStyles() {
         return;
     }
 
+
     const style =
         document.createElement(
             "style"
         );
 
+
     style.id =
         "fsi-dashboard-stat-popup-styles";
+
 
     style.textContent = `
 .dashboard-stat-clickable {
@@ -888,27 +1080,33 @@ display: none;
 // ============================================================
 // GET CUSTOMER INITIALS
 // ============================================================
+
 function dashboardGetCustomerInitials(
     name
 ) {
+
     const text =
         String(
             name ||
             "Customer"
         ).trim();
 
+
     if (!text) {
         return "C";
     }
+
 
     const parts =
         text
             .split(/\s+/)
             .filter(Boolean);
 
+
     if (
         parts.length === 1
     ) {
+
         return parts[0]
             .substring(
                 0,
@@ -916,6 +1114,7 @@ function dashboardGetCustomerInitials(
             )
             .toUpperCase();
     }
+
 
     return (
         parts[0][0] +
@@ -927,6 +1126,7 @@ function dashboardGetCustomerInitials(
 // ============================================================
 // RENDER STAT POPUP
 // ============================================================
+
 function dashboardRenderStatPopup() {
 
     if (
@@ -935,17 +1135,25 @@ function dashboardRenderStatPopup() {
         return;
     }
 
+
     const config =
         DASHBOARD_STAT_CATEGORIES[
             dashboardStatPopupCurrentCategory
         ];
 
+
     if (!config) {
         return;
     }
 
+
     const allCategoryData =
-        dashboardStatPopupCurrentData;
+        Array.isArray(
+            dashboardStatPopupCurrentData
+        )
+            ? dashboardStatPopupCurrentData
+            : [];
+
 
     const searchTerm =
         String(
@@ -955,10 +1163,12 @@ function dashboardRenderStatPopup() {
             .trim()
             .toLowerCase();
 
+
     let filtered =
         [
             ...allCategoryData
         ];
+
 
     if (searchTerm) {
 
@@ -978,6 +1188,7 @@ function dashboardRenderStatPopup() {
                         )
                     ];
 
+
                     return values.some(
                         value =>
                             String(
@@ -993,14 +1204,16 @@ function dashboardRenderStatPopup() {
             );
     }
 
+
     filtered =
         dashboardSortPopupLeads(
             filtered
         );
 
+
     /*
      * Default:
-     * tampilkan beberapa customer dulu.
+     * tampilkan maksimal 5 customer.
      *
      * View All:
      * tampilkan seluruh hasil kategori.
@@ -1013,34 +1226,41 @@ function dashboardRenderStatPopup() {
                 filtered.length
             );
 
+
     const visibleLeads =
         filtered.slice(
             0,
             displayLimit
         );
 
+
     const totalCategory =
         allCategoryData.length;
+
 
     const title =
         dashboardEscapeHTML(
             config.title
         );
 
+
     const description =
         dashboardEscapeHTML(
             config.description
         );
+
 
     const icon =
         dashboardEscapeHTML(
             config.icon
         );
 
+
     const searchValue =
         dashboardEscapeHTML(
             dashboardStatPopupSearchTerm
         );
+
 
     const footerText =
         dashboardStatPopupShowingAll
@@ -1051,7 +1271,10 @@ function dashboardRenderStatPopup() {
                     : `Menampilkan ${totalCategory} customer.`
             );
 
-    let listHTML = "";
+
+    let listHTML =
+        "";
+
 
     if (
         !visibleLeads.length
@@ -1059,6 +1282,7 @@ function dashboardRenderStatPopup() {
 
         listHTML = `
 <div class="fsi-dashboard-stat-empty">
+
 <div class="fsi-dashboard-stat-empty-icon">
 <i data-lucide="search-x"></i>
 </div>
@@ -1084,21 +1308,26 @@ Coba gunakan kata pencarian lain.
                         lead.customer_name ||
                         "Unnamed Customer";
 
+
                     const phone =
                         lead.phone ||
                         "-";
+
 
                     const email =
                         lead.email ||
                         "";
 
+
                     const business =
                         lead.business ||
                         "-";
 
+
                     const location =
                         lead.location ||
                         "";
+
 
                     const status =
                         dashboardNormalizeStatus(
@@ -1106,10 +1335,12 @@ Coba gunakan kata pencarian lain.
                         ) ||
                         "New";
 
+
                     const salesName =
                         dashboardGetLeadSalesName(
                             lead
                         );
+
 
                     const lastUpdate =
                         dashboardFormatPopupDate(
@@ -1117,10 +1348,12 @@ Coba gunakan kata pencarian lain.
                             lead.created_at
                         );
 
+
                     const statusClass =
                         dashboardGetPopupStatusClass(
                             status
                         );
+
 
                     return `
 <div class="fsi-dashboard-stat-row">
@@ -1239,6 +1472,7 @@ ${dashboardEscapeHTML(
                 }
             ).join("");
     }
+
 
     dashboardStatPopupElement.innerHTML = `
 <div
@@ -1402,13 +1636,15 @@ height="16"
 `;
 
 
-    /*
-     * Search event.
-     */
+    // ========================================================
+    // SEARCH EVENT
+    // ========================================================
+
     const searchInput =
         document.getElementById(
             "fsi-dashboard-stat-search"
         );
+
 
     if (searchInput) {
 
@@ -1422,6 +1658,7 @@ height="16"
 
                 dashboardRenderStatPopup();
 
+
                 /*
                  * Fokus kembali ke search.
                  */
@@ -1430,14 +1667,17 @@ height="16"
                         "fsi-dashboard-stat-search"
                     );
 
+
                 if (nextInput) {
 
                     nextInput.focus();
+
 
                     try {
 
                         const length =
                             nextInput.value.length;
+
 
                         nextInput.setSelectionRange(
                             length,
@@ -1453,13 +1693,15 @@ height="16"
     }
 
 
-    /*
-     * View All.
-     */
+    // ========================================================
+    // VIEW ALL
+    // ========================================================
+
     const viewAllButton =
         document.getElementById(
             "fsi-dashboard-stat-view-all"
         );
+
 
     if (viewAllButton) {
 
@@ -1476,13 +1718,15 @@ height="16"
     }
 
 
-    /*
-     * Show Less.
-     */
+    // ========================================================
+    // SHOW LESS
+    // ========================================================
+
     const showLessButton =
         document.getElementById(
             "fsi-dashboard-stat-show-less"
         );
+
 
     if (showLessButton) {
 
@@ -1499,9 +1743,10 @@ height="16"
     }
 
 
-    /*
-     * Close buttons.
-     */
+    // ========================================================
+    // CLOSE BUTTONS
+    // ========================================================
+
     dashboardStatPopupElement
         .querySelectorAll(
             "[data-dashboard-stat-close='true']"
@@ -1520,9 +1765,14 @@ height="16"
         );
 
 
+    // ========================================================
+    // REFRESH LUCIDE ICONS
+    // ========================================================
+
     if (
         typeof window.refreshIcons === "function"
     ) {
+
         window.refreshIcons();
     }
 }
@@ -1531,6 +1781,7 @@ height="16"
 // ============================================================
 // OPEN STAT POPUP
 // ============================================================
+
 function dashboardOpenStatPopup(
     category
 ) {
@@ -1539,6 +1790,7 @@ function dashboardOpenStatPopup(
         DASHBOARD_STAT_CATEGORIES[
             category
         ];
+
 
     if (!config) {
 
@@ -1550,9 +1802,12 @@ function dashboardOpenStatPopup(
         return;
     }
 
+
     /*
-     * Data yang dipakai berasal dari dashboardData,
-     * yang sudah mengikuti access control Admin / Sales.
+     * Data berasal dari dashboardData.
+     *
+     * dashboardData sudah mengikuti access control
+     * Admin / Sales dari dashboard-data.js.
      */
     const categoryData =
         dashboardFilterDataForStat(
@@ -1560,19 +1815,24 @@ function dashboardOpenStatPopup(
             category
         );
 
+
     dashboardStatPopupCurrentCategory =
         category;
+
 
     dashboardStatPopupCurrentData =
         dashboardSortPopupLeads(
             categoryData
         );
 
+
     dashboardStatPopupShowingAll =
         false;
 
+
     dashboardStatPopupSearchTerm =
         "";
+
 
     dashboardEnsureStatPopupStyles();
 
@@ -1597,26 +1857,33 @@ function dashboardOpenStatPopup(
             "div"
         );
 
+
     modal.id =
         "fsi-dashboard-stat-modal";
 
+
     modal.className =
         "fsi-dashboard-stat-modal";
+
 
     modal.setAttribute(
         "aria-label",
         config.title
     );
 
+
     modal.innerHTML =
         "";
+
 
     document.body.appendChild(
         modal
     );
 
+
     dashboardStatPopupElement =
         modal;
+
 
     dashboardRenderStatPopup();
 
@@ -1626,6 +1893,7 @@ function dashboardOpenStatPopup(
      */
     document.body.dataset.fsiDashboardScrollLocked =
         "true";
+
 
     document.body.style.overflow =
         "hidden";
@@ -1642,6 +1910,7 @@ function dashboardOpenStatPopup(
                     "fsi-dashboard-stat-search"
                 );
 
+
             if (search) {
                 search.focus();
             }
@@ -1655,6 +1924,7 @@ function dashboardOpenStatPopup(
 // ============================================================
 // CLOSE STAT POPUP
 // ============================================================
+
 function dashboardCloseStatPopup() {
 
     if (
@@ -1667,14 +1937,18 @@ function dashboardCloseStatPopup() {
             null;
     }
 
+
     dashboardStatPopupCurrentCategory =
         "total";
+
 
     dashboardStatPopupCurrentData =
         [];
 
+
     dashboardStatPopupShowingAll =
         false;
+
 
     dashboardStatPopupSearchTerm =
         "";
@@ -1688,6 +1962,7 @@ function dashboardCloseStatPopup() {
         document.body.style.overflow =
             "";
 
+
         delete document.body.dataset
             .fsiDashboardScrollLocked;
     }
@@ -1697,6 +1972,7 @@ function dashboardCloseStatPopup() {
 // ============================================================
 // KEYBOARD HANDLER FOR STAT POPUP
 // ============================================================
+
 function dashboardHandleStatPopupKeydown(
     event
 ) {
@@ -1706,6 +1982,7 @@ function dashboardHandleStatPopupKeydown(
     ) {
         return;
     }
+
 
     if (
         dashboardStatPopupElement
@@ -1719,17 +1996,21 @@ function dashboardHandleStatPopupKeydown(
 // ============================================================
 // BIND STAT CARD CLICKS
 // ============================================================
+
 function dashboardBindStatCardClicks() {
 
     dashboardEnsureStatPopupStyles();
+
 
     const categoryEntries =
         Object.entries(
             DASHBOARD_STAT_CATEGORIES
         );
 
+
     let boundCount =
         0;
+
 
     categoryEntries.forEach(
         ([
@@ -1742,8 +2023,10 @@ function dashboardBindStatCardClicks() {
                 ...(config.legacyIds || [])
             ];
 
+
             let statElement =
                 null;
+
 
             for (
                 const id
@@ -1755,6 +2038,7 @@ function dashboardBindStatCardClicks() {
                         id
                     );
 
+
                 if (element) {
 
                     statElement =
@@ -1764,14 +2048,17 @@ function dashboardBindStatCardClicks() {
                 }
             }
 
+
             if (!statElement) {
                 return;
             }
+
 
             const cardElement =
                 dashboardFindStatCardElement(
                     statElement
                 );
+
 
             if (!cardElement) {
                 return;
@@ -1789,29 +2076,38 @@ function dashboardBindStatCardClicks() {
                 return;
             }
 
+
             cardElement.dataset
                 .fsiStatPopupBound =
                 category;
 
+
             cardElement.classList.add(
                 "dashboard-stat-clickable"
             );
+
 
             cardElement.setAttribute(
                 "role",
                 "button"
             );
 
+
             cardElement.setAttribute(
                 "tabindex",
                 "0"
             );
+
 
             cardElement.setAttribute(
                 "aria-label",
                 `Open ${config.title}`
             );
 
+
+            // ==================================================
+            // CLICK
+            // ==================================================
 
             cardElement.addEventListener(
                 "click",
@@ -1827,6 +2123,7 @@ function dashboardBindStatCardClicks() {
                             "button, a, input, select, textarea"
                         );
 
+
                     if (
                         interactive &&
                         interactive !== cardElement
@@ -1834,12 +2131,17 @@ function dashboardBindStatCardClicks() {
                         return;
                     }
 
+
                     dashboardOpenStatPopup(
                         category
                     );
                 }
             );
 
+
+            // ==================================================
+            // KEYBOARD
+            // ==================================================
 
             cardElement.addEventListener(
                 "keydown",
@@ -1852,6 +2154,7 @@ function dashboardBindStatCardClicks() {
 
                         event.preventDefault();
 
+
                         dashboardOpenStatPopup(
                             category
                         );
@@ -1859,10 +2162,15 @@ function dashboardBindStatCardClicks() {
                 }
             );
 
+
             boundCount++;
         }
     );
 
+
+    // ========================================================
+    // GLOBAL ESCAPE HANDLER
+    // ========================================================
 
     if (
         !dashboardStatPopupBound
@@ -1872,6 +2180,7 @@ function dashboardBindStatCardClicks() {
             "keydown",
             dashboardHandleStatPopupKeydown
         );
+
 
         dashboardStatPopupBound =
             true;
@@ -1889,4 +2198,127 @@ function dashboardBindStatCardClicks() {
     }
 }
 
+
 // ============================================================
+// GLOBAL EXPORTS
+// ============================================================
+
+window.dashboardEscapeHTML =
+    dashboardEscapeHTML;
+
+window.dashboardFindStatCardElement =
+    dashboardFindStatCardElement;
+
+window.dashboardGetStatCategoryFromElement =
+    dashboardGetStatCategoryFromElement;
+
+window.dashboardFilterDataForStat =
+    dashboardFilterDataForStat;
+
+window.dashboardSortPopupLeads =
+    dashboardSortPopupLeads;
+
+window.dashboardGetLeadSalesName =
+    dashboardGetLeadSalesName;
+
+window.dashboardFormatPopupDate =
+    dashboardFormatPopupDate;
+
+window.dashboardGetPopupStatusClass =
+    dashboardGetPopupStatusClass;
+
+window.dashboardEnsureStatPopupStyles =
+    dashboardEnsureStatPopupStyles;
+
+window.dashboardGetCustomerInitials =
+    dashboardGetCustomerInitials;
+
+window.dashboardRenderStatPopup =
+    dashboardRenderStatPopup;
+
+window.dashboardOpenStatPopup =
+    dashboardOpenStatPopup;
+
+window.dashboardCloseStatPopup =
+    dashboardCloseStatPopup;
+
+window.dashboardHandleStatPopupKeydown =
+    dashboardHandleStatPopupKeydown;
+
+window.dashboardBindStatCardClicks =
+    dashboardBindStatCardClicks;
+
+
+// ============================================================
+// FSI DASHBOARD POPUP NAMESPACE
+// ============================================================
+
+window.FSIDashboardPopup =
+    window.FSIDashboardPopup ||
+    {};
+
+window.FSIDashboardPopup.escapeHTML =
+    dashboardEscapeHTML;
+
+window.FSIDashboardPopup.open =
+    dashboardOpenStatPopup;
+
+window.FSIDashboardPopup.close =
+    dashboardCloseStatPopup;
+
+window.FSIDashboardPopup.render =
+    dashboardRenderStatPopup;
+
+window.FSIDashboardPopup.bind =
+    dashboardBindStatCardClicks;
+
+
+// ============================================================
+// INITIALIZE STAT CARD POPUP
+// ============================================================
+
+function dashboardInitializeStatPopup() {
+
+    try {
+
+        dashboardBindStatCardClicks();
+
+    } catch (error) {
+
+        console.error(
+            "FSI CRM: gagal initialize dashboard stat popup:",
+            error
+        );
+    }
+}
+
+
+// ============================================================
+// DOM READY
+// ============================================================
+
+if (
+    document.readyState === "loading"
+) {
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        dashboardInitializeStatPopup,
+        {
+            once: true
+        }
+    );
+
+} else {
+
+    dashboardInitializeStatPopup();
+}
+
+
+// ============================================================
+// DONE
+// ============================================================
+
+console.log(
+    "FSI CRM: dashboard-popup.js berhasil dimuat."
+);
