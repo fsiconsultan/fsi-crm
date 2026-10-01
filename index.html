@@ -715,7 +715,7 @@
 
 
                 <!-- =================================================
-                     DASHBOARD — UPDATED
+                     DASHBOARD
                 ================================================== -->
 
                 <section
@@ -724,10 +724,6 @@
                     data-page-view="dashboard"
                 >
 
-                    <!-- =================================================
-                         DASHBOARD ERROR
-                    ================================================== -->
-
                     <div
                         id="dashboardError"
                         class="dashboard-error"
@@ -735,9 +731,7 @@
                     ></div>
 
 
-                    <!-- =================================================
-                         GREETING
-                    ================================================== -->
+                    <!-- GREETING -->
 
                     <section class="dashboard-section dashboard-greeting-section">
 
@@ -748,10 +742,12 @@
                                 <div class="dashboard-section-eyebrow">
 
                                     <span class="dashboard-section-header-icon">
+
                                         <i
                                             data-lucide="sun"
                                             aria-hidden="true"
                                         ></i>
+
                                     </span>
 
                                     FSI CONSULTANT
@@ -888,8 +884,7 @@
                         </div>
 
 
-                        <!-- LEGACY SALES FILTER
-                             Kept hidden for old JS compatibility -->
+                        <!-- LEGACY SALES FILTER -->
 
                         <div
                             id="dashboardLegacySalesFilter"
@@ -1340,10 +1335,7 @@
 
 
 
-                            <!-- =================================================
-                                 LEGACY IDS
-                                 Hidden to preserve old JS compatibility.
-                            ================================================== -->
+                            <!-- LEGACY IDS -->
 
                             <span
                                 id="statFollowUp"
@@ -2094,6 +2086,10 @@
 
                 <div class="form-grid">
 
+                    <!-- =================================================
+                         CUSTOMER NAME
+                    ================================================== -->
+
                     <div class="form-group">
 
                         <label for="leadCustomerName">
@@ -2105,11 +2101,16 @@
                             name="customer_name"
                             type="text"
                             placeholder="Customer name"
+                            autocomplete="name"
                             required
                         >
 
                     </div>
 
+
+                    <!-- =================================================
+                         PHONE
+                    ================================================== -->
 
                     <div class="form-group">
 
@@ -2122,11 +2123,37 @@
                             name="phone"
                             type="tel"
                             placeholder="08xxxxxxxxxx"
+                            autocomplete="tel"
                             required
                         >
 
                     </div>
 
+
+                    <!-- =================================================
+                         EMAIL — ADDED
+                    ================================================== -->
+
+                    <div class="form-group">
+
+                        <label for="leadEmail">
+                            Email
+                        </label>
+
+                        <input
+                            id="leadEmail"
+                            name="email"
+                            type="email"
+                            placeholder="customer@example.com"
+                            autocomplete="email"
+                        >
+
+                    </div>
+
+
+                    <!-- =================================================
+                         BUSINESS
+                    ================================================== -->
 
                     <div class="form-group">
 
@@ -2184,7 +2211,9 @@
                     </div>
 
 
-                    <!-- LEAD TYPE -->
+                    <!-- =================================================
+                         LEAD TYPE
+                    ================================================== -->
 
                     <div class="form-group">
 
@@ -2210,6 +2239,10 @@
                     </div>
 
 
+                    <!-- =================================================
+                         LOCATION
+                    ================================================== -->
+
                     <div class="form-group">
 
                         <label for="leadLocation">
@@ -2226,7 +2259,9 @@
                     </div>
 
 
-                    <!-- STATUS -->
+                    <!-- =================================================
+                         STATUS
+                    ================================================== -->
 
                     <div class="form-group">
 
@@ -2272,6 +2307,10 @@
                     </div>
 
 
+                    <!-- =================================================
+                         INPUT DATE
+                    ================================================== -->
+
                     <div class="form-group">
 
                         <label for="leadStatusStartedAt">
@@ -2286,6 +2325,10 @@
 
                     </div>
 
+
+                    <!-- =================================================
+                         APPOINTMENT
+                    ================================================== -->
 
                     <div class="form-group">
 
@@ -2302,6 +2345,10 @@
                     </div>
 
 
+                    <!-- =================================================
+                         SITE SURVEY
+                    ================================================== -->
+
                     <div class="form-group">
 
                         <label for="leadSiteSurvey">
@@ -2317,6 +2364,10 @@
                     </div>
 
 
+                    <!-- =================================================
+                         QUOTATION
+                    ================================================== -->
+
                     <div class="form-group">
 
                         <label for="leadQuotation">
@@ -2331,6 +2382,10 @@
 
                     </div>
 
+
+                    <!-- =================================================
+                         ASSIGN SALES
+                    ================================================== -->
 
                     <div
                         class="form-group admin-only"
@@ -2354,6 +2409,10 @@
 
                     </div>
 
+
+                    <!-- =================================================
+                         NOTES
+                    ================================================== -->
 
                     <div class="form-group full-width">
 
@@ -2722,6 +2781,10 @@
 
     <script src="js/dashboard/dashboard.js"></script>
 
+
+    <!-- =====================================================
+         CUSTOMER FORM
+    ====================================================== -->
 
     <script src="js/customer/customer-form.js"></script>
 
