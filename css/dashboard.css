@@ -1,2203 +1,925 @@
 /* ============================================================
-   FSI CRM - DASHBOARD STYLES
-   File    : css/dashboard.css
-   Version : 2026.10.01 - Professional Dashboard UI
-
-   Fokus:
-   - Modern professional CRM dashboard
-   - Clean visual hierarchy
-   - Premium cards
-   - Sales cards lebih compact
-   - Pipeline lebih menarik
-   - Recent Activity timeline
-   - Responsive
-   - Tetap kompatibel dengan selector/class lama
-   - Tidak membutuhkan perubahan JS
-============================================================ */
+   FSI CRM — DASHBOARD CSS
+   Version: 2026.10.01
+   Professional CRM Dashboard
+   ============================================================ */
 
 
 /* ============================================================
-   1. DASHBOARD ROOT
-============================================================ */
+   1. DASHBOARD BASE
+   ============================================================ */
 
-.dashboard-page,
-.dashboard-container,
-.dashboard-main,
-#dashboardPage,
-#dashboard {
+.dashboard-page {
     width: 100%;
     min-width: 0;
 }
-
-.dashboard-page {
-    animation: fsiDashboardFadeIn 0.35s ease both;
-}
-
-@keyframes fsiDashboardFadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(8px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-
-/* ============================================================
-   2. DASHBOARD GREETING
-============================================================ */
-
-.dashboard-greeting {
-    width: 100%;
-    margin: 0 0 28px;
-}
-
-.dashboard-greeting h1,
-.dashboard-greeting-title {
-    margin: 0;
-
-    font-size: clamp(25px, 3vw, 34px);
-    line-height: 1.15;
-
-    font-weight: 800;
-    letter-spacing: -0.04em;
-
-    color: #0f172a;
-}
-
-.dashboard-greeting p,
-.dashboard-greeting-subtitle {
-    max-width: 760px;
-
-    margin: 8px 0 0;
-
-    font-size: 14px;
-    line-height: 1.6;
-
-    color: #64748b;
-}
-
-
-/* ============================================================
-   3. SECTION
-============================================================ */
 
 .dashboard-section {
     width: 100%;
-    margin-bottom: 30px;
+    min-width: 0;
+    margin-bottom: 24px;
+}
+
+.dashboard-page button {
+    font-family: inherit;
+}
+
+.dashboard-page svg {
+    width: 18px;
+    height: 18px;
+    stroke-width: 2;
+}
+
+
+/* ============================================================
+   2. DASHBOARD ERROR
+   ============================================================ */
+
+.dashboard-error {
+    display: none;
+    width: 100%;
+    margin-bottom: 20px;
+    padding: 14px 16px;
+    border: 1px solid #fecaca;
+    border-radius: 12px;
+    background: #fef2f2;
+    color: #b91c1c;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.dashboard-error:not(:empty) {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+
+/* ============================================================
+   3. COMMON SECTION HEADER
+   ============================================================ */
+
+.dashboard-section-header,
+.dashboard-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
 }
 
 .dashboard-section-header {
+    margin-bottom: 18px;
+}
+
+.dashboard-card-header {
+    margin-bottom: 22px;
+}
+
+.dashboard-section-header > div:first-child,
+.dashboard-card-header > div:first-child {
+    min-width: 0;
+}
+
+.dashboard-section-eyebrow,
+.dashboard-card-eyebrow {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-
-    gap: 16px;
-
-    margin-bottom: 15px;
-}
-
-.dashboard-section-title {
-    margin: 0;
-
-    font-size: 17px;
-    line-height: 1.3;
-
-    font-weight: 800;
-
-    color: #0f172a;
-}
-
-.dashboard-section-subtitle {
-    margin: 5px 0 0;
-
-    font-size: 13px;
-    line-height: 1.45;
-
+    gap: 7px;
+    margin-bottom: 7px;
     color: #64748b;
-}
-
-.dashboard-section-actions {
-    display: flex;
-    align-items: center;
-
-    gap: 8px;
-}
-
-
-/* ============================================================
-   4. STATISTICS
-============================================================ */
-
-.dashboard-stats,
-.dashboard-stats-grid,
-.stats-grid {
-    display: grid;
-
-    grid-template-columns:
-        repeat(4, minmax(0, 1fr));
-
-    gap: 16px;
-
-    width: 100%;
-
-    margin-bottom: 30px;
-}
-
-
-/* ============================================================
-   STAT CARD
-============================================================ */
-
-.dashboard-stat-card,
-.stat-card,
-.dashboard-stat {
-    position: relative;
-
-    min-width: 0;
-
-    padding: 20px;
-
-    overflow: hidden;
-
-    border: 1px solid #e5e7eb;
-    border-radius: 18px;
-
-    background:
-        linear-gradient(
-            145deg,
-            #ffffff 0%,
-            #fbfcfe 100%
-        );
-
-    box-shadow:
-        0 8px 25px rgba(15, 23, 42, 0.045),
-        0 2px 6px rgba(15, 23, 42, 0.025);
-
-    transition:
-        transform 0.2s ease,
-        box-shadow 0.2s ease,
-        border-color 0.2s ease;
-}
-
-.dashboard-stat-card::before,
-.stat-card::before,
-.dashboard-stat::before {
-    content: "";
-
-    position: absolute;
-
-    top: 0;
-    left: 0;
-    right: 0;
-
-    height: 3px;
-
-    background:
-        linear-gradient(
-            90deg,
-            #f59e0b,
-            #f97316,
-            #ea580c
-        );
-}
-
-.dashboard-stat-card:hover,
-.stat-card:hover,
-.dashboard-stat:hover {
-    transform: translateY(-3px);
-
-    border-color: #dbe2ea;
-
-    box-shadow:
-        0 16px 36px rgba(15, 23, 42, 0.075),
-        0 4px 10px rgba(15, 23, 42, 0.025);
-}
-
-.dashboard-stat-card.clickable,
-.stat-card.clickable {
-    cursor: pointer;
-}
-
-
-/* ============================================================
-   STAT HEADER
-============================================================ */
-
-.dashboard-stat-card-header,
-.stat-card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    gap: 12px;
-}
-
-.dashboard-stat-card-label,
-.stat-card-label {
-    min-width: 0;
-
     font-size: 10px;
-    line-height: 1.4;
-
     font-weight: 800;
-
-    letter-spacing: 0.08em;
+    letter-spacing: 0.12em;
+    line-height: 1.3;
     text-transform: uppercase;
+}
 
+.dashboard-section-header h2,
+.dashboard-card-header h2 {
+    margin: 0;
+    color: #0f172a;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    line-height: 1.25;
+}
+
+.dashboard-section-header p,
+.dashboard-card-header p {
+    margin: 6px 0 0;
     color: #64748b;
+    font-size: 13px;
+    line-height: 1.5;
 }
 
 
 /* ============================================================
-   STAT ICON
-============================================================ */
+   4. HEADER ICON
+   ============================================================ */
 
-.dashboard-stat-card-icon,
-.stat-card-icon {
+.dashboard-section-header-icon,
+.dashboard-card-header-icon {
+    flex: 0 0 auto;
     display: flex;
     align-items: center;
     justify-content: center;
-
-    flex: 0 0 auto;
-
-    width: 42px;
-    height: 42px;
-
-    border-radius: 13px;
-
-    background:
-        linear-gradient(
-            145deg,
-            #fff7ed,
-            #ffedd5
-        );
-
-    color: #ea580c;
-
-    box-shadow:
-        inset 0 0 0 1px rgba(234, 88, 12, 0.07);
+    width: 40px;
+    height: 40px;
+    border: 1px solid #dbeafe;
+    border-radius: 12px;
+    background: #eff6ff;
+    color: #2563eb;
 }
 
-.dashboard-stat-card-icon svg,
-.stat-card-icon svg {
+.dashboard-section-header-icon svg,
+.dashboard-card-header-icon svg {
     width: 19px;
     height: 19px;
 }
 
-
-/* ============================================================
-   STAT VALUE
-============================================================ */
-
-.dashboard-stat-card-value,
-.stat-card-value,
-.dashboard-stat-value {
-    display: block;
-
-    margin-top: 14px;
-
-    font-size: clamp(27px, 3vw, 36px);
-    line-height: 1;
-
-    font-weight: 800;
-
-    letter-spacing: -0.045em;
-
-    color: #0f172a;
-}
-
-.dashboard-stat-card-description,
-.stat-card-description {
-    margin-top: 8px;
-
-    font-size: 11px;
-    line-height: 1.45;
-
-    color: #94a3b8;
-}
-
-
-/* ============================================================
-   STAT ACTIVE
-============================================================ */
-
-.dashboard-stat-card.is-active,
-.stat-card.is-active,
-.dashboard-stat-card.active,
-.stat-card.active {
-    border-color: rgba(245, 158, 11, 0.5);
-
-    box-shadow:
-        0 14px 32px rgba(245, 158, 11, 0.1),
-        0 0 0 3px rgba(245, 158, 11, 0.07);
-}
-
-
-/* ============================================================
-   5. MAIN GRID
-============================================================ */
-
-.dashboard-grid {
-    display: grid;
-
-    grid-template-columns:
-        minmax(0, 1.5fr)
-        minmax(300px, 0.9fr);
-
-    gap: 20px;
-
-    width: 100%;
-}
-
-.dashboard-grid-full {
-    grid-column: 1 / -1;
-}
-
-
-/* ============================================================
-   DASHBOARD CARD
-============================================================ */
-
-.dashboard-card {
-    min-width: 0;
-
-    overflow: hidden;
-
-    border: 1px solid #e5e7eb;
-    border-radius: 20px;
-
-    background: #ffffff;
-
-    box-shadow:
-        0 8px 25px rgba(15, 23, 42, 0.045),
-        0 2px 6px rgba(15, 23, 42, 0.02);
-}
-
-.dashboard-card-header {
+.dashboard-card-header-actions {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-
-    gap: 14px;
-
-    padding: 19px 21px;
-
-    border-bottom: 1px solid #f1f5f9;
-}
-
-.dashboard-card-title {
-    margin: 0;
-
-    font-size: 15px;
-    line-height: 1.35;
-
-    font-weight: 800;
-
-    color: #0f172a;
-}
-
-.dashboard-card-subtitle {
-    margin: 4px 0 0;
-
-    font-size: 12px;
-    line-height: 1.4;
-
-    color: #94a3b8;
-}
-
-.dashboard-card-body {
-    padding: 20px;
+    gap: 10px;
+    flex: 0 0 auto;
 }
 
 
 /* ============================================================
-   6. SALES SECTION
-============================================================ */
+   5. GREETING
+   ============================================================ */
+
+.dashboard-greeting-section {
+    margin-bottom: 24px;
+}
+
+.dashboard-greeting {
+    position: relative;
+    overflow: hidden;
+    min-height: 142px;
+    padding: 28px 30px;
+    border: 1px solid #dbeafe;
+    border-radius: 18px;
+    background:
+        radial-gradient(
+            circle at 100% 0%,
+            rgba(37, 99, 235, 0.13),
+            transparent 35%
+        ),
+        linear-gradient(
+            135deg,
+            #ffffff 0%,
+            #f8fbff 100%
+        );
+    box-shadow:
+        0 10px 30px rgba(15, 23, 42, 0.05);
+}
+
+.dashboard-greeting::after {
+    content: "";
+    position: absolute;
+    right: -55px;
+    bottom: -75px;
+    width: 190px;
+    height: 190px;
+    border: 1px solid rgba(37, 99, 235, 0.08);
+    border-radius: 50%;
+}
+
+.dashboard-greeting-content {
+    position: relative;
+    z-index: 1;
+}
+
+.dashboard-greeting .dashboard-section-eyebrow {
+    color: #2563eb;
+}
+
+.dashboard-greeting h1,
+#dashboardGreeting {
+    margin: 4px 0 8px;
+    color: #0f172a;
+    font-size: clamp(24px, 3vw, 31px);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1.15;
+}
+
+.dashboard-greeting p,
+#dashboardGreetingText {
+    max-width: 680px;
+    margin: 0;
+    color: #64748b;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+
+/* ============================================================
+   6. SALES TEAM
+   ============================================================ */
 
 .dashboard-sales-section {
-    width: 100%;
-    margin-bottom: 32px;
+    padding: 24px;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow:
+        0 8px 25px rgba(15, 23, 42, 0.04);
 }
 
-.dashboard-sales-section-header {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-
-    gap: 16px;
-
-    margin-bottom: 15px;
-}
-
-.dashboard-sales-section-title {
-    margin: 0;
-
-    font-size: 18px;
-    line-height: 1.25;
-
-    font-weight: 800;
-
-    color: #0f172a;
-}
-
-.dashboard-sales-section-subtitle {
-    margin: 5px 0 0;
-
-    font-size: 13px;
-    line-height: 1.45;
-
-    color: #64748b;
-}
-
-
-/* ============================================================
-   7. SALES CARDS
-============================================================ */
-
-.dashboard-sales-cards-grid {
+.dashboard-sales-cards {
     display: grid;
-
-    grid-template-columns:
-        repeat(4, minmax(0, 1fr));
-
-    gap: 14px;
-
-    width: 100%;
+    grid-template-columns: repeat(
+        auto-fit,
+        minmax(175px, 1fr)
+    );
+    gap: 12px;
 }
 
-
-/* ============================================================
-   SALES CARD
-============================================================ */
+.dashboard-sales-cards-dynamic {
+    display: contents;
+}
 
 .dashboard-sales-card {
     position: relative;
-
-    display: flex;
-    align-items: center;
-
-    gap: 13px;
-
-    min-width: 0;
-    min-height: 108px;
-
-    padding: 16px;
-
     overflow: hidden;
-
+    min-width: 0;
+    padding: 16px;
     border: 1px solid #e2e8f0;
-    border-radius: 17px;
-
-    background:
-        linear-gradient(
-            145deg,
-            #ffffff,
-            #f8fafc
-        );
-
-    box-shadow:
-        0 7px 20px rgba(15, 23, 42, 0.045);
-
-    cursor: pointer;
-
+    border-radius: 15px;
+    background: #ffffff;
+    color: #0f172a;
     text-align: left;
-
-    font: inherit;
-
+    cursor: pointer;
     transition:
-        transform 0.2s ease,
-        border-color 0.2s ease,
-        box-shadow 0.2s ease;
+        transform 180ms ease,
+        border-color 180ms ease,
+        box-shadow 180ms ease,
+        background 180ms ease;
 }
 
 .dashboard-sales-card::before {
     content: "";
-
     position: absolute;
-
     top: 0;
     left: 0;
-    bottom: 0;
-
-    width: 3px;
-
-    background:
-        linear-gradient(
-            180deg,
-            #f59e0b,
-            #ea580c
-        );
-
-    opacity: 0;
-
-    transition: opacity 0.2s ease;
+    width: 100%;
+    height: 3px;
+    background: #e2e8f0;
 }
 
 .dashboard-sales-card:hover {
-    transform: translateY(-3px);
-
-    border-color: #fed7aa;
-
+    transform: translateY(-2px);
+    border-color: #bfdbfe;
     box-shadow:
-        0 16px 32px rgba(15, 23, 42, 0.075);
+        0 10px 24px rgba(37, 99, 235, 0.09);
 }
 
-.dashboard-sales-card:hover::before {
-    opacity: 1;
-}
-
-.dashboard-sales-card.is-active,
 .dashboard-sales-card.active {
-    border-color: rgba(245, 158, 11, 0.55);
-
-    background:
-        linear-gradient(
-            145deg,
-            #fffdf8,
-            #ffffff
-        );
-
+    border-color: #93c5fd;
+    background: #f8fbff;
     box-shadow:
-        0 14px 32px rgba(245, 158, 11, 0.1);
+        0 8px 22px rgba(37, 99, 235, 0.08);
 }
 
-.dashboard-sales-card.is-active::before,
-.dashboard-sales-card.active::before {
-    opacity: 1;
+.dashboard-sales-card.active::before,
+.dashboard-sales-card-all::before {
+    background: #2563eb;
 }
 
-.dashboard-sales-card:focus-visible {
-    outline: none;
-
-    border-color: #f59e0b;
-
-    box-shadow:
-        0 0 0 4px rgba(245, 158, 11, 0.12);
+.dashboard-sales-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
 }
-
-
-/* ============================================================
-   SALES CARD ICON
-============================================================ */
 
 .dashboard-sales-card-icon {
     display: flex;
     align-items: center;
     justify-content: center;
-
-    flex: 0 0 auto;
-
-    width: 47px;
-    height: 47px;
-
-    border-radius: 14px;
-
-    background:
-        linear-gradient(
-            145deg,
-            #fff7ed,
-            #ffedd5
-        );
-
-    color: #ea580c;
-
-    box-shadow:
-        inset 0 0 0 1px rgba(234, 88, 12, 0.07);
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    background: #eff6ff;
+    color: #2563eb;
 }
 
 .dashboard-sales-card-icon svg {
-    width: 21px;
-    height: 21px;
+    width: 18px;
+    height: 18px;
 }
-
-
-/* ============================================================
-   SALES CONTENT
-============================================================ */
-
-.dashboard-sales-card-content {
-    display: flex;
-
-    flex: 1 1 auto;
-
-    flex-direction: column;
-
-    min-width: 0;
-}
-
-.dashboard-sales-card-name {
-    overflow: hidden;
-
-    margin: 0;
-
-    font-size: 13px;
-    line-height: 1.35;
-
-    font-weight: 800;
-
-    color: #1e293b;
-
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.dashboard-sales-card-label {
-    margin-top: 3px;
-
-    font-size: 9px;
-    line-height: 1.3;
-
-    font-weight: 700;
-
-    color: #94a3b8;
-
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-}
-
-.dashboard-sales-card-count-wrapper {
-    display: flex;
-    align-items: baseline;
-
-    gap: 5px;
-
-    margin-top: 7px;
-}
-
-.dashboard-sales-card-count {
-    font-size: 21px;
-    line-height: 1;
-
-    font-weight: 800;
-
-    letter-spacing: -0.03em;
-
-    color: #0f172a;
-}
-
-.dashboard-sales-card-count-label {
-    font-size: 10px;
-
-    font-weight: 600;
-
-    color: #94a3b8;
-}
-
-
-/* ============================================================
-   SALES ARROW
-============================================================ */
 
 .dashboard-sales-card-arrow {
     display: flex;
     align-items: center;
     justify-content: center;
-
-    flex: 0 0 auto;
-
-    width: 29px;
-    height: 29px;
-
-    border-radius: 9px;
-
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: #f8fafc;
     color: #94a3b8;
-
     transition:
-        transform 0.2s ease,
-        background 0.2s ease,
-        color 0.2s ease;
+        background 180ms ease,
+        color 180ms ease;
 }
 
 .dashboard-sales-card:hover .dashboard-sales-card-arrow {
-    transform: translateX(3px);
-
-    color: #ea580c;
-
-    background: #fff7ed;
-}
-
-.dashboard-sales-card.is-active .dashboard-sales-card-arrow,
-.dashboard-sales-card.active .dashboard-sales-card-arrow {
-    color: #ea580c;
-
-    background: #fff7ed;
-}
-
-
-/* ============================================================
-   SALES ANIMATION
-============================================================ */
-
-.dashboard-sales-card {
-    animation: fsiSalesCardIn 0.35s ease both;
-}
-
-.dashboard-sales-card:nth-child(1) {
-    animation-delay: 0.02s;
-}
-
-.dashboard-sales-card:nth-child(2) {
-    animation-delay: 0.05s;
-}
-
-.dashboard-sales-card:nth-child(3) {
-    animation-delay: 0.08s;
-}
-
-.dashboard-sales-card:nth-child(4) {
-    animation-delay: 0.11s;
-}
-
-.dashboard-sales-card:nth-child(5) {
-    animation-delay: 0.14s;
-}
-
-.dashboard-sales-card:nth-child(6) {
-    animation-delay: 0.17s;
-}
-
-.dashboard-sales-card:nth-child(7) {
-    animation-delay: 0.20s;
-}
-
-@keyframes fsiSalesCardIn {
-    from {
-        opacity: 0;
-        transform: translateY(8px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-
-/* ============================================================
-   8. SALES FILTER
-============================================================ */
-
-.dashboard-sales-filter-wrapper {
-    display: flex;
-    align-items: center;
-
-    gap: 10px;
-}
-
-.dashboard-sales-filter-wrapper label {
-    font-size: 12px;
-
-    font-weight: 700;
-
-    color: #64748b;
-}
-
-#salesFilter,
-#dashboardSalesFilter {
-    min-width: 190px;
-    height: 38px;
-
-    padding: 0 34px 0 12px;
-
-    border: 1px solid #dbe3ec;
-    border-radius: 10px;
-
-    background: #ffffff;
-
-    color: #334155;
-
-    font: inherit;
-    font-size: 12px;
-    font-weight: 600;
-
-    cursor: pointer;
-}
-
-#salesFilter:focus,
-#dashboardSalesFilter:focus {
-    outline: none;
-
-    border-color: #f59e0b;
-
-    box-shadow:
-        0 0 0 3px rgba(245, 158, 11, 0.1);
-}
-
-
-/* ============================================================
-   9. PROFESSIONAL SALES PIPELINE
-============================================================ */
-
-.dashboard-pipeline,
-.sales-pipeline {
-    width: 100%;
-}
-
-.dashboard-pipeline-grid,
-.sales-pipeline-grid {
-    display: grid;
-
-    grid-template-columns:
-        repeat(7, minmax(0, 1fr));
-
-    gap: 8px;
-
-    width: 100%;
-
-    padding: 6px 0 4px;
-
-    position: relative;
-}
-
-
-/* ============================================================
-   PIPELINE CONNECTOR
-============================================================ */
-
-.dashboard-pipeline-grid::before,
-.sales-pipeline-grid::before {
-    content: "";
-
-    position: absolute;
-
-    top: 30px;
-
-    left: 6%;
-    right: 6%;
-
-    height: 2px;
-
-    background:
-        linear-gradient(
-            90deg,
-            #dbeafe,
-            #ede9fe,
-            #fef3c7,
-            #cffafe,
-            #ffedd5,
-            #dcfce7
-        );
-
-    z-index: 0;
-}
-
-
-/* ============================================================
-   PIPELINE STAGE
-============================================================ */
-
-.dashboard-pipeline-stage,
-.sales-pipeline-stage,
-.pipeline-stage {
-    position: relative;
-
-    min-width: 0;
-
-    padding: 0 4px 4px;
-
-    border: 0;
-
-    background: transparent;
-
-    transition:
-        transform 0.2s ease;
-}
-
-.dashboard-pipeline-stage:hover,
-.sales-pipeline-stage:hover,
-.pipeline-stage:hover {
-    transform: translateY(-3px);
-}
-
-
-/* ============================================================
-   PIPELINE HEADER
-============================================================ */
-
-.dashboard-pipeline-stage-header {
-    position: relative;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    min-height: 55px;
-
-    z-index: 2;
-}
-
-
-/* ============================================================
-   PIPELINE NUMBER
-============================================================ */
-
-.dashboard-pipeline-stage-number {
-    position: relative;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    width: 47px;
-    height: 47px;
-
-    border: 3px solid #ffffff;
-    border-radius: 50%;
-
-    background: #f8fafc;
-
-    color: #64748b;
-
-    font-size: 11px;
-    font-weight: 800;
-
-    box-shadow:
-        0 4px 12px rgba(15, 23, 42, 0.08),
-        0 0 0 1px #e2e8f0;
-
-    z-index: 2;
-
-    transition:
-        transform 0.2s ease,
-        box-shadow 0.2s ease;
-}
-
-.dashboard-pipeline-stage:hover .dashboard-pipeline-stage-number {
-    transform: scale(1.07);
-
-    box-shadow:
-        0 8px 20px rgba(15, 23, 42, 0.12),
-        0 0 0 1px #cbd5e1;
-}
-
-
-/* ============================================================
-   PIPELINE BODY
-============================================================ */
-
-.dashboard-pipeline-stage::after {
-    content: "";
-
-    display: block;
-
-    width: 100%;
-
-    margin-top: 9px;
-
-    padding-top: 12px;
-
-    border: 1px solid #e5e7eb;
-    border-radius: 15px;
-
-    background:
-        linear-gradient(
-            145deg,
-            #ffffff,
-            #fbfcfd
-        );
-
-    box-shadow:
-        0 5px 16px rgba(15, 23, 42, 0.04);
-
-    transition:
-        border-color 0.2s ease,
-        box-shadow 0.2s ease;
-}
-
-.dashboard-pipeline-stage:hover::after {
-    border-color: #cbd5e1;
-
-    box-shadow:
-        0 10px 24px rgba(15, 23, 42, 0.065);
-}
-
-
-/* ============================================================
-   PIPELINE CONTENT
-============================================================ */
-
-.dashboard-pipeline-stage-title,
-.dashboard-pipeline-stage-count,
-.dashboard-pipeline-stage-description {
-    position: relative;
-
-    z-index: 2;
-}
-
-.dashboard-pipeline-stage-title,
-.pipeline-stage-title {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    min-height: 31px;
-
-    margin: -40px 7px 0;
-
-    text-align: center;
-
-    font-size: 10px;
-    line-height: 1.3;
-
-    font-weight: 800;
-
-    color: #334155;
-}
-
-.dashboard-pipeline-stage-count,
-.pipeline-stage-count {
-    margin: 9px 7px 0;
-
-    text-align: center;
-
-    font-size: 25px;
-    line-height: 1;
-
-    font-weight: 800;
-
-    letter-spacing: -0.04em;
-
-    color: #0f172a;
-}
-
-.dashboard-pipeline-stage-description {
-    min-height: 29px;
-
-    margin: 7px 7px 12px;
-
-    text-align: center;
-
-    font-size: 9px;
-    line-height: 1.4;
-
-    color: #94a3b8;
-}
-
-
-/* ============================================================
-   PIPELINE COLORS
-============================================================ */
-
-.dashboard-pipeline-stage.is-new .dashboard-pipeline-stage-number,
-.pipeline-stage.is-new .dashboard-pipeline-stage-number {
     background: #eff6ff;
     color: #2563eb;
 }
 
-.dashboard-pipeline-stage.is-contact .dashboard-pipeline-stage-number,
-.pipeline-stage.is-contact .dashboard-pipeline-stage-number {
-    background: #f5f3ff;
-    color: #7c3aed;
+.dashboard-sales-card-arrow svg {
+    width: 15px;
+    height: 15px;
 }
 
-.dashboard-pipeline-stage.is-appointment .dashboard-pipeline-stage-number,
-.pipeline-stage.is-appointment .dashboard-pipeline-stage-number {
-    background: #fffbeb;
-    color: #b45309;
-}
-
-.dashboard-pipeline-stage.is-survey .dashboard-pipeline-stage-number,
-.pipeline-stage.is-survey .dashboard-pipeline-stage-number {
-    background: #ecfeff;
-    color: #0891b2;
-}
-
-.dashboard-pipeline-stage.is-quotation .dashboard-pipeline-stage-number,
-.pipeline-stage.is-quotation .dashboard-pipeline-stage-number {
-    background: #fff7ed;
-    color: #c2410c;
-}
-
-.dashboard-pipeline-stage.is-deal .dashboard-pipeline-stage-number,
-.pipeline-stage.is-deal .dashboard-pipeline-stage-number {
-    background: #f0fdf4;
-    color: #15803d;
-}
-
-.dashboard-pipeline-stage.is-no-deal .dashboard-pipeline-stage-number,
-.pipeline-stage.is-no-deal .dashboard-pipeline-stage-number {
-    background: #fef2f2;
-    color: #dc2626;
-}
-
-
-/* ============================================================
-   PIPELINE BORDER STATES
-============================================================ */
-
-.dashboard-pipeline-stage.is-new::after {
-    border-color: #dbeafe;
-}
-
-.dashboard-pipeline-stage.is-contact::after {
-    border-color: #ede9fe;
-}
-
-.dashboard-pipeline-stage.is-appointment::after {
-    border-color: #fef3c7;
-}
-
-.dashboard-pipeline-stage.is-survey::after {
-    border-color: #cffafe;
-}
-
-.dashboard-pipeline-stage.is-quotation::after {
-    border-color: #ffedd5;
-}
-
-.dashboard-pipeline-stage.is-deal::after {
-    border-color: #dcfce7;
-}
-
-.dashboard-pipeline-stage.is-no-deal::after {
-    border-color: #fee2e2;
-}
-
-
-/* ============================================================
-   PIPELINE ACTIVE
-============================================================ */
-
-.dashboard-pipeline-stage.is-active,
-.pipeline-stage.is-active {
-    transform: translateY(-2px);
-}
-
-.dashboard-pipeline-stage.is-active
-.dashboard-pipeline-stage-number,
-.pipeline-stage.is-active
-.dashboard-pipeline-stage-number {
-    transform: scale(1.08);
-}
-
-
-/* ============================================================
-   10. RECENT ACTIVITY
-============================================================ */
-
-.dashboard-recent-activity {
-    width: 100%;
-}
-
-.dashboard-activity-list {
-    position: relative;
-
-    display: flex;
-    flex-direction: column;
-
-    width: 100%;
-
-    padding: 4px 0;
-}
-
-
-/* ============================================================
-   TIMELINE LINE
-============================================================ */
-
-.dashboard-activity-list::before {
-    content: "";
-
-    position: absolute;
-
-    top: 18px;
-    bottom: 18px;
-
-    left: 20px;
-
-    width: 2px;
-
-    background:
-        linear-gradient(
-            180deg,
-            #e2e8f0,
-            #f1f5f9
-        );
-}
-
-
-/* ============================================================
-   ACTIVITY ITEM
-============================================================ */
-
-.dashboard-activity-item {
-    position: relative;
-
-    display: grid;
-
-    grid-template-columns: 42px minmax(0, 1fr) auto;
-
-    align-items: start;
-
-    gap: 12px;
-
-    min-height: 70px;
-
-    padding: 9px 6px;
-
-    border-bottom: 1px solid #f1f5f9;
-
-    border-radius: 12px;
-
-    transition:
-        background 0.18s ease,
-        transform 0.18s ease;
-}
-
-.dashboard-activity-item:last-child {
-    border-bottom: 0;
-}
-
-.dashboard-activity-item:hover {
-    background: #fafafa;
-
-    transform: translateX(2px);
-}
-
-
-/* ============================================================
-   ACTIVITY ICON
-============================================================ */
-
-.dashboard-activity-icon {
-    position: relative;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    width: 40px;
-    height: 40px;
-
-    border: 3px solid #ffffff;
-
-    border-radius: 12px;
-
-    background:
-        linear-gradient(
-            145deg,
-            #f8fafc,
-            #eef2f7
-        );
-
-    color: #64748b;
-
-    box-shadow:
-        0 3px 9px rgba(15, 23, 42, 0.07),
-        0 0 0 1px #e2e8f0;
-
-    z-index: 2;
-}
-
-.dashboard-activity-icon svg {
-    width: 16px;
-    height: 16px;
-}
-
-
-/* ============================================================
-   ACTIVITY CONTENT
-============================================================ */
-
-.dashboard-activity-content {
-    min-width: 0;
-
-    padding-top: 2px;
-}
-
-.dashboard-activity-title {
+.dashboard-sales-card-label {
     overflow: hidden;
-
-    margin: 0;
-
-    font-size: 12px;
-    line-height: 1.4;
-
-    font-weight: 800;
-
-    color: #1e293b;
-
-    text-overflow: ellipsis;
-}
-
-.dashboard-activity-description {
-    overflow: hidden;
-
-    margin: 4px 0 0;
-
-    font-size: 11px;
-    line-height: 1.4;
-
+    margin-bottom: 5px;
     color: #64748b;
-
-    text-overflow: ellipsis;
-}
-
-.dashboard-activity-description strong {
-    font-weight: 750;
-
-    color: #475569;
-}
-
-
-/* ============================================================
-   ACTIVITY TIME
-============================================================ */
-
-.dashboard-activity-time {
-    flex: 0 0 auto;
-
-    padding-top: 4px;
-
     font-size: 10px;
-    line-height: 1.35;
-
-    font-weight: 700;
-
-    color: #94a3b8;
-
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
     white-space: nowrap;
 }
 
-
-/* ============================================================
-   ACTIVITY TYPES
-============================================================ */
-
-.dashboard-activity-item.activity-new .dashboard-activity-icon {
-    background: #eff6ff;
-    color: #2563eb;
-}
-
-.dashboard-activity-item.activity-contact .dashboard-activity-icon {
-    background: #f5f3ff;
-    color: #7c3aed;
-}
-
-.dashboard-activity-item.activity-appointment .dashboard-activity-icon {
-    background: #fffbeb;
-    color: #b45309;
-}
-
-.dashboard-activity-item.activity-survey .dashboard-activity-icon {
-    background: #ecfeff;
-    color: #0891b2;
-}
-
-.dashboard-activity-item.activity-quotation .dashboard-activity-icon {
-    background: #fff7ed;
-    color: #c2410c;
-}
-
-.dashboard-activity-item.activity-deal .dashboard-activity-icon {
-    background: #f0fdf4;
-    color: #15803d;
-}
-
-.dashboard-activity-item.activity-no-deal .dashboard-activity-icon {
-    background: #fef2f2;
-    color: #dc2626;
-}
-
-
-/* ============================================================
-   ACTIVITY EMPTY
-============================================================ */
-
-.dashboard-activity-empty {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    min-height: 160px;
-
-    padding: 25px;
-
-    text-align: center;
-
-    font-size: 12px;
-
-    color: #94a3b8;
-}
-
-
-/* ============================================================
-   11. PROFILE PIPELINE
-============================================================ */
-
-.profile-pipeline {
-    display: grid;
-
-    grid-template-columns:
-        repeat(7, minmax(0, 1fr));
-
-    gap: 8px;
-
-    width: 100%;
-}
-
-.profile-pipeline-item {
-    position: relative;
-
-    min-width: 0;
-
-    padding: 11px;
-
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-
-    background: #ffffff;
-
-    transition:
-        transform 0.18s ease,
-        border-color 0.18s ease,
-        box-shadow 0.18s ease;
-}
-
-.profile-pipeline-item:hover {
-    transform: translateY(-2px);
-
-    border-color: #cbd5e1;
-
-    box-shadow:
-        0 7px 16px rgba(15, 23, 42, 0.055);
-}
-
-.profile-pipeline-item.active {
-    border-color: rgba(245, 158, 11, 0.45);
-
-    background: #fffbeb;
-
-    box-shadow:
-        0 5px 15px rgba(245, 158, 11, 0.08);
-}
-
-.profile-pipeline-item-title {
-    font-size: 10px;
-    line-height: 1.35;
-
-    font-weight: 700;
-
-    color: #64748b;
-}
-
-.profile-pipeline-item-value {
-    margin-top: 6px;
-
-    font-size: 17px;
-    line-height: 1;
-
-    font-weight: 800;
-
+.dashboard-sales-card-count {
     color: #0f172a;
+    font-size: 27px;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1.05;
+}
+
+.dashboard-sales-card-meta {
+    margin-top: 5px;
+    color: #94a3b8;
+    font-size: 11px;
+    font-weight: 500;
 }
 
 
 /* ============================================================
-   12. SELECTED SALES LEAD LIST
-============================================================ */
+   7. OVERVIEW STAT CARDS
+   ============================================================ */
 
-.dashboard-sales-lead-list-section {
-    width: 100%;
-
-    margin-top: 24px;
-    margin-bottom: 30px;
-
-    overflow: hidden;
-
+.dashboard-overview-section {
+    padding: 24px;
     border: 1px solid #e2e8f0;
-    border-radius: 20px;
-
+    border-radius: 18px;
     background: #ffffff;
-
     box-shadow:
-        0 10px 28px rgba(15, 23, 42, 0.05);
-
-    animation:
-        fsiLeadSectionIn 0.3s ease both;
+        0 8px 25px rgba(15, 23, 42, 0.04);
 }
 
-@keyframes fsiLeadSectionIn {
-    from {
-        opacity: 0;
-        transform: translateY(8px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-
-/* ============================================================
-   LEAD HEADER
-============================================================ */
-
-.dashboard-sales-lead-list-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    gap: 16px;
-
-    padding: 20px;
-
-    border-bottom: 1px solid #eef2f7;
-
-    background:
-        linear-gradient(
-            135deg,
-            #ffffff,
-            #fafafa
-        );
-}
-
-.dashboard-sales-lead-list-heading {
-    display: flex;
-    align-items: center;
-
+.dashboard-stats-grid,
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(
+        4,
+        minmax(0, 1fr)
+    );
     gap: 12px;
-
-    min-width: 0;
 }
 
-.dashboard-sales-lead-list-title-icon {
+.stat-card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    min-width: 0;
+    min-height: 94px;
+    padding: 15px;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    background: #ffffff;
+    color: #0f172a;
+    text-align: left;
+    cursor: pointer;
+    transition:
+        transform 180ms ease,
+        border-color 180ms ease,
+        box-shadow 180ms ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    border-color: #cbd5e1;
+    box-shadow:
+        0 10px 24px rgba(15, 23, 42, 0.07);
+}
+
+.stat-card:focus-visible,
+.dashboard-sales-card:focus-visible,
+.dashboard-view-all:focus-visible {
+    outline: 3px solid rgba(37, 99, 235, 0.18);
+    outline-offset: 2px;
+}
+
+.stat-card-icon {
+    flex: 0 0 auto;
     display: flex;
     align-items: center;
     justify-content: center;
-
-    flex: 0 0 auto;
-
     width: 42px;
     height: 42px;
-
-    border-radius: 12px;
-
-    background:
-        linear-gradient(
-            145deg,
-            #fff7ed,
-            #ffedd5
-        );
-
-    color: #ea580c;
+    border-radius: 11px;
+    background: #f1f5f9;
+    color: #475569;
 }
 
-.dashboard-sales-lead-list-title-icon svg {
-    width: 20px;
-    height: 20px;
+.stat-card-icon svg {
+    width: 19px;
+    height: 19px;
 }
 
-.dashboard-sales-lead-list-title {
-    margin: 0;
-
-    font-size: 17px;
-    line-height: 1.3;
-
-    font-weight: 800;
-
-    color: #111827;
+.stat-card-content {
+    min-width: 0;
+    flex: 1 1 auto;
 }
 
-.dashboard-sales-lead-list-subtitle {
-    margin: 4px 0 0;
-
-    font-size: 12px;
-    line-height: 1.45;
-
+.stat-card-label {
+    display: block;
+    overflow: hidden;
+    margin-bottom: 5px;
     color: #64748b;
-}
-
-.dashboard-sales-lead-list-count {
-    flex: 0 0 auto;
-
-    padding: 7px 11px;
-
-    border: 1px solid #fed7aa;
-    border-radius: 10px;
-
-    background: #fff7ed;
-
-    color: #c2410c;
-
     font-size: 11px;
-    font-weight: 800;
+    font-weight: 600;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
+.stat-card-value {
+    display: block;
+    color: #0f172a;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    line-height: 1;
+}
 
-/* ============================================================
-   LEAD TOOLBAR
-============================================================ */
-
-.dashboard-sales-lead-list-toolbar {
+.stat-card-arrow {
+    flex: 0 0 auto;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-
-    gap: 12px;
-
-    padding: 14px 20px;
-
-    border-bottom: 1px solid #f1f5f9;
-
-    background: #ffffff;
-}
-
-.dashboard-sales-lead-search-wrap {
-    position: relative;
-
-    flex: 1 1 auto;
-
-    min-width: 180px;
-    max-width: 520px;
-}
-
-.dashboard-sales-lead-search-icon {
-    position: absolute;
-
-    top: 50%;
-    left: 12px;
-
-    width: 16px;
-    height: 16px;
-
-    transform: translateY(-50%);
-
-    color: #94a3b8;
-
-    pointer-events: none;
-}
-
-.dashboard-sales-lead-search {
-    width: 100%;
-    height: 40px;
-
-    padding: 0 13px 0 38px;
-
-    border: 1px solid #dbe3ec;
-    border-radius: 11px;
-
-    background: #f8fafc;
-
-    color: #1e293b;
-
-    font: inherit;
-    font-size: 12px;
-
-    transition:
-        border-color 0.18s ease,
-        background 0.18s ease,
-        box-shadow 0.18s ease;
-}
-
-.dashboard-sales-lead-search::placeholder {
-    color: #94a3b8;
-}
-
-.dashboard-sales-lead-search:focus {
-    outline: none;
-
-    background: #ffffff;
-
-    border-color: #f59e0b;
-
-    box-shadow:
-        0 0 0 3px rgba(245, 158, 11, 0.1);
-}
-
-.dashboard-sales-lead-page-size {
-    flex: 0 0 auto;
-
-    height: 40px;
-
-    padding: 0 32px 0 11px;
-
-    border: 1px solid #dbe3ec;
-    border-radius: 11px;
-
-    background: #ffffff;
-
-    color: #475569;
-
-    font: inherit;
-    font-size: 12px;
-    font-weight: 600;
-
-    cursor: pointer;
-}
-
-
-/* ============================================================
-   LEAD TABLE
-============================================================ */
-
-.dashboard-sales-lead-table-wrap {
-    width: 100%;
-
-    overflow-x: auto;
-    overflow-y: hidden;
-
-    -webkit-overflow-scrolling: touch;
-}
-
-.dashboard-sales-lead-table {
-    width: 100%;
-
-    min-width: 940px;
-
-    border-collapse: separate;
-    border-spacing: 0;
-
-    font-size: 12px;
-}
-
-.dashboard-sales-lead-table thead th {
-    position: sticky;
-
-    top: 0;
-
-    z-index: 1;
-
-    padding: 12px 14px;
-
-    border-bottom: 1px solid #e5e7eb;
-
-    background: #f8fafc;
-
-    color: #64748b;
-
-    font-size: 10px;
-    font-weight: 800;
-
-    letter-spacing: 0.055em;
-
-    text-transform: uppercase;
-
-    text-align: left;
-
-    white-space: nowrap;
-}
-
-.dashboard-sales-lead-table tbody td {
-    padding: 13px 14px;
-
-    border-bottom: 1px solid #f1f5f9;
-
-    vertical-align: middle;
-
-    color: #475569;
-}
-
-.dashboard-sales-lead-table tbody tr {
-    transition: background 0.16s ease;
-}
-
-.dashboard-sales-lead-table tbody tr:hover {
-    background: #fffaf4;
-}
-
-.dashboard-sales-lead-table tbody tr:last-child td {
-    border-bottom: 0;
-}
-
-
-/* ============================================================
-   COLUMN WIDTHS
-============================================================ */
-
-.dashboard-sales-lead-table th:nth-child(1),
-.dashboard-sales-lead-table td:nth-child(1) {
-    min-width: 190px;
-}
-
-.dashboard-sales-lead-table th:nth-child(2),
-.dashboard-sales-lead-table td:nth-child(2) {
-    min-width: 130px;
-}
-
-.dashboard-sales-lead-table th:nth-child(3),
-.dashboard-sales-lead-table td:nth-child(3) {
-    min-width: 125px;
-}
-
-.dashboard-sales-lead-table th:nth-child(4),
-.dashboard-sales-lead-table td:nth-child(4) {
-    min-width: 130px;
-}
-
-.dashboard-sales-lead-table th:nth-child(5),
-.dashboard-sales-lead-table td:nth-child(5) {
-    min-width: 110px;
-}
-
-.dashboard-sales-lead-table th:nth-child(6),
-.dashboard-sales-lead-table td:nth-child(6) {
-    min-width: 115px;
-}
-
-.dashboard-sales-lead-table th:nth-child(7),
-.dashboard-sales-lead-table td:nth-child(7) {
-    min-width: 105px;
-}
-
-.dashboard-sales-lead-table th:nth-child(8),
-.dashboard-sales-lead-table td:nth-child(8) {
-    width: 80px;
-}
-
-
-/* ============================================================
-   CUSTOMER
-============================================================ */
-
-.dashboard-sales-lead-customer {
-    min-width: 0;
-}
-
-.dashboard-sales-lead-customer-name {
-    display: block;
-
-    overflow: hidden;
-
-    font-size: 12px;
-    line-height: 1.4;
-
-    font-weight: 800;
-
-    color: #1e293b;
-
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.dashboard-sales-lead-customer-email {
-    display: block;
-
-    overflow: hidden;
-
-    margin-top: 3px;
-
-    font-size: 10px;
-
-    color: #94a3b8;
-
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-
-/* ============================================================
-   BUSINESS / PHONE / LOCATION
-============================================================ */
-
-.dashboard-sales-lead-business {
-    display: block;
-
-    overflow: hidden;
-
-    font-size: 11px;
-
-    font-weight: 650;
-
-    color: #475569;
-
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.dashboard-sales-lead-phone {
-    font-size: 11px;
-
-    color: #475569;
-
-    white-space: nowrap;
-}
-
-.dashboard-sales-lead-location {
-    display: block;
-
-    overflow: hidden;
-
-    max-width: 190px;
-
-    font-size: 11px;
-
-    color: #64748b;
-
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-
-/* ============================================================
-   STATUS
-============================================================ */
-
-.dashboard-sales-lead-status {
-    display: inline-flex;
-    align-items: center;
     justify-content: center;
-
-    min-height: 24px;
-
-    padding: 4px 8px;
-
-    border: 1px solid transparent;
-    border-radius: 999px;
-
-    font-size: 9px;
-    line-height: 1.2;
-
-    font-weight: 800;
-
-    white-space: nowrap;
+    width: 27px;
+    height: 27px;
+    border-radius: 8px;
+    background: #f8fafc;
+    color: #94a3b8;
 }
 
-.dashboard-sales-lead-status-new {
+.stat-card-arrow svg {
+    width: 14px;
+    height: 14px;
+}
+
+
+/* ============================================================
+   8. STAT CARD VARIANTS
+   ============================================================ */
+
+.stat-card-total .stat-card-icon {
     background: #eff6ff;
-    border-color: #dbeafe;
     color: #2563eb;
 }
 
-.dashboard-sales-lead-status-first-contact {
-    background: #f5f3ff;
-    border-color: #ede9fe;
-    color: #7c3aed;
-}
-
-.dashboard-sales-lead-status-appointment {
-    background: #fffbeb;
-    border-color: #fef3c7;
-    color: #b45309;
-}
-
-.dashboard-sales-lead-status-site-survey {
-    background: #ecfeff;
-    border-color: #cffafe;
-    color: #0891b2;
-}
-
-.dashboard-sales-lead-status-quotation {
-    background: #fff7ed;
-    border-color: #ffedd5;
-    color: #c2410c;
-}
-
-.dashboard-sales-lead-status-deal,
-.dashboard-sales-lead-status-closing {
+.stat-card-new .stat-card-icon {
     background: #f0fdf4;
-    border-color: #dcfce7;
-    color: #15803d;
+    color: #16a34a;
 }
 
-.dashboard-sales-lead-status-no-deal,
-.dashboard-sales-lead-status-not-interested {
+.stat-card-contact .stat-card-icon {
+    background: #f0fdfa;
+    color: #0f766e;
+}
+
+.stat-card-appointment .stat-card-icon {
+    background: #fff7ed;
+    color: #ea580c;
+}
+
+.stat-card-survey .stat-card-icon {
+    background: #f0f9ff;
+    color: #0284c7;
+}
+
+.stat-card-quotation .stat-card-icon {
+    background: #faf5ff;
+    color: #9333ea;
+}
+
+.stat-card-deal .stat-card-icon {
+    background: #ecfdf5;
+    color: #059669;
+}
+
+.stat-card-no-deal .stat-card-icon {
     background: #fef2f2;
-    border-color: #fee2e2;
     color: #dc2626;
-}
-
-.dashboard-sales-lead-status-default {
-    background: #f8fafc;
-    border-color: #e2e8f0;
-    color: #64748b;
 }
 
 
 /* ============================================================
-   DATE
-============================================================ */
+   9. MAIN DASHBOARD GRID
+   ============================================================ */
 
-.dashboard-sales-lead-date {
-    font-size: 10px;
-    line-height: 1.45;
+.dashboard-main-grid {
+    display: grid;
+    grid-template-columns:
+        minmax(0, 1.15fr)
+        minmax(0, 0.85fr);
+    gap: 20px;
+    align-items: start;
+}
 
+.dashboard-card {
+    min-width: 0;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow:
+        0 8px 25px rgba(15, 23, 42, 0.04);
+}
+
+.dashboard-pipeline-card,
+.dashboard-recent-card {
+    min-height: 100%;
+    padding: 24px;
+}
+
+
+/* ============================================================
+   10. VIEW ALL
+   ============================================================ */
+
+.dashboard-view-all {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 34px;
+    padding: 0 11px;
+    border: 1px solid #e2e8f0;
+    border-radius: 9px;
+    background: #ffffff;
+    color: #475569;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition:
+        border-color 180ms ease,
+        background 180ms ease,
+        color 180ms ease;
+}
+
+.dashboard-view-all:hover {
+    border-color: #bfdbfe;
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.dashboard-view-all svg {
+    width: 14px;
+    height: 14px;
+}
+
+
+/* ============================================================
+   11. PIPELINE CONTAINER
+   ============================================================ */
+
+.dashboard-pipeline {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
+}
+
+
+/* ============================================================
+   12. PIPELINE ITEM
+   ============================================================ */
+
+.pipeline-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid #edf2f7;
+    border-radius: 12px;
+    background: #ffffff;
+    cursor: pointer;
+    transition:
+        transform 160ms ease,
+        border-color 160ms ease,
+        background 160ms ease,
+        box-shadow 160ms ease;
+}
+
+.pipeline-item:hover {
+    transform: translateX(2px);
+    border-color: #dbeafe;
+    background: #f8fbff;
+    box-shadow:
+        0 5px 15px rgba(15, 23, 42, 0.045);
+}
+
+.pipeline-item:focus-visible {
+    outline: 3px solid rgba(37, 99, 235, 0.15);
+    outline-offset: 2px;
+}
+
+
+/* ============================================================
+   13. PIPELINE ICON
+   ============================================================ */
+
+.pipeline-stage-icon {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: #f1f5f9;
     color: #64748b;
+}
 
+.pipeline-stage-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+
+/* ============================================================
+   14. PIPELINE CONTENT
+   ============================================================ */
+
+.pipeline-content {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.pipeline-stage-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    min-width: 0;
+}
+
+.pipeline-stage-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 3px;
+}
+
+.pipeline-label {
+    overflow: hidden;
+    color: #1e293b;
+    font-size: 12px;
+    font-weight: 750;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pipeline-description {
+    overflow: hidden;
+    color: #94a3b8;
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 1.3;
+    text-overflow: ellipsis;
     white-space: nowrap;
 }
 
 
 /* ============================================================
-   VIEW BUTTON
-============================================================ */
+   15. PIPELINE NUMBER
+   ============================================================ */
 
-.dashboard-sales-lead-view {
-    display: inline-flex;
+.pipeline-stage-number {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    flex: 0 0 auto;
+}
+
+.pipeline-count {
+    color: #0f172a;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+}
+
+.pipeline-percentage {
+    min-width: 34px;
+    color: #94a3b8;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    text-align: right;
+}
+
+
+/* ============================================================
+   16. PIPELINE PROGRESS BAR
+   ============================================================ */
+
+.pipeline-bar {
+    width: 100%;
+    height: 5px;
+    margin-top: 9px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #eef2f7;
+}
+
+.pipeline-bar-fill {
+    height: 100%;
+    min-width: 0;
+    border-radius: inherit;
+    background: #2563eb;
+    transition: width 450ms ease;
+}
+
+
+/* ============================================================
+   17. PIPELINE STATUS COLORS
+   ============================================================ */
+
+.pipeline-item.status-new .pipeline-stage-icon {
+    background: #f0fdf4;
+    color: #16a34a;
+}
+
+.pipeline-item.status-new .pipeline-bar-fill {
+    background: #22c55e;
+}
+
+.pipeline-item.status-first-contact .pipeline-stage-icon {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.pipeline-item.status-first-contact .pipeline-bar-fill {
+    background: #3b82f6;
+}
+
+.pipeline-item.status-appointment .pipeline-stage-icon {
+    background: #fff7ed;
+    color: #ea580c;
+}
+
+.pipeline-item.status-appointment .pipeline-bar-fill {
+    background: #f97316;
+}
+
+.pipeline-item.status-site-survey .pipeline-stage-icon {
+    background: #f0f9ff;
+    color: #0284c7;
+}
+
+.pipeline-item.status-site-survey .pipeline-bar-fill {
+    background: #0ea5e9;
+}
+
+.pipeline-item.status-quotation .pipeline-stage-icon {
+    background: #faf5ff;
+    color: #9333ea;
+}
+
+.pipeline-item.status-quotation .pipeline-bar-fill {
+    background: #a855f7;
+}
+
+.pipeline-item.status-deal .pipeline-stage-icon {
+    background: #ecfdf5;
+    color: #059669;
+}
+
+.pipeline-item.status-deal .pipeline-bar-fill {
+    background: #10b981;
+}
+
+.pipeline-item.status-no-deal .pipeline-stage-icon {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.pipeline-item.status-no-deal .pipeline-bar-fill {
+    background: #ef4444;
+}
+
+
+/* ============================================================
+   18. PIPELINE TERMINAL INDICATOR
+   ============================================================ */
+
+.pipeline-terminal-indicator {
+    flex: 0 0 auto;
+    display: flex;
     align-items: center;
     justify-content: center;
-
-    gap: 5px;
-
-    min-height: 30px;
-
-    padding: 6px 9px;
-
-    border: 1px solid #e2e8f0;
-    border-radius: 9px;
-
-    background: #ffffff;
-
-    color: #475569;
-
-    font: inherit;
-    font-size: 10px;
-    font-weight: 800;
-
-    cursor: pointer;
-
-    transition:
-        transform 0.18s ease,
-        background 0.18s ease,
-        border-color 0.18s ease,
-        color 0.18s ease;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #f8fafc;
+    color: #94a3b8;
 }
 
-.dashboard-sales-lead-view:hover {
-    transform: translateY(-1px);
-
-    border-color: #fdba74;
-
-    background: #fff7ed;
-
-    color: #c2410c;
-}
-
-.dashboard-sales-lead-view:focus-visible {
-    outline: none;
-
-    border-color: #f59e0b;
-
-    box-shadow:
-        0 0 0 3px rgba(245, 158, 11, 0.12);
-}
-
-.dashboard-sales-lead-view svg {
+.pipeline-terminal-indicator svg {
     width: 13px;
     height: 13px;
 }
 
+.pipeline-item.status-deal .pipeline-terminal-indicator {
+    background: #ecfdf5;
+    color: #059669;
+}
+
+.pipeline-item.status-no-deal .pipeline-terminal-indicator {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
 
 /* ============================================================
-   EMPTY
-============================================================ */
+   19. PIPELINE EMPTY / LOADING
+   ============================================================ */
 
-.dashboard-sales-lead-empty {
+.pipeline-loading,
+.dashboard-loading-placeholder {
     display: flex;
     flex-direction: column;
-
     align-items: center;
     justify-content: center;
-
     min-height: 220px;
-
     padding: 30px;
-
+    color: #94a3b8;
     text-align: center;
 }
 
-.dashboard-sales-lead-empty-icon {
+.pipeline-empty-icon {
     display: flex;
     align-items: center;
     justify-content: center;
-
     width: 48px;
     height: 48px;
-
     margin-bottom: 12px;
-
     border-radius: 14px;
-
     background: #f8fafc;
-
     color: #94a3b8;
 }
 
-.dashboard-sales-lead-empty-icon svg {
+.pipeline-empty-icon svg {
     width: 22px;
     height: 22px;
 }
 
-.dashboard-sales-lead-empty-title {
-    margin: 0;
-
-    font-size: 14px;
-
-    font-weight: 800;
-
-    color: #334155;
-}
-
-.dashboard-sales-lead-empty-text {
-    max-width: 420px;
-
-    margin: 6px 0 0;
-
-    font-size: 12px;
-    line-height: 1.5;
-
-    color: #94a3b8;
-}
-
-
-/* ============================================================
-   LOADING
-============================================================ */
-
-.dashboard-sales-lead-loading,
-.dashboard-loading {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    min-height: 180px;
-
-    padding: 30px;
-
-    color: #64748b;
-
-    font-size: 12px;
+.pipeline-empty-title {
+    color: #475569;
+    font-size: 13px;
     font-weight: 700;
 }
 
-.dashboard-sales-lead-loading::before {
-    content: "";
-
-    width: 18px;
-    height: 18px;
-
-    margin-right: 9px;
-
-    border: 2px solid #e2e8f0;
-    border-top-color: #f59e0b;
-
-    border-radius: 50%;
-
-    animation:
-        fsiDashboardSpinner 0.7s linear infinite;
+.pipeline-empty-text {
+    max-width: 250px;
+    margin-top: 5px;
+    color: #94a3b8;
+    font-size: 11px;
+    line-height: 1.5;
 }
 
 .dashboard-loading-spinner {
-    width: 20px;
-    height: 20px;
-
-    margin-right: 9px;
-
-    border: 2px solid #e2e8f0;
-    border-top-color: #f59e0b;
-
-    border-radius: 50%;
-
-    animation:
-        fsiDashboardSpinner 0.7s linear infinite;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
 }
 
-@keyframes fsiDashboardSpinner {
+.dashboard-loading-spinner svg {
+    width: 22px;
+    height: 22px;
+    animation: dashboard-spin 1s linear infinite;
+}
+
+@keyframes dashboard-spin {
     to {
         transform: rotate(360deg);
     }
@@ -2205,877 +927,1010 @@
 
 
 /* ============================================================
-   PAGINATION
-============================================================ */
+   20. RECENT ACTIVITY
+   ============================================================ */
 
-.dashboard-sales-lead-pagination {
+.dashboard-activity-list {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.activity-item.dashboard-recent-activity-item {
+    position: relative;
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 11px;
+    min-width: 0;
+    padding: 12px 0;
+    border-bottom: 1px solid #f1f5f9;
+    transition:
+        background 160ms ease;
+}
+
+.activity-item.dashboard-recent-activity-item:first-child {
+    padding-top: 2px;
+}
+
+.activity-item.dashboard-recent-activity-item:last-child {
+    padding-bottom: 2px;
+    border-bottom: 0;
+}
+
+
+/* ============================================================
+   21. RECENT ACTIVITY ICON
+   ============================================================ */
+
+.activity-icon {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border: 1px solid #e2e8f0;
+    border-radius: 11px;
+    background: #f8fafc;
+    color: #64748b;
+}
+
+.activity-icon svg {
+    width: 17px;
+    height: 17px;
+}
+
+
+/* ============================================================
+   22. RECENT ACTIVITY CONTENT
+   ============================================================ */
+
+.activity-content {
+    min-width: 0;
+}
+
+.activity-title {
+    overflow: hidden;
+    margin-bottom: 4px;
+    color: #1e293b;
+    font-size: 12px;
+    font-weight: 750;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.activity-meta {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    color: #64748b;
+    font-size: 10px;
+    line-height: 1.4;
+}
+
+.recent-activity-type {
+    flex: 0 0 auto;
+    color: #2563eb;
+    font-weight: 700;
+}
+
+.recent-activity-separator {
+    flex: 0 0 auto;
+    color: #cbd5e1;
+}
+
+.recent-activity-customer {
+    overflow: hidden;
+    min-width: 0;
+    color: #64748b;
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+/* ============================================================
+   23. RECENT ACTIVITY TIME
+   ============================================================ */
+
+.activity-time {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 3px;
+    flex: 0 0 auto;
+    min-width: 58px;
+    text-align: right;
+}
+
+.activity-relative-time {
+    color: #64748b;
+    font-size: 10px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.activity-clock {
+    color: #94a3b8;
+    font-size: 9px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+
+/* ============================================================
+   24. ACTIVITY COLORS
+   ============================================================ */
+
+.activity-item.activity-new .activity-icon {
+    border-color: #bbf7d0;
+    background: #f0fdf4;
+    color: #16a34a;
+}
+
+.activity-item.activity-contact .activity-icon {
+    border-color: #bfdbfe;
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.activity-item.activity-appointment .activity-icon {
+    border-color: #fed7aa;
+    background: #fff7ed;
+    color: #ea580c;
+}
+
+.activity-item.activity-survey .activity-icon {
+    border-color: #bae6fd;
+    background: #f0f9ff;
+    color: #0284c7;
+}
+
+.activity-item.activity-quotation .activity-icon {
+    border-color: #e9d5ff;
+    background: #faf5ff;
+    color: #9333ea;
+}
+
+.activity-item.activity-closing .activity-icon {
+    border-color: #a7f3d0;
+    background: #ecfdf5;
+    color: #059669;
+}
+
+.activity-item.activity-no-deal .activity-icon {
+    border-color: #fecaca;
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+
+/* ============================================================
+   25. EMPTY STATE
+   ============================================================ */
+
+.dashboard-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 220px;
+    padding: 30px 20px;
+    text-align: center;
+}
+
+.dashboard-empty-state-icon,
+.empty-state-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 12px;
+    border-radius: 14px;
+    background: #f8fafc;
+    color: #94a3b8;
+}
+
+.dashboard-empty-state-icon svg,
+.empty-state-icon svg {
+    width: 22px;
+    height: 22px;
+}
+
+.dashboard-empty-state h3,
+.dashboard-empty-state h4,
+.empty-state h3,
+.empty-state h4 {
+    margin: 0;
+    color: #475569;
+    font-size: 13px;
+    font-weight: 750;
+}
+
+.dashboard-empty-state p,
+.empty-state p {
+    max-width: 330px;
+    margin: 6px auto 0;
+    color: #94a3b8;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+
+/* ============================================================
+   26. LEGACY ACTIVITY SUPPORT
+   ============================================================ */
+
+.dashboard-activity-item {
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 11px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.dashboard-activity-item:last-child {
+    border-bottom: 0;
+}
+
+.dashboard-activity-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    background: #f8fafc;
+    color: #64748b;
+}
+
+.dashboard-activity-content {
+    min-width: 0;
+}
+
+.dashboard-activity-title {
+    color: #1e293b;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.dashboard-activity-description {
+    margin-top: 3px;
+    color: #64748b;
+    font-size: 10px;
+}
+
+.dashboard-activity-time {
+    color: #94a3b8;
+    font-size: 10px;
+    white-space: nowrap;
+}
+
+
+/* ============================================================
+   27. LEADS DASHBOARD COMPATIBILITY
+   ============================================================ */
+
+.dashboard-page .section-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-
-    gap: 12px;
-
-    padding: 14px 20px;
-
-    border-top: 1px solid #eef2f7;
-
-    background: #fafafa;
+    gap: 16px;
+    margin-bottom: 20px;
 }
 
-.dashboard-sales-lead-pagination-info {
-    font-size: 11px;
+.dashboard-page .section-header h2 {
+    margin: 0;
+    color: #0f172a;
+    font-size: 21px;
+    font-weight: 800;
+}
 
-    font-weight: 600;
-
+.dashboard-page .section-header p {
+    margin: 5px 0 0;
     color: #64748b;
+    font-size: 13px;
 }
 
-.dashboard-sales-lead-pagination-buttons {
-    display: flex;
-    align-items: center;
 
-    gap: 5px;
-}
+/* ============================================================
+   28. TABLE COMPATIBILITY
+   ============================================================ */
 
-.dashboard-sales-lead-page-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    min-width: 30px;
-    height: 30px;
-
-    padding: 0 8px;
-
+.dashboard-page .table-panel {
+    width: 100%;
+    overflow-x: auto;
     border: 1px solid #e2e8f0;
-    border-radius: 8px;
-
+    border-radius: 15px;
     background: #ffffff;
+}
 
+.dashboard-page .crm-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.dashboard-page .crm-table th {
+    padding: 12px 14px;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fafc;
     color: #64748b;
-
-    font: inherit;
     font-size: 10px;
     font-weight: 800;
+    letter-spacing: 0.03em;
+    text-align: left;
+    white-space: nowrap;
+}
 
+.dashboard-page .crm-table td {
+    padding: 13px 14px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #475569;
+    font-size: 12px;
+}
+
+.dashboard-page .crm-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+
+/* ============================================================
+   29. PAGINATION
+   ============================================================ */
+
+.dashboard-page .pagination-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 15px;
+}
+
+.dashboard-page .pagination-info {
+    color: #64748b;
+    font-size: 11px;
+}
+
+.dashboard-page .pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.dashboard-page .pagination-controls button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #475569;
     cursor: pointer;
-
-    transition:
-        background 0.18s ease,
-        color 0.18s ease,
-        border-color 0.18s ease;
 }
 
-.dashboard-sales-lead-page-button:hover:not(:disabled) {
-    border-color: #fdba74;
-
-    background: #fff7ed;
-
-    color: #c2410c;
+.dashboard-page .pagination-controls button:hover:not(:disabled) {
+    border-color: #bfdbfe;
+    background: #eff6ff;
+    color: #2563eb;
 }
 
-.dashboard-sales-lead-page-button.is-active,
-.dashboard-sales-lead-page-button.active {
-    border-color: #f59e0b;
-
-    background: #f59e0b;
-
-    color: #ffffff;
-}
-
-.dashboard-sales-lead-page-button:disabled {
+.dashboard-page .pagination-controls button:disabled {
     opacity: 0.45;
-
     cursor: not-allowed;
 }
 
 
 /* ============================================================
-   MOBILE LEAD CARDS
-============================================================ */
+   30. SEARCH / FILTER COMPATIBILITY
+   ============================================================ */
 
-.dashboard-sales-lead-mobile-card {
-    display: none;
+.dashboard-page .filter-panel {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 16px;
+}
 
-    padding: 15px;
+.dashboard-page .search-box {
+    position: relative;
+    flex: 1 1 240px;
+}
 
-    border-bottom: 1px solid #f1f5f9;
+.dashboard-page .search-box svg {
+    position: absolute;
+    top: 50%;
+    left: 12px;
+    width: 16px;
+    height: 16px;
+    color: #94a3b8;
+    transform: translateY(-50%);
+}
 
+.dashboard-page .search-box input,
+.dashboard-page .filter-panel select {
+    width: 100%;
+    min-height: 40px;
+    border: 1px solid #e2e8f0;
+    border-radius: 9px;
     background: #ffffff;
+    color: #334155;
+    font-family: inherit;
+    font-size: 12px;
 }
 
-.dashboard-sales-lead-mobile-card:last-child {
-    border-bottom: 0;
+.dashboard-page .search-box input {
+    padding: 0 12px 0 37px;
 }
 
-.dashboard-sales-lead-mobile-card-header {
+.dashboard-page .filter-panel select {
+    flex: 0 1 180px;
+    padding: 0 12px;
+}
+
+.dashboard-page .search-box input:focus,
+.dashboard-page .filter-panel select:focus {
+    outline: none;
+    border-color: #93c5fd;
+    box-shadow:
+        0 0 0 3px rgba(37, 99, 235, 0.08);
+}
+
+
+/* ============================================================
+   31. MODAL COMPATIBILITY
+   ============================================================ */
+
+.dashboard-page .modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(4px);
+}
+
+.dashboard-page .modal-card {
+    width: min(100%, 560px);
+    max-height: calc(100vh - 40px);
+    overflow: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow:
+        0 25px 60px rgba(15, 23, 42, 0.18);
+}
+
+.dashboard-page .large-modal {
+    width: min(100%, 780px);
+}
+
+.dashboard-page .modal-header {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-
-    gap: 12px;
+    gap: 16px;
+    padding: 20px;
+    border-bottom: 1px solid #e2e8f0;
 }
 
-.dashboard-sales-lead-mobile-card-name {
+.dashboard-page .modal-header h3 {
     margin: 0;
-
-    font-size: 13px;
+    color: #0f172a;
+    font-size: 17px;
     font-weight: 800;
-
-    color: #1e293b;
 }
 
-.dashboard-sales-lead-mobile-card-row {
-    display: flex;
-
-    gap: 7px;
-
-    margin-top: 8px;
-
-    font-size: 11px;
-
+.dashboard-page .modal-header p {
+    margin: 5px 0 0;
     color: #64748b;
+    font-size: 12px;
 }
 
-.dashboard-sales-lead-mobile-card-label {
-    flex: 0 0 70px;
-
-    font-size: 9px;
-    font-weight: 800;
-
-    color: #94a3b8;
-
-    text-transform: uppercase;
+.dashboard-page .modal-body {
+    padding: 20px;
 }
 
-.dashboard-sales-lead-mobile-card-value {
-    min-width: 0;
-
-    overflow: hidden;
-
-    text-overflow: ellipsis;
+.dashboard-page .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 9px;
+    padding-top: 20px;
 }
 
 
 /* ============================================================
-   POPUP
-============================================================ */
+   32. FORM COMPATIBILITY
+   ============================================================ */
 
-.dashboard-stat-popup,
-.dashboard-popup {
-    position: fixed;
-
-    z-index: 9999;
-
-    width: min(420px, calc(100vw - 32px));
-
-    padding: 18px;
-
-    border: 1px solid rgba(226, 232, 240, 0.95);
-    border-radius: 18px;
-
-    background: rgba(255, 255, 255, 0.98);
-
-    box-shadow:
-        0 24px 70px rgba(15, 23, 42, 0.18),
-        0 6px 18px rgba(15, 23, 42, 0.08);
-
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-
-    animation:
-        fsiPopupIn 0.2s ease both;
+.dashboard-page .form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 15px;
 }
 
-@keyframes fsiPopupIn {
-    from {
-        opacity: 0;
-        transform: translateY(7px) scale(0.98);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
+.dashboard-page .form-group {
+    min-width: 0;
 }
 
-.dashboard-popup-title {
-    margin: 0;
-
-    font-size: 15px;
-    font-weight: 800;
-
-    color: #111827;
+.dashboard-page .form-group.full-width {
+    grid-column: 1 / -1;
 }
 
-.dashboard-popup-content {
-    margin-top: 10px;
-
-    font-size: 12px;
-    line-height: 1.6;
-
-    color: #64748b;
-}
-
-.dashboard-popup-close {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    width: 30px;
-    height: 30px;
-
-    border: 0;
-    border-radius: 8px;
-
-    background: #f8fafc;
-
-    color: #64748b;
-
-    cursor: pointer;
-}
-
-.dashboard-popup-close:hover {
-    background: #f1f5f9;
-
+.dashboard-page .form-group label {
+    display: block;
+    margin-bottom: 6px;
     color: #334155;
+    font-size: 11px;
+    font-weight: 700;
 }
 
-
-/* ============================================================
-   ERROR
-============================================================ */
-
-.dashboard-error {
-    display: flex;
-    align-items: flex-start;
-
-    gap: 12px;
-
+.dashboard-page .form-group input,
+.dashboard-page .form-group select,
+.dashboard-page .form-group textarea {
     width: 100%;
-
-    margin-bottom: 20px;
-
-    padding: 14px 16px;
-
-    border: 1px solid #fecaca;
-    border-radius: 14px;
-
-    background: #fef2f2;
-
-    color: #991b1b;
-
+    min-height: 40px;
+    padding: 9px 11px;
+    border: 1px solid #e2e8f0;
+    border-radius: 9px;
+    background: #ffffff;
+    color: #334155;
+    font-family: inherit;
     font-size: 12px;
-    line-height: 1.5;
+    box-sizing: border-box;
 }
 
-.dashboard-error-icon {
-    flex: 0 0 auto;
+.dashboard-page .form-group textarea {
+    min-height: 100px;
+    resize: vertical;
 }
 
-.dashboard-error-message {
-    min-width: 0;
+.dashboard-page .form-group input:focus,
+.dashboard-page .form-group select:focus,
+.dashboard-page .form-group textarea:focus {
+    outline: none;
+    border-color: #93c5fd;
+    box-shadow:
+        0 0 0 3px rgba(37, 99, 235, 0.08);
 }
 
 
 /* ============================================================
-   BUTTONS
-============================================================ */
+   33. BUTTON COMPATIBILITY
+   ============================================================ */
 
-.dashboard-btn {
+.dashboard-page .primary-btn,
+.dashboard-page .btn-primary {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-
     gap: 7px;
-
-    min-height: 36px;
-
-    padding: 8px 12px;
-
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-
-    background: #ffffff;
-
-    color: #475569;
-
-    font: inherit;
-    font-size: 11px;
-    font-weight: 800;
-
+    min-height: 40px;
+    padding: 0 15px;
+    border: 1px solid #2563eb;
+    border-radius: 9px;
+    background: #2563eb;
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
     cursor: pointer;
-
     transition:
-        transform 0.18s ease,
-        border-color 0.18s ease,
-        background 0.18s ease,
-        color 0.18s ease;
+        background 160ms ease,
+        transform 160ms ease,
+        box-shadow 160ms ease;
 }
 
-.dashboard-btn:hover {
-    transform: translateY(-1px);
-
-    border-color: #fdba74;
-
-    background: #fff7ed;
-
-    color: #c2410c;
+.dashboard-page .primary-btn:hover,
+.dashboard-page .btn-primary:hover {
+    background: #1d4ed8;
+    box-shadow:
+        0 7px 16px rgba(37, 99, 235, 0.18);
 }
 
-.dashboard-btn-primary {
-    border-color: #f59e0b;
-
-    background: #f59e0b;
-
-    color: #ffffff;
-}
-
-.dashboard-btn-primary:hover {
-    border-color: #d97706;
-
-    background: #d97706;
-
-    color: #ffffff;
-}
-
-
-/* ============================================================
-   VIEW ALL
-============================================================ */
-
-.dashboard-view-all,
-#dashboardViewAll {
+.dashboard-page .secondary-btn,
+.dashboard-page .btn-secondary {
     display: inline-flex;
     align-items: center;
-
-    gap: 6px;
-
-    border: 0;
-
-    background: transparent;
-
-    color: #ea580c;
-
-    font: inherit;
-    font-size: 11px;
-    font-weight: 800;
-
+    justify-content: center;
+    gap: 7px;
+    min-height: 40px;
+    padding: 0 15px;
+    border: 1px solid #e2e8f0;
+    border-radius: 9px;
+    background: #ffffff;
+    color: #475569;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
     cursor: pointer;
 }
 
-.dashboard-view-all:hover,
-#dashboardViewAll:hover {
-    color: #c2410c;
-}
-
-.dashboard-view-all svg,
-#dashboardViewAll svg {
-    transition:
-        transform 0.18s ease;
-}
-
-.dashboard-view-all:hover svg,
-#dashboardViewAll:hover svg {
-    transform: translateX(3px);
-}
-
-
-/* ============================================================
-   HIDDEN / ROLE
-============================================================ */
-
-.dashboard-hidden {
-    display: none !important;
-}
-
-.admin-only.dashboard-hidden,
-.sales-only.dashboard-hidden {
-    display: none !important;
-}
-
-
-/* ============================================================
-   SCROLLBAR
-============================================================ */
-
-.dashboard-sales-lead-table-wrap::-webkit-scrollbar {
-    height: 8px;
-}
-
-.dashboard-sales-lead-table-wrap::-webkit-scrollbar-track {
+.dashboard-page .secondary-btn:hover,
+.dashboard-page .btn-secondary:hover {
     background: #f8fafc;
-}
-
-.dashboard-sales-lead-table-wrap::-webkit-scrollbar-thumb {
-    border-radius: 999px;
-
-    background: #cbd5e1;
-}
-
-.dashboard-sales-lead-table-wrap::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+    border-color: #cbd5e1;
 }
 
 
 /* ============================================================
-   RESPONSIVE 1200
-============================================================ */
+   34. HIDDEN LEGACY ELEMENTS
+   ============================================================ */
+
+#dashboardLegacySalesFilter {
+    display: none !important;
+}
+
+#recent-leads-container {
+    display: none !important;
+}
+
+#dashboard-activities {
+    display: none !important;
+}
+
+#statFollowUp,
+#statClosing,
+#statFlyerSent {
+    display: none !important;
+}
+
+
+/* ============================================================
+   35. RESPONSIVE — LARGE TABLET
+   ============================================================ */
 
 @media (max-width: 1200px) {
 
-    .dashboard-stats,
     .dashboard-stats-grid,
     .stats-grid {
+        grid-template-columns: repeat(
+            4,
+            minmax(0, 1fr)
+        );
+    }
+
+    .dashboard-main-grid {
         grid-template-columns:
-            repeat(3, minmax(0, 1fr));
+            minmax(0, 1fr)
+            minmax(0, 1fr);
     }
 
-    .dashboard-sales-cards-grid {
-        grid-template-columns:
-            repeat(3, minmax(0, 1fr));
-    }
-
-    .dashboard-pipeline-grid,
-    .sales-pipeline-grid {
-        grid-template-columns:
-            repeat(4, minmax(0, 1fr));
-
-        gap: 12px;
-    }
-
-    .dashboard-pipeline-grid::before,
-    .sales-pipeline-grid::before {
-        display: none;
-    }
-
-    .profile-pipeline {
-        grid-template-columns:
-            repeat(4, minmax(0, 1fr));
-    }
 }
 
 
 /* ============================================================
-   RESPONSIVE 900
-============================================================ */
+   36. RESPONSIVE — TABLET
+   ============================================================ */
 
-@media (max-width: 900px) {
+@media (max-width: 980px) {
 
-    .dashboard-stats,
-    .dashboard-stats-grid,
-    .stats-grid {
-        grid-template-columns:
-            repeat(2, minmax(0, 1fr));
-    }
-
-    .dashboard-sales-cards-grid {
-        grid-template-columns:
-            repeat(2, minmax(0, 1fr));
-    }
-
-    .dashboard-grid {
+    .dashboard-main-grid {
         grid-template-columns: 1fr;
     }
 
-    .dashboard-grid-full {
-        grid-column: auto;
+    .dashboard-stats-grid,
+    .stats-grid {
+        grid-template-columns: repeat(
+            2,
+            minmax(0, 1fr)
+        );
     }
 
-    .dashboard-pipeline-grid,
-    .sales-pipeline-grid {
-        grid-template-columns:
-            repeat(3, minmax(0, 1fr));
-
-        gap: 12px;
+    .dashboard-sales-cards {
+        grid-template-columns: repeat(
+            2,
+            minmax(0, 1fr)
+        );
     }
 
-    .dashboard-pipeline-stage-number {
-        width: 42px;
-        height: 42px;
-    }
-
-    .dashboard-pipeline-stage-title {
-        font-size: 9px;
-    }
-
-    .dashboard-pipeline-stage-count {
-        font-size: 22px;
-    }
-
-    .profile-pipeline {
-        grid-template-columns:
-            repeat(3, minmax(0, 1fr));
-    }
 }
 
 
 /* ============================================================
-   RESPONSIVE 700
-============================================================ */
+   37. RESPONSIVE — MOBILE
+   ============================================================ */
 
-@media (max-width: 700px) {
+@media (max-width: 640px) {
 
     .dashboard-section {
-        margin-bottom: 24px;
+        margin-bottom: 16px;
     }
 
-    .dashboard-sales-section-header {
-        align-items: flex-start;
-
-        flex-direction: column;
-    }
-
-    .dashboard-sales-cards-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .dashboard-sales-card {
-        min-height: 94px;
-    }
-
-    .dashboard-sales-lead-list-header {
-        align-items: flex-start;
-
-        flex-direction: column;
-    }
-
-    .dashboard-sales-lead-list-toolbar {
-        align-items: stretch;
-
-        flex-direction: column;
-    }
-
-    .dashboard-sales-lead-search-wrap {
-        max-width: none;
-    }
-
-    .dashboard-sales-lead-page-size {
-        width: 100%;
-    }
-
-    .dashboard-sales-lead-pagination {
-        align-items: flex-start;
-
-        flex-direction: column;
-    }
-
-    .dashboard-sales-lead-pagination-buttons {
-        width: 100%;
-
-        overflow-x: auto;
-    }
-
-    .dashboard-pipeline-grid,
-    .sales-pipeline-grid {
-        grid-template-columns:
-            repeat(2, minmax(0, 1fr));
-
-        gap: 12px;
-    }
-
-    .dashboard-pipeline-stage-number {
-        width: 40px;
-        height: 40px;
-    }
-
-    .dashboard-pipeline-stage-title {
-        margin-top: -34px;
-
-        min-height: 35px;
-    }
-
-    .dashboard-pipeline-stage-count {
-        font-size: 21px;
-    }
-
-    .dashboard-activity-item {
-        grid-template-columns:
-            38px minmax(0, 1fr);
-
-        gap: 10px;
-    }
-
-    .dashboard-activity-time {
-        grid-column: 2;
-
-        padding-top: 0;
-
-        font-size: 9px;
-    }
-
-    .profile-pipeline {
-        grid-template-columns:
-            repeat(2, minmax(0, 1fr));
-    }
-}
-
-
-/* ============================================================
-   RESPONSIVE 600
-============================================================ */
-
-@media (max-width: 600px) {
-
-    .dashboard-stats,
-    .dashboard-stats-grid,
-    .stats-grid {
-        grid-template-columns:
-            repeat(2, minmax(0, 1fr));
-
-        gap: 10px;
-    }
-
-    .dashboard-stat-card,
-    .stat-card,
-    .dashboard-stat {
-        padding: 15px;
-
+    .dashboard-greeting {
+        min-height: auto;
+        padding: 22px 20px;
         border-radius: 15px;
     }
 
-    .dashboard-stat-card-icon,
-    .stat-card-icon {
-        width: 36px;
-        height: 36px;
-    }
-
-    .dashboard-stat-card-value,
-    .stat-card-value,
-    .dashboard-stat-value {
-        font-size: 25px;
-    }
-
     .dashboard-greeting h1,
-    .dashboard-greeting-title {
-        font-size: 24px;
+    #dashboardGreeting {
+        font-size: 23px;
     }
 
+    .dashboard-greeting p,
+    #dashboardGreetingText {
+        font-size: 12px;
+    }
+
+    .dashboard-sales-section,
+    .dashboard-overview-section,
+    .dashboard-pipeline-card,
+    .dashboard-recent-card {
+        padding: 17px;
+        border-radius: 15px;
+    }
+
+    .dashboard-section-header,
     .dashboard-card-header {
-        padding: 15px;
+        gap: 12px;
     }
 
-    .dashboard-card-body {
-        padding: 15px;
+    .dashboard-section-header h2,
+    .dashboard-card-header h2 {
+        font-size: 17px;
     }
 
-    .dashboard-sales-lead-list-header {
-        padding: 15px;
-    }
-
-    .dashboard-sales-lead-list-toolbar {
-        padding: 12px 15px;
-    }
-
-    .dashboard-sales-lead-pagination {
-        padding: 12px 15px;
-    }
-
-    .dashboard-activity-item {
-        min-height: 64px;
-
-        padding: 8px 2px;
-    }
-
-    .dashboard-activity-icon {
-        width: 34px;
-        height: 34px;
-
-        border-radius: 10px;
-    }
-
-    .dashboard-activity-title {
+    .dashboard-section-header p,
+    .dashboard-card-header p {
         font-size: 11px;
     }
 
-    .dashboard-activity-description {
-        font-size: 10px;
+    .dashboard-section-header-icon,
+    .dashboard-card-header-icon {
+        width: 35px;
+        height: 35px;
+        border-radius: 10px;
     }
 
-    .dashboard-activity-list::before {
-        left: 17px;
+    .dashboard-stats-grid,
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
     }
 
-    .dashboard-pipeline-grid,
-    .sales-pipeline-grid {
-        grid-template-columns:
-            repeat(2, minmax(0, 1fr));
-
-        gap: 10px;
+    .stat-card {
+        min-height: 82px;
+        padding: 11px;
+        gap: 9px;
+        border-radius: 12px;
     }
 
-    .dashboard-pipeline-stage-title {
+    .stat-card-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
+    }
+
+    .stat-card-icon svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .stat-card-label {
         font-size: 9px;
     }
 
-    .dashboard-pipeline-stage-count {
+    .stat-card-value {
         font-size: 20px;
     }
 
-    .dashboard-pipeline-stage-description {
-        font-size: 8px;
-    }
-}
-
-
-/* ============================================================
-   RESPONSIVE 420
-============================================================ */
-
-@media (max-width: 420px) {
-
-    .dashboard-stats,
-    .dashboard-stats-grid,
-    .stats-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .dashboard-sales-card {
-        padding: 13px;
-    }
-
-    .dashboard-sales-card-icon {
-        width: 42px;
-        height: 42px;
-    }
-
-    .dashboard-sales-card-count {
-        font-size: 18px;
-    }
-
-    .dashboard-pipeline-grid,
-    .sales-pipeline-grid {
-        grid-template-columns: 1fr;
-
-        gap: 8px;
-    }
-
-    .dashboard-pipeline-stage {
-        display: grid;
-
-        grid-template-columns:
-            48px minmax(0, 1fr);
-
-        align-items: center;
-
-        column-gap: 10px;
-
-        padding: 8px;
-
-        border: 1px solid #e5e7eb;
-        border-radius: 14px;
-
-        background: #ffffff;
-
-        box-shadow:
-            0 4px 12px rgba(15, 23, 42, 0.035);
-    }
-
-    .dashboard-pipeline-stage::after {
+    .stat-card-arrow {
         display: none;
     }
 
-    .dashboard-pipeline-stage-header {
-        min-height: 48px;
-
-        grid-row: 1 / span 3;
-    }
-
-    .dashboard-pipeline-stage-number {
-        width: 42px;
-        height: 42px;
-    }
-
-    .dashboard-pipeline-stage-title {
-        margin: 0;
-
-        min-height: auto;
-
-        justify-content: flex-start;
-
-        text-align: left;
-
-        font-size: 10px;
-    }
-
-    .dashboard-pipeline-stage-count {
-        margin: 4px 0 0;
-
-        text-align: left;
-
-        font-size: 21px;
-    }
-
-    .dashboard-pipeline-stage-description {
-        margin: 3px 0 0;
-
-        text-align: left;
-
-        font-size: 9px;
-    }
-
-    .profile-pipeline {
-        grid-template-columns: 1fr;
-    }
-
-    .dashboard-sales-lead-list-title {
-        font-size: 15px;
-    }
-
-    .dashboard-sales-lead-list-count {
-        align-self: flex-start;
-    }
-
-    .dashboard-sales-lead-page-button {
-        min-width: 28px;
-        height: 28px;
-    }
-
-    .dashboard-activity-item {
+    .dashboard-sales-cards {
+        grid-template-columns: 1fr 1fr;
         gap: 8px;
     }
 
-    .dashboard-activity-icon {
-        width: 32px;
-        height: 32px;
+    .dashboard-sales-card {
+        padding: 12px;
+        border-radius: 12px;
     }
 
-    .dashboard-activity-list::before {
-        left: 16px;
+    .dashboard-sales-card-top {
+        margin-bottom: 13px;
     }
+
+    .dashboard-sales-card-icon {
+        width: 33px;
+        height: 33px;
+    }
+
+    .dashboard-sales-card-count {
+        font-size: 22px;
+    }
+
+    .dashboard-sales-card-meta {
+        font-size: 9px;
+    }
+
+    .dashboard-card-header-actions {
+        gap: 6px;
+    }
+
+    .dashboard-card-header-actions
+    .dashboard-card-header-icon {
+        display: none;
+    }
+
+    .dashboard-view-all {
+        min-height: 32px;
+        padding: 0 9px;
+        font-size: 10px;
+    }
+
+    .pipeline-item {
+        gap: 9px;
+        padding: 10px;
+        border-radius: 10px;
+    }
+
+    .pipeline-stage-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
+    }
+
+    .pipeline-stage-icon svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .pipeline-label {
+        font-size: 11px;
+    }
+
+    .pipeline-description {
+        font-size: 9px;
+    }
+
+    .pipeline-count {
+        font-size: 16px;
+    }
+
+    .pipeline-percentage {
+        font-size: 9px;
+    }
+
+    .pipeline-terminal-indicator {
+        display: none;
+    }
+
+    .activity-item.dashboard-recent-activity-item {
+        grid-template-columns:
+            34px
+            minmax(0, 1fr)
+            auto;
+        gap: 9px;
+        padding: 11px 0;
+    }
+
+    .activity-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
+    }
+
+    .activity-icon svg {
+        width: 15px;
+        height: 15px;
+    }
+
+    .activity-title {
+        font-size: 11px;
+    }
+
+    .activity-meta {
+        font-size: 9px;
+    }
+
+    .activity-relative-time {
+        font-size: 9px;
+    }
+
+    .activity-clock {
+        font-size: 8px;
+    }
+
+    .activity-time {
+        min-width: 45px;
+    }
+
 }
 
 
 /* ============================================================
-   REDUCED MOTION
-============================================================ */
+   38. RESPONSIVE — SMALL MOBILE
+   ============================================================ */
+
+@media (max-width: 420px) {
+
+    .dashboard-stats-grid,
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .dashboard-sales-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-section-header-icon,
+    .dashboard-card-header-icon {
+        display: none;
+    }
+
+    .dashboard-card-header {
+        margin-bottom: 16px;
+    }
+
+    .pipeline-stage-top {
+        gap: 8px;
+    }
+
+    .pipeline-stage-number {
+        gap: 3px;
+    }
+
+    .pipeline-count {
+        font-size: 15px;
+    }
+
+    .pipeline-percentage {
+        min-width: 28px;
+    }
+
+    .activity-item.dashboard-recent-activity-item {
+        grid-template-columns:
+            32px
+            minmax(0, 1fr);
+    }
+
+    .activity-time {
+        grid-column: 2;
+        align-items: flex-start;
+        min-width: 0;
+        margin-top: -3px;
+        text-align: left;
+    }
+
+    .activity-clock {
+        display: inline;
+        margin-left: 5px;
+    }
+
+}
+
+
+/* ============================================================
+   39. REDUCED MOTION
+   ============================================================ */
 
 @media (prefers-reduced-motion: reduce) {
 
-    .dashboard-page,
+    .pipeline-item,
+    .pipeline-bar-fill,
     .dashboard-sales-card,
-    .dashboard-sales-lead-list-section,
-    .dashboard-stat-popup,
-    .dashboard-popup {
+    .stat-card,
+    .dashboard-view-all,
+    .dashboard-sales-card-arrow {
+        transition: none !important;
+    }
+
+    .dashboard-loading-spinner svg {
         animation: none !important;
     }
 
-    .dashboard-stat-card,
-    .stat-card,
-    .dashboard-stat,
-    .dashboard-sales-card,
-    .dashboard-pipeline-stage,
-    .sales-pipeline-stage,
-    .pipeline-stage,
-    .dashboard-activity-item,
-    .dashboard-btn,
-    .dashboard-sales-lead-view,
-    .profile-pipeline-item {
-        transition: none !important;
-    }
 }
-
-
-/* ============================================================
-   END OF DASHBOARD.CSS
-============================================================ */
