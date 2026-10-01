@@ -143,7 +143,6 @@
 
     <!-- =====================================================
          FSI CRM — SPLASH OPENING
-         ADDED ONLY — EXISTING CODE BELOW IS PRESERVED
     ====================================================== -->
 
     <div
@@ -273,8 +272,6 @@
                                 "
                             >
 
-
-                            <!-- SHOW / HIDE PASSWORD -->
 
                             <button
                                 id="toggle-login-password"
@@ -442,7 +439,6 @@
                 </div>
 
 
-
                 <!-- MOBILE MENU -->
 
                 <button
@@ -460,7 +456,6 @@
                     ></i>
 
                 </button>
-
 
 
                 <!-- DESKTOP NAVIGATION -->
@@ -509,8 +504,6 @@
                     </button>
 
 
-                    <!-- MANAGE SALES -->
-
                     <button
                         type="button"
                         id="manage-sales-nav"
@@ -531,7 +524,6 @@
                     </button>
 
                 </nav>
-
 
 
                 <!-- USER AREA -->
@@ -723,47 +715,190 @@
 
 
                 <!-- =================================================
-                     DASHBOARD
+                     DASHBOARD — UPDATED
                 ================================================== -->
 
                 <section
                     id="view-dashboard"
-                    class="crm-page active"
+                    class="crm-page active dashboard-page"
                     data-page-view="dashboard"
                 >
 
+                    <!-- =================================================
+                         DASHBOARD ERROR
+                    ================================================== -->
+
                     <div
                         id="dashboardError"
+                        class="dashboard-error"
                         role="alert"
                     ></div>
 
 
                     <!-- =================================================
-                         DASHBOARD SALES FILTER
+                         GREETING
                     ================================================== -->
 
-                    <div class="dashboard-filter-bar admin-only">
+                    <section class="dashboard-section dashboard-greeting-section">
 
-                        <div class="dashboard-filter-content">
+                        <div class="dashboard-greeting">
 
-                            <div class="dashboard-filter-label">
+                            <div class="dashboard-greeting-content">
+
+                                <div class="dashboard-section-eyebrow">
+
+                                    <span class="dashboard-section-header-icon">
+                                        <i
+                                            data-lucide="sun"
+                                            aria-hidden="true"
+                                        ></i>
+                                    </span>
+
+                                    FSI CONSULTANT
+
+                                </div>
+
+
+                                <h1 id="dashboardGreeting">
+                                    Good Morning, Admin 👋
+                                </h1>
+
+
+                                <p id="dashboardGreetingText">
+                                    Welcome back. Here's what's happening with your sales and customers today.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+
+                    <!-- =================================================
+                         SALES TEAM
+                    ================================================== -->
+
+                    <section
+                        id="dashboardSalesSection"
+                        class="dashboard-section dashboard-sales-section"
+                    >
+
+                        <div class="dashboard-section-header">
+
+                            <div>
+
+                                <div class="dashboard-section-eyebrow">
+                                    SALES TEAM
+                                </div>
+
+                                <h2>
+                                    Sales
+                                </h2>
+
+                                <p>
+                                    Select a Sales to view their customer activity.
+                                </p>
+
+                            </div>
+
+
+                            <div class="dashboard-section-header-icon">
 
                                 <i
                                     data-lucide="users"
                                     aria-hidden="true"
                                 ></i>
 
-                                <span>
-                                    View Dashboard
-                                </span>
-
                             </div>
 
+                        </div>
+
+
+                        <div
+                            id="dashboardSalesCards"
+                            class="dashboard-sales-cards"
+                        >
+
+                            <!-- ALL SALES -->
+
+                            <button
+                                type="button"
+                                id="dashboardSalesAll"
+                                class="dashboard-sales-card dashboard-sales-card-all active"
+                                data-sales-filter="all"
+                            >
+
+                                <div class="dashboard-sales-card-top">
+
+                                    <div class="dashboard-sales-card-icon">
+
+                                        <i
+                                            data-lucide="users"
+                                            aria-hidden="true"
+                                        ></i>
+
+                                    </div>
+
+
+                                    <div class="dashboard-sales-card-arrow">
+
+                                        <i
+                                            data-lucide="arrow-up-right"
+                                            aria-hidden="true"
+                                        ></i>
+
+                                    </div>
+
+                                </div>
+
+
+                                <div class="dashboard-sales-card-body">
+
+                                    <div class="dashboard-sales-card-label">
+                                        ALL SALES
+                                    </div>
+
+
+                                    <div
+                                        id="dashboardSalesAllCount"
+                                        class="dashboard-sales-card-count"
+                                    >
+                                        0
+                                    </div>
+
+
+                                    <div class="dashboard-sales-card-meta">
+                                        Total Leads
+                                    </div>
+
+                                </div>
+
+                            </button>
+
+
+                            <!-- DYNAMIC SALES CARDS -->
+
+                            <div
+                                id="dashboardSalesCardsDynamic"
+                                class="dashboard-sales-cards-dynamic"
+                            ></div>
+
+                        </div>
+
+
+                        <!-- LEGACY SALES FILTER
+                             Kept hidden for old JS compatibility -->
+
+                        <div
+                            id="dashboardLegacySalesFilter"
+                            style="display:none;"
+                        >
 
                             <select
                                 id="salesFilter"
-                                class="dashboard-sales-filter"
-                                aria-label="Filter Dashboard berdasarkan Sales"
+                                aria-label="Dashboard Sales Filter"
                             >
 
                                 <option value="">
@@ -774,323 +909,510 @@
 
                         </div>
 
-                    </div>
+                    </section>
 
 
 
                     <!-- =================================================
-                         DASHBOARD STATS
+                         OVERVIEW
                     ================================================== -->
 
-                    <div class="stats-grid">
+                    <section
+                        id="dashboardOverviewSection"
+                        class="dashboard-section dashboard-overview-section"
+                    >
+
+                        <div class="dashboard-section-header">
+
+                            <div>
+
+                                <div class="dashboard-section-eyebrow">
+                                    OVERVIEW
+                                </div>
+
+                                <h2>
+                                    Sales Overview
+                                </h2>
+
+                                <p>
+                                    Current customer and sales activity.
+                                </p>
+
+                            </div>
 
 
-                        <!-- TOTAL LEADS -->
-
-                        <article class="stat-card">
-
-                            <div class="stat-icon bg-blue">
+                            <div class="dashboard-section-header-icon">
 
                                 <i
-                                    data-lucide="users"
+                                    data-lucide="layout-dashboard"
                                     aria-hidden="true"
                                 ></i>
 
                             </div>
 
+                        </div>
 
-                            <div class="stat-details">
 
-                                <span>
-                                    Total Leads
-                                </span>
+                        <div class="stats-grid dashboard-stats-grid">
 
-                                <strong id="statTotal">
-                                    0
-                                </strong>
 
-                                <small>
-                                    All customers
-                                </small>
+                            <!-- TOTAL LEADS -->
 
-                            </div>
+                            <button
+                                type="button"
+                                id="statCardTotal"
+                                class="stat-card dashboard-stat-card stat-card-total"
+                                data-stat-card="total"
+                            >
 
-                        </article>
+                                <div class="stat-card-icon">
 
+                                    <i
+                                        data-lucide="users"
+                                        aria-hidden="true"
+                                    ></i>
 
+                                </div>
 
-                        <!-- 1. NEW -->
 
-                        <article class="stat-card">
+                                <div class="stat-card-content">
 
-                            <div class="stat-icon bg-cyan">
+                                    <span class="stat-card-label">
+                                        Total Leads
+                                    </span>
 
-                                <i
-                                    data-lucide="sparkles"
-                                    aria-hidden="true"
-                                ></i>
+                                    <strong
+                                        id="statTotal"
+                                        class="stat-card-value"
+                                    >
+                                        0
+                                    </strong>
 
-                            </div>
+                                </div>
 
 
-                            <div class="stat-details">
+                                <div class="stat-card-arrow">
 
-                                <span>
-                                    New
-                                </span>
+                                    <i
+                                        data-lucide="arrow-up-right"
+                                        aria-hidden="true"
+                                    ></i>
 
-                                <strong id="statNew">
-                                    0
-                                </strong>
+                                </div>
 
-                                <small>
-                                    New leads
-                                </small>
+                            </button>
 
-                            </div>
 
-                        </article>
 
+                            <!-- NEW CUSTOMER -->
 
+                            <button
+                                type="button"
+                                id="statCardNew"
+                                class="stat-card dashboard-stat-card stat-card-new"
+                                data-stat-card="newCustomer"
+                            >
 
-                        <!-- 2. FIRST CONTACT -->
+                                <div class="stat-card-icon">
 
-                        <article class="stat-card">
+                                    <i
+                                        data-lucide="user-plus"
+                                        aria-hidden="true"
+                                    ></i>
 
-                            <div class="stat-icon bg-green">
+                                </div>
 
-                                <i
-                                    data-lucide="phone"
-                                    aria-hidden="true"
-                                ></i>
 
-                            </div>
+                                <div class="stat-card-content">
 
+                                    <span class="stat-card-label">
+                                        New Customer
+                                    </span>
 
-                            <div class="stat-details">
+                                    <strong
+                                        id="statNew"
+                                        class="stat-card-value"
+                                    >
+                                        0
+                                    </strong>
 
-                                <span>
-                                    First Contact
-                                </span>
+                                </div>
 
-                                <strong id="statInterested">
-                                    0
-                                </strong>
 
-                                <small>
-                                    First contact stage
-                                </small>
+                                <div class="stat-card-arrow">
 
-                            </div>
+                                    <i
+                                        data-lucide="arrow-up-right"
+                                        aria-hidden="true"
+                                    ></i>
 
-                        </article>
+                                </div>
 
+                            </button>
 
 
-                        <!-- 3. FIRST MEETING / APPOINTMENT / SITE SURVEY -->
 
-                        <article class="stat-card">
+                            <!-- FIRST CONTACT -->
 
-                            <div class="stat-icon bg-orange">
+                            <button
+                                type="button"
+                                id="statCardFirstContact"
+                                class="stat-card dashboard-stat-card stat-card-contact"
+                                data-stat-card="firstContact"
+                            >
 
-                                <i
-                                    data-lucide="calendar-check"
-                                    aria-hidden="true"
-                                ></i>
+                                <div class="stat-card-icon">
 
-                            </div>
+                                    <i
+                                        data-lucide="phone"
+                                        aria-hidden="true"
+                                    ></i>
 
+                                </div>
 
-                            <div class="stat-details">
 
-                                <span>
-                                    First Meeting / Appointment / Site Survey
-                                </span>
+                                <div class="stat-card-content">
 
-                                <strong id="statFollowUp">
-                                    0
-                                </strong>
+                                    <span class="stat-card-label">
+                                        First Contact
+                                    </span>
 
-                                <small>
-                                    Meeting or survey stage
-                                </small>
+                                    <strong
+                                        id="statInterested"
+                                        class="stat-card-value"
+                                    >
+                                        0
+                                    </strong>
 
-                            </div>
+                                </div>
 
-                        </article>
 
+                                <div class="stat-card-arrow">
 
+                                    <i
+                                        data-lucide="arrow-up-right"
+                                        aria-hidden="true"
+                                    ></i>
 
-                        <!-- 4. QUOTATION -->
+                                </div>
 
-                        <article class="stat-card">
+                            </button>
 
-                            <div class="stat-icon bg-yellow">
 
-                                <i
-                                    data-lucide="file-text"
-                                    aria-hidden="true"
-                                ></i>
 
-                            </div>
+                            <!-- APPOINTMENT -->
 
+                            <button
+                                type="button"
+                                id="statCardAppointment"
+                                class="stat-card dashboard-stat-card stat-card-appointment"
+                                data-stat-card="appointment"
+                            >
 
-                            <div class="stat-details">
+                                <div class="stat-card-icon">
 
-                                <span>
-                                    Quotation
-                                </span>
+                                    <i
+                                        data-lucide="calendar-check"
+                                        aria-hidden="true"
+                                    ></i>
 
-                                <strong id="statQuotation">
-                                    0
-                                </strong>
+                                </div>
 
-                                <small>
-                                    Quotation stage
-                                </small>
 
-                            </div>
+                                <div class="stat-card-content">
 
-                        </article>
+                                    <span class="stat-card-label">
+                                        Appointment
+                                    </span>
 
+                                    <strong
+                                        id="statAppointment"
+                                        class="stat-card-value"
+                                    >
+                                        0
+                                    </strong>
 
+                                </div>
 
-                        <!-- 5. SECOND APPOINTMENT -->
 
-                        <article class="stat-card">
+                                <div class="stat-card-arrow">
 
-                            <div class="stat-icon bg-purple">
+                                    <i
+                                        data-lucide="arrow-up-right"
+                                        aria-hidden="true"
+                                    ></i>
 
-                                <i
-                                    data-lucide="calendar-clock"
-                                    aria-hidden="true"
-                                ></i>
+                                </div>
 
-                            </div>
+                            </button>
 
 
-                            <div class="stat-details">
 
-                                <span>
-                                    Second Appointment
-                                </span>
+                            <!-- SITE SURVEY -->
 
-                                <strong id="statAppointment">
-                                    0
-                                </strong>
+                            <button
+                                type="button"
+                                id="statCardSiteSurvey"
+                                class="stat-card dashboard-stat-card stat-card-survey"
+                                data-stat-card="siteSurvey"
+                            >
 
-                                <small>
-                                    Second meeting stage
-                                </small>
+                                <div class="stat-card-icon">
 
-                            </div>
+                                    <i
+                                        data-lucide="map-pin"
+                                        aria-hidden="true"
+                                    ></i>
 
-                        </article>
+                                </div>
 
 
+                                <div class="stat-card-content">
 
-                        <!-- 6. DEAL -->
+                                    <span class="stat-card-label">
+                                        Site Survey
+                                    </span>
 
-                        <article class="stat-card">
+                                    <strong
+                                        id="statSiteSurvey"
+                                        class="stat-card-value"
+                                    >
+                                        0
+                                    </strong>
 
-                            <div class="stat-icon bg-indigo">
+                                </div>
 
-                                <i
-                                    data-lucide="handshake"
-                                    aria-hidden="true"
-                                ></i>
 
-                            </div>
+                                <div class="stat-card-arrow">
 
+                                    <i
+                                        data-lucide="arrow-up-right"
+                                        aria-hidden="true"
+                                    ></i>
 
-                            <div class="stat-details">
+                                </div>
 
-                                <span>
-                                    Deal
-                                </span>
+                            </button>
 
-                                <strong id="statSPK">
-                                    0
-                                </strong>
 
-                                <small>
-                                    Successful deals
-                                </small>
 
-                            </div>
+                            <!-- QUOTATION -->
 
-                        </article>
+                            <button
+                                type="button"
+                                id="statCardQuotation"
+                                class="stat-card dashboard-stat-card stat-card-quotation"
+                                data-stat-card="quotation"
+                            >
 
+                                <div class="stat-card-icon">
 
+                                    <i
+                                        data-lucide="file-text"
+                                        aria-hidden="true"
+                                    ></i>
 
-                        <!-- 7. NO DEAL -->
+                                </div>
 
-                        <article class="stat-card">
 
-                            <div class="stat-icon bg-red">
+                                <div class="stat-card-content">
 
-                                <i
-                                    data-lucide="user-round-x"
-                                    aria-hidden="true"
-                                ></i>
+                                    <span class="stat-card-label">
+                                        Quotation
+                                    </span>
 
-                            </div>
+                                    <strong
+                                        id="statQuotation"
+                                        class="stat-card-value"
+                                    >
+                                        0
+                                    </strong>
 
+                                </div>
 
-                            <div class="stat-details">
 
-                                <span>
-                                    No Deal
-                                </span>
+                                <div class="stat-card-arrow">
 
-                                <strong id="statNotInterested">
-                                    0
-                                </strong>
+                                    <i
+                                        data-lucide="arrow-up-right"
+                                        aria-hidden="true"
+                                    ></i>
 
-                                <small>
-                                    Customers not continuing
-                                </small>
+                                </div>
 
-                            </div>
+                            </button>
 
-                        </article>
 
 
+                            <!-- DEAL / CLOSING -->
 
-                        <!-- =================================================
-                             LEGACY ID KEPT FOR JAVASCRIPT COMPATIBILITY
-                        ================================================== -->
+                            <button
+                                type="button"
+                                id="statCardDeal"
+                                class="stat-card dashboard-stat-card stat-card-deal"
+                                data-stat-card="closing"
+                            >
 
-                        <strong
-                            id="statClosing"
-                            style="display:none;"
+                                <div class="stat-card-icon">
+
+                                    <i
+                                        data-lucide="handshake"
+                                        aria-hidden="true"
+                                    ></i>
+
+                                </div>
+
+
+                                <div class="stat-card-content">
+
+                                    <span class="stat-card-label">
+                                        Deal / Closing
+                                    </span>
+
+                                    <strong
+                                        id="statSPK"
+                                        class="stat-card-value"
+                                    >
+                                        0
+                                    </strong>
+
+                                </div>
+
+
+                                <div class="stat-card-arrow">
+
+                                    <i
+                                        data-lucide="arrow-up-right"
+                                        aria-hidden="true"
+                                    ></i>
+
+                                </div>
+
+                            </button>
+
+
+
+                            <!-- NO DEAL -->
+
+                            <button
+                                type="button"
+                                id="statCardNoDeal"
+                                class="stat-card dashboard-stat-card stat-card-no-deal"
+                                data-stat-card="noDeal"
+                            >
+
+                                <div class="stat-card-icon">
+
+                                    <i
+                                        data-lucide="x-circle"
+                                        aria-hidden="true"
+                                    ></i>
+
+                                </div>
+
+
+                                <div class="stat-card-content">
+
+                                    <span class="stat-card-label">
+                                        No Deal
+                                    </span>
+
+                                    <strong
+                                        id="statNotInterested"
+                                        class="stat-card-value"
+                                    >
+                                        0
+                                    </strong>
+
+                                </div>
+
+
+                                <div class="stat-card-arrow">
+
+                                    <i
+                                        data-lucide="arrow-up-right"
+                                        aria-hidden="true"
+                                    ></i>
+
+                                </div>
+
+                            </button>
+
+
+
+                            <!-- =================================================
+                                 LEGACY IDS
+                                 Hidden to preserve old JS compatibility.
+                            ================================================== -->
+
+                            <span
+                                id="statFollowUp"
+                                style="display:none;"
+                            >
+                                0
+                            </span>
+
+
+                            <span
+                                id="statClosing"
+                                style="display:none;"
+                            >
+                                0
+                            </span>
+
+
+                            <span
+                                id="statFlyerSent"
+                                style="display:none;"
+                            >
+                                0
+                            </span>
+
+                        </div>
+
+                    </section>
+
+
+
+                    <!-- =================================================
+                         PIPELINE + RECENT ACTIVITY
+                    ================================================== -->
+
+                    <div class="dashboard-main-grid">
+
+
+                        <!-- SALES PIPELINE -->
+
+                        <section
+                            id="dashboardPipelineSection"
+                            class="dashboard-section dashboard-card dashboard-pipeline-card"
                         >
-                            0
-                        </strong>
 
-                    </div>
-
-
-
-                    <!-- =================================================
-                         DASHBOARD CONTENT
-                    ================================================== -->
-
-                    <div class="dashboard-grid">
-
-                        <section class="dashboard-card">
-
-                            <div class="card-header">
+                            <div class="dashboard-card-header">
 
                                 <div>
 
+                                    <div class="dashboard-card-eyebrow">
+                                        SALES PIPELINE
+                                    </div>
+
                                     <h2>
-                                        Sales Pipeline
+                                        Customer Journey
                                     </h2>
 
                                     <p>
-                                        Customer progress by stage
+                                        Customer distribution across the sales process.
                                     </p>
+
+                                </div>
+
+
+                                <div class="dashboard-card-header-icon">
+
+                                    <i
+                                        data-lucide="git-branch"
+                                        aria-hidden="true"
+                                    ></i>
 
                                 </div>
 
@@ -1099,11 +1421,24 @@
 
                             <div
                                 id="pipeline-summary"
-                                class="pipeline-summary"
+                                class="dashboard-pipeline"
                             >
 
-                                <div class="pipeline-loading">
-                                    Loading pipeline...
+                                <div class="dashboard-loading-placeholder">
+
+                                    <div class="dashboard-loading-spinner">
+
+                                        <i
+                                            data-lucide="loader-2"
+                                            aria-hidden="true"
+                                        ></i>
+
+                                    </div>
+
+                                    <span>
+                                        Loading pipeline...
+                                    </span>
+
                                 </div>
 
                             </div>
@@ -1111,66 +1446,137 @@
                         </section>
 
 
-                        <section class="dashboard-card">
 
-                            <div class="card-header">
+                        <!-- RECENT ACTIVITY -->
+
+                        <section
+                            id="dashboardRecentSection"
+                            class="dashboard-section dashboard-card dashboard-recent-card"
+                        >
+
+                            <div class="dashboard-card-header">
 
                                 <div>
 
+                                    <div class="dashboard-card-eyebrow">
+                                        RECENT ACTIVITY
+                                    </div>
+
                                     <h2>
-                                        Recent Leads
+                                        Latest Customer Activity
                                     </h2>
 
                                     <p>
-                                        Latest customer activity
+                                        Recent updates from your sales team.
                                     </p>
 
                                 </div>
 
 
-                                <button
-                                    type="button"
-                                    class="btn-outline"
-                                    data-page="leads"
-                                >
+                                <div class="dashboard-card-header-actions">
 
-                                    <span>
-                                        View All
-                                    </span>
+                                    <div class="dashboard-card-header-icon">
 
-                                    <i
-                                        data-lucide="arrow-right"
-                                        aria-hidden="true"
-                                    ></i>
+                                        <i
+                                            data-lucide="activity"
+                                            aria-hidden="true"
+                                        ></i>
 
-                                </button>
+                                    </div>
+
+
+                                    <button
+                                        type="button"
+                                        id="dashboardViewAllRecent"
+                                        class="dashboard-view-all"
+                                        data-page="leads"
+                                    >
+
+                                        <span>
+                                            View All
+                                        </span>
+
+                                        <i
+                                            data-lucide="arrow-right"
+                                            aria-hidden="true"
+                                        ></i>
+
+                                    </button>
+
+                                </div>
 
                             </div>
 
 
                             <div
                                 id="recent-leads"
-                                class="recent-leads"
+                                class="dashboard-activity-list"
                             >
 
-                                <div class="empty-state">
+                                <div class="dashboard-loading-placeholder">
 
-                                    <i
-                                        data-lucide="users"
-                                        aria-hidden="true"
-                                    ></i>
+                                    <div class="dashboard-loading-spinner">
+
+                                        <i
+                                            data-lucide="loader-2"
+                                            aria-hidden="true"
+                                        ></i>
+
+                                    </div>
 
                                     <span>
-                                        Loading recent leads...
+                                        Loading recent activity...
                                     </span>
 
                                 </div>
 
                             </div>
 
+
+                            <div
+                                id="dashboardEmptyState"
+                                class="dashboard-empty-state"
+                                style="display:none;"
+                            >
+
+                                <div class="dashboard-empty-state-icon">
+
+                                    <i
+                                        data-lucide="inbox"
+                                        aria-hidden="true"
+                                    ></i>
+
+                                </div>
+
+
+                                <h3>
+                                    No Recent Activity
+                                </h3>
+
+
+                                <p>
+                                    Customer activity will appear here once your sales team starts working with leads.
+                                </p>
+
+                            </div>
+
                         </section>
 
                     </div>
+
+
+                    <!-- LEGACY CONTAINERS -->
+
+                    <div
+                        id="recent-leads-container"
+                        style="display:none;"
+                    ></div>
+
+
+                    <div
+                        id="dashboard-activities"
+                        style="display:none;"
+                    ></div>
 
                 </section>
 
@@ -1243,8 +1649,6 @@
 
                         </div>
 
-
-                        <!-- STATUS FILTER — 7 STATUSES -->
 
                         <select
                             id="filter-status"
@@ -1330,10 +1734,6 @@
                                 <tr>
 
                                     <th>Customer</th>
-
-                                    <!-- =================================================
-                                         NEW: LEAD TYPE
-                                    ================================================== -->
 
                                     <th>Lead Type</th>
 
@@ -1771,10 +2171,6 @@
                                 Commercial
                             </option>
 
-                            <!-- =================================================
-                                 NEW BUSINESS TYPE
-                            ================================================== -->
-
                             <option value="EPC">
                                 EPC
                             </option>
@@ -1788,10 +2184,7 @@
                     </div>
 
 
-                    <!-- =================================================
-                         LEAD TYPE
-                         CUSTOMER / PARTNER
-                    ================================================== -->
+                    <!-- LEAD TYPE -->
 
                     <div class="form-group">
 
@@ -1833,9 +2226,7 @@
                     </div>
 
 
-                    <!-- =================================================
-                         STATUS — 7 STAGES
-                    ================================================== -->
+                    <!-- STATUS -->
 
                     <div class="form-group">
 
@@ -1880,10 +2271,6 @@
 
                     </div>
 
-
-                    <!-- =================================================
-                         STATUS INPUT DATE
-                    ================================================== -->
 
                     <div class="form-group">
 
@@ -2026,12 +2413,6 @@
 
     <!-- =====================================================
          SALES MODAL
-
-         FIXED:
-         1. Added Password field.
-         2. Added salesFormMessage.
-         3. Cancel ID compatible with sales.js.
-         4. Existing X button preserved.
     ====================================================== -->
 
     <div
@@ -2095,9 +2476,6 @@
 
                 <div class="form-grid">
 
-
-                    <!-- FULL NAME -->
-
                     <div class="form-group full-width">
 
                         <label for="salesName">
@@ -2116,8 +2494,6 @@
                     </div>
 
 
-                    <!-- USERNAME -->
-
                     <div class="form-group">
 
                         <label for="salesUsername">
@@ -2135,8 +2511,6 @@
 
                     </div>
 
-
-                    <!-- PASSWORD -->
 
                     <div class="form-group">
 
@@ -2157,8 +2531,6 @@
                     </div>
 
 
-                    <!-- EMAIL -->
-
                     <div class="form-group">
 
                         <label for="salesEmail">
@@ -2176,8 +2548,6 @@
                     </div>
 
 
-                    <!-- PHONE -->
-
                     <div class="form-group">
 
                         <label for="salesPhone">
@@ -2194,8 +2564,6 @@
 
                     </div>
 
-
-                    <!-- ROLE -->
 
                     <div class="form-group">
 
@@ -2229,8 +2597,6 @@
                     </div>
 
 
-                    <!-- STATUS -->
-
                     <div class="form-group">
 
                         <label for="salesStatus">
@@ -2258,8 +2624,6 @@
 
 
 
-                <!-- FORM MESSAGE -->
-
                 <div
                     id="salesFormMessage"
                     class="form-message"
@@ -2268,8 +2632,6 @@
                 ></div>
 
 
-
-                <!-- MODAL FOOTER -->
 
                 <div class="modal-footer">
 
@@ -2318,7 +2680,6 @@
     ></script>
 
 
-
     <!-- =====================================================
          LUCIDE
     ====================================================== -->
@@ -2328,14 +2689,8 @@
     ></script>
 
 
-
     <!-- =====================================================
          CRM JAVASCRIPT
-
-         EXISTING ORDER PRESERVED.
-
-         DASHBOARD IS NOW MODULAR.
-         LEADS IS NOW MODULAR.
     ====================================================== -->
 
     <script src="js/config.js"></script>
@@ -2443,12 +2798,6 @@
                         document.querySelectorAll(".crm-page");
 
 
-                    /*
-                     * Initial state:
-                     * Login visible.
-                     * CRM hidden.
-                     */
-
                     if (loginPage) {
 
                         loginPage.classList.remove("hidden");
@@ -2467,10 +2816,6 @@
                     }
 
 
-                    /*
-                     * Prepare CRM pages.
-                     */
-
                     pages.forEach(function (page) {
 
                         page.classList.remove("active");
@@ -2479,10 +2824,6 @@
 
                     });
 
-
-                    /*
-                     * Dashboard is default page.
-                     */
 
                     const dashboard =
                         document.getElementById(
@@ -2497,10 +2838,6 @@
 
                     }
 
-
-                    /*
-                     * Render Lucide icons.
-                     */
 
                     if (
                         window.lucide &&
