@@ -20,101 +20,139 @@
 // - Dashboard mengirim filter melalui sessionStorage.
 // - Loading Leads dikontrol oleh file ini.
 // - Dashboard navigation hanya membuka halaman Leads.
+// - State menggunakan window.FSILeadsState agar aman
+//   terhadap duplicate script loading.
+// ============================================================
+
+
+// ============================================================
+// GLOBAL STATE
+// ============================================================
+//
+// JANGAN menggunakan:
+//
+// let leadsInitialized
+//
+// Karena jika file dimuat dua kali akan muncul:
+//
+// Identifier 'leadsInitialized' has already been declared
 //
 // ============================================================
 
+window.FSILeadsState =
+    window.FSILeadsState ||
+    {
+        initialized: false,
+
+        loadingPromise: null,
+
+        filterOptionsLoadingPromise: null,
+
+        lastLoadedKey: "",
+
+        dashboardFilterApplied: false,
+
+        pageOpenedListenerBound: false,
+
+        domReadyBound: false,
+
+        profileReadyBound: false,
+
+        appReadyBound: false,
+
+        salesSelectedBound: false,
+
+        leadChangedBound: false
+    };
+
 
 // ============================================================
-// STATE
+// STATE SHORTCUT
 // ============================================================
 
-let leadsInitialized = false;
-
-let leadsLoadingPromise = null;
-
-let leadsFilterOptionsLoadingPromise = null;
-
-let leadsLastLoadedKey = "";
-
-let leadsDashboardFilterApplied = false;
-
-let leadsPageOpenedListenerBound = false;
+var leadsState =
+    window.FSILeadsState;
 
 
 // ============================================================
 // CREATE LEADS LOAD KEY
 // ============================================================
-//
-// Digunakan untuk mengetahui apakah request yang sama
-// sedang diminta berulang kali.
-//
-// Contoh:
-//
-// page 1
-// search ""
-// status ""
-// business ""
-// sales ""
-//
-// akan memiliki key yang sama.
-//
 
-function leadsCreateLoadKey(page = 1) {
+function leadsCreateLoadKey(
+    page
+) {
 
-    let search = "";
-    let status = "";
-    let business = "";
-    let sales = "";
+    page =
+        Number(page) > 0
+            ? Number(page)
+            : 1;
+
+    var search = "";
+    var status = "";
+    var business = "";
+    var sales = "";
 
     try {
 
-        const searchElement =
+        var searchElement =
             leadElement(
                 "lead-search",
                 "leadSearch",
                 "leadsSearch"
             );
 
-        const statusElement =
+        var statusElement =
             leadElement(
                 "filter-status",
                 "statusFilter",
                 "leadStatusFilter"
             );
 
-        const businessElement =
+        var businessElement =
             leadElement(
                 "filter-business",
                 "businessFilter"
             );
 
-        const salesElement =
+        var salesElement =
             leadElement(
                 "salesFilter"
             );
 
+
         search =
             String(
-                searchElement?.value ||
-                ""
+                searchElement &&
+                searchElement.value
+                    ? searchElement.value
+                    : ""
             ).trim();
+
 
         status =
             String(
-                statusElement?.value ||
-                ""
+                statusElement &&
+                statusElement.value
+                    ? statusElement.value
+                    : ""
             ).trim();
+
 
         business =
             String(
-                businessElement?.value ||
-                ""
+                businessElement &&
+                businessElement.value
+                    ? businessElement.value
+                    : ""
             ).trim();
+
 
         sales =
             String(
-                salesElement?.value ||
-                ""
+                salesElement &&
+                salesElement.value
+                    ? salesElement.value
+                    : ""
             ).trim();
 
     } catch (error) {
@@ -123,11 +161,11 @@ function leadsCreateLoadKey(page = 1) {
             "FSI CRM: gagal membuat Leads load key:",
             error
         );
-
     }
 
+
     return [
-        String(page || 1),
+        String(page),
         search,
         status,
         business,
@@ -139,47 +177,44 @@ function leadsCreateLoadKey(page = 1) {
 // ============================================================
 // SAFE LOAD LEADS
 // ============================================================
-//
-// Semua loading Leads dari event/navigation diarahkan ke
-// fungsi ini.
-//
-// Tujuan utama:
-// - mencegah double request
-// - mencegah request bertumpuk
-// - tetap mengizinkan filter/page baru
-//
-// ============================================================
 
 async function leadsSafeLoad(
-    page = 1,
-    options = {}
+    page,
+    options
 ) {
 
-    const force =
-        options &&
-        options.force === true;
-
-    const reason =
-        options?.reason ||
-        "unknown";
-
-    const normalizedPage =
+    page =
         Number(page) > 0
             ? Number(page)
             : 1;
 
-    const loadKey =
+    options =
+        options ||
+        {};
+
+
+    var force =
+        options.force === true;
+
+
+    var reason =
+        options.reason ||
+        "unknown";
+
+
+    var loadKey =
         leadsCreateLoadKey(
-            normalizedPage
+            page
         );
+
 
     console.log(
         "FSI CRM: Leads load request:",
         {
-            page: normalizedPage,
+            page: page,
             key: loadKey,
-            reason,
-            force
+            reason: reason,
+            force: force
         }
     );
 
@@ -188,13 +223,15 @@ async function leadsSafeLoad(
     // REQUEST SEDANG BERJALAN
     // ========================================================
 
-    if (leadsLoadingPromise) {
+    if (
+        leadsState.loadingPromise
+    ) {
 
         console.log(
             "FSI CRM: Leads load masih berjalan. Request tambahan ditahan."
         );
 
-        return leadsLoadingPromise;
+        return leadsState.loadingPromise;
     }
 
 
@@ -204,7 +241,8 @@ async function leadsSafeLoad(
 
     if (
         !force &&
-        leadsLastLoadedKey === loadKey
+        leadsState.lastLoadedKey ===
+        loadKey
     ) {
 
         console.log(
@@ -216,7 +254,7 @@ async function leadsSafeLoad(
 
 
     // ========================================================
-    // LOAD
+    // CHECK LOAD FUNCTION
     // ========================================================
 
     if (
@@ -232,19 +270,25 @@ async function leadsSafeLoad(
     }
 
 
-    leadsLoadingPromise =
+    // ========================================================
+    // LOAD
+    // ========================================================
+
+    leadsState.loadingPromise =
         (async function () {
 
             try {
 
                 await window.loadLeads(
-                    normalizedPage
+                    page
                 );
 
-                leadsLastLoadedKey =
+
+                leadsState.lastLoadedKey =
                     leadsCreateLoadKey(
-                        normalizedPage
+                        page
                     );
+
 
                 return true;
 
@@ -259,14 +303,14 @@ async function leadsSafeLoad(
 
             } finally {
 
-                leadsLoadingPromise =
+                leadsState.loadingPromise =
                     null;
             }
 
         })();
 
 
-    return leadsLoadingPromise;
+    return leadsState.loadingPromise;
 }
 
 
@@ -276,12 +320,108 @@ async function leadsSafeLoad(
 
 function resetLeadsLoadCache() {
 
-    leadsLastLoadedKey =
+    leadsState.lastLoadedKey =
         "";
+
 
     console.log(
         "FSI CRM: Leads load cache reset."
     );
+}
+
+
+// ============================================================
+// LOAD FILTER OPTIONS ONCE
+// ============================================================
+
+function loadFilterOptionsOnce(
+    options
+) {
+
+    options =
+        options ||
+        {};
+
+
+    var reason =
+        options.reason ||
+        "unknown";
+
+
+    // ========================================================
+    // REQUEST SEDANG BERJALAN
+    // ========================================================
+
+    if (
+        leadsState.filterOptionsLoadingPromise
+    ) {
+
+        console.log(
+            "FSI CRM: filter options masih loading. Reuse request."
+        );
+
+        return leadsState.filterOptionsLoadingPromise;
+    }
+
+
+    // ========================================================
+    // FUNCTION BELUM TERSEDIA
+    // ========================================================
+
+    if (
+        typeof window.loadFilterOptions !==
+        "function"
+    ) {
+
+        console.warn(
+            "FSI CRM: window.loadFilterOptions belum tersedia."
+        );
+
+        return Promise.resolve(
+            false
+        );
+    }
+
+
+    // ========================================================
+    // LOAD
+    // ========================================================
+
+    leadsState.filterOptionsLoadingPromise =
+        (async function () {
+
+            try {
+
+                console.log(
+                    "FSI CRM: loading filter options:",
+                    reason
+                );
+
+
+                await window.loadFilterOptions();
+
+
+                return true;
+
+            } catch (error) {
+
+                console.warn(
+                    "FSI CRM: filter options load failed:",
+                    error
+                );
+
+                return false;
+
+            } finally {
+
+                leadsState.filterOptionsLoadingPromise =
+                    null;
+            }
+
+        })();
+
+
+    return leadsState.filterOptionsLoadingPromise;
 }
 
 
@@ -295,7 +435,9 @@ function initializeLeads() {
     // ALREADY INITIALIZED
     // ========================================================
 
-    if (leadsInitialized) {
+    if (
+        leadsState.initialized
+    ) {
 
         console.log(
             "FSI CRM: Leads already initialized."
@@ -309,7 +451,7 @@ function initializeLeads() {
     // MARK INITIALIZED
     // ========================================================
 
-    leadsInitialized =
+    leadsState.initialized =
         true;
 
 
@@ -317,14 +459,20 @@ function initializeLeads() {
     // ADD CUSTOMER
     // ========================================================
 
-    bindAddCustomerButtons();
+    if (
+        typeof bindAddCustomerButtons ===
+        "function"
+    ) {
+
+        bindAddCustomerButtons();
+    }
 
 
     // ========================================================
     // SEARCH
     // ========================================================
 
-    const searchInput =
+    var searchInput =
         leadElement(
             "lead-search",
             "leadSearch",
@@ -362,16 +510,15 @@ function initializeLeads() {
         ]
 
     ].forEach(
-        ids => {
+        function (ids) {
 
-            const element =
+            var element =
                 leadElement(
                     ...ids
                 );
 
 
             if (!element) {
-
                 return;
             }
 
@@ -380,9 +527,9 @@ function initializeLeads() {
                 "change",
                 function () {
 
-                    // ============================================
+                    // ========================================
                     // SALES FILTER
-                    // ============================================
+                    // ========================================
 
                     if (
                         element.id ===
@@ -394,17 +541,50 @@ function initializeLeads() {
                             "";
 
 
-                        const selected =
-                            leadGetSalesData()
-                                .find(
-                                    sales =>
-                                        String(
+                        var salesData = [];
+
+
+                        if (
+                            typeof leadGetSalesData ===
+                            "function"
+                        ) {
+
+                            try {
+
+                                salesData =
+                                    leadGetSalesData() ||
+                                    [];
+
+                            } catch (error) {
+
+                                console.warn(
+                                    "FSI CRM: gagal membaca Sales data:",
+                                    error
+                                );
+                            }
+                        }
+
+
+                        var selected =
+                            Array.isArray(
+                                salesData
+                            )
+                                ? salesData.find(
+                                    function (sales) {
+
+                                        return String(
+                                            sales &&
                                             sales.id
+                                                ? sales.id
+                                                : ""
                                         ) ===
                                         String(
-                                            element.value
-                                        )
-                                );
+                                            element.value ||
+                                            ""
+                                        );
+                                    }
+                                )
+                                : null;
 
 
                         window.crmSelectedSalesName =
@@ -419,27 +599,39 @@ function initializeLeads() {
                     }
 
 
-                    // ============================================
+                    // ========================================
                     // FILTER BERUBAH
-                    // ============================================
+                    // ========================================
 
                     resetLeadsLoadCache();
 
 
-                    // ============================================
+                    // ========================================
                     // RESET PAGE
-                    // ============================================
+                    // ========================================
 
-                    leadSetCurrentPage(
-                        1
-                    );
+                    if (
+                        typeof leadSetCurrentPage ===
+                        "function"
+                    ) {
+
+                        leadSetCurrentPage(
+                            1
+                        );
+                    }
 
 
-                    // ============================================
+                    // ========================================
                     // APPLY FILTER
-                    // ============================================
+                    // ========================================
 
-                    filterLeads();
+                    if (
+                        typeof filterLeads ===
+                        "function"
+                    ) {
+
+                        filterLeads();
+                    }
 
                 }
             );
@@ -451,7 +643,7 @@ function initializeLeads() {
     // PREVIOUS PAGE
     // ========================================================
 
-    const prevBtn =
+    var prevBtn =
         leadElement(
             "btn-prev-page",
             "prevBtn"
@@ -466,9 +658,16 @@ function initializeLeads() {
 
                 resetLeadsLoadCache();
 
-                changePage(
-                    -1
-                );
+
+                if (
+                    typeof changePage ===
+                    "function"
+                ) {
+
+                    changePage(
+                        -1
+                    );
+                }
 
             }
         );
@@ -479,7 +678,7 @@ function initializeLeads() {
     // NEXT PAGE
     // ========================================================
 
-    const nextBtn =
+    var nextBtn =
         leadElement(
             "btn-next-page",
             "nextBtn"
@@ -494,9 +693,16 @@ function initializeLeads() {
 
                 resetLeadsLoadCache();
 
-                changePage(
-                    1
-                );
+
+                if (
+                    typeof changePage ===
+                    "function"
+                ) {
+
+                    changePage(
+                        1
+                    );
+                }
 
             }
         );
@@ -507,7 +713,7 @@ function initializeLeads() {
     // CLEAR FILTER
     // ========================================================
 
-    const clearFilterBtn =
+    var clearFilterBtn =
         leadElement(
             "btn-clear-filters",
             "clearLeadFilters"
@@ -522,7 +728,14 @@ function initializeLeads() {
 
                 resetLeadsLoadCache();
 
-                clearLeadFilters();
+
+                if (
+                    typeof clearLeadFilters ===
+                    "function"
+                ) {
+
+                    clearLeadFilters();
+                }
 
             }
         );
@@ -533,7 +746,13 @@ function initializeLeads() {
     // TABLE ACTIONS
     // ========================================================
 
-    setupTableActions();
+    if (
+        typeof setupTableActions ===
+        "function"
+    ) {
+
+        setupTableActions();
+    }
 
 
     // ========================================================
@@ -548,12 +767,11 @@ function initializeLeads() {
                 event.key !==
                 "Escape"
             ) {
-
                 return;
             }
 
 
-            const modal =
+            var modal =
                 leadElement(
                     "leadModal"
                 );
@@ -574,10 +792,12 @@ function initializeLeads() {
 
                     window.FSICustomerForm.closeCustomerForm();
 
-                } else {
+                } else if (
+                    typeof closeLeadModal ===
+                    "function"
+                ) {
 
                     closeLeadModal();
-
                 }
             }
         }
@@ -588,7 +808,7 @@ function initializeLeads() {
     // MODAL BACKDROP
     // ========================================================
 
-    const modal =
+    var modal =
         leadElement(
             "leadModal"
         );
@@ -601,24 +821,29 @@ function initializeLeads() {
             function (event) {
 
                 if (
-                    event.target ===
+                    event.target !==
                     modal
                 ) {
-
-                    if (
-                        window.FSICustomerForm &&
-                        typeof window.FSICustomerForm.closeCustomerForm ===
-                        "function"
-                    ) {
-
-                        window.FSICustomerForm.closeCustomerForm();
-
-                    } else {
-
-                        closeLeadModal();
-
-                    }
+                    return;
                 }
+
+
+                if (
+                    window.FSICustomerForm &&
+                    typeof window.FSICustomerForm.closeCustomerForm ===
+                    "function"
+                ) {
+
+                    window.FSICustomerForm.closeCustomerForm();
+
+                } else if (
+                    typeof closeLeadModal ===
+                    "function"
+                ) {
+
+                    closeLeadModal();
+                }
+
             }
         );
     }
@@ -628,14 +853,26 @@ function initializeLeads() {
     // SALES ACCESS
     // ========================================================
 
-    setupSalesAssignmentAccess();
+    if (
+        typeof setupSalesAssignmentAccess ===
+        "function"
+    ) {
+
+        setupSalesAssignmentAccess();
+    }
 
 
-    refreshAddCustomerVisibility();
+    if (
+        typeof refreshAddCustomerVisibility ===
+        "function"
+    ) {
+
+        refreshAddCustomerVisibility();
+    }
 
 
     // ========================================================
-    // BIND DASHBOARD -> LEADS EVENT
+    // DASHBOARD -> LEADS
     // ========================================================
 
     bindDashboardLeadsNavigation();
@@ -657,117 +894,19 @@ function initializeLeads() {
 
 
 // ============================================================
-// LOAD FILTER OPTIONS ONCE
-// ============================================================
-//
-// Sama seperti Leads loading, filter options juga tidak boleh
-// dipanggil bersamaan berkali-kali.
-//
-
-function loadFilterOptionsOnce(
-    options = {}
-) {
-
-    const reason =
-        options?.reason ||
-        "unknown";
-
-
-    // ========================================================
-    // REQUEST SEDANG BERJALAN
-    // ========================================================
-
-    if (
-        leadsFilterOptionsLoadingPromise
-    ) {
-
-        console.log(
-            "FSI CRM: filter options masih loading. Reuse request."
-        );
-
-        return leadsFilterOptionsLoadingPromise;
-    }
-
-
-    if (
-        typeof window.loadFilterOptions !==
-        "function"
-    ) {
-
-        console.warn(
-            "FSI CRM: window.loadFilterOptions belum tersedia."
-        );
-
-        return Promise.resolve(
-            false
-        );
-    }
-
-
-    leadsFilterOptionsLoadingPromise =
-        (async function () {
-
-            try {
-
-                console.log(
-                    "FSI CRM: loading filter options:",
-                    reason
-                );
-
-                await window.loadFilterOptions();
-
-                return true;
-
-            } catch (error) {
-
-                console.warn(
-                    "FSI CRM: filter options load failed:",
-                    error
-                );
-
-                return false;
-
-            } finally {
-
-                leadsFilterOptionsLoadingPromise =
-                    null;
-            }
-
-        })();
-
-
-    return leadsFilterOptionsLoadingPromise;
-}
-
-
-// ============================================================
 // APPLY DASHBOARD -> LEADS FILTER
 // ============================================================
-//
-// Dashboard menyimpan:
-//
-// {
-//     salesId: "...",
-//     status: "..."
-// }
-//
-// ke:
-//
-// fsi_dashboard_leads_filter
-//
-// Fungsi ini membaca data tersebut lalu mengisi:
-//
-// - Sales filter
-// - Status filter
-//
-// Setelah itu Leads dimuat satu kali.
-//
 
 async function applyDashboardLeadsFilter(
-    options = {}
+    options
 ) {
 
-    let rawFilter =
+    options =
+        options ||
+        {};
+
+
+    var rawFilter =
         null;
 
 
@@ -798,12 +937,11 @@ async function applyDashboardLeadsFilter(
     // ========================================================
 
     if (!rawFilter) {
-
         return false;
     }
 
 
-    let filterData;
+    var filterData;
 
 
     // ========================================================
@@ -858,14 +996,14 @@ async function applyDashboardLeadsFilter(
     // VALUES
     // ========================================================
 
-    const salesId =
+    var salesId =
         String(
             filterData.salesId ||
             ""
         ).trim();
 
 
-    const status =
+    var status =
         String(
             filterData.status ||
             ""
@@ -875,8 +1013,8 @@ async function applyDashboardLeadsFilter(
     console.log(
         "FSI CRM: menerima filter dari Dashboard:",
         {
-            salesId,
-            status
+            salesId: salesId,
+            status: status
         }
     );
 
@@ -885,7 +1023,7 @@ async function applyDashboardLeadsFilter(
     // SALES FILTER
     // ========================================================
 
-    const salesSelect =
+    var salesSelect =
         leadElement(
             "salesFilter"
         );
@@ -905,26 +1043,28 @@ async function applyDashboardLeadsFilter(
 
             try {
 
-                const salesData =
+                var salesData =
                     typeof leadGetSalesData ===
                     "function"
-
                         ? leadGetSalesData()
-
                         : [];
 
 
-                const selected =
+                var selected =
                     Array.isArray(
                         salesData
                     )
                         ? salesData.find(
-                            sales =>
-                                String(
-                                    sales?.id ||
-                                    ""
+                            function (sales) {
+
+                                return String(
+                                    sales &&
+                                    sales.id
+                                        ? sales.id
+                                        : ""
                                 ).trim() ===
-                                salesId
+                                salesId;
+                            }
                         )
                         : null;
 
@@ -946,10 +1086,8 @@ async function applyDashboardLeadsFilter(
                     error
                 );
 
-
                 window.crmSelectedSalesName =
                     "";
-
             }
 
         } else {
@@ -964,7 +1102,7 @@ async function applyDashboardLeadsFilter(
     // STATUS FILTER
     // ========================================================
 
-    const statusSelect =
+    var statusSelect =
         leadElement(
             "filter-status",
             "statusFilter",
@@ -983,9 +1121,15 @@ async function applyDashboardLeadsFilter(
     // RESET PAGE
     // ========================================================
 
-    leadSetCurrentPage(
-        1
-    );
+    if (
+        typeof leadSetCurrentPage ===
+        "function"
+    ) {
+
+        leadSetCurrentPage(
+            1
+        );
+    }
 
 
     // ========================================================
@@ -1011,11 +1155,7 @@ async function applyDashboardLeadsFilter(
     }
 
 
-    // ========================================================
-    // MARK FILTER APPLIED
-    // ========================================================
-
-    leadsDashboardFilterApplied =
+    leadsState.dashboardFilterApplied =
         true;
 
 
@@ -1039,14 +1179,14 @@ async function applyDashboardLeadsFilter(
 
 
     // ========================================================
-    // RESET LOAD CACHE
+    // RESET CACHE
     // ========================================================
 
     resetLeadsLoadCache();
 
 
     // ========================================================
-    // LOAD LEADS
+    // LOAD
     // ========================================================
 
     await leadsSafeLoad(
@@ -1054,7 +1194,7 @@ async function applyDashboardLeadsFilter(
         {
             force: true,
             reason:
-                options?.reason ||
+                options.reason ||
                 "dashboard-filter"
         }
     );
@@ -1065,15 +1205,7 @@ async function applyDashboardLeadsFilter(
 
 
 // ============================================================
-// HANDLE DASHBOARD -> LEADS PAGE OPENED
-// ============================================================
-//
-// Event dikirim oleh:
-//
-// dashboard-navigation.js
-//
-// setelah halaman Leads berhasil dibuka.
-//
+// HANDLE LEADS PAGE OPENED
 // ============================================================
 
 async function handleLeadsPageOpened() {
@@ -1084,36 +1216,39 @@ async function handleLeadsPageOpened() {
 
 
     // ========================================================
-    // PASTIKAN INITIALIZED
+    // INITIALIZE
     // ========================================================
 
-    if (!leadsInitialized) {
+    if (
+        !leadsState.initialized
+    ) {
 
         initializeLeads();
     }
 
 
     // ========================================================
-    // CEK DASHBOARD FILTER
+    // CHECK DASHBOARD FILTER
     // ========================================================
 
-    const hasDashboardFilter =
-        (() => {
+    var hasDashboardFilter =
+        false;
 
-            try {
 
-                return Boolean(
-                    sessionStorage.getItem(
-                        "fsi_dashboard_leads_filter"
-                    )
-                );
+    try {
 
-            } catch (error) {
+        hasDashboardFilter =
+            Boolean(
+                sessionStorage.getItem(
+                    "fsi_dashboard_leads_filter"
+                )
+            );
 
-                return false;
-            }
+    } catch (error) {
 
-        })();
+        hasDashboardFilter =
+            false;
+    }
 
 
     if (hasDashboardFilter) {
@@ -1135,12 +1270,8 @@ async function handleLeadsPageOpened() {
 
 
     // ========================================================
-    // TANPA DASHBOARD FILTER
+    // NORMAL LEADS NAVIGATION
     // ========================================================
-    //
-    // Jika Leads dibuka dari menu/header biasa,
-    // cukup load data sekali.
-    //
 
     await leadsSafeLoad(
         1,
@@ -1159,14 +1290,14 @@ async function handleLeadsPageOpened() {
 function bindDashboardLeadsNavigation() {
 
     if (
-        leadsPageOpenedListenerBound
+        leadsState.pageOpenedListenerBound
     ) {
 
         return;
     }
 
 
-    leadsPageOpenedListenerBound =
+    leadsState.pageOpenedListenerBound =
         true;
 
 
@@ -1176,7 +1307,7 @@ function bindDashboardLeadsNavigation() {
 
             handleLeadsPageOpened()
                 .catch(
-                    error => {
+                    function (error) {
 
                         console.error(
                             "FSI CRM: Leads page navigation error:",
@@ -1202,18 +1333,32 @@ function bindDashboardLeadsNavigation() {
 
 function handleProfileReady() {
 
-    setupSalesAssignmentAccess();
+    if (
+        typeof setupSalesAssignmentAccess ===
+        "function"
+    ) {
+
+        setupSalesAssignmentAccess();
+    }
 
 
-    refreshAddCustomerVisibility();
+    if (
+        typeof refreshAddCustomerVisibility ===
+        "function"
+    ) {
+
+        refreshAddCustomerVisibility();
+    }
 
 
-    bindAddCustomerButtons();
+    if (
+        typeof bindAddCustomerButtons ===
+        "function"
+    ) {
 
+        bindAddCustomerButtons();
+    }
 
-    // ========================================================
-    // LOAD FILTER OPTIONS
-    // ========================================================
 
     loadFilterOptionsOnce({
         reason:
@@ -1222,7 +1367,7 @@ function handleProfileReady() {
         .then(
             function () {
 
-                applyDashboardLeadsFilter({
+                return applyDashboardLeadsFilter({
                     reason:
                         "profile-ready"
                 });
@@ -1230,7 +1375,7 @@ function handleProfileReady() {
             }
         )
         .catch(
-            error => {
+            function (error) {
 
                 console.warn(
                     "FSI CRM: profile-ready filter load failed:",
@@ -1251,21 +1396,37 @@ function handleSalesSelected(
 ) {
 
     if (
-        !leadIsAdmin()
+        typeof leadIsAdmin ===
+        "function"
     ) {
 
-        return;
+        if (
+            !leadIsAdmin()
+        ) {
+
+            return;
+        }
+
+    } else if (
+        typeof window.dashboardIsAdmin ===
+        "function"
+    ) {
+
+        if (
+            !window.dashboardIsAdmin()
+        ) {
+
+            return;
+        }
     }
 
 
-    const detail =
-        event?.detail ||
-        {};
+    var detail =
+        event &&
+        event.detail
+            ? event.detail
+            : {};
 
-
-    // ========================================================
-    // SALES ID
-    // ========================================================
 
     if (
         Object.prototype.hasOwnProperty.call(
@@ -1280,10 +1441,6 @@ function handleSalesSelected(
     }
 
 
-    // ========================================================
-    // SALES NAME
-    // ========================================================
-
     if (
         Object.prototype.hasOwnProperty.call(
             detail,
@@ -1297,11 +1454,7 @@ function handleSalesSelected(
     }
 
 
-    // ========================================================
-    // SELECT
-    // ========================================================
-
-    const salesSelect =
+    var salesSelect =
         leadElement(
             "salesFilter"
         );
@@ -1315,32 +1468,28 @@ function handleSalesSelected(
     }
 
 
-    // ========================================================
-    // PAGE
-    // ========================================================
+    if (
+        typeof leadSetCurrentPage ===
+        "function"
+    ) {
 
-    leadSetCurrentPage(
-        1
-    );
-
-
-    // ========================================================
-    // CONTEXT
-    // ========================================================
-
-    updateLeadsContext();
+        leadSetCurrentPage(
+            1
+        );
+    }
 
 
-    // ========================================================
-    // RESET CACHE
-    // ========================================================
+    if (
+        typeof updateLeadsContext ===
+        "function"
+    ) {
+
+        updateLeadsContext();
+    }
+
 
     resetLeadsLoadCache();
 
-
-    // ========================================================
-    // LOAD
-    // ========================================================
 
     leadsSafeLoad(
         1,
@@ -1351,7 +1500,7 @@ function handleSalesSelected(
         }
     )
         .catch(
-            error => {
+            function (error) {
 
                 console.error(
                     "FSI CRM: header Sales selection load error:",
@@ -1369,21 +1518,41 @@ function handleSalesSelected(
 
 function handleAppReady() {
 
-    setupSalesAssignmentAccess();
+    if (
+        typeof setupSalesAssignmentAccess ===
+        "function"
+    ) {
+
+        setupSalesAssignmentAccess();
+    }
 
 
-    updateLeadsContext();
+    if (
+        typeof updateLeadsContext ===
+        "function"
+    ) {
+
+        updateLeadsContext();
+    }
 
 
-    refreshAddCustomerVisibility();
+    if (
+        typeof refreshAddCustomerVisibility ===
+        "function"
+    ) {
+
+        refreshAddCustomerVisibility();
+    }
 
 
-    bindAddCustomerButtons();
+    if (
+        typeof bindAddCustomerButtons ===
+        "function"
+    ) {
 
+        bindAddCustomerButtons();
+    }
 
-    // ========================================================
-    // FILTER OPTIONS
-    // ========================================================
 
     loadFilterOptionsOnce({
         reason:
@@ -1392,7 +1561,7 @@ function handleAppReady() {
         .then(
             function () {
 
-                applyDashboardLeadsFilter({
+                return applyDashboardLeadsFilter({
                     reason:
                         "app-ready"
                 });
@@ -1400,7 +1569,7 @@ function handleAppReady() {
             }
         )
         .catch(
-            error => {
+            function (error) {
 
                 console.warn(
                     "FSI CRM: app-ready filter load failed:",
@@ -1413,259 +1582,368 @@ function handleAppReady() {
 
 
 // ============================================================
-// EXPORT TO WINDOW
+// GLOBAL EXPORTS
 // ============================================================
 
-window.loadFilterOptions =
-    loadFilterOptions;
-
-
-window.populateFilter =
-    populateFilter;
-
-
-window.loadLeads =
-    loadLeads;
-
-
-window.updatePagination =
-    updatePagination;
-
-
-window.changePage =
-    changePage;
-
-
-window.nextLeadPage =
-    nextLeadPage;
-
-
-window.previousLeadPage =
-    previousLeadPage;
-
-
-window.renderLeads =
-    renderLeads;
-
-
-window.filterLeads =
-    filterLeads;
-
-
-window.onSearchInput =
-    onSearchInput;
-
-
-window.clearLeadFilters =
-    clearLeadFilters;
-
-
-window.openLeadModal =
-    openLeadModal;
-
-
-window.closeLeadModal =
-    closeLeadModal;
-
-
-window.clearLeadForm =
-    clearLeadForm;
-
-
-window.openEditLead =
-    openEditLead;
-
-
-window.saveLead =
-    saveLead;
-
-
-window.deleteLead =
-    deleteLead;
-
-
-window.setupSalesAssignmentAccess =
-    setupSalesAssignmentAccess;
-
-
-window.clearSalesHeaderFilter =
-    clearSalesHeaderFilter;
-
-
-window.updateAddCustomerVisibility =
-    updateAddCustomerVisibility;
-
-
-window.bindAddCustomerButtons =
-    bindAddCustomerButtons;
-
-
-// ============================================================
-// DASHBOARD FILTER FUNCTION
-// ============================================================
-
-window.applyDashboardLeadsFilter =
-    applyDashboardLeadsFilter;
-
-
-// ============================================================
-// LEADS LOAD CONTROL
-// ============================================================
+window.leadsCreateLoadKey =
+    leadsCreateLoadKey;
 
 window.leadsSafeLoad =
     leadsSafeLoad;
 
-
 window.resetLeadsLoadCache =
     resetLeadsLoadCache;
 
+window.applyDashboardLeadsFilter =
+    applyDashboardLeadsFilter;
 
 window.handleLeadsPageOpened =
     handleLeadsPageOpened;
+
+window.loadFilterOptionsOnce =
+    loadFilterOptionsOnce;
+
+window.initializeLeads =
+    initializeLeads;
+
+
+// ============================================================
+// EXISTING FUNCTION EXPORTS
+// ============================================================
+
+if (
+    typeof loadFilterOptions ===
+    "function"
+) {
+    window.loadFilterOptions =
+        loadFilterOptions;
+}
+
+if (
+    typeof populateFilter ===
+    "function"
+) {
+    window.populateFilter =
+        populateFilter;
+}
+
+if (
+    typeof loadLeads ===
+    "function"
+) {
+    window.loadLeads =
+        loadLeads;
+}
+
+if (
+    typeof updatePagination ===
+    "function"
+) {
+    window.updatePagination =
+        updatePagination;
+}
+
+if (
+    typeof changePage ===
+    "function"
+) {
+    window.changePage =
+        changePage;
+}
+
+if (
+    typeof nextLeadPage ===
+    "function"
+) {
+    window.nextLeadPage =
+        nextLeadPage;
+}
+
+if (
+    typeof previousLeadPage ===
+    "function"
+) {
+    window.previousLeadPage =
+        previousLeadPage;
+}
+
+if (
+    typeof renderLeads ===
+    "function"
+) {
+    window.renderLeads =
+        renderLeads;
+}
+
+if (
+    typeof filterLeads ===
+    "function"
+) {
+    window.filterLeads =
+        filterLeads;
+}
+
+if (
+    typeof onSearchInput ===
+    "function"
+) {
+    window.onSearchInput =
+        onSearchInput;
+}
+
+if (
+    typeof clearLeadFilters ===
+    "function"
+) {
+    window.clearLeadFilters =
+        clearLeadFilters;
+}
+
+if (
+    typeof openLeadModal ===
+    "function"
+) {
+    window.openLeadModal =
+        openLeadModal;
+}
+
+if (
+    typeof closeLeadModal ===
+    "function"
+) {
+    window.closeLeadModal =
+        closeLeadModal;
+}
+
+if (
+    typeof clearLeadForm ===
+    "function"
+) {
+    window.clearLeadForm =
+        clearLeadForm;
+}
+
+if (
+    typeof openEditLead ===
+    "function"
+) {
+    window.openEditLead =
+        openEditLead;
+}
+
+if (
+    typeof saveLead ===
+    "function"
+) {
+    window.saveLead =
+        saveLead;
+}
+
+if (
+    typeof deleteLead ===
+    "function"
+) {
+    window.deleteLead =
+        deleteLead;
+}
+
+if (
+    typeof setupSalesAssignmentAccess ===
+    "function"
+) {
+    window.setupSalesAssignmentAccess =
+        setupSalesAssignmentAccess;
+}
+
+if (
+    typeof clearSalesHeaderFilter ===
+    "function"
+) {
+    window.clearSalesHeaderFilter =
+        clearSalesHeaderFilter;
+}
+
+if (
+    typeof updateAddCustomerVisibility ===
+    "function"
+) {
+    window.updateAddCustomerVisibility =
+        updateAddCustomerVisibility;
+}
+
+if (
+    typeof bindAddCustomerButtons ===
+    "function"
+) {
+    window.bindAddCustomerButtons =
+        bindAddCustomerButtons;
+}
 
 
 // ============================================================
 // FSI LEADS NAMESPACE
 // ============================================================
 
-window.FSILeads = {
+window.FSILeads =
+    window.FSILeads ||
+    {};
 
-    loadFilterOptions,
 
-    populateFilter,
+Object.assign(
+    window.FSILeads,
+    {
 
-    loadLeads,
+        leadsCreateLoadKey:
+            leadsCreateLoadKey,
 
-    updatePagination,
+        leadsSafeLoad:
+            leadsSafeLoad,
 
-    changePage,
+        resetLeadsLoadCache:
+            resetLeadsLoadCache,
 
-    nextLeadPage,
+        loadFilterOptionsOnce:
+            loadFilterOptionsOnce,
 
-    previousLeadPage,
+        initializeLeads:
+            initializeLeads,
 
-    renderLeads,
+        applyDashboardLeadsFilter:
+            applyDashboardLeadsFilter,
 
-    filterLeads,
-
-    onSearchInput,
-
-    clearLeadFilters,
-
-    openLeadModal,
-
-    closeLeadModal,
-
-    clearLeadForm,
-
-    openEditLead,
-
-    saveLead,
-
-    deleteLead,
-
-    setupSalesAssignmentAccess,
-
-    clearSalesHeaderFilter,
-
-    updateAddCustomerVisibility,
-
-    bindAddCustomerButtons,
-
-    applyDashboardLeadsFilter,
-
-    leadsSafeLoad,
-
-    resetLeadsLoadCache,
-
-    handleLeadsPageOpened
-
-};
+        handleLeadsPageOpened:
+            handleLeadsPageOpened
+    }
+);
 
 
 // ============================================================
 // DOM READY
 // ============================================================
 
-document.addEventListener(
-    "DOMContentLoaded",
-    function () {
+if (
+    !leadsState.domReadyBound
+) {
 
-        bindDashboardLeadsNavigation();
+    leadsState.domReadyBound =
+        true;
 
-        initializeLeads();
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        function () {
+
+            bindDashboardLeadsNavigation();
+
+            initializeLeads();
 
 
-        console.log(
-            "FSI CRM: Leads module loaded successfully."
-        );
+            console.log(
+                "FSI CRM: Leads module loaded successfully."
+            );
 
-    }
-);
+        }
+    );
+}
 
 
 // ============================================================
 // PROFILE READY
 // ============================================================
 
-document.addEventListener(
-    "fsi:profile-ready",
-    function () {
+if (
+    !leadsState.profileReadyBound
+) {
 
-        handleProfileReady();
+    leadsState.profileReadyBound =
+        true;
 
-    }
-);
+
+    document.addEventListener(
+        "fsi:profile-ready",
+        function () {
+
+            handleProfileReady();
+
+        }
+    );
+}
 
 
 // ============================================================
 // APP READY
 // ============================================================
 
-document.addEventListener(
-    "fsi:app-ready",
-    function () {
+if (
+    !leadsState.appReadyBound
+) {
 
-        handleAppReady();
+    leadsState.appReadyBound =
+        true;
 
-    }
-);
+
+    document.addEventListener(
+        "fsi:app-ready",
+        function () {
+
+            handleAppReady();
+
+        }
+    );
+}
 
 
 // ============================================================
 // SALES SELECTED
 // ============================================================
 
-document.addEventListener(
-    "fsi:sales-selected",
-    function (event) {
+if (
+    !leadsState.salesSelectedBound
+) {
 
-        handleSalesSelected(
-            event
-        );
+    leadsState.salesSelectedBound =
+        true;
 
-    }
-);
+
+    document.addEventListener(
+        "fsi:sales-selected",
+        function (event) {
+
+            handleSalesSelected(
+                event
+            );
+
+        }
+    );
+}
 
 
 // ============================================================
 // LEAD CHANGED
 // ============================================================
 
-document.addEventListener(
-    "fsi:lead-changed",
-    function () {
+if (
+    !leadsState.leadChangedBound
+) {
 
-        // ----------------------------------------------------
-        // Save/delete melakukan refresh sendiri.
-        // Tidak melakukan load ulang otomatis di sini.
-        // ----------------------------------------------------
+    leadsState.leadChangedBound =
+        true;
 
-        resetLeadsLoadCache();
 
-    }
-);
+    document.addEventListener(
+        "fsi:lead-changed",
+        function () {
 
+            resetLeadsLoadCache();
+
+        }
+    );
+}
+
+
+// ============================================================
+// INITIALIZATION LOG
+// ============================================================
 
 console.log(
     "FSI CRM: leads-init.js loaded successfully."
