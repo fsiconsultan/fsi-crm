@@ -9,8 +9,10 @@
 // 3. Mengambil nama Sales dari tabel "sales_users"
 // 4. Menampilkan Input Date
 // 5. Menghitung selisih Input Date berdasarkan TANGGAL KALENDER
-// 6. Tidak menangani Add Customer
-// 7. Tidak menangani Edit Customer
+// 6. Menampilkan Email Customer
+// 7. Email Customer menggunakan mailto:
+// 8. Tidak menangani Add Customer
+// 9. Tidak menangani Edit Customer
 //
 // STATUS SYSTEM:
 // 1. New
@@ -159,6 +161,56 @@
 
 
     // ========================================================
+    // EMAIL HELPER
+    // ========================================================
+
+    function createEmailLink(email) {
+
+        const safeEmail =
+            String(email || "").trim();
+
+
+        if (!safeEmail) {
+
+            return `
+                <span class="customer-email-empty">
+                    —
+                </span>
+            `;
+
+        }
+
+
+        const mailto =
+            `mailto:${encodeURIComponent(
+                safeEmail
+            )}`;
+
+
+        return `
+            <a
+                href="${mailto}"
+                class="customer-email-link"
+                title="Send email to ${escapeHTML(
+                    safeEmail
+                )}"
+            >
+                <i
+                    data-lucide="mail"
+                    aria-hidden="true"
+                ></i>
+
+                <span>
+                    ${escapeHTML(
+                        safeEmail
+                    )}
+                </span>
+            </a>
+        `;
+    }
+
+
+    // ========================================================
     // DATE PARSER
     // ========================================================
 
@@ -293,19 +345,6 @@
 
     // ========================================================
     // INPUT DATE CALCULATION
-    // ========================================================
-    //
-    // SAMA DENGAN LOGIC LEADS
-    //
-    // Input Date = status_started_at
-    //
-    // Contoh:
-    // status_started_at = 31 Jul 2026
-    // hari ini = 27 Sep 2026
-    //
-    // hasil:
-    // 58 days
-    //
     // ========================================================
 
     function getInputDateInfo(
@@ -471,13 +510,6 @@
 
     // ========================================================
     // FOLLOW UP CALCULATION
-    // ========================================================
-    //
-    // Follow Up tetap dipakai untuk bagian Activity /
-    // Pipeline.
-    //
-    // Tidak lagi digunakan sebagai card utama di atas.
-    //
     // ========================================================
 
     function getFollowUpInfo(
@@ -821,6 +853,23 @@
             );
 
 
+        // ====================================================
+        // EMAIL
+        // ====================================================
+
+        const email =
+            displayValue(
+                customer.email,
+                ""
+            );
+
+
+        const emailHTML =
+            createEmailLink(
+                email
+            );
+
+
         const business =
             displayValue(
                 customer.business
@@ -856,19 +905,6 @@
 
         // ====================================================
         // INPUT DATE
-        // ====================================================
-        //
-        // PENTING:
-        // Sama dengan Leads:
-        //
-        // Input Date = status_started_at
-        //
-        // BUKAN:
-        // created_at
-        //
-        // BUKAN:
-        // follow_up_date
-        //
         // ====================================================
 
         const inputDateValue =
@@ -931,11 +967,6 @@
 
         // ====================================================
         // FOLLOW UP DATA
-        // ====================================================
-        //
-        // Tetap disiapkan karena Follow Up masih dipakai
-        // di bagian Customer Information dan Pipeline.
-        //
         // ====================================================
 
         let followUpBadge = "";
@@ -1135,7 +1166,6 @@
 
                 <!-- ==================================================
                      INPUT DATE CARD
-                     MENGGANTIKAN FOLLOW-UP CARD UTAMA
                 =================================================== -->
 
                 <section
@@ -1244,6 +1274,24 @@
                                 ${escapeHTML(
                                     phone
                                 )}
+                            </strong>
+
+                        </div>
+
+
+                        <!-- ==================================================
+                             EMAIL
+                        =================================================== -->
+
+                        <div class="profile-info-item">
+
+                            <span class="profile-info-label">
+                                <i data-lucide="mail"></i>
+                                Email
+                            </span>
+
+                            <strong class="profile-info-value-email">
+                                ${emailHTML}
                             </strong>
 
                         </div>
@@ -1749,11 +1797,6 @@
         }
 
 
-        // ----------------------------------------------------
-        // PRIORITAS 1
-        // Navigation system utama
-        // ----------------------------------------------------
-
         if (
             window.FSINavigation &&
             typeof window.FSINavigation.showPage ===
@@ -1774,11 +1817,6 @@
         }
 
 
-        // ----------------------------------------------------
-        // PRIORITAS 2
-        // Global showPage jika ada
-        // ----------------------------------------------------
-
         if (
             typeof window.showPage ===
             "function"
@@ -1798,11 +1836,6 @@
         }
 
 
-        // ----------------------------------------------------
-        // PRIORITAS 3
-        // Global navigation
-        // ----------------------------------------------------
-
         if (
             typeof window.crmNavigate ===
             "function"
@@ -1821,10 +1854,6 @@
 
         }
 
-
-        // ----------------------------------------------------
-        // FALLBACK
-        // ----------------------------------------------------
 
         activateProfilePage();
 
@@ -2016,10 +2045,6 @@
 
         profileLoading = true;
 
-
-        // ----------------------------------------------------
-        // Buka halaman PROFILE terlebih dahulu.
-        // ----------------------------------------------------
 
         showCustomerProfilePage();
 
