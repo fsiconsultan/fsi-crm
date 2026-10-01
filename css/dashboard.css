@@ -1,23 +1,62 @@
 /* ============================================================
    FSI CRM - DASHBOARD STYLES
-   File : css/dashboard.css
-   Version : 2026.10.01
+   File    : css/dashboard.css
+   Version : 2026.10.01 - Professional Dashboard
 
    Fungsi:
-   1. Dashboard greeting
-   2. Dashboard statistics
-   3. Sales cards
-   4. Sales selection state
-   5. Sales pipeline
-   6. Recent activity
-   7. Customer / Lead list
-   8. Dashboard popup
-   9. Loading / empty / error state
-   10. Responsive dashboard base
+   1. Dashboard root
+   2. Dashboard greeting
+   3. Dashboard section
+   4. Dashboard statistics
+   5. Stat card interaction
+   6. Dashboard main grid
+   7. Sales section
+   8. Sales cards grid
+   9. Sales card
+   10. Sales card icon
+   11. Sales card content
+   12. Sales card arrow
+   13. Sales card animation
+   14. Sales filter
+   15. Professional sales pipeline
+   16. Pipeline stage states
+   17. Recent activity timeline
+   18. Profile pipeline
+   19. Selected Sales lead list
+   20. Lead list header
+   21. Lead list toolbar
+   22. Lead table
+   23. Lead table widths
+   24. Customer cell
+   25. Business
+   26. Phone
+   27. Location
+   28. Status
+   29. Date
+   30. View button
+   31. Empty state
+   32. Loading state
+   33. Pagination
+   34. Mobile lead cards
+   35. Dashboard popup
+   36. Dashboard error
+   37. Dashboard loading
+   38. Dashboard buttons
+   39. View all
+   40. Role states
+   41. Scrollbar
+   42. Responsive 1200px
+   43. Responsive 900px
+   44. Responsive 700px
+   45. Responsive 600px
+   46. Responsive 420px
+   47. Reduced motion
 
    IMPORTANT:
-   - responsive.css tetap menjadi CSS terakhir.
    - Jangan menghapus responsive.css dari index.html.
+   - responsive.css tetap menjadi CSS terakhir.
+   - Jangan menghapus class lama karena JS dashboard
+     masih menggunakan beberapa selector legacy.
 ============================================================ */
 
 
@@ -57,7 +96,7 @@
 
 .dashboard-greeting {
     width: 100%;
-    margin-bottom: 24px;
+    margin-bottom: 26px;
     animation: dashboardGreetingIn 0.45s ease both;
 }
 
@@ -67,14 +106,14 @@
     font-size: clamp(24px, 3vw, 32px);
     line-height: 1.2;
     font-weight: 800;
-    letter-spacing: -0.025em;
+    letter-spacing: -0.03em;
     color: #111827;
 }
 
 .dashboard-greeting p,
 .dashboard-greeting-subtitle {
     margin: 8px 0 0;
-    max-width: 760px;
+    max-width: 780px;
     font-size: 14px;
     line-height: 1.6;
     color: #6b7280;
@@ -99,7 +138,7 @@
 
 .dashboard-section {
     width: 100%;
-    margin-bottom: 28px;
+    margin-bottom: 30px;
 }
 
 .dashboard-section-header {
@@ -107,7 +146,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    margin-bottom: 14px;
+    margin-bottom: 15px;
 }
 
 .dashboard-section-title {
@@ -141,7 +180,7 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 16px;
     width: 100%;
-    margin-bottom: 28px;
+    margin-bottom: 30px;
 }
 
 .dashboard-stat-card,
@@ -150,18 +189,23 @@
     position: relative;
     min-width: 0;
     overflow: hidden;
+
     padding: 20px;
-    border: 1px solid rgba(226, 232, 240, 0.9);
+
+    border: 1px solid rgba(226, 232, 240, 0.95);
     border-radius: 18px;
+
     background:
         linear-gradient(
             145deg,
-            rgba(255, 255, 255, 0.98),
-            rgba(248, 250, 252, 0.96)
+            rgba(255, 255, 255, 0.99),
+            rgba(248, 250, 252, 0.97)
         );
+
     box-shadow:
-        0 8px 25px rgba(15, 23, 42, 0.06),
-        0 2px 6px rgba(15, 23, 42, 0.03);
+        0 8px 25px rgba(15, 23, 42, 0.055),
+        0 2px 6px rgba(15, 23, 42, 0.025);
+
     transition:
         transform 0.22s ease,
         box-shadow 0.22s ease,
@@ -172,17 +216,22 @@
 .stat-card::before,
 .dashboard-stat::before {
     content: "";
+
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
+
     height: 3px;
-    background: linear-gradient(
-        90deg,
-        #f59e0b,
-        #f97316,
-        #ef4444
-    );
+
+    background:
+        linear-gradient(
+            90deg,
+            #f59e0b,
+            #f97316,
+            #ef4444
+        );
+
     opacity: 0.85;
 }
 
@@ -190,10 +239,12 @@
 .stat-card:hover,
 .dashboard-stat:hover {
     transform: translateY(-3px);
+
     border-color: rgba(203, 213, 225, 0.95);
+
     box-shadow:
-        0 14px 34px rgba(15, 23, 42, 0.09),
-        0 4px 10px rgba(15, 23, 42, 0.04);
+        0 15px 35px rgba(15, 23, 42, 0.09),
+        0 4px 10px rgba(15, 23, 42, 0.035);
 }
 
 .dashboard-stat-card.clickable,
@@ -212,11 +263,14 @@
 .dashboard-stat-card-label,
 .stat-card-label {
     min-width: 0;
+
     font-size: 11px;
     line-height: 1.4;
     font-weight: 800;
+
     letter-spacing: 0.08em;
     text-transform: uppercase;
+
     color: #64748b;
 }
 
@@ -225,31 +279,47 @@
     display: flex;
     align-items: center;
     justify-content: center;
+
     flex: 0 0 auto;
+
     width: 40px;
     height: 40px;
+
     border-radius: 12px;
-    background: #f8fafc;
+
+    background: #fff7ed;
     color: #f59e0b;
+}
+
+.dashboard-stat-card-icon svg,
+.stat-card-icon svg {
+    width: 19px;
+    height: 19px;
 }
 
 .dashboard-stat-card-value,
 .stat-card-value,
 .dashboard-stat-value {
     display: block;
+
     margin-top: 12px;
+
     font-size: clamp(25px, 3vw, 34px);
     line-height: 1;
+
     font-weight: 800;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.035em;
+
     color: #0f172a;
 }
 
 .dashboard-stat-card-description,
 .stat-card-description {
     margin-top: 8px;
+
     font-size: 12px;
     line-height: 1.45;
+
     color: #94a3b8;
 }
 
@@ -263,6 +333,7 @@
 .dashboard-stat-card.active,
 .stat-card.active {
     border-color: rgba(245, 158, 11, 0.5);
+
     box-shadow:
         0 12px 30px rgba(245, 158, 11, 0.12),
         0 0 0 3px rgba(245, 158, 11, 0.08);
@@ -275,7 +346,10 @@
 
 .dashboard-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1.5fr) minmax(300px, 0.9fr);
+    grid-template-columns:
+        minmax(0, 1.5fr)
+        minmax(300px, 0.9fr);
+
     gap: 20px;
     width: 100%;
 }
@@ -286,9 +360,12 @@
 
 .dashboard-card {
     min-width: 0;
+
     border: 1px solid #e5e7eb;
     border-radius: 18px;
+
     background: #ffffff;
+
     box-shadow:
         0 8px 24px rgba(15, 23, 42, 0.05),
         0 2px 5px rgba(15, 23, 42, 0.025);
@@ -298,21 +375,28 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+
     gap: 14px;
+
     padding: 18px 20px;
+
     border-bottom: 1px solid #f1f5f9;
 }
 
 .dashboard-card-title {
     margin: 0;
+
     font-size: 15px;
     font-weight: 800;
+
     color: #111827;
 }
 
 .dashboard-card-subtitle {
     margin: 4px 0 0;
+
     font-size: 12px;
+
     color: #94a3b8;
 }
 
@@ -327,28 +411,35 @@
 
 .dashboard-sales-section {
     width: 100%;
-    margin-bottom: 28px;
+    margin-bottom: 30px;
 }
 
 .dashboard-sales-section-header {
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
+
     gap: 16px;
-    margin-bottom: 14px;
+
+    margin-bottom: 15px;
 }
 
 .dashboard-sales-section-title {
     margin: 0;
+
     font-size: 18px;
     line-height: 1.25;
+
     font-weight: 800;
+
     color: #111827;
 }
 
 .dashboard-sales-section-subtitle {
     margin: 5px 0 0;
+
     font-size: 13px;
+
     color: #64748b;
 }
 
@@ -359,8 +450,12 @@
 
 .dashboard-sales-cards-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+
     gap: 14px;
+
     width: 100%;
 }
 
@@ -371,13 +466,18 @@
 
 .dashboard-sales-card {
     position: relative;
+
     display: flex;
     align-items: center;
+
     gap: 13px;
+
     width: 100%;
     min-width: 0;
-    min-height: 102px;
+    min-height: 104px;
+
     padding: 15px;
+
     overflow: hidden;
 
     border: 1px solid #e2e8f0;
@@ -386,7 +486,7 @@
     background:
         linear-gradient(
             145deg,
-            rgba(255, 255, 255, 0.98),
+            rgba(255, 255, 255, 0.99),
             rgba(248, 250, 252, 0.98)
         );
 
@@ -395,7 +495,9 @@
         0 2px 5px rgba(15, 23, 42, 0.025);
 
     cursor: pointer;
+
     text-align: left;
+
     font: inherit;
 
     transition:
@@ -407,25 +509,34 @@
 
 .dashboard-sales-card::before {
     content: "";
+
     position: absolute;
+
     top: 0;
     left: 0;
     bottom: 0;
+
     width: 3px;
-    background: linear-gradient(
-        180deg,
-        #f59e0b,
-        #f97316
-    );
+
+    background:
+        linear-gradient(
+            180deg,
+            #f59e0b,
+            #f97316
+        );
+
     opacity: 0;
+
     transition: opacity 0.22s ease;
 }
 
 .dashboard-sales-card:hover {
     transform: translateY(-3px);
+
     border-color: rgba(245, 158, 11, 0.35);
+
     box-shadow:
-        0 14px 30px rgba(15, 23, 42, 0.09),
+        0 15px 32px rgba(15, 23, 42, 0.09),
         0 4px 10px rgba(15, 23, 42, 0.035);
 }
 
@@ -435,7 +546,9 @@
 
 .dashboard-sales-card:focus-visible {
     outline: none;
+
     border-color: rgba(245, 158, 11, 0.7);
+
     box-shadow:
         0 0 0 4px rgba(245, 158, 11, 0.12),
         0 10px 24px rgba(15, 23, 42, 0.08);
@@ -444,12 +557,14 @@
 .dashboard-sales-card.is-active,
 .dashboard-sales-card.active {
     border-color: rgba(245, 158, 11, 0.65);
+
     background:
         linear-gradient(
             145deg,
             #fffdf7,
             #ffffff
         );
+
     box-shadow:
         0 14px 32px rgba(245, 158, 11, 0.12),
         0 0 0 3px rgba(245, 158, 11, 0.07);
@@ -469,6 +584,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+
     flex: 0 0 auto;
 
     width: 46px;
@@ -501,17 +617,22 @@
 
 .dashboard-sales-card-content {
     display: flex;
+
     flex: 1 1 auto;
+
     flex-direction: column;
+
     min-width: 0;
 }
 
 .dashboard-sales-card-name {
     overflow: hidden;
+
     margin: 0;
 
     font-size: 13px;
     line-height: 1.35;
+
     font-weight: 800;
 
     color: #1e293b;
@@ -525,6 +646,7 @@
 
     font-size: 10px;
     line-height: 1.35;
+
     font-weight: 600;
 
     color: #94a3b8;
@@ -535,22 +657,30 @@
 
 .dashboard-sales-card-count-wrapper {
     display: flex;
+
     align-items: baseline;
+
     gap: 5px;
+
     margin-top: 7px;
 }
 
 .dashboard-sales-card-count {
     font-size: 20px;
     line-height: 1;
+
     font-weight: 800;
+
     letter-spacing: -0.025em;
+
     color: #0f172a;
 }
 
 .dashboard-sales-card-count-label {
     font-size: 10px;
+
     font-weight: 600;
+
     color: #94a3b8;
 }
 
@@ -561,6 +691,7 @@
 
 .dashboard-sales-card-arrow {
     display: flex;
+
     align-items: center;
     justify-content: center;
 
@@ -581,13 +712,16 @@
 
 .dashboard-sales-card:hover .dashboard-sales-card-arrow {
     transform: translateX(3px);
+
     color: #ea580c;
+
     background: #fff7ed;
 }
 
 .dashboard-sales-card.is-active .dashboard-sales-card-arrow,
 .dashboard-sales-card.active .dashboard-sales-card-arrow {
     color: #ea580c;
+
     background: #fff7ed;
 }
 
@@ -647,13 +781,17 @@
 
 .dashboard-sales-filter-wrapper {
     display: flex;
+
     align-items: center;
+
     gap: 10px;
 }
 
 .dashboard-sales-filter-wrapper label {
     font-size: 12px;
+
     font-weight: 700;
+
     color: #64748b;
 }
 
@@ -661,15 +799,18 @@
 #dashboardSalesFilter {
     min-width: 190px;
     height: 38px;
+
     padding: 0 34px 0 12px;
 
     border: 1px solid #dbe3ec;
     border-radius: 10px;
 
     background-color: #ffffff;
+
     color: #334155;
 
     font: inherit;
+
     font-size: 12px;
     font-weight: 600;
 
@@ -679,13 +820,16 @@
 #salesFilter:focus,
 #dashboardSalesFilter:focus {
     outline: none;
+
     border-color: #f59e0b;
-    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+
+    box-shadow:
+        0 0 0 3px rgba(245, 158, 11, 0.1);
 }
 
 
 /* ============================================================
-   15. SALES PIPELINE
+   15. PROFESSIONAL SALES PIPELINE
 ============================================================ */
 
 .dashboard-pipeline,
@@ -693,90 +837,268 @@
     width: 100%;
 }
 
+/*
+   Pipeline dibuat sebagai horizontal process flow.
+   Tetap menggunakan selector lama agar JS tidak rusak.
+*/
+
 .dashboard-pipeline-grid,
 .sales-pipeline-grid {
     display: grid;
-    grid-template-columns: repeat(7, minmax(0, 1fr));
-    gap: 10px;
+
+    grid-template-columns:
+        repeat(7, minmax(0, 1fr));
+
+    gap: 0;
+
     width: 100%;
+
+    position: relative;
+
+    padding: 6px 0 2px;
 }
+
+/*
+   Garis progress di belakang semua stage.
+*/
+
+.dashboard-pipeline-grid::before,
+.sales-pipeline-grid::before {
+    content: "";
+
+    position: absolute;
+
+    top: 27px;
+    left: 5%;
+    right: 5%;
+
+    height: 2px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #dbeafe 0%,
+            #ede9fe 20%,
+            #fef3c7 40%,
+            #cffafe 60%,
+            #ffedd5 75%,
+            #dcfce7 100%
+        );
+
+    z-index: 0;
+}
+
+
+/* ============================================================
+   PIPELINE STAGE
+============================================================ */
 
 .dashboard-pipeline-stage,
 .sales-pipeline-stage,
 .pipeline-stage {
     position: relative;
+
     min-width: 0;
-    padding: 14px 12px;
+
+    padding: 0 7px 4px;
+
+    border: 0;
+
+    background: transparent;
+
+    transition:
+        transform 0.2s ease,
+        opacity 0.2s ease;
+}
+
+.dashboard-pipeline-stage:hover,
+.sales-pipeline-stage:hover,
+.pipeline-stage:hover {
+    transform: translateY(-3px);
+}
+
+
+/* ============================================================
+   PIPELINE STAGE HEADER
+============================================================ */
+
+.dashboard-pipeline-stage-header {
+    position: relative;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    min-height: 54px;
+
+    z-index: 2;
+}
+
+
+/*
+   Number / icon circle.
+*/
+
+.dashboard-pipeline-stage-number {
+    position: relative;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 46px;
+    height: 46px;
+
+    border: 3px solid #ffffff;
+
+    border-radius: 50%;
+
+    background: #f8fafc;
+
+    color: #64748b;
+
+    font-size: 11px;
+
+    font-weight: 800;
+
+    box-shadow:
+        0 4px 12px rgba(15, 23, 42, 0.08),
+        0 0 0 1px rgba(226, 232, 240, 0.9);
+
+    z-index: 2;
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease,
+        color 0.2s ease;
+}
+
+.dashboard-pipeline-stage:hover
+.dashboard-pipeline-stage-number {
+    transform: scale(1.06);
+
+    box-shadow:
+        0 7px 18px rgba(15, 23, 42, 0.12),
+        0 0 0 1px rgba(226, 232, 240, 1);
+}
+
+
+/* ============================================================
+   PIPELINE STAGE BODY
+============================================================ */
+
+.dashboard-pipeline-stage::after {
+    content: "";
+
+    display: block;
+
+    width: 100%;
+
+    margin-top: 10px;
+
+    padding-top: 11px;
 
     border: 1px solid #e5e7eb;
     border-radius: 14px;
 
     background: #ffffff;
 
+    box-shadow:
+        0 5px 16px rgba(15, 23, 42, 0.045);
+
     transition:
-        transform 0.2s ease,
-        box-shadow 0.2s ease,
-        border-color 0.2s ease;
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
-.dashboard-pipeline-stage:hover,
-.sales-pipeline-stage:hover,
-.pipeline-stage:hover {
-    transform: translateY(-2px);
+.dashboard-pipeline-stage:hover::after {
     border-color: #cbd5e1;
-    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+
+    box-shadow:
+        0 10px 24px rgba(15, 23, 42, 0.075);
 }
 
-.dashboard-pipeline-stage-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 8px;
+
+/*
+   Content ditempatkan di atas pseudo body.
+*/
+
+.dashboard-pipeline-stage-title,
+.dashboard-pipeline-stage-count,
+.dashboard-pipeline-stage-description {
+    position: relative;
+
+    z-index: 2;
 }
 
-.dashboard-pipeline-stage-number {
-    display: flex;
-    align-items: center;
-    justify-content: center;
 
-    width: 24px;
-    height: 24px;
-
-    border-radius: 8px;
-
-    background: #f8fafc;
-    color: #64748b;
-
-    font-size: 10px;
-    font-weight: 800;
-}
+/* ============================================================
+   PIPELINE TITLE
+============================================================ */
 
 .dashboard-pipeline-stage-title,
 .pipeline-stage-title {
-    margin: 10px 0 0;
+    margin: -39px 8px 0;
 
-    font-size: 11px;
-    line-height: 1.4;
+    min-height: 32px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    text-align: center;
+
+    font-size: 10px;
+
+    line-height: 1.35;
+
     font-weight: 800;
 
     color: #334155;
+
+    letter-spacing: -0.005em;
 }
+
+
+/* ============================================================
+   PIPELINE COUNT
+============================================================ */
 
 .dashboard-pipeline-stage-count,
 .pipeline-stage-count {
-    margin-top: 8px;
+    margin: 9px 8px 0;
 
-    font-size: 22px;
+    text-align: center;
+
+    font-size: 24px;
+
     line-height: 1;
-    font-weight: 800;
+
+    font-weight: 850;
+
+    letter-spacing: -0.035em;
 
     color: #0f172a;
 }
 
-.dashboard-pipeline-stage-description {
-    margin-top: 5px;
 
-    font-size: 10px;
+/* ============================================================
+   PIPELINE DESCRIPTION
+============================================================ */
+
+.dashboard-pipeline-stage-description {
+    margin: 7px 8px 12px;
+
+    min-height: 28px;
+
+    text-align: center;
+
+    font-size: 9px;
+
     line-height: 1.45;
 
     color: #94a3b8;
@@ -784,7 +1106,116 @@
 
 
 /* ============================================================
-   16. PIPELINE STAGE STATES
+   PIPELINE STAGE COLORS
+============================================================ */
+
+/* New */
+
+.dashboard-pipeline-stage.is-new
+.dashboard-pipeline-stage-number,
+.pipeline-stage.is-new
+.dashboard-pipeline-stage-number {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.dashboard-pipeline-stage.is-new::after {
+    border-color: rgba(59, 130, 246, 0.22);
+}
+
+
+/* First Contact */
+
+.dashboard-pipeline-stage.is-contact
+.dashboard-pipeline-stage-number,
+.pipeline-stage.is-contact
+.dashboard-pipeline-stage-number {
+    background: #f5f3ff;
+    color: #7c3aed;
+}
+
+.dashboard-pipeline-stage.is-contact::after {
+    border-color: rgba(139, 92, 246, 0.22);
+}
+
+
+/* Appointment */
+
+.dashboard-pipeline-stage.is-appointment
+.dashboard-pipeline-stage-number,
+.pipeline-stage.is-appointment
+.dashboard-pipeline-stage-number {
+    background: #fffbeb;
+    color: #b45309;
+}
+
+.dashboard-pipeline-stage.is-appointment::after {
+    border-color: rgba(245, 158, 11, 0.25);
+}
+
+
+/* Site Survey */
+
+.dashboard-pipeline-stage.is-survey
+.dashboard-pipeline-stage-number,
+.pipeline-stage.is-survey
+.dashboard-pipeline-stage-number {
+    background: #ecfeff;
+    color: #0891b2;
+}
+
+.dashboard-pipeline-stage.is-survey::after {
+    border-color: rgba(14, 165, 233, 0.24);
+}
+
+
+/* Quotation */
+
+.dashboard-pipeline-stage.is-quotation
+.dashboard-pipeline-stage-number,
+.pipeline-stage.is-quotation
+.dashboard-pipeline-stage-number {
+    background: #fff7ed;
+    color: #c2410c;
+}
+
+.dashboard-pipeline-stage.is-quotation::after {
+    border-color: rgba(249, 115, 22, 0.25);
+}
+
+
+/* Deal */
+
+.dashboard-pipeline-stage.is-deal
+.dashboard-pipeline-stage-number,
+.pipeline-stage.is-deal
+.dashboard-pipeline-stage-number {
+    background: #f0fdf4;
+    color: #15803d;
+}
+
+.dashboard-pipeline-stage.is-deal::after {
+    border-color: rgba(34, 197, 94, 0.25);
+}
+
+
+/* No Deal */
+
+.dashboard-pipeline-stage.is-no-deal
+.dashboard-pipeline-stage-number,
+.pipeline-stage.is-no-deal
+.dashboard-pipeline-stage-number {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.dashboard-pipeline-stage.is-no-deal::after {
+    border-color: rgba(239, 68, 68, 0.2);
+}
+
+
+/* ============================================================
+   PIPELINE LEGACY SUPPORT
 ============================================================ */
 
 .dashboard-pipeline-stage.is-new,
@@ -824,6 +1255,23 @@
 
 
 /* ============================================================
+   16. PIPELINE STAGE STATES
+============================================================ */
+
+.dashboard-pipeline-stage.is-active,
+.pipeline-stage.is-active {
+    transform: translateY(-2px);
+}
+
+.dashboard-pipeline-stage.is-active
+.dashboard-pipeline-stage-number,
+.pipeline-stage.is-active
+.dashboard-pipeline-stage-number {
+    transform: scale(1.08);
+}
+
+
+/* ============================================================
    17. RECENT ACTIVITY
 ============================================================ */
 
@@ -832,18 +1280,63 @@
 }
 
 .dashboard-activity-list {
+    position: relative;
+
     display: flex;
+
     flex-direction: column;
+
     width: 100%;
+
+    padding: 4px 0 4px 2px;
 }
 
+
+/*
+   Vertical timeline.
+*/
+
+.dashboard-activity-list::before {
+    content: "";
+
+    position: absolute;
+
+    top: 15px;
+    bottom: 15px;
+
+    left: 19px;
+
+    width: 1px;
+
+    background:
+        linear-gradient(
+            180deg,
+            #e2e8f0,
+            #f1f5f9
+        );
+}
+
+
+/* ============================================================
+   ACTIVITY ITEM
+============================================================ */
+
 .dashboard-activity-item {
+    position: relative;
+
     display: flex;
+
     align-items: flex-start;
+
     gap: 12px;
-    padding: 13px 0;
+
+    min-height: 64px;
+
+    padding: 9px 4px;
 
     border-bottom: 1px solid #f1f5f9;
+
+    border-radius: 10px;
 
     transition:
         background 0.18s ease,
@@ -856,54 +1349,180 @@
 
 .dashboard-activity-item:hover {
     transform: translateX(2px);
+
+    background: #fafafa;
 }
 
+
+/* ============================================================
+   ACTIVITY ICON
+============================================================ */
+
 .dashboard-activity-icon {
+    position: relative;
+
     display: flex;
+
     align-items: center;
     justify-content: center;
 
     flex: 0 0 auto;
 
-    width: 34px;
-    height: 34px;
+    width: 38px;
+    height: 38px;
 
-    border-radius: 10px;
+    border: 3px solid #ffffff;
 
-    background: #f8fafc;
+    border-radius: 12px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #f8fafc,
+            #eef2f7
+        );
+
     color: #64748b;
+
+    box-shadow:
+        0 2px 8px rgba(15, 23, 42, 0.07),
+        0 0 0 1px #e2e8f0;
+
+    z-index: 2;
 }
+
+.dashboard-activity-icon svg {
+    width: 16px;
+    height: 16px;
+}
+
+
+/* ============================================================
+   ACTIVITY CONTENT
+============================================================ */
 
 .dashboard-activity-content {
     flex: 1 1 auto;
+
     min-width: 0;
+
+    padding-top: 2px;
 }
 
 .dashboard-activity-title {
     margin: 0;
 
     font-size: 12px;
-    line-height: 1.4;
-    font-weight: 700;
 
-    color: #334155;
+    line-height: 1.45;
+
+    font-weight: 800;
+
+    color: #1e293b;
 }
 
 .dashboard-activity-description {
     margin: 3px 0 0;
 
     font-size: 11px;
+
     line-height: 1.45;
 
-    color: #94a3b8;
+    color: #64748b;
 }
+
+.dashboard-activity-description strong {
+    font-weight: 750;
+
+    color: #475569;
+}
+
+
+/* ============================================================
+   ACTIVITY TIME
+============================================================ */
 
 .dashboard-activity-time {
     flex: 0 0 auto;
 
+    padding-top: 3px;
+
     font-size: 10px;
+
     line-height: 1.4;
-    font-weight: 600;
+
+    font-weight: 700;
+
+    color: #94a3b8;
+
+    white-space: nowrap;
+}
+
+
+/* ============================================================
+   ACTIVITY TYPES
+============================================================ */
+
+.dashboard-activity-item.activity-new
+.dashboard-activity-icon {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.dashboard-activity-item.activity-contact
+.dashboard-activity-icon {
+    background: #f5f3ff;
+    color: #7c3aed;
+}
+
+.dashboard-activity-item.activity-appointment
+.dashboard-activity-icon {
+    background: #fffbeb;
+    color: #b45309;
+}
+
+.dashboard-activity-item.activity-survey
+.dashboard-activity-icon {
+    background: #ecfeff;
+    color: #0891b2;
+}
+
+.dashboard-activity-item.activity-quotation
+.dashboard-activity-icon {
+    background: #fff7ed;
+    color: #c2410c;
+}
+
+.dashboard-activity-item.activity-deal
+.dashboard-activity-icon {
+    background: #f0fdf4;
+    color: #15803d;
+}
+
+.dashboard-activity-item.activity-no-deal
+.dashboard-activity-icon {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+
+/* ============================================================
+   RECENT EMPTY
+============================================================ */
+
+.dashboard-activity-empty {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    min-height: 150px;
+
+    padding: 25px;
+
+    text-align: center;
+
+    font-size: 12px;
 
     color: #94a3b8;
 }
@@ -915,38 +1534,69 @@
 
 .profile-pipeline {
     display: grid;
-    grid-template-columns: repeat(7, minmax(0, 1fr));
+
+    grid-template-columns:
+        repeat(7, minmax(0, 1fr));
+
     gap: 8px;
+
     width: 100%;
 }
 
 .profile-pipeline-item {
     position: relative;
+
     min-width: 0;
+
     padding: 10px;
 
     border: 1px solid #e5e7eb;
+
     border-radius: 11px;
 
     background: #ffffff;
+
+    transition:
+        transform 0.18s ease,
+        border-color 0.18s ease,
+        box-shadow 0.18s ease;
+}
+
+.profile-pipeline-item:hover {
+    transform: translateY(-2px);
+
+    border-color: #cbd5e1;
+
+    box-shadow:
+        0 6px 15px rgba(15, 23, 42, 0.06);
 }
 
 .profile-pipeline-item.active {
     border-color: rgba(245, 158, 11, 0.45);
+
     background: #fffbeb;
+
+    box-shadow:
+        0 5px 15px rgba(245, 158, 11, 0.08);
 }
 
 .profile-pipeline-item-title {
     font-size: 10px;
+
     line-height: 1.35;
+
     font-weight: 700;
+
     color: #64748b;
 }
 
 .profile-pipeline-item-value {
     margin-top: 6px;
+
     font-size: 16px;
+
     font-weight: 800;
+
     color: #0f172a;
 }
 
@@ -957,10 +1607,12 @@
 
 .dashboard-sales-lead-list-section {
     width: 100%;
+
     margin-top: 24px;
-    margin-bottom: 28px;
+    margin-bottom: 30px;
 
     border: 1px solid #e2e8f0;
+
     border-radius: 20px;
 
     background: #ffffff;
@@ -971,7 +1623,8 @@
 
     overflow: hidden;
 
-    animation: dashboardLeadSectionIn 0.3s ease both;
+    animation:
+        dashboardLeadSectionIn 0.3s ease both;
 }
 
 @keyframes dashboardLeadSectionIn {
@@ -993,8 +1646,10 @@
 
 .dashboard-sales-lead-list-header {
     display: flex;
+
     align-items: center;
     justify-content: space-between;
+
     gap: 16px;
 
     padding: 20px;
@@ -1011,7 +1666,9 @@
 
 .dashboard-sales-lead-list-heading {
     display: flex;
+
     align-items: center;
+
     gap: 12px;
 
     min-width: 0;
@@ -1019,6 +1676,7 @@
 
 .dashboard-sales-lead-list-title-icon {
     display: flex;
+
     align-items: center;
     justify-content: center;
 
@@ -1048,7 +1706,9 @@
     margin: 0;
 
     font-size: 17px;
+
     line-height: 1.3;
+
     font-weight: 800;
 
     color: #111827;
@@ -1058,6 +1718,7 @@
     margin: 4px 0 0;
 
     font-size: 12px;
+
     line-height: 1.45;
 
     color: #64748b;
@@ -1069,6 +1730,7 @@
     padding: 7px 10px;
 
     border: 1px solid #fed7aa;
+
     border-radius: 10px;
 
     background: #fff7ed;
@@ -1076,7 +1738,9 @@
     color: #c2410c;
 
     font-size: 11px;
+
     line-height: 1;
+
     font-weight: 800;
 }
 
@@ -1087,8 +1751,10 @@
 
 .dashboard-sales-lead-list-toolbar {
     display: flex;
+
     align-items: center;
     justify-content: space-between;
+
     gap: 12px;
 
     padding: 14px 20px;
@@ -1100,13 +1766,16 @@
 
 .dashboard-sales-lead-search-wrap {
     position: relative;
+
     flex: 1 1 auto;
+
     min-width: 180px;
     max-width: 520px;
 }
 
 .dashboard-sales-lead-search-icon {
     position: absolute;
+
     top: 50%;
     left: 12px;
 
@@ -1122,11 +1791,13 @@
 
 .dashboard-sales-lead-search {
     width: 100%;
+
     height: 40px;
 
     padding: 0 13px 0 38px;
 
     border: 1px solid #dbe3ec;
+
     border-radius: 11px;
 
     background: #f8fafc;
@@ -1134,6 +1805,7 @@
     color: #1e293b;
 
     font: inherit;
+
     font-size: 12px;
 
     transition:
@@ -1152,6 +1824,7 @@
 
 .dashboard-sales-lead-search:focus {
     outline: none;
+
     background: #ffffff;
 
     border-color: #f59e0b;
@@ -1168,6 +1841,7 @@
     padding: 0 32px 0 11px;
 
     border: 1px solid #dbe3ec;
+
     border-radius: 11px;
 
     background: #ffffff;
@@ -1175,7 +1849,9 @@
     color: #475569;
 
     font: inherit;
+
     font-size: 12px;
+
     font-weight: 600;
 
     cursor: pointer;
@@ -1183,6 +1859,7 @@
 
 .dashboard-sales-lead-page-size:focus {
     outline: none;
+
     border-color: #f59e0b;
 
     box-shadow:
@@ -1196,16 +1873,20 @@
 
 .dashboard-sales-lead-table-wrap {
     width: 100%;
+
     overflow-x: auto;
     overflow-y: hidden;
+
     -webkit-overflow-scrolling: touch;
 }
 
 .dashboard-sales-lead-table {
     width: 100%;
+
     min-width: 940px;
 
     border-collapse: separate;
+
     border-spacing: 0;
 
     font-size: 12px;
@@ -1213,7 +1894,9 @@
 
 .dashboard-sales-lead-table thead th {
     position: sticky;
+
     top: 0;
+
     z-index: 1;
 
     padding: 12px 14px;
@@ -1225,13 +1908,17 @@
     color: #64748b;
 
     font-size: 10px;
+
     line-height: 1.3;
+
     font-weight: 800;
 
     letter-spacing: 0.055em;
+
     text-transform: uppercase;
 
     text-align: left;
+
     white-space: nowrap;
 }
 
@@ -1246,8 +1933,7 @@
 }
 
 .dashboard-sales-lead-table tbody tr {
-    transition:
-        background 0.16s ease;
+    transition: background 0.16s ease;
 }
 
 .dashboard-sales-lead-table tbody tr:hover {
@@ -1318,12 +2004,15 @@
     overflow: hidden;
 
     font-size: 12px;
+
     line-height: 1.4;
+
     font-weight: 800;
 
     color: #1e293b;
 
     text-overflow: ellipsis;
+
     white-space: nowrap;
 }
 
@@ -1335,11 +2024,13 @@
     margin-top: 3px;
 
     font-size: 10px;
+
     line-height: 1.35;
 
     color: #94a3b8;
 
     text-overflow: ellipsis;
+
     white-space: nowrap;
 }
 
@@ -1354,12 +2045,15 @@
     overflow: hidden;
 
     font-size: 11px;
+
     line-height: 1.4;
+
     font-weight: 650;
 
     color: #475569;
 
     text-overflow: ellipsis;
+
     white-space: nowrap;
 }
 
@@ -1370,8 +2064,11 @@
 
 .dashboard-sales-lead-phone {
     font-size: 11px;
+
     line-height: 1.4;
+
     color: #475569;
+
     white-space: nowrap;
 }
 
@@ -1388,11 +2085,13 @@
     max-width: 190px;
 
     font-size: 11px;
+
     line-height: 1.4;
 
     color: #64748b;
 
     text-overflow: ellipsis;
+
     white-space: nowrap;
 }
 
@@ -1403,17 +2102,22 @@
 
 .dashboard-sales-lead-status {
     display: inline-flex;
+
     align-items: center;
     justify-content: center;
 
     min-height: 24px;
+
     padding: 4px 8px;
 
     border: 1px solid transparent;
+
     border-radius: 999px;
 
     font-size: 9px;
+
     line-height: 1.2;
+
     font-weight: 800;
 
     white-space: nowrap;
@@ -1421,51 +2125,67 @@
 
 .dashboard-sales-lead-status-new {
     background: #eff6ff;
+
     border-color: #dbeafe;
+
     color: #2563eb;
 }
 
 .dashboard-sales-lead-status-first-contact {
     background: #f5f3ff;
+
     border-color: #ede9fe;
+
     color: #7c3aed;
 }
 
 .dashboard-sales-lead-status-appointment {
     background: #fffbeb;
+
     border-color: #fef3c7;
+
     color: #b45309;
 }
 
 .dashboard-sales-lead-status-site-survey {
     background: #ecfeff;
+
     border-color: #cffafe;
+
     color: #0891b2;
 }
 
 .dashboard-sales-lead-status-quotation {
     background: #fff7ed;
+
     border-color: #ffedd5;
+
     color: #c2410c;
 }
 
 .dashboard-sales-lead-status-deal,
 .dashboard-sales-lead-status-closing {
     background: #f0fdf4;
+
     border-color: #dcfce7;
+
     color: #15803d;
 }
 
 .dashboard-sales-lead-status-no-deal,
 .dashboard-sales-lead-status-not-interested {
     background: #fef2f2;
+
     border-color: #fee2e2;
+
     color: #dc2626;
 }
 
 .dashboard-sales-lead-status-default {
     background: #f8fafc;
+
     border-color: #e2e8f0;
+
     color: #64748b;
 }
 
@@ -1476,8 +2196,11 @@
 
 .dashboard-sales-lead-date {
     font-size: 10px;
+
     line-height: 1.45;
+
     color: #64748b;
+
     white-space: nowrap;
 }
 
@@ -1488,14 +2211,18 @@
 
 .dashboard-sales-lead-view {
     display: inline-flex;
+
     align-items: center;
     justify-content: center;
+
     gap: 5px;
 
     min-height: 30px;
+
     padding: 6px 9px;
 
     border: 1px solid #e2e8f0;
+
     border-radius: 9px;
 
     background: #ffffff;
@@ -1503,8 +2230,11 @@
     color: #475569;
 
     font: inherit;
+
     font-size: 10px;
+
     line-height: 1;
+
     font-weight: 800;
 
     cursor: pointer;
@@ -1547,7 +2277,9 @@
 
 .dashboard-sales-lead-empty {
     display: flex;
+
     flex-direction: column;
+
     align-items: center;
     justify-content: center;
 
@@ -1560,6 +2292,7 @@
 
 .dashboard-sales-lead-empty-icon {
     display: flex;
+
     align-items: center;
     justify-content: center;
 
@@ -1571,14 +2304,22 @@
     border-radius: 14px;
 
     background: #f8fafc;
+
     color: #94a3b8;
+}
+
+.dashboard-sales-lead-empty-icon svg {
+    width: 22px;
+    height: 22px;
 }
 
 .dashboard-sales-lead-empty-title {
     margin: 0;
 
     font-size: 14px;
+
     line-height: 1.4;
+
     font-weight: 800;
 
     color: #334155;
@@ -1590,6 +2331,7 @@
     margin: 6px 0 0;
 
     font-size: 12px;
+
     line-height: 1.5;
 
     color: #94a3b8;
@@ -1602,6 +2344,7 @@
 
 .dashboard-sales-lead-loading {
     display: flex;
+
     align-items: center;
     justify-content: center;
 
@@ -1612,6 +2355,7 @@
     color: #64748b;
 
     font-size: 12px;
+
     font-weight: 700;
 }
 
@@ -1624,11 +2368,13 @@
     margin-right: 9px;
 
     border: 2px solid #e2e8f0;
+
     border-top-color: #f59e0b;
 
     border-radius: 50%;
 
-    animation: dashboardSpinner 0.7s linear infinite;
+    animation:
+        dashboardSpinner 0.7s linear infinite;
 }
 
 @keyframes dashboardSpinner {
@@ -1644,8 +2390,10 @@
 
 .dashboard-sales-lead-pagination {
     display: flex;
+
     align-items: center;
     justify-content: space-between;
+
     gap: 12px;
 
     padding: 14px 20px;
@@ -1657,7 +2405,9 @@
 
 .dashboard-sales-lead-pagination-info {
     font-size: 11px;
+
     line-height: 1.4;
+
     font-weight: 600;
 
     color: #64748b;
@@ -1665,12 +2415,15 @@
 
 .dashboard-sales-lead-pagination-buttons {
     display: flex;
+
     align-items: center;
+
     gap: 5px;
 }
 
 .dashboard-sales-lead-page-button {
     display: inline-flex;
+
     align-items: center;
     justify-content: center;
 
@@ -1680,6 +2433,7 @@
     padding: 0 8px;
 
     border: 1px solid #e2e8f0;
+
     border-radius: 8px;
 
     background: #ffffff;
@@ -1687,7 +2441,9 @@
     color: #64748b;
 
     font: inherit;
+
     font-size: 10px;
+
     font-weight: 800;
 
     cursor: pointer;
@@ -1700,19 +2456,24 @@
 
 .dashboard-sales-lead-page-button:hover:not(:disabled) {
     border-color: #fdba74;
+
     background: #fff7ed;
+
     color: #c2410c;
 }
 
 .dashboard-sales-lead-page-button.is-active,
 .dashboard-sales-lead-page-button.active {
     border-color: #f59e0b;
+
     background: #f59e0b;
+
     color: #ffffff;
 }
 
 .dashboard-sales-lead-page-button:disabled {
     opacity: 0.45;
+
     cursor: not-allowed;
 }
 
@@ -1737,8 +2498,10 @@
 
 .dashboard-sales-lead-mobile-card-header {
     display: flex;
+
     align-items: flex-start;
     justify-content: space-between;
+
     gap: 12px;
 }
 
@@ -1746,7 +2509,9 @@
     margin: 0;
 
     font-size: 13px;
+
     line-height: 1.35;
+
     font-weight: 800;
 
     color: #1e293b;
@@ -1754,11 +2519,13 @@
 
 .dashboard-sales-lead-mobile-card-row {
     display: flex;
+
     gap: 7px;
 
     margin-top: 8px;
 
     font-size: 11px;
+
     line-height: 1.4;
 
     color: #64748b;
@@ -1768,6 +2535,7 @@
     flex: 0 0 70px;
 
     font-size: 9px;
+
     font-weight: 800;
 
     color: #94a3b8;
@@ -1777,6 +2545,7 @@
 
 .dashboard-sales-lead-mobile-card-value {
     min-width: 0;
+
     overflow: hidden;
 
     text-overflow: ellipsis;
@@ -1798,6 +2567,7 @@
     padding: 18px;
 
     border: 1px solid rgba(226, 232, 240, 0.95);
+
     border-radius: 18px;
 
     background: rgba(255, 255, 255, 0.98);
@@ -1807,20 +2577,28 @@
         0 6px 18px rgba(15, 23, 42, 0.08);
 
     backdrop-filter: blur(16px);
+
     -webkit-backdrop-filter: blur(16px);
 
-    animation: dashboardPopupIn 0.2s ease both;
+    animation:
+        dashboardPopupIn 0.2s ease both;
 }
 
 @keyframes dashboardPopupIn {
     from {
         opacity: 0;
-        transform: translateY(7px) scale(0.98);
+
+        transform:
+            translateY(7px)
+            scale(0.98);
     }
 
     to {
         opacity: 1;
-        transform: translateY(0) scale(1);
+
+        transform:
+            translateY(0)
+            scale(1);
     }
 }
 
@@ -1828,7 +2606,9 @@
     margin: 0;
 
     font-size: 15px;
+
     line-height: 1.4;
+
     font-weight: 800;
 
     color: #111827;
@@ -1838,6 +2618,7 @@
     margin-top: 10px;
 
     font-size: 12px;
+
     line-height: 1.6;
 
     color: #64748b;
@@ -1845,6 +2626,7 @@
 
 .dashboard-popup-close {
     display: inline-flex;
+
     align-items: center;
     justify-content: center;
 
@@ -1852,6 +2634,7 @@
     height: 30px;
 
     border: 0;
+
     border-radius: 8px;
 
     background: #f8fafc;
@@ -1863,6 +2646,7 @@
 
 .dashboard-popup-close:hover {
     background: #f1f5f9;
+
     color: #334155;
 }
 
@@ -1873,15 +2657,19 @@
 
 .dashboard-error {
     display: flex;
+
     align-items: flex-start;
+
     gap: 12px;
 
     width: 100%;
 
     margin-bottom: 20px;
+
     padding: 14px 16px;
 
     border: 1px solid #fecaca;
+
     border-radius: 14px;
 
     background: #fef2f2;
@@ -1889,11 +2677,13 @@
     color: #991b1b;
 
     font-size: 12px;
+
     line-height: 1.5;
 }
 
 .dashboard-error-icon {
     flex: 0 0 auto;
+
     margin-top: 1px;
 }
 
@@ -1908,6 +2698,7 @@
 
 .dashboard-loading {
     display: flex;
+
     align-items: center;
     justify-content: center;
 
@@ -1916,6 +2707,7 @@
     color: #64748b;
 
     font-size: 12px;
+
     font-weight: 700;
 }
 
@@ -1926,11 +2718,13 @@
     margin-right: 9px;
 
     border: 2px solid #e2e8f0;
+
     border-top-color: #f59e0b;
 
     border-radius: 50%;
 
-    animation: dashboardSpinner 0.7s linear infinite;
+    animation:
+        dashboardSpinner 0.7s linear infinite;
 }
 
 
@@ -1940,8 +2734,10 @@
 
 .dashboard-btn {
     display: inline-flex;
+
     align-items: center;
     justify-content: center;
+
     gap: 7px;
 
     min-height: 36px;
@@ -1949,6 +2745,7 @@
     padding: 8px 12px;
 
     border: 1px solid #e2e8f0;
+
     border-radius: 10px;
 
     background: #ffffff;
@@ -1956,7 +2753,9 @@
     color: #475569;
 
     font: inherit;
+
     font-size: 11px;
+
     font-weight: 800;
 
     cursor: pointer;
@@ -1988,7 +2787,9 @@
 
 .dashboard-btn-primary:hover {
     border-color: #d97706;
+
     background: #d97706;
+
     color: #ffffff;
 }
 
@@ -2000,7 +2801,9 @@
 .dashboard-view-all,
 #dashboardViewAll {
     display: inline-flex;
+
     align-items: center;
+
     gap: 6px;
 
     border: 0;
@@ -2010,7 +2813,9 @@
     color: #ea580c;
 
     font: inherit;
+
     font-size: 11px;
+
     font-weight: 800;
 
     cursor: pointer;
@@ -2023,7 +2828,8 @@
 
 .dashboard-view-all svg,
 #dashboardViewAll svg {
-    transition: transform 0.18s ease;
+    transition:
+        transform 0.18s ease;
 }
 
 .dashboard-view-all:hover svg,
@@ -2060,6 +2866,7 @@
 
 .dashboard-sales-lead-table-wrap::-webkit-scrollbar-thumb {
     border-radius: 999px;
+
     background: #cbd5e1;
 }
 
@@ -2070,7 +2877,6 @@
 
 /* ============================================================
    42. BASE RESPONSIVE - 1200PX
-   responsive.css tetap boleh override bagian ini.
 ============================================================ */
 
 @media (max-width: 1200px) {
@@ -2078,20 +2884,43 @@
     .dashboard-stats,
     .dashboard-stats-grid,
     .stats-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
     }
 
     .dashboard-sales-cards-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
     }
 
     .dashboard-pipeline-grid,
     .sales-pipeline-grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns:
+            repeat(4, minmax(0, 1fr));
+
+        gap: 10px;
+    }
+
+    .dashboard-pipeline-grid::before,
+    .sales-pipeline-grid::before {
+        display: none;
+    }
+
+    .dashboard-pipeline-stage {
+        padding: 4px;
+    }
+
+    .dashboard-pipeline-stage::after {
+        padding-top: 8px;
+    }
+
+    .dashboard-pipeline-stage-title {
+        margin-top: -36px;
     }
 
     .profile-pipeline {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns:
+            repeat(4, minmax(0, 1fr));
     }
 }
 
@@ -2105,11 +2934,13 @@
     .dashboard-stats,
     .dashboard-stats-grid,
     .stats-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
     }
 
     .dashboard-sales-cards-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
     }
 
     .dashboard-grid {
@@ -2122,11 +2953,42 @@
 
     .dashboard-pipeline-grid,
     .sales-pipeline-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+
+        gap: 12px;
+    }
+
+    .dashboard-pipeline-stage {
+        padding: 3px;
+    }
+
+    .dashboard-pipeline-stage-header {
+        min-height: 48px;
+    }
+
+    .dashboard-pipeline-stage-number {
+        width: 40px;
+        height: 40px;
+
+        font-size: 10px;
+    }
+
+    .dashboard-pipeline-stage-title {
+        margin-top: -33px;
+
+        min-height: 36px;
+
+        font-size: 10px;
+    }
+
+    .dashboard-pipeline-stage-count {
+        font-size: 21px;
     }
 
     .profile-pipeline {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
     }
 }
 
@@ -2137,15 +2999,22 @@
 
 @media (max-width: 700px) {
 
+    .dashboard-section {
+        margin-bottom: 24px;
+    }
+
     .dashboard-stats,
     .dashboard-stats-grid,
     .stats-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+
         gap: 10px;
     }
 
     .dashboard-sales-cards-grid {
         grid-template-columns: 1fr;
+
         gap: 10px;
     }
 
@@ -2153,13 +3022,21 @@
         min-height: 92px;
     }
 
+    .dashboard-sales-section-header {
+        align-items: flex-start;
+
+        flex-direction: column;
+    }
+
     .dashboard-sales-lead-list-header {
         align-items: flex-start;
+
         flex-direction: column;
     }
 
     .dashboard-sales-lead-list-toolbar {
         align-items: stretch;
+
         flex-direction: column;
     }
 
@@ -2173,22 +3050,77 @@
 
     .dashboard-sales-lead-pagination {
         align-items: flex-start;
+
         flex-direction: column;
     }
 
     .dashboard-sales-lead-pagination-buttons {
         width: 100%;
+
         overflow-x: auto;
+
         padding-bottom: 2px;
     }
 
+    /*
+       Pipeline mobile/tablet:
+       2 columns agar setiap stage tetap readable.
+    */
+
     .dashboard-pipeline-grid,
     .sales-pipeline-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+
+        gap: 12px;
+    }
+
+    .dashboard-pipeline-stage {
+        padding: 4px;
+    }
+
+    .dashboard-pipeline-stage::after {
+        padding-top: 8px;
+    }
+
+    .dashboard-pipeline-stage-header {
+        min-height: 46px;
+    }
+
+    .dashboard-pipeline-stage-number {
+        width: 40px;
+        height: 40px;
+    }
+
+    .dashboard-pipeline-stage-title {
+        margin-top: -32px;
+
+        min-height: 32px;
+    }
+
+    .dashboard-pipeline-stage-count {
+        margin-top: 8px;
+
+        font-size: 22px;
+    }
+
+    .dashboard-pipeline-stage-description {
+        min-height: auto;
+
+        margin-bottom: 10px;
+    }
+
+    .dashboard-activity-item {
+        gap: 10px;
+    }
+
+    .dashboard-activity-time {
+        font-size: 9px;
     }
 
     .profile-pipeline {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
     }
 }
 
@@ -2202,13 +3134,15 @@
     .dashboard-stats,
     .dashboard-stats-grid,
     .stats-grid {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns:
+            1fr 1fr;
     }
 
     .dashboard-stat-card,
     .stat-card,
     .dashboard-stat {
         padding: 15px;
+
         border-radius: 14px;
     }
 
@@ -2242,6 +3176,63 @@
     .dashboard-sales-lead-pagination {
         padding: 12px 15px;
     }
+
+    .dashboard-activity-item {
+        min-height: 58px;
+
+        padding: 8px 2px;
+    }
+
+    .dashboard-activity-icon {
+        width: 34px;
+        height: 34px;
+
+        border-radius: 10px;
+    }
+
+    .dashboard-activity-title {
+        font-size: 11px;
+    }
+
+    .dashboard-activity-description {
+        font-size: 10px;
+    }
+
+    .dashboard-activity-time {
+        display: none;
+    }
+
+    .dashboard-activity-list::before {
+        left: 17px;
+    }
+
+    /*
+       Di layar kecil pipeline menjadi card grid.
+    */
+
+    .dashboard-pipeline-grid,
+    .sales-pipeline-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+
+        gap: 10px;
+    }
+
+    .dashboard-pipeline-stage::after {
+        margin-top: 8px;
+    }
+
+    .dashboard-pipeline-stage-title {
+        font-size: 9px;
+    }
+
+    .dashboard-pipeline-stage-count {
+        font-size: 20px;
+    }
+
+    .dashboard-pipeline-stage-description {
+        font-size: 8px;
+    }
 }
 
 
@@ -2264,6 +3255,7 @@
     .dashboard-sales-card-icon {
         width: 42px;
         height: 42px;
+
         border-radius: 12px;
     }
 
@@ -2271,9 +3263,79 @@
         font-size: 18px;
     }
 
+    /*
+       Pipeline satu kolom untuk layar sangat kecil.
+    */
+
     .dashboard-pipeline-grid,
     .sales-pipeline-grid {
         grid-template-columns: 1fr;
+
+        gap: 8px;
+    }
+
+    .dashboard-pipeline-stage {
+        display: grid;
+
+        grid-template-columns: 48px minmax(0, 1fr);
+
+        align-items: center;
+
+        column-gap: 10px;
+
+        padding: 7px 8px;
+
+        border: 1px solid #e5e7eb;
+
+        border-radius: 14px;
+
+        background: #ffffff;
+
+        box-shadow:
+            0 4px 12px rgba(15, 23, 42, 0.035);
+    }
+
+    .dashboard-pipeline-stage::after {
+        display: none;
+    }
+
+    .dashboard-pipeline-stage-header {
+        min-height: 48px;
+
+        grid-row: 1 / span 3;
+    }
+
+    .dashboard-pipeline-stage-number {
+        width: 42px;
+        height: 42px;
+    }
+
+    .dashboard-pipeline-stage-title {
+        margin: 0;
+
+        min-height: auto;
+
+        justify-content: flex-start;
+
+        text-align: left;
+
+        font-size: 10px;
+    }
+
+    .dashboard-pipeline-stage-count {
+        margin: 4px 0 0;
+
+        text-align: left;
+
+        font-size: 21px;
+    }
+
+    .dashboard-pipeline-stage-description {
+        margin: 3px 0 0;
+
+        text-align: left;
+
+        font-size: 9px;
     }
 
     .profile-pipeline {
@@ -2290,7 +3352,21 @@
 
     .dashboard-sales-lead-page-button {
         min-width: 28px;
+
         height: 28px;
+    }
+
+    .dashboard-activity-item {
+        gap: 8px;
+    }
+
+    .dashboard-activity-icon {
+        width: 32px;
+        height: 32px;
+    }
+
+    .dashboard-activity-list::before {
+        left: 16px;
     }
 }
 
@@ -2319,7 +3395,8 @@
     .pipeline-stage,
     .dashboard-activity-item,
     .dashboard-btn,
-    .dashboard-sales-lead-view {
+    .dashboard-sales-lead-view,
+    .profile-pipeline-item {
         transition: none !important;
     }
 }
