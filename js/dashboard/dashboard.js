@@ -25,6 +25,7 @@
 // - Klik Sales -> Leads dengan filter Sales.
 // - Klik Status -> Leads dengan filter Status.
 // - Jika Sales sudah dipilih, Status + Sales digabung.
+// - Status Dashboard dinormalisasi dengan status Leads.
 //
 // ROLE RULE:
 //
@@ -57,6 +58,8 @@ let dashboardSelectedSalesIdState = "";
 let dashboardSalesFilterBound = false;
 
 let dashboardViewAllBound = false;
+
+let dashboardStatCardClicksBound = false;
 
 
 // ============================================================
@@ -895,6 +898,463 @@ function dashboardFindSalesCardsContainer() {
 
 
 // ============================================================
+// STATUS NORMALIZATION
+// ============================================================
+//
+// Fungsi ini menyamakan status Dashboard dengan status Leads.
+//
+// Contoh:
+//
+// "New Customer"   -> "New"
+// "Deal / Closing" -> "Deal"
+// "Closing"        -> "Deal"
+//
+// Dengan begitu Dashboard tidak lagi gagal menemukan lead
+// hanya karena nama status di UI berbeda dengan database.
+//
+// ============================================================
+
+function dashboardNormalizeStatus(
+    status
+) {
+
+    const value =
+        String(
+            status ?? ""
+        )
+        .trim();
+
+
+    if (!value) {
+        return "";
+    }
+
+
+    const normalized =
+        value
+            .replace(
+                /\s+/g,
+                " "
+            )
+            .trim();
+
+
+    const lower =
+        normalized.toLowerCase();
+
+
+    const statusMap = {
+
+        "new":
+            "New",
+
+        "new customer":
+            "New",
+
+        "first contact":
+            "First Contact",
+
+        "appointment":
+            "Appointment",
+
+        "first meeting":
+            "Appointment",
+
+        "site survey":
+            "Site Survey",
+
+        "first meeting / appointment / site survey":
+            "Site Survey",
+
+        "quotation":
+            "Quotation",
+
+        "second appointment":
+            "Second Appointment",
+
+        "deal":
+            "Deal",
+
+        "deal / closing":
+            "Deal",
+
+        "closing":
+            "Deal",
+
+        "no deal":
+            "No Deal"
+
+    };
+
+
+    return (
+        statusMap[lower] ||
+        normalized
+    );
+}
+
+
+// ============================================================
+// FILTER DASHBOARD DATA FOR STAT
+// ============================================================
+//
+// Dipakai ketika Dashboard membutuhkan lead yang sesuai
+// dengan status card.
+//
+// ============================================================
+
+function dashboardFilterDataForStat(
+    leads,
+    status
+) {
+
+    const data =
+        Array.isArray(
+            leads
+        )
+            ? leads
+            : [];
+
+
+    const targetStatus =
+        dashboardNormalizeStatus(
+            status
+        );
+
+
+    if (!targetStatus) {
+
+        return data;
+    }
+
+
+    return data.filter(
+        lead => {
+
+            const leadStatus =
+                dashboardNormalizeStatus(
+                    lead?.status
+                );
+
+
+            return (
+                leadStatus ===
+                targetStatus
+            );
+        }
+    );
+}
+
+
+// ============================================================
+// GET STATUS FROM STAT CARD
+// ============================================================
+//
+// Dashboard statistics renderer bisa menggunakan:
+//
+// data-status
+// data-filter-status
+// data-lead-status
+//
+// Jika atribut tersebut tidak ada, fungsi akan membaca teks
+// card sebagai fallback.
+//
+// ============================================================
+
+function dashboardGetStatCardStatus(
+    card
+) {
+
+    if (!card) {
+        return "";
+    }
+
+
+    // ========================================================
+    // DATA ATTRIBUTE
+    // ========================================================
+
+    const dataStatus =
+        card.dataset?.status ||
+        card.dataset?.filterStatus ||
+        card.dataset?.leadStatus ||
+        card.getAttribute(
+            "data-status"
+        ) ||
+        card.getAttribute(
+            "data-filter-status"
+        ) ||
+        card.getAttribute(
+            "data-lead-status"
+        );
+
+
+    if (dataStatus) {
+
+        return dashboardNormalizeStatus(
+            dataStatus
+        );
+    }
+
+
+    // ========================================================
+    // TEXT FALLBACK
+    // ========================================================
+
+    const text =
+        String(
+            card.textContent ||
+            ""
+        )
+        .replace(
+            /\s+/g,
+            " "
+        )
+        .trim()
+        .toLowerCase();
+
+
+    if (
+        text.includes(
+            "second appointment"
+        )
+    ) {
+
+        return "Second Appointment";
+    }
+
+
+    if (
+        text.includes(
+            "deal / closing"
+        )
+    ) {
+
+        return "Deal";
+    }
+
+
+    if (
+        text.includes(
+            "closing"
+        )
+    ) {
+
+        return "Deal";
+    }
+
+
+    if (
+        text.includes(
+            "no deal"
+        )
+    ) {
+
+        return "No Deal";
+    }
+
+
+    if (
+        text.includes(
+            "site survey"
+        )
+    ) {
+
+        return "Site Survey";
+    }
+
+
+    if (
+        text.includes(
+            "quotation"
+        )
+    ) {
+
+        return "Quotation";
+    }
+
+
+    if (
+        text.includes(
+            "appointment"
+        )
+    ) {
+
+        return "Appointment";
+    }
+
+
+    if (
+        text.includes(
+            "first contact"
+        )
+    ) {
+
+        return "First Contact";
+    }
+
+
+    if (
+        text.includes(
+            "new customer"
+        )
+    ) {
+
+        return "New";
+    }
+
+
+    if (
+        text ===
+        "new"
+    ) {
+
+        return "New";
+    }
+
+
+    return "";
+}
+
+
+// ============================================================
+// BIND DASHBOARD STAT CARD CLICKS
+// ============================================================
+//
+// PERBAIKAN UTAMA:
+//
+// Sebelumnya updateDashboard() memanggil:
+//
+// dashboardBindStatCardClicks()
+//
+// tetapi fungsi tersebut tidak tersedia di dashboard.js.
+//
+// Akibatnya browser dapat menghasilkan:
+//
+// ReferenceError:
+// dashboardBindStatCardClicks is not defined
+//
+// Sekarang fungsi ini menggunakan delegated click listener,
+// sehingga tetap bekerja walaupun card statistik dibuat ulang
+// oleh renderDashboardStats().
+//
+// ============================================================
+
+function dashboardBindStatCardClicks() {
+
+    if (
+        dashboardStatCardClicksBound
+    ) {
+
+        return;
+    }
+
+
+    dashboardStatCardClicksBound =
+        true;
+
+
+    document.addEventListener(
+        "click",
+        function (event) {
+
+            const target =
+                event.target;
+
+
+            if (!target) {
+                return;
+            }
+
+
+            // =================================================
+            // FIND STAT CARD
+            // =================================================
+
+            const card =
+                target.closest(
+                    [
+                        "[data-status]",
+                        "[data-filter-status]",
+                        "[data-lead-status]",
+                        ".dashboard-stat-card",
+                        ".dashboard-stat",
+                        ".stat-card"
+                    ].join(",")
+                );
+
+
+            if (!card) {
+                return;
+            }
+
+
+            // =================================================
+            // STATUS
+            // =================================================
+
+            const status =
+                dashboardGetStatCardStatus(
+                    card
+                );
+
+
+            if (!status) {
+
+                console.log(
+                    "FSI CRM: klik element Dashboard tetapi status tidak ditemukan."
+                );
+
+                return;
+            }
+
+
+            // =================================================
+            // PREVENT DEFAULT
+            // =================================================
+
+            event.preventDefault();
+
+
+            // =================================================
+            // SELECTED SALES
+            // =================================================
+
+            const selectedSalesId =
+                dashboardGetSelectedSalesId();
+
+
+            console.log(
+                "FSI CRM: Dashboard status card clicked:",
+                {
+                    status,
+                    selectedSalesId:
+                        selectedSalesId ||
+                        "ALL SALES"
+                }
+            );
+
+
+            // =================================================
+            // OPEN LEADS
+            // =================================================
+
+            dashboardOpenStatusInLeads(
+                status
+            );
+
+        },
+        true
+    );
+
+
+    console.log(
+        "FSI CRM: Dashboard stat card click binding ready."
+    );
+}
+
+
+// ============================================================
 // DASHBOARD -> LEADS WITH FILTER
 // ============================================================
 //
@@ -921,11 +1381,17 @@ function dashboardOpenLeadsWithFilters(
         ).trim();
 
 
-    const status =
+    const rawStatus =
         String(
             filters?.status ||
             ""
         ).trim();
+
+
+    const status =
+        dashboardNormalizeStatus(
+            rawStatus
+        );
 
 
     const filterData = {
@@ -1046,10 +1512,9 @@ function dashboardOpenStatusInLeads(
 ) {
 
     const value =
-        String(
-            status ||
-            ""
-        ).trim();
+        dashboardNormalizeStatus(
+            status
+        );
 
 
     dashboardOpenLeadsWithFilters({
@@ -2084,10 +2549,14 @@ async function updateDashboard() {
         // ====================================================
         // STATUS PIPELINE
         // ====================================================
+        //
+        // Gunakan status yang sesuai dengan Leads.
+        //
+        // ====================================================
 
         const dashboardStatuses = [
 
-            "New Customer",
+            "New",
 
             "First Contact",
 
@@ -2097,7 +2566,9 @@ async function updateDashboard() {
 
             "Quotation",
 
-            "Deal / Closing",
+            "Second Appointment",
+
+            "Deal",
 
             "No Deal"
 
@@ -2173,6 +2644,7 @@ async function updateDashboard() {
             stats.closing =
                 Number(
                     stats.dealClosing ||
+                    stats.deal ||
                     0
                 );
         }
@@ -2225,7 +2697,7 @@ async function updateDashboard() {
         //
         // Customer list berada di halaman Leads.
         //
-        // ========================================================
+        // ====================================================
 
 
         // ====================================================
@@ -2931,7 +3403,7 @@ document.addEventListener(
 
         window.FSIDashboard.statuses = [
 
-            "New Customer",
+            "New",
 
             "First Contact",
 
@@ -2941,7 +3413,9 @@ document.addEventListener(
 
             "Quotation",
 
-            "Deal / Closing",
+            "Second Appointment",
+
+            "Deal",
 
             "No Deal"
 
@@ -3235,6 +3709,18 @@ window.dashboardFilterDataForStat =
 
 
 // ============================================================
+// STATUS NORMALIZATION EXPORT
+// ============================================================
+
+window.dashboardNormalizeStatus =
+    dashboardNormalizeStatus;
+
+
+window.dashboardGetStatCardStatus =
+    dashboardGetStatCardStatus;
+
+
+// ============================================================
 // FSI DASHBOARD NAMESPACE
 // ============================================================
 
@@ -3368,7 +3854,7 @@ Object.assign(
 
         statuses: [
 
-            "New Customer",
+            "New",
 
             "First Contact",
 
@@ -3378,7 +3864,9 @@ Object.assign(
 
             "Quotation",
 
-            "Deal / Closing",
+            "Second Appointment",
+
+            "Deal",
 
             "No Deal"
 
