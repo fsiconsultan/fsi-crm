@@ -1,1751 +1,431 @@
 /* =========================================================
-   FSI CRM — DASHBOARD
-   File:
-   css/dashboard.css
+   FSI CRM — DASHBOARD SALES MANAGEMENT
+   =========================================================
+   Fungsi:
+   1. Sales cards
+   2. Active Sales card
+   3. Customer / Lead list
+   4. Search
+   5. Pagination
+   6. Status badge
+   7. View customer button
+   8. Empty state
+   9. Loading state
+   10. Responsive support
 
-   NOTE:
-   - Dashboard layout
-   - Stat cards
-   - Sales Pipeline
-   - Recent Activity
-   - Profile Pipeline
-   - Greeting
-   - Dashboard Error
-   - Basic dashboard responsive
-   - responsive.css remains final authority
+   IMPORTANT:
+   - Jangan hapus CSS dashboard sebelumnya.
+   - responsive.css tetap menjadi CSS terakhir.
 ========================================================= */
 
 
 /* =========================================================
-   DASHBOARD — STATS GRID
+   SALES CARDS WRAPPER
 ========================================================= */
 
-.stats-grid {
+.dashboard-sales-cards-grid {
     display: grid;
 
     grid-template-columns:
-        repeat(5, minmax(0, 1fr));
-
-    gap: 14px;
-
-    margin-bottom: 18px;
-}
-
-
-/* =========================================================
-   STAT CARD
-========================================================= */
-
-.stat-card {
-    min-width: 0;
-
-    display: flex;
-    align-items: center;
+        repeat(4, minmax(0, 1fr));
 
     gap: 12px;
 
-    min-height: 110px;
-
-    padding: 17px;
-
-    position: relative;
-
-    overflow: hidden;
-
-    background: var(--card-bg);
-
-    border: 1px solid var(--border);
-
-    border-radius: var(--radius-lg);
-
-    box-shadow: var(--shadow-xs);
-
-    transition:
-        transform 0.25s ease,
-        box-shadow 0.25s ease,
-        border-color 0.25s ease;
-}
-
-
-/* =========================================================
-   RUNNING LIGHT
-========================================================= */
-
-.stat-card::before {
-    content: "";
-
-    position: absolute;
-
-    top: -1px;
-    left: -70px;
-
-    width: 70px;
-    height: 2px;
-
-    z-index: 5;
-
-    pointer-events: none;
-
-    border-radius: 999px;
-
-    background:
-        linear-gradient(
-            90deg,
-            transparent 0%,
-            rgba(96, 165, 250, 0.12) 18%,
-            rgba(147, 197, 253, 0.75) 40%,
-            #ffffff 50%,
-            rgba(147, 197, 253, 0.75) 60%,
-            rgba(96, 165, 250, 0.12) 82%,
-            transparent 100%
-        );
-
-    box-shadow:
-        0 0 5px rgba(96, 165, 250, 0.75),
-        0 0 12px rgba(96, 165, 250, 0.40);
-
-    animation:
-        statCardLightMove
-        5s
-        linear
-        infinite;
-}
-
-
-/* =========================================================
-   RUNNING LIGHT — SOFT GLOW
-========================================================= */
-
-.stat-card::after {
-    content: "";
-
-    position: absolute;
-
-    top: -4px;
-    left: -95px;
-
-    width: 100px;
-    height: 8px;
-
-    z-index: 4;
-
-    pointer-events: none;
-
-    border-radius: 999px;
-
-    background:
-        linear-gradient(
-            90deg,
-            transparent,
-            rgba(96, 165, 250, 0.30),
-            rgba(147, 197, 253, 0.42),
-            transparent
-        );
-
-    filter: blur(5px);
-
-    opacity: 0.75;
-
-    animation:
-        statCardLightGlow
-        5s
-        linear
-        infinite;
-}
-
-
-/* =========================================================
-   RUNNING LIGHT — MAIN ANIMATION
-========================================================= */
-
-@keyframes statCardLightMove {
-
-    0% {
-        top: -1px;
-        left: -70px;
-        transform: rotate(0deg);
-    }
-
-    24% {
-        top: -1px;
-        left: calc(100% - 1px);
-        transform: rotate(0deg);
-    }
-
-    25% {
-        top: -70px;
-        left: calc(100% - 1px);
-        transform: rotate(90deg);
-    }
-
-    49% {
-        top: calc(100% - 1px);
-        left: calc(100% - 1px);
-        transform: rotate(90deg);
-    }
-
-    50% {
-        top: calc(100% - 1px);
-        left: calc(100% + 70px);
-        transform: rotate(180deg);
-    }
-
-    74% {
-        top: calc(100% - 1px);
-        left: -70px;
-        transform: rotate(180deg);
-    }
-
-    75% {
-        top: calc(100% + 70px);
-        left: -1px;
-        transform: rotate(270deg);
-    }
-
-    99% {
-        top: -70px;
-        left: -1px;
-        transform: rotate(270deg);
-    }
-
-    100% {
-        top: -1px;
-        left: -70px;
-        transform: rotate(360deg);
-    }
-}
-
-
-/* =========================================================
-   RUNNING LIGHT — GLOW ANIMATION
-========================================================= */
-
-@keyframes statCardLightGlow {
-
-    0% {
-        top: -4px;
-        left: -95px;
-        transform: rotate(0deg);
-    }
-
-    24% {
-        top: -4px;
-        left: calc(100% - 1px);
-        transform: rotate(0deg);
-    }
-
-    25% {
-        top: -95px;
-        left: calc(100% - 1px);
-        transform: rotate(90deg);
-    }
-
-    49% {
-        top: calc(100% - 1px);
-        left: calc(100% - 1px);
-        transform: rotate(90deg);
-    }
-
-    50% {
-        top: calc(100% - 1px);
-        left: calc(100% + 95px);
-        transform: rotate(180deg);
-    }
-
-    74% {
-        top: calc(100% - 1px);
-        left: -95px;
-        transform: rotate(180deg);
-    }
-
-    75% {
-        top: calc(100% + 95px);
-        left: -1px;
-        transform: rotate(270deg);
-    }
-
-    99% {
-        top: -95px;
-        left: -1px;
-        transform: rotate(270deg);
-    }
-
-    100% {
-        top: -4px;
-        left: -95px;
-        transform: rotate(360deg);
-    }
-}
-
-
-/* =========================================================
-   STAT CARD HOVER
-========================================================= */
-
-.stat-card:hover {
-    transform: translateY(-3px);
-
-    border-color: #dbe3ef;
-
-    box-shadow: var(--shadow-md);
-}
-
-.stat-card:hover::before {
-    animation-duration: 2.8s;
-
-    box-shadow:
-        0 0 6px rgba(96, 165, 250, 0.95),
-        0 0 15px rgba(96, 165, 250, 0.55);
-}
-
-.stat-card:hover::after {
-    animation-duration: 2.8s;
-
-    opacity: 1;
-}
-
-
-/* =========================================================
-   STAT CARD ENTRANCE
-========================================================= */
-
-.stats-grid .stat-card {
-    opacity: 0;
-
-    animation:
-        dashboardStatIn
-        0.55s
-        ease-out
-        forwards;
-}
-
-.stats-grid .stat-card:nth-child(1) {
-    animation-delay: 0.05s;
-}
-
-.stats-grid .stat-card:nth-child(2) {
-    animation-delay: 0.10s;
-}
-
-.stats-grid .stat-card:nth-child(3) {
-    animation-delay: 0.15s;
-}
-
-.stats-grid .stat-card:nth-child(4) {
-    animation-delay: 0.20s;
-}
-
-.stats-grid .stat-card:nth-child(5) {
-    animation-delay: 0.25s;
-}
-
-.stats-grid .stat-card:nth-child(6) {
-    animation-delay: 0.30s;
-}
-
-.stats-grid .stat-card:nth-child(7) {
-    animation-delay: 0.35s;
-}
-
-.stats-grid .stat-card:nth-child(8) {
-    animation-delay: 0.40s;
-}
-
-
-@keyframes dashboardStatIn {
-
-    from {
-        opacity: 0;
-
-        transform:
-            translateY(12px);
-    }
-
-    to {
-        opacity: 1;
-
-        transform:
-            translateY(0);
-    }
-}
-
-
-/* =========================================================
-   STAT ICON
-========================================================= */
-
-.stat-icon {
-    width: 43px;
-    height: 43px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    flex-shrink: 0;
-
-    border-radius: 11px;
-
-    transition:
-        transform 0.25s ease,
-        box-shadow 0.25s ease;
-}
-
-.stat-card:hover .stat-icon {
-    transform: scale(1.06);
-
-    box-shadow:
-        0 6px 16px
-        rgba(15, 23, 42, 0.08);
-}
-
-.stat-icon svg {
-    width: 20px;
-    height: 20px;
-}
-
-
-/* =========================================================
-   STAT ICON COLORS
-========================================================= */
-
-.stat-icon.bg-blue {
-    color: var(--primary);
-    background: var(--primary-light);
-}
-
-.stat-icon.bg-cyan {
-    color: var(--info);
-    background: var(--info-light);
-}
-
-.stat-icon.bg-green {
-    color: var(--success);
-    background: var(--success-light);
-}
-
-.stat-icon.bg-orange {
-    color: var(--warning);
-    background: var(--warning-light);
-}
-
-.stat-icon.bg-purple {
-    color: var(--purple);
-    background: var(--purple-light);
-}
-
-.stat-icon.bg-yellow {
-    color: var(--yellow);
-    background: var(--yellow-light);
-}
-
-.stat-icon.bg-indigo {
-    color: var(--indigo);
-    background: var(--indigo-light);
-}
-
-.stat-icon.bg-red {
-    color: var(--danger);
-    background: var(--danger-light);
-}
-
-
-/* =========================================================
-   STAT DETAILS
-========================================================= */
-
-.stat-details {
-    min-width: 0;
-
-    display: flex;
-    flex-direction: column;
-}
-
-.stat-details span {
-    color: var(--slate-500);
-
-    font-size: 11px;
-    font-weight: 600;
-
-    white-space: nowrap;
-
-    overflow: hidden;
-
-    text-overflow: ellipsis;
-}
-
-.stat-details strong {
-    margin-top: 2px;
-
-    color: var(--slate-900);
-
-    font-size: 23px;
-
-    line-height: 1.2;
-
-    font-weight: 800;
-
-    transition:
-        transform 0.25s ease,
-        color 0.25s ease;
-}
-
-.stat-card:hover .stat-details strong {
-    transform:
-        translateX(2px);
-}
-
-.stat-details small {
-    margin-top: 3px;
-
-    color: var(--slate-400);
-
-    font-size: 9px;
-}
-
-
-/* =========================================================
-   DASHBOARD GRID
-========================================================= */
-
-.dashboard-grid {
-    display: grid;
-
-    grid-template-columns:
-        minmax(0, 1.15fr)
-        minmax(360px, 0.85fr);
-
-    gap: 18px;
-}
-
-
-/* =========================================================
-   DASHBOARD CARD
-========================================================= */
-
-.dashboard-card {
-    min-width: 0;
-
-    overflow: hidden;
-
-    background: #ffffff;
-
-    border: 1px solid var(--border);
-
-    border-radius: var(--radius-lg);
-
-    box-shadow: var(--shadow-xs);
-
-    transition:
-        transform 0.25s ease,
-        box-shadow 0.25s ease,
-        border-color 0.25s ease;
-
-    animation:
-        dashboardCardIn
-        0.6s
-        ease-out
-        both;
-}
-
-.dashboard-grid > .dashboard-card:nth-child(1) {
-    animation-delay: 0.25s;
-}
-
-.dashboard-grid > .dashboard-card:nth-child(2) {
-    animation-delay: 0.35s;
-}
-
-.dashboard-card:hover {
-    border-color: #dbe3ef;
-
-    box-shadow: var(--shadow-md);
-}
-
-
-@keyframes dashboardCardIn {
-
-    from {
-        opacity: 0;
-
-        transform:
-            translateY(14px);
-    }
-
-    to {
-        opacity: 1;
-
-        transform:
-            translateY(0);
-    }
-}
-
-
-/* =========================================================
-   CARD HEADER
-========================================================= */
-
-.card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    gap: 15px;
-
-    padding: 18px 19px;
-
-    border-bottom:
-        1px solid var(--slate-100);
-}
-
-.card-header h2 {
-    margin: 0;
-
-    color: var(--slate-900);
-
-    font-size: 14px;
-
-    font-weight: 800;
-}
-
-.card-header p {
-    margin: 4px 0 0;
-
-    color: var(--slate-400);
-
-    font-size: 10px;
-}
-
-
-/* =========================================================
-   SALES PIPELINE
-========================================================= */
-
-.pipeline-summary {
-    padding: 12px 18px 15px;
-}
-
-
-/* =========================================================
-   PIPELINE ITEM
-========================================================= */
-
-.pipeline-item {
-    position: relative;
-
-    display: flex;
-    align-items: center;
-
-    gap: 12px;
-
-    min-width: 0;
-
-    padding: 12px 2px;
-
-    border-bottom:
-        1px solid var(--slate-100);
-
-    cursor: pointer;
-
-    transition:
-        transform 0.25s ease,
-        background 0.25s ease,
-        padding-left 0.25s ease,
-        border-color 0.25s ease;
-}
-
-.pipeline-item:last-child {
-    border-bottom: 0;
-}
-
-.pipeline-item:hover {
-    padding-left: 6px;
-
-    transform:
-        translateX(2px);
-
-    background:
-        linear-gradient(
-            90deg,
-            rgba(248, 250, 252, 0.85),
-            transparent
-        );
-}
-
-
-/* =========================================================
-   PIPELINE STAGE ICON
-========================================================= */
-
-.pipeline-stage-icon {
-    width: 35px;
-    height: 35px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    flex-shrink: 0;
-
-    border-radius: 10px;
-
-    color: var(--primary);
-
-    background: var(--primary-light);
-
-    transition:
-        transform 0.25s ease,
-        box-shadow 0.25s ease,
-        background 0.25s ease,
-        color 0.25s ease;
-}
-
-.pipeline-stage-icon svg {
-    width: 16px;
-    height: 16px;
-    stroke-width: 2.2;
-}
-
-.pipeline-item:hover .pipeline-stage-icon {
-    transform: scale(1.07);
-
-    box-shadow:
-        0 5px 13px
-        rgba(15, 23, 42, 0.08);
-}
-
-
-/* =========================================================
-   PIPELINE CONTENT
-========================================================= */
-
-.pipeline-content {
-    min-width: 0;
-
-    flex: 1;
-}
-
-
-/* =========================================================
-   PIPELINE TOP ROW
-========================================================= */
-
-.pipeline-stage-top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-
-    gap: 10px;
-
-    min-width: 0;
-}
-
-
-/* =========================================================
-   PIPELINE TEXT
-========================================================= */
-
-.pipeline-stage-text {
-    min-width: 0;
-
-    flex: 1;
-}
-
-.pipeline-label {
-    display: block;
-
-    overflow: hidden;
-
-    color: var(--slate-700);
-
-    font-size: 11px;
-
-    line-height: 1.35;
-
-    font-weight: 700;
-
-    white-space: nowrap;
-
-    text-overflow: ellipsis;
-}
-
-.pipeline-description {
-    display: block;
-
-    margin-top: 2px;
-
-    overflow: hidden;
-
-    color: var(--slate-400);
-
-    font-size: 8.5px;
-
-    line-height: 1.3;
-
-    white-space: nowrap;
-
-    text-overflow: ellipsis;
-}
-
-
-/* =========================================================
-   PIPELINE NUMBER
-========================================================= */
-
-.pipeline-stage-number {
-    display: flex;
-    align-items: center;
-
-    gap: 6px;
-
-    flex-shrink: 0;
-}
-
-.pipeline-count {
-    min-width: 24px;
-
-    color: var(--slate-900);
-
-    font-size: 14px;
-
-    line-height: 1;
-
-    font-weight: 800;
-
-    text-align: right;
-}
-
-.pipeline-percentage {
-    min-width: 36px;
-
-    padding: 3px 6px;
-
-    border-radius: 999px;
-
-    color: var(--slate-500);
-
-    background: var(--slate-100);
-
-    font-size: 8px;
-
-    line-height: 1;
-
-    font-weight: 700;
-
-    text-align: center;
-}
-
-
-/* =========================================================
-   PIPELINE BAR
-========================================================= */
-
-.pipeline-bar {
     width: 100%;
 
-    height: 5px;
-
-    margin-top: 7px;
-
-    overflow: hidden;
-
-    border-radius: 999px;
-
-    background:
-        var(--slate-100);
-}
-
-.pipeline-bar-fill {
-    width: 0;
-
-    height: 100%;
-
-    min-width: 0;
-
-    border-radius: inherit;
-
-    background:
-        linear-gradient(
-            90deg,
-            var(--primary),
-            #60a5fa
-        );
-
-    transform-origin:
-        left center;
-
-    animation:
-        pipelineBarIn
-        0.9s
-        cubic-bezier(
-            0.22,
-            1,
-            0.36,
-            1
-        )
-        both;
-}
-
-
-@keyframes pipelineBarIn {
-
-    from {
-        opacity: 0;
-
-        transform:
-            scaleX(0);
-    }
-
-    to {
-        opacity: 1;
-
-        transform:
-            scaleX(1);
-    }
+    margin-top: 12px;
 }
 
 
 /* =========================================================
-   PIPELINE TERMINAL
+   SALES CARD
 ========================================================= */
 
-.pipeline-terminal {
-    background:
-        linear-gradient(
-            90deg,
-            transparent,
-            rgba(248, 250, 252, 0.45)
-        );
-}
-
-.pipeline-terminal-indicator {
-    width: 25px;
-    height: 25px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    flex-shrink: 0;
-
-    border-radius: 8px;
-
-    color: var(--slate-400);
-
-    background: var(--slate-100);
-}
-
-.pipeline-terminal-indicator svg {
-    width: 13px;
-    height: 13px;
-}
-
-
-/* =========================================================
-   PIPELINE STATUS COLORS
-========================================================= */
-
-.pipeline-item.status-new
-.pipeline-stage-icon {
-    color: var(--primary);
-
-    background:
-        var(--primary-light);
-}
-
-.pipeline-item.status-new
-.pipeline-bar-fill {
-    background:
-        linear-gradient(
-            90deg,
-            var(--primary),
-            #60a5fa
-        );
-}
-
-
-.pipeline-item.status-first-contact
-.pipeline-stage-icon {
-    color: var(--info);
-
-    background:
-        var(--info-light);
-}
-
-.pipeline-item.status-first-contact
-.pipeline-bar-fill {
-    background:
-        linear-gradient(
-            90deg,
-            var(--info),
-            #67e8f9
-        );
-}
-
-
-/* APPOINTMENT */
-
-.pipeline-item.status-appointment
-.pipeline-stage-icon {
-    color: var(--purple);
-
-    background:
-        var(--purple-light);
-}
-
-.pipeline-item.status-appointment
-.pipeline-bar-fill {
-    background:
-        linear-gradient(
-            90deg,
-            var(--purple),
-            #c084fc
-        );
-}
-
-
-/* SITE SURVEY */
-
-.pipeline-item.status-site-survey
-.pipeline-stage-icon {
-    color: var(--info);
-
-    background:
-        var(--info-light);
-}
-
-.pipeline-item.status-site-survey
-.pipeline-bar-fill {
-    background:
-        linear-gradient(
-            90deg,
-            var(--info),
-            #67e8f9
-        );
-}
-
-
-/* QUOTATION */
-
-.pipeline-item.status-quotation
-.pipeline-stage-icon {
-    color: var(--warning);
-
-    background:
-        var(--warning-light);
-}
-
-.pipeline-item.status-quotation
-.pipeline-bar-fill {
-    background:
-        linear-gradient(
-            90deg,
-            var(--warning),
-            #fbbf24
-        );
-}
-
-
-/* DEAL / CLOSING */
-
-.pipeline-item.status-deal-closing
-.pipeline-stage-icon {
-    color: var(--success);
-
-    background:
-        var(--success-light);
-}
-
-.pipeline-item.status-deal-closing
-.pipeline-bar-fill {
-    background:
-        linear-gradient(
-            90deg,
-            var(--success),
-            #4ade80
-        );
-}
-
-.pipeline-item.status-deal-closing
-.pipeline-terminal-indicator {
-    color: var(--success);
-
-    background:
-        var(--success-light);
-}
-
-
-/* NO DEAL */
-
-.pipeline-item.status-no-deal
-.pipeline-stage-icon {
-    color: var(--danger);
-
-    background:
-        var(--danger-light);
-}
-
-.pipeline-item.status-no-deal
-.pipeline-bar-fill {
-    background:
-        linear-gradient(
-            90deg,
-            var(--danger),
-            #fb7185
-        );
-}
-
-.pipeline-item.status-no-deal
-.pipeline-terminal-indicator {
-    color: var(--danger);
-
-    background:
-        var(--danger-light);
-}
-
-
-/* =========================================================
-   PIPELINE ITEM STAGGER
-========================================================= */
-
-.pipeline-item {
-    opacity: 0;
-
-    animation:
-        pipelineItemIn
-        0.45s
-        ease-out
-        forwards;
-}
-
-.pipeline-item:nth-child(1) {
-    animation-delay: 0.10s;
-}
-
-.pipeline-item:nth-child(2) {
-    animation-delay: 0.16s;
-}
-
-.pipeline-item:nth-child(3) {
-    animation-delay: 0.22s;
-}
-
-.pipeline-item:nth-child(4) {
-    animation-delay: 0.28s;
-}
-
-.pipeline-item:nth-child(5) {
-    animation-delay: 0.34s;
-}
-
-.pipeline-item:nth-child(6) {
-    animation-delay: 0.40s;
-}
-
-.pipeline-item:nth-child(7) {
-    animation-delay: 0.46s;
-}
-
-
-@keyframes pipelineItemIn {
-
-    from {
-        opacity: 0;
-
-        transform:
-            translateX(-8px);
-    }
-
-    to {
-        opacity: 1;
-
-        transform:
-            translateX(0);
-    }
-}
-
-
-/* =========================================================
-   PIPELINE EMPTY STATE
-========================================================= */
-
-.pipeline-loading {
-    min-height: 150px;
-
-    display: flex;
-    flex-direction: column;
-
-    align-items: center;
-    justify-content: center;
-
-    padding: 25px 10px;
-
-    color: var(--slate-400);
-
-    font-size: 12px;
-
-    text-align: center;
-}
-
-.pipeline-empty-icon {
-    width: 38px;
-    height: 38px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    margin-bottom: 9px;
-
-    border-radius: 11px;
-
-    color: var(--slate-400);
-
-    background: var(--slate-100);
-}
-
-.pipeline-empty-icon svg {
-    width: 18px;
-    height: 18px;
-}
-
-.pipeline-empty-title {
-    color: var(--slate-600);
-
-    font-size: 11px;
-
-    font-weight: 800;
-}
-
-.pipeline-empty-text {
-    margin-top: 3px;
-
-    color: var(--slate-400);
-
-    font-size: 9px;
-}
-
-
-/* =========================================================
-   RECENT ACTIVITY
-========================================================= */
-
-.recent-leads {
-    padding: 7px 18px 13px;
-}
-
-
-/* =========================================================
-   RECENT ACTIVITY ITEM
-========================================================= */
-
-.dashboard-recent-activity-item {
-    display: flex;
-    align-items: center;
-
-    gap: 11px;
-
-    min-width: 0;
-
-    padding: 11px 2px;
-
-    border-bottom:
-        1px solid var(--slate-100);
-
-    cursor: pointer;
-
-    transition:
-        transform 0.22s ease,
-        background 0.22s ease,
-        padding-left 0.22s ease;
-}
-
-.dashboard-recent-activity-item:last-child {
-    border-bottom: 0;
-}
-
-.dashboard-recent-activity-item:hover {
-    padding-left: 6px;
-
-    transform:
-        translateX(2px);
-
-    background:
-        linear-gradient(
-            90deg,
-            rgba(248, 250, 252, 0.90),
-            transparent
-        );
-}
-
-
-/* =========================================================
-   RECENT ACTIVITY STAGGER
-========================================================= */
-
-.dashboard-recent-activity-item {
-    opacity: 0;
-
-    animation:
-        recentActivityIn
-        0.45s
-        ease-out
-        forwards;
-}
-
-.dashboard-recent-activity-item:nth-child(1) {
-    animation-delay: 0.10s;
-}
-
-.dashboard-recent-activity-item:nth-child(2) {
-    animation-delay: 0.15s;
-}
-
-.dashboard-recent-activity-item:nth-child(3) {
-    animation-delay: 0.20s;
-}
-
-.dashboard-recent-activity-item:nth-child(4) {
-    animation-delay: 0.25s;
-}
-
-.dashboard-recent-activity-item:nth-child(5) {
-    animation-delay: 0.30s;
-}
-
-.dashboard-recent-activity-item:nth-child(6) {
-    animation-delay: 0.35s;
-}
-
-.dashboard-recent-activity-item:nth-child(7) {
-    animation-delay: 0.40s;
-}
-
-.dashboard-recent-activity-item:nth-child(8) {
-    animation-delay: 0.45s;
-}
-
-
-@keyframes recentActivityIn {
-
-    from {
-        opacity: 0;
-
-        transform:
-            translateY(7px);
-    }
-
-    to {
-        opacity: 1;
-
-        transform:
-            translateY(0);
-    }
-}
-
-
-/* =========================================================
-   RECENT ACTIVITY ICON
-========================================================= */
-
-.dashboard-recent-activity-item
-.activity-icon {
-    width: 35px;
-    height: 35px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    flex-shrink: 0;
-
-    border-radius: 10px;
-
-    color: var(--primary);
-
-    background:
-        var(--primary-light);
-
-    transition:
-        transform 0.25s ease,
-        box-shadow 0.25s ease,
-        color 0.25s ease,
-        background 0.25s ease;
-}
-
-.dashboard-recent-activity-item
-.activity-icon svg {
-    width: 16px;
-    height: 16px;
-
-    stroke-width: 2.2;
-}
-
-.dashboard-recent-activity-item:hover
-.activity-icon {
-    transform:
-        scale(1.06);
-
-    box-shadow:
-        0 5px 12px
-        rgba(15, 23, 42, 0.08);
-}
-
-
-/* =========================================================
-   RECENT ACTIVITY COLORS
-========================================================= */
-
-.dashboard-recent-activity-item.activity-new
-.activity-icon {
-    color: var(--primary);
-
-    background:
-        var(--primary-light);
-}
-
-
-.dashboard-recent-activity-item.activity-contact
-.activity-icon {
-    color: var(--info);
-
-    background:
-        var(--info-light);
-}
-
-
-.dashboard-recent-activity-item.activity-appointment
-.activity-icon {
-    color: var(--purple);
-
-    background:
-        var(--purple-light);
-}
-
-
-.dashboard-recent-activity-item.activity-survey
-.activity-icon {
-    color: var(--info);
-
-    background:
-        var(--info-light);
-}
-
-
-.dashboard-recent-activity-item.activity-quotation
-.activity-icon {
-    color: var(--warning);
-
-    background:
-        var(--warning-light);
-}
-
-
-.dashboard-recent-activity-item.activity-closing
-.activity-icon {
-    color: var(--success);
-
-    background:
-        var(--success-light);
-}
-
-
-.dashboard-recent-activity-item.activity-no-deal
-.activity-icon {
-    color: var(--danger);
-
-    background:
-        var(--danger-light);
-}
-
-
-/* =========================================================
-   RECENT ACTIVITY CONTENT
-========================================================= */
-
-.dashboard-recent-activity-item
-.activity-content {
-    min-width: 0;
-
-    flex: 1;
-}
-
-
-.dashboard-recent-activity-item
-.activity-title {
-    overflow: hidden;
-
-    color: var(--slate-800);
-
-    font-size: 11px;
-
-    line-height: 1.35;
-
-    font-weight: 750;
-
-    white-space: nowrap;
-
-    text-overflow: ellipsis;
-}
-
-
-/* =========================================================
-   RECENT ACTIVITY META
-========================================================= */
-
-.dashboard-recent-activity-item
-.activity-meta {
-    display: flex;
-    align-items: center;
-
-    gap: 5px;
-
-    min-width: 0;
-
-    margin-top: 3px;
-
-    font-size: 9px;
-
-    line-height: 1.35;
-}
-
-
-.recent-activity-type {
-    flex-shrink: 0;
-
-    color: var(--slate-600);
-
-    font-weight: 700;
-}
-
-
-.recent-activity-separator {
-    flex-shrink: 0;
-
-    color: var(--slate-300);
-}
-
-
-.recent-activity-customer {
-    min-width: 0;
-
-    overflow: hidden;
-
-    color: var(--slate-400);
-
-    white-space: nowrap;
-
-    text-overflow: ellipsis;
-}
-
-
-/* =========================================================
-   RECENT ACTIVITY TIME
-========================================================= */
-
-.dashboard-recent-activity-item
-.activity-time {
-    min-width: 52px;
-
-    display: flex;
-    flex-direction: column;
-
-    align-items: flex-end;
-
-    justify-content: center;
-
-    flex-shrink: 0;
-
-    gap: 2px;
-
-    text-align: right;
-}
-
-
-.activity-relative-time {
-    color: var(--slate-500);
-
-    font-size: 9px;
-
-    line-height: 1.2;
-
-    font-weight: 700;
-
-    white-space: nowrap;
-}
-
-
-.activity-clock {
-    color: var(--slate-400);
-
-    font-size: 8px;
-
-    line-height: 1.2;
-
-    white-space: nowrap;
-}
-
-
-/* =========================================================
-   LEGACY RECENT LEAD SUPPORT
-========================================================= */
-
-.recent-lead-item {
-    display: flex;
-    align-items: center;
-
-    gap: 10px;
-
-    padding: 11px 2px;
-
-    border-bottom:
-        1px solid var(--slate-100);
-}
-
-.recent-lead-avatar {
-    width: 35px;
-    height: 35px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    flex-shrink: 0;
-
-    border-radius: 10px;
-
-    color: var(--primary);
-
-    background:
-        var(--primary-light);
-
-    font-size: 11px;
-
-    font-weight: 800;
-}
-
-.recent-lead-content {
-    min-width: 0;
-
-    flex: 1;
-}
-
-.recent-lead-name {
-    overflow: hidden;
-
-    color: var(--slate-800);
-
-    font-size: 11px;
-
-    font-weight: 700;
-
-    text-overflow: ellipsis;
-
-    white-space: nowrap;
-}
-
-.recent-lead-meta {
-    margin-top: 2px;
-
-    color: var(--slate-400);
-
-    font-size: 9px;
-}
-
-.recent-lead-status {
-    flex-shrink: 0;
-}
-
-
-/* =========================================================
-   PROFILE PIPELINE
-========================================================= */
-
-.profile-pipeline-grid {
-    display: grid;
-
-    grid-template-columns:
-        repeat(3, minmax(0, 1fr));
-
-    gap: 10px;
-
-    padding: 17px 19px;
-}
-
-
-.pipeline-date-item {
+.dashboard-sales-card {
     position: relative;
 
+    display: flex;
+
+    align-items: center;
+
+    width: 100%;
+
     min-width: 0;
 
-    min-height: 92px;
-
-    display: flex;
-    flex-direction: column;
-
-    padding: 13px;
+    padding: 14px;
 
     border:
-        1px solid var(--slate-100);
+        1px solid var(--border);
 
-    border-radius: 12px;
+    border-radius:
+        var(--radius-lg);
 
     background:
         linear-gradient(
             135deg,
-            #fafbfc,
-            #ffffff
+            #ffffff 0%,
+            #f8fafc 100%
         );
 
+    box-shadow:
+        var(--shadow-xs);
+
+    cursor: pointer;
+
+    appearance: none;
+
+    text-align: left;
+
+    font-family: inherit;
+
     transition:
-        transform 0.25s ease,
-        border-color 0.25s ease,
-        box-shadow 0.25s ease;
+        transform 0.22s ease,
+        box-shadow 0.22s ease,
+        border-color 0.22s ease,
+        background 0.22s ease;
+}
+
+
+/* =========================================================
+   SALES CARD HOVER
+========================================================= */
+
+.dashboard-sales-card:hover {
+    transform:
+        translateY(-3px);
+
+    border-color:
+        rgba(59, 130, 246, 0.32);
+
+    box-shadow:
+        0 10px 25px
+        rgba(15, 23, 42, 0.08);
+}
+
+
+/* =========================================================
+   SALES CARD ACTIVE
+========================================================= */
+
+.dashboard-sales-card.is-active {
+    border-color:
+        var(--primary);
+
+    background:
+        linear-gradient(
+            135deg,
+            #eff6ff 0%,
+            #ffffff 100%
+        );
+
+    box-shadow:
+        0 0 0 2px
+        rgba(59, 130, 246, 0.08),
+
+        0 10px 25px
+        rgba(59, 130, 246, 0.10);
+}
+
+
+/* =========================================================
+   SALES CARD ICON
+========================================================= */
+
+.dashboard-sales-card-icon {
+    width: 40px;
+
+    height: 40px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    margin-right: 11px;
+
+    border-radius: 11px;
+
+    color:
+        var(--primary);
+
+    background:
+        var(--primary-light);
+
+    font-size:
+        12px;
+
+    line-height:
+        1;
+
+    font-weight:
+        800;
+
+    transition:
+        transform 0.22s ease,
+        background 0.22s ease,
+        color 0.22s ease;
+}
+
+
+.dashboard-sales-card:hover
+.dashboard-sales-card-icon {
+    transform:
+        scale(1.06);
+}
+
+
+.dashboard-sales-card.is-active
+.dashboard-sales-card-icon {
+    color:
+        #ffffff;
+
+    background:
+        var(--primary);
+}
+
+
+/* =========================================================
+   SALES CARD CONTENT
+========================================================= */
+
+.dashboard-sales-card-content {
+    min-width: 0;
+
+    flex: 1;
+}
+
+
+.dashboard-sales-card-name {
+    display: block;
+
+    width: 100%;
+
+    overflow: hidden;
+
+    color:
+        var(--slate-800);
+
+    font-size:
+        11px;
+
+    line-height:
+        1.35;
+
+    font-weight:
+        800;
+
+    white-space:
+        nowrap;
+
+    text-overflow:
+        ellipsis;
+}
+
+
+.dashboard-sales-card-label {
+    display: block;
+
+    margin-top:
+        3px;
+
+    color:
+        var(--slate-400);
+
+    font-size:
+        8px;
+
+    line-height:
+        1.3;
+
+    font-weight:
+        600;
+}
+
+
+/* =========================================================
+   SALES CARD COUNT
+========================================================= */
+
+.dashboard-sales-card-count-wrapper {
+    flex-shrink: 0;
+
+    margin-left:
+        8px;
+
+    text-align:
+        right;
+}
+
+
+.dashboard-sales-card-count {
+    display: block;
+
+    color:
+        var(--slate-900);
+
+    font-size:
+        18px;
+
+    line-height:
+        1;
+
+    font-weight:
+        850;
+}
+
+
+.dashboard-sales-card-count-label {
+    display: block;
+
+    margin-top:
+        3px;
+
+    color:
+        var(--slate-400);
+
+    font-size:
+        7px;
+
+    line-height:
+        1;
+
+    font-weight:
+        600;
+}
+
+
+/* =========================================================
+   SALES CARD ARROW
+========================================================= */
+
+.dashboard-sales-card-arrow {
+    width:
+        22px;
+
+    height:
+        22px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    flex-shrink:
+        0;
+
+    margin-left:
+        7px;
+
+    color:
+        var(--slate-300);
+
+    transition:
+        transform 0.22s ease,
+        color 0.22s ease;
+}
+
+
+.dashboard-sales-card:hover
+.dashboard-sales-card-arrow {
+    color:
+        var(--primary);
+
+    transform:
+        translateX(3px);
+}
+
+
+.dashboard-sales-card.is-active
+.dashboard-sales-card-arrow {
+    color:
+        var(--primary);
+
+    transform:
+        translateX(3px);
+}
+
+
+.dashboard-sales-card-arrow svg {
+    width:
+        14px;
+
+    height:
+        14px;
+}
+
+
+/* =========================================================
+   SALES CARD ENTRANCE
+========================================================= */
+
+.dashboard-sales-card {
+    opacity:
+        0;
 
     animation:
-        profilePipelineIn
+        dashboardSalesCardIn
         0.45s
         ease-out
-        both;
+        forwards;
 }
 
 
-.pipeline-date-item:nth-child(1) {
-    animation-delay: 0.08s;
+.dashboard-sales-card:nth-child(1) {
+    animation-delay:
+        0.05s;
 }
 
-.pipeline-date-item:nth-child(2) {
-    animation-delay: 0.14s;
+.dashboard-sales-card:nth-child(2) {
+    animation-delay:
+        0.10s;
 }
 
-.pipeline-date-item:nth-child(3) {
-    animation-delay: 0.20s;
+.dashboard-sales-card:nth-child(3) {
+    animation-delay:
+        0.15s;
 }
 
-.pipeline-date-item:nth-child(4) {
-    animation-delay: 0.26s;
+.dashboard-sales-card:nth-child(4) {
+    animation-delay:
+        0.20s;
 }
 
-.pipeline-date-item:nth-child(5) {
-    animation-delay: 0.32s;
+.dashboard-sales-card:nth-child(5) {
+    animation-delay:
+        0.25s;
 }
 
-.pipeline-date-item:nth-child(6) {
-    animation-delay: 0.38s;
+.dashboard-sales-card:nth-child(6) {
+    animation-delay:
+        0.30s;
+}
+
+.dashboard-sales-card:nth-child(7) {
+    animation-delay:
+        0.35s;
 }
 
 
-@keyframes profilePipelineIn {
+@keyframes dashboardSalesCardIn {
 
     from {
-        opacity: 0;
+        opacity:
+            0;
 
         transform:
             translateY(8px);
     }
 
     to {
-        opacity: 1;
+        opacity:
+            1;
 
         transform:
             translateY(0);
@@ -1753,881 +433,1200 @@
 }
 
 
-.pipeline-date-item:hover {
-    transform:
-        translateY(-2px);
+/* =========================================================
+   SELECTED SALES CUSTOMER SECTION
+========================================================= */
 
-    border-color:
-        #dbe3ef;
+.dashboard-sales-lead-list-section {
+    width:
+        100%;
+
+    margin-top:
+        18px;
+
+    overflow:
+        hidden;
+
+    background:
+        #ffffff;
+
+    border:
+        1px solid var(--border);
+
+    border-radius:
+        var(--radius-lg);
 
     box-shadow:
         var(--shadow-xs);
+
+    scroll-margin-top:
+        90px;
+
+    animation:
+        dashboardLeadListIn
+        0.4s
+        ease-out
+        both;
+}
+
+
+@keyframes dashboardLeadListIn {
+
+    from {
+        opacity:
+            0;
+
+        transform:
+            translateY(10px);
+    }
+
+    to {
+        opacity:
+            1;
+
+        transform:
+            translateY(0);
+    }
 }
 
 
 /* =========================================================
-   PROFILE PIPELINE ICON
+   LEAD LIST HEADER
 ========================================================= */
 
-.pipeline-date-icon {
-    width: 31px;
-    height: 31px;
+.dashboard-sales-lead-list-header {
+    display:
+        flex;
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    align-items:
+        center;
 
-    margin-bottom: 9px;
+    justify-content:
+        space-between;
 
-    border-radius: 9px;
+    gap:
+        15px;
 
-    color: var(--primary);
+    padding:
+        17px 19px;
+
+    border-bottom:
+        1px solid var(--slate-100);
+}
+
+
+.dashboard-sales-lead-list-heading {
+    min-width:
+        0;
+}
+
+
+.dashboard-sales-lead-list-title {
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        7px;
+
+    margin:
+        0;
+
+    color:
+        var(--slate-900);
+
+    font-size:
+        14px;
+
+    line-height:
+        1.3;
+
+    font-weight:
+        800;
+}
+
+
+.dashboard-sales-lead-list-title-icon {
+    width:
+        27px;
+
+    height:
+        27px;
+
+    display:
+        inline-flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    flex-shrink:
+        0;
+
+    border-radius:
+        8px;
+
+    color:
+        var(--primary);
+
+    background:
+        var(--primary-light);
+}
+
+
+.dashboard-sales-lead-list-title-icon svg {
+    width:
+        14px;
+
+    height:
+        14px;
+}
+
+
+.dashboard-sales-lead-list-subtitle {
+    margin:
+        4px 0 0;
+
+    color:
+        var(--slate-400);
+
+    font-size:
+        9px;
+
+    line-height:
+        1.4;
+}
+
+
+/* =========================================================
+   TOTAL LEADS BADGE
+========================================================= */
+
+.dashboard-sales-lead-list-count {
+    flex-shrink:
+        0;
+
+    padding:
+        6px 10px;
+
+    border-radius:
+        999px;
+
+    color:
+        var(--primary);
 
     background:
         var(--primary-light);
 
-    transition:
-        transform 0.25s ease,
-        box-shadow 0.25s ease;
+    font-size:
+        9px;
+
+    line-height:
+        1;
+
+    font-weight:
+        800;
+
+    white-space:
+        nowrap;
 }
 
-.pipeline-date-item:hover
-.pipeline-date-icon {
-    transform:
-        scale(1.05);
 
-    box-shadow:
-        0 4px 10px
-        rgba(15, 23, 42, 0.06);
-}
+/* =========================================================
+   TOOLBAR
+========================================================= */
 
-.pipeline-date-icon svg {
-    width: 15px;
-    height: 15px;
-}
+.dashboard-sales-lead-list-toolbar {
+    display:
+        flex;
 
-.pipeline-date-item:nth-child(2)
-.pipeline-date-icon {
-    color: var(--purple);
+    align-items:
+        center;
+
+    gap:
+        9px;
+
+    padding:
+        12px 18px;
+
+    border-bottom:
+        1px solid var(--slate-100);
 
     background:
-        var(--purple-light);
+        #fcfdff;
 }
 
-.pipeline-date-item:nth-child(3)
-.pipeline-date-icon {
-    color: var(--info);
+
+/* =========================================================
+   SEARCH WRAPPER
+========================================================= */
+
+.dashboard-sales-lead-search-wrap {
+    position:
+        relative;
+
+    min-width:
+        0;
+
+    flex:
+        1;
+}
+
+
+/* =========================================================
+   SEARCH ICON
+========================================================= */
+
+.dashboard-sales-lead-search-icon {
+    position:
+        absolute;
+
+    top:
+        50%;
+
+    left:
+        11px;
+
+    width:
+        14px;
+
+    height:
+        14px;
+
+    color:
+        var(--slate-400);
+
+    pointer-events:
+        none;
+
+    transform:
+        translateY(-50%);
+}
+
+
+.dashboard-sales-lead-search-icon svg {
+    width:
+        14px;
+
+    height:
+        14px;
+}
+
+
+/* =========================================================
+   SEARCH INPUT
+========================================================= */
+
+.dashboard-sales-lead-search {
+    width:
+        100%;
+
+    min-height:
+        36px;
+
+    padding:
+        8px 11px 8px 32px;
+
+    border:
+        1px solid var(--slate-200);
+
+    border-radius:
+        9px;
+
+    outline:
+        none;
+
+    background:
+        #ffffff;
+
+    color:
+        var(--slate-800);
+
+    font-family:
+        inherit;
+
+    font-size:
+        10px;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+
+.dashboard-sales-lead-search::placeholder {
+    color:
+        var(--slate-400);
+}
+
+
+.dashboard-sales-lead-search:focus {
+    border-color:
+        rgba(59, 130, 246, 0.55);
+
+    box-shadow:
+        0 0 0 3px
+        rgba(59, 130, 246, 0.08);
+}
+
+
+/* =========================================================
+   PAGE SIZE SELECT
+========================================================= */
+
+.dashboard-sales-lead-page-size {
+    min-height:
+        36px;
+
+    padding:
+        8px 10px;
+
+    border:
+        1px solid var(--slate-200);
+
+    border-radius:
+        9px;
+
+    outline:
+        none;
+
+    background:
+        #ffffff;
+
+    color:
+        var(--slate-700);
+
+    font-family:
+        inherit;
+
+    font-size:
+        10px;
+
+    cursor:
+        pointer;
+}
+
+
+/* =========================================================
+   TABLE WRAPPER
+========================================================= */
+
+.dashboard-sales-lead-table-wrap {
+    width:
+        100%;
+
+    overflow-x:
+        auto;
+
+    overscroll-behavior-x:
+        contain;
+
+    scrollbar-width:
+        thin;
+}
+
+
+/* =========================================================
+   TABLE
+========================================================= */
+
+.dashboard-sales-lead-table {
+    width:
+        100%;
+
+    min-width:
+        920px;
+
+    border-collapse:
+        collapse;
+
+    table-layout:
+        fixed;
+}
+
+
+/* =========================================================
+   TABLE HEADER
+========================================================= */
+
+.dashboard-sales-lead-table thead {
+    background:
+        #f8fafc;
+}
+
+
+.dashboard-sales-lead-table th {
+    padding:
+        10px 12px;
+
+    border-bottom:
+        1px solid var(--slate-200);
+
+    color:
+        var(--slate-500);
+
+    font-size:
+        8px;
+
+    line-height:
+        1.2;
+
+    font-weight:
+        800;
+
+    letter-spacing:
+        0.02em;
+
+    text-align:
+        left;
+
+    text-transform:
+        uppercase;
+
+    white-space:
+        nowrap;
+}
+
+
+/* =========================================================
+   TABLE WIDTHS
+========================================================= */
+
+.dashboard-sales-lead-table th:nth-child(1) {
+    width:
+        19%;
+}
+
+.dashboard-sales-lead-table th:nth-child(2) {
+    width:
+        12%;
+}
+
+.dashboard-sales-lead-table th:nth-child(3) {
+    width:
+        13%;
+}
+
+.dashboard-sales-lead-table th:nth-child(4) {
+    width:
+        14%;
+}
+
+.dashboard-sales-lead-table th:nth-child(5) {
+    width:
+        12%;
+}
+
+.dashboard-sales-lead-table th:nth-child(6) {
+    width:
+        11%;
+}
+
+.dashboard-sales-lead-table th:nth-child(7) {
+    width:
+        11%;
+}
+
+.dashboard-sales-lead-table th:nth-child(8) {
+    width:
+        8%;
+}
+
+
+/* =========================================================
+   TABLE BODY
+========================================================= */
+
+.dashboard-sales-lead-table td {
+    padding:
+        11px 12px;
+
+    border-bottom:
+        1px solid var(--slate-100);
+
+    color:
+        var(--slate-600);
+
+    font-size:
+        9px;
+
+    line-height:
+        1.35;
+
+    vertical-align:
+        middle;
+}
+
+
+.dashboard-sales-lead-table tbody tr {
+    cursor:
+        pointer;
+
+    transition:
+        background 0.18s ease;
+}
+
+
+.dashboard-sales-lead-table tbody tr:hover {
+    background:
+        #f8fbff;
+}
+
+
+.dashboard-sales-lead-table tbody tr:last-child td {
+    border-bottom:
+        0;
+}
+
+
+/* =========================================================
+   CUSTOMER NAME
+========================================================= */
+
+.dashboard-sales-lead-customer {
+    min-width:
+        0;
+}
+
+
+.dashboard-sales-lead-customer-name {
+    display:
+        block;
+
+    overflow:
+        hidden;
+
+    color:
+        var(--slate-800);
+
+    font-size:
+        10px;
+
+    line-height:
+        1.3;
+
+    font-weight:
+        800;
+
+    white-space:
+        nowrap;
+
+    text-overflow:
+        ellipsis;
+}
+
+
+.dashboard-sales-lead-customer-email {
+    display:
+        block;
+
+    margin-top:
+        2px;
+
+    overflow:
+        hidden;
+
+    color:
+        var(--slate-400);
+
+    font-size:
+        8px;
+
+    line-height:
+        1.25;
+
+    white-space:
+        nowrap;
+
+    text-overflow:
+        ellipsis;
+}
+
+
+/* =========================================================
+   BUSINESS
+========================================================= */
+
+.dashboard-sales-lead-business {
+    overflow:
+        hidden;
+
+    color:
+        var(--slate-700);
+
+    font-weight:
+        700;
+
+    white-space:
+        nowrap;
+
+    text-overflow:
+        ellipsis;
+}
+
+
+/* =========================================================
+   PHONE
+========================================================= */
+
+.dashboard-sales-lead-phone {
+    overflow:
+        hidden;
+
+    color:
+        var(--slate-500);
+
+    font-family:
+        ui-monospace,
+        SFMono-Regular,
+        Menlo,
+        Monaco,
+        Consolas,
+        monospace;
+
+    font-size:
+        8px;
+
+    white-space:
+        nowrap;
+
+    text-overflow:
+        ellipsis;
+}
+
+
+/* =========================================================
+   LOCATION
+========================================================= */
+
+.dashboard-sales-lead-location {
+    overflow:
+        hidden;
+
+    color:
+        var(--slate-500);
+
+    white-space:
+        nowrap;
+
+    text-overflow:
+        ellipsis;
+}
+
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+.dashboard-sales-lead-status {
+    display:
+        inline-flex;
+
+    align-items:
+        center;
+
+    max-width:
+        100%;
+
+    padding:
+        4px 7px;
+
+    overflow:
+        hidden;
+
+    border-radius:
+        999px;
+
+    color:
+        var(--slate-600);
+
+    background:
+        var(--slate-100);
+
+    font-size:
+        7.5px;
+
+    line-height:
+        1.1;
+
+    font-weight:
+        800;
+
+    white-space:
+        nowrap;
+
+    text-overflow:
+        ellipsis;
+}
+
+
+.dashboard-sales-lead-status.status-new {
+    color:
+        var(--primary);
+
+    background:
+        var(--primary-light);
+}
+
+
+.dashboard-sales-lead-status.status-first-contact {
+    color:
+        var(--info);
 
     background:
         var(--info-light);
 }
 
-.pipeline-date-item:nth-child(4)
-.pipeline-date-icon {
-    color: var(--warning);
+
+.dashboard-sales-lead-status.status-appointment {
+    color:
+        var(--purple);
+
+    background:
+        var(--purple-light);
+}
+
+
+.dashboard-sales-lead-status.status-site-survey {
+    color:
+        var(--info);
+
+    background:
+        var(--info-light);
+}
+
+
+.dashboard-sales-lead-status.status-quotation {
+    color:
+        var(--warning);
 
     background:
         var(--warning-light);
 }
 
-.pipeline-date-item:nth-child(5)
-.pipeline-date-icon {
-    color: var(--indigo);
 
-    background:
-        var(--indigo-light);
-}
-
-.pipeline-date-item:nth-child(6)
-.pipeline-date-icon {
-    color: var(--success);
+.dashboard-sales-lead-status.status-deal-closing {
+    color:
+        var(--success);
 
     background:
         var(--success-light);
 }
 
 
-/* =========================================================
-   PROFILE PIPELINE TEXT
-========================================================= */
-
-.pipeline-date-item
-.pipeline-date-label,
-.pipeline-date-item small {
-    color: var(--slate-400);
-
-    font-size: 9px;
-
-    font-weight: 700;
-}
-
-.pipeline-date-item
-.pipeline-date-value,
-.pipeline-date-item strong {
-    margin-top: 3px;
-
-    overflow-wrap: anywhere;
-
-    color: var(--slate-700);
-
-    font-size: 11px;
-
-    line-height: 1.4;
-
-    font-weight: 800;
-}
-
-
-/* =========================================================
-   DASHBOARD GREETING
-========================================================= */
-
-#dashboardGreeting.dashboard-greeting-animated {
-    position: relative;
-
-    display: flex;
-    align-items: center;
-
-    gap: 10px;
-
-    width: fit-content;
-
-    max-width: 100%;
-
-    margin-bottom: 20px;
-
-    padding: 2px 4px;
-
-    color: var(--slate-900);
-
-    overflow: hidden;
-
-    isolation: isolate;
-
-    animation:
-        dashboardGreetingFloat
-        4.5s
-        ease-in-out
-        infinite;
-}
-
-
-/* =========================================================
-   GREETING ICON
-========================================================= */
-
-.dashboard-greeting-icon {
-    position: relative;
-
-    display: inline-flex;
-
-    align-items: center;
-    justify-content: center;
-
-    flex-shrink: 0;
-
-    width: 32px;
-    height: 32px;
-
-    font-size: 28px;
-
-    line-height: 1;
-
-    transform-origin: center;
-
-    animation:
-        dashboardGreetingIcon
-        3.2s
-        ease-in-out
-        infinite;
-}
-
-
-/* =========================================================
-   GREETING TEXT
-========================================================= */
-
-.dashboard-greeting-text {
-    position: relative;
-
-    display: inline-block;
-
-    color: var(--slate-800);
-
-    font-size: 24px;
-
-    line-height: 1.3;
-
-    font-weight: 600;
-
-    letter-spacing: -0.35px;
-
-    animation:
-        dashboardGreetingText
-        4s
-        ease-in-out
-        infinite;
-}
-
-
-/* =========================================================
-   GREETING NAME
-========================================================= */
-
-.dashboard-greeting-name {
-    position: relative;
-
-    display: inline-block;
-
-    color: var(--primary);
-
-    font-weight: 800;
-
-    letter-spacing: -0.45px;
-
-    animation:
-        dashboardGreetingName
-        3.5s
-        ease-in-out
-        infinite;
-}
-
-
-/* =========================================================
-   GREETING LIGHT SWEEP
-========================================================= */
-
-#dashboardGreeting.dashboard-greeting-animated::after {
-    content: "";
-
-    position: absolute;
-
-    top: 0;
-    left: -45%;
-
-    width: 30%;
-    height: 100%;
-
-    pointer-events: none;
-
-    background:
-        linear-gradient(
-            100deg,
-            transparent,
-            rgba(255, 255, 255, 0.72),
-            transparent
-        );
-
-    transform:
-        skewX(-18deg);
-
-    opacity: 0;
-
-    animation:
-        dashboardGreetingSweep
-        5.5s
-        ease-in-out
-        infinite;
-}
-
-
-/* =========================================================
-   GREETING REFRESH
-========================================================= */
-
-.dashboard-greeting-refresh {
-    animation:
-        dashboardGreetingRefresh
-        0.65s
-        cubic-bezier(
-            0.22,
-            1,
-            0.36,
-            1
-        )
-        both,
-
-        dashboardGreetingFloat
-        4.5s
-        ease-in-out
-        0.65s
-        infinite !important;
-}
-
-
-/* =========================================================
-   GREETING ANIMATIONS
-========================================================= */
-
-@keyframes dashboardGreetingFloat {
-
-    0%,
-    100% {
-        transform:
-            translate3d(
-                0,
-                0,
-                0
-            );
-    }
-
-    50% {
-        transform:
-            translate3d(
-                0,
-                -2px,
-                0
-            );
-    }
-}
-
-
-@keyframes dashboardGreetingIcon {
-
-    0%,
-    100% {
-        transform:
-            translateY(0)
-            rotate(0deg)
-            scale(1);
-    }
-
-    25% {
-        transform:
-            translateY(-2px)
-            rotate(-4deg)
-            scale(1.04);
-    }
-
-    50% {
-        transform:
-            translateY(0)
-            rotate(0deg)
-            scale(1);
-    }
-
-    75% {
-        transform:
-            translateY(-1px)
-            rotate(4deg)
-            scale(1.03);
-    }
-}
-
-
-@keyframes dashboardGreetingText {
-
-    0%,
-    100% {
-        opacity: 1;
-
-        text-shadow:
-            0 0 0
-            rgba(59, 130, 246, 0);
-    }
-
-    50% {
-        opacity: 0.94;
-
-        text-shadow:
-            0 3px 16px
-            rgba(59, 130, 246, 0.10);
-    }
-}
-
-
-@keyframes dashboardGreetingName {
-
-    0%,
-    100% {
-        text-shadow:
-            0 0 0
-            rgba(59, 130, 246, 0);
-    }
-
-    50% {
-        text-shadow:
-            0 0 12px
-            rgba(59, 130, 246, 0.20);
-    }
-}
-
-
-@keyframes dashboardGreetingSweep {
-
-    0% {
-        left: -45%;
-        opacity: 0;
-    }
-
-    10% {
-        opacity: 0;
-    }
-
-    18% {
-        opacity: 0.7;
-    }
-
-    35% {
-        left: 125%;
-        opacity: 0;
-    }
-
-    100% {
-        left: 125%;
-        opacity: 0;
-    }
-}
-
-
-@keyframes dashboardGreetingRefresh {
-
-    from {
-        opacity: 0;
-
-        transform:
-            translateY(8px)
-            scale(0.98);
-    }
-
-    to {
-        opacity: 1;
-
-        transform:
-            translateY(0)
-            scale(1);
-    }
-}
-
-
-/* =========================================================
-   DASHBOARD ERROR
-========================================================= */
-
-#dashboardError {
-    display: none;
-
-    margin-bottom: 15px;
-
-    padding: 12px 15px;
-
-    border:
-        1px solid #fecaca;
-
-    border-radius: 10px;
+.dashboard-sales-lead-status.status-no-deal {
+    color:
+        var(--danger);
 
     background:
         var(--danger-light);
-
-    color: var(--danger);
-
-    font-size: 12px;
-
-    animation:
-        dashboardErrorIn
-        0.3s
-        ease-out;
-}
-
-#dashboardError:not(:empty) {
-    display: block;
-}
-
-
-@keyframes dashboardErrorIn {
-
-    from {
-        opacity: 0;
-
-        transform:
-            translateY(-5px);
-    }
-
-    to {
-        opacity: 1;
-
-        transform:
-            translateY(0);
-    }
 }
 
 
 /* =========================================================
-   ACCESSIBILITY — REDUCED MOTION
+   DATE
+========================================================= */
+
+.dashboard-sales-lead-date {
+    color:
+        var(--slate-500);
+
+    font-size:
+        8px;
+
+    white-space:
+        nowrap;
+}
+
+
+.dashboard-sales-lead-date.empty {
+    color:
+        var(--slate-300);
+}
+
+
+/* =========================================================
+   VIEW BUTTON
+========================================================= */
+
+.dashboard-sales-lead-view {
+    display:
+        inline-flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    gap:
+        4px;
+
+    min-height:
+        28px;
+
+    padding:
+        5px 8px;
+
+    border:
+        1px solid var(--slate-200);
+
+    border-radius:
+        7px;
+
+    background:
+        #ffffff;
+
+    color:
+        var(--primary);
+
+    font-family:
+        inherit;
+
+    font-size:
+        8px;
+
+    font-weight:
+        800;
+
+    cursor:
+        pointer;
+
+    transition:
+        background 0.18s ease,
+        border-color 0.18s ease,
+        transform 0.18s ease;
+}
+
+
+.dashboard-sales-lead-view:hover {
+    border-color:
+        rgba(59, 130, 246, 0.35);
+
+    background:
+        var(--primary-light);
+
+    transform:
+        translateY(-1px);
+}
+
+
+.dashboard-sales-lead-view svg {
+    width:
+        12px;
+
+    height:
+        12px;
+}
+
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
+
+.dashboard-sales-lead-empty {
+    min-height:
+        180px;
+
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    padding:
+        30px 20px;
+
+    color:
+        var(--slate-400);
+
+    text-align:
+        center;
+}
+
+
+.dashboard-sales-lead-empty-icon {
+    width:
+        42px;
+
+    height:
+        42px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    margin-bottom:
+        10px;
+
+    border-radius:
+        12px;
+
+    color:
+        var(--slate-400);
+
+    background:
+        var(--slate-100);
+}
+
+
+.dashboard-sales-lead-empty-icon svg {
+    width:
+        19px;
+
+    height:
+        19px;
+}
+
+
+.dashboard-sales-lead-empty-title {
+    color:
+        var(--slate-700);
+
+    font-size:
+        11px;
+
+    font-weight:
+        800;
+}
+
+
+.dashboard-sales-lead-empty-text {
+    max-width:
+        400px;
+
+    margin-top:
+        4px;
+
+    color:
+        var(--slate-400);
+
+    font-size:
+        9px;
+
+    line-height:
+        1.5;
+}
+
+
+/* =========================================================
+   LOADING
+========================================================= */
+
+.dashboard-sales-lead-loading {
+    min-height:
+        180px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    color:
+        var(--slate-400);
+
+    font-size:
+        10px;
+}
+
+
+/* =========================================================
+   PAGINATION
+========================================================= */
+
+.dashboard-sales-lead-pagination {
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        space-between;
+
+    gap:
+        12px;
+
+    padding:
+        11px 18px;
+
+    border-top:
+        1px solid var(--slate-100);
+
+    background:
+        #fcfdff;
+}
+
+
+.dashboard-sales-lead-pagination-info {
+    color:
+        var(--slate-400);
+
+    font-size:
+        8px;
+
+    line-height:
+        1.3;
+}
+
+
+.dashboard-sales-lead-pagination-info strong {
+    color:
+        var(--slate-600);
+
+    font-weight:
+        800;
+}
+
+
+.dashboard-sales-lead-pagination-buttons {
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        4px;
+}
+
+
+.dashboard-sales-lead-page-button {
+    min-width:
+        28px;
+
+    height:
+        28px;
+
+    display:
+        inline-flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    padding:
+        0 7px;
+
+    border:
+        1px solid var(--slate-200);
+
+    border-radius:
+        7px;
+
+    background:
+        #ffffff;
+
+    color:
+        var(--slate-600);
+
+    font-family:
+        inherit;
+
+    font-size:
+        8px;
+
+    font-weight:
+        700;
+
+    cursor:
+        pointer;
+
+    transition:
+        background 0.18s ease,
+        color 0.18s ease,
+        border-color 0.18s ease,
+        transform 0.18s ease;
+}
+
+
+.dashboard-sales-lead-page-button:hover:not(:disabled) {
+    color:
+        var(--primary);
+
+    border-color:
+        rgba(59, 130, 246, 0.30);
+
+    background:
+        var(--primary-light);
+
+    transform:
+        translateY(-1px);
+}
+
+
+.dashboard-sales-lead-page-button.active {
+    color:
+        #ffffff;
+
+    border-color:
+        var(--primary);
+
+    background:
+        var(--primary);
+}
+
+
+.dashboard-sales-lead-page-button:disabled {
+    opacity:
+        0.45;
+
+    cursor:
+        not-allowed;
+}
+
+
+/* =========================================================
+   MOBILE CARD SUPPORT
+========================================================= */
+
+.dashboard-sales-lead-mobile-card {
+    display:
+        none;
+}
+
+
+/* =========================================================
+   REDUCED MOTION
 ========================================================= */
 
 @media (prefers-reduced-motion: reduce) {
 
-    .stat-card,
-    .stat-card::before,
-    .stat-card::after,
+    .dashboard-sales-card,
+    .dashboard-sales-lead-list-section {
 
-    .dashboard-card,
+        animation:
+            none !important;
 
-    .pipeline-item,
-    .pipeline-date-item,
-
-    .recent-lead-item,
-    .dashboard-recent-activity-item,
-
-    .pipeline-bar-fill,
-
-    #dashboardGreeting.dashboard-greeting-animated,
-    #dashboardGreeting.dashboard-greeting-animated::after,
-
-    .dashboard-greeting-icon,
-    .dashboard-greeting-text,
-    .dashboard-greeting-name,
-
-    .dashboard-greeting-refresh {
-
-        animation: none !important;
-
-        transition: none !important;
+        transition:
+            none !important;
     }
 
 
-    .stat-card,
-    .dashboard-card,
-    .pipeline-item,
-    .pipeline-date-item,
-    .recent-lead-item,
-    .dashboard-recent-activity-item {
+    .dashboard-sales-card {
 
-        opacity: 1;
-
-        transform: none;
-    }
-}
-
-
-/* =========================================================
-   DASHBOARD RESPONSIVE
-   NOTE:
-   responsive.css remains final authority.
-========================================================= */
-
-@media (max-width: 1200px) {
-
-    .stats-grid {
-        grid-template-columns:
-            repeat(4, minmax(0, 1fr));
-    }
-
-
-    .dashboard-grid {
-        grid-template-columns:
-            minmax(0, 1fr);
-    }
-}
-
-
-@media (max-width: 900px) {
-
-    .stats-grid {
-        grid-template-columns:
-            repeat(3, minmax(0, 1fr));
-    }
-
-
-    .profile-pipeline-grid {
-        grid-template-columns:
-            repeat(2, minmax(0, 1fr));
-    }
-}
-
-
-@media (max-width: 640px) {
-
-    .stats-grid {
-
-        grid-template-columns:
-            repeat(2, minmax(0, 1fr));
-
-        gap: 10px;
-    }
-
-
-    .stat-card {
-
-        min-height: 95px;
-
-        padding: 13px;
-
-        gap: 9px;
-    }
-
-
-    .stat-icon {
-
-        width: 38px;
-        height: 38px;
-
-        border-radius: 10px;
-    }
-
-
-    .stat-icon svg {
-
-        width: 18px;
-        height: 18px;
-    }
-
-
-    .stat-details strong {
-
-        font-size: 20px;
-    }
-
-
-    .dashboard-grid {
-
-        gap: 12px;
-    }
-
-
-    .card-header {
-
-        padding: 15px;
-    }
-
-
-    .pipeline-summary {
-
-        padding: 10px 15px 12px;
-    }
-
-
-    .pipeline-item {
-
-        gap: 9px;
-
-        padding: 10px 1px;
-    }
-
-
-    .pipeline-stage-icon {
-
-        width: 32px;
-        height: 32px;
-
-        border-radius: 9px;
-    }
-
-
-    .pipeline-stage-icon svg {
-
-        width: 15px;
-        height: 15px;
-    }
-
-
-    .pipeline-label {
-
-        font-size: 10px;
-    }
-
-
-    .pipeline-description {
-
-        font-size: 8px;
-    }
-
-
-    .pipeline-count {
-
-        font-size: 13px;
-    }
-
-
-    /* -------------------------------------------------------
-       RECENT ACTIVITY MOBILE
-    ------------------------------------------------------- */
-
-    .recent-leads {
-
-        padding:
-            5px 15px 10px;
-    }
-
-
-    .dashboard-recent-activity-item {
-
-        gap: 8px;
-
-        padding:
-            10px 1px;
-    }
-
-
-    .dashboard-recent-activity-item
-    .activity-icon {
-
-        width: 32px;
-        height: 32px;
-
-        border-radius: 9px;
-    }
-
-
-    .dashboard-recent-activity-item
-    .activity-icon svg {
-
-        width: 14px;
-        height: 14px;
-    }
-
-
-    .dashboard-recent-activity-item
-    .activity-title {
-
-        font-size: 10px;
-    }
-
-
-    .dashboard-recent-activity-item
-    .activity-meta {
-
-        font-size: 8px;
-
-        gap: 4px;
-    }
-
-
-    .dashboard-recent-activity-item
-    .activity-time {
-
-        min-width: 45px;
-    }
-
-
-    .activity-relative-time {
-
-        font-size: 8px;
-    }
-
-
-    .activity-clock {
-
-        font-size: 7px;
-    }
-
-
-    .profile-pipeline-grid {
-
-        grid-template-columns:
-            1fr;
-
-        padding:
-            14px 15px;
-    }
-
-
-    .stat-card::before {
-
-        animation-duration:
-            6s;
-    }
-
-
-    .stat-card::after {
-
-        animation-duration:
-            6s;
-    }
-
-
-    .dashboard-greeting-icon {
-
-        width: 27px;
-        height: 27px;
-
-        font-size: 23px;
-    }
-
-
-    .dashboard-greeting-text {
-
-        font-size: 20px;
-    }
-}
-
-
-@media (max-width: 420px) {
-
-    .stats-grid {
-
-        grid-template-columns:
-            1fr;
-    }
-
-
-    .stat-card {
-
-        min-height: 82px;
-    }
-
-
-    .dashboard-greeting-text {
-
-        font-size: 18px;
-    }
-
-
-    .dashboard-greeting-icon {
-
-        width: 24px;
-        height: 24px;
-
-        font-size: 20px;
-    }
-
-
-    .pipeline-stage-number {
-
-        gap: 4px;
-    }
-
-
-    .pipeline-percentage {
-
-        min-width: 32px;
-
-        padding:
-            3px 4px;
-
-        font-size: 7.5px;
-    }
-
-
-    /* -------------------------------------------------------
-       VERY SMALL SCREEN — RECENT ACTIVITY
-    ------------------------------------------------------- */
-
-    .dashboard-recent-activity-item
-    .activity-time {
-
-        min-width: 40px;
-    }
-
-
-    .dashboard-recent-activity-item
-    .activity-meta {
-
-        display: block;
-    }
-
-
-    .recent-activity-separator {
-
-        display: none;
-    }
-
-
-    .recent-activity-customer {
-
-        display: block;
-
-        margin-top: 2px;
+        opacity:
+            1;
     }
 }
