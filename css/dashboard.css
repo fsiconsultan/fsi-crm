@@ -7,7 +7,7 @@
    - Dashboard layout
    - Stat cards
    - Sales Pipeline
-   - Recent Leads
+   - Recent Activity
    - Profile Pipeline
    - Greeting
    - Dashboard Error
@@ -160,7 +160,6 @@
 
 @keyframes statCardLightMove {
 
-    /* TOP */
     0% {
         top: -1px;
         left: -70px;
@@ -173,7 +172,6 @@
         transform: rotate(0deg);
     }
 
-    /* RIGHT */
     25% {
         top: -70px;
         left: calc(100% - 1px);
@@ -186,7 +184,6 @@
         transform: rotate(90deg);
     }
 
-    /* BOTTOM */
     50% {
         top: calc(100% - 1px);
         left: calc(100% + 70px);
@@ -199,7 +196,6 @@
         transform: rotate(180deg);
     }
 
-    /* LEFT */
     75% {
         top: calc(100% + 70px);
         left: -1px;
@@ -949,9 +945,6 @@
    PIPELINE STATUS COLORS
 ========================================================= */
 
-
-/* NEW */
-
 .pipeline-item.status-new
 .pipeline-stage-icon {
     color: var(--primary);
@@ -970,8 +963,6 @@
         );
 }
 
-
-/* FIRST CONTACT */
 
 .pipeline-item.status-first-contact
 .pipeline-stage-icon {
@@ -992,9 +983,9 @@
 }
 
 
-/* FIRST MEETING */
+/* APPOINTMENT */
 
-.pipeline-item.status-first-meeting
+.pipeline-item.status-appointment
 .pipeline-stage-icon {
     color: var(--purple);
 
@@ -1002,13 +993,34 @@
         var(--purple-light);
 }
 
-.pipeline-item.status-first-meeting
+.pipeline-item.status-appointment
 .pipeline-bar-fill {
     background:
         linear-gradient(
             90deg,
             var(--purple),
             #c084fc
+        );
+}
+
+
+/* SITE SURVEY */
+
+.pipeline-item.status-site-survey
+.pipeline-stage-icon {
+    color: var(--info);
+
+    background:
+        var(--info-light);
+}
+
+.pipeline-item.status-site-survey
+.pipeline-bar-fill {
+    background:
+        linear-gradient(
+            90deg,
+            var(--info),
+            #67e8f9
         );
 }
 
@@ -1034,30 +1046,9 @@
 }
 
 
-/* SECOND APPOINTMENT */
+/* DEAL / CLOSING */
 
-.pipeline-item.status-second-appointment
-.pipeline-stage-icon {
-    color: var(--indigo);
-
-    background:
-        var(--indigo-light);
-}
-
-.pipeline-item.status-second-appointment
-.pipeline-bar-fill {
-    background:
-        linear-gradient(
-            90deg,
-            var(--indigo),
-            #818cf8
-        );
-}
-
-
-/* DEAL */
-
-.pipeline-item.status-deal
+.pipeline-item.status-deal-closing
 .pipeline-stage-icon {
     color: var(--success);
 
@@ -1065,7 +1056,7 @@
         var(--success-light);
 }
 
-.pipeline-item.status-deal
+.pipeline-item.status-deal-closing
 .pipeline-bar-fill {
     background:
         linear-gradient(
@@ -1075,7 +1066,7 @@
         );
 }
 
-.pipeline-item.status-deal
+.pipeline-item.status-deal-closing
 .pipeline-terminal-indicator {
     color: var(--success);
 
@@ -1236,18 +1227,25 @@
 
 
 /* =========================================================
-   RECENT LEADS
+   RECENT ACTIVITY
 ========================================================= */
 
 .recent-leads {
     padding: 7px 18px 13px;
 }
 
-.recent-lead-item {
+
+/* =========================================================
+   RECENT ACTIVITY ITEM
+========================================================= */
+
+.dashboard-recent-activity-item {
     display: flex;
     align-items: center;
 
-    gap: 10px;
+    gap: 11px;
+
+    min-width: 0;
 
     padding: 11px 2px;
 
@@ -1262,12 +1260,12 @@
         padding-left 0.22s ease;
 }
 
-.recent-lead-item:last-child {
+.dashboard-recent-activity-item:last-child {
     border-bottom: 0;
 }
 
-.recent-lead-item:hover {
-    padding-left: 5px;
+.dashboard-recent-activity-item:hover {
+    padding-left: 6px;
 
     transform:
         translateX(2px);
@@ -1275,60 +1273,60 @@
     background:
         linear-gradient(
             90deg,
-            rgba(248, 250, 252, 0.9),
+            rgba(248, 250, 252, 0.90),
             transparent
         );
 }
 
 
 /* =========================================================
-   RECENT LEAD STAGGER
+   RECENT ACTIVITY STAGGER
 ========================================================= */
 
-.recent-lead-item {
+.dashboard-recent-activity-item {
     opacity: 0;
 
     animation:
-        recentLeadIn
+        recentActivityIn
         0.45s
         ease-out
         forwards;
 }
 
-.recent-lead-item:nth-child(1) {
+.dashboard-recent-activity-item:nth-child(1) {
+    animation-delay: 0.10s;
+}
+
+.dashboard-recent-activity-item:nth-child(2) {
     animation-delay: 0.15s;
 }
 
-.recent-lead-item:nth-child(2) {
+.dashboard-recent-activity-item:nth-child(3) {
     animation-delay: 0.20s;
 }
 
-.recent-lead-item:nth-child(3) {
+.dashboard-recent-activity-item:nth-child(4) {
     animation-delay: 0.25s;
 }
 
-.recent-lead-item:nth-child(4) {
+.dashboard-recent-activity-item:nth-child(5) {
     animation-delay: 0.30s;
 }
 
-.recent-lead-item:nth-child(5) {
+.dashboard-recent-activity-item:nth-child(6) {
     animation-delay: 0.35s;
 }
 
-.recent-lead-item:nth-child(6) {
+.dashboard-recent-activity-item:nth-child(7) {
     animation-delay: 0.40s;
 }
 
-.recent-lead-item:nth-child(7) {
+.dashboard-recent-activity-item:nth-child(8) {
     animation-delay: 0.45s;
 }
 
-.recent-lead-item:nth-child(8) {
-    animation-delay: 0.50s;
-}
 
-
-@keyframes recentLeadIn {
+@keyframes recentActivityIn {
 
     from {
         opacity: 0;
@@ -1347,8 +1345,262 @@
 
 
 /* =========================================================
-   RECENT LEAD AVATAR
+   RECENT ACTIVITY ICON
 ========================================================= */
+
+.dashboard-recent-activity-item
+.activity-icon {
+    width: 35px;
+    height: 35px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 10px;
+
+    color: var(--primary);
+
+    background:
+        var(--primary-light);
+
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease,
+        color 0.25s ease,
+        background 0.25s ease;
+}
+
+.dashboard-recent-activity-item
+.activity-icon svg {
+    width: 16px;
+    height: 16px;
+
+    stroke-width: 2.2;
+}
+
+.dashboard-recent-activity-item:hover
+.activity-icon {
+    transform:
+        scale(1.06);
+
+    box-shadow:
+        0 5px 12px
+        rgba(15, 23, 42, 0.08);
+}
+
+
+/* =========================================================
+   RECENT ACTIVITY COLORS
+========================================================= */
+
+.dashboard-recent-activity-item.activity-new
+.activity-icon {
+    color: var(--primary);
+
+    background:
+        var(--primary-light);
+}
+
+
+.dashboard-recent-activity-item.activity-contact
+.activity-icon {
+    color: var(--info);
+
+    background:
+        var(--info-light);
+}
+
+
+.dashboard-recent-activity-item.activity-appointment
+.activity-icon {
+    color: var(--purple);
+
+    background:
+        var(--purple-light);
+}
+
+
+.dashboard-recent-activity-item.activity-survey
+.activity-icon {
+    color: var(--info);
+
+    background:
+        var(--info-light);
+}
+
+
+.dashboard-recent-activity-item.activity-quotation
+.activity-icon {
+    color: var(--warning);
+
+    background:
+        var(--warning-light);
+}
+
+
+.dashboard-recent-activity-item.activity-closing
+.activity-icon {
+    color: var(--success);
+
+    background:
+        var(--success-light);
+}
+
+
+.dashboard-recent-activity-item.activity-no-deal
+.activity-icon {
+    color: var(--danger);
+
+    background:
+        var(--danger-light);
+}
+
+
+/* =========================================================
+   RECENT ACTIVITY CONTENT
+========================================================= */
+
+.dashboard-recent-activity-item
+.activity-content {
+    min-width: 0;
+
+    flex: 1;
+}
+
+
+.dashboard-recent-activity-item
+.activity-title {
+    overflow: hidden;
+
+    color: var(--slate-800);
+
+    font-size: 11px;
+
+    line-height: 1.35;
+
+    font-weight: 750;
+
+    white-space: nowrap;
+
+    text-overflow: ellipsis;
+}
+
+
+/* =========================================================
+   RECENT ACTIVITY META
+========================================================= */
+
+.dashboard-recent-activity-item
+.activity-meta {
+    display: flex;
+    align-items: center;
+
+    gap: 5px;
+
+    min-width: 0;
+
+    margin-top: 3px;
+
+    font-size: 9px;
+
+    line-height: 1.35;
+}
+
+
+.recent-activity-type {
+    flex-shrink: 0;
+
+    color: var(--slate-600);
+
+    font-weight: 700;
+}
+
+
+.recent-activity-separator {
+    flex-shrink: 0;
+
+    color: var(--slate-300);
+}
+
+
+.recent-activity-customer {
+    min-width: 0;
+
+    overflow: hidden;
+
+    color: var(--slate-400);
+
+    white-space: nowrap;
+
+    text-overflow: ellipsis;
+}
+
+
+/* =========================================================
+   RECENT ACTIVITY TIME
+========================================================= */
+
+.dashboard-recent-activity-item
+.activity-time {
+    min-width: 52px;
+
+    display: flex;
+    flex-direction: column;
+
+    align-items: flex-end;
+
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    gap: 2px;
+
+    text-align: right;
+}
+
+
+.activity-relative-time {
+    color: var(--slate-500);
+
+    font-size: 9px;
+
+    line-height: 1.2;
+
+    font-weight: 700;
+
+    white-space: nowrap;
+}
+
+
+.activity-clock {
+    color: var(--slate-400);
+
+    font-size: 8px;
+
+    line-height: 1.2;
+
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   LEGACY RECENT LEAD SUPPORT
+========================================================= */
+
+.recent-lead-item {
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    padding: 11px 2px;
+
+    border-bottom:
+        1px solid var(--slate-100);
+}
 
 .recent-lead-avatar {
     width: 35px;
@@ -1370,19 +1622,6 @@
     font-size: 11px;
 
     font-weight: 800;
-
-    transition:
-        transform 0.25s ease,
-        box-shadow 0.25s ease;
-}
-
-.recent-lead-item:hover
-.recent-lead-avatar {
-    transform: scale(1.05);
-
-    box-shadow:
-        0 5px 12px
-        rgba(15, 23, 42, 0.08);
 }
 
 .recent-lead-content {
@@ -1433,6 +1672,7 @@
     padding: 17px 19px;
 }
 
+
 .pipeline-date-item {
     position: relative;
 
@@ -1468,6 +1708,7 @@
         ease-out
         both;
 }
+
 
 .pipeline-date-item:nth-child(1) {
     animation-delay: 0.08s;
@@ -1510,6 +1751,7 @@
             translateY(0);
     }
 }
+
 
 .pipeline-date-item:hover {
     transform:
@@ -2026,6 +2268,7 @@
     .pipeline-date-item,
 
     .recent-lead-item,
+    .dashboard-recent-activity-item,
 
     .pipeline-bar-fill,
 
@@ -2048,7 +2291,8 @@
     .dashboard-card,
     .pipeline-item,
     .pipeline-date-item,
-    .recent-lead-item {
+    .recent-lead-item,
+    .dashboard-recent-activity-item {
 
         opacity: 1;
 
@@ -2196,10 +2440,76 @@
     }
 
 
+    /* -------------------------------------------------------
+       RECENT ACTIVITY MOBILE
+    ------------------------------------------------------- */
+
     .recent-leads {
 
         padding:
             5px 15px 10px;
+    }
+
+
+    .dashboard-recent-activity-item {
+
+        gap: 8px;
+
+        padding:
+            10px 1px;
+    }
+
+
+    .dashboard-recent-activity-item
+    .activity-icon {
+
+        width: 32px;
+        height: 32px;
+
+        border-radius: 9px;
+    }
+
+
+    .dashboard-recent-activity-item
+    .activity-icon svg {
+
+        width: 14px;
+        height: 14px;
+    }
+
+
+    .dashboard-recent-activity-item
+    .activity-title {
+
+        font-size: 10px;
+    }
+
+
+    .dashboard-recent-activity-item
+    .activity-meta {
+
+        font-size: 8px;
+
+        gap: 4px;
+    }
+
+
+    .dashboard-recent-activity-item
+    .activity-time {
+
+        min-width: 45px;
+    }
+
+
+    .activity-relative-time {
+
+        font-size: 8px;
+    }
+
+
+    .activity-clock {
+
+        font-size: 7px;
     }
 
 
@@ -2287,5 +2597,37 @@
             3px 4px;
 
         font-size: 7.5px;
+    }
+
+
+    /* -------------------------------------------------------
+       VERY SMALL SCREEN — RECENT ACTIVITY
+    ------------------------------------------------------- */
+
+    .dashboard-recent-activity-item
+    .activity-time {
+
+        min-width: 40px;
+    }
+
+
+    .dashboard-recent-activity-item
+    .activity-meta {
+
+        display: block;
+    }
+
+
+    .recent-activity-separator {
+
+        display: none;
+    }
+
+
+    .recent-activity-customer {
+
+        display: block;
+
+        margin-top: 2px;
     }
 }
