@@ -18,11 +18,19 @@
 // 13. Dashboard navigation
 // 14. Dashboard refresh
 //
+// UPDATE:
+// - CARD "ALL SALES" DIHILANGKAN DARI DASHBOARD.
+// - Sales individual tetap ditampilkan.
+// - Total Leads pada Sales Overview tetap ditampilkan.
+// - Klik Sales -> Leads dengan filter Sales.
+// - Klik Status -> Leads dengan filter Status.
+// - Jika Sales sudah dipilih, Status + Sales digabung.
+//
 // ROLE RULE:
 //
 // ADMIN
 // - Bisa melihat semua Sales
-// - Bisa memilih ALL SALES
+// - Tidak menampilkan card ALL SALES
 // - Bisa memilih Sales tertentu
 // - Bisa melihat seluruh customer
 // - Klik Sales -> halaman Leads + filter Sales
@@ -890,9 +898,7 @@ function dashboardFindSalesCardsContainer() {
 // DASHBOARD -> LEADS WITH FILTER
 // ============================================================
 //
-// Ini adalah bagian utama.
-//
-// Dashboard TIDAK lagi membuat customer list.
+// Dashboard tidak membuat customer list.
 //
 // Dashboard hanya mengirim filter ke halaman Leads.
 //
@@ -1060,6 +1066,13 @@ function dashboardOpenStatusInLeads(
 // ============================================================
 // RENDER SALES CARDS
 // ============================================================
+//
+// UPDATE:
+// ALL SALES CARD SUDAH DIHILANGKAN.
+//
+// Yang ditampilkan hanya Sales individual.
+//
+// ============================================================
 
 function dashboardRenderSalesCards(
     leads
@@ -1191,14 +1204,13 @@ function dashboardRenderSalesCards(
 
 
     // ========================================================
-    // CREATE CARD
+    // CREATE SALES CARD
     // ========================================================
 
     function createSalesCard({
         id,
         name,
-        count,
-        isAll = false
+        count
     }) {
 
         const card =
@@ -1228,18 +1240,11 @@ function dashboardRenderSalesCards(
         // ====================================================
 
         if (
-            (
-                isAll &&
-                !selectedSalesId
-            ) ||
-            (
-                !isAll &&
-                String(
-                    selectedSalesId
-                ) ===
-                String(
-                    id
-                )
+            String(
+                selectedSalesId
+            ) ===
+            String(
+                id
             )
         ) {
 
@@ -1250,9 +1255,7 @@ function dashboardRenderSalesCards(
 
 
         const icon =
-            isAll
-                ? "👥"
-                : "👤";
+            "👤";
 
 
         const initial =
@@ -1306,21 +1309,14 @@ function dashboardRenderSalesCards(
 
             </span>
 
-            ${
-                isAll
-                    ? ""
-                    :
-                    `
-                    <span
-                        class="dashboard-sales-card-initial"
-                        aria-hidden="true"
-                    >
-                        ${dashboardEscapeGreetingHTML(
-                            initial
-                        )}
-                    </span>
-                    `
-            }
+            <span
+                class="dashboard-sales-card-initial"
+                aria-hidden="true"
+            >
+                ${dashboardEscapeGreetingHTML(
+                    initial
+                )}
+            </span>
             `;
 
 
@@ -1328,10 +1324,9 @@ function dashboardRenderSalesCards(
         // CLICK
         // ====================================================
         //
-        // IMPORTANT:
-        // Jangan updateDashboard().
+        // Tidak menjalankan updateDashboard().
         //
-        // Langsung pindah ke Leads.
+        // Langsung menuju Leads.
         //
         // ====================================================
 
@@ -1340,16 +1335,6 @@ function dashboardRenderSalesCards(
             function (event) {
 
                 event.preventDefault();
-
-
-                if (isAll) {
-
-                    dashboardOpenSalesInLeads(
-                        ""
-                    );
-
-                    return;
-                }
 
 
                 dashboardOpenSalesInLeads(
@@ -1361,30 +1346,6 @@ function dashboardRenderSalesCards(
 
         return card;
     }
-
-
-    // ========================================================
-    // ALL SALES
-    // ========================================================
-
-    const allCard =
-        createSalesCard({
-
-            id: "",
-
-            name: "ALL SALES",
-
-            count:
-                dashboardLeads.length,
-
-            isAll: true
-
-        });
-
-
-    grid.appendChild(
-        allCard
-    );
 
 
     // ========================================================
@@ -1424,9 +1385,7 @@ function dashboardRenderSalesCards(
 
                     name,
 
-                    count,
-
-                    isAll: false
+                    count
 
                 });
 
@@ -1490,7 +1449,7 @@ function dashboardRenderSalesCards(
 
             selectedSalesId:
                 selectedSalesId ||
-                "ALL SALES"
+                "NO SALES SELECTED"
         }
     );
 }
@@ -1636,7 +1595,7 @@ function dashboardSetSelectedSales(
     console.log(
         "FSI CRM: Dashboard Sales selected:",
         value ||
-        "ALL SALES"
+        "NO SALES SELECTED"
     );
 }
 
@@ -1747,13 +1706,6 @@ function dashboardGetSelectedSales() {
 // ============================================================
 // LEGACY SALES LEAD FUNCTIONS
 // ============================================================
-//
-// Fungsi-fungsi ini dipertahankan agar modul lama tidak error.
-//
-// Dashboard sekarang TIDAK memanggilnya.
-//
-// Customer list tetap berada di halaman Leads.
-// ============================================================
 
 function dashboardFormatSalesLeadDate(
     value
@@ -1823,11 +1775,6 @@ function dashboardGetLeadStatusClass(
 // ============================================================
 // LEGACY CUSTOMER LIST
 // ============================================================
-//
-// Tidak digunakan oleh Dashboard baru.
-//
-// Dipertahankan untuk kompatibilitas module.
-// ============================================================
 
 function dashboardRenderSalesLeads(
     leads
@@ -1844,13 +1791,6 @@ function dashboardRenderSalesLeads(
         oldList.remove();
     }
 
-
-    // --------------------------------------------------------
-    // IMPORTANT
-    // --------------------------------------------------------
-    // Jangan render list customer di Dashboard.
-    // Customer list sekarang ada di halaman Leads.
-    // --------------------------------------------------------
 
     return;
 }
@@ -1883,10 +1823,6 @@ function dashboardFilterSalesLeadRows(
 
 // ============================================================
 // OPEN CUSTOMER PROFILE
-// ============================================================
-//
-// Customer tertentu tetap boleh dibuka ke Customer Profile.
-//
 // ============================================================
 
 async function dashboardOpenLeadProfile(
@@ -2285,13 +2221,11 @@ async function updateDashboard() {
         // IMPORTANT
         // ====================================================
         //
-        // TIDAK ADA:
+        // Tidak ada customer list di Dashboard.
         //
-        // dashboardRenderSalesLeads()
+        // Customer list berada di halaman Leads.
         //
-        // Customer list tidak lagi dibuat di Dashboard.
-        //
-        // ====================================================
+        // ========================================================
 
 
         // ====================================================
@@ -2363,7 +2297,7 @@ async function updateDashboard() {
 
                 selectedSales:
                     selectedSalesId ||
-                    "ALL SALES"
+                    "ALL AVAILABLE SALES"
             }
         );
 
@@ -2489,12 +2423,6 @@ async function updateDashboard() {
 
 // ============================================================
 // DASHBOARD SALES FILTER CHANGE
-// ============================================================
-//
-// Kalau dropdown Sales di Dashboard masih digunakan,
-// perubahan dropdown tetap meng-update Dashboard.
-//
-// Klik CARD tidak menggunakan fungsi ini lagi.
 // ============================================================
 
 function dashboardBindSalesFilterChange() {
