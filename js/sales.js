@@ -627,14 +627,18 @@
     // ========================================================
     //
     // IMPORTANT:
-    // Leads menggunakan ID:
     //
-    // #salesFilter
+    // Leads menggunakan dropdown TERPISAH dari Dashboard.
     //
-    // Fungsi ini juga tetap mendukung ID lama:
+    // Leads:
     // #leadSalesFilter
     // #filter-sales
     // #filterSales
+    //
+    // Dashboard:
+    // #salesFilter
+    //
+    // JANGAN memasukkan #salesFilter di sini.
     //
     // ========================================================
 
@@ -643,7 +647,6 @@
     ) {
 
         const salesFilterIds = [
-            "salesFilter",
             "leadSalesFilter",
             "filter-sales",
             "filterSales"
@@ -772,6 +775,11 @@
 
     // ========================================================
     // POPULATE DASHBOARD SALES FILTER
+    // ========================================================
+    //
+    // IMPORTANT:
+    // HANYA #salesFilter.
+    //
     // ========================================================
 
     function populateDashboardSalesFilter(
@@ -1089,9 +1097,10 @@
         // LEADS FILTER
         // ----------------------------------------------------
         //
-        // IMPORTANT:
-        // Gunakan activeSales saja.
-        // Admin/Owner tidak dimasukkan sebagai pilihan filter.
+        // HANYA dropdown Leads:
+        // #leadSalesFilter
+        // #filter-sales
+        // #filterSales
         //
         populateLeadSalesFilter(
             activeSales
@@ -2462,6 +2471,10 @@
         salesId
     ) {
 
+        // ----------------------------------------------------
+        // TOP / LEADS FILTER
+        // ----------------------------------------------------
+
         const salesFilter =
             salesElement(
                 "leadSalesFilter",
@@ -2506,6 +2519,14 @@
         salesName
     ) {
 
+        // ----------------------------------------------------
+        // LEADS FILTER ONLY
+        //
+        // IMPORTANT:
+        // Jangan menggunakan #salesFilter di sini.
+        // #salesFilter adalah milik Dashboard.
+        // ----------------------------------------------------
+
         const salesFilter =
             salesElement(
                 "leadSalesFilter",
@@ -2517,24 +2538,18 @@
 
             salesFilter.value =
                 salesId || "";
-        }
 
-        // ----------------------------------------------------
-        // Keep Leads #salesFilter synchronized if it exists.
-        // ----------------------------------------------------
-
-        const leadsSalesFilter =
-            document.getElementById(
-                "salesFilter"
+            // Trigger change supaya Leads menangkap
+            // perubahan filter secara normal.
+            salesFilter.dispatchEvent(
+                new Event(
+                    "change",
+                    {
+                        bubbles:
+                            true
+                    }
+                )
             );
-
-        if (
-            leadsSalesFilter &&
-            leadsSalesFilter !== salesFilter
-        ) {
-
-            leadsSalesFilter.value =
-                salesId || "";
         }
 
         updateSalesDropdownButton(
