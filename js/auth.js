@@ -2,7 +2,7 @@
 // FSI CRM - AUTHENTICATION & USER PROFILE
 // ============================================================
 // File    : js/auth.js
-// Version : 2026.10
+// Version : 2026.10 FIX
 //
 // Fungsi:
 // 1. Check Supabase session
@@ -15,6 +15,14 @@
 // 8. Load CRM data
 // 9. Logout
 // 10. Supabase auth listener
+//
+// FIX:
+// - Prevent duplicate loadProfile()
+// - Shared Promise untuk concurrent loadProfile()
+// - checkSession + Auth Listener aman berjalan bersamaan
+// - JWT "issued at future" ditangani
+// - Tidak mengubah struktur sales_users
+// - Tetap menggunakan "auth_user-id"
 // ============================================================
 
 "use strict";
@@ -123,10 +131,7 @@ function authSetCurrentProfile(profile) {
     window.currentProfile =
         value;
 
-    // --------------------------------------------------------
     // Leads compatibility
-    // --------------------------------------------------------
-
     window.FSILeadsProfile =
         value;
 }
@@ -137,7 +142,7 @@ function authGetCurrentUser() {
 
         if (
             typeof currentUser !==
-            "undefined" &&
+                "undefined" &&
             currentUser
         ) {
             return currentUser;
@@ -156,7 +161,7 @@ function authGetCurrentProfile() {
 
         if (
             typeof currentProfile !==
-            "undefined" &&
+                "undefined" &&
             currentProfile
         ) {
             return currentProfile;
@@ -219,7 +224,7 @@ function authGetSupabase() {
 
         if (
             typeof supabaseClient !==
-            "undefined" &&
+                "undefined" &&
             supabaseClient &&
             supabaseClient.auth
         ) {
@@ -397,6 +402,8 @@ async function checkSession() {
             session.user
         );
 
+        // IMPORTANT:
+        // loadProfile() sekarang memakai shared Promise.
         return await loadProfile();
 
     } catch (error) {
@@ -619,13 +626,9 @@ async function login(event) {
         // ====================================================
         // STEP 4
         //
-        // IMPORTANT:
-        // Jangan panggil loadProfile() di sini lagi.
+        // JANGAN loadProfile() di sini.
         //
-        // Supabase auth listener akan menerima SIGNED_IN /
-        // INITIAL_SESSION dan menjalankan loadProfile().
-        //
-        // Ini mencegah dua loadProfile() berjalan bersamaan.
+        // Auth listener akan memproses session.
         // ====================================================
 
         return true;
@@ -739,7 +742,6 @@ function translateAuthError(error) {
             "invalid credentials"
         )
     ) {
-
         return "Username atau password salah.";
     }
 
@@ -748,7 +750,6 @@ function translateAuthError(error) {
             "email not confirmed"
         )
     ) {
-
         return "Akun belum dikonfirmasi.";
     }
 
@@ -757,7 +758,6 @@ function translateAuthError(error) {
             "too many requests"
         )
     ) {
-
         return (
             "Terlalu banyak percobaan login. " +
             "Coba beberapa saat lagi."
@@ -769,7 +769,6 @@ function translateAuthError(error) {
             "jwt issued at future"
         )
     ) {
-
         return (
             "Session login tidak valid. " +
             "Silakan refresh halaman dan login kembali."
@@ -785,25 +784,37 @@ function translateAuthError(error) {
 // ============================================================
 // LOAD USER PROFILE
 // ============================================================
+//
+// IMPORTANT FIX:
+//
+// Sebelumnya:
+//
+// let authProfileLoading = false;
+//
+// if (authProfileLoading) {
+//     return !!authGetCurrentProfile();
+// }
+//
+// Masalah:
+// checkSession() dan auth listener bisa memanggil loadProfile()
+// hampir bersamaan.
+//
+// Sekarang menggunakan Promise:
+//
+// - Pemanggilan pertama menjalankan proses.
+// - Pemanggilan kedua menunggu proses yang sama.
+// - Tidak ada duplicate query.
+// - Tidak ada "loadProfile() masih berjalan" yang memutus proses.
+// ============================================================
 
 let authProfileLoading = false;
+let authProfilePromise = null;
 
-async function loadProfile() {
+// ============================================================
+// INTERNAL PROFILE LOADER
+// ============================================================
 
-    // --------------------------------------------------------
-    // PREVENT DUPLICATE PROFILE LOAD
-    // --------------------------------------------------------
-
-    if (authProfileLoading) {
-
-        console.warn(
-            "FSI CRM - loadProfile() masih berjalan."
-        );
-
-        return (
-            !!authGetCurrentProfile()
-        );
-    }
+async function authLoadProfileInternal() {
 
     const supabase =
         authGetSupabase();
@@ -818,8 +829,6 @@ async function loadProfile() {
 
         return false;
     }
-
-    authProfileLoading = true;
 
     try {
 
@@ -860,7 +869,7 @@ async function loadProfile() {
 
         if (!session?.user?.id) {
 
-            console.error(
+            console.warn(
                 "FSI CRM - loadProfile: session/user tidak tersedia."
             );
 
@@ -978,23 +987,14 @@ async function loadProfile() {
 
             authSetCurrentProfile(null);
 
-            setLoginMessage(
-                "Gagal mengambil profile: " +
-                (
-                    error.message ||
-                    "Database error."
-                ),
-                true
-            );
-
-            // ------------------------------------------------
-            // JWT / SESSION ERROR
-            // ------------------------------------------------
-
             const errorMessage =
                 String(
                     error.message || ""
                 ).toLowerCase();
+
+            // ------------------------------------------------
+            // JWT / SESSION ERROR
+            // ------------------------------------------------
 
             if (
                 errorMessage.includes(
@@ -1017,6 +1017,22 @@ async function loadProfile() {
                         signOutError
                     );
                 }
+
+                setLoginMessage(
+                    "Session login tidak valid. Halaman akan meminta login ulang.",
+                    true
+                );
+
+            } else {
+
+                setLoginMessage(
+                    "Gagal mengambil profile: " +
+                    (
+                        error.message ||
+                        "Database error."
+                    ),
+                    true
+                );
             }
 
             showLogin();
@@ -1153,7 +1169,6 @@ async function loadProfile() {
             data
         );
 
-        // Explicit global assignments
         window.currentProfile =
             data;
 
@@ -1299,16 +1314,80 @@ async function loadProfile() {
         showLogin();
 
         return false;
+    }
+}
+
+// ============================================================
+// PUBLIC LOAD PROFILE
+// ============================================================
+
+async function loadProfile() {
+
+    // --------------------------------------------------------
+    // PROFILE SUDAH ADA
+    // --------------------------------------------------------
+
+    if (authGetCurrentProfile()) {
+
+        return true;
+    }
+
+    // --------------------------------------------------------
+    // PROFILE LOAD SEDANG BERJALAN
+    //
+    // Jangan return false.
+    // Tunggu Promise yang sama.
+    // --------------------------------------------------------
+
+    if (
+        authProfileLoading &&
+        authProfilePromise
+    ) {
+
+        console.log(
+            "FSI CRM - loadProfile() sedang berjalan, menunggu proses yang sama..."
+        );
+
+        try {
+
+            return await authProfilePromise;
+
+        } catch (error) {
+
+            console.error(
+                "FSI CRM - shared loadProfile error:",
+                error
+            );
+
+            return false;
+        }
+    }
+
+    // --------------------------------------------------------
+    // START PROFILE LOAD
+    // --------------------------------------------------------
+
+    authProfileLoading =
+        true;
+
+    authProfilePromise =
+        authLoadProfileInternal();
+
+    try {
+
+        return await authProfilePromise;
 
     } finally {
 
         // ----------------------------------------------------
-        // IMPORTANT:
-        // Selalu release loading lock.
+        // RELEASE LOCK
         // ----------------------------------------------------
 
         authProfileLoading =
             false;
+
+        authProfilePromise =
+            null;
     }
 }
 
@@ -1556,7 +1635,7 @@ function showLogin() {
             if (
                 usernameInput &&
                 document.visibilityState !==
-                "hidden"
+                    "hidden"
             ) {
 
                 try {
@@ -1657,7 +1736,7 @@ function showApp() {
                 if (
                     window.FSINavigation &&
                     typeof window.FSINavigation.showPage ===
-                    "function"
+                        "function"
                 ) {
 
                     window.FSINavigation.showPage(
@@ -2027,10 +2106,7 @@ function setupRoleAccess() {
     );
 
     // --------------------------------------------------------
-    // SALES FILTER
-    //
-    // Dashboard legacy filter.
-    // Leads menggunakan #filter-sales.
+    // DASHBOARD SALES FILTER
     // --------------------------------------------------------
 
     const salesFilter =
@@ -2175,6 +2251,7 @@ function setupSalesAssignmentAccess() {
 
     // --------------------------------------------------------
     // NON ADMIN
+    //
     // Sales / Secretary / Digital Marketing
     // --------------------------------------------------------
 
@@ -2191,7 +2268,7 @@ function setupSalesAssignmentAccess() {
 
     if (
         field.tagName ===
-        "SELECT" &&
+            "SELECT" &&
         profile.id
     ) {
 
@@ -2239,7 +2316,6 @@ async function logout() {
     } finally {
 
         authSetCurrentUser(null);
-
         authSetCurrentProfile(null);
 
         window.isAdmin =
@@ -2249,6 +2325,13 @@ async function logout() {
             false;
 
         window.crmUserRole =
+            null;
+
+        // Reset profile loading state
+        authProfileLoading =
+            false;
+
+        authProfilePromise =
             null;
 
         try {
@@ -2466,6 +2549,15 @@ function setupAuthListener() {
                     session.user
                 );
 
+                // IMPORTANT:
+                // Jangan langsung memanggil loadProfile
+                // dari callback sync Supabase.
+                //
+                // Gunakan setTimeout kecil sehingga:
+                // - checkSession selesai bila sedang berjalan
+                // - shared Promise tetap digunakan
+                // - tidak terjadi duplicate query
+
                 setTimeout(
                     async function () {
 
@@ -2506,7 +2598,7 @@ function refreshLucideIcons() {
         if (
             window.lucide &&
             typeof window.lucide.createIcons ===
-            "function"
+                "function"
         ) {
 
             window.lucide.createIcons();
