@@ -618,15 +618,15 @@ async function login(event) {
 
         // ====================================================
         // STEP 4
-        // LOAD PROFILE
+        //
+        // IMPORTANT:
+        // Jangan panggil loadProfile() di sini lagi.
+        //
+        // Supabase auth listener akan menerima SIGNED_IN /
+        // INITIAL_SESSION dan menjalankan loadProfile().
+        //
+        // Ini mencegah dua loadProfile() berjalan bersamaan.
         // ====================================================
-
-        const profileLoaded =
-            await loadProfile();
-
-        if (!profileLoaded) {
-            return false;
-        }
 
         return true;
 
@@ -764,6 +764,18 @@ function translateAuthError(error) {
         );
     }
 
+    if (
+        message.includes(
+            "jwt issued at future"
+        )
+    ) {
+
+        return (
+            "Session login tidak valid. " +
+            "Silakan refresh halaman dan login kembali."
+        );
+    }
+
     return (
         error.message ||
         "Login gagal. Silakan coba lagi."
@@ -807,25 +819,69 @@ async function loadProfile() {
         return false;
     }
 
-    const user =
-        authGetCurrentUser();
-
-    if (!user?.id) {
-
-        console.error(
-            "FSI CRM - loadProfile: Auth user tidak tersedia."
-        );
-
-        authSetCurrentProfile(null);
-
-        showLogin();
-
-        return false;
-    }
-
     authProfileLoading = true;
 
     try {
+
+        // ----------------------------------------------------
+        // GET FRESH SESSION
+        // ----------------------------------------------------
+
+        const sessionResponse =
+            await supabase.auth.getSession();
+
+        const sessionError =
+            sessionResponse?.error;
+
+        const session =
+            sessionResponse?.data?.session;
+
+        if (sessionError) {
+
+            console.error(
+                "FSI CRM - loadProfile session error:",
+                sessionError
+            );
+
+            authSetCurrentUser(null);
+            authSetCurrentProfile(null);
+
+            setLoginMessage(
+                translateAuthError(
+                    sessionError
+                ),
+                true
+            );
+
+            showLogin();
+
+            return false;
+        }
+
+        if (!session?.user?.id) {
+
+            console.error(
+                "FSI CRM - loadProfile: session/user tidak tersedia."
+            );
+
+            authSetCurrentUser(null);
+            authSetCurrentProfile(null);
+
+            showLogin();
+
+            return false;
+        }
+
+        // ----------------------------------------------------
+        // USE USER FROM CURRENT SESSION
+        // ----------------------------------------------------
+
+        const user =
+            session.user;
+
+        authSetCurrentUser(
+            user
+        );
 
         console.log(
             "================================================"
@@ -930,6 +986,38 @@ async function loadProfile() {
                 ),
                 true
             );
+
+            // ------------------------------------------------
+            // JWT / SESSION ERROR
+            // ------------------------------------------------
+
+            const errorMessage =
+                String(
+                    error.message || ""
+                ).toLowerCase();
+
+            if (
+                errorMessage.includes(
+                    "jwt issued at future"
+                )
+            ) {
+
+                console.warn(
+                    "FSI CRM - JWT session tidak valid."
+                );
+
+                try {
+
+                    await supabase.auth.signOut();
+
+                } catch (signOutError) {
+
+                    console.warn(
+                        "FSI CRM - signOut setelah JWT error gagal:",
+                        signOutError
+                    );
+                }
+            }
 
             showLogin();
 
@@ -1202,8 +1290,9 @@ async function loadProfile() {
         authSetCurrentProfile(null);
 
         setLoginMessage(
-            error?.message ||
-            "Gagal memuat profile user.",
+            translateAuthError(
+                error
+            ),
             true
         );
 
@@ -1212,6 +1301,11 @@ async function loadProfile() {
         return false;
 
     } finally {
+
+        // ----------------------------------------------------
+        // IMPORTANT:
+        // Selalu release loading lock.
+        // ----------------------------------------------------
 
         authProfileLoading =
             false;
@@ -1934,6 +2028,9 @@ function setupRoleAccess() {
 
     // --------------------------------------------------------
     // SALES FILTER
+    //
+    // Dashboard legacy filter.
+    // Leads menggunakan #filter-sales.
     // --------------------------------------------------------
 
     const salesFilter =
@@ -1945,6 +2042,25 @@ function setupRoleAccess() {
     if (salesFilter) {
 
         salesFilter.style.display =
+            isAdmin
+                ? ""
+                : "none";
+    }
+
+    // --------------------------------------------------------
+    // LEADS SALES FILTER
+    // --------------------------------------------------------
+
+    const leadsSalesFilter =
+        authFirstElement([
+            "filter-sales",
+            "leadSalesFilter",
+            "filterSales"
+        ]);
+
+    if (leadsSalesFilter) {
+
+        leadsSalesFilter.style.display =
             isAdmin
                 ? ""
                 : "none";
