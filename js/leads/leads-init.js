@@ -19,24 +19,14 @@
 // - Tidak mengubah query database.
 // - Dashboard mengirim filter melalui sessionStorage.
 // - Loading Leads dikontrol oleh file ini.
-// - Dashboard navigation hanya membuka halaman Leads.
-// - State menggunakan window.FSILeadsState agar aman
-//   terhadap duplicate script loading.
+// - Dashboard Sales selector (#salesFilter) TIDAK disentuh.
+// - Leads Sales selector menggunakan #filter-sales.
+// - State menggunakan window.FSILeadsState.
 // ============================================================
 
 
 // ============================================================
 // GLOBAL STATE
-// ============================================================
-//
-// JANGAN menggunakan:
-//
-// let leadsInitialized
-//
-// Karena jika file dimuat dua kali akan muncul:
-//
-// Identifier 'leadsInitialized' has already been declared
-//
 // ============================================================
 
 window.FSILeadsState =
@@ -75,6 +65,28 @@ var leadsState =
 
 
 // ============================================================
+// GET LEADS SALES SELECT
+// ============================================================
+//
+// PENTING:
+// #salesFilter = Dashboard
+// #filter-sales = Leads
+//
+// Jangan gunakan #salesFilter untuk Leads.
+// ============================================================
+
+function leadsGetSalesSelect() {
+
+    return (
+        document.getElementById("filter-sales") ||
+        document.getElementById("leadSalesFilter") ||
+        document.getElementById("filterSales") ||
+        null
+    );
+}
+
+
+// ============================================================
 // CREATE LEADS LOAD KEY
 // ============================================================
 
@@ -101,6 +113,7 @@ function leadsCreateLoadKey(
                 "leadsSearch"
             );
 
+
         var statusElement =
             leadElement(
                 "filter-status",
@@ -108,16 +121,21 @@ function leadsCreateLoadKey(
                 "leadStatusFilter"
             );
 
+
         var businessElement =
             leadElement(
                 "filter-business",
                 "businessFilter"
             );
 
+
+        // ====================================================
+        // IMPORTANT:
+        // Leads harus menggunakan #filter-sales
+        // ====================================================
+
         var salesElement =
-            leadElement(
-                "salesFilter"
-            );
+            leadsGetSalesSelect();
 
 
         search =
@@ -187,6 +205,7 @@ async function leadsSafeLoad(
         Number(page) > 0
             ? Number(page)
             : 1;
+
 
     options =
         options ||
@@ -348,10 +367,6 @@ function loadFilterOptionsOnce(
         "unknown";
 
 
-    // ========================================================
-    // REQUEST SEDANG BERJALAN
-    // ========================================================
-
     if (
         leadsState.filterOptionsLoadingPromise
     ) {
@@ -363,10 +378,6 @@ function loadFilterOptionsOnce(
         return leadsState.filterOptionsLoadingPromise;
     }
 
-
-    // ========================================================
-    // FUNCTION BELUM TERSEDIA
-    // ========================================================
 
     if (
         typeof window.loadFilterOptions !==
@@ -382,10 +393,6 @@ function loadFilterOptionsOnce(
         );
     }
 
-
-    // ========================================================
-    // LOAD
-    // ========================================================
 
     leadsState.filterOptionsLoadingPromise =
         (async function () {
@@ -431,10 +438,6 @@ function loadFilterOptionsOnce(
 
 function initializeLeads() {
 
-    // ========================================================
-    // ALREADY INITIALIZED
-    // ========================================================
-
     if (
         leadsState.initialized
     ) {
@@ -446,10 +449,6 @@ function initializeLeads() {
         return;
     }
 
-
-    // ========================================================
-    // MARK INITIALIZED
-    // ========================================================
 
     leadsState.initialized =
         true;
@@ -482,15 +481,31 @@ function initializeLeads() {
 
     if (searchInput) {
 
-        searchInput.addEventListener(
-            "input",
-            onSearchInput
-        );
+        if (
+            searchInput.dataset.fsiSearchBound !==
+            "true"
+        ) {
+
+            searchInput.dataset.fsiSearchBound =
+                "true";
+
+
+            searchInput.addEventListener(
+                "input",
+                onSearchInput
+            );
+        }
     }
 
 
     // ========================================================
-    // FILTER EVENTS
+    // STATUS + BUSINESS FILTER
+    //
+    // IMPORTANT:
+    // Sales filter (#filter-sales) sudah ditangani
+    // oleh leads-filters.js.
+    //
+    // Jangan bind ulang di sini.
     // ========================================================
 
     [
@@ -503,10 +518,6 @@ function initializeLeads() {
         [
             "filter-business",
             "businessFilter"
-        ],
-
-        [
-            "salesFilter"
         ]
 
     ].forEach(
@@ -523,92 +534,29 @@ function initializeLeads() {
             }
 
 
+            var boundKey =
+                "fsiFilterBound";
+
+
+            if (
+                element.dataset[boundKey] ===
+                "true"
+            ) {
+
+                return;
+            }
+
+
+            element.dataset[boundKey] =
+                "true";
+
+
             element.addEventListener(
                 "change",
                 function () {
 
-                    // ========================================
-                    // SALES FILTER
-                    // ========================================
-
-                    if (
-                        element.id ===
-                        "salesFilter"
-                    ) {
-
-                        window.crmSelectedSalesId =
-                            element.value ||
-                            "";
-
-
-                        var salesData = [];
-
-
-                        if (
-                            typeof leadGetSalesData ===
-                            "function"
-                        ) {
-
-                            try {
-
-                                salesData =
-                                    leadGetSalesData() ||
-                                    [];
-
-                            } catch (error) {
-
-                                console.warn(
-                                    "FSI CRM: gagal membaca Sales data:",
-                                    error
-                                );
-                            }
-                        }
-
-
-                        var selected =
-                            Array.isArray(
-                                salesData
-                            )
-                                ? salesData.find(
-                                    function (sales) {
-
-                                        return String(
-                                            sales &&
-                                            sales.id
-                                                ? sales.id
-                                                : ""
-                                        ) ===
-                                        String(
-                                            element.value ||
-                                            ""
-                                        );
-                                    }
-                                )
-                                : null;
-
-
-                        window.crmSelectedSalesName =
-                            selected
-                                ? (
-                                    selected.name ||
-                                    selected.full_name ||
-                                    selected.username ||
-                                    ""
-                                )
-                                : "";
-                    }
-
-
-                    // ========================================
-                    // FILTER BERUBAH
-                    // ========================================
-
                     resetLeadsLoadCache();
 
-
-                    // ========================================
-                    // RESET PAGE
-                    // ========================================
 
                     if (
                         typeof leadSetCurrentPage ===
@@ -621,10 +569,6 @@ function initializeLeads() {
                     }
 
 
-                    // ========================================
-                    // APPLY FILTER
-                    // ========================================
-
                     if (
                         typeof filterLeads ===
                         "function"
@@ -635,6 +579,7 @@ function initializeLeads() {
 
                 }
             );
+
         }
     );
 
@@ -652,25 +597,35 @@ function initializeLeads() {
 
     if (prevBtn) {
 
-        prevBtn.addEventListener(
-            "click",
-            function () {
+        if (
+            prevBtn.dataset.fsiPaginationBound !==
+            "true"
+        ) {
 
-                resetLeadsLoadCache();
+            prevBtn.dataset.fsiPaginationBound =
+                "true";
 
 
-                if (
-                    typeof changePage ===
-                    "function"
-                ) {
+            prevBtn.addEventListener(
+                "click",
+                function () {
 
-                    changePage(
-                        -1
-                    );
+                    resetLeadsLoadCache();
+
+
+                    if (
+                        typeof changePage ===
+                        "function"
+                    ) {
+
+                        changePage(
+                            -1
+                        );
+                    }
+
                 }
-
-            }
-        );
+            );
+        }
     }
 
 
@@ -687,25 +642,35 @@ function initializeLeads() {
 
     if (nextBtn) {
 
-        nextBtn.addEventListener(
-            "click",
-            function () {
+        if (
+            nextBtn.dataset.fsiPaginationBound !==
+            "true"
+        ) {
 
-                resetLeadsLoadCache();
+            nextBtn.dataset.fsiPaginationBound =
+                "true";
 
 
-                if (
-                    typeof changePage ===
-                    "function"
-                ) {
+            nextBtn.addEventListener(
+                "click",
+                function () {
 
-                    changePage(
-                        1
-                    );
+                    resetLeadsLoadCache();
+
+
+                    if (
+                        typeof changePage ===
+                        "function"
+                    ) {
+
+                        changePage(
+                            1
+                        );
+                    }
+
                 }
-
-            }
-        );
+            );
+        }
     }
 
 
@@ -722,23 +687,33 @@ function initializeLeads() {
 
     if (clearFilterBtn) {
 
-        clearFilterBtn.addEventListener(
-            "click",
-            function () {
+        if (
+            clearFilterBtn.dataset.fsiClearBound !==
+            "true"
+        ) {
 
-                resetLeadsLoadCache();
+            clearFilterBtn.dataset.fsiClearBound =
+                "true";
 
 
-                if (
-                    typeof clearLeadFilters ===
-                    "function"
-                ) {
+            clearFilterBtn.addEventListener(
+                "click",
+                function () {
 
-                    clearLeadFilters();
+                    resetLeadsLoadCache();
+
+
+                    if (
+                        typeof clearLeadFilters ===
+                        "function"
+                    ) {
+
+                        clearLeadFilters();
+                    }
+
                 }
-
-            }
-        );
+            );
+        }
     }
 
 
@@ -816,36 +791,46 @@ function initializeLeads() {
 
     if (modal) {
 
-        modal.addEventListener(
-            "click",
-            function (event) {
+        if (
+            modal.dataset.fsiModalBound !==
+            "true"
+        ) {
 
-                if (
-                    event.target !==
-                    modal
-                ) {
-                    return;
+            modal.dataset.fsiModalBound =
+                "true";
+
+
+            modal.addEventListener(
+                "click",
+                function (event) {
+
+                    if (
+                        event.target !==
+                        modal
+                    ) {
+                        return;
+                    }
+
+
+                    if (
+                        window.FSICustomerForm &&
+                        typeof window.FSICustomerForm.closeCustomerForm ===
+                        "function"
+                    ) {
+
+                        window.FSICustomerForm.closeCustomerForm();
+
+                    } else if (
+                        typeof closeLeadModal ===
+                        "function"
+                    ) {
+
+                        closeLeadModal();
+                    }
+
                 }
-
-
-                if (
-                    window.FSICustomerForm &&
-                    typeof window.FSICustomerForm.closeCustomerForm ===
-                    "function"
-                ) {
-
-                    window.FSICustomerForm.closeCustomerForm();
-
-                } else if (
-                    typeof closeLeadModal ===
-                    "function"
-                ) {
-
-                    closeLeadModal();
-                }
-
-            }
-        );
+            );
+        }
     }
 
 
@@ -932,10 +917,6 @@ async function applyDashboardLeadsFilter(
     }
 
 
-    // ========================================================
-    // NO FILTER
-    // ========================================================
-
     if (!rawFilter) {
         return false;
     }
@@ -1020,13 +1001,11 @@ async function applyDashboardLeadsFilter(
 
 
     // ========================================================
-    // SALES FILTER
+    // SALES FILTER - LEADS ONLY
     // ========================================================
 
     var salesSelect =
-        leadElement(
-            "salesFilter"
-        );
+        leadsGetSalesSelect();
 
 
     if (salesSelect) {
@@ -1039,62 +1018,85 @@ async function applyDashboardLeadsFilter(
             salesId;
 
 
-        if (salesId) {
+        var salesData = [];
+
+
+        if (
+            typeof leadGetSalesData ===
+            "function"
+        ) {
 
             try {
 
-                var salesData =
-                    typeof leadGetSalesData ===
-                    "function"
-                        ? leadGetSalesData()
-                        : [];
-
-
-                var selected =
-                    Array.isArray(
-                        salesData
-                    )
-                        ? salesData.find(
-                            function (sales) {
-
-                                return String(
-                                    sales &&
-                                    sales.id
-                                        ? sales.id
-                                        : ""
-                                ).trim() ===
-                                salesId;
-                            }
-                        )
-                        : null;
-
-
-                window.crmSelectedSalesName =
-                    selected
-                        ? (
-                            selected.name ||
-                            selected.full_name ||
-                            selected.username ||
-                            ""
-                        )
-                        : "";
+                salesData =
+                    leadGetSalesData() ||
+                    [];
 
             } catch (error) {
 
                 console.warn(
-                    "FSI CRM: gagal mengambil Sales name:",
+                    "FSI CRM: gagal mengambil Sales data:",
                     error
                 );
-
-                window.crmSelectedSalesName =
-                    "";
             }
-
-        } else {
-
-            window.crmSelectedSalesName =
-                "";
         }
+
+
+        var selected =
+            Array.isArray(
+                salesData
+            )
+                ? salesData.find(
+                    function (sales) {
+
+                        return String(
+                            sales &&
+                            sales.id
+                                ? sales.id
+                                : ""
+                        ).trim() ===
+                        salesId;
+                    }
+                )
+                : null;
+
+
+        window.crmSelectedSalesName =
+            selected
+                ? (
+                    selected.name ||
+                    selected.full_name ||
+                    selected.username ||
+                    ""
+                )
+                : "";
+
+
+        console.log(
+            "FSI CRM: Dashboard -> Leads Sales filter:",
+            {
+                dropdown: salesSelect.id,
+                value: salesSelect.value,
+                salesName:
+                    window.crmSelectedSalesName,
+                isAllSales:
+                    !salesId
+            }
+        );
+
+    } else {
+
+        console.warn(
+            "FSI CRM: Leads Sales dropdown (#filter-sales) tidak ditemukan."
+        );
+
+
+        window.crmSelectedSalesId =
+            salesId;
+
+
+        window.crmSelectedSalesName =
+            "";
     }
 
 
@@ -1390,6 +1392,13 @@ function handleProfileReady() {
 // ============================================================
 // SALES SELECTED FROM HEADER
 // ============================================================
+//
+// IMPORTANT:
+// Header Sales selection tetap boleh mengubah Leads,
+// tetapi targetnya #filter-sales.
+//
+// Jangan mengubah #salesFilter Dashboard.
+// ============================================================
 
 function handleSalesSelected(
     event
@@ -1454,10 +1463,12 @@ function handleSalesSelected(
     }
 
 
+    // ========================================================
+    // LEADS DROPDOWN ONLY
+    // ========================================================
+
     var salesSelect =
-        leadElement(
-            "salesFilter"
-        );
+        leadsGetSalesSelect();
 
 
     if (salesSelect) {
@@ -1465,6 +1476,19 @@ function handleSalesSelected(
         salesSelect.value =
             window.crmSelectedSalesId ||
             "";
+
+
+        console.log(
+            "FSI CRM: Header Sales -> Leads filter:",
+            {
+                dropdown:
+                    salesSelect.id,
+                value:
+                    salesSelect.value,
+                salesName:
+                    window.crmSelectedSalesName
+            }
+        );
     }
 
 
@@ -1584,6 +1608,9 @@ function handleAppReady() {
 // ============================================================
 // GLOBAL EXPORTS
 // ============================================================
+
+window.leadsGetSalesSelect =
+    leadsGetSalesSelect;
 
 window.leadsCreateLoadKey =
     leadsCreateLoadKey;
@@ -1792,6 +1819,9 @@ window.FSILeads =
 Object.assign(
     window.FSILeads,
     {
+
+        leadsGetSalesSelect:
+            leadsGetSalesSelect,
 
         leadsCreateLoadKey:
             leadsCreateLoadKey,
