@@ -1,4 +1,10 @@
 /* =========================================================
+   FSI CRM - LEADS CSS
+   Compact & Responsive Leads Table
+========================================================= */
+
+
+/* =========================================================
    FILTER PANEL
 ========================================================= */
 .filter-panel {
@@ -19,11 +25,6 @@
 
 /* =========================================================
    SEARCH BOX
-   Improved:
-   - icon no longer covers typed text
-   - larger left padding
-   - stable vertical alignment
-   - search field has proper right-side space
 ========================================================= */
 .search-box {
     position: relative;
@@ -55,15 +56,11 @@
     z-index: 1;
 }
 
-/* Prevent browser search decoration from creating
-   an unwanted overlap with our search layout. */
 .search-box input[type="search"] {
     -webkit-appearance: none;
     appearance: none;
 }
 
-/* Keep the native clear button available and
-   positioned safely on the right side. */
 .search-box input[type="search"]::-webkit-search-cancel-button {
     -webkit-appearance: none;
     width: 16px;
@@ -153,7 +150,8 @@
 
 /* =========================================================
    TABLE
-   Compact Leads table
+   Compact Leads Table
+   - smaller overall width
    - smaller row height
    - smaller padding
    - smaller typography
@@ -169,12 +167,15 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-xs);
+
+    /* Better touch scrolling on mobile */
+    -webkit-overflow-scrolling: touch;
 }
 
 .crm-table,
 .data-table {
     width: 100%;
-    min-width: 1180px;
+    min-width: 1050px;
     border-collapse: separate;
     border-spacing: 0;
     table-layout: auto;
@@ -182,8 +183,8 @@
 
 .crm-table th,
 .data-table th {
-    height: 40px;
-    padding: 0 9px;
+    height: 38px;
+    padding: 0 7px;
     background: var(--slate-50);
     border-bottom: 1px solid var(--border);
     color: var(--slate-500);
@@ -198,7 +199,7 @@
 .crm-table td,
 .data-table td {
     height: 45px;
-    padding: 6px 9px;
+    padding: 5px 7px;
     border-bottom: 1px solid var(--slate-100);
     color: var(--slate-600);
     font-size: 10px;
@@ -215,6 +216,10 @@
     background: #fafcff;
 }
 
+
+/* =========================================================
+   TABLE EMPTY / LOADING / ERROR
+========================================================= */
 .table-loading,
 .table-empty,
 .table-error {
@@ -223,21 +228,25 @@
     color: var(--slate-400) !important;
 }
 
+
+/* =========================================================
+   CUSTOMER CELLS
+========================================================= */
 .customer-name-cell {
     color: var(--slate-800);
     font-weight: 700;
+    max-width: 130px;
 }
 
 .customer-phone-cell {
     color: var(--slate-500);
+    white-space: nowrap;
 }
 
 
 /* =========================================================
    LEADS TABLE CELLS
-   Keep important information compact and visible
 ========================================================= */
-
 .lead-customer-cell,
 .lead-sales-cell,
 .lead-status-wrapper,
@@ -246,42 +255,80 @@
     min-width: 0;
 }
 
+
+/* =========================================================
+   CUSTOMER NAME
+========================================================= */
 .lead-name-btn {
-    max-width: 170px;
+    display: inline-block;
+    max-width: 130px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
+
+/* =========================================================
+   SALES NAME
+========================================================= */
 .lead-sales-name {
     display: block;
-    max-width: 160px;
+    max-width: 120px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
+
+/* =========================================================
+   INPUT DATE
+========================================================= */
 .lead-input-date {
     display: inline-block;
-    min-width: 78px;
+    min-width: 70px;
     white-space: nowrap;
     font-size: 10px;
 }
 
+
+/* =========================================================
+   DAYS
+========================================================= */
 .lead-days {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 24px;
+    min-width: 22px;
     white-space: nowrap;
+    font-size: 10px;
     font-weight: 700;
 }
 
+
+/* =========================================================
+   PROGRESS
+========================================================= */
+.lead-progress-wrapper {
+    min-width: 0;
+    max-width: 120px;
+    overflow: hidden;
+}
+
+.lead-progress-wrapper span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   NOTE
+========================================================= */
 .lead-note-cell {
     display: flex;
     align-items: center;
     gap: 5px;
-    max-width: 150px;
+    max-width: 110px;
     overflow: hidden;
 }
 
@@ -298,12 +345,13 @@
 .table-actions {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 3px;
+    white-space: nowrap;
 }
 
 .action-btn {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -328,8 +376,8 @@
 }
 
 .action-btn svg {
-    width: 15px;
-    height: 15px;
+    width: 13px;
+    height: 13px;
 }
 
 
@@ -340,8 +388,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 25px;
-    padding: 0 9px;
+    min-height: 23px;
+    padding: 0 7px;
     border-radius: 99px;
     font-size: 9px;
     font-weight: 800;
@@ -453,4 +501,159 @@
     color: var(--primary);
     font-size: 11px;
     font-weight: 800;
+}
+
+
+/* =========================================================
+   RESPONSIVE - TABLET
+========================================================= */
+@media (max-width: 1100px) {
+
+    .filter-panel {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+    .search-box {
+        grid-column: 1 / -1;
+    }
+
+    .crm-table,
+    .data-table {
+        min-width: 1050px;
+    }
+}
+
+
+/* =========================================================
+   RESPONSIVE - MOBILE
+========================================================= */
+@media (max-width: 768px) {
+
+    .filter-panel {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        padding: 10px;
+    }
+
+    .search-box {
+        grid-column: auto;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .crm-table,
+    .data-table {
+        min-width: 1050px;
+    }
+
+    .crm-table th,
+    .data-table th {
+        height: 36px;
+        padding: 0 6px;
+        font-size: 8px;
+    }
+
+    .crm-table td,
+    .data-table td {
+        height: 43px;
+        padding: 5px 6px;
+        font-size: 9px;
+    }
+
+    .lead-name-btn {
+        max-width: 120px;
+    }
+
+    .lead-sales-name {
+        max-width: 110px;
+    }
+
+    .lead-note-cell {
+        max-width: 100px;
+    }
+
+    .lead-progress-wrapper {
+        max-width: 110px;
+    }
+
+    .action-btn {
+        width: 27px;
+        height: 27px;
+    }
+
+    .action-btn svg {
+        width: 12px;
+        height: 12px;
+    }
+
+    .pagination-wrapper {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .pagination-controls {
+        justify-content: center;
+    }
+}
+
+
+/* =========================================================
+   RESPONSIVE - SMALL MOBILE
+========================================================= */
+@media (max-width: 480px) {
+
+    .filter-panel {
+        padding: 8px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea,
+    .filter-panel select,
+    .search-box input {
+        min-height: 38px;
+        font-size: 11px;
+    }
+
+    .crm-table,
+    .data-table {
+        min-width: 1000px;
+    }
+
+    .crm-table th,
+    .data-table th {
+        font-size: 8px;
+        padding: 0 5px;
+    }
+
+    .crm-table td,
+    .data-table td {
+        font-size: 9px;
+        padding: 4px 5px;
+    }
+
+    .lead-name-btn {
+        max-width: 110px;
+    }
+
+    .lead-sales-name {
+        max-width: 100px;
+    }
+
+    .lead-note-cell {
+        max-width: 90px;
+    }
+
+    .lead-progress-wrapper {
+        max-width: 100px;
+    }
+
+    .action-btn {
+        width: 26px;
+        height: 26px;
+    }
 }
