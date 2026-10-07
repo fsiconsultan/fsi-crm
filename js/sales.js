@@ -76,8 +76,7 @@
         try {
 
             if (
-                typeof supabaseClient !==
-                "undefined" &&
+                typeof supabaseClient !== "undefined" &&
                 supabaseClient
             ) {
 
@@ -105,8 +104,7 @@
         try {
 
             if (
-                typeof currentProfile !==
-                "undefined" &&
+                typeof currentProfile !== "undefined" &&
                 currentProfile
             ) {
 
@@ -130,8 +128,7 @@
         try {
 
             if (
-                typeof currentUser !==
-                "undefined" &&
+                typeof currentUser !== "undefined" &&
                 currentUser
             ) {
 
@@ -370,26 +367,11 @@
         return String(
             value ?? ""
         )
-            .replace(
-                /&/g,
-                "&amp;"
-            )
-            .replace(
-                /</g,
-                "&lt;"
-            )
-            .replace(
-                />/g,
-                "&gt;"
-            )
-            .replace(
-                /"/g,
-                "&quot;"
-            )
-            .replace(
-                /'/g,
-                "&#039;"
-            );
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
     }
 
 
@@ -462,9 +444,7 @@
                         );
 
                     return (
-                        isSalesLikeRole(
-                            role
-                        ) &&
+                        isSalesLikeRole(role) &&
                         status === "Active"
                     );
                 }
@@ -480,8 +460,7 @@
                         ),
                         undefined,
                         {
-                            sensitivity:
-                                "base"
+                            sensitivity: "base"
                         }
                     );
                 }
@@ -517,8 +496,7 @@
                         );
 
                     if (
-                        status !==
-                        "Active"
+                        status !== "Active"
                     ) {
 
                         return false;
@@ -528,9 +506,7 @@
                         role === "admin" ||
                         role === "owner" ||
                         role === "administrator" ||
-                        isSalesLikeRole(
-                            role
-                        )
+                        isSalesLikeRole(role)
                     );
                 }
             )
@@ -545,8 +521,7 @@
                         ),
                         undefined,
                         {
-                            sensitivity:
-                                "base"
+                            sensitivity: "base"
                         }
                     );
                 }
@@ -581,8 +556,7 @@
                     .order(
                         "name",
                         {
-                            ascending:
-                                true
+                            ascending: true
                         }
                     );
 
@@ -626,19 +600,17 @@
     // POPULATE LEAD SALES FILTER
     // ========================================================
     //
-    // IMPORTANT:
-    //
-    // Leads menggunakan dropdown TERPISAH dari Dashboard.
-    //
-    // Leads:
-    // #leadSalesFilter
+    // LEADS:
     // #filter-sales
+    //
+    // Optional fallback:
+    // #leadSalesFilter
     // #filterSales
     //
     // Dashboard:
     // #salesFilter
     //
-    // JANGAN memasukkan #salesFilter di sini.
+    // #salesFilter TIDAK BOLEH dipopulate di sini.
     //
     // ========================================================
 
@@ -647,8 +619,8 @@
     ) {
 
         const salesFilterIds = [
-            "leadSalesFilter",
             "filter-sales",
+            "leadSalesFilter",
             "filterSales"
         ];
 
@@ -662,9 +634,7 @@
 
                 if (
                     element &&
-                    !salesFilters.includes(
-                        element
-                    )
+                    !salesFilters.includes(element)
                 ) {
 
                     salesFilters.push(
@@ -691,8 +661,7 @@
 
                 const currentValue =
                     String(
-                        salesFilter.value ||
-                        ""
+                        salesFilter.value || ""
                     ).trim();
 
                 salesFilter.innerHTML =
@@ -759,8 +728,7 @@
 
                             return String(
                                 sales?.id || ""
-                            ) ===
-                            currentValue;
+                            ) === currentValue;
                         }
                     );
 
@@ -777,8 +745,8 @@
     // POPULATE DASHBOARD SALES FILTER
     // ========================================================
     //
-    // IMPORTANT:
-    // HANYA #salesFilter.
+    // DASHBOARD ONLY:
+    // #salesFilter
     //
     // ========================================================
 
@@ -824,13 +792,19 @@
         salesList.forEach(
             function (sales) {
 
+                if (!sales?.id) {
+                    return;
+                }
+
                 const option =
                     document.createElement(
                         "option"
                     );
 
                 option.value =
-                    sales.id || "";
+                    String(
+                        sales.id
+                    );
 
                 option.textContent =
                     getSalesDisplayName(
@@ -1005,8 +979,17 @@
             emptyOption
         );
 
-        activeSales.forEach(
+        const salesList =
+            Array.isArray(activeSales)
+                ? activeSales
+                : [];
+
+        salesList.forEach(
             function (sales) {
+
+                if (!sales?.id) {
+                    return;
+                }
 
                 const option =
                     document.createElement(
@@ -1014,7 +997,9 @@
                     );
 
                 option.value =
-                    sales.id || "";
+                    String(
+                        sales.id
+                    );
 
                 option.textContent =
                     getSalesDisplayName(
@@ -1039,7 +1024,7 @@
                 getProfileId();
 
             const ownSales =
-                activeSales.find(
+                salesList.find(
                     function (sales) {
 
                         return String(
@@ -1059,7 +1044,7 @@
         } else {
 
             const exists =
-                activeSales.some(
+                salesList.some(
                     function (sales) {
 
                         return String(
@@ -1096,12 +1081,7 @@
         // ----------------------------------------------------
         // LEADS FILTER
         // ----------------------------------------------------
-        //
-        // HANYA dropdown Leads:
-        // #leadSalesFilter
-        // #filter-sales
-        // #filterSales
-        //
+
         populateLeadSalesFilter(
             activeSales
         );
@@ -1129,6 +1109,10 @@
         populateLeadAssignment(
             leadAssignableUsers
         );
+
+        // ----------------------------------------------------
+        // TOP BUTTON
+        // ----------------------------------------------------
 
         updateSalesDropdownButtonFromFilter();
     }
@@ -1269,8 +1253,7 @@
                     .order(
                         "created_at",
                         {
-                            ascending:
-                                false
+                            ascending: false
                         }
                     );
 
@@ -2151,12 +2134,9 @@
                     "create-sales",
                     {
                         body: {
-                            name:
-                                name,
-                            username:
-                                username,
-                            password:
-                                password
+                            name: name,
+                            username: username,
+                            password: password
                         }
                     }
                 );
@@ -2180,8 +2160,7 @@
 
                 if (
                     error.context &&
-                    typeof error.context ===
-                    "object"
+                    typeof error.context === "object"
                 ) {
 
                     try {
@@ -2356,8 +2335,7 @@
             );
 
         const newStatus =
-            normalizedCurrent ===
-            "Active"
+            normalizedCurrent === "Active"
                 ? "Inactive"
                 : "Active";
 
@@ -2401,8 +2379,7 @@
                 await supabase
                     .from("sales_users")
                     .update({
-                        status:
-                            newStatus
+                        status: newStatus
                     })
                     .eq(
                         "id",
@@ -2472,13 +2449,13 @@
     ) {
 
         // ----------------------------------------------------
-        // TOP / LEADS FILTER
+        // LEADS ONLY
         // ----------------------------------------------------
 
         const salesFilter =
             salesElement(
-                "leadSalesFilter",
                 "filter-sales",
+                "leadSalesFilter",
                 "filterSales"
             );
 
@@ -2486,6 +2463,15 @@
 
             salesFilter.value =
                 salesId || "";
+
+            salesFilter.dispatchEvent(
+                new Event(
+                    "change",
+                    {
+                        bubbles: true
+                    }
+                )
+            );
         }
 
         updateSalesDropdownButtonFromFilter();
@@ -2520,17 +2506,19 @@
     ) {
 
         // ----------------------------------------------------
-        // LEADS FILTER ONLY
+        // LEADS ONLY
         //
-        // IMPORTANT:
-        // Jangan menggunakan #salesFilter di sini.
-        // #salesFilter adalah milik Dashboard.
+        // #filter-sales = Leads
+        //
+        // #salesFilter = Dashboard
+        //
+        // JANGAN menyentuh #salesFilter di sini.
         // ----------------------------------------------------
 
         const salesFilter =
             salesElement(
-                "leadSalesFilter",
                 "filter-sales",
+                "leadSalesFilter",
                 "filterSales"
             );
 
@@ -2539,14 +2527,11 @@
             salesFilter.value =
                 salesId || "";
 
-            // Trigger change supaya Leads menangkap
-            // perubahan filter secara normal.
             salesFilter.dispatchEvent(
                 new Event(
                     "change",
                     {
-                        bubbles:
-                            true
+                        bubbles: true
                     }
                 )
             );
@@ -2588,8 +2573,8 @@
 
         const salesFilter =
             salesElement(
-                "leadSalesFilter",
                 "filter-sales",
+                "leadSalesFilter",
                 "filterSales"
             );
 
@@ -2598,7 +2583,9 @@
         }
 
         const value =
-            salesFilter.value || "";
+            String(
+                salesFilter.value || ""
+            ).trim();
 
         if (!value) {
 
@@ -2621,7 +2608,9 @@
 
                     return String(
                         item.id
-                    ) === String(value);
+                    ) === String(
+                        value
+                    );
                 }
             );
 
@@ -3002,9 +2991,7 @@
                     if (
                         text === "add sales" ||
                         text === "add new sales" ||
-                        text.includes(
-                            "add sales"
-                        )
+                        text.includes("add sales")
                     ) {
 
                         button.dataset.salesOpenBound =
@@ -3124,6 +3111,10 @@
         salesEventsBound =
             true;
 
+        // ----------------------------------------------------
+        // ESCAPE
+        // ----------------------------------------------------
+
         document.addEventListener(
             "keydown",
             function (event) {
@@ -3149,7 +3140,7 @@
                             "show"
                         ) ||
                         modal.style.display ===
-                            "flex"
+                        "flex"
                     )
                 ) {
 
@@ -3158,6 +3149,10 @@
             }
         );
 
+
+        // ----------------------------------------------------
+        // PROFILE READY
+        // ----------------------------------------------------
 
         document.addEventListener(
             "fsi:profile-ready",
@@ -3179,6 +3174,10 @@
         );
 
 
+        // ----------------------------------------------------
+        // AUTH READY
+        // ----------------------------------------------------
+
         document.addEventListener(
             "fsi:auth-ready",
             async function () {
@@ -3199,6 +3198,10 @@
         );
 
 
+        // ----------------------------------------------------
+        // SALES CHANGED
+        // ----------------------------------------------------
+
         document.addEventListener(
             "fsi:sales-changed",
             async function () {
@@ -3207,6 +3210,10 @@
             }
         );
 
+
+        // ----------------------------------------------------
+        // NAVIGATION
+        // ----------------------------------------------------
 
         document.addEventListener(
             "fsi:navigation-changed",
@@ -3298,7 +3305,7 @@
 
 
     // ========================================================
-    // EXPORT GLOBAL FUNCTIONS
+    // GLOBAL EXPORTS
     // ========================================================
 
     window.loadSalesLookup =
