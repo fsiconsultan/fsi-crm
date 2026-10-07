@@ -32,6 +32,7 @@
     display: flex;
     align-items: center;
 }
+
 .search-box svg {
     position: absolute;
     left: 13px;
@@ -43,6 +44,7 @@
     pointer-events: none;
     z-index: 2;
 }
+
 .search-box input {
     width: 100%;
     min-width: 0;
@@ -52,12 +54,14 @@
     position: relative;
     z-index: 1;
 }
+
 /* Prevent browser search decoration from creating
    an unwanted overlap with our search layout. */
 .search-box input[type="search"] {
     -webkit-appearance: none;
     appearance: none;
 }
+
 /* Keep the native clear button available and
    positioned safely on the right side. */
 .search-box input[type="search"]::-webkit-search-cancel-button {
@@ -78,11 +82,13 @@
     gap: 6px;
     min-width: 0;
 }
+
 .form-group label {
     color: var(--slate-700);
     font-size: 11px;
     font-weight: 700;
 }
+
 .form-group input,
 .form-group select,
 .form-group textarea,
@@ -101,17 +107,20 @@
         border-color var(--transition),
         box-shadow var(--transition);
 }
+
 .form-group textarea {
     min-height: 95px;
     padding-top: 10px;
     padding-bottom: 10px;
     resize: vertical;
 }
+
 .form-group input::placeholder,
 .form-group textarea::placeholder,
 .search-box input::placeholder {
     color: var(--slate-400);
 }
+
 .form-group input:hover,
 .form-group select:hover,
 .form-group textarea:hover,
@@ -119,6 +128,7 @@
 .search-box input:hover {
     border-color: var(--slate-300);
 }
+
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus,
@@ -128,12 +138,14 @@
     box-shadow:
         0 0 0 3px rgba(37, 99, 235, 0.08);
 }
+
 .form-grid {
     display: grid;
     grid-template-columns:
         repeat(2, minmax(0, 1fr));
     gap: 15px;
 }
+
 .full-width {
     grid-column: 1 / -1;
 }
@@ -141,54 +153,68 @@
 
 /* =========================================================
    TABLE
+   Compact Leads table
+   - smaller row height
+   - smaller padding
+   - smaller typography
+   - horizontal scroll preserved on small screens
 ========================================================= */
 .table-panel,
 .table-container {
     width: 100%;
+    max-width: 100%;
     overflow-x: auto;
+    overflow-y: hidden;
     background: #ffffff;
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-xs);
 }
+
 .crm-table,
 .data-table {
     width: 100%;
-    min-width: 900px;
+    min-width: 1180px;
     border-collapse: separate;
     border-spacing: 0;
+    table-layout: auto;
 }
+
 .crm-table th,
 .data-table th {
-    height: 45px;
-    padding: 0 13px;
+    height: 40px;
+    padding: 0 9px;
     background: var(--slate-50);
     border-bottom: 1px solid var(--border);
     color: var(--slate-500);
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 800;
     text-align: left;
     text-transform: uppercase;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.2px;
     white-space: nowrap;
 }
+
 .crm-table td,
 .data-table td {
-    height: 58px;
-    padding: 9px 13px;
+    height: 45px;
+    padding: 6px 9px;
     border-bottom: 1px solid var(--slate-100);
     color: var(--slate-600);
-    font-size: 11px;
+    font-size: 10px;
     vertical-align: middle;
 }
+
 .crm-table tbody tr:last-child td,
 .data-table tbody tr:last-child td {
     border-bottom: 0;
 }
+
 .crm-table tbody tr:hover,
 .data-table tbody tr:hover {
     background: #fafcff;
 }
+
 .table-loading,
 .table-empty,
 .table-error {
@@ -196,12 +222,73 @@
     text-align: center !important;
     color: var(--slate-400) !important;
 }
+
 .customer-name-cell {
     color: var(--slate-800);
     font-weight: 700;
 }
+
 .customer-phone-cell {
     color: var(--slate-500);
+}
+
+
+/* =========================================================
+   LEADS TABLE CELLS
+   Keep important information compact and visible
+========================================================= */
+
+.lead-customer-cell,
+.lead-sales-cell,
+.lead-status-wrapper,
+.lead-progress-wrapper,
+.lead-note-cell {
+    min-width: 0;
+}
+
+.lead-name-btn {
+    max-width: 170px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.lead-sales-name {
+    display: block;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.lead-input-date {
+    display: inline-block;
+    min-width: 78px;
+    white-space: nowrap;
+    font-size: 10px;
+}
+
+.lead-days {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    white-space: nowrap;
+    font-weight: 700;
+}
+
+.lead-note-cell {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    max-width: 150px;
+    overflow: hidden;
+}
+
+.lead-note-cell span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 
@@ -213,6 +300,7 @@
     align-items: center;
     gap: 5px;
 }
+
 .action-btn {
     width: 32px;
     height: 32px;
@@ -227,15 +315,18 @@
         background var(--transition),
         color var(--transition);
 }
+
 .action-btn:hover {
     color: var(--primary);
     background: var(--primary-light);
 }
+
 .action-btn.danger:hover,
 .action-delete:hover {
     color: var(--danger);
     background: var(--danger-light);
 }
+
 .action-btn svg {
     width: 15px;
     height: 15px;
@@ -256,40 +347,49 @@
     font-weight: 800;
     white-space: nowrap;
 }
+
 .status-new {
     color: #1d4ed8;
     background: #dbeafe;
 }
+
 .status-flyer,
 .status-flyer-sent {
     color: #92400e;
     background: #fef3c7;
 }
+
 .status-interested {
     color: #166534;
     background: #dcfce7;
 }
+
 .status-follow-up,
 .status-followup {
     color: #9a3412;
     background: #ffedd5;
 }
+
 .status-appointment {
     color: #6d28d9;
     background: #ede9fe;
 }
+
 .status-site-survey {
     color: #0e7490;
     background: #cffafe;
 }
+
 .status-quotation {
     color: #92400e;
     background: #fef3c7;
 }
+
 .status-closing {
     color: #166534;
     background: #bbf7d0;
 }
+
 .status-not-interested {
     color: #991b1b;
     background: #fee2e2;
@@ -306,15 +406,18 @@
     gap: 15px;
     margin-top: 14px;
 }
+
 .pagination-info {
     color: var(--slate-500);
     font-size: 11px;
 }
+
 .pagination-controls {
     display: flex;
     align-items: center;
     gap: 7px;
 }
+
 .pagination-controls button {
     width: 34px;
     height: 34px;
@@ -327,15 +430,18 @@
     color: var(--slate-600);
     cursor: pointer;
 }
+
 .pagination-controls button:hover:not(:disabled) {
     color: var(--primary);
     background: var(--primary-light);
     border-color: #bfdbfe;
 }
+
 .pagination-controls button:disabled {
     opacity: 0.45;
     cursor: not-allowed;
 }
+
 .pagination-controls span {
     min-width: 34px;
     height: 34px;
