@@ -19,6 +19,7 @@
 // - Card tidak memanggil loadLeads() langsung
 // - Card hanya mengirim filter ke Leads
 // - Tidak ada recursive dashboard navigation
+// - Keyboard stat card TIDAK mengganggu input/search
 // ============================================================
 
 
@@ -1310,10 +1311,10 @@ function dashboardBindStatCardClicks() {
             }
 
 
-            // Jangan menangkap tombol/link internal.
+            // Jangan menangkap tombol/link/input internal.
             const interactive =
                 target.closest(
-                    "button, a, input, select, textarea"
+                    "button, a, input, select, textarea, [contenteditable='true']"
                 );
 
 
@@ -1425,6 +1426,57 @@ function dashboardBindStatCardKeyboard() {
         "keydown",
         function (event) {
 
+            if (!event) {
+                return;
+            }
+
+
+            // ====================================================
+            // IMPORTANT:
+            // Jangan pernah menangkap keyboard ketika user sedang
+            // mengetik di field/form.
+            //
+            // Ini memperbaiki:
+            // - Space di Customer Leads Search
+            // - Space di input customer name
+            // - Space di textarea
+            // - Enter di form/input
+            // ====================================================
+
+            const target =
+                event.target;
+
+
+            if (
+                target &&
+                target.matches &&
+                target.matches(
+                    "input, textarea, select, [contenteditable='true']"
+                )
+            ) {
+                return;
+            }
+
+
+            // ====================================================
+            // Jangan mengganggu button/link lain.
+            // ====================================================
+
+            if (
+                target &&
+                target.closest &&
+                target.closest(
+                    "button, a"
+                )
+            ) {
+                return;
+            }
+
+
+            // ====================================================
+            // Hanya Enter / Space
+            // ====================================================
+
             if (
                 event.key !== "Enter" &&
                 event.key !== " "
@@ -1433,9 +1485,13 @@ function dashboardBindStatCardKeyboard() {
             }
 
 
+            // ====================================================
+            // Cari stat card berdasarkan target.
+            // ====================================================
+
             const card =
                 dashboardStatsFindCard(
-                    event.target
+                    target
                 );
 
 
@@ -1454,6 +1510,11 @@ function dashboardBindStatCardKeyboard() {
                 return;
             }
 
+
+            // ====================================================
+            // Hanya setelah benar-benar ditemukan stat card,
+            // baru cegah default browser.
+            // ====================================================
 
             event.preventDefault();
 
