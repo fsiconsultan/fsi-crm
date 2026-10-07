@@ -5,65 +5,58 @@
 // Fungsi:
 // 1. Selected Sales state
 // 2. Sales name state
-// 3. Sales filter
+// 3. Leads Sales filter
 // 4. Filter options
 // 5. Business filter
 // 6. Lead filters
 // 7. Search query
 // 8. Dashboard -> Leads filter integration
 //
-// IMPORTANT:
-// - ADMIN dapat menggunakan Sales dropdown.
-// - Admin memilih Sales A/B/C -> hanya Lead Sales tersebut.
-// - Admin memilih All Sales -> seluruh Leads.
-// - SALES biasa tetap menggunakan Sales ID miliknya.
-// - SECRETARY tetap menggunakan Sales ID miliknya.
-// - DIGITAL MARKETING tetap menggunakan Sales ID miliknya.
-// - Tidak mengubah Supabase RLS.
-// - Tidak mengubah struktur database.
+// ============================================================
+// DROPDOWN OWNERSHIP
+// ============================================================
 //
-// DROPDOWN OWNERSHIP:
-//
-// Dashboard:
+// DASHBOARD:
 //   #salesFilter
 //
-// Leads:
-//   #leadSalesFilter
+// LEADS:
 //   #filter-sales
-//   #filterSales
 //
 // IMPORTANT:
-// #salesFilter TIDAK digunakan sebagai dropdown Leads.
+// - #salesFilter = MILIK DASHBOARD
+// - #filter-sales = MILIK LEADS
+// - Jangan mencampur keduanya.
 // ============================================================
 
 
 // ============================================================
-// LEADS SALES SELECT
+// GET LEADS SALES SELECT
 // ============================================================
-//
-// Satu helper untuk mengambil dropdown Sales milik halaman Leads.
-//
-// Priority:
-// 1. #leadSalesFilter
-// 2. #filter-sales
-// 3. #filterSales
-//
-// JANGAN menggunakan #salesFilter di sini.
-// #salesFilter adalah milik Dashboard.
-//
 
 function getLeadSalesSelect() {
 
-    return leadElement(
-        "leadSalesFilter",
-        "filter-sales",
-        "filterSales"
-    );
+    // Prioritas utama adalah dropdown yang benar-benar
+    // terdapat pada halaman Leads.
+
+    const select =
+        document.getElementById("filter-sales");
+
+    if (select) {
+        return select;
+    }
+
+    // Fallback untuk kompatibilitas jika nanti HTML berubah.
+
+    const fallback =
+        document.getElementById("leadSalesFilter") ||
+        document.getElementById("filterSales");
+
+    return fallback || null;
 }
 
 
 // ============================================================
-// SELECTED SALES
+// GET SELECTED SALES ID
 // ============================================================
 
 function getSelectedSalesId() {
@@ -75,18 +68,15 @@ function getSelectedSalesId() {
         value === null ||
         value === undefined
     ) {
-
         return "";
     }
 
-    return String(
-        value
-    ).trim();
+    return String(value).trim();
 }
 
 
 // ============================================================
-// SELECTED SALES NAME
+// GET SELECTED SALES NAME
 // ============================================================
 
 function getSelectedSalesName() {
@@ -98,50 +88,29 @@ function getSelectedSalesName() {
         value === null ||
         value === undefined
     ) {
-
         return "";
     }
 
-    return String(
-        value
-    ).trim();
+    return String(value).trim();
 }
 
 
 // ============================================================
-// GET SALES DATA
+// GET CURRENT SALES DATA
+// ============================================================
+//
+// Sumber utama:
+//   window.salesUsersData
+//
+// Ini adalah data yang dihasilkan oleh sales.js.
+//
 // ============================================================
 
 function leadGetCurrentSalesData() {
 
     try {
 
-        // ----------------------------------------------------
-        // PRIMARY SOURCE
-        // ----------------------------------------------------
-
-        if (
-            typeof leadGetSalesData ===
-            "function"
-        ) {
-
-            const data =
-                leadGetSalesData();
-
-            if (
-                Array.isArray(data) &&
-                data.length > 0
-            ) {
-
-                return data;
-            }
-        }
-
-
-        // ----------------------------------------------------
-        // CURRENT SALES LOOKUP
-        // ----------------------------------------------------
-
+        // PRIMARY
         if (
             Array.isArray(
                 window.salesUsersData
@@ -152,10 +121,25 @@ function leadGetCurrentSalesData() {
         }
 
 
-        // ----------------------------------------------------
-        // LEGACY
-        // ----------------------------------------------------
+        // SECONDARY
+        if (
+            typeof window.leadGetSalesData ===
+            "function"
+        ) {
 
+            const data =
+                window.leadGetSalesData();
+
+            if (
+                Array.isArray(data)
+            ) {
+
+                return data;
+            }
+        }
+
+
+        // LEGACY
         if (
             Array.isArray(
                 window.salesData
@@ -191,6 +175,77 @@ function leadGetCurrentSalesData() {
 
 
 // ============================================================
+// NORMALIZE ROLE
+// ============================================================
+
+function leadNormalizeRole(role) {
+
+    return String(
+        role || ""
+    )
+        .trim()
+        .toLowerCase()
+        .replace(
+            /[\s-]+/g,
+            "_"
+        );
+}
+
+
+// ============================================================
+// CHECK SALES-LIKE ROLE
+// ============================================================
+
+function leadIsSalesLikeRole(role) {
+
+    const normalized =
+        leadNormalizeRole(role);
+
+    return (
+
+        normalized === "sales" ||
+
+        normalized === "salesperson" ||
+
+        normalized === "secretary" ||
+
+        normalized === "digital_marketing"
+
+    );
+}
+
+
+// ============================================================
+// GET SALES DISPLAY NAME
+// ============================================================
+
+function leadGetSalesDisplayName(
+    sales
+) {
+
+    if (!sales) {
+        return "";
+    }
+
+    return String(
+
+        sales.name ||
+
+        sales.full_name ||
+
+        sales.username ||
+
+        sales.display_name ||
+
+        sales.email ||
+
+        ""
+
+    ).trim();
+}
+
+
+// ============================================================
 // GET SALES NAME BY ID
 // ============================================================
 
@@ -203,15 +258,12 @@ function leadGetSalesNameById(
             salesId || ""
         ).trim();
 
-
     if (!value) {
         return "";
     }
 
-
     const salesData =
         leadGetCurrentSalesData();
-
 
     const selected =
         salesData.find(
@@ -220,37 +272,19 @@ function leadGetSalesNameById(
                 return (
                     String(
                         sales?.id || ""
-                    ).trim() ===
-                    value
+                    ).trim() === value
                 );
             }
         );
 
-
-    if (!selected) {
-        return "";
-    }
-
-
-    return String(
-        selected.name ||
-        selected.full_name ||
-        selected.username ||
-        ""
-    ).trim();
+    return leadGetSalesDisplayName(
+        selected
+    );
 }
 
 
 // ============================================================
 // SYNC SELECTED SALES STATE
-// ============================================================
-//
-// Satu sumber state untuk:
-//
-// - crmSelectedSalesId
-// - currentSalesFilter
-// - crmSelectedSalesName
-//
 // ============================================================
 
 function syncSelectedSalesState(
@@ -262,45 +296,281 @@ function syncSelectedSalesState(
             salesId || ""
         ).trim();
 
-
     window.crmSelectedSalesId =
         value;
-
 
     window.currentSalesFilter =
         value;
 
-
-    if (value) {
-
-        window.crmSelectedSalesName =
-            leadGetSalesNameById(
-                value
-            );
-
-    } else {
-
-        window.crmSelectedSalesName =
-            "";
-    }
-
+    window.crmSelectedSalesName =
+        value
+            ? leadGetSalesNameById(value)
+            : "";
 
     return value;
 }
 
 
 // ============================================================
-// APPLY SELECTED SALES FILTER
+// POPULATE LEADS SALES DROPDOWN
 // ============================================================
 //
-// Untuk Leads.
+// INI BAGIAN PENTING.
 //
-// ADMIN:
-//   mengambil nilai dari dropdown Leads.
+// Dropdown Leads diisi langsung dari:
 //
-// SALES / SECRETARY / DIGITAL MARKETING:
-//   menggunakan Sales ID miliknya.
+//   window.salesUsersData
 //
+// Tidak bergantung pada populateSalesDropdowns().
+// Tidak menyentuh #salesFilter Dashboard.
+// ============================================================
+
+function populateLeadsSalesDropdown() {
+
+    const salesSelect =
+        getLeadSalesSelect();
+
+    if (!salesSelect) {
+
+        console.warn(
+            "FSI CRM: Dropdown Leads #filter-sales tidak ditemukan."
+        );
+
+        return false;
+    }
+
+
+    const salesData =
+        leadGetCurrentSalesData();
+
+
+    console.log(
+        "FSI CRM: populateLeadsSalesDropdown:",
+        {
+            dropdownId:
+                salesSelect.id,
+
+            salesDataLength:
+                salesData.length,
+
+            salesData:
+                salesData
+        }
+    );
+
+
+    // Simpan pilihan sekarang.
+
+    const currentValue =
+        String(
+            salesSelect.value || ""
+        ).trim();
+
+
+    // Bersihkan dropdown.
+
+    salesSelect.innerHTML =
+        "";
+
+
+    // ========================================================
+    // ALL SALES
+    // ========================================================
+
+    const allOption =
+        document.createElement(
+            "option"
+        );
+
+    allOption.value =
+        "";
+
+    allOption.textContent =
+        "All Sales";
+
+    salesSelect.appendChild(
+        allOption
+    );
+
+
+    // ========================================================
+    // FILTER USER YANG BOLEH MUNCUL
+    // ========================================================
+
+    const salesUsers =
+        salesData
+            .filter(
+                function (user) {
+
+                    if (!user) {
+                        return false;
+                    }
+
+                    // Active check.
+                    //
+                    // Kalau is_active tidak tersedia,
+                    // tetap izinkan user.
+
+                    if (
+                        user.is_active !== undefined &&
+                        user.is_active !== null
+                    ) {
+
+                        if (
+                            user.is_active === false ||
+                            user.is_active === "false" ||
+                            user.is_active === 0
+                        ) {
+
+                            return false;
+                        }
+                    }
+
+
+                    return leadIsSalesLikeRole(
+                        user.role
+                    );
+                }
+            )
+            .sort(
+                function (a, b) {
+
+                    const nameA =
+                        leadGetSalesDisplayName(a);
+
+                    const nameB =
+                        leadGetSalesDisplayName(b);
+
+                    return nameA.localeCompare(
+                        nameB,
+                        undefined,
+                        {
+                            sensitivity:
+                                "base"
+                        }
+                    );
+                }
+            );
+
+
+    console.log(
+        "FSI CRM: Leads Sales users:",
+        salesUsers
+    );
+
+
+    // ========================================================
+    // ADD USERS
+    // ========================================================
+
+    salesUsers.forEach(
+        function (sales) {
+
+            const id =
+                String(
+                    sales?.id || ""
+                ).trim();
+
+            const name =
+                leadGetSalesDisplayName(
+                    sales
+                );
+
+            if (!id || !name) {
+                return;
+            }
+
+
+            const option =
+                document.createElement(
+                    "option"
+                );
+
+            option.value =
+                id;
+
+            option.textContent =
+                name;
+
+            salesSelect.appendChild(
+                option
+            );
+        }
+    );
+
+
+    // ========================================================
+    // RESTORE VALUE
+    // ========================================================
+
+    const stateValue =
+        getSelectedSalesId();
+
+
+    const restoreValue =
+        stateValue ||
+        currentValue;
+
+
+    if (
+        restoreValue &&
+        Array.from(
+            salesSelect.options
+        ).some(
+            function (option) {
+
+                return (
+                    option.value ===
+                    restoreValue
+                );
+            }
+        )
+    ) {
+
+        salesSelect.value =
+            restoreValue;
+
+    } else {
+
+        salesSelect.value =
+            "";
+    }
+
+
+    console.log(
+        "FSI CRM: Leads Sales dropdown FINAL:",
+        {
+            id:
+                salesSelect.id,
+
+            value:
+                salesSelect.value,
+
+            options:
+                Array.from(
+                    salesSelect.options
+                ).map(
+                    function (option) {
+
+                        return {
+                            value:
+                                option.value,
+
+                            text:
+                                option.textContent
+                        };
+                    }
+                )
+        }
+    );
+
+
+    return true;
+}
+
+
+// ============================================================
+// APPLY SELECTED SALES FILTER
 // ============================================================
 
 function applySelectedSalesFilter() {
@@ -331,37 +601,21 @@ function applySelectedSalesFilter() {
 
 
         console.log(
-            "FSI CRM: Admin Leads Sales filter applied:",
+            "FSI CRM: Admin Leads Sales filter:",
             {
-                salesFilter:
-                    selectedValue,
-
-                dropdownId:
+                dropdown:
                     salesSelect
                         ? salesSelect.id
-                        : undefined,
+                        : null,
 
-                dropdownValue:
-                    salesSelect
-                        ? salesSelect.value
-                        : undefined,
-
-                crmSelectedSalesId:
-                    window.crmSelectedSalesId,
-
-                currentSalesFilter:
-                    window.currentSalesFilter,
+                value:
+                    selectedValue,
 
                 salesName:
                     window.crmSelectedSalesName,
 
                 isAllSales:
-                    selectedValue === "",
-
-                salesInputExists:
-                    Boolean(
-                        salesSelect
-                    )
+                    selectedValue === ""
             }
         );
 
@@ -398,12 +652,14 @@ function applySelectedSalesFilter() {
 // APPLY DASHBOARD SALES FILTER
 // ============================================================
 //
-// Dashboard tetap menggunakan:
+// Dashboard tetap memakai:
 //
-// #salesFilter
+//   #salesFilter
 //
-// Fungsi ini dipakai ketika Dashboard mengirim filter
-// ke halaman Leads.
+// Tetapi ketika Dashboard mengirim filter ke Leads,
+// yang diubah untuk Leads adalah:
+//
+//   #filter-sales
 //
 // ============================================================
 
@@ -417,29 +673,20 @@ function applyDashboardSalesFilter(
         ).trim();
 
 
-    // --------------------------------------------------------
-    // Dashboard dropdown
-    // --------------------------------------------------------
-
-    const dashboardSalesSelect =
-        leadElement(
-            "salesFilter"
-        );
-
-
-    if (dashboardSalesSelect) {
-
-        dashboardSalesSelect.value =
-            value;
-    }
-
-
-    // --------------------------------------------------------
-    // Leads dropdown
+    // ========================================================
+    // JANGAN UBAH DASHBOARD DROPDOWN
+    // ========================================================
     //
-    // Dashboard -> Leads harus tetap mensinkronkan
-    // dropdown Leads.
-    // --------------------------------------------------------
+    // Dashboard sudah punya state sendiri.
+    //
+    // Kita hanya menerima nilai salesId yang dikirim
+    // oleh Dashboard.
+    // ========================================================
+
+
+    // ========================================================
+    // SET LEADS DROPDOWN
+    // ========================================================
 
     const leadsSalesSelect =
         getLeadSalesSelect();
@@ -452,39 +699,30 @@ function applyDashboardSalesFilter(
     }
 
 
-    // --------------------------------------------------------
-    // State
-    // --------------------------------------------------------
+    // ========================================================
+    // STATE
+    // ========================================================
 
     syncSelectedSalesState(
         value
     );
 
 
-    // --------------------------------------------------------
-    // Debug
-    // --------------------------------------------------------
-
     console.log(
-        "FSI CRM: Dashboard Sales filter applied to Leads:",
+        "FSI CRM: Dashboard -> Leads Sales filter:",
         {
             salesId:
                 value,
 
-            dashboardDropdown:
-                dashboardSalesSelect
-                    ? dashboardSalesSelect.value
-                    : undefined,
-
-            leadsDropdownId:
+            leadsDropdown:
                 leadsSalesSelect
                     ? leadsSalesSelect.id
-                    : undefined,
+                    : null,
 
-            leadsDropdownValue:
+            leadsValue:
                 leadsSalesSelect
                     ? leadsSalesSelect.value
-                    : undefined,
+                    : null,
 
             salesName:
                 window.crmSelectedSalesName
@@ -534,7 +772,7 @@ function applyDashboardStatusFilter(
 
 
 // ============================================================
-// APPLY DASHBOARD FILTER DIRECTLY
+// APPLY DASHBOARD LEAD FILTERS
 // ============================================================
 
 function applyDashboardLeadFilters(
@@ -553,42 +791,24 @@ function applyDashboardLeadFilters(
         ).trim();
 
 
-    // ========================================================
-    // SALES
-    // ========================================================
-
     applyDashboardSalesFilter(
         salesId
     );
 
-
-    // ========================================================
-    // STATUS
-    // ========================================================
 
     applyDashboardStatusFilter(
         status
     );
 
 
-    // ========================================================
-    // RESET PAGE
-    // ========================================================
-
     if (
         typeof leadSetCurrentPage ===
         "function"
     ) {
 
-        leadSetCurrentPage(
-            1
-        );
+        leadSetCurrentPage(1);
     }
 
-
-    // ========================================================
-    // UPDATE CONTEXT
-    // ========================================================
 
     if (
         typeof updateLeadsContext ===
@@ -610,9 +830,7 @@ function applyDashboardLeadFilters(
 
 
     return {
-
         salesId,
-
         status
     };
 }
@@ -629,14 +847,9 @@ function updateSalesFilterVisibility() {
 
 
     if (!salesSelect) {
-
         return;
     }
 
-
-    // --------------------------------------------------------
-    // Cari container dropdown Leads.
-    // --------------------------------------------------------
 
     const salesContainer =
         salesSelect.closest(
@@ -656,38 +869,130 @@ function updateSalesFilterVisibility() {
         salesSelect;
 
 
-    // --------------------------------------------------------
-    // Admin melihat dropdown.
-    // --------------------------------------------------------
-
-    if (
-        leadIsAdmin()
-    ) {
-
-        target.style.display =
-            "";
-
-        target.removeAttribute(
-            "data-admin-sales-filter-hidden"
-        );
-
-        return;
-    }
-
-
-    // --------------------------------------------------------
-    // Sales-like role
-    //
-    // Dropdown tetap tersedia secara visual tetapi nilainya
-    // dikunci oleh Sales ID sendiri.
-    // --------------------------------------------------------
-
     target.style.display =
         "";
+
 
     target.removeAttribute(
         "data-admin-sales-filter-hidden"
     );
+}
+
+
+// ============================================================
+// BIND LEADS SALES CHANGE
+// ============================================================
+//
+// Kita bind langsung ke dropdown #filter-sales.
+//
+// Jadi walaupun leads-init.js tidak memasang event,
+// dropdown tetap bekerja.
+//
+// ============================================================
+
+function bindLeadsSalesFilter() {
+
+    const salesSelect =
+        getLeadSalesSelect();
+
+
+    if (!salesSelect) {
+
+        console.warn(
+            "FSI CRM: Tidak bisa bind Sales filter. Dropdown tidak ditemukan."
+        );
+
+        return false;
+    }
+
+
+    // Hindari event listener ganda.
+
+    if (
+        salesSelect.dataset.fsiSalesFilterBound ===
+        "true"
+    ) {
+
+        return true;
+    }
+
+
+    salesSelect.addEventListener(
+        "change",
+        async function () {
+
+            const selectedValue =
+                String(
+                    salesSelect.value || ""
+                ).trim();
+
+
+            console.log(
+                "FSI CRM: Leads Sales dropdown changed:",
+                {
+                    value:
+                        selectedValue,
+
+                    name:
+                        leadGetSalesNameById(
+                            selectedValue
+                        )
+                }
+            );
+
+
+            // State.
+
+            syncSelectedSalesState(
+                selectedValue
+            );
+
+
+            // Reset halaman.
+
+            if (
+                typeof leadSetCurrentPage ===
+                "function"
+            ) {
+
+                leadSetCurrentPage(1);
+            }
+
+
+            // Reload Leads.
+
+            if (
+                typeof loadLeads ===
+                "function"
+            ) {
+
+                try {
+
+                    await loadLeads(1);
+
+                } catch (error) {
+
+                    console.error(
+                        "FSI CRM: gagal reload Leads setelah Sales filter:",
+                        error
+                    );
+                }
+            }
+        }
+    );
+
+
+    salesSelect.dataset.fsiSalesFilterBound =
+        "true";
+
+
+    console.log(
+        "FSI CRM: Leads Sales filter event bound:",
+        salesSelect.id
+    );
+
+
+    return true;
 }
 
 
@@ -712,7 +1017,7 @@ async function loadFilterOptions() {
 
 
     // ========================================================
-    // SIMPAN SALES YANG SEDANG DIPILIH
+    // SIMPAN PILIHAN SALES
     // ========================================================
 
     const salesSelectBefore =
@@ -728,7 +1033,7 @@ async function loadFilterOptions() {
 
 
     // ========================================================
-    // CHECK DASHBOARD FILTER
+    // DASHBOARD FILTER
     // ========================================================
 
     let dashboardFilter =
@@ -746,9 +1051,7 @@ async function loadFilterOptions() {
         if (raw) {
 
             dashboardFilter =
-                JSON.parse(
-                    raw
-                );
+                JSON.parse(raw);
         }
 
     } catch (error) {
@@ -763,7 +1066,7 @@ async function loadFilterOptions() {
     try {
 
         // ====================================================
-        // SALES LOOKUP
+        // LOAD SALES LOOKUP
         // ====================================================
 
         if (
@@ -786,6 +1089,20 @@ async function loadFilterOptions() {
 
 
         // ====================================================
+        // LANGSUNG POPULATE LEADS SALES
+        // ====================================================
+
+        populateLeadsSalesDropdown();
+
+
+        // ====================================================
+        // BIND EVENT
+        // ====================================================
+
+        bindLeadsSalesFilter();
+
+
+        // ====================================================
         // BUSINESS
         // ====================================================
 
@@ -794,12 +1111,8 @@ async function loadFilterOptions() {
             error
         } =
             await client
-                .from(
-                    "leads"
-                )
-                .select(
-                    "business"
-                );
+                .from("leads")
+                .select("business");
 
 
         if (error) {
@@ -810,16 +1123,12 @@ async function loadFilterOptions() {
             );
 
 
-            populateBusinessFilter(
-                []
-            );
+            populateBusinessFilter([]);
 
         } else {
 
             const leads =
-                Array.isArray(
-                    data
-                )
+                Array.isArray(data)
                     ? data
                     : [];
 
@@ -842,37 +1151,14 @@ async function loadFilterOptions() {
 
 
         // ====================================================
-        // SALES DROPDOWNS
-        // ====================================================
-
-        if (
-            typeof window.populateSalesDropdowns ===
-            "function"
-        ) {
-
-            try {
-
-                window.populateSalesDropdowns();
-
-            } catch (error) {
-
-                console.warn(
-                    "FSI CRM: populateSalesDropdowns failed:",
-                    error
-                );
-            }
-        }
-
-
-        // ====================================================
-        // SHOW SALES FILTER
+        // VISIBILITY
         // ====================================================
 
         updateSalesFilterVisibility();
 
 
         // ====================================================
-        // DASHBOARD FILTER
+        // DASHBOARD -> LEADS
         // ====================================================
 
         if (
@@ -887,10 +1173,9 @@ async function loadFilterOptions() {
 
         } else {
 
-            // ------------------------------------------------
-            // Jika tidak ada Dashboard filter,
-            // pertahankan pilihan Leads sebelumnya.
-            // ------------------------------------------------
+            // ==================================================
+            // RESTORE ADMIN SELECTION
+            // ==================================================
 
             const salesSelect =
                 getLeadSalesSelect();
@@ -918,7 +1203,6 @@ async function loadFilterOptions() {
             }
         }
 
-
     } catch (error) {
 
         console.error(
@@ -927,12 +1211,13 @@ async function loadFilterOptions() {
         );
 
 
-        populateBusinessFilter(
-            []
-        );
-
+        populateBusinessFilter([]);
 
         updateSalesFilterVisibility();
+
+        populateLeadsSalesDropdown();
+
+        bindLeadsSalesFilter();
 
 
         if (
@@ -998,12 +1283,11 @@ function populateBusinessFilter(
         ...standardValues,
 
         ...(
-            Array.isArray(
-                databaseValues
-            )
+            Array.isArray(databaseValues)
                 ? databaseValues
                 : []
         )
+
     ];
 
 
@@ -1037,9 +1321,7 @@ function uniqueSortedValues(
         ...new Set(
 
             (
-                Array.isArray(
-                    values
-                )
+                Array.isArray(values)
                     ? values
                     : []
             )
@@ -1051,16 +1333,12 @@ function uniqueSortedValues(
                         ).trim();
                     }
                 )
-                .filter(
-                    Boolean
-                )
+                .filter(Boolean)
+
         )
 
     ].sort(
-        function (
-            a,
-            b
-        ) {
+        function (a, b) {
 
             return a.localeCompare(
                 b,
@@ -1086,15 +1364,12 @@ function populateFilter(
 ) {
 
     const idList =
-        Array.isArray(
-            ids
-        )
+        Array.isArray(ids)
             ? ids
             : [ids];
 
 
-    let select =
-        null;
+    let select = null;
 
 
     for (
@@ -1102,10 +1377,7 @@ function populateFilter(
     ) {
 
         select =
-            document.getElementById(
-                id
-            );
-
+            document.getElementById(id);
 
         if (select) {
             break;
@@ -1149,9 +1421,7 @@ function populateFilter(
 
     const safeValues =
         uniqueSortedValues(
-            Array.isArray(
-                values
-            )
+            Array.isArray(values)
                 ? values
                 : []
         );
@@ -1199,18 +1469,7 @@ function populateFilter(
 
 
 // ============================================================
-// GET FILTER VALUES
-// ============================================================
-//
-// Ini bagian PALING PENTING untuk Leads.
-//
-// ADMIN:
-//   membaca #leadSalesFilter / #filter-sales / #filterSales
-//
-// SALES-LIKE:
-//   menggunakan Sales ID sendiri.
-//
-// #salesFilter tidak digunakan di sini.
+// GET LEAD FILTERS
 // ============================================================
 
 function getLeadFilters() {
@@ -1238,17 +1497,13 @@ function getLeadFilters() {
         );
 
 
-    // --------------------------------------------------------
-    // LEADS SALES DROPDOWN
-    // --------------------------------------------------------
+    // ========================================================
+    // HANYA DROPDOWN LEADS
+    // ========================================================
 
     const salesInput =
         getLeadSalesSelect();
 
-
-    // ========================================================
-    // SALES FILTER
-    // ========================================================
 
     let salesFilter =
         salesInput
@@ -1266,10 +1521,6 @@ function getLeadFilters() {
         leadIsAdmin()
     ) {
 
-        // ----------------------------------------------------
-        // Dropdown Leads adalah source of truth.
-        // ----------------------------------------------------
-
         syncSelectedSalesState(
             salesFilter
         );
@@ -1278,18 +1529,17 @@ function getLeadFilters() {
         console.log(
             "DEBUG FSI CRM - getLeadFilters ADMIN:",
             {
-                salesFilter:
-                    salesFilter,
+                salesFilter,
 
                 dropdownId:
                     salesInput
                         ? salesInput.id
-                        : undefined,
+                        : null,
 
                 dropdownValue:
                     salesInput
                         ? salesInput.value
-                        : undefined,
+                        : null,
 
                 crmSelectedSalesId:
                     window.crmSelectedSalesId,
@@ -1298,15 +1548,7 @@ function getLeadFilters() {
                     window.currentSalesFilter,
 
                 salesName:
-                    window.crmSelectedSalesName,
-
-                isEmpty:
-                    salesFilter === "",
-
-                salesInputExists:
-                    Boolean(
-                        salesInput
-                    )
+                    window.crmSelectedSalesName
             }
         );
 
@@ -1321,7 +1563,7 @@ function getLeadFilters() {
 
 
         if (
-            selectedSalesId !== ""
+            selectedSalesId
         ) {
 
             salesFilter =
@@ -1342,10 +1584,6 @@ function getLeadFilters() {
     }
 
 
-    // ========================================================
-    // RETURN FILTERS
-    // ========================================================
-
     const filters = {
 
         search:
@@ -1362,6 +1600,7 @@ function getLeadFilters() {
 
         salesFilter:
             salesFilter
+
     };
 
 
@@ -1376,7 +1615,7 @@ function getLeadFilters() {
 
 
 // ============================================================
-// BUILD SEARCH CONDITION
+// BUILD SEARCH QUERY
 // ============================================================
 
 function buildSearchQuery(
@@ -1390,9 +1629,7 @@ function buildSearchQuery(
 
 
     const safeSearch =
-        String(
-            search
-        )
+        String(search)
             .replace(
                 /\\/g,
                 "\\\\"
@@ -1427,72 +1664,68 @@ function buildSearchQuery(
 
 
     return query.or(
-        searchConditions.join(
-            ","
-        )
+        searchConditions.join(",")
     );
 }
 
 
 // ============================================================
-// EXPORT FILTER FUNCTIONS
+// EXPORT
 // ============================================================
 
 window.getLeadSalesSelect =
     getLeadSalesSelect;
 
-
 window.getSelectedSalesId =
     getSelectedSalesId;
-
 
 window.getSelectedSalesName =
     getSelectedSalesName;
 
+window.leadGetCurrentSalesData =
+    leadGetCurrentSalesData;
+
+window.leadGetSalesNameById =
+    leadGetSalesNameById;
+
+window.populateLeadsSalesDropdown =
+    populateLeadsSalesDropdown;
 
 window.applySelectedSalesFilter =
     applySelectedSalesFilter;
 
-
 window.applyDashboardSalesFilter =
     applyDashboardSalesFilter;
-
 
 window.applyDashboardStatusFilter =
     applyDashboardStatusFilter;
 
-
 window.applyDashboardLeadFilters =
     applyDashboardLeadFilters;
-
 
 window.updateSalesFilterVisibility =
     updateSalesFilterVisibility;
 
+window.bindLeadsSalesFilter =
+    bindLeadsSalesFilter;
 
 window.loadFilterOptions =
     loadFilterOptions;
 
-
 window.getStandardBusinessOptions =
     getStandardBusinessOptions;
-
 
 window.populateBusinessFilter =
     populateBusinessFilter;
 
-
 window.uniqueSortedValues =
     uniqueSortedValues;
-
 
 window.populateFilter =
     populateFilter;
 
-
 window.getLeadFilters =
     getLeadFilters;
-
 
 window.buildSearchQuery =
     buildSearchQuery;
@@ -1517,6 +1750,12 @@ Object.assign(
 
         getSelectedSalesName,
 
+        leadGetCurrentSalesData,
+
+        leadGetSalesNameById,
+
+        populateLeadsSalesDropdown,
+
         applySelectedSalesFilter,
 
         applyDashboardSalesFilter,
@@ -1526,6 +1765,8 @@ Object.assign(
         applyDashboardLeadFilters,
 
         updateSalesFilterVisibility,
+
+        bindLeadsSalesFilter,
 
         loadFilterOptions,
 
@@ -1540,5 +1781,6 @@ Object.assign(
         getLeadFilters,
 
         buildSearchQuery
+
     }
 );
