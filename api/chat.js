@@ -8,7 +8,7 @@ export const config = {
     maxDuration: 60
 };
 
-const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+const MODEL = process.env.GEMINI_MODEL || "gemini-3.8-flash";
 
 const MAX_MESSAGE_LENGTH = 4000;
 const MAX_HISTORY = 10;
