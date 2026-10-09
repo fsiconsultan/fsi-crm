@@ -1,3 +1,4 @@
+// api/chat.js
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -7,9 +8,13 @@ export default async function handler(req, res) {
     });
   }
 
-  if (!process.env.OPENAI_API_KEY) {
+  const apiKey = process.env.OPENAI_API_KEY;
+
+  if (!apiKey) {
+    console.error("OPENAI_API_KEY belum tersedia di environment Vercel.");
+
     return res.status(500).json({
-      error: "OPENAI_API_KEY belum dikonfigurasi."
+      error: "API key AI belum dikonfigurasi di server."
     });
   }
 
@@ -32,18 +37,17 @@ export default async function handler(req, res) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization":
-            `Bearer ${process.env.OPENAI_API_KEY}`
+          "Authorization": `Bearer ${apiKey}`
         },
         body: JSON.stringify({
           model: "gpt-5-mini",
           instructions:
-            "Kamu adalah asisten AI CRM FSI Consultant. " +
-            "Bantu pengguna dengan sopan, jelas, dan profesional. " +
-            "Gunakan bahasa yang sesuai dengan bahasa pengguna. " +
-            "Jangan mengaku memiliki akses ke database CRM.",
+            "Kamu adalah asisten AI FSI Consultant. " +
+            "Jawab dengan sopan, jelas, profesional, dan gunakan bahasa pengguna. " +
+            "Kamu belum memiliki akses langsung ke database CRM. " +
+            "Jangan mengarang jumlah lead, nama customer, atau data CRM.",
           input: message.trim(),
-          max_output_tokens: 700
+          max_output_tokens: 1000
         })
       }
     );
@@ -51,10 +55,21 @@ export default async function handler(req, res) {
     const data = await response.json();
 
     if (!response.ok) {
-      console.error("OpenAI API error:", response.status);
+      // Detail hanya muncul di log server Vercel.
+      console.error("OpenAI API error:", {
+        status: response.status,
+        error: data.error
+          ? {
+              message: data.error.message,
+              type: data.error.type,
+              code: data.error.code
+            }
+          : "Unknown API error"
+      });
 
       return res.status(502).json({
-        error: "Layanan AI gagal memproses pesan."
+        error:
+          "AI gagal memproses pesan. Periksa log server Vercel."
       });
     }
 
@@ -62,13 +77,20 @@ export default async function handler(req, res) {
       .flatMap(item => item.content || [])
       .filter(item => item.type === "output_text")
       .map(item => item.text)
-      .join("\n");
+      .join("\n")
+      .trim();
 
-    return res.status(200).json({
-      answer: answer || "AI belum memberikan jawaban."
-    });
+    if (!answer) {
+      console.error("OpenAI mengembalikan jawaban kosong.");
+      return res.status(502).json({
+        error: "AI tidak menghasilkan jawaban. Silakan coba lagi."
+      });
+    }
+
+    return res.status(200).json({ answer });
+
   } catch (error) {
-    console.error("Chat backend error:", error);
+    console.error("Chat backend error:", error.message);
 
     return res.status(500).json({
       error: "Terjadi kesalahan pada server AI."
