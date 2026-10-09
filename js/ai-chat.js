@@ -1,15 +1,23 @@
-/* FSI CRM - AI Assistant */
+/* ============================================================
+   FSI CRM - AI ASSISTANT
+   File: js/ai-chat.js
+
+   Fitur:
+   - Chat dengan Gemini melalui /api/chat
+   - Mengirim token sesi Supabase
+   - Menangani error, timeout, dan cooldown
+   - Tampilan chat aman dari HTML injection
+   ============================================================ */
 
 (() => {
     "use strict";
 
     const API_URL = "/api/chat";
-    const REQUEST_TIMEOUT_MS = 45000;   // batalkan request jika server terlalu lama
-    const DEFAULT_COOLDOWN_MS = 3000;   // jeda kirim setelah error
+    const REQUEST_TIMEOUT_MS = 45000;
+    const DEFAULT_COOLDOWN_MS = 3000;
     const RATE_LIMIT_COOLDOWN_MS = 10000;
     const MAX_MESSAGE_LENGTH = 4000;
 
-    // Error yang pesannya aman ditampilkan ke pengguna
     class ChatError extends Error {
         constructor(message, status = 0) {
             super(message);
@@ -18,78 +26,95 @@
         }
     }
 
-    // Detail teknis hanya masuk console; pengguna melihat pesan yang ramah
     function friendlyMessageForStatus(status, serverMessage) {
         switch (status) {
             case 400:
             case 413:
             case 422:
-                return serverMessage || "Pesan tidak dapat diproses. Coba persingkat atau ubah pesan kamu.";
+                return serverMessage ||
+                    "Pesan tidak dapat diproses. Coba persingkat pesan.";
+
             case 401:
             case 403:
-                return "Sesi kamu tidak valid. Muat ulang halaman atau login kembali.";
+                return "Sesi tidak valid. Silakan login kembali.";
+
             case 404:
-                return "Endpoint /api/chat tidak ditemukan. Periksa deployment Vercel.";
+                return "Endpoint AI tidak ditemukan. Periksa deployment Vercel.";
+
             case 429:
-                return "Terlalu banyak permintaan. Tunggu sebentar lalu coba lagi.";
+                return "Batas permintaan tercapai. Tunggu sebentar lalu coba lagi.";
+
             case 500:
             case 502:
             case 503:
             case 504:
-                return "Layanan AI sedang tidak tersedia. Silakan coba lagi nanti atau hubungi admin.";
+                return serverMessage ||
+                    "Layanan AI sedang bermasalah. Silakan coba lagi nanti.";
+
             default:
-                return `Layanan AI gagal (HTTP ${status}).`;
+                return serverMessage ||
+                    `Layanan AI gagal (HTTP ${status}).`;
         }
     }
 
     function parseRetryAfterMs(response) {
         const value = response.headers.get("Retry-After");
+
         if (!value) return null;
+
         const seconds = Number(value);
+
         if (Number.isFinite(seconds) && seconds >= 0) {
             return Math.min(seconds * 1000, 60000);
         }
+
         return null;
     }
 
     async function readJson(response) {
         const raw = await response.text();
+
         if (!raw.trim()) return {};
 
         try {
             return JSON.parse(raw);
-        } catch (parseError) {
+        } catch {
             console.error(
-                "[FSI AI] Respons bukan JSON:",
-                response.status,
-                raw.slice(0, 500)
+                "[FSI AI] Respons server bukan JSON:",
+                response.status
             );
+
             throw new ChatError(
                 response.status === 404
-                    ? "Endpoint /api/chat tidak ditemukan. Periksa deployment Vercel."
-                    : "Respons server tidak valid. Periksa log Vercel.",
+                    ? "Endpoint AI tidak ditemukan."
+                    : "Respons server tidak valid.",
                 response.status
             );
         }
     }
 
     function initAIChat() {
-        // Hindari widget dibuat dua kali
-        if (document.getElementById("fsi-ai-chat-toggle")) return;
+        if (document.getElementById("fsi-ai-chat-toggle")) {
+            return;
+        }
 
         const toggle = document.createElement("button");
+
         toggle.id = "fsi-ai-chat-toggle";
         toggle.className = "ai-chat-toggle";
         toggle.type = "button";
+
         toggle.innerHTML = `
             <i data-lucide="bot" aria-hidden="true"></i>
             <span>AI Assistant</span>
         `;
+
         toggle.setAttribute("aria-label", "Buka AI Assistant");
         toggle.setAttribute("aria-expanded", "false");
         toggle.setAttribute("aria-controls", "fsi-ai-chat-panel");
 
         const panel = document.createElement("section");
+
         panel.className = "ai-chat-panel";
         panel.id = "fsi-ai-chat-panel";
         panel.setAttribute("aria-label", "FSI AI Assistant");
@@ -97,29 +122,42 @@
         panel.innerHTML = `
             <div class="ai-chat-header">
                 <div class="ai-chat-avatar">✦</div>
+
                 <div class="ai-chat-heading">
                     <strong>FSI AI Assistant</strong>
                     <span>Asisten CRM kamu</span>
                 </div>
-                <button class="ai-chat-close" type="button"
-                    aria-label="Tutup chat">&times;</button>
+
+                <button
+                    class="ai-chat-close"
+                    type="button"
+                    aria-label="Tutup chat"
+                >&times;</button>
             </div>
 
             <div class="ai-chat-messages" aria-live="polite">
                 <div class="ai-chat-message bot">
-                    Halo! Saya FSI AI Assistant. Ada yang bisa saya bantu?
+                    Halo! Saya FSI AI Assistant.
+                    Saya bisa membantu pertanyaan CRM, lead, dan PLTS.
                 </div>
             </div>
 
             <form class="ai-chat-form">
-                <input class="ai-chat-input" type="text"
+                <input
+                    class="ai-chat-input"
+                    type="text"
                     maxlength="${MAX_MESSAGE_LENGTH}"
-                    placeholder="Tulis pesan kamu..."
+                    placeholder="Contoh: cek lead terbaru..."
                     autocomplete="off"
                     aria-label="Pesan untuk AI"
-                    required>
-                <button class="ai-chat-send" type="submit"
-                    aria-label="Kirim pesan">➤</button>
+                    required
+                >
+
+                <button
+                    class="ai-chat-send"
+                    type="submit"
+                    aria-label="Kirim pesan"
+                >➤</button>
             </form>
         `;
 
@@ -135,9 +173,15 @@
         let lockedUntil = 0;
         let cooldownTimer = null;
 
+        // Riwayat hanya disimpan selama widget aktif.
+        const history = [];
+        const MAX_HISTORY = 10;
+
         function refreshIcons() {
-            if (window.lucide &&
-                typeof window.lucide.createIcons === "function") {
+            if (
+                window.lucide &&
+                typeof window.lucide.createIcons === "function"
+            ) {
                 window.lucide.createIcons();
             }
         }
@@ -152,16 +196,21 @@
 
         function addMessage(text, type = "bot") {
             const element = document.createElement("div");
+
             element.className = `ai-chat-message ${type}`;
             element.textContent = String(text);
+
             messages.appendChild(element);
             scrollToBottom();
+
             return element;
         }
 
         function setChatOpen(open) {
             panel.classList.toggle("is-open", open);
+
             toggle.setAttribute("aria-expanded", String(open));
+
             toggle.setAttribute(
                 "aria-label",
                 open ? "Tutup AI Assistant" : "Buka AI Assistant"
@@ -174,17 +223,20 @@
             }
         }
 
-        // Tahan tombol kirim sementara setelah error agar tidak
-        // memperparah rate limit (mis. user menekan Enter berulang kali)
         function startCooldown(ms) {
             if (!ms) return;
+
             lockedUntil = Date.now() + ms;
             sendButton.disabled = true;
 
             clearTimeout(cooldownTimer);
+
             cooldownTimer = setTimeout(() => {
                 lockedUntil = 0;
-                if (!isBusy) sendButton.disabled = false;
+
+                if (!isBusy) {
+                    sendButton.disabled = false;
+                }
             }, ms);
         }
 
@@ -196,21 +248,25 @@
             setChatOpen(false);
         });
 
-        document.addEventListener("keydown", (event) => {
+        document.addEventListener("keydown", event => {
             if (event.key === "Escape" && isOpen()) {
                 setChatOpen(false);
             }
         });
 
-        form.addEventListener("submit", async (event) => {
+        form.addEventListener("submit", async event => {
             event.preventDefault();
 
-            if (isBusy || Date.now() < lockedUntil) return;
+            if (isBusy || Date.now() < lockedUntil) {
+                return;
+            }
 
             const message = input.value.trim();
+
             if (!message) return;
 
             isBusy = true;
+
             let cooldownMs = 0;
 
             addMessage(message, "user");
@@ -218,33 +274,72 @@
             input.value = "";
             input.disabled = true;
             sendButton.disabled = true;
+
             sendButton.setAttribute("aria-busy", "true");
 
-            const waiting = addMessage("Sedang menyiapkan jawaban...");
+            const waiting = addMessage(
+                "Sedang menyiapkan jawaban..."
+            );
+
             waiting.classList.add("loading");
 
             const controller = new AbortController();
+
             const timeoutId = setTimeout(
                 () => controller.abort(),
                 REQUEST_TIMEOUT_MS
             );
 
             try {
+                const supabase = window.supabaseClient;
+
+                if (!supabase?.auth?.getSession) {
+                    throw new ChatError(
+                        "Koneksi Supabase tidak tersedia.",
+                        401
+                    );
+                }
+
+                const {
+                    data: sessionData,
+                    error: sessionError
+                } = await supabase.auth.getSession();
+
+                if (
+                    sessionError ||
+                    !sessionData?.session?.access_token
+                ) {
+                    throw new ChatError(
+                        "Sesi login tidak ditemukan. Silakan login kembali.",
+                        401
+                    );
+                }
+
+                const accessToken =
+                    sessionData.session.access_token;
+
                 const response = await fetch(API_URL, {
                     method: "POST",
+
                     headers: {
                         "Content-Type": "application/json",
-                        "Accept": "application/json"
+                        "Accept": "application/json",
+                        "Authorization": `Bearer ${accessToken}`
                     },
+
                     credentials: "same-origin",
-                    body: JSON.stringify({ message }),
+
+                    body: JSON.stringify({
+                        message,
+                        history
+                    }),
+
                     signal: controller.signal
                 });
 
                 const data = await readJson(response);
 
                 if (!response.ok) {
-                    // Detail asli (mis. kuota OpenAI) hanya di console
                     console.error(
                         "[FSI AI] HTTP error:",
                         response.status,
@@ -260,12 +355,18 @@
                     }
 
                     throw new ChatError(
-                        friendlyMessageForStatus(response.status, data.error),
+                        friendlyMessageForStatus(
+                            response.status,
+                            data.error
+                        ),
                         response.status
                     );
                 }
 
-                if (typeof data.answer !== "string" || !data.answer.trim()) {
+                if (
+                    typeof data.answer !== "string" ||
+                    !data.answer.trim()
+                ) {
                     throw new ChatError(
                         "Jawaban AI kosong atau format respons salah."
                     );
@@ -274,34 +375,53 @@
                 waiting.textContent = data.answer;
                 waiting.classList.remove("error");
 
+                // Simpan percakapan untuk pertanyaan lanjutan.
+                history.push(
+                    { role: "user", content: message },
+                    { role: "assistant", content: data.answer }
+                );
+
+                if (history.length > MAX_HISTORY) {
+                    history.splice(
+                        0,
+                        history.length - MAX_HISTORY
+                    );
+                }
+
             } catch (error) {
                 console.error("[FSI AI] Gagal:", error);
 
-                if (!cooldownMs) cooldownMs = DEFAULT_COOLDOWN_MS;
+                if (!cooldownMs) {
+                    cooldownMs = DEFAULT_COOLDOWN_MS;
+                }
 
                 waiting.classList.add("error");
 
                 if (error instanceof ChatError) {
                     waiting.textContent = error.message;
-                } else if (error && error.name === "AbortError") {
+                } else if (error?.name === "AbortError") {
                     waiting.textContent =
-                        "AI terlalu lama merespons. Silakan coba lagi.";
+                        "AI terlalu lama merespons. Coba lagi.";
                 } else if (error instanceof TypeError) {
                     waiting.textContent =
-                        "Tidak dapat menghubungi AI. Periksa koneksi dan deployment Vercel.";
+                        "Tidak dapat menghubungi AI. Periksa koneksi internet.";
                 } else {
-                    waiting.textContent = "AI gagal memproses pesan.";
+                    waiting.textContent =
+                        "AI gagal memproses pesan.";
                 }
 
-                // Kembalikan pesan agar user tidak perlu mengetik ulang
-                if (!input.value) input.value = message;
+                if (!input.value) {
+                    input.value = message;
+                }
 
             } finally {
                 clearTimeout(timeoutId);
+
                 waiting.classList.remove("loading");
 
                 isBusy = false;
                 input.disabled = false;
+
                 sendButton.removeAttribute("aria-busy");
 
                 if (cooldownMs) {
@@ -310,8 +430,10 @@
                     sendButton.disabled = false;
                 }
 
-                // Jangan "mencuri" fokus kalau panel sudah ditutup
-                if (isOpen()) input.focus();
+                if (isOpen()) {
+                    input.focus();
+                }
+
                 scrollToBottom();
             }
         });
@@ -320,9 +442,11 @@
     }
 
     if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", initAIChat, {
-            once: true
-        });
+        document.addEventListener(
+            "DOMContentLoaded",
+            initAIChat,
+            { once: true }
+        );
     } else {
         initAIChat();
     }
