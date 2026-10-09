@@ -1,6 +1,6 @@
  // api/chat.js — FSI CRM AI Assistant (Gemini / Vercel Serverless Function)
 
-const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+const MODEL = process.env.GEMINI_MODEL || "gemini-3.8-flash";
 const MAX_MESSAGE_LENGTH = 4000;
 const MAX_HISTORY = 10;
 const TIMEOUT_MS = 25000;
@@ -13,10 +13,12 @@ const SYSTEM_PROMPT =
   "Jangan mengarang jumlah lead, nama customer, atau data CRM.";
 
 function setCors(res) {
-  // CRM dan API berada di domain yang sama.
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization"
+  );
 }
 
 function parseBody(req) {
@@ -70,7 +72,7 @@ function friendlyError(status, model = MODEL) {
   }
 
   if (status === 404) {
-    return `Model "${model}" tidak ditemukan atau tidak tersedia.`;
+    return `Model "${model}" tidak ditemukan atau tidak tersedia untuk API key kamu.`;
   }
 
   if (status === 429) {
@@ -107,7 +109,7 @@ export default async function handler(req, res) {
     );
 
     return res.status(500).json({
-      error: "API key Gemini belum dikonfigurasi di server."
+      error: "API key Gemini belum dikonfigurasi di Vercel."
     });
   }
 
@@ -131,10 +133,10 @@ export default async function handler(req, res) {
       });
     }
 
-    // Riwayat percakapan sebelumnya.
+    // Ambil riwayat percakapan.
     const history = cleanHistory(body.history);
 
-    // Format role Gemini: user dan model.
+    // Konversi role assistant menjadi model sesuai format Gemini.
     const contents = [
       ...history.map((m) => ({
         role: m.role === "assistant" ? "model" : "user",
@@ -146,7 +148,7 @@ export default async function handler(req, res) {
       }
     ];
 
-    // Panggil Gemini API.
+    // Kirim permintaan ke Gemini API.
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`,
       {
@@ -172,7 +174,7 @@ export default async function handler(req, res) {
     const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-      // Detail error hanya disimpan di log server.
+      // Detail hanya dicatat di log server, bukan API key.
       console.error("Gemini API error:", {
         status: response.status,
         model: MODEL,
