@@ -133,11 +133,6 @@
 
     <link
         rel="stylesheet"
-        href="css/ai-chat.css"
-    >
-
-    <link
-        rel="stylesheet"
         href="css/responsive.css"
     >
 
@@ -1003,19 +998,20 @@
                             </button>
 
 
-                            <!-- AVERAGE DEAL VALUE -->
+
+                            <!-- NEW CUSTOMER -->
 
                             <button
                                 type="button"
-                                id="statCardAverage"
-                                class="stat-card dashboard-stat-card stat-card-average"
-                                data-stat-card="average"
+                                id="statCardNew"
+                                class="stat-card dashboard-stat-card stat-card-new"
+                                data-stat-card="newCustomer"
                             >
 
                                 <div class="stat-card-icon">
 
                                     <i
-                                        data-lucide="trending-up"
+                                        data-lucide="user-plus"
                                         aria-hidden="true"
                                     ></i>
 
@@ -1025,14 +1021,14 @@
                                 <div class="stat-card-content">
 
                                     <span class="stat-card-label">
-                                        Avg. Lead Value
+                                        New Customer
                                     </span>
 
                                     <strong
-                                        id="statAverage"
+                                        id="statNew"
                                         class="stat-card-value"
                                     >
-                                        Rp 0
+                                        0
                                     </strong>
 
                                 </div>
@@ -1050,19 +1046,20 @@
                             </button>
 
 
-                            <!-- CONVERSION RATE -->
+
+                            <!-- FIRST CONTACT -->
 
                             <button
                                 type="button"
-                                id="statCardConversion"
-                                class="stat-card dashboard-stat-card stat-card-conversion"
-                                data-stat-card="conversion"
+                                id="statCardFirstContact"
+                                class="stat-card dashboard-stat-card stat-card-contact"
+                                data-stat-card="firstContact"
                             >
 
                                 <div class="stat-card-icon">
 
                                     <i
-                                        data-lucide="target"
+                                        data-lucide="phone"
                                         aria-hidden="true"
                                     ></i>
 
@@ -1072,14 +1069,14 @@
                                 <div class="stat-card-content">
 
                                     <span class="stat-card-label">
-                                        Conversion Rate
+                                        First Contact
                                     </span>
 
                                     <strong
-                                        id="statConversion"
+                                        id="statInterested"
                                         class="stat-card-value"
                                     >
-                                        0%
+                                        0
                                     </strong>
 
                                 </div>
@@ -1097,19 +1094,20 @@
                             </button>
 
 
-                            <!-- CLOSE RATE -->
+
+                            <!-- APPOINTMENT -->
 
                             <button
                                 type="button"
-                                id="statCardCloseRate"
-                                class="stat-card dashboard-stat-card stat-card-close"
-                                data-stat-card="close-rate"
+                                id="statCardAppointment"
+                                class="stat-card dashboard-stat-card stat-card-appointment"
+                                data-stat-card="appointment"
                             >
 
                                 <div class="stat-card-icon">
 
                                     <i
-                                        data-lucide="check-circle"
+                                        data-lucide="calendar-check"
                                         aria-hidden="true"
                                     ></i>
 
@@ -1119,14 +1117,14 @@
                                 <div class="stat-card-content">
 
                                     <span class="stat-card-label">
-                                        Close Rate
+                                        Appointment
                                     </span>
 
                                     <strong
-                                        id="statCloseRate"
+                                        id="statAppointment"
                                         class="stat-card-value"
                                     >
-                                        0%
+                                        0
                                     </strong>
 
                                 </div>
@@ -1140,12 +1138,879 @@
                                     ></i>
 
                                 </div>
+
+                            </button>
+
+
+
+                            <!-- SITE SURVEY -->
+
+                            <button
+                                type="button"
+                                id="statCardSiteSurvey"
+                                class="stat-card dashboard-stat-card stat-card-survey"
+                                data-stat-card="siteSurvey"
+                            >
+
+                                <div class="stat-card-icon">
+
+                                    <i
+                                        data-lucide="map-pin"
+                                        aria-hidden="true"
+                                    ></i>
+
+                                </div>
+
+
+                                <div class="stat-card-content">
+
+                                    <span class="stat-card-label">
+                                        Site Survey
+                                    </span>
+
+                                    <strong
+                                        id="statSiteSurvey"
+                                        class="stat-card-value"
+                                    >
+                                        0
+                                    </strong>
+
+                                </div>
+
+
+                                <div class="stat-card-arrow">
+
+                                    <i
+                                        data-lucide="arrow-up-right"
+                                        aria-hidden="true"
+                                    ></i>
+
+                                </div>
+
+                            </button>
+
+
+
+                            <!-- QUOTATION -->
+
+                            <button
+                                type="button"
+                                id="statCardQuotation"
+                                class="stat-card dashboard-stat-card stat-card-quotation"
+                                data-stat-card="quotation"
+                            >
+
+                                <div class="stat-card-icon">
+
+                                    <i
+                                        data-lucide="file-text"
+                                        aria-hidden="true"
+                                    ></i>
+
+                                </div>
+
+
+                                <div class="stat-card-content">
+
+                                    <span class="stat-card-label">
+                                        Quotation
+                                    </span>
+
+                                    <strong
+                                        id="statQuotation"
+                                        class="stat-card-value"
+                                    >
+                                        0
+                                    </strong>
+
+                                </div>
+
+
+                                <div class="stat-card-arrow">
+
+                                    <i
+                                        data-lucide="arrow-up-right"
+                                        aria-hidden="true"
+                                    ></i>
+
+                                </div>
+
+                            </button>
+
+
+
+                            <!-- DEAL / CLOSING -->
+
+                            <button
+                                type="button"
+                                id="statCardDeal"
+                                class="stat-card dashboard-stat-card stat-card-deal"
+                                data-stat-card="closing"
+                            >
+
+                                <div class="stat-card-icon">
+
+                                    <i
+                                        data-lucide="handshake"
+                                        aria-hidden="true"
+                                    ></i>
+
+                                </div>
+
+
+                                <div class="stat-card-content">
+
+                                    <span class="stat-card-label">
+                                        Deal / Closing
+                                    </span>
+
+                                    <strong
+                                        id="statSPK"
+                                        class="stat-card-value"
+                                    >
+                                        0
+                                    </strong>
+
+                                </div>
+
+
+                                <div class="stat-card-arrow">
+
+                                    <i
+                                        data-lucide="arrow-up-right"
+                                        aria-hidden="true"
+                                    ></i>
+
+                                </div>
+
+                            </button>
+
+
+
+                            <!-- NO DEAL -->
+
+                            <button
+                                type="button"
+                                id="statCardNoDeal"
+                                class="stat-card dashboard-stat-card stat-card-no-deal"
+                                data-stat-card="noDeal"
+                            >
+
+                                <div class="stat-card-icon">
+
+                                    <i
+                                        data-lucide="x-circle"
+                                        aria-hidden="true"
+                                    ></i>
+
+                                </div>
+
+
+                                <div class="stat-card-content">
+
+                                    <span class="stat-card-label">
+                                        No Deal
+                                    </span>
+
+                                    <strong
+                                        id="statNotInterested"
+                                        class="stat-card-value"
+                                    >
+                                        0
+                                    </strong>
+
+                                </div>
+
+
+                                <div class="stat-card-arrow">
+
+                                    <i
+                                        data-lucide="arrow-up-right"
+                                        aria-hidden="true"
+                                    ></i>
+
+                                </div>
+
+                            </button>
+
+
+
+                            <!-- LEGACY IDS -->
+
+                            <span
+                                id="statFollowUp"
+                                style="display:none;"
+                            >
+                                0
+                            </span>
+
+
+                            <span
+                                id="statClosing"
+                                style="display:none;"
+                            >
+                                0
+                            </span>
+
+
+                            <span
+                                id="statFlyerSent"
+                                style="display:none;"
+                            >
+                                0
+                            </span>
+
+                        </div>
+
+                    </section>
+
+
+
+                    <!-- =================================================
+                         PIPELINE + RECENT ACTIVITY
+                    ================================================== -->
+
+                    <div class="dashboard-main-grid">
+
+
+                        <!-- SALES PIPELINE -->
+
+                        <section
+                            id="dashboardPipelineSection"
+                            class="dashboard-section dashboard-card dashboard-pipeline-card"
+                        >
+
+                            <div class="dashboard-card-header">
+
+                                <div>
+
+                                    <div class="dashboard-card-eyebrow">
+                                        SALES PIPELINE
+                                    </div>
+
+                                    <h2>
+                                        Customer Journey
+                                    </h2>
+
+                                    <p>
+                                        Customer distribution across the sales process.
+                                    </p>
+
+                                </div>
+
+
+                                <div class="dashboard-card-header-icon">
+
+                                    <i
+                                        data-lucide="git-branch"
+                                        aria-hidden="true"
+                                    ></i>
+
+                                </div>
+
+                            </div>
+
+
+                            <div
+                                id="pipeline-summary"
+                                class="dashboard-pipeline"
+                            >
+
+                                <div class="dashboard-loading-placeholder">
+
+                                    <div class="dashboard-loading-spinner">
+
+                                        <i
+                                            data-lucide="loader-2"
+                                            aria-hidden="true"
+                                        ></i>
+
+                                    </div>
+
+                                    <span>
+                                        Loading pipeline...
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                        </section>
+
+
+
+                        <!-- RECENT ACTIVITY -->
+
+                        <section
+                            id="dashboardRecentSection"
+                            class="dashboard-section dashboard-card dashboard-recent-card"
+                        >
+
+                            <div class="dashboard-card-header">
+
+                                <div>
+
+                                    <div class="dashboard-card-eyebrow">
+                                        RECENT ACTIVITY
+                                    </div>
+
+                                    <h2>
+                                        Latest Customer Activity
+                                    </h2>
+
+                                    <p>
+                                        Recent updates from your sales team.
+                                    </p>
+
+                                </div>
+
+
+                                <div class="dashboard-card-header-actions">
+
+                                    <div class="dashboard-card-header-icon">
+
+                                        <i
+                                            data-lucide="activity"
+                                            aria-hidden="true"
+                                        ></i>
+
+                                    </div>
+
+
+                                    <button
+                                        type="button"
+                                        id="dashboardViewAllRecent"
+                                        class="dashboard-view-all"
+                                        data-page="leads"
+                                    >
+
+                                        <span>
+                                            View All
+                                        </span>
+
+                                        <i
+                                            data-lucide="arrow-right"
+                                            aria-hidden="true"
+                                        ></i>
+
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+
+                            <div
+                                id="recent-leads"
+                                class="dashboard-activity-list"
+                            >
+
+                                <div class="dashboard-loading-placeholder">
+
+                                    <div class="dashboard-loading-spinner">
+
+                                        <i
+                                            data-lucide="loader-2"
+                                            aria-hidden="true"
+                                        ></i>
+
+                                    </div>
+
+                                    <span>
+                                        Loading recent activity...
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            <div
+                                id="dashboardEmptyState"
+                                class="dashboard-empty-state"
+                                style="display:none;"
+                            >
+
+                                <div class="dashboard-empty-state-icon">
+
+                                    <i
+                                        data-lucide="inbox"
+                                        aria-hidden="true"
+                                    ></i>
+
+                                </div>
+
+
+                                <h3>
+                                    No Recent Activity
+                                </h3>
+
+
+                                <p>
+                                    Customer activity will appear here once your sales team starts working with leads.
+                                </p>
+
+                            </div>
+
+                        </section>
+
+                    </div>
+
+
+                    <!-- LEGACY CONTAINERS -->
+
+                    <div
+                        id="recent-leads-container"
+                        style="display:none;"
+                    ></div>
+
+
+                    <div
+                        id="dashboard-activities"
+                        style="display:none;"
+                    ></div>
+
+                </section>
+
+
+
+                <!-- =================================================
+                     LEADS / CUSTOMER PAGE
+                ================================================== -->
+
+                <section
+                    id="view-leads"
+                    class="crm-page"
+                    data-page-view="leads"
+                >
+
+                    <div class="section-header">
+
+                        <div>
+
+                            <h2>
+                                Customer Leads
+                            </h2>
+
+                            <p>
+                                Manage customer leads and sales pipeline.
+                            </p>
+
+                        </div>
+
+
+                        <button
+                            id="btn-add-lead"
+                            type="button"
+                            class="btn-primary primary-btn"
+                            data-action="add-customer"
+                        >
+
+                            <i
+                                data-lucide="plus"
+                                aria-hidden="true"
+                            ></i>
+
+                            <span>
+                                Add Customer
+                            </span>
+
+                        </button>
+
+                    </div>
+
+
+
+                    <!-- FILTERS -->
+
+                    <div class="filter-panel">
+
+                        <div class="search-box">
+
+                            <i
+                                data-lucide="search"
+                                aria-hidden="true"
+                            ></i>
+
+                            <input
+                                id="lead-search"
+                                type="search"
+                                placeholder="Search customer, phone, business..."
+                                autocomplete="off"
+                            >
+
+                        </div>
+
+
+                        <select
+                            id="filter-status"
+                            aria-label="Filter status"
+                        >
+
+                            <option value="">
+                                All Status
+                            </option>
+
+                            <option value="New">
+                                New
+                            </option>
+
+                            <option value="First Contact">
+                                First Contact
+                            </option>
+
+                            <option value="First Meeting / Appointment / Site Survey">
+                                First Meeting / Appointment / Site Survey
+                            </option>
+
+                            <option value="Quotation">
+                                Quotation
+                            </option>
+
+                            <option value="Second Appointment">
+                                Second Appointment
+                            </option>
+
+                            <option value="Deal">
+                                Deal
+                            </option>
+
+                            <option value="No Deal">
+                                No Deal
+                            </option>
+
+                        </select>
+
+
+                        <select
+                            id="filter-business"
+                            aria-label="Filter business"
+                        >
+
+                            <option value="">
+                                All Business
+                            </option>
+
+                        </select>
+
+
+                        <select
+                            id="filter-sales"
+                            class="admin-only"
+                            aria-label="Filter sales"
+                        >
+
+                            <option value="">
+                                All Sales
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+
+                    <!-- LEADS TABLE -->
+
+                    <div
+                        class="table-panel table-container"
+                    >
+
+                        <table
+                            id="leads-table"
+                            class="crm-table data-table"
+                        >
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>Customer</th>
+
+                                    <th>Lead Type</th>
+
+                                    <th>WhatsApp</th>
+
+                                    <th>Email</th>
+
+                                    <th>Business</th>
+
+                                    <th>Sales</th>
+
+                                    <th>Status</th>
+
+                                    <th>Input Date</th>
+
+                                    <th>Days</th>
+
+                                    <th>Progress</th>
+
+                                    <th>Note</th>
+
+                                    <th>Actions</th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody id="leads-table-body">
+
+                                <tr>
+
+                                    <td
+                                        colspan="12"
+                                        class="table-loading"
+                                    >
+                                        Loading leads...
+                                    </td>
+
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+
+
+                    <!-- PAGINATION -->
+
+                    <div class="pagination-wrapper">
+
+                        <div
+                            id="leads-pagination-info"
+                            class="pagination-info"
+                        >
+                            Showing 0 of 0
+                        </div>
+
+
+                        <div class="pagination-controls">
+
+                            <button
+                                id="btn-prev-page"
+                                type="button"
+                                aria-label="Previous page"
+                                disabled
+                            >
+
+                                <i
+                                    data-lucide="chevron-left"
+                                    aria-hidden="true"
+                                ></i>
+
+                            </button>
+
+
+                            <span id="leads-page-number">
+                                1
+                            </span>
+
+
+                            <button
+                                id="btn-next-page"
+                                type="button"
+                                aria-label="Next page"
+                                disabled
+                            >
+
+                                <i
+                                    data-lucide="chevron-right"
+                                    aria-hidden="true"
+                                ></i>
 
                             </button>
 
                         </div>
 
-                    </section>
+                    </div>
+
+                </section>
+
+
+
+                <!-- =================================================
+                     CUSTOMER PROFILE PAGE
+                ================================================== -->
+
+                <section
+                    id="view-customer-profile"
+                    class="crm-page"
+                    data-page-view="customer-profile"
+                >
+
+                    <div
+                        id="customer-profile-container"
+                        class="customer-profile-container"
+                    >
+
+                        <div class="empty-state">
+
+                            <i
+                                data-lucide="contact"
+                                aria-hidden="true"
+                            ></i>
+
+                            <span>
+                                Select a customer to view the profile.
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+
+                <!-- =================================================
+                     MANAGE SALES PAGE
+                ================================================== -->
+
+                <section
+                    id="view-sales"
+                    class="crm-page"
+                    data-page-view="sales"
+                >
+
+                    <div class="section-header">
+
+                        <div>
+
+                            <h2>
+                                Manage Sales
+                            </h2>
+
+                            <p>
+                                Manage FSI sales accounts and access.
+                            </p>
+
+                        </div>
+
+
+                        <button
+                            id="btn-add-sales"
+                            type="button"
+                            class="btn-primary primary-btn"
+                        >
+
+                            <i
+                                data-lucide="user-plus"
+                                aria-hidden="true"
+                            ></i>
+
+                            <span>
+                                Add Sales
+                            </span>
+
+                        </button>
+
+                    </div>
+
+
+
+                    <div
+                        class="table-panel table-container"
+                    >
+
+                        <table
+                            id="sales-table"
+                            class="crm-table data-table"
+                        >
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>Sales</th>
+
+                                    <th>Username</th>
+
+                                    <th>Phone</th>
+
+                                    <th>Role</th>
+
+                                    <th>Status</th>
+
+                                    <th>Created</th>
+
+                                    <th>Action</th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody id="sales-table-body">
+
+                                <tr>
+
+                                    <td
+                                        colspan="7"
+                                        class="table-loading"
+                                    >
+                                        Loading sales...
+                                    </td>
+
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+
+
+                    <div class="pagination-wrapper">
+
+                        <div
+                            id="sales-pagination-info"
+                            class="pagination-info"
+                        >
+                            Showing 0 sales
+                        </div>
+
+
+                        <div class="pagination-controls">
+
+                            <button
+                                id="sales-prev-page"
+                                type="button"
+                                aria-label="Previous page"
+                            >
+
+                                <i
+                                    data-lucide="chevron-left"
+                                    aria-hidden="true"
+                                ></i>
+
+                            </button>
+
+
+                            <span id="sales-page-number">
+                                1
+                            </span>
+
+
+                            <button
+                                id="sales-next-page"
+                                type="button"
+                                aria-label="Next page"
+                            >
+
+                                <i
+                                    data-lucide="chevron-right"
+                                    aria-hidden="true"
+                                ></i>
+
+                            </button>
+
+                        </div>
+
+                    </div>
 
                 </section>
 
@@ -1156,197 +2021,909 @@
     </div>
 
 
+
     <!-- =====================================================
-         AI CHAT WIDGET
+         CUSTOMER ADD / EDIT MODAL
     ====================================================== -->
 
-    <button
-        id="aiChatToggle"
-        class="ai-chat-btn"
-        type="button"
-        aria-label="Open AI chat"
-        title="AI Chat"
-    >
-        <i data-lucide="message-circle" aria-hidden="true"></i>
-    </button>
-
     <div
-        id="aiChatContainer"
-        class="ai-chat-container"
-        aria-live="polite"
+        id="leadModal"
+        class="modal-overlay hidden"
+        aria-hidden="true"
     >
-        <div class="ai-chat-header">
-            <div class="ai-chat-header-content">
-                <div class="ai-chat-header-icon">
-                    <i data-lucide="bot" aria-hidden="true"></i>
+
+        <div
+            class="modal-card large-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="lead-modal-title"
+        >
+
+            <div class="modal-header">
+
+                <div>
+
+                    <h3 id="lead-modal-title">
+                        Add Customer
+                    </h3>
+
+                    <p id="lead-modal-description">
+                        Enter customer information and pipeline status.
+                    </p>
+
                 </div>
-                <div class="ai-chat-header-text">
-                    <h3>FSI AI Assistant</h3>
-                    <p>Ready to help</p>
-                </div>
+
+
+                <button
+                    id="lead-modal-close"
+                    type="button"
+                    class="btn-close"
+                    aria-label="Close"
+                >
+
+                    <i
+                        data-lucide="x"
+                        aria-hidden="true"
+                    ></i>
+
+                </button>
+
             </div>
-            <button
-                id="aiChatClose"
-                type="button"
-                class="ai-chat-close-btn"
-                aria-label="Close AI chat"
-                title="Close"
+
+
+
+            <form
+                id="lead-form"
+                class="modal-body"
             >
-                <i data-lucide="x" aria-hidden="true"></i>
-            </button>
+
+                <input
+                    type="hidden"
+                    id="leadId"
+                    name="leadId"
+                >
+
+
+                <div class="form-grid">
+
+                    <!-- =================================================
+                         CUSTOMER NAME
+                    ================================================== -->
+
+                    <div class="form-group">
+
+                        <label for="leadCustomerName">
+                            Customer Name *
+                        </label>
+
+                        <input
+                            id="leadCustomerName"
+                            name="customer_name"
+                            type="text"
+                            placeholder="Customer name"
+                            autocomplete="name"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- =================================================
+                         PHONE
+                    ================================================== -->
+
+                    <div class="form-group">
+
+                        <label for="leadPhone">
+                            Phone *
+                        </label>
+
+                        <input
+                            id="leadPhone"
+                            name="phone"
+                            type="tel"
+                            placeholder="08xxxxxxxxxx"
+                            autocomplete="tel"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- =================================================
+                         EMAIL — ADDED
+                    ================================================== -->
+
+                    <div class="form-group">
+
+                        <label for="leadEmail">
+                            Email
+                        </label>
+
+                        <input
+                            id="leadEmail"
+                            name="email"
+                            type="email"
+                            placeholder="customer@example.com"
+                            autocomplete="email"
+                        >
+
+                    </div>
+
+
+                    <!-- =================================================
+                         BUSINESS
+                    ================================================== -->
+
+                    <div class="form-group">
+
+                        <label for="leadBusiness">
+                            Business
+                        </label>
+
+                        <select
+                            id="leadBusiness"
+                            name="business"
+                        >
+
+                            <option value="">
+                                Select Business
+                            </option>
+
+                            <option value="Residential">
+                                Residential
+                            </option>
+
+                            <option value="Villa">
+                                Villa
+                            </option>
+
+                            <option value="Hotel">
+                                Hotel
+                            </option>
+
+                            <option value="Restaurant">
+                                Restaurant
+                            </option>
+
+                            <option value="Office">
+                                Office
+                            </option>
+
+                            <option value="Factory">
+                                Factory
+                            </option>
+
+                            <option value="Commercial">
+                                Commercial
+                            </option>
+
+                            <option value="EPC">
+                                EPC
+                            </option>
+
+                            <option value="Other">
+                                Other
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         LEAD TYPE
+                    ================================================== -->
+
+                    <div class="form-group">
+
+                        <label for="leadType">
+                            Lead Type
+                        </label>
+
+                        <select
+                            id="leadType"
+                            name="lead_type"
+                        >
+
+                            <option value="Customer">
+                                Customer
+                            </option>
+
+                            <option value="Partner">
+                                Partner
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         LOCATION
+                    ================================================== -->
+
+                    <div class="form-group">
+
+                        <label for="leadLocation">
+                            Location
+                        </label>
+
+                        <input
+                            id="leadLocation"
+                            name="location"
+                            type="text"
+                            placeholder="Denpasar, Sanur, Seminyak..."
+                        >
+
+                    </div>
+
+
+                    <!-- =================================================
+                         STATUS
+                    ================================================== -->
+
+                    <div class="form-group">
+
+                        <label for="leadStatus">
+                            Status
+                        </label>
+
+                        <select
+                            id="leadStatus"
+                            name="status"
+                        >
+
+                            <option value="New">
+                                New
+                            </option>
+
+                            <option value="First Contact">
+                                First Contact
+                            </option>
+
+                            <option value="First Meeting / Appointment / Site Survey">
+                                First Meeting / Appointment / Site Survey
+                            </option>
+
+                            <option value="Quotation">
+                                Quotation
+                            </option>
+
+                            <option value="Second Appointment">
+                                Second Appointment
+                            </option>
+
+                            <option value="Deal">
+                                Deal
+                            </option>
+
+                            <option value="No Deal">
+                                No Deal
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         INPUT DATE
+                    ================================================== -->
+
+                    <div class="form-group">
+
+                        <label for="leadStatusStartedAt">
+                            Input Date
+                        </label>
+
+                        <input
+                            id="leadStatusStartedAt"
+                            name="status_started_at"
+                            type="date"
+                        >
+
+                    </div>
+
+
+                    <!-- =================================================
+                         APPOINTMENT
+                    ================================================== -->
+
+                    <div class="form-group">
+
+                        <label for="leadAppointment">
+                            Appointment
+                        </label>
+
+                        <input
+                            id="leadAppointment"
+                            name="appointment"
+                            type="date"
+                        >
+
+                    </div>
+
+
+                    <!-- =================================================
+                         SITE SURVEY
+                    ================================================== -->
+
+                    <div class="form-group">
+
+                        <label for="leadSiteSurvey">
+                            Site Survey
+                        </label>
+
+                        <input
+                            id="leadSiteSurvey"
+                            name="site_survey"
+                            type="date"
+                        >
+
+                    </div>
+
+
+                    <!-- =================================================
+                         QUOTATION
+                    ================================================== -->
+
+                    <div class="form-group">
+
+                        <label for="leadQuotation">
+                            Quotation
+                        </label>
+
+                        <input
+                            id="leadQuotation"
+                            name="quotation"
+                            type="date"
+                        >
+
+                    </div>
+
+
+                    <!-- =================================================
+                         ASSIGN SALES
+                    ================================================== -->
+
+                    <div
+                        class="form-group admin-only"
+                        id="lead-sales-group"
+                    >
+
+                        <label for="leadSales">
+                            Assign Sales
+                        </label>
+
+                        <select
+                            id="leadSales"
+                            name="sales_id"
+                        >
+
+                            <option value="">
+                                Select Sales
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         NOTES
+                    ================================================== -->
+
+                    <div class="form-group full-width">
+
+                        <label for="leadNotes">
+                            Notes
+                        </label>
+
+                        <textarea
+                            id="leadNotes"
+                            name="notes"
+                            placeholder="Customer notes..."
+                        ></textarea>
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="modal-footer">
+
+                    <button
+                        id="lead-modal-cancel"
+                        type="button"
+                        class="btn-secondary secondary-btn"
+                    >
+                        Cancel
+                    </button>
+
+
+                    <button
+                        id="lead-save-button"
+                        type="submit"
+                        class="btn-primary primary-btn"
+                    >
+
+                        <i
+                            data-lucide="save"
+                            aria-hidden="true"
+                        ></i>
+
+                        <span id="lead-save-text">
+                            Save Customer
+                        </span>
+
+                    </button>
+
+                </div>
+
+            </form>
+
         </div>
 
-        <div id="aiChatMessages" class="ai-chat-messages">
-            <div class="ai-chat-empty">
-                <div class="ai-chat-empty-icon">
-                    <i data-lucide="sparkles" aria-hidden="true"></i>
-                </div>
-                <h4>Halo, ada yang bisa saya bantu?</h4>
-                <p>Tanya seputar CRM, lead, sales, atau aktivitas harian.</p>
-            </div>
-        </div>
-
-        <div class="ai-chat-footer">
-            <div class="ai-chat-input-group">
-                <textarea
-                    id="aiChatInput"
-                    class="ai-chat-input"
-                    rows="1"
-                    placeholder="Ketik pesan Anda..."
-                    aria-label="Chat message"
-                ></textarea>
-            </div>
-            <button
-                id="aiChatSend"
-                class="ai-chat-send-btn"
-                type="button"
-                aria-label="Send message"
-                title="Send"
-            >
-                <i data-lucide="send" aria-hidden="true"></i>
-            </button>
-        </div>
     </div>
 
+
+
+    <!-- =====================================================
+         SALES MODAL
+    ====================================================== -->
+
+    <div
+        id="salesModal"
+        class="modal-overlay hidden"
+        aria-hidden="true"
+    >
+
+        <div
+            class="modal-card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="sales-modal-title"
+        >
+
+            <div class="modal-header">
+
+                <div>
+
+                    <h3 id="sales-modal-title">
+                        Add Sales
+                    </h3>
+
+                    <p>
+                        Create or update a sales account.
+                    </p>
+
+                </div>
+
+
+                <button
+                    id="sales-modal-close"
+                    type="button"
+                    class="btn-close"
+                    aria-label="Close"
+                >
+
+                    <i
+                        data-lucide="x"
+                        aria-hidden="true"
+                    ></i>
+
+                </button>
+
+            </div>
+
+
+
+            <form
+                id="sales-form"
+                class="modal-body"
+                autocomplete="off"
+            >
+
+                <input
+                    type="hidden"
+                    id="salesId"
+                    name="salesId"
+                >
+
+
+                <div class="form-grid">
+
+                    <div class="form-group full-width">
+
+                        <label for="salesName">
+                            Full Name *
+                        </label>
+
+                        <input
+                            id="salesName"
+                            name="name"
+                            type="text"
+                            placeholder="Sales full name"
+                            autocomplete="name"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="salesUsername">
+                            Username *
+                        </label>
+
+                        <input
+                            id="salesUsername"
+                            name="username"
+                            type="text"
+                            placeholder="username"
+                            autocomplete="username"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="salesPassword">
+                            Password *
+                        </label>
+
+                        <input
+                            id="salesPassword"
+                            name="password"
+                            type="password"
+                            placeholder="Minimum 6 characters"
+                            autocomplete="new-password"
+                            minlength="6"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="salesEmail">
+                            Email
+                        </label>
+
+                        <input
+                            id="salesEmail"
+                            name="email"
+                            type="email"
+                            placeholder="sales@example.com"
+                            autocomplete="email"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="salesPhone">
+                            Phone
+                        </label>
+
+                        <input
+                            id="salesPhone"
+                            name="phone"
+                            type="tel"
+                            placeholder="08xxxxxxxxxx"
+                            autocomplete="tel"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="salesRole">
+                            Role
+                        </label>
+
+                        <select
+                            id="salesRole"
+                            name="role"
+                        >
+
+                            <option value="sales">
+                                Sales
+                            </option>
+
+                            <option value="Digital Marketing">
+                                Digital Marketing
+                            </option>
+
+                            <option value="Secretary">
+                                Secretary
+                            </option>
+
+                            <option value="Admin">
+                                Admin
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="salesStatus">
+                            Status
+                        </label>
+
+                        <select
+                            id="salesStatus"
+                            name="status"
+                        >
+
+                            <option value="active">
+                                Active
+                            </option>
+
+                            <option value="inactive">
+                                Inactive
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+
+
+                <div
+                    id="salesFormMessage"
+                    class="form-message"
+                    role="alert"
+                    aria-live="polite"
+                ></div>
+
+
+
+                <div class="modal-footer">
+
+                    <button
+                        id="salesModalClose"
+                        type="button"
+                        class="btn-secondary secondary-btn"
+                    >
+                        Cancel
+                    </button>
+
+
+                    <button
+                        id="sales-save-button"
+                        type="submit"
+                        class="btn-primary primary-btn"
+                    >
+
+                        <i
+                            data-lucide="save"
+                            aria-hidden="true"
+                        ></i>
+
+                        <span>
+                            Save Sales
+                        </span>
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         SUPABASE
+    ====================================================== -->
+
+    <script
+        src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+    ></script>
+
+
+    <!-- =====================================================
+         LUCIDE
+    ====================================================== -->
+
+    <script
+        src="https://unpkg.com/lucide@latest"
+    ></script>
+
+
+    <!-- =====================================================
+         CRM JAVASCRIPT
+    ====================================================== -->
+
+    <script src="js/config.js"></script>
+
+    <script src="js/helpers.js"></script>
+
+    <script src="js/navigation.js"></script>
+
+
+    <!-- =====================================================
+         DASHBOARD — MODULAR
+    ====================================================== -->
+
+    <script src="js/dashboard/dashboard-state.js"></script>
+
+    <script src="js/dashboard/dashboard-navigation.js"></script>
+
+    <script src="js/dashboard/dashboard-data.js"></script>
+
+    <script src="js/dashboard/dashboard-stats.js"></script>
+
+    <script src="js/dashboard/dashboard-popup.js"></script>
+
+    <script src="js/dashboard/dashboard-pipeline.js"></script>
+
+    <script src="js/dashboard/dashboard-recent.js"></script>
+
+    <script src="js/dashboard/dashboard-loading.js"></script>
+
+    <script src="js/dashboard/dashboard.js"></script>
+
+
+    <!-- =====================================================
+         CUSTOMER FORM
+    ====================================================== -->
+
+    <script src="js/customer/customer-form.js"></script>
+
+
+    <!-- =====================================================
+         LEADS — MODULAR
+    ====================================================== -->
+
+    <script src="js/leads/leads-core.js"></script>
+
+    <script src="js/leads/leads-customer.js"></script>
+
+    <script src="js/leads/leads-utils.js"></script>
+
+    <script src="js/leads/leads-date.js"></script>
+
+    <script src="js/leads/leads-display.js"></script>
+
+    <script src="js/leads/leads-filters.js"></script>
+
+    <script src="js/leads/leads-states.js"></script>
+
+    <script src="js/leads/leads-loader.js"></script>
+
+    <script src="js/leads/leads-pagination.js"></script>
+
+    <script src="js/leads/leads-render.js"></script>
+
+    <script src="js/leads/leads-search-actions.js"></script>
+
+    <script src="js/leads/leads-modal.js"></script>
+
+    <script src="js/leads/leads-edit-save.js"></script>
+
+    <script src="js/leads/leads-delete.js"></script>
+
+    <script src="js/leads/leads-sales-actions.js"></script>
+
+    <script src="js/leads/leads-init.js"></script>
+
+
+    <!-- =====================================================
+         OTHER CRM JAVASCRIPT
+    ====================================================== -->
+
+    <script src="js/sales.js"></script>
+
+    <script src="js/customer/customer-profile.js"></script>
+
+    <script src="js/customer/customer-documents.js"></script>
+
+    <script src="js/auth.js"></script>
+
+
+
+    <!-- =====================================================
+         INITIAL UI
+    ====================================================== -->
+
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const chatToggle = document.getElementById("aiChatToggle");
-            const chatContainer = document.getElementById("aiChatContainer");
-            const chatClose = document.getElementById("aiChatClose");
-            const chatMessages = document.getElementById("aiChatMessages");
-            const chatInput = document.getElementById("aiChatInput");
-            const chatSend = document.getElementById("aiChatSend");
-
-            if (!chatToggle || !chatContainer || !chatMessages || !chatInput || !chatSend) {
-                return;
-            }
-
-            function openChat() {
-                chatContainer.classList.add("open");
-                setTimeout(function () {
-                    chatInput.focus();
-                }, 100);
-            }
-
-            function closeChat() {
-                chatContainer.classList.remove("open");
-            }
-
-            chatToggle.addEventListener("click", function () {
-                if (chatContainer.classList.contains("open")) {
-                    closeChat();
-                } else {
-                    openChat();
-                }
-            });
-
-            chatClose.addEventListener("click", closeChat);
-
-            chatInput.addEventListener("keydown", function (event) {
-                if (event.key === "Enter" && !event.shiftKey) {
-                    event.preventDefault();
-                    chatSend.click();
-                }
-            });
-
-            function appendMessage(sender, text) {
-                const wrapper = document.createElement("div");
-                wrapper.className = "ai-chat-message " + sender;
-
-                const bubble = document.createElement("div");
-                bubble.className = "ai-chat-bubble";
-                bubble.textContent = text;
-
-                wrapper.appendChild(bubble);
-                chatMessages.appendChild(wrapper);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }
-
-            function showTyping() {
-                const wrapper = document.createElement("div");
-                wrapper.className = "ai-chat-message assistant";
-
-                const bubble = document.createElement("div");
-                bubble.className = "ai-chat-typing";
-                bubble.innerHTML =
-                    '<span class="ai-chat-typing-dot"></span>' +
-                    '<span class="ai-chat-typing-dot"></span>' +
-                    '<span class="ai-chat-typing-dot"></span>';
-
-                wrapper.appendChild(bubble);
-                chatMessages.appendChild(wrapper);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-                return wrapper;
-            }
-
-            async function sendMessage() {
-                const message = chatInput.value.trim();
-
-                if (!message) {
-                    chatInput.focus();
-                    return;
-                }
-
-                appendMessage("user", message);
-                chatInput.value = "";
-
-                const typingIndicator = showTyping();
-                chatSend.disabled = true;
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
 
                 try {
-                    const response = await fetch("/api/chat", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({ message })
-                    });
 
-                    const data = await response.json();
+                    const loginPage =
+                        document.getElementById("login-page");
 
-                    if (!response.ok) {
-                        throw new Error(data.error || "AI tidak bisa merespons.");
+                    const appShell =
+                        document.getElementById("app-shell");
+
+                    const pages =
+                        document.querySelectorAll(".crm-page");
+
+
+                    if (loginPage) {
+
+                        loginPage.classList.remove("hidden");
+
+                        loginPage.hidden = false;
+
                     }
 
-                    typingIndicator.remove();
-                    appendMessage("assistant", data.answer || "AI tidak memberikan jawaban.");
+
+                    if (appShell) {
+
+                        appShell.classList.add("hidden");
+
+                        appShell.hidden = true;
+
+                    }
+
+
+                    pages.forEach(function (page) {
+
+                        page.classList.remove("active");
+
+                        page.style.display = "none";
+
+                    });
+
+
+                    const dashboard =
+                        document.getElementById(
+                            "view-dashboard"
+                        );
+
+                    if (dashboard) {
+
+                        dashboard.classList.add("active");
+
+                        dashboard.style.display = "block";
+
+                    }
+
+
+                    if (
+                        window.lucide &&
+                        typeof window.lucide.createIcons === "function"
+                    ) {
+
+                        window.lucide.createIcons();
+
+                    }
+
                 } catch (error) {
-                    typingIndicator.remove();
-                    appendMessage("assistant", "Maaf, ada kendala pada layanan AI. Silakan coba lagi.");
-                    console.error("AI chat error:", error);
-                } finally {
-                    chatSend.disabled = false;
-                    chatInput.focus();
+
+                    console.error(
+                        "Initial CRM UI error:",
+                        error
+                    );
+
                 }
-            }
 
-            chatSend.addEventListener("click", sendMessage);
-
-            if (window.lucide && typeof window.lucide.createIcons === "function") {
-                window.lucide.createIcons();
             }
-        });
+        );
     </script>
+
 
 
     <!-- =====================================================
