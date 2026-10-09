@@ -1,23 +1,33 @@
 /* ============================================================
-   FSI CRM - AI Assistant (widget chat)
-   Semua nama class lama dipertahankan, jadi ai-chat.js tidak
-   perlu diubah.
+   FSI CRM — AI ASSISTANT
+   Professional SaaS UI
+   Kompatibel dengan class lama di ai-chat.js
    ============================================================ */
 
 :root {
-    --ai-brand: #1d4ed8;
-    --ai-brand-dark: #1e3a8a;
-    --ai-brand-soft: #eff4ff;
+    --ai-brand: #2563eb;
+    --ai-brand-dark: #1d4ed8;
+    --ai-brand-deep: #172554;
+    --ai-brand-soft: #eff6ff;
+
     --ai-ink: #0f172a;
-    --ai-text: #1e293b;
+    --ai-text: #334155;
     --ai-muted: #64748b;
+
     --ai-line: #e2e8f0;
     --ai-surface: #ffffff;
-    --ai-canvas: #f4f6fb;
+    --ai-canvas: #f8fafc;
+
     --ai-danger: #b91c1c;
     --ai-danger-soft: #fef2f2;
     --ai-danger-line: #fecaca;
-    --ai-font: Inter, "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+
+    --ai-font: Inter, "Segoe UI", system-ui,
+        -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+
+    --ai-shadow:
+        0 12px 32px rgba(15, 23, 42, .10),
+        0 32px 80px rgba(15, 23, 42, .16);
 }
 
 /* ---------- Tombol pembuka ---------- */
@@ -27,76 +37,107 @@
     right: 24px;
     bottom: 24px;
     z-index: 9998;
+
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 10px;
-    padding: 13px 20px 13px 16px;
-    border: 0;
-    border-radius: 999px;
-    background: var(--ai-brand);
-    color: #fff;
+
+    min-height: 52px;
+    padding: 0 20px 0 17px;
+
+    border: 1px solid rgba(255, 255, 255, .16);
+    border-radius: 16px;
+
+    background: linear-gradient(
+        135deg,
+        #2563eb 0%,
+        #1d4ed8 100%
+    );
+
+    color: #ffffff;
     font-family: var(--ai-font);
     font-size: 14px;
-    font-weight: 600;
-    letter-spacing: .01em;
+    font-weight: 650;
+    letter-spacing: -.01em;
     line-height: 1;
+
     cursor: pointer;
+
     box-shadow:
-        0 1px 2px rgba(15, 23, 42, .2),
-        0 8px 24px rgba(29, 78, 216, .32);
-    transition: background-color .2s, box-shadow .2s, transform .2s;
+        0 4px 10px rgba(37, 99, 235, .20),
+        0 12px 28px rgba(37, 99, 235, .25);
+
+    transition:
+        transform .2s ease,
+        box-shadow .2s ease,
+        background .2s ease;
 }
 
 .ai-chat-toggle:hover {
-    background: var(--ai-brand-dark);
+    background: linear-gradient(
+        135deg,
+        #1d4ed8 0%,
+        #1e40af 100%
+    );
+
     transform: translateY(-2px);
+
     box-shadow:
-        0 1px 2px rgba(15, 23, 42, .2),
-        0 12px 28px rgba(29, 78, 216, .38);
+        0 8px 18px rgba(37, 99, 235, .24),
+        0 16px 34px rgba(37, 99, 235, .28);
 }
 
 .ai-chat-toggle:active {
-    transform: translateY(0);
+    transform: translateY(0) scale(.98);
 }
 
 .ai-chat-toggle svg {
+    display: block;
     flex-shrink: 0;
     width: 20px;
     height: 20px;
 }
 
-/* ---------- Panel ---------- */
+/* ---------- Panel utama ---------- */
 
 .ai-chat-panel {
     position: fixed;
     right: 24px;
     bottom: 90px;
     z-index: 9999;
+
     display: none;
     flex-direction: column;
-    width: min(400px, calc(100vw - 32px));
-    height: min(580px, calc(100dvh - 120px));
+
+    width: min(410px, calc(100vw - 32px));
+    height: min(620px, calc(100dvh - 120px));
+
     overflow: hidden;
-    border: 1px solid var(--ai-line);
-    border-radius: 16px;
+
+    border: 1px solid rgba(226, 232, 240, .95);
+    border-radius: 22px;
+
     background: var(--ai-surface);
-    box-shadow:
-        0 2px 6px rgba(15, 23, 42, .06),
-        0 24px 56px rgba(15, 23, 42, .18);
-    font-family: var(--ai-font);
     color: var(--ai-text);
+    font-family: var(--ai-font);
+
+    box-shadow: var(--ai-shadow);
+
+    isolation: isolate;
 }
 
 .ai-chat-panel.is-open {
     display: flex;
-    animation: aiChatAppear .22s ease-out;
+    animation: aiChatAppear .24s cubic-bezier(.2, .8, .2, 1);
 }
 
 @keyframes aiChatAppear {
     from {
         opacity: 0;
-        transform: translateY(12px) scale(.98);
+        transform: translateY(14px) scale(.975);
     }
+
     to {
         opacity: 1;
         transform: translateY(0) scale(1);
@@ -106,85 +147,145 @@
 /* ---------- Header ---------- */
 
 .ai-chat-header {
+    position: relative;
+
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 14px 14px 14px 16px;
-    background: var(--ai-brand-dark);
-    color: #fff;
+
+    padding: 18px 16px;
+
+    background: linear-gradient(
+        120deg,
+        #172554 0%,
+        #1e40af 55%,
+        #2563eb 100%
+    );
+
+    color: #ffffff;
+}
+
+/* Aksen cahaya halus pada header */
+.ai-chat-header::before {
+    content: "";
+    position: absolute;
+    top: -48px;
+    right: 34px;
+
+    width: 140px;
+    height: 140px;
+
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .055);
+
+    pointer-events: none;
 }
 
 .ai-chat-avatar {
     position: relative;
+
     display: grid;
     flex-shrink: 0;
     place-items: center;
-    width: 40px;
-    height: 40px;
-    border: 1px solid rgba(255, 255, 255, .22);
-    border-radius: 12px;
-    background: rgba(255, 255, 255, .12);
-    font-size: 20px;
+
+    width: 44px;
+    height: 44px;
+
+    border: 1px solid rgba(255, 255, 255, .24);
+    border-radius: 14px;
+
+    background: rgba(255, 255, 255, .13);
+
+    color: #ffffff;
+    font-size: 21px;
     line-height: 1;
+
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08);
 }
 
-/* Indikator "online" kecil di avatar */
 .ai-chat-avatar::after {
     content: "";
+
     position: absolute;
     right: -3px;
     bottom: -3px;
-    width: 11px;
-    height: 11px;
-    border: 2px solid var(--ai-brand-dark);
+
+    width: 10px;
+    height: 10px;
+
+    border: 2px solid #1e40af;
     border-radius: 50%;
-    background: #22c55e;
+
+    background: #4ade80;
+    box-shadow: 0 0 0 2px rgba(74, 222, 128, .12);
 }
 
 .ai-chat-heading {
+    position: relative;
+    z-index: 1;
+
     min-width: 0;
     flex: 1;
 }
 
 .ai-chat-heading strong {
     display: block;
+
     overflow: hidden;
+
+    color: #ffffff;
     font-size: 15px;
-    font-weight: 600;
-    line-height: 1.3;
+    font-weight: 700;
+    letter-spacing: -.025em;
+    line-height: 1.4;
+
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
 .ai-chat-heading span {
     display: block;
-    margin-top: 2px;
-    color: #bfd3ff;
+
+    margin-top: 4px;
+
+    color: #dbeafe;
     font-size: 12px;
+    font-weight: 450;
     line-height: 1.4;
 }
 
 .ai-chat-close {
+    position: relative;
+    z-index: 2;
+
     display: grid;
     flex-shrink: 0;
     place-items: center;
-    width: 32px;
-    height: 32px;
+
+    width: 34px;
+    height: 34px;
     padding: 0;
-    border: 0;
-    border-radius: 8px;
-    background: transparent;
-    color: #fff;
-    font-size: 22px;
+
+    border: 1px solid rgba(255, 255, 255, .14);
+    border-radius: 10px;
+
+    background: rgba(255, 255, 255, .08);
+    color: #ffffff;
+
+    font-family: inherit;
+    font-size: 23px;
     line-height: 1;
-    opacity: .85;
+
     cursor: pointer;
-    transition: background-color .15s, opacity .15s;
+
+    transition:
+        background .18s ease,
+        transform .18s ease;
 }
 
 .ai-chat-close:hover {
-    background: rgba(255, 255, 255, .14);
-    opacity: 1;
+    background: rgba(255, 255, 255, .18);
+    transform: rotate(90deg);
 }
 
 /* ---------- Area pesan ---------- */
@@ -193,155 +294,377 @@
     display: flex;
     flex: 1;
     flex-direction: column;
-    gap: 10px;
+    align-items: stretch;
+    gap: 14px;
+
+    min-height: 0;
+    overflow-x: hidden;
     overflow-y: auto;
-    overscroll-behavior: contain;
-    padding: 18px 16px;
-    background: var(--ai-canvas);
+
+    padding: 20px 16px;
+
+    background:
+        radial-gradient(
+            ellipse at top left,
+            rgba(219, 234, 254, .20),
+            transparent 48%
+        ),
+        var(--ai-canvas);
+
     scroll-behavior: smooth;
+    overscroll-behavior: contain;
+
     scrollbar-width: thin;
     scrollbar-color: #cbd5e1 transparent;
 }
 
 .ai-chat-messages::-webkit-scrollbar {
-    width: 6px;
+    width: 5px;
+}
+
+.ai-chat-messages::-webkit-scrollbar-track {
+    background: transparent;
 }
 
 .ai-chat-messages::-webkit-scrollbar-thumb {
-    border-radius: 999px;
+    border-radius: 99px;
     background: #cbd5e1;
 }
 
+.ai-chat-messages::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* ---------- Gelembung pesan ---------- */
+
 .ai-chat-message {
-    max-width: 86%;
-    padding: 10px 14px;
-    border-radius: 14px;
+    position: relative;
+
+    max-width: 88%;
+    padding: 12px 14px;
+
+    border-radius: 16px;
+
+    font-family: var(--ai-font);
     font-size: 13.5px;
-    line-height: 1.6;
+    font-weight: 400;
+    line-height: 1.7;
+
     white-space: pre-wrap;
     overflow-wrap: anywhere;
+    word-break: normal;
 }
 
 .ai-chat-message.bot {
     align-self: flex-start;
-    border: 1px solid var(--ai-line);
-    border-bottom-left-radius: 4px;
-    background: var(--ai-surface);
-    color: var(--ai-text);
-    box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+
+    border: 1px solid #e5eaf2;
+    border-bottom-left-radius: 5px;
+
+    background: #ffffff;
+    color: #334155;
+
+    box-shadow:
+        0 2px 4px rgba(15, 23, 42, .025),
+        0 1px 2px rgba(15, 23, 42, .025);
 }
 
 .ai-chat-message.user {
     align-self: flex-end;
-    border-bottom-right-radius: 4px;
-    background: var(--ai-brand);
-    color: #fff;
+
+    border: 1px solid #2563eb;
+    border-bottom-right-radius: 5px;
+
+    background: linear-gradient(
+        135deg,
+        #2563eb,
+        #1d4ed8
+    );
+
+    color: #ffffff;
+
+    box-shadow: 0 3px 8px rgba(37, 99, 235, .12);
 }
 
 .ai-chat-message.error {
-    border-color: var(--ai-danger-line);
+    align-self: flex-start;
+
+    border: 1px solid var(--ai-danger-line);
+    border-bottom-left-radius: 5px;
+
     background: var(--ai-danger-soft);
     color: var(--ai-danger);
+
+    box-shadow: none;
 }
 
-/* Opsional: indikator "mengetik" jika JS menambahkan class ini.
-   Contoh: <div class="ai-chat-message bot is-typing"><span></span><span></span><span></span></div> */
+/* ---------- Indikator mengetik ---------- */
+
 .ai-chat-message.is-typing {
     display: inline-flex;
-    gap: 5px;
     align-items: center;
-    padding: 14px 16px;
+    gap: 5px;
+
+    width: fit-content;
+    min-height: 42px;
+    padding: 12px 16px;
 }
 
 .ai-chat-message.is-typing span {
+    display: block;
+
     width: 6px;
     height: 6px;
+
     border-radius: 50%;
-    background: #94a3b8;
+    background: #64748b;
+
     animation: aiChatDot 1.2s infinite ease-in-out;
 }
 
-.ai-chat-message.is-typing span:nth-child(2) { animation-delay: .15s; }
-.ai-chat-message.is-typing span:nth-child(3) { animation-delay: .3s; }
+.ai-chat-message.is-typing span:nth-child(2) {
+    animation-delay: .15s;
+}
+
+.ai-chat-message.is-typing span:nth-child(3) {
+    animation-delay: .3s;
+}
 
 @keyframes aiChatDot {
-    0%, 60%, 100% { opacity: .35; transform: translateY(0); }
-    30%           { opacity: 1;   transform: translateY(-3px); }
+    0%, 60%, 100% {
+        opacity: .35;
+        transform: translateY(0);
+    }
+
+    30% {
+        opacity: 1;
+        transform: translateY(-4px);
+    }
 }
 
 /* ---------- Form input ---------- */
 
 .ai-chat-form {
     display: flex;
-    gap: 8px;
     align-items: center;
-    padding: 12px;
-    border-top: 1px solid var(--ai-line);
-    background: var(--ai-surface);
+    gap: 9px;
+
+    padding: 13px 14px;
+
+    border-top: 1px solid #e9eef5;
+    background: #ffffff;
 }
 
 .ai-chat-input {
+    display: block;
+
     min-width: 0;
+    min-height: 46px;
     flex: 1;
-    padding: 11px 14px;
-    border: 1px solid #cbd5e1;
-    border-radius: 10px;
-    background: var(--ai-surface);
+
+    padding: 12px 14px;
+
+    border: 1px solid #dbe3ef;
+    border-radius: 13px;
+
+    background: #f8fafc;
     color: var(--ai-ink);
-    font: inherit;
-    font-size: 14px; /* 14px+ mencegah zoom otomatis di iOS saat fokus */
+
+    font-family: var(--ai-font);
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.4;
+
     outline: none;
-    transition: border-color .15s, box-shadow .15s;
+
+    transition:
+        border-color .18s ease,
+        background .18s ease,
+        box-shadow .18s ease;
 }
 
 .ai-chat-input::placeholder {
     color: #94a3b8;
 }
 
+.ai-chat-input:hover {
+    border-color: #cbd5e1;
+}
+
 .ai-chat-input:focus {
-    border-color: var(--ai-brand);
-    box-shadow: 0 0 0 3px rgba(29, 78, 216, .14);
+    border-color: #60a5fa;
+    background: #ffffff;
+
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .11);
 }
 
 .ai-chat-send {
     display: grid;
     flex-shrink: 0;
     place-items: center;
-    width: 42px;
-    height: 42px;
+
+    width: 46px;
+    height: 46px;
     padding: 0;
+
     border: 0;
-    border-radius: 10px;
-    background: var(--ai-brand);
-    color: #fff;
-    font-size: 18px;
+    border-radius: 13px;
+
+    background: linear-gradient(
+        135deg,
+        #2563eb,
+        #1d4ed8
+    );
+
+    color: #ffffff;
+    font-size: 19px;
     line-height: 1;
+
     cursor: pointer;
-    transition: background-color .15s;
+
+    box-shadow: 0 3px 8px rgba(37, 99, 235, .18);
+
+    transition:
+        background .18s ease,
+        box-shadow .18s ease,
+        transform .18s ease,
+        opacity .18s ease;
 }
 
 .ai-chat-send:hover:not(:disabled) {
-    background: var(--ai-brand-dark);
+    background: #1e40af;
+
+    box-shadow: 0 5px 12px rgba(37, 99, 235, .24);
+    transform: translateY(-1px);
+}
+
+.ai-chat-send:active:not(:disabled) {
+    transform: scale(.96);
 }
 
 .ai-chat-send:disabled {
-    cursor: not-allowed;
     opacity: .45;
+    cursor: not-allowed;
+    box-shadow: none;
 }
 
-/* ---------- Aksesibilitas ---------- */
+/* ---------- Fokus aksesibilitas ---------- */
 
 .ai-chat-toggle:focus-visible,
 .ai-chat-close:focus-visible,
 .ai-chat-send:focus-visible {
-    outline: 3px solid rgba(29, 78, 216, .45);
-    outline-offset: 2px;
+    outline: 3px solid rgba(96, 165, 250, .8);
+    outline-offset: 3px;
 }
 
 .ai-chat-close:focus-visible {
-    outline-color: rgba(255, 255, 255, .8);
-    outline-offset: -2px;
+    outline-color: #ffffff;
+    outline-offset: -3px;
 }
+
+.ai-chat-input:focus-visible {
+    outline: none;
+}
+
+/* ---------- Responsif tablet ---------- */
+
+@media (max-width: 768px) {
+    .ai-chat-toggle {
+        right: 18px;
+        bottom: 18px;
+    }
+
+    .ai-chat-panel {
+        right: 16px;
+        bottom: 82px;
+    }
+}
+
+/* ---------- Responsif HP ---------- */
+
+@media (max-width: 480px) {
+    .ai-chat-toggle {
+        right: 15px;
+        bottom: 15px;
+
+        min-height: 48px;
+        padding: 0 16px 0 14px;
+
+        border-radius: 14px;
+        font-size: 13px;
+    }
+
+    .ai-chat-toggle svg {
+        width: 19px;
+        height: 19px;
+    }
+
+    .ai-chat-panel {
+        right: 8px;
+        bottom: 72px;
+
+        width: calc(100vw - 16px);
+        height: min(620px, calc(100dvh - 88px));
+
+        border-radius: 19px;
+    }
+
+    .ai-chat-header {
+        gap: 10px;
+        padding: 15px 13px;
+    }
+
+    .ai-chat-avatar {
+        width: 41px;
+        height: 41px;
+        border-radius: 12px;
+    }
+
+    .ai-chat-messages {
+        gap: 12px;
+        padding: 16px 12px;
+    }
+
+    .ai-chat-message {
+        max-width: 92%;
+        padding: 11px 12px;
+        font-size: 13px;
+        line-height: 1.65;
+    }
+
+    .ai-chat-form {
+        gap: 8px;
+        padding: 10px;
+    }
+
+    .ai-chat-input {
+        min-height: 44px;
+        padding: 11px 12px;
+        border-radius: 12px;
+        font-size: 14px;
+    }
+
+    .ai-chat-send {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+    }
+}
+
+/* ---------- HP dengan layar pendek ---------- */
+
+@media (max-width: 480px) and (max-height: 600px) {
+    .ai-chat-panel {
+        bottom: 8px;
+        height: calc(100dvh - 16px);
+    }
+
+    .ai-chat-panel.is-open {
+        border-radius: 15px;
+    }
+}
+
+/* ---------- Preferensi aksesibilitas ---------- */
 
 @media (prefers-reduced-motion: reduce) {
     .ai-chat-panel.is-open,
@@ -350,30 +673,11 @@
     }
 
     .ai-chat-toggle,
+    .ai-chat-close,
+    .ai-chat-send,
+    .ai-chat-input,
     .ai-chat-messages {
-        scroll-behavior: auto;
         transition: none;
-    }
-}
-
-/* ---------- Mobile ---------- */
-
-@media (max-width: 480px) {
-    .ai-chat-toggle {
-        right: 16px;
-        bottom: 16px;
-        padding: 12px 16px 12px 14px;
-    }
-
-    .ai-chat-panel {
-        right: 8px;
-        bottom: 76px;
-        width: calc(100vw - 16px);
-        height: min(600px, calc(100dvh - 92px));
-        border-radius: 14px;
-    }
-
-    .ai-chat-message {
-        max-width: 92%;
+        scroll-behavior: auto;
     }
 }
