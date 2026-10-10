@@ -3,23 +3,18 @@
    File: js/ai-chat.js
 
    PREMIUM ENTERPRISE EDITION
-
-   FEATURES:
-   - Modern professional AI chat interface
-   - CRM and PLTS quick prompts
-   - Automatic Indonesian / English-friendly UI
+   - Sapaan personal sesuai nama user login
+   - Quick prompts berbentuk kartu/gelembung yang rapi
+   - Layout responsif untuk desktop dan HP
+   - Bilingual UI: Indonesia / English
    - Supabase session authentication
    - Existing /api/chat backend compatibility
-   - Gemini / GroqCloud / OpenRouter backend compatible
-   - CRM fallback handled by backend
-   - Safe message rendering
-   - Basic Markdown formatting
+   - Safe Markdown rendering
    - Copy AI response
    - Retry failed requests
    - Typing indicator
    - Request timeout and cooldown
    - Temporary conversation history
-   - Responsive and keyboard accessible
    - Prevent duplicate initialization
    - No redundant footer
    ============================================================ */
@@ -44,8 +39,6 @@
     const PANEL_ID = "fsi-ai-chat-panel";
 
     if (window.FSI_AI_CHAT_INITIALIZED) return;
-
-    // Prevent duplicate initialization while DOM is loading.
     window.FSI_AI_CHAT_INITIALIZED = true;
 
     // ========================================================
@@ -67,12 +60,65 @@
         return getLanguage() === "en" ? en : id;
     }
 
-    // The backend remains responsible for interpreting the
-    // user's actual message and generating its response.
-    // This function only localizes the widget interface.
+    // ========================================================
+    // 03. CURRENT USER PROFILE
+    // ========================================================
+
+    function getCurrentProfile() {
+        const candidates = [
+            window.currentProfile,
+            window.FSICurrentProfile,
+            window.fsiCurrentProfile,
+            window.currentUserProfile
+        ];
+
+        for (const profile of candidates) {
+            if (profile && typeof profile === "object") {
+                return profile;
+            }
+        }
+
+        return null;
+    }
+
+    function getUserName() {
+        const profile = getCurrentProfile();
+
+        if (!profile) {
+            return t("teman", "there");
+        }
+
+        const candidates = [
+            profile.full_name,
+            profile.fullName,
+            profile.name,
+            profile.display_name,
+            profile.displayName,
+            profile.username,
+            profile.email
+        ];
+
+        for (const candidate of candidates) {
+            if (typeof candidate !== "string") continue;
+
+            const value = candidate.trim();
+
+            if (!value) continue;
+
+            // Use the email's name portion only as a fallback.
+            if (value.includes("@")) {
+                const emailName = value.split("@")[0].trim();
+                if (emailName) return emailName;
+            } else {
+                return value;
+            }
+        }
+
+        return t("teman", "there");
+    }
 
     // ========================================================
-    // 03. ERROR HANDLING
+    // 04. ERROR HANDLING
     // ========================================================
 
     class ChatError extends Error {
@@ -89,63 +135,52 @@
                 "Permintaan tidak valid. Periksa pesan kamu.",
                 "Invalid request. Please check your message."
             ),
-
             401: t(
                 "Sesi login tidak valid atau sudah berakhir. Silakan login kembali.",
-                "Your login session is invalid or expired. Please sign in again."
+                "Your session is invalid or expired. Please sign in again."
             ),
-
             403: t(
-                "Akses AI ditolak. Periksa izin akun atau konfigurasi server.",
-                "AI access was denied. Check your account permissions or server configuration."
+                "Akses AI ditolak. Periksa izin akun.",
+                "AI access was denied. Check your account permissions."
             ),
-
             404: t(
                 "Endpoint AI tidak ditemukan. Periksa deployment Vercel.",
                 "AI endpoint not found. Check your Vercel deployment."
             ),
-
             413: t(
                 "Pesan terlalu besar. Coba persingkat pesan.",
                 "Message is too large. Please shorten it."
             ),
-
             422: t(
                 "Format pesan tidak dapat diproses.",
                 "The message format could not be processed."
             ),
-
             429: t(
                 "Batas permintaan tercapai. Tunggu sebentar lalu coba lagi.",
-                "The request limit was reached. Please wait a moment and try again."
+                "The request limit was reached. Please wait and try again."
             ),
-
             500: t(
                 "Server AI mengalami masalah. Silakan coba lagi.",
                 "The AI server encountered a problem. Please try again."
             ),
-
             502: t(
                 "Server AI belum merespons dengan benar.",
                 "The AI server returned an invalid response."
             ),
-
             503: t(
                 "Layanan AI sedang tidak tersedia.",
                 "The AI service is temporarily unavailable."
             ),
-
             504: t(
                 "Server AI membutuhkan waktu terlalu lama.",
                 "The AI server took too long to respond."
             )
         };
 
-        return messages[status] ||
-            t(
-                `Layanan AI gagal merespons (HTTP ${status}).`,
-                `The AI service failed to respond (HTTP ${status}).`
-            );
+        return messages[status] || t(
+            `Layanan AI gagal merespons (HTTP ${status}).`,
+            `The AI service failed to respond (HTTP ${status}).`
+        );
     }
 
     async function readResponse(response) {
@@ -169,17 +204,10 @@
     }
 
     function getServerError(data) {
-        if (!data || typeof data !== "object") {
-            return "";
-        }
+        if (!data || typeof data !== "object") return "";
 
-        if (typeof data.error === "string") {
-            return data.error;
-        }
-
-        if (typeof data.message === "string") {
-            return data.message;
-        }
+        if (typeof data.error === "string") return data.error;
+        if (typeof data.message === "string") return data.message;
 
         return "";
     }
@@ -199,7 +227,7 @@
     }
 
     // ========================================================
-    // 04. ICON HELPERS
+    // 05. ICON HELPERS
     // ========================================================
 
     function refreshIcons(root = document) {
@@ -213,10 +241,8 @@
                         "stroke-width": 1.8
                     }
                 });
-            } catch (error) {
-                console.warn(
-                    "[FSI AI] Icon initialization failed."
-                );
+            } catch {
+                // Icon rendering is optional.
             }
         }
     }
@@ -227,30 +253,14 @@
         icon.setAttribute("data-lucide", name);
         icon.setAttribute("aria-hidden", "true");
 
-        if (className) {
-            icon.className = className;
-        }
+        if (className) icon.className = className;
 
         return icon;
     }
 
     // ========================================================
-    // 05. SAFE MESSAGE RENDERING
+    // 06. SAFE MARKDOWN RENDERING
     // ========================================================
-
-    /*
-     * AI responses are treated as plain text.
-     * No response is inserted as raw HTML.
-     *
-     * Supported formatting:
-     * - **bold**
-     * - `inline code`
-     * - headings beginning with #
-     * - bullet lists
-     * - numbered lists
-     * - fenced code blocks
-     * - clickable HTTP/HTTPS URLs
-     */
 
     function appendInlineContent(container, text) {
         const pattern =
@@ -275,28 +285,39 @@
                 token.endsWith("**")
             ) {
                 const strong = document.createElement("strong");
-
                 strong.textContent = token.slice(2, -2);
-
                 container.appendChild(strong);
             } else if (
                 token.startsWith("`") &&
                 token.endsWith("`")
             ) {
                 const code = document.createElement("code");
-
                 code.textContent = token.slice(1, -1);
-
                 container.appendChild(code);
             } else {
-                const anchor = document.createElement("a");
+                try {
+                    const url = new URL(token);
 
-                anchor.href = token;
-                anchor.textContent = token;
-                anchor.target = "_blank";
-                anchor.rel = "noopener noreferrer";
-
-                container.appendChild(anchor);
+                    if (
+                        url.protocol === "https:" ||
+                        url.protocol === "http:"
+                    ) {
+                        const anchor = document.createElement("a");
+                        anchor.href = url.href;
+                        anchor.textContent = token;
+                        anchor.target = "_blank";
+                        anchor.rel = "noopener noreferrer";
+                        container.appendChild(anchor);
+                    } else {
+                        container.appendChild(
+                            document.createTextNode(token)
+                        );
+                    }
+                } catch {
+                    container.appendChild(
+                        document.createTextNode(token)
+                    );
+                }
             }
 
             lastIndex = pattern.lastIndex;
@@ -316,7 +337,7 @@
 
         let list = null;
         let listType = "";
-        let codeBlock = null;
+        let codeBlock = false;
         let codeLines = [];
 
         function closeList() {
@@ -333,7 +354,7 @@
             pre.appendChild(code);
             element.appendChild(pre);
 
-            codeBlock = null;
+            codeBlock = false;
             codeLines = [];
         }
 
@@ -369,7 +390,6 @@
                 closeList();
 
                 const heading = document.createElement("strong");
-
                 appendInlineContent(heading, headingMatch[1]);
 
                 element.appendChild(heading);
@@ -377,7 +397,6 @@
             }
 
             const bulletMatch = trimmed.match(/^[-*•]\s+(.+)$/);
-
             const numberMatch = trimmed.match(/^\d+[.)]\s+(.+)$/);
 
             if (bulletMatch || numberMatch) {
@@ -406,19 +425,16 @@
             closeList();
 
             const paragraph = document.createElement("div");
-
             appendInlineContent(paragraph, line);
 
             element.appendChild(paragraph);
         }
 
-        if (codeBlock) {
-            flushCodeBlock();
-        }
+        if (codeBlock) flushCodeBlock();
     }
 
     // ========================================================
-    // 06. INITIALIZE WIDGET
+    // 07. INITIALIZE WIDGET
     // ========================================================
 
     function initAIChat() {
@@ -429,10 +445,7 @@
             return;
         }
 
-        // ----------------------------------------------------
         // Floating launcher
-        // ----------------------------------------------------
-
         const toggle = document.createElement("button");
 
         toggle.id = WIDGET_ID;
@@ -442,9 +455,7 @@
         toggle.appendChild(createIcon("bot"));
 
         const toggleLabel = document.createElement("span");
-
         toggleLabel.textContent = "AI Assistant";
-
         toggle.appendChild(toggleLabel);
 
         toggle.setAttribute(
@@ -455,25 +466,17 @@
         toggle.setAttribute("aria-expanded", "false");
         toggle.setAttribute("aria-controls", PANEL_ID);
 
-        // ----------------------------------------------------
         // Chat panel
-        // ----------------------------------------------------
-
         const panel = document.createElement("section");
 
         panel.id = PANEL_ID;
         panel.className = "ai-chat-panel";
 
-        panel.setAttribute(
-            "aria-label",
-            "FSI AI Assistant"
-        );
-
+        panel.setAttribute("aria-label", "FSI AI Assistant");
         panel.setAttribute("aria-hidden", "true");
 
         panel.innerHTML = `
             <header class="ai-chat-header">
-
                 <div class="ai-chat-avatar" aria-hidden="true">
                     <i data-lucide="sparkles"></i>
                 </div>
@@ -481,10 +484,7 @@
                 <div class="ai-chat-heading">
                     <strong>FSI AI Assistant</strong>
                     <span class="ai-chat-subtitle">
-                        ${t(
-                            "Asisten CRM & PLTS",
-                            "CRM & Solar Assistant"
-                        )}
+                        ${t("Asisten CRM & PLTS", "CRM & Solar Assistant")}
                     </span>
                 </div>
 
@@ -494,7 +494,6 @@
                     aria-label="${t("Tutup chat", "Close chat")}"
                     title="${t("Tutup chat", "Close chat")}"
                 >&times;</button>
-
             </header>
 
             <div
@@ -502,14 +501,10 @@
                 role="log"
                 aria-live="polite"
                 aria-relevant="additions text"
-                aria-label="${t(
-                    "Riwayat percakapan",
-                    "Conversation history"
-                )}"
+                aria-label="${t("Riwayat percakapan", "Conversation history")}"
             ></div>
 
             <form class="ai-chat-form">
-
                 <input
                     class="ai-chat-input"
                     type="text"
@@ -519,10 +514,7 @@
                         "Ask about CRM or solar energy..."
                     )}"
                     autocomplete="off"
-                    aria-label="${t(
-                        "Pesan untuk AI",
-                        "Message for AI"
-                    )}"
+                    aria-label="${t("Pesan untuk AI", "Message for AI")}"
                     required
                 >
 
@@ -534,16 +526,14 @@
                 >
                     <i data-lucide="arrow-up" aria-hidden="true"></i>
                 </button>
-
             </form>
         `;
 
-        // No duplicate footer is added.
-
+        // No extra footer is created.
         document.body.append(toggle, panel);
 
         // ====================================================
-        // 07. ELEMENT REFERENCES
+        // 08. ELEMENT REFERENCES
         // ====================================================
 
         const messages = panel.querySelector(".ai-chat-messages");
@@ -557,12 +547,11 @@
         let cooldownTimer = null;
         let activeController = null;
 
-        // Temporary in-memory conversation only.
-        // Nothing is saved to localStorage.
+        // Temporary conversation history only.
         const history = [];
 
         // ====================================================
-        // 08. UI HELPERS
+        // 09. UI HELPERS
         // ====================================================
 
         function isOpen() {
@@ -573,6 +562,67 @@
             messages.scrollTop = messages.scrollHeight;
         }
 
+        async function copyText(text, button) {
+            try {
+                if (navigator.clipboard?.writeText) {
+                    await navigator.clipboard.writeText(text);
+                } else {
+                    const temporary = document.createElement("textarea");
+
+                    temporary.value = text;
+                    temporary.style.position = "fixed";
+                    temporary.style.left = "-9999px";
+                    temporary.setAttribute("readonly", "");
+
+                    document.body.appendChild(temporary);
+                    temporary.select();
+
+                    const copied = document.execCommand("copy");
+                    temporary.remove();
+
+                    if (!copied) {
+                        throw new Error("Copy failed");
+                    }
+                }
+
+                button.replaceChildren(createIcon("check"));
+
+                button.title = t("Berhasil disalin", "Copied");
+                button.setAttribute(
+                    "aria-label",
+                    t("Berhasil disalin", "Copied")
+                );
+
+                refreshIcons(panel);
+            } catch {
+                button.title = t("Gagal menyalin", "Could not copy");
+            }
+        }
+
+        function addCopyAction(element, text) {
+            const actions = document.createElement("div");
+            actions.className = "ai-chat-message-actions";
+
+            const copyButton = document.createElement("button");
+
+            copyButton.type = "button";
+            copyButton.className = "ai-chat-copy";
+            copyButton.appendChild(createIcon("copy"));
+
+            copyButton.title = t("Salin jawaban", "Copy response");
+            copyButton.setAttribute(
+                "aria-label",
+                t("Salin jawaban", "Copy response")
+            );
+
+            copyButton.addEventListener("click", () => {
+                copyText(text, copyButton);
+            });
+
+            actions.appendChild(copyButton);
+            element.appendChild(actions);
+        }
+
         function addMessage(text, type = "bot") {
             const element = document.createElement("div");
 
@@ -580,86 +630,14 @@
 
             if (type === "bot") {
                 renderFormattedText(element, text);
+                addCopyAction(element, text);
             } else {
                 element.textContent = String(text);
             }
 
             messages.appendChild(element);
 
-            if (type === "bot") {
-                const actions = document.createElement("div");
-
-                actions.className = "ai-chat-message-actions";
-
-                const copyButton = document.createElement("button");
-
-                copyButton.type = "button";
-                copyButton.className = "ai-chat-copy";
-                copyButton.appendChild(createIcon("copy"));
-
-                copyButton.setAttribute(
-                    "aria-label",
-                    t("Salin jawaban", "Copy response")
-                );
-
-                copyButton.title = t(
-                    "Salin jawaban",
-                    "Copy response"
-                );
-
-                copyButton.addEventListener("click", async () => {
-                    try {
-                        if (navigator.clipboard?.writeText) {
-                            await navigator.clipboard.writeText(text);
-                        } else {
-                            const temporary = document.createElement("textarea");
-
-                            temporary.value = text;
-                            temporary.style.position = "fixed";
-                            temporary.style.opacity = "0";
-
-                            document.body.appendChild(temporary);
-
-                            temporary.select();
-
-                            const copied = document.execCommand("copy");
-
-                            temporary.remove();
-
-                            if (!copied) {
-                                throw new Error("Copy failed");
-                            }
-                        }
-
-                        copyButton.replaceChildren(
-                            createIcon("check")
-                        );
-
-                        copyButton.title = t(
-                            "Berhasil disalin",
-                            "Copied"
-                        );
-
-                        copyButton.setAttribute(
-                            "aria-label",
-                            t("Berhasil disalin", "Copied")
-                        );
-
-                        refreshIcons(panel);
-                    } catch {
-                        copyButton.title = t(
-                            "Gagal menyalin",
-                            "Could not copy"
-                        );
-                    }
-                });
-
-                actions.appendChild(copyButton);
-                element.appendChild(actions);
-            }
-
             scrollToBottom();
-
             refreshIcons(panel);
 
             return element;
@@ -669,7 +647,6 @@
             const element = document.createElement("div");
 
             element.className = "ai-chat-message bot is-typing";
-
             element.setAttribute("role", "status");
 
             element.setAttribute(
@@ -677,14 +654,11 @@
                 t("AI sedang berpikir", "AI is thinking")
             );
 
-            for (let index = 0; index < 3; index++) {
-                element.appendChild(
-                    document.createElement("span")
-                );
+            for (let i = 0; i < 3; i++) {
+                element.appendChild(document.createElement("span"));
             }
 
             messages.appendChild(element);
-
             scrollToBottom();
 
             return element;
@@ -692,7 +666,6 @@
 
         function setChatOpen(open) {
             panel.classList.toggle("is-open", open);
-
             panel.setAttribute("aria-hidden", String(!open));
 
             toggle.setAttribute("aria-expanded", String(open));
@@ -706,9 +679,7 @@
 
             if (open) {
                 window.setTimeout(() => {
-                    if (isOpen() && !input.disabled) {
-                        input.focus();
-                    }
+                    if (isOpen() && !input.disabled) input.focus();
                 }, 50);
             } else {
                 toggle.focus();
@@ -719,17 +690,13 @@
             if (!ms) return;
 
             lockedUntil = Date.now() + ms;
-
             sendButton.disabled = true;
 
             clearTimeout(cooldownTimer);
 
             cooldownTimer = window.setTimeout(() => {
                 lockedUntil = 0;
-
-                if (!isBusy) {
-                    sendButton.disabled = false;
-                }
+                updateSendButton();
             }, ms);
         }
 
@@ -739,60 +706,60 @@
                 Date.now() < lockedUntil ||
                 !input.value.trim();
 
-            sendButton.setAttribute(
-                "aria-busy",
-                String(isBusy)
-            );
+            sendButton.setAttribute("aria-busy", String(isBusy));
         }
 
         function removeWelcome() {
-            const welcome = messages.querySelector(
-                ".ai-chat-welcome"
-            );
-
-            if (welcome) {
-                welcome.remove();
-            }
+            messages.querySelector(".ai-chat-welcome")?.remove();
         }
 
+        // ====================================================
+        // 10. PERSONALIZED WELCOME + QUICK PROMPT BUBBLES
+        // ====================================================
+
         function showWelcome() {
-            if (messages.querySelector(".ai-chat-welcome")) {
-                return;
-            }
+            if (messages.querySelector(".ai-chat-welcome")) return;
 
             const welcome = document.createElement("div");
-
             welcome.className = "ai-chat-welcome";
 
             const iconBox = document.createElement("div");
-
             iconBox.className = "ai-chat-welcome-icon";
             iconBox.setAttribute("aria-hidden", "true");
             iconBox.appendChild(createIcon("message-circle"));
 
             const heading = document.createElement("h3");
 
+            // Name is read from the current CRM profile.
             heading.textContent = t(
-                "Halo! Ada yang bisa saya bantu?",
-                "Hello! How can I help you?"
+                `Halo, ${getUserName()}! 👋`,
+                `Hello, ${getUserName()}! 👋`
             );
 
             const description = document.createElement("p");
 
             description.textContent = t(
-                "Saya siap membantu pekerjaan CRM, tindak lanjut pelanggan, strategi sales, dan perhitungan PLTS.",
-                "I can help with CRM, customer follow-ups, sales strategy, and solar energy calculations."
+                "Saya siap membantu pekerjaan CRM kamu. Mau mulai dari mana hari ini?",
+                "I'm ready to help with your CRM work. What would you like to work on today?"
+            );
+
+            const sectionTitle = document.createElement("div");
+            sectionTitle.className = "ai-chat-suggestions-title";
+            sectionTitle.textContent = t(
+                "Pilih bantuan yang kamu butuhkan",
+                "Choose how I can help"
             );
 
             const suggestions = document.createElement("div");
-
             suggestions.className = "ai-chat-suggestions";
 
             const prompts = [
                 {
                     icon: "messages-square",
                     id: "Buat pesan follow-up pelanggan",
-                    en: "Create a customer follow-up message",
+                    en: "Customer follow-up",
+                    detailId: "Susun pesan WhatsApp profesional",
+                    detailEn: "Write a professional WhatsApp message",
                     promptId:
                         "Bantu saya menyusun pesan follow-up pelanggan PLTS yang sopan dan profesional.",
                     promptEn:
@@ -800,26 +767,32 @@
                 },
                 {
                     icon: "sun",
-                    id: "Jelaskan manfaat dan ROI PLTS",
-                    en: "Explain solar benefits and ROI",
+                    id: "Manfaat & ROI PLTS",
+                    en: "Solar benefits & ROI",
+                    detailId: "Hitung potensi penghematan",
+                    detailEn: "Estimate potential savings",
                     promptId:
                         "Bantu saya menjelaskan manfaat PLTS, penghematan listrik, ROI, dan payback period kepada calon pelanggan.",
                     promptEn:
                         "Help me explain solar benefits, electricity savings, ROI, and payback period to a potential customer."
                 },
                 {
-                    icon: "chart-no-axes-combined",
-                    id: "Strategi appointment dan closing",
-                    en: "Appointment and closing strategy",
+                    icon: "calendar-check",
+                    id: "Appointment & closing",
+                    en: "Appointment & closing",
+                    detailId: "Rencanakan langkah penjualan",
+                    detailEn: "Plan the next sales steps",
                     promptId:
                         "Bantu saya membuat strategi harian untuk meningkatkan appointment dan closing penjualan PLTS.",
                     promptEn:
                         "Help me create a daily strategy to improve solar appointments and sales closing."
                 },
                 {
-                    icon: "clipboard-list",
-                    id: "Buat laporan aktivitas sales",
-                    en: "Create a sales activity report",
+                    icon: "chart-no-axes-combined",
+                    id: "Laporan aktivitas sales",
+                    en: "Sales activity report",
+                    detailId: "Ringkas progres harian",
+                    detailEn: "Summarize daily progress",
                     promptId:
                         "Bantu saya membuat laporan aktivitas sales harian yang profesional untuk manager.",
                     promptEn:
@@ -832,32 +805,41 @@
 
                 button.type = "button";
                 button.className = "ai-chat-suggestion";
-
                 button.dataset.prompt =
                     getLanguage() === "en"
                         ? item.promptEn
                         : item.promptId;
 
-                button.appendChild(createIcon(item.icon));
+                const iconWrap = document.createElement("span");
+                iconWrap.className = "ai-chat-suggestion-icon";
+                iconWrap.appendChild(createIcon(item.icon));
 
-                const label = document.createElement("span");
+                const content = document.createElement("span");
+                content.className = "ai-chat-suggestion-content";
 
+                const label = document.createElement("strong");
+                label.className = "ai-chat-suggestion-label";
                 label.textContent =
+                    getLanguage() === "en" ? item.en : item.id;
+
+                const detail = document.createElement("small");
+                detail.className = "ai-chat-suggestion-detail";
+                detail.textContent =
                     getLanguage() === "en"
-                        ? item.en
-                        : item.id;
+                        ? item.detailEn
+                        : item.detailId;
 
-                button.appendChild(label);
+                content.append(label, detail);
 
-                button.appendChild(
-                    createIcon("arrow-up-right")
-                );
+                const arrowWrap = document.createElement("span");
+                arrowWrap.className = "ai-chat-suggestion-arrow";
+                arrowWrap.appendChild(createIcon("arrow-up-right"));
 
+                button.append(iconWrap, content, arrowWrap);
                 suggestions.appendChild(button);
             }
 
             const disclaimer = document.createElement("div");
-
             disclaimer.className = "ai-chat-disclaimer";
 
             disclaimer.textContent = t(
@@ -869,17 +851,17 @@
                 iconBox,
                 heading,
                 description,
+                sectionTitle,
                 suggestions,
                 disclaimer
             );
 
             messages.appendChild(welcome);
-
             refreshIcons(panel);
         }
 
         // ====================================================
-        // 09. OPEN / CLOSE EVENTS
+        // 11. OPEN / CLOSE EVENTS
         // ====================================================
 
         toggle.addEventListener("click", () => {
@@ -898,21 +880,29 @@
 
         input.addEventListener("input", updateSendButton);
 
+        // If the CRM announces profile readiness, refresh the
+        // greeting when the welcome screen is still visible.
+        document.addEventListener("fsi:profile-ready", () => {
+            const welcome = messages.querySelector(".ai-chat-welcome");
+
+            if (welcome) {
+                welcome.remove();
+                showWelcome();
+            }
+        });
+
         // ====================================================
-        // 10. QUICK PROMPTS
+        // 12. QUICK PROMPTS
         // ====================================================
 
         messages.addEventListener("click", event => {
-            const button = event.target.closest(
-                "button[data-prompt]"
-            );
+            const button = event.target.closest("button[data-prompt]");
 
             if (!button || isBusy || Date.now() < lockedUntil) {
                 return;
             }
 
             input.value = button.dataset.prompt || "";
-
             updateSendButton();
 
             if (typeof form.requestSubmit === "function") {
@@ -928,15 +918,13 @@
         });
 
         // ====================================================
-        // 11. SEND MESSAGE
+        // 13. SEND MESSAGE
         // ====================================================
 
         form.addEventListener("submit", async event => {
             event.preventDefault();
 
-            if (isBusy || Date.now() < lockedUntil) {
-                return;
-            }
+            if (isBusy || Date.now() < lockedUntil) return;
 
             const message = input.value.trim();
 
@@ -950,7 +938,6 @@
                     ),
                     "error"
                 );
-
                 return;
             }
 
@@ -961,7 +948,6 @@
             let timeoutId = null;
 
             addMessage(message, "user");
-
             removeWelcome();
 
             input.value = "";
@@ -972,8 +958,6 @@
             waiting = createTypingIndicator();
 
             try {
-                // 1. Verify Supabase client.
-
                 const supabase = window.supabaseClient;
 
                 if (
@@ -989,19 +973,12 @@
                     );
                 }
 
-                // 2. Retrieve the current authenticated session.
-
                 const {
                     data: sessionData,
                     error: sessionError
                 } = await supabase.auth.getSession();
 
                 if (sessionError) {
-                    console.error(
-                        "[FSI AI] Session error:",
-                        sessionError.message
-                    );
-
                     throw new ChatError(
                         t(
                             "Tidak dapat memeriksa sesi login. Silakan login kembali.",
@@ -1024,40 +1001,27 @@
                     );
                 }
 
-                // 3. Start the request timeout.
-
                 const controller = new AbortController();
-
                 activeController = controller;
 
                 timeoutId = window.setTimeout(() => {
                     controller.abort();
                 }, REQUEST_TIMEOUT_MS);
 
-                // 4. Send the existing backend request.
-                // API keys remain on the server.
-                // The frontend never calls providers directly.
-
                 const response = await fetch(API_URL, {
                     method: "POST",
-
                     headers: {
                         "Content-Type": "application/json",
                         "Accept": "application/json",
                         "Authorization": `Bearer ${accessToken}`
                     },
-
                     credentials: "same-origin",
-
                     body: JSON.stringify({
                         message,
                         history: history.slice(-MAX_HISTORY)
                     }),
-
                     signal: controller.signal
                 });
-
-                // 5. Parse the response.
 
                 const data = await readResponse(response);
 
@@ -1069,21 +1033,18 @@
                         error: serverMessage || "No server error message"
                     });
 
-                    if (response.status === 429) {
-                        cooldownMs =
+                    cooldownMs = response.status === 429
+                        ? (
                             parseRetryAfterMs(response) ??
-                            RATE_LIMIT_COOLDOWN_MS;
-                    } else {
-                        cooldownMs = DEFAULT_COOLDOWN_MS;
-                    }
+                            RATE_LIMIT_COOLDOWN_MS
+                        )
+                        : DEFAULT_COOLDOWN_MS;
 
                     throw new ChatError(
                         friendlyMessageForStatus(response.status),
                         response.status
                     );
                 }
-
-                // 6. Validate the expected response format.
 
                 if (
                     !data ||
@@ -1100,88 +1061,14 @@
 
                 const answer = data.answer.trim();
 
-                // 7. Replace the typing indicator with the answer.
-
                 waiting.className = "ai-chat-message bot";
-
                 waiting.removeAttribute("role");
                 waiting.removeAttribute("aria-label");
 
                 renderFormattedText(waiting, answer);
-
-                // Add a copy button to the answer.
-
-                const actions = document.createElement("div");
-
-                actions.className = "ai-chat-message-actions";
-
-                const copyButton = document.createElement("button");
-
-                copyButton.type = "button";
-                copyButton.className = "ai-chat-copy";
-
-                copyButton.setAttribute(
-                    "aria-label",
-                    t("Salin jawaban", "Copy response")
-                );
-
-                copyButton.title = t(
-                    "Salin jawaban",
-                    "Copy response"
-                );
-
-                copyButton.appendChild(createIcon("copy"));
-
-                copyButton.addEventListener("click", async () => {
-                    try {
-                        if (navigator.clipboard?.writeText) {
-                            await navigator.clipboard.writeText(answer);
-                        } else {
-                            const temporary =
-                                document.createElement("textarea");
-
-                            temporary.value = answer;
-                            temporary.style.position = "fixed";
-                            temporary.style.opacity = "0";
-
-                            document.body.appendChild(temporary);
-
-                            temporary.select();
-
-                            const copied =
-                                document.execCommand("copy");
-
-                            temporary.remove();
-
-                            if (!copied) {
-                                throw new Error("Copy failed");
-                            }
-                        }
-
-                        copyButton.replaceChildren(
-                            createIcon("check")
-                        );
-
-                        copyButton.title = t(
-                            "Berhasil disalin",
-                            "Copied"
-                        );
-
-                        refreshIcons(panel);
-                    } catch {
-                        copyButton.title = t(
-                            "Gagal menyalin",
-                            "Could not copy"
-                        );
-                    }
-                });
-
-                actions.appendChild(copyButton);
-                waiting.appendChild(actions);
+                addCopyAction(waiting, answer);
 
                 refreshIcons(panel);
-
-                // 8. Save temporary conversation history.
 
                 history.push(
                     {
@@ -1213,7 +1100,6 @@
 
                 if (waiting) {
                     waiting.className = "ai-chat-message error";
-
                     waiting.removeAttribute("role");
                     waiting.removeAttribute("aria-label");
 
@@ -1236,26 +1122,16 @@
                         );
                     }
 
-                    // Provide a retry button without duplicating
-                    // the original user message in the history.
-
                     const retryButton = document.createElement("button");
 
                     retryButton.type = "button";
                     retryButton.className = "ai-chat-retry";
-
-                    retryButton.textContent = t(
-                        "Coba lagi",
-                        "Try again"
-                    );
+                    retryButton.textContent = t("Coba lagi", "Try again");
 
                     retryButton.addEventListener("click", () => {
-                        if (isBusy || Date.now() < lockedUntil) {
-                            return;
-                        }
+                        if (isBusy || Date.now() < lockedUntil) return;
 
                         input.value = message;
-
                         updateSendButton();
 
                         if (typeof form.requestSubmit === "function") {
@@ -1263,18 +1139,11 @@
                         }
                     });
 
-                    waiting.appendChild(
-                        document.createElement("br")
-                    );
-
+                    waiting.appendChild(document.createElement("br"));
                     waiting.appendChild(retryButton);
                 }
 
-                // Restore the message so the user can edit it.
-
-                if (!input.value) {
-                    input.value = message;
-                }
+                if (!input.value) input.value = message;
 
             } finally {
                 if (timeoutId !== null) {
@@ -1294,29 +1163,25 @@
 
                 updateSendButton();
 
-                if (isOpen()) {
-                    input.focus();
-                }
+                if (isOpen()) input.focus();
 
                 scrollToBottom();
             }
         });
 
         // ====================================================
-        // 12. INITIAL WELCOME SCREEN
+        // 14. INITIAL WELCOME SCREEN
         // ====================================================
 
         showWelcome();
-
         refreshIcons(panel);
-
         updateSendButton();
 
         console.info("[FSI AI] Widget initialized.");
     }
 
     // ========================================================
-    // 13. INITIALIZE ONCE
+    // 15. INITIALIZE ONCE
     // ========================================================
 
     if (document.readyState === "loading") {
