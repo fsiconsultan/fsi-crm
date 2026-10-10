@@ -12,11 +12,7 @@
         (function () {
             try {
                 const url = new URL(window.location.href);
-                const sensitiveParams = [
-                    "username", "password", "email", "token",
-                    "access_token", "refresh_token"
-                ];
-
+                const sensitiveParams = ["username", "password", "email", "token", "access_token", "refresh_token"];
                 let changed = false;
 
                 sensitiveParams.forEach(function (param) {
@@ -27,16 +23,8 @@
                 });
 
                 if (changed) {
-                    const cleanUrl =
-                        url.pathname +
-                        (url.search ? url.search : "") +
-                        (url.hash ? url.hash : "");
-
-                    window.history.replaceState(
-                        {},
-                        document.title,
-                        cleanUrl
-                    );
+                    const cleanUrl = url.pathname + (url.search ? url.search : "") + (url.hash ? url.hash : "");
+                    window.history.replaceState({}, document.title, cleanUrl);
                 }
             } catch (error) {
                 console.warn("URL cleanup failed:", error);
@@ -47,340 +35,17 @@
     <!-- GOOGLE FONT -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-        rel="stylesheet"
-    >
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- CSS — responsive.css MUST REMAIN LAST -->
+    <!-- CSS — responsive.css MUST remain last -->
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/login.css">
     <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="css/leads.css">
     <link rel="stylesheet" href="css/profile.css">
     <link rel="stylesheet" href="css/customer-edit.css">
-    <link rel="stylesheet" href="css/ai-chat.css">
+    <link rel="stylesheet" href="css/ai-chat.css"><!-- AI CHAT (BARU) -->
     <link rel="stylesheet" href="css/responsive.css">
-
-    <!-- PROFILE DROPDOWN -->
-    <style>
-        /* ================================================
-           FSI CRM — PROFILE NAVIGATION
-           ================================================ */
-
-        #top-header {
-            position: relative;
-            z-index: 1000;
-        }
-
-        #topbar-user.fsi-profile-area {
-            position: relative;
-            display: flex;
-            align-items: center;
-            gap: 0;
-            min-width: 0;
-        }
-
-        #fsi-profile-menu-toggle {
-            display: flex;
-            align-items: center;
-            gap: 11px;
-            min-width: 0;
-            padding: 7px 10px;
-            border: 1px solid transparent;
-            border-radius: 14px;
-            background: transparent;
-            color: inherit;
-            font: inherit;
-            text-align: left;
-            cursor: pointer;
-            transition:
-                background 180ms ease,
-                border-color 180ms ease,
-                box-shadow 180ms ease;
-        }
-
-        #fsi-profile-menu-toggle:hover,
-        #fsi-profile-menu-toggle[aria-expanded="true"] {
-            background: #f1f5f9;
-            border-color: #e2e8f0;
-        }
-
-        #fsi-profile-menu-toggle:focus-visible,
-        #fsi-profile-dropdown button:focus-visible {
-            outline: 3px solid rgba(37, 99, 235, 0.3);
-            outline-offset: 3px;
-        }
-
-        #fsi-profile-menu-toggle .user-avatar {
-            flex: 0 0 auto;
-        }
-
-        #fsi-profile-menu-toggle .user-details {
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-            gap: 3px;
-        }
-
-        #fsi-profile-menu-toggle .user-details strong {
-            overflow: hidden;
-            max-width: 180px;
-            color: #0f172a;
-            font-size: 13px;
-            font-weight: 700;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        #fsi-profile-menu-toggle .user-details span {
-            color: #64748b;
-            font-size: 11px;
-            font-weight: 500;
-        }
-
-        #fsi-profile-chevron {
-            flex: 0 0 auto;
-            width: 16px;
-            height: 16px;
-            color: #64748b;
-            transition: transform 180ms ease;
-        }
-
-        #fsi-profile-menu-toggle[aria-expanded="true"]
-        #fsi-profile-chevron {
-            transform: rotate(180deg);
-        }
-
-        #fsi-profile-dropdown {
-            position: absolute;
-            top: calc(100% + 10px);
-            right: 0;
-            z-index: 2000;
-            width: min(320px, calc(100vw - 28px));
-            max-height: min(72vh, 560px);
-            overflow-y: auto;
-            padding: 10px;
-            border: 1px solid #e2e8f0;
-            border-radius: 18px;
-            background: #ffffff;
-            box-shadow:
-                0 20px 50px rgba(15, 23, 42, 0.16),
-                0 4px 12px rgba(15, 23, 42, 0.06);
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-            transform: translateY(-7px) scale(0.98);
-            transform-origin: top right;
-            transition:
-                opacity 160ms ease,
-                visibility 160ms ease,
-                transform 160ms ease;
-        }
-
-        #topbar-user.fsi-profile-area.fsi-menu-open
-        #fsi-profile-dropdown {
-            opacity: 1;
-            visibility: visible;
-            pointer-events: auto;
-            transform: translateY(0) scale(1);
-        }
-
-        .fsi-dropdown-heading {
-            padding: 12px 12px 14px;
-            border-bottom: 1px solid #e2e8f0;
-            margin-bottom: 8px;
-        }
-
-        .fsi-dropdown-heading strong {
-            display: block;
-            color: #0f172a;
-            font-size: 14px;
-            font-weight: 800;
-        }
-
-        .fsi-dropdown-heading span {
-            display: block;
-            margin-top: 4px;
-            color: #64748b;
-            font-size: 11px;
-        }
-
-        .fsi-dropdown-label {
-            padding: 8px 12px 6px;
-            color: #94a3b8;
-            font-size: 10px;
-            font-weight: 800;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-        }
-
-        /* Keep the existing nav container and its event listeners. */
-        #fsi-profile-dropdown #main-navigation {
-            display: flex !important;
-            flex-direction: column;
-            align-items: stretch;
-            gap: 4px;
-            width: 100%;
-            padding: 0;
-            margin: 0;
-            border: 0;
-            background: transparent;
-        }
-
-        #fsi-profile-dropdown #main-navigation .nav-link {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            width: 100%;
-            min-height: 44px;
-            padding: 11px 12px;
-            border: 1px solid transparent;
-            border-radius: 11px;
-            background: transparent;
-            color: #334155;
-            font-family: inherit;
-            font-size: 13px;
-            font-weight: 600;
-            text-align: left;
-            cursor: pointer;
-            transition:
-                background 160ms ease,
-                color 160ms ease,
-                border-color 160ms ease;
-        }
-
-        #fsi-profile-dropdown #main-navigation .nav-link i,
-        #fsi-profile-dropdown #main-navigation .nav-link svg {
-            flex: 0 0 auto;
-            width: 18px;
-            height: 18px;
-        }
-
-        #fsi-profile-dropdown #main-navigation .nav-link:hover {
-            border-color: #dbeafe;
-            background: #eff6ff;
-            color: #1d4ed8;
-        }
-
-        #fsi-profile-dropdown #main-navigation .nav-link.active,
-        #fsi-profile-dropdown #main-navigation .nav-link[aria-current="page"] {
-            border-color: #dbeafe;
-            background: #eff6ff;
-            color: #1d4ed8;
-        }
-
-        #fsi-profile-dropdown #main-navigation .nav-link.hidden,
-        #fsi-profile-dropdown #main-navigation .nav-link[hidden] {
-            display: none !important;
-        }
-
-        .fsi-dropdown-divider {
-            height: 1px;
-            margin: 10px 4px;
-            background: #e2e8f0;
-        }
-
-        #fsi-profile-dropdown .fsi-dropdown-account {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 11px 12px 6px;
-            color: #94a3b8;
-            font-size: 10px;
-            font-weight: 800;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-        }
-
-        #fsi-profile-dropdown #logout-button {
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            gap: 12px;
-            width: 100%;
-            min-height: 44px;
-            padding: 11px 12px;
-            margin: 0;
-            border: 1px solid transparent;
-            border-radius: 11px;
-            background: transparent;
-            color: #dc2626;
-            font-family: inherit;
-            font-size: 13px;
-            font-weight: 600;
-            text-align: left;
-            cursor: pointer;
-            transition:
-                background 160ms ease,
-                border-color 160ms ease;
-        }
-
-        #fsi-profile-dropdown #logout-button:hover {
-            border-color: #fee2e2;
-            background: #fef2f2;
-        }
-
-        #fsi-profile-dropdown #logout-button i,
-        #fsi-profile-dropdown #logout-button svg {
-            width: 18px;
-            height: 18px;
-        }
-
-        /* Legacy mobile navigation is retained in the DOM. */
-        #mobileNav,
-        #mobileMenuBtn {
-            display: none !important;
-        }
-
-        @media (max-width: 600px) {
-            #top-header {
-                gap: 8px;
-            }
-
-            #topbar-user.fsi-profile-area {
-                margin-left: auto;
-            }
-
-            #fsi-profile-menu-toggle {
-                gap: 7px;
-                padding: 6px;
-                border-radius: 12px;
-            }
-
-            #fsi-profile-menu-toggle .user-details strong {
-                max-width: 100px;
-                font-size: 12px;
-            }
-
-            #fsi-profile-menu-toggle .user-details span {
-                font-size: 10px;
-            }
-
-            #fsi-profile-chevron {
-                width: 14px;
-                height: 14px;
-            }
-
-            #fsi-profile-dropdown {
-                position: fixed;
-                top: auto;
-                right: 12px;
-                width: min(320px, calc(100vw - 24px));
-                max-height: min(72vh, 560px);
-            }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            #fsi-profile-menu-toggle,
-            #fsi-profile-chevron,
-            #fsi-profile-dropdown,
-            #fsi-profile-dropdown .nav-link,
-            #fsi-profile-dropdown #logout-button {
-                transition: none !important;
-            }
-        }
-    </style>
 </head>
 
 <body>
@@ -396,6 +61,7 @@
             <div class="fsi-splash-tagline">Every Lead Is an Opportunity.</div>
         </div>
     </div>
+
 
     <!-- LOGIN PAGE -->
     <section id="login-page" class="login-page">
@@ -415,14 +81,7 @@
 
                     <div class="form-group">
                         <label for="login-username">Username</label>
-                        <input
-                            id="login-username"
-                            name="username"
-                            type="text"
-                            autocomplete="username"
-                            placeholder="Enter username"
-                            required
-                        >
+                        <input id="login-username" name="username" type="text" autocomplete="username" placeholder="Enter username" required>
                     </div>
 
                     <!-- PASSWORD -->
@@ -447,37 +106,22 @@
                                 title="Show password"
                                 style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; padding: 0; margin: 0; border: 0; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #64748b; border-radius: 6px;"
                             >
-                                <i
-                                    id="toggle-login-password-icon"
-                                    data-lucide="eye"
-                                    aria-hidden="true"
-                                ></i>
+                                <i id="toggle-login-password-icon" data-lucide="eye" aria-hidden="true"></i>
                             </button>
                         </div>
                     </div>
 
                     <!-- REMEMBER ME -->
                     <div class="remember-me">
-                        <label
-                            for="remember-me"
-                            style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer;"
-                        >
-                            <input
-                                id="remember-me"
-                                name="remember-me"
-                                type="checkbox"
-                            >
+                        <label for="remember-me" style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input id="remember-me" name="remember-me" type="checkbox">
                             <span>Remember me</span>
                         </label>
                     </div>
 
                     <div id="login-error" class="login-error" role="alert"></div>
 
-                    <button
-                        id="login-button"
-                        class="btn-primary primary-btn"
-                        type="submit"
-                    >
+                    <button id="login-button" class="btn-primary primary-btn" type="submit">
                         <i data-lucide="log-in" aria-hidden="true"></i>
                         <span>Sign In</span>
                     </button>
@@ -492,6 +136,7 @@
         </div>
     </section>
 
+
     <!-- APPLICATION SHELL -->
     <div id="app-shell" class="app-shell hidden">
         <div class="app-container">
@@ -499,13 +144,7 @@
             <!-- TOP HEADER -->
             <header id="top-header" class="top-header">
 
-                <div
-                    class="brand"
-                    id="brand-home"
-                    data-home="dashboard"
-                    role="button"
-                    tabindex="0"
-                >
+                <div class="brand" id="brand-home" data-home="dashboard" role="button" tabindex="0">
                     <div class="brand-logo">
                         <img src="logo-fsi.png" alt="FSI">
                     </div>
@@ -515,57 +154,25 @@
                     </div>
                 </div>
 
-                <!-- LEGACY MOBILE BUTTON — PRESERVED -->
-                <button
-                    id="mobileMenuBtn"
-                    class="mobile-menu-btn"
-                    type="button"
-                    aria-label="Open navigation"
-                    aria-expanded="false"
-                    aria-controls="mobileNav"
-                >
+                <!-- MOBILE MENU -->
+                <button id="mobileMenuBtn" class="mobile-menu-btn" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="mobileNav">
                     <i data-lucide="menu" aria-hidden="true"></i>
                 </button>
 
-                <!--
-                    DESKTOP NAVIGATION
-                    This existing nav is moved into the profile dropdown
-                    by the script at the end of this file.
-                    Its original element and buttons are preserved.
-                -->
-                <nav
-                    id="main-navigation"
-                    class="main-navigation"
-                    aria-label="Main navigation"
-                >
+                <!-- DESKTOP NAVIGATION -->
+                <nav id="main-navigation" class="main-navigation" aria-label="Main navigation">
 
-                    <button
-                        type="button"
-                        class="nav-link"
-                        data-page="dashboard"
-                        data-nav="dashboard"
-                    >
+                    <button type="button" class="nav-link" data-page="dashboard" data-nav="dashboard">
                         <i data-lucide="layout-dashboard" aria-hidden="true"></i>
                         <span>Dashboard</span>
                     </button>
 
-                    <button
-                        type="button"
-                        class="nav-link"
-                        data-page="leads"
-                        data-nav="leads"
-                    >
+                    <button type="button" class="nav-link" data-page="leads" data-nav="leads">
                         <i data-lucide="users" aria-hidden="true"></i>
                         <span>Leads</span>
                     </button>
 
-                    <button
-                        type="button"
-                        id="manage-sales-nav"
-                        class="nav-link admin-only"
-                        data-page="sales"
-                        data-nav="sales"
-                    >
+                    <button type="button" id="manage-sales-nav" class="nav-link admin-only" data-page="sales" data-nav="sales">
                         <i data-lucide="user-cog" aria-hidden="true"></i>
                         <span>Manage Sales</span>
                     </button>
@@ -584,13 +191,7 @@
                         <span id="header-user-role">Sales</span>
                     </div>
 
-                    <button
-                        id="logout-button"
-                        class="logout-button"
-                        type="button"
-                        title="Logout"
-                        aria-label="Logout"
-                    >
+                    <button id="logout-button" class="logout-button" type="button" title="Logout" aria-label="Logout">
                         <i data-lucide="log-out" aria-hidden="true"></i>
                     </button>
 
@@ -598,54 +199,32 @@
 
             </header>
 
-            <!-- MOBILE NAVIGATION — LEGACY PRESERVED -->
-            <nav
-                id="mobileNav"
-                class="mobile-nav"
-                aria-label="Mobile navigation"
-            >
 
-                <button
-                    type="button"
-                    class="nav-link"
-                    data-page="dashboard"
-                    data-nav="dashboard"
-                >
+            <!-- MOBILE NAVIGATION -->
+            <nav id="mobileNav" class="mobile-nav" aria-label="Mobile navigation">
+
+                <button type="button" class="nav-link" data-page="dashboard" data-nav="dashboard">
                     <i data-lucide="layout-dashboard" aria-hidden="true"></i>
                     <span>Dashboard</span>
                 </button>
 
-                <button
-                    type="button"
-                    class="nav-link"
-                    data-page="leads"
-                    data-nav="leads"
-                >
+                <button type="button" class="nav-link" data-page="leads" data-nav="leads">
                     <i data-lucide="users" aria-hidden="true"></i>
                     <span>Leads</span>
                 </button>
 
-                <button
-                    type="button"
-                    class="nav-link"
-                    data-page="customer-profile"
-                    data-nav="customer-profile"
-                >
+                <button type="button" class="nav-link" data-page="customer-profile" data-nav="customer-profile">
                     <i data-lucide="contact" aria-hidden="true"></i>
                     <span>Customer Profile</span>
                 </button>
 
-                <button
-                    type="button"
-                    class="nav-link admin-only"
-                    data-page="sales"
-                    data-nav="sales"
-                >
+                <button type="button" class="nav-link admin-only" data-page="sales" data-nav="sales">
                     <i data-lucide="user-cog" aria-hidden="true"></i>
                     <span>Manage Sales</span>
                 </button>
 
             </nav>
+
 
             <!-- MAIN CONTENT -->
             <main id="main-content" class="main-content">
@@ -660,18 +239,13 @@
 
                         <h1 id="page-title">Dashboard</h1>
 
-                        <p id="page-description">
-                            Overview of your sales activity and customer pipeline.
-                        </p>
+                        <p id="page-description">Overview of your sales activity and customer pipeline.</p>
                     </div>
                 </div>
 
+
                 <!-- DASHBOARD -->
-                <section
-                    id="view-dashboard"
-                    class="crm-page active dashboard-page"
-                    data-page-view="dashboard"
-                >
+                <section id="view-dashboard" class="crm-page active dashboard-page" data-page-view="dashboard">
 
                     <div id="dashboardError" class="dashboard-error" role="alert"></div>
 
@@ -689,19 +263,15 @@
 
                                 <h1 id="dashboardGreeting">Good Morning, Admin 👋</h1>
 
-                                <p id="dashboardGreetingText">
-                                    Welcome back. Here's what's happening with your sales and customers today.
-                                </p>
+                                <p id="dashboardGreetingText">Welcome back. Here's what's happening with your sales and customers today.</p>
 
                             </div>
                         </div>
                     </section>
 
+
                     <!-- SALES TEAM -->
-                    <section
-                        id="dashboardSalesSection"
-                        class="dashboard-section dashboard-sales-section"
-                    >
+                    <section id="dashboardSalesSection" class="dashboard-section dashboard-sales-section">
 
                         <div class="dashboard-section-header">
                             <div>
@@ -717,12 +287,9 @@
 
                         <div id="dashboardSalesCards" class="dashboard-sales-cards">
 
-                            <button
-                                type="button"
-                                id="dashboardSalesAll"
-                                class="dashboard-sales-card dashboard-sales-card-all active"
-                                data-sales-filter="all"
-                            >
+                            <!-- ALL SALES -->
+                            <button type="button" id="dashboardSalesAll" class="dashboard-sales-card dashboard-sales-card-all active" data-sales-filter="all">
+
                                 <div class="dashboard-sales-card-top">
                                     <div class="dashboard-sales-card-icon">
                                         <i data-lucide="users" aria-hidden="true"></i>
@@ -738,12 +305,11 @@
                                     <div id="dashboardSalesAllCount" class="dashboard-sales-card-count">0</div>
                                     <div class="dashboard-sales-card-meta">Total Leads</div>
                                 </div>
+
                             </button>
 
-                            <div
-                                id="dashboardSalesCardsDynamic"
-                                class="dashboard-sales-cards-dynamic"
-                            ></div>
+                            <!-- DYNAMIC SALES CARDS -->
+                            <div id="dashboardSalesCardsDynamic" class="dashboard-sales-cards-dynamic"></div>
 
                         </div>
 
@@ -756,11 +322,9 @@
 
                     </section>
 
+
                     <!-- OVERVIEW -->
-                    <section
-                        id="dashboardOverviewSection"
-                        class="dashboard-section dashboard-overview-section"
-                    >
+                    <section id="dashboardOverviewSection" class="dashboard-section dashboard-overview-section">
 
                         <div class="dashboard-section-header">
                             <div>
@@ -776,148 +340,84 @@
 
                         <div class="stats-grid dashboard-stats-grid">
 
-                            <button
-                                type="button"
-                                id="statCardTotal"
-                                class="stat-card dashboard-stat-card stat-card-total"
-                                data-stat-card="total"
-                            >
-                                <div class="stat-card-icon">
-                                    <i data-lucide="users" aria-hidden="true"></i>
-                                </div>
+                            <!-- TOTAL LEADS -->
+                            <button type="button" id="statCardTotal" class="stat-card dashboard-stat-card stat-card-total" data-stat-card="total">
+                                <div class="stat-card-icon"><i data-lucide="users" aria-hidden="true"></i></div>
                                 <div class="stat-card-content">
                                     <span class="stat-card-label">Total Leads</span>
                                     <strong id="statTotal" class="stat-card-value">0</strong>
                                 </div>
-                                <div class="stat-card-arrow">
-                                    <i data-lucide="arrow-up-right" aria-hidden="true"></i>
-                                </div>
+                                <div class="stat-card-arrow"><i data-lucide="arrow-up-right" aria-hidden="true"></i></div>
                             </button>
 
-                            <button
-                                type="button"
-                                id="statCardNew"
-                                class="stat-card dashboard-stat-card stat-card-new"
-                                data-stat-card="newCustomer"
-                            >
-                                <div class="stat-card-icon">
-                                    <i data-lucide="user-plus" aria-hidden="true"></i>
-                                </div>
+                            <!-- NEW CUSTOMER -->
+                            <button type="button" id="statCardNew" class="stat-card dashboard-stat-card stat-card-new" data-stat-card="newCustomer">
+                                <div class="stat-card-icon"><i data-lucide="user-plus" aria-hidden="true"></i></div>
                                 <div class="stat-card-content">
                                     <span class="stat-card-label">New Customer</span>
                                     <strong id="statNew" class="stat-card-value">0</strong>
                                 </div>
-                                <div class="stat-card-arrow">
-                                    <i data-lucide="arrow-up-right" aria-hidden="true"></i>
-                                </div>
+                                <div class="stat-card-arrow"><i data-lucide="arrow-up-right" aria-hidden="true"></i></div>
                             </button>
 
-                            <button
-                                type="button"
-                                id="statCardFirstContact"
-                                class="stat-card dashboard-stat-card stat-card-contact"
-                                data-stat-card="firstContact"
-                            >
-                                <div class="stat-card-icon">
-                                    <i data-lucide="phone" aria-hidden="true"></i>
-                                </div>
+                            <!-- FIRST CONTACT -->
+                            <button type="button" id="statCardFirstContact" class="stat-card dashboard-stat-card stat-card-contact" data-stat-card="firstContact">
+                                <div class="stat-card-icon"><i data-lucide="phone" aria-hidden="true"></i></div>
                                 <div class="stat-card-content">
                                     <span class="stat-card-label">First Contact</span>
                                     <strong id="statInterested" class="stat-card-value">0</strong>
                                 </div>
-                                <div class="stat-card-arrow">
-                                    <i data-lucide="arrow-up-right" aria-hidden="true"></i>
-                                </div>
+                                <div class="stat-card-arrow"><i data-lucide="arrow-up-right" aria-hidden="true"></i></div>
                             </button>
 
-                            <button
-                                type="button"
-                                id="statCardAppointment"
-                                class="stat-card dashboard-stat-card stat-card-appointment"
-                                data-stat-card="appointment"
-                            >
-                                <div class="stat-card-icon">
-                                    <i data-lucide="calendar-check" aria-hidden="true"></i>
-                                </div>
+                            <!-- APPOINTMENT -->
+                            <button type="button" id="statCardAppointment" class="stat-card dashboard-stat-card stat-card-appointment" data-stat-card="appointment">
+                                <div class="stat-card-icon"><i data-lucide="calendar-check" aria-hidden="true"></i></div>
                                 <div class="stat-card-content">
                                     <span class="stat-card-label">Appointment</span>
                                     <strong id="statAppointment" class="stat-card-value">0</strong>
                                 </div>
-                                <div class="stat-card-arrow">
-                                    <i data-lucide="arrow-up-right" aria-hidden="true"></i>
-                                </div>
+                                <div class="stat-card-arrow"><i data-lucide="arrow-up-right" aria-hidden="true"></i></div>
                             </button>
 
-                            <button
-                                type="button"
-                                id="statCardSiteSurvey"
-                                class="stat-card dashboard-stat-card stat-card-survey"
-                                data-stat-card="siteSurvey"
-                            >
-                                <div class="stat-card-icon">
-                                    <i data-lucide="map-pin" aria-hidden="true"></i>
-                                </div>
+                            <!-- SITE SURVEY -->
+                            <button type="button" id="statCardSiteSurvey" class="stat-card dashboard-stat-card stat-card-survey" data-stat-card="siteSurvey">
+                                <div class="stat-card-icon"><i data-lucide="map-pin" aria-hidden="true"></i></div>
                                 <div class="stat-card-content">
                                     <span class="stat-card-label">Site Survey</span>
                                     <strong id="statSiteSurvey" class="stat-card-value">0</strong>
                                 </div>
-                                <div class="stat-card-arrow">
-                                    <i data-lucide="arrow-up-right" aria-hidden="true"></i>
-                                </div>
+                                <div class="stat-card-arrow"><i data-lucide="arrow-up-right" aria-hidden="true"></i></div>
                             </button>
 
-                            <button
-                                type="button"
-                                id="statCardQuotation"
-                                class="stat-card dashboard-stat-card stat-card-quotation"
-                                data-stat-card="quotation"
-                            >
-                                <div class="stat-card-icon">
-                                    <i data-lucide="file-text" aria-hidden="true"></i>
-                                </div>
+                            <!-- QUOTATION -->
+                            <button type="button" id="statCardQuotation" class="stat-card dashboard-stat-card stat-card-quotation" data-stat-card="quotation">
+                                <div class="stat-card-icon"><i data-lucide="file-text" aria-hidden="true"></i></div>
                                 <div class="stat-card-content">
                                     <span class="stat-card-label">Quotation</span>
                                     <strong id="statQuotation" class="stat-card-value">0</strong>
                                 </div>
-                                <div class="stat-card-arrow">
-                                    <i data-lucide="arrow-up-right" aria-hidden="true"></i>
-                                </div>
+                                <div class="stat-card-arrow"><i data-lucide="arrow-up-right" aria-hidden="true"></i></div>
                             </button>
 
-                            <button
-                                type="button"
-                                id="statCardDeal"
-                                class="stat-card dashboard-stat-card stat-card-deal"
-                                data-stat-card="closing"
-                            >
-                                <div class="stat-card-icon">
-                                    <i data-lucide="handshake" aria-hidden="true"></i>
-                                </div>
+                            <!-- DEAL / CLOSING -->
+                            <button type="button" id="statCardDeal" class="stat-card dashboard-stat-card stat-card-deal" data-stat-card="closing">
+                                <div class="stat-card-icon"><i data-lucide="handshake" aria-hidden="true"></i></div>
                                 <div class="stat-card-content">
                                     <span class="stat-card-label">Deal / Closing</span>
                                     <strong id="statSPK" class="stat-card-value">0</strong>
                                 </div>
-                                <div class="stat-card-arrow">
-                                    <i data-lucide="arrow-up-right" aria-hidden="true"></i>
-                                </div>
+                                <div class="stat-card-arrow"><i data-lucide="arrow-up-right" aria-hidden="true"></i></div>
                             </button>
 
-                            <button
-                                type="button"
-                                id="statCardNoDeal"
-                                class="stat-card dashboard-stat-card stat-card-no-deal"
-                                data-stat-card="noDeal"
-                            >
-                                <div class="stat-card-icon">
-                                    <i data-lucide="x-circle" aria-hidden="true"></i>
-                                </div>
+                            <!-- NO DEAL -->
+                            <button type="button" id="statCardNoDeal" class="stat-card dashboard-stat-card stat-card-no-deal" data-stat-card="noDeal">
+                                <div class="stat-card-icon"><i data-lucide="x-circle" aria-hidden="true"></i></div>
                                 <div class="stat-card-content">
                                     <span class="stat-card-label">No Deal</span>
                                     <strong id="statNotInterested" class="stat-card-value">0</strong>
                                 </div>
-                                <div class="stat-card-arrow">
-                                    <i data-lucide="arrow-up-right" aria-hidden="true"></i>
-                                </div>
+                                <div class="stat-card-arrow"><i data-lucide="arrow-up-right" aria-hidden="true"></i></div>
                             </button>
 
                             <!-- LEGACY IDS -->
@@ -926,15 +426,16 @@
                             <span id="statFlyerSent" style="display:none;">0</span>
 
                         </div>
+
                     </section>
+
 
                     <!-- PIPELINE + RECENT ACTIVITY -->
                     <div class="dashboard-main-grid">
 
-                        <section
-                            id="dashboardPipelineSection"
-                            class="dashboard-section dashboard-card dashboard-pipeline-card"
-                        >
+                        <!-- SALES PIPELINE -->
+                        <section id="dashboardPipelineSection" class="dashboard-section dashboard-card dashboard-pipeline-card">
+
                             <div class="dashboard-card-header">
                                 <div>
                                     <div class="dashboard-card-eyebrow">SALES PIPELINE</div>
@@ -955,12 +456,13 @@
                                     <span>Loading pipeline...</span>
                                 </div>
                             </div>
+
                         </section>
 
-                        <section
-                            id="dashboardRecentSection"
-                            class="dashboard-section dashboard-card dashboard-recent-card"
-                        >
+
+                        <!-- RECENT ACTIVITY -->
+                        <section id="dashboardRecentSection" class="dashboard-section dashboard-card dashboard-recent-card">
+
                             <div class="dashboard-card-header">
                                 <div>
                                     <div class="dashboard-card-eyebrow">RECENT ACTIVITY</div>
@@ -973,12 +475,7 @@
                                         <i data-lucide="activity" aria-hidden="true"></i>
                                     </div>
 
-                                    <button
-                                        type="button"
-                                        id="dashboardViewAllRecent"
-                                        class="dashboard-view-all"
-                                        data-page="leads"
-                                    >
+                                    <button type="button" id="dashboardViewAllRecent" class="dashboard-view-all" data-page="leads">
                                         <span>View All</span>
                                         <i data-lucide="arrow-right" aria-hidden="true"></i>
                                     </button>
@@ -999,10 +496,9 @@
                                     <i data-lucide="inbox" aria-hidden="true"></i>
                                 </div>
                                 <h3>No Recent Activity</h3>
-                                <p>
-                                    Customer activity will appear here once your sales team starts working with leads.
-                                </p>
+                                <p>Customer activity will appear here once your sales team starts working with leads.</p>
                             </div>
+
                         </section>
 
                     </div>
@@ -1013,6 +509,7 @@
 
                 </section>
 
+
                 <!-- LEADS / CUSTOMER PAGE -->
                 <section id="view-leads" class="crm-page" data-page-view="leads">
 
@@ -1022,12 +519,7 @@
                             <p>Manage customer leads and sales pipeline.</p>
                         </div>
 
-                        <button
-                            id="btn-add-lead"
-                            type="button"
-                            class="btn-primary primary-btn"
-                            data-action="add-customer"
-                        >
+                        <button id="btn-add-lead" type="button" class="btn-primary primary-btn" data-action="add-customer">
                             <i data-lucide="plus" aria-hidden="true"></i>
                             <span>Add Customer</span>
                         </button>
@@ -1038,12 +530,7 @@
 
                         <div class="search-box">
                             <i data-lucide="search" aria-hidden="true"></i>
-                            <input
-                                id="lead-search"
-                                type="search"
-                                placeholder="Search customer, phone, business..."
-                                autocomplete="off"
-                            >
+                            <input id="lead-search" type="search" placeholder="Search customer, phone, business..." autocomplete="off">
                         </div>
 
                         <select id="filter-status" aria-label="Filter status">
@@ -1097,48 +584,38 @@
 
                     <!-- PAGINATION -->
                     <div class="pagination-wrapper">
-                        <div id="leads-pagination-info" class="pagination-info">
-                            Showing 0 of 0
-                        </div>
+
+                        <div id="leads-pagination-info" class="pagination-info">Showing 0 of 0</div>
 
                         <div class="pagination-controls">
-                            <button
-                                id="btn-prev-page"
-                                type="button"
-                                aria-label="Previous page"
-                                disabled
-                            >
+                            <button id="btn-prev-page" type="button" aria-label="Previous page" disabled>
                                 <i data-lucide="chevron-left" aria-hidden="true"></i>
                             </button>
 
                             <span id="leads-page-number">1</span>
 
-                            <button
-                                id="btn-next-page"
-                                type="button"
-                                aria-label="Next page"
-                                disabled
-                            >
+                            <button id="btn-next-page" type="button" aria-label="Next page" disabled>
                                 <i data-lucide="chevron-right" aria-hidden="true"></i>
                             </button>
                         </div>
+
                     </div>
 
                 </section>
 
+
                 <!-- CUSTOMER PROFILE PAGE -->
-                <section
-                    id="view-customer-profile"
-                    class="crm-page"
-                    data-page-view="customer-profile"
-                >
+                <section id="view-customer-profile" class="crm-page" data-page-view="customer-profile">
+
                     <div id="customer-profile-container" class="customer-profile-container">
                         <div class="empty-state">
                             <i data-lucide="contact" aria-hidden="true"></i>
                             <span>Select a customer to view the profile.</span>
                         </div>
                     </div>
+
                 </section>
+
 
                 <!-- MANAGE SALES PAGE -->
                 <section id="view-sales" class="crm-page" data-page-view="sales">
@@ -1149,11 +626,7 @@
                             <p>Manage FSI sales accounts and access.</p>
                         </div>
 
-                        <button
-                            id="btn-add-sales"
-                            type="button"
-                            class="btn-primary primary-btn"
-                        >
+                        <button id="btn-add-sales" type="button" class="btn-primary primary-btn">
                             <i data-lucide="user-plus" aria-hidden="true"></i>
                             <span>Add Sales</span>
                         </button>
@@ -1182,103 +655,72 @@
                     </div>
 
                     <div class="pagination-wrapper">
-                        <div id="sales-pagination-info" class="pagination-info">
-                            Showing 0 sales
-                        </div>
+
+                        <div id="sales-pagination-info" class="pagination-info">Showing 0 sales</div>
 
                         <div class="pagination-controls">
-                            <button
-                                id="sales-prev-page"
-                                type="button"
-                                aria-label="Previous page"
-                            >
+                            <button id="sales-prev-page" type="button" aria-label="Previous page">
                                 <i data-lucide="chevron-left" aria-hidden="true"></i>
                             </button>
 
                             <span id="sales-page-number">1</span>
 
-                            <button
-                                id="sales-next-page"
-                                type="button"
-                                aria-label="Next page"
-                            >
+                            <button id="sales-next-page" type="button" aria-label="Next page">
                                 <i data-lucide="chevron-right" aria-hidden="true"></i>
                             </button>
                         </div>
+
                     </div>
 
                 </section>
 
             </main>
+
         </div>
     </div>
 
+
     <!-- CUSTOMER ADD / EDIT MODAL -->
     <div id="leadModal" class="modal-overlay hidden" aria-hidden="true">
-        <div
-            class="modal-card large-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="lead-modal-title"
-        >
+
+        <div class="modal-card large-modal" role="dialog" aria-modal="true" aria-labelledby="lead-modal-title">
+
             <div class="modal-header">
                 <div>
                     <h3 id="lead-modal-title">Add Customer</h3>
-                    <p id="lead-modal-description">
-                        Enter customer information and pipeline status.
-                    </p>
+                    <p id="lead-modal-description">Enter customer information and pipeline status.</p>
                 </div>
 
-                <button
-                    id="lead-modal-close"
-                    type="button"
-                    class="btn-close"
-                    aria-label="Close"
-                >
+                <button id="lead-modal-close" type="button" class="btn-close" aria-label="Close">
                     <i data-lucide="x" aria-hidden="true"></i>
                 </button>
             </div>
 
             <form id="lead-form" class="modal-body">
+
                 <input type="hidden" id="leadId" name="leadId">
 
                 <div class="form-grid">
 
+                    <!-- CUSTOMER NAME -->
                     <div class="form-group">
                         <label for="leadCustomerName">Customer Name *</label>
-                        <input
-                            id="leadCustomerName"
-                            name="customer_name"
-                            type="text"
-                            placeholder="Customer name"
-                            autocomplete="name"
-                            required
-                        >
+                        <input id="leadCustomerName" name="customer_name" type="text" placeholder="Customer name" autocomplete="name" required>
                     </div>
 
+                    <!-- PHONE -->
                     <div class="form-group">
                         <label for="leadPhone">Phone *</label>
-                        <input
-                            id="leadPhone"
-                            name="phone"
-                            type="tel"
-                            placeholder="08xxxxxxxxxx"
-                            autocomplete="tel"
-                            required
-                        >
+                        <input id="leadPhone" name="phone" type="tel" placeholder="08xxxxxxxxxx" autocomplete="tel" required>
                     </div>
 
+                    <!-- EMAIL -->
                     <div class="form-group">
                         <label for="leadEmail">Email</label>
-                        <input
-                            id="leadEmail"
-                            name="email"
-                            type="email"
-                            placeholder="customer@example.com"
-                            autocomplete="email"
-                        >
+                        <input id="leadEmail" name="email" type="email" placeholder="customer@example.com" autocomplete="email">
                     </div>
 
+                    <!-- BUSINESS -->
                     <div class="form-group">
                         <label for="leadBusiness">Business</label>
                         <select id="leadBusiness" name="business">
@@ -1295,6 +737,7 @@
                         </select>
                     </div>
 
+                    <!-- LEAD TYPE -->
                     <div class="form-group">
                         <label for="leadType">Lead Type</label>
                         <select id="leadType" name="lead_type">
@@ -1303,16 +746,13 @@
                         </select>
                     </div>
 
+                    <!-- LOCATION -->
                     <div class="form-group">
                         <label for="leadLocation">Location</label>
-                        <input
-                            id="leadLocation"
-                            name="location"
-                            type="text"
-                            placeholder="Denpasar, Sanur, Seminyak..."
-                        >
+                        <input id="leadLocation" name="location" type="text" placeholder="Denpasar, Sanur, Seminyak...">
                     </div>
 
+                    <!-- STATUS -->
                     <div class="form-group">
                         <label for="leadStatus">Status</label>
                         <select id="leadStatus" name="status">
@@ -1326,42 +766,31 @@
                         </select>
                     </div>
 
+                    <!-- INPUT DATE -->
                     <div class="form-group">
                         <label for="leadStatusStartedAt">Input Date</label>
-                        <input
-                            id="leadStatusStartedAt"
-                            name="status_started_at"
-                            type="date"
-                        >
+                        <input id="leadStatusStartedAt" name="status_started_at" type="date">
                     </div>
 
+                    <!-- APPOINTMENT -->
                     <div class="form-group">
                         <label for="leadAppointment">Appointment</label>
-                        <input
-                            id="leadAppointment"
-                            name="appointment"
-                            type="date"
-                        >
+                        <input id="leadAppointment" name="appointment" type="date">
                     </div>
 
+                    <!-- SITE SURVEY -->
                     <div class="form-group">
                         <label for="leadSiteSurvey">Site Survey</label>
-                        <input
-                            id="leadSiteSurvey"
-                            name="site_survey"
-                            type="date"
-                        >
+                        <input id="leadSiteSurvey" name="site_survey" type="date">
                     </div>
 
+                    <!-- QUOTATION -->
                     <div class="form-group">
                         <label for="leadQuotation">Quotation</label>
-                        <input
-                            id="leadQuotation"
-                            name="quotation"
-                            type="date"
-                        >
+                        <input id="leadQuotation" name="quotation" type="date">
                     </div>
 
+                    <!-- ASSIGN SALES -->
                     <div class="form-group admin-only" id="lead-sales-group">
                         <label for="leadSales">Assign Sales</label>
                         <select id="leadSales" name="sales_id">
@@ -1369,125 +798,77 @@
                         </select>
                     </div>
 
+                    <!-- NOTES -->
                     <div class="form-group full-width">
                         <label for="leadNotes">Notes</label>
-                        <textarea
-                            id="leadNotes"
-                            name="notes"
-                            placeholder="Customer notes..."
-                        ></textarea>
+                        <textarea id="leadNotes" name="notes" placeholder="Customer notes..."></textarea>
                     </div>
 
                 </div>
 
                 <div class="modal-footer">
-                    <button
-                        id="lead-modal-cancel"
-                        type="button"
-                        class="btn-secondary secondary-btn"
-                    >
-                        Cancel
-                    </button>
 
-                    <button
-                        id="lead-save-button"
-                        type="submit"
-                        class="btn-primary primary-btn"
-                    >
+                    <button id="lead-modal-cancel" type="button" class="btn-secondary secondary-btn">Cancel</button>
+
+                    <button id="lead-save-button" type="submit" class="btn-primary primary-btn">
                         <i data-lucide="save" aria-hidden="true"></i>
                         <span id="lead-save-text">Save Customer</span>
                     </button>
+
                 </div>
+
             </form>
+
         </div>
+
     </div>
+
 
     <!-- SALES MODAL -->
     <div id="salesModal" class="modal-overlay hidden" aria-hidden="true">
-        <div
-            class="modal-card"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="sales-modal-title"
-        >
+
+        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="sales-modal-title">
+
             <div class="modal-header">
                 <div>
                     <h3 id="sales-modal-title">Add Sales</h3>
                     <p>Create or update a sales account.</p>
                 </div>
 
-                <button
-                    id="sales-modal-close"
-                    type="button"
-                    class="btn-close"
-                    aria-label="Close"
-                >
+                <button id="sales-modal-close" type="button" class="btn-close" aria-label="Close">
                     <i data-lucide="x" aria-hidden="true"></i>
                 </button>
             </div>
 
             <form id="sales-form" class="modal-body" autocomplete="off">
+
                 <input type="hidden" id="salesId" name="salesId">
 
                 <div class="form-grid">
 
                     <div class="form-group full-width">
                         <label for="salesName">Full Name *</label>
-                        <input
-                            id="salesName"
-                            name="name"
-                            type="text"
-                            placeholder="Sales full name"
-                            autocomplete="name"
-                            required
-                        >
+                        <input id="salesName" name="name" type="text" placeholder="Sales full name" autocomplete="name" required>
                     </div>
 
                     <div class="form-group">
                         <label for="salesUsername">Username *</label>
-                        <input
-                            id="salesUsername"
-                            name="username"
-                            type="text"
-                            placeholder="username"
-                            autocomplete="username"
-                            required
-                        >
+                        <input id="salesUsername" name="username" type="text" placeholder="username" autocomplete="username" required>
                     </div>
 
                     <div class="form-group">
                         <label for="salesPassword">Password *</label>
-                        <input
-                            id="salesPassword"
-                            name="password"
-                            type="password"
-                            placeholder="Minimum 6 characters"
-                            autocomplete="new-password"
-                            minlength="6"
-                            required
-                        >
+                        <input id="salesPassword" name="password" type="password" placeholder="Minimum 6 characters" autocomplete="new-password" minlength="6" required>
                     </div>
 
                     <div class="form-group">
                         <label for="salesEmail">Email</label>
-                        <input
-                            id="salesEmail"
-                            name="email"
-                            type="email"
-                            placeholder="sales@example.com"
-                            autocomplete="email"
-                        >
+                        <input id="salesEmail" name="email" type="email" placeholder="sales@example.com" autocomplete="email">
                     </div>
 
                     <div class="form-group">
                         <label for="salesPhone">Phone</label>
-                        <input
-                            id="salesPhone"
-                            name="phone"
-                            type="tel"
-                            placeholder="08xxxxxxxxxx"
-                            autocomplete="tel"
-                        >
+                        <input id="salesPhone" name="phone" type="tel" placeholder="08xxxxxxxxxx" autocomplete="tel">
                     </div>
 
                     <div class="form-group">
@@ -1510,34 +891,25 @@
 
                 </div>
 
-                <div
-                    id="salesFormMessage"
-                    class="form-message"
-                    role="alert"
-                    aria-live="polite"
-                ></div>
+                <div id="salesFormMessage" class="form-message" role="alert" aria-live="polite"></div>
 
                 <div class="modal-footer">
-                    <button
-                        id="salesModalClose"
-                        type="button"
-                        class="btn-secondary secondary-btn"
-                    >
-                        Cancel
-                    </button>
 
-                    <button
-                        id="sales-save-button"
-                        type="submit"
-                        class="btn-primary primary-btn"
-                    >
+                    <button id="salesModalClose" type="button" class="btn-secondary secondary-btn">Cancel</button>
+
+                    <button id="sales-save-button" type="submit" class="btn-primary primary-btn">
                         <i data-lucide="save" aria-hidden="true"></i>
                         <span>Save Sales</span>
                     </button>
+
                 </div>
+
             </form>
+
         </div>
+
     </div>
+
 
     <!-- SUPABASE -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1588,21 +960,17 @@
     <script src="js/customer/customer-documents.js"></script>
     <script src="js/auth.js"></script>
 
-    <!-- AI CHAT ASSISTANT -->
+    <!-- AI CHAT ASSISTANT (BARU) — memanggil api/chat.js -->
     <script src="js/ai-chat.js"></script>
+
 
     <!-- INITIAL UI -->
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             try {
-                const loginPage =
-                    document.getElementById("login-page");
-
-                const appShell =
-                    document.getElementById("app-shell");
-
-                const pages =
-                    document.querySelectorAll(".crm-page");
+                const loginPage = document.getElementById("login-page");
+                const appShell = document.getElementById("app-shell");
+                const pages = document.querySelectorAll(".crm-page");
 
                 if (loginPage) {
                     loginPage.classList.remove("hidden");
@@ -1619,18 +987,14 @@
                     page.style.display = "none";
                 });
 
-                const dashboard =
-                    document.getElementById("view-dashboard");
+                const dashboard = document.getElementById("view-dashboard");
 
                 if (dashboard) {
                     dashboard.classList.add("active");
                     dashboard.style.display = "block";
                 }
 
-                if (
-                    window.lucide &&
-                    typeof window.lucide.createIcons === "function"
-                ) {
+                if (window.lucide && typeof window.lucide.createIcons === "function") {
                     window.lucide.createIcons();
                 }
             } catch (error) {
@@ -1639,49 +1003,31 @@
         });
     </script>
 
+
     <!-- LOGIN PASSWORD TOGGLE -->
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            const passwordInput =
-                document.getElementById("login-password");
-
-            const toggleButton =
-                document.getElementById("toggle-login-password");
+            const passwordInput = document.getElementById("login-password");
+            const toggleButton = document.getElementById("toggle-login-password");
 
             if (!passwordInput || !toggleButton) {
                 return;
             }
 
             toggleButton.addEventListener("click", function () {
-                const isPassword =
-                    passwordInput.type === "password";
+                const isPassword = passwordInput.type === "password";
 
-                passwordInput.type =
-                    isPassword ? "text" : "password";
+                passwordInput.type = isPassword ? "text" : "password";
 
-                toggleButton.setAttribute(
-                    "aria-label",
-                    isPassword ? "Hide password" : "Show password"
-                );
+                toggleButton.setAttribute("aria-label", isPassword ? "Hide password" : "Show password");
+                toggleButton.setAttribute("title", isPassword ? "Hide password" : "Show password");
 
-                toggleButton.setAttribute(
-                    "title",
-                    isPassword ? "Hide password" : "Show password"
-                );
-
-                const icon =
-                    document.getElementById("toggle-login-password-icon");
+                const icon = document.getElementById("toggle-login-password-icon");
 
                 if (icon) {
-                    icon.setAttribute(
-                        "data-lucide",
-                        isPassword ? "eye-off" : "eye"
-                    );
+                    icon.setAttribute("data-lucide", isPassword ? "eye-off" : "eye");
 
-                    if (
-                        window.lucide &&
-                        typeof window.lucide.createIcons === "function"
-                    ) {
+                    if (window.lucide && typeof window.lucide.createIcons === "function") {
                         window.lucide.createIcons();
                     }
                 }
@@ -1689,466 +1035,37 @@
         });
     </script>
 
+
     <!-- REMEMBER ME — USERNAME -->
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            const usernameInput =
-                document.getElementById("login-username");
-
-            const rememberCheckbox =
-                document.getElementById("remember-me");
-
-            const loginForm =
-                document.getElementById("login-form");
+            const usernameInput = document.getElementById("login-username");
+            const rememberCheckbox = document.getElementById("remember-me");
+            const loginForm = document.getElementById("login-form");
 
             if (!usernameInput || !rememberCheckbox) {
                 return;
             }
 
-            try {
-                const savedUsername =
-                    localStorage.getItem("fsi_crm_remember_username");
+            const savedUsername = localStorage.getItem("fsi_crm_remember_username");
 
-                if (savedUsername) {
-                    usernameInput.value = savedUsername;
-                    rememberCheckbox.checked = true;
-                }
-            } catch (error) {
-                console.warn("Remember Me read failed:", error);
+            if (savedUsername) {
+                usernameInput.value = savedUsername;
+                rememberCheckbox.checked = true;
             }
 
             if (loginForm) {
                 loginForm.addEventListener("submit", function () {
-                    const username =
-                        usernameInput.value.trim();
+                    const username = usernameInput.value.trim();
 
-                    try {
-                        if (rememberCheckbox.checked && username) {
-                            localStorage.setItem(
-                                "fsi_crm_remember_username",
-                                username
-                            );
-                        } else {
-                            localStorage.removeItem(
-                                "fsi_crm_remember_username"
-                            );
-                        }
-                    } catch (error) {
-                        console.warn("Remember Me save failed:", error);
+                    if (rememberCheckbox.checked && username) {
+                        localStorage.setItem("fsi_crm_remember_username", username);
+                    } else {
+                        localStorage.removeItem("fsi_crm_remember_username");
                     }
                 });
             }
         });
-    </script>
-
-    <!-- FSI CRM PROFILE DROPDOWN -->
-    <script>
-        (function () {
-            "use strict";
-
-            let profileMenuInitialized = false;
-
-            function initFSIProfileMenu() {
-                if (profileMenuInitialized) {
-                    return;
-                }
-
-                const header =
-                    document.getElementById("top-header");
-
-                const userArea =
-                    document.getElementById("topbar-user");
-
-                const desktopNav =
-                    document.getElementById("main-navigation");
-
-                const mobileNav =
-                    document.getElementById("mobileNav");
-
-                const logoutButton =
-                    document.getElementById("logout-button");
-
-                const avatar =
-                    document.getElementById("user-avatar");
-
-                const userDetails =
-                    userArea
-                        ? userArea.querySelector(".user-details")
-                        : null;
-
-                if (
-                    !header ||
-                    !userArea ||
-                    !desktopNav ||
-                    !logoutButton ||
-                    !avatar ||
-                    !userDetails
-                ) {
-                    console.warn(
-                        "FSI CRM: Profile dropdown tidak dibuat karena elemen header belum lengkap."
-                    );
-                    return;
-                }
-
-                profileMenuInitialized = true;
-
-                /* --------------------------------------------
-                   BUILD PROFILE TOGGLE
-                   -------------------------------------------- */
-
-                const toggle =
-                    document.createElement("button");
-
-                toggle.type = "button";
-                toggle.id = "fsi-profile-menu-toggle";
-                toggle.setAttribute(
-                    "aria-label",
-                    "Open profile and navigation menu"
-                );
-                toggle.setAttribute("aria-expanded", "false");
-                toggle.setAttribute(
-                    "aria-controls",
-                    "fsi-profile-dropdown"
-                );
-
-                /* --------------------------------------------
-                   BUILD DROPDOWN
-                   -------------------------------------------- */
-
-                const dropdown =
-                    document.createElement("div");
-
-                dropdown.id = "fsi-profile-dropdown";
-                dropdown.setAttribute("role", "region");
-                dropdown.setAttribute(
-                    "aria-label",
-                    "Profile and navigation menu"
-                );
-
-                const heading =
-                    document.createElement("div");
-
-                heading.className = "fsi-dropdown-heading";
-                heading.innerHTML =
-                    "<strong>FSI CRM</strong>" +
-                    "<span>Sales Management System</span>";
-
-                const menuLabel =
-                    document.createElement("div");
-
-                menuLabel.className = "fsi-dropdown-label";
-                menuLabel.textContent = "Main Menu";
-
-                const divider =
-                    document.createElement("div");
-
-                divider.className = "fsi-dropdown-divider";
-                divider.setAttribute("aria-hidden", "true");
-
-                const accountLabel =
-                    document.createElement("div");
-
-                accountLabel.className = "fsi-dropdown-account";
-                accountLabel.textContent = "Account";
-
-                /* --------------------------------------------
-                   MOVE EXISTING NODES
-                   Existing node event listeners are retained.
-                   -------------------------------------------- */
-
-                toggle.appendChild(avatar);
-                toggle.appendChild(userDetails);
-
-                const chevron =
-                    document.createElement("i");
-
-                chevron.id = "fsi-profile-chevron";
-                chevron.setAttribute("data-lucide", "chevron-down");
-                chevron.setAttribute("aria-hidden", "true");
-
-                toggle.appendChild(chevron);
-
-                dropdown.appendChild(heading);
-                dropdown.appendChild(menuLabel);
-
-                /*
-                 * Move the original desktop navigation container,
-                 * not just the buttons. This preserves event
-                 * delegation attached to #main-navigation.
-                 */
-                dropdown.appendChild(desktopNav);
-
-                /*
-                 * Customer Profile existed only in the legacy
-                 * mobile navigation. Move that existing button
-                 * into the main menu without creating a duplicate.
-                 */
-                if (mobileNav) {
-                    const customerProfileButton =
-                        mobileNav.querySelector(
-                            '[data-page="customer-profile"]'
-                        );
-
-                    if (customerProfileButton) {
-                        desktopNav.appendChild(
-                            customerProfileButton
-                        );
-                    }
-
-                    /*
-                     * Hide legacy mobile navigation after moving
-                     * the required menu item. Other legacy buttons
-                     * remain in the DOM for compatibility.
-                     */
-                    mobileNav.hidden = true;
-                }
-
-                dropdown.appendChild(divider);
-                dropdown.appendChild(accountLabel);
-                dropdown.appendChild(logoutButton);
-
-                /*
-                 * Replace the user area's direct children with
-                 * the toggle and dropdown. All relevant original
-                 * nodes are preserved and moved, not recreated.
-                 */
-                userArea.replaceChildren(toggle, dropdown);
-
-                userArea.classList.add("fsi-profile-area");
-
-                /* --------------------------------------------
-                   OPEN / CLOSE
-                   -------------------------------------------- */
-
-                function setMenuOpen(open) {
-                    userArea.classList.toggle(
-                        "fsi-menu-open",
-                        open
-                    );
-
-                    toggle.setAttribute(
-                        "aria-expanded",
-                        String(open)
-                    );
-
-                    toggle.setAttribute(
-                        "aria-label",
-                        open
-                            ? "Close profile and navigation menu"
-                            : "Open profile and navigation menu"
-                    );
-                }
-
-                function isMenuOpen() {
-                    return userArea.classList.contains(
-                        "fsi-menu-open"
-                    );
-                }
-
-                toggle.addEventListener("click", function (event) {
-                    event.preventDefault();
-                    event.stopPropagation();
-
-                    setMenuOpen(!isMenuOpen());
-                });
-
-                document.addEventListener("click", function (event) {
-                    if (!userArea.contains(event.target)) {
-                        setMenuOpen(false);
-                    }
-                });
-
-                document.addEventListener("keydown", function (event) {
-                    if (event.key === "Escape" && isMenuOpen()) {
-                        setMenuOpen(false);
-                        toggle.focus();
-                    }
-                });
-
-                /*
-                 * Close after selecting a page. The existing
-                 * navigation handlers remain responsible for
-                 * changing CRM pages.
-                 */
-                desktopNav.addEventListener("click", function (event) {
-                    const button =
-                        event.target.closest("button[data-page]");
-
-                    if (button) {
-                        setMenuOpen(false);
-                    }
-                });
-
-                /* --------------------------------------------
-                   ADMIN MENU VISIBILITY
-                   -------------------------------------------- */
-
-                function updateProfileMenuRole() {
-                    const profile =
-                        window.currentProfile ||
-                        window.FSILeadsProfile ||
-                        null;
-
-                    const rawRole =
-                        String(profile?.role || "")
-                            .trim()
-                            .toLowerCase();
-
-                    const isAdmin =
-                        rawRole === "admin" ||
-                        rawRole === "administrator" ||
-                        rawRole === "owner";
-
-                    const manageSalesButtons =
-                        desktopNav.querySelectorAll(
-                            '[data-page="sales"]'
-                        );
-
-                    manageSalesButtons.forEach(function (button) {
-                        button.hidden = !isAdmin;
-                        button.classList.toggle(
-                            "hidden",
-                            !isAdmin
-                        );
-
-                        button.setAttribute(
-                            "aria-hidden",
-                            String(!isAdmin)
-                        );
-                    });
-                }
-
-                /* --------------------------------------------
-                   ACTIVE PAGE STATE
-                   -------------------------------------------- */
-
-                function syncActiveMenuItem() {
-                    const activePage =
-                        document.querySelector(
-                            ".crm-page.active[data-page-view]"
-                        );
-
-                    if (!activePage) {
-                        return;
-                    }
-
-                    const activePageName =
-                        activePage.getAttribute("data-page-view");
-
-                    const navButtons =
-                        desktopNav.querySelectorAll(
-                            "button[data-page]"
-                        );
-
-                    navButtons.forEach(function (button) {
-                        const isActive =
-                            button.getAttribute("data-page") ===
-                            activePageName;
-
-                        button.classList.toggle(
-                            "active",
-                            isActive
-                        );
-
-                        if (isActive) {
-                            button.setAttribute(
-                                "aria-current",
-                                "page"
-                            );
-                        } else {
-                            button.removeAttribute("aria-current");
-                        }
-                    });
-                }
-
-                /*
-                 * Keep original mobile navigation button hidden.
-                 * The profile dropdown is now the single menu.
-                 */
-                const mobileMenuButton =
-                    document.getElementById("mobileMenuBtn");
-
-                if (mobileMenuButton) {
-                    mobileMenuButton.hidden = true;
-                    mobileMenuButton.setAttribute(
-                        "aria-hidden",
-                        "true"
-                    );
-                }
-
-                function refreshMenu() {
-                    updateProfileMenuRole();
-                    syncActiveMenuItem();
-
-                    if (
-                        window.lucide &&
-                        typeof window.lucide.createIcons === "function"
-                    ) {
-                        window.lucide.createIcons();
-                    }
-                }
-
-                window.FSIProfileMenu = {
-                    open: function () {
-                        setMenuOpen(true);
-                    },
-                    close: function () {
-                        setMenuOpen(false);
-                    },
-                    refresh: refreshMenu
-                };
-
-                window.refreshFSIProfileMenu =
-                    refreshMenu;
-
-                window.addEventListener(
-                    "fsi:profile-ready",
-                    refreshMenu
-                );
-
-                window.addEventListener(
-                    "fsi:app-ready",
-                    refreshMenu
-                );
-
-                /*
-                 * Observe CRM page activation so the active menu
-                 * state follows navigation performed by existing
-                 * JavaScript modules.
-                 */
-                const mainContent =
-                    document.getElementById("main-content");
-
-                if (mainContent && "MutationObserver" in window) {
-                    const observer =
-                        new MutationObserver(function () {
-                            syncActiveMenuItem();
-                        });
-
-                    observer.observe(mainContent, {
-                        subtree: true,
-                        attributes: true,
-                        attributeFilter: ["class"]
-                    });
-                }
-
-                refreshMenu();
-
-                console.log(
-                    "FSI CRM: Profile dropdown initialized."
-                );
-            }
-
-            if (document.readyState === "loading") {
-                document.addEventListener(
-                    "DOMContentLoaded",
-                    initFSIProfileMenu,
-                    { once: true }
-                );
-            } else {
-                initFSIProfileMenu();
-            }
-        })();
     </script>
 
 </body>
