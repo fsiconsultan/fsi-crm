@@ -1004,7 +1004,7 @@ async function applyDashboardLeadsFilter(
     // SALES FILTER - LEADS ONLY
     // ========================================================
 
-    var salesSelect =
+var salesSelect =
         leadsGetSalesSelect();
 
 
@@ -1013,9 +1013,21 @@ async function applyDashboardLeadsFilter(
         salesSelect.value =
             salesId;
 
+        // PERIKSA APAKAH BROWSER BERHASIL MENSET VALUE-NYA
+        if (salesId && salesSelect.value !== salesId) {
+            console.warn(
+                "FSI CRM: Opsi sales untuk ID " + salesId + " belum tersedia di dropdown. Mencoba memuat ulang options..."
+            );
+            
+            if (typeof loadFilterOptionsOnce === "function") {
+                await loadFilterOptionsOnce({ reason: "retry-sales-option" });
+                salesSelect.value = salesId; 
+            }
+        }
+
 
         window.crmSelectedSalesId =
-            salesId;
+            salesSelect.value || salesId;
 
 
         var salesData = [];
@@ -1055,7 +1067,7 @@ async function applyDashboardLeadsFilter(
                                 ? sales.id
                                 : ""
                         ).trim() ===
-                        salesId;
+                        salesSelect.value;
                     }
                 )
                 : null;
@@ -1080,7 +1092,7 @@ async function applyDashboardLeadsFilter(
                 salesName:
                     window.crmSelectedSalesName,
                 isAllSales:
-                    !salesId
+                    !salesSelect.value
             }
         );
 
