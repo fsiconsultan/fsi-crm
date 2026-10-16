@@ -1012,7 +1012,11 @@ var salesSelect =
 
         salesSelect.value =
             salesId;
-
+        
+        salesSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        window.crmSelectedSalesId =
+            salesId;
+        
         // PERIKSA APAKAH BROWSER BERHASIL MENSET VALUE-NYA
         if (salesId && salesSelect.value !== salesId) {
             console.warn(
@@ -1129,7 +1133,8 @@ var salesSelect =
         statusSelect.value =
             status;
     }
-
+statusSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }
 
     // ========================================================
     // RESET PAGE
