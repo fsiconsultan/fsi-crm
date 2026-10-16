@@ -878,286 +878,34 @@ function initializeLeads() {
 }
 
 
-// ============================================================
-// APPLY DASHBOARD -> LEADS FILTER
-// ============================================================
-
-async function applyDashboardLeadsFilter(
-    options
-) {
-
-    options =
-        options ||
-        {};
-
-
-    var rawFilter =
-        null;
-
-
     // ========================================================
-    // READ SESSION STORAGE
+    // SALES FILTER - LEADS ONLY
     // ========================================================
 
-    try {
-
-        rawFilter =
-            sessionStorage.getItem(
-                "fsi_dashboard_leads_filter"
-            );
-
-    } catch (error) {
-
-        console.warn(
-            "FSI CRM: gagal membaca Dashboard Leads filter:",
-            error
-        );
-
-        return false;
-    }
-
-
-    if (!rawFilter) {
-        return false;
-    }
-
-
-    var filterData;
-
-
-    // ========================================================
-    // PARSE
-    // ========================================================
-
-    try {
-
-        filterData =
-            JSON.parse(
-                rawFilter
-            );
-
-    } catch (error) {
-
-        console.warn(
-            "FSI CRM: Dashboard Leads filter tidak valid:",
-            error
-        );
-
-
-        try {
-
-            sessionStorage.removeItem(
-                "fsi_dashboard_leads_filter"
-            );
-
-        } catch (removeError) {
-
-            console.warn(
-                "FSI CRM: gagal membersihkan Dashboard Leads filter:",
-                removeError
-            );
-        }
-
-
-        return false;
-    }
-
-
-    if (
-        !filterData ||
-        typeof filterData !==
-        "object"
-    ) {
-
-        return false;
-    }
-
-
-    // ========================================================
-    // VALUES
-    // ========================================================
-
-    var salesId =
-        String(
-            filterData.salesId ||
-            ""
-        ).trim();
-
-
-    var status =
-        String(
-            filterData.status ||
-            ""
-        ).trim();
-
-
-    console.log(
-        "FSI CRM: menerima filter dari Dashboard:",
-        {
-            salesId: salesId,
-            status: status
-        }
-    );
-
-
-// ============================================================
-// APPLY DASHBOARD -> LEADS FILTER
-// ============================================================
-
-async function applyDashboardLeadsFilter(
-    options
-) {
-
-    options =
-        options ||
-        {};
-
-
-    var rawFilter =
-        null;
-
-
-    // ========================================================
-    // READ SESSION STORAGE
-    // ========================================================
-
-    try {
-
-        rawFilter =
-            sessionStorage.getItem(
-                "fsi_dashboard_leads_filter"
-            );
-
-    } catch (error) {
-
-        console.warn(
-            "FSI CRM: gagal membaca Dashboard Leads filter:",
-            error
-        );
-
-        return false;
-    }
-
-
-    if (!rawFilter) {
-        return false;
-    }
-
-
-    var filterData;
-
-
-    // ========================================================
-    // PARSE
-    // ========================================================
-
-    try {
-
-        filterData =
-            JSON.parse(
-                rawFilter
-            );
-
-    } catch (error) {
-
-        console.warn(
-            "FSI CRM: Dashboard Leads filter tidak valid:",
-            error
-        );
-
-
-        try {
-
-            sessionStorage.removeItem(
-                "fsi_dashboard_leads_filter"
-            );
-
-        } catch (removeError) {
-
-            console.warn(
-                "FSI CRM: gagal membersihkan Dashboard Leads filter:",
-                removeError
-            );
-        }
-
-
-        return false;
-    }
-
-
-    if (
-        !filterData ||
-        typeof filterData !==
-        "object"
-    ) {
-
-        return false;
-    }
-
-
-    // ========================================================
-    // VALUES
-    // ========================================================
-
-    var salesId =
-        String(
-            filterData.salesId ||
-            ""
-        ).trim();
-
-
-    var status =
-        String(
-            filterData.status ||
-            ""
-        ).trim();
-
-
-    console.log(
-        "FSI CRM: menerima filter dari Dashboard:",
-        {
-            salesId: salesId,
-            status: status
-        }
-    );
-
-
-    // Pastikan filter options selesai dimuat dulu
-    if (typeof loadFilterOptionsOnce === "function") {
-        await loadFilterOptionsOnce({ reason: "dashboard-navigation-wait" });
-    }
-
-
-    // ========================================================
-    // SALES FILTER - LEADS ONLY (DENGAN MEKANISME TUNGGU OPSI)
-    // ========================================================
-
-    var salesSelect =
+var salesSelect =
         leadsGetSalesSelect();
 
 
     if (salesSelect) {
 
-        // Tunggu hingga opsi sales benar-benar tersedia di DOM (maksimal 1 detik)
-        if (salesId) {
-            var retries = 0;
-            while (retries < 20) {
-                salesSelect.value = salesId;
-                if (salesSelect.value === salesId) {
-                    break;
-                }
-                // Tunggu 50ms lalu coba lagi sambil menunggu option dirender
-                await new Promise(function (resolve) {
-                    setTimeout(resolve, 50);
-                });
-                retries++;
-            }
-        } else {
-            salesSelect.value = "";
-        }
-
-        // Paksa picu event change agar sistem filter membaca perubahan
+        salesSelect.value =
+            salesId;
+        
         salesSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        window.crmSelectedSalesId =
+            salesId;
+        
+        // PERIKSA APAKAH BROWSER BERHASIL MENSET VALUE-NYA
+        if (salesId && salesSelect.value !== salesId) {
+            console.warn(
+                "FSI CRM: Opsi sales untuk ID " + salesId + " belum tersedia di dropdown. Mencoba memuat ulang options..."
+            );
+            
+            if (typeof loadFilterOptionsOnce === "function") {
+                await loadFilterOptionsOnce({ reason: "retry-sales-option" });
+                salesSelect.value = salesId; 
+            }
+        }
 
 
         window.crmSelectedSalesId =
@@ -1262,10 +1010,9 @@ async function applyDashboardLeadsFilter(
 
         statusSelect.value =
             status;
-
-        statusSelect.dispatchEvent(new Event('change', { bubbles: true }));
     }
-
+statusSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }
 
     // ========================================================
     // RESET PAGE
@@ -1352,7 +1099,6 @@ async function applyDashboardLeadsFilter(
 
     return true;
 }
-
 
 // ============================================================
 // HANDLE LEADS PAGE OPENED
