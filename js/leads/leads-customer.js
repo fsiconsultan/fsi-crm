@@ -190,4 +190,5 @@ true
 );
 refreshAddCustomerVisibility();
 }
+bindAddCustomerButtons();
 // ========================================================
