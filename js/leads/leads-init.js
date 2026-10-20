@@ -1010,6 +1010,7 @@ var salesSelect =
 
         statusSelect.value =
             status;
+    }
 statusSelect.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
