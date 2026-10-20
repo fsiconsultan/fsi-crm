@@ -1883,3 +1883,18 @@ if (
 console.log(
     "FSI CRM: leads-init.js loaded successfully."
 );
+
+// ========================================================
+// INISIALISASI OTOMATIS ADD CUSTOMER
+// ========================================================
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function () {
+        if (typeof bindAddCustomerButtons === "function") {
+            bindAddCustomerButtons();
+        }
+    });
+} else {
+    if (typeof bindAddCustomerButtons === "function") {
+        bindAddCustomerButtons();
+    }
+}
