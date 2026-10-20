@@ -576,7 +576,7 @@ function initializeLeads() {
                         updateLeadsContext();
                     }
 
-                    if (
+                     if (
                         typeof leadsSafeLoad ===
                         "function"
                     ) {
@@ -590,10 +590,10 @@ function initializeLeads() {
                     ) {
                         filterLeads();
                     }
-
                 }
             );
-
+        }
+    );
 
     // ========================================================
     // PREVIOUS PAGE
@@ -888,6 +888,11 @@ function initializeLeads() {
     );
 }
 
+// ============================================================
+// APPLY DASHBOARD LEADS FILTER
+// ============================================================
+async function applyDashboardLeadsFilter(options) {
+    options = options || {};
 
     // ========================================================
     // SALES FILTER - LEADS ONLY
@@ -1021,7 +1026,6 @@ var salesSelect =
 
         statusSelect.value =
             status;
-    }
 statusSelect.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
