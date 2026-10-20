@@ -570,18 +570,29 @@ function initializeLeads() {
 
 
                     if (
+                        typeof updateLeadsContext ===
+                        "function"
+                    ) {
+                        updateLeadsContext();
+                    }
+
+                    if (
+                        typeof leadsSafeLoad ===
+                        "function"
+                    ) {
+                        leadsSafeLoad(1, {
+                            force: true,
+                            reason: "filter-change"
+                        });
+                    } else if (
                         typeof filterLeads ===
                         "function"
                     ) {
-
                         filterLeads();
                     }
 
                 }
             );
-
-        }
-    );
 
 
     // ========================================================
