@@ -1,4 +1,4 @@
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 
@@ -11,6 +11,10 @@ export const metadata: Metadata = {
   title: { default: "FSI CRM", template: "%s · FSI CRM" },
   description: "Lead, customer and sales management for French Solar Industry.",
 }
+
+// Lets pages pad for the iPhone home indicator with env(safe-area-inset-*).
+// The inbox reply box relies on it.
+export const viewport: Viewport = { viewportFit: "cover" }
 
 // Applies the saved theme before paint so there is no light flash in dark mode.
 const themeScript = `try{var t=localStorage.getItem("fsi-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}`
