@@ -19,15 +19,14 @@ export const metadata: Metadata = {
 // The inbox reply box relies on it.
 export const viewport: Viewport = {
   viewportFit: "cover",
-  // Browser and installed-app chrome match the canvas token in each theme.
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f2f2f0" },
-    { media: "(prefers-color-scheme: dark)", color: "#121212" },
-  ],
+  // Browser chrome matches the light canvas token: light is the default whatever the
+  // device setting. The theme switch rewrites it to the dark canvas when dark is chosen.
+  themeColor: "#f2f2f0",
 }
 
-// Applies the saved theme before paint so there is no light flash in dark mode.
-const themeScript = `try{var t=localStorage.getItem("fsi-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}`
+// Before paint: the dark theme only when chosen in the profile menu, and the
+// collapsed sidebar rail, so neither flashes on load.
+const themeScript = `try{var d=document.documentElement;if(localStorage.getItem("fsi-theme")==="dark")d.dataset.theme="dark";if(localStorage.getItem("fsi-sidebar")==="collapsed")d.dataset.sidebar="collapsed";if(d.dataset.theme==="dark")document.addEventListener("DOMContentLoaded",function(){var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",getComputedStyle(d).getPropertyValue("--canvas").trim())})}catch(e){}`
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (

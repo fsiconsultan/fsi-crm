@@ -11,7 +11,7 @@ export function Card({
   as?: "section" | "article" | "div"
 }) {
   return (
-    <Tag className={cn("rounded-[var(--radius-card)] border border-line bg-surface p-6", className)}>
+    <Tag className={cn("rounded-[var(--radius-card)] border border-line bg-surface p-5", className)}>
       {children}
     </Tag>
   )
@@ -34,7 +34,7 @@ export function CardHeader({
         <h2 id={id} className="text-[17px] font-medium leading-6 text-ink">
           {title}
         </h2>
-        {meta ? <p className="mt-0.5 text-[13px] text-muted">{meta}</p> : null}
+        {meta ? <p className="mt-0.5 text-xs text-muted">{meta}</p> : null}
       </div>
       {action ? <div className="shrink-0">{action}</div> : null}
     </header>

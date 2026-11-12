@@ -15,7 +15,7 @@ export function TeamCard({ team, period }: { team: TeamRow[]; period: Period }) 
     <Card className="max-md:p-4">
       <CardHeader
         title="By salesperson"
-        meta={`In pipeline means not yet Deal or No deal. Deals are for the ${period.label.toLowerCase()}.`}
+        meta={`Deals: ${period.label.toLowerCase()}`}
       />
 
       <div aria-hidden="true" className={`${GRID} border-b border-line pb-2 text-xs text-muted`}>

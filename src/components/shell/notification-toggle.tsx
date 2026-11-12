@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Bell, BellOff } from "lucide-react"
+import { menuItemClass } from "@/components/ui/menu"
 import { isDeviceMine, removeDevice, saveDevice } from "@/lib/push/actions"
 
 const PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
@@ -46,7 +47,7 @@ const NOTE: Partial<Record<State, string>> = {
     "On iPhone, add FSI CRM to the Home Screen first: tap Share, then Add to Home Screen, and open it from there.",
   unsupported: "This browser cannot show notifications.",
   blocked: "Notifications are blocked for this site. Allow them in the browser's site settings, then reload.",
-  on: "You get a notification when a chat needs you.",
+  on: "You get a notification when a chat needs you. Select to turn off.",
 }
 
 // Phone notifications for chats that need a person. Asks for permission only
@@ -66,8 +67,9 @@ export function NotificationToggle() {
     }
   }, [])
 
-  // Not configured on the server yet: nothing to offer.
-  if (!PUBLIC_KEY || state === "checking") return null
+  // Not configured on the server yet: say so instead of hiding the item.
+  if (!PUBLIC_KEY) return <UnavailableItem note="Not set up on the server yet." />
+  if (state === "checking") return <UnavailableItem note="Checking this device..." />
 
   async function turnOn() {
     setBusy(true)
@@ -128,35 +130,74 @@ export function NotificationToggle() {
 
   const actionable = state === "on" || state === "off"
   const Icon = state === "on" ? Bell : BellOff
-  const label = state === "on" ? "Notifications on" : actionable ? "Turn on notifications" : "Notifications off"
-  const note = NOTE[state]
+  const status = busy ? (state === "on" ? "Turning off..." : "Turning on...") : state === "on" ? "On" : "Off"
+  const message = error ?? NOTE[state]
+  const noteId = "notification-toggle-note"
 
+  // A checkbox item in the profile menu. When the browser cannot be switched on
+  // from here (blocked, unsupported, iPhone outside the Home Screen) it stays
+  // focusable but disabled, and the note says what to do.
   return (
-    <div className="flex flex-col">
-      {actionable ? (
-        <button
-          type="button"
-          onClick={state === "on" ? turnOff : turnOn}
-          disabled={busy}
-          aria-pressed={state === "on"}
-          className="flex min-h-11 w-full items-center gap-3 rounded-[var(--radius-control)] px-3 text-sm text-ink transition-colors duration-150 hover:bg-surface disabled:opacity-50 md:min-h-10"
-        >
-          <Icon aria-hidden="true" className="size-[18px]" strokeWidth={1.75} />
-          {busy ? (state === "on" ? "Turning off..." : "Turning on...") : label}
-          <span className="sr-only"> on this device</span>
-        </button>
-      ) : (
-        <p className="flex min-h-11 items-center gap-3 px-3 text-sm text-ink md:min-h-10">
-          <Icon aria-hidden="true" className="size-[18px]" strokeWidth={1.75} />
-          {label}
-        </p>
-      )}
-      {note ? <p className="px-3 pb-1 pl-[42px] text-xs text-muted">{note}</p> : null}
-      {error ? (
-        <p role="alert" className="px-3 pb-1 pl-[42px] text-xs text-negative">
-          {error}
-        </p>
-      ) : null}
-    </div>
+    <button
+      type="button"
+      role="menuitemcheckbox"
+      aria-checked={state === "on"}
+      aria-disabled={!actionable || busy}
+      aria-describedby={message ? noteId : undefined}
+      tabIndex={-1}
+      onClick={() => {
+        if (!actionable || busy) return
+        if (state === "on") turnOff()
+        else turnOn()
+      }}
+      className={`${menuItemClass} py-2`}
+    >
+      <Icon aria-hidden="true" className="mt-0.5 size-[18px] shrink-0 self-start" strokeWidth={1.75} />
+      <span className="min-w-0 flex-1">
+        <span className="flex items-baseline justify-between gap-3">
+          <span>Notifications on this device</span>
+          <span aria-hidden="true" className="text-xs text-muted">
+            {status}
+          </span>
+        </span>
+        {message ? (
+          <span id={noteId} role={error ? "alert" : undefined} className={NOTE_TONE[error ? "error" : "note"]}>
+            {message}
+          </span>
+        ) : null}
+      </span>
+    </button>
+  )
+}
+
+const NOTE_TONE = {
+  error: "mt-0.5 block text-xs text-negative",
+  note: "mt-0.5 block text-xs text-muted",
+} as const
+
+function UnavailableItem({ note }: { note: string }) {
+  return (
+    <button
+      type="button"
+      role="menuitemcheckbox"
+      aria-checked={false}
+      aria-disabled
+      aria-describedby="notification-toggle-note"
+      tabIndex={-1}
+      className={`${menuItemClass} py-2`}
+    >
+      <BellOff aria-hidden="true" className="mt-0.5 size-[18px] shrink-0 self-start" strokeWidth={1.75} />
+      <span className="min-w-0 flex-1">
+        <span className="flex items-baseline justify-between gap-3">
+          <span>Notifications on this device</span>
+          <span aria-hidden="true" className="text-xs text-muted">
+            Off
+          </span>
+        </span>
+        <span id="notification-toggle-note" className={NOTE_TONE.note}>
+          {note}
+        </span>
+      </span>
+    </button>
   )
 }

@@ -1,5 +1,6 @@
 import "server-only"
 import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js"
+import { cache } from "react"
 import { createClient } from "@/lib/supabase/server"
 import type { Database } from "./database.types"
 import type { AutomationEvent, Conversation, Message, Qualification } from "./types"
@@ -39,20 +40,47 @@ const SUMMARY_COLUMNS =
 
 type Row = Omit<ConversationSummary, "unread" | "attention">
 
+type AttentionFields = Pick<
+  Conversation,
+  "mode" | "taken_over_by" | "assigned_sales_id" | "last_inbound_at" | "last_message_at"
+>
+
+// The one rule for "this chat waits for a person": the inbox order, the
+// sidebar badge and the Overview's Needs you row all read it from here.
+export function attentionOf(row: AttentionFields, viewerId: string): ConversationSummary["attention"] {
+  if (row.mode !== "human") return null
+  if (!row.taken_over_by) return "handoff"
+  const customerWroteLast = !!row.last_inbound_at && row.last_inbound_at === row.last_message_at
+  const mine = row.assigned_sales_id === viewerId || row.taken_over_by === viewerId
+  return customerWroteLast && mine ? "reply" : null
+}
+
 function summarize(row: Row, viewerId: string): ConversationSummary {
   const unread =
     !!row.last_inbound_at && (!row.last_read_at || new Date(row.last_inbound_at) > new Date(row.last_read_at))
 
-  let attention: ConversationSummary["attention"] = null
-  if (row.mode === "human") {
-    const customerWroteLast = !!row.last_inbound_at && row.last_inbound_at === row.last_message_at
-    const mine = row.assigned_sales_id === viewerId || row.taken_over_by === viewerId
-    if (!row.taken_over_by) attention = "handoff"
-    else if (customerWroteLast && mine) attention = "reply"
-  }
-
-  return { ...row, unread, attention }
+  return { ...row, unread, attention: attentionOf(row, viewerId) }
 }
+
+/**
+ * Chats waiting for this person: handoffs nobody has taken yet, and taken-over
+ * chats of theirs where the customer wrote last. RLS limits the rows to what
+ * they may see. Null when the inbox tables do not exist yet or the query
+ * failed, so callers hide the count instead of showing a false 0.
+ */
+export const countWaitingChats = cache(async (viewerId: string): Promise<number | null> => {
+  const db = await inboxClient()
+  const { data, error } = await db
+    .from("wa_conversations")
+    .select("mode, taken_over_by, assigned_sales_id, last_inbound_at, last_message_at")
+    .eq("mode", "human")
+    .limit(1000)
+  if (error) {
+    if (!isMissingTable(error)) console.error(`Counting waiting chats failed: ${error.message}`)
+    return null
+  }
+  return (data ?? []).filter((row) => attentionOf(row, viewerId) !== null).length
+})
 
 const ATTENTION_ORDER = { handoff: 0, reply: 1 } as const
 
