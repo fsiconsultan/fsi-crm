@@ -16,6 +16,7 @@ const TYPE_LABELS: Record<string, string> = {
   ai_error: "AI error",
   tool_failed: "AI step failed",
   webhook_error: "Webhook error",
+  push_failed: "Notification not sent",
 }
 
 function SeverityChip({ severity }: { severity: string }) {

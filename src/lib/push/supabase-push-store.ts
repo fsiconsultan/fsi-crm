@@ -7,10 +7,16 @@ export function createSupabasePushStore(db: SupabaseClient<Database>): PushStore
   return {
     async subscriptionsFor(salesUserIds) {
       if (salesUserIds.length === 0) return []
+      // Deactivated staff are never notified, even if their phone is still subscribed.
+      const people = await db.from("sales_users").select("id, status").in("id", salesUserIds)
+      if (people.error) throw new Error(`Read staff status: ${people.error.message}`)
+      const active = (people.data ?? []).filter((row) => row.status !== "Inactive").map((row) => row.id)
+      if (active.length === 0) return []
+
       const { data, error } = await db
         .from("push_subscriptions")
         .select("id, sales_user_id, endpoint, p256dh, auth")
-        .in("sales_user_id", salesUserIds)
+        .in("sales_user_id", active)
       if (error) throw new Error(`Read push subscriptions: ${error.message}`)
       return (data ?? []).map((row) => ({
         id: row.id,

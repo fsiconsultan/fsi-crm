@@ -40,11 +40,12 @@ export async function POST(request: Request) {
       const notifier = notifierFromEnv(admin)
       const deps = { store, api: cloudApiFromEnv(), model: openAiModelFromEnv(), now: () => new Date(), notifier }
       for (const item of pending) {
+        // The customer's answer comes first; the staff notification follows it.
+        await answerInbound(item, deps)
         if (notifier && item.assignedTo) {
           const conversation = await store.getConversation(item.conversationId).catch(() => null)
           if (conversation) await notifier.assigned(conversation, item.assignedTo, null)
         }
-        await answerInbound(item, deps)
       }
     })
   }

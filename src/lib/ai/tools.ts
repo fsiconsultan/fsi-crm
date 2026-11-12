@@ -132,7 +132,11 @@ export async function requestHumanHandoff(ctx: ToolContext, args: Args) {
     detail: { reason },
   })
   // After the handoff is recorded, so a failed notification cannot undo it.
-  await ctx.notifier?.handoff(ctx.conversation, reason)
+  // Re-read so an Admin's reassignment during this run picks the right person.
+  if (ctx.notifier) {
+    const current = await store.getConversation(conversation.id).catch(() => null)
+    await ctx.notifier.handoff(current ?? ctx.conversation)
+  }
   return { status: "handed_off", note: "Tell the customer a member of the FSI team will reply here, then stop." }
 }
 

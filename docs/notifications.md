@@ -10,11 +10,16 @@ conversation needs them. Tapping it opens `/inbox/<conversation id>`.
 | The AI asks for a person (`request_human_handoff`) | The assigned salesperson. If nobody is assigned, every active Admin. |
 | A conversation is assigned or reassigned | The new assignee. This covers an Admin assigning in the inbox and the automatic `lead_owner` rule. |
 
-The person who performed the action is never notified. The notification shows
-the customer's WhatsApp name (or number) and a short reason, never the
-conversation itself, because lock screens are public.
+The person who performed the action is never notified, and neither is anyone
+whose account is Inactive. The notification shows the customer's WhatsApp name
+(or number) and a fixed line ("Needs a person to take over." or "This
+conversation was assigned to you."), never the AI's reason or any message,
+because lock screens are public.
 
-A failed notification never blocks the handoff or the assignment. Devices the
+A failed notification never blocks the handoff, the assignment or the AI's reply
+to the customer: each send times out after 5 seconds, all of a person's devices
+are sent to at once, and the webhook answers the customer before notifying
+staff. Devices the
 push service reports as gone (HTTP 404 or 410) are removed. Other failures are
 counted on the device and logged as `push_failed` in `automation_events`; when
 nobody could be reached the event is listed in `/inbox/review`.
@@ -41,7 +46,13 @@ Code: `src/lib/push/` (`notify.ts` has the rules), hooks in
 
 In the sidebar (on a phone: the menu), tap **Turn on notifications**. The
 browser asks for permission only after that tap. The control shows the real
-state: on, off, blocked in the browser settings, or not supported.
+state: on, off, blocked in the browser settings, or not supported. "On" means
+the server has this device saved for the signed-in user, not only that the
+browser is subscribed.
+
+Signing out removes this device's notifications, so the next person on a shared
+phone never sees the previous user's. Only the browsers' own push services are
+accepted as devices (Google, Mozilla, Apple, Microsoft).
 
 **iPhone and iPad:** Apple only delivers web notifications to sites added to
 the Home Screen (iOS 16.4 or later). Open the CRM in Safari, tap Share, then

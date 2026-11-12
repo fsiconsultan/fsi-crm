@@ -8,6 +8,7 @@ import { LogOut, Menu, X } from "lucide-react"
 import type { Role } from "@/lib/auth"
 import { cn } from "@/lib/cn"
 import { logout } from "@/app/login/actions"
+import { forgetThisDevice } from "@/lib/push/device"
 import { navFor } from "./nav"
 import { NotificationToggle } from "./notification-toggle"
 import { ThemeToggle } from "./theme-toggle"
@@ -81,7 +82,13 @@ function SidebarBody({ user, onNavigate }: { user: SidebarUser; onNavigate?: () 
       <div className="flex flex-col gap-1">
         <NotificationToggle />
         <ThemeToggle />
-        <form action={logout}>
+        <form
+          action={async () => {
+            // A shared phone must not keep the previous user's notifications.
+            await forgetThisDevice()
+            await logout()
+          }}
+        >
           <button
             type="submit"
             className="flex min-h-11 w-full items-center gap-3 rounded-[var(--radius-control)] px-3 text-sm text-ink transition-colors duration-150 hover:bg-surface md:min-h-10"

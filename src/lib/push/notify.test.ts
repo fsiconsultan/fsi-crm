@@ -53,13 +53,13 @@ describe("notifier", () => {
       targets: [device("phone", "sales-1"), device("laptop", "sales-1"), device("other", "sales-2")],
     })
 
-    const result = await notifier.handoff(conversation("sales-1"), "Customer asked for a person.")
+    const result = await notifier.handoff(conversation("sales-1"))
 
     expect(result).toEqual({ recipients: 1, devices: 2, delivered: 2 })
     expect(sent.map((s) => s.endpoint)).toEqual(["https://push.example.test/phone", "https://push.example.test/laptop"])
     expect(sent[0].payload).toEqual({
       title: "Budi",
-      body: "Needs a person: Customer asked for a person.",
+      body: "Needs a person to take over.",
       url: "/inbox/conv-1",
       tag: "conversation-conv-1",
     })
@@ -68,15 +68,53 @@ describe("notifier", () => {
 
   it("sends an unassigned handoff to the Admins", async () => {
     const { notifier, sent } = setup({ targets: [device("a1", "admin-1"), device("s1", "sales-1")], adminIds: ["admin-1"] })
-    await notifier.handoff(conversation(null), "Complaint about an installation.")
+    await notifier.handoff(conversation(null))
     expect(sent.map((s) => s.endpoint)).toEqual(["https://push.example.test/a1"])
   })
 
-  it("keeps the body short and uses the number when there is no profile name", async () => {
+  it("uses the number when there is no profile name, and never puts the AI's reason on the lock screen", async () => {
     const { notifier, sent } = setup({ targets: [device("phone", "sales-1")] })
-    await notifier.handoff({ ...conversation("sales-1"), profile_name: null }, "x".repeat(400))
+    await notifier.handoff({ ...conversation("sales-1"), profile_name: null })
     expect(sent[0].payload.title).toBe("+62 812 0000 0001")
-    expect(sent[0].payload.body.length).toBeLessThanOrEqual(120)
+    expect(sent[0].payload.body).toBe("Needs a person to take over.")
+  })
+
+  it("never notifies deactivated staff", async () => {
+    const { notifier, sent } = setup({ targets: [device("phone", "sales-1")], inactive: ["sales-1"] })
+    expect(await notifier.handoff(conversation("sales-1"))).toMatchObject({ devices: 0, delivered: 0 })
+    expect(sent).toEqual([])
+  })
+
+  it("sends to every device at once, so one hung device does not hold up the others", async () => {
+    const push = memoryPushStore({ targets: [device("slow", "sales-1"), device("fast", "sales-1")] })
+    const started: string[] = []
+    let release: () => void = () => {}
+    const sender = {
+      async send(target: { id: string }) {
+        started.push(target.id)
+        if (target.id === "slow") await new Promise<void>((r) => (release = r))
+        return { ok: true as const }
+      },
+    }
+    const notifier = createNotifier({ store: push.store, sender, log: async () => {}, now: () => new Date() })
+    const run = notifier.handoff(conversation("sales-1"))
+    await new Promise((r) => setTimeout(r, 0))
+    expect(started).toEqual(["slow", "fast"])
+    release()
+    expect(await run).toMatchObject({ delivered: 2 })
+  })
+
+  it("treats a sender that throws as a failed device, not a crash", async () => {
+    const push = memoryPushStore({ targets: [device("phone", "sales-1")] })
+    const events: NewEvent[] = []
+    const sender = {
+      async send(): Promise<never> {
+        throw new Error("socket hang up")
+      },
+    }
+    const notifier = createNotifier({ store: push.store, sender, log: async (e) => void events.push(e), now: () => new Date() })
+    await expect(notifier.handoff(conversation("sales-1"))).resolves.toMatchObject({ delivered: 0 })
+    expect(events[0]).toMatchObject({ type: "push_failed", needsReview: true })
   })
 
   it("tells a salesperson a conversation was assigned to them, but not the Admin who assigned it", async () => {
@@ -99,7 +137,7 @@ describe("notifier", () => {
         "https://push.example.test/expired": { ok: false, statusCode: 404, message: "Not found" },
       },
     )
-    const result = await notifier.handoff(conversation("sales-1"), "Needs help")
+    const result = await notifier.handoff(conversation("sales-1"))
     expect(push.targets.map((t) => t.id)).toEqual(["ok"])
     expect(result.delivered).toBe(1)
     expect(events).toEqual([])
@@ -110,7 +148,7 @@ describe("notifier", () => {
       { targets: [device("phone", "sales-1")] },
       { "https://push.example.test/phone": { ok: false, statusCode: 500, message: "Push service error" } },
     )
-    const result = await notifier.handoff(conversation("sales-1"), "Needs help")
+    const result = await notifier.handoff(conversation("sales-1"))
     expect(result.delivered).toBe(0)
     expect(push.failures).toEqual({ phone: 1 })
     expect(push.targets).toHaveLength(1)
@@ -124,14 +162,14 @@ describe("notifier", () => {
     push.store.subscriptionsFor = async () => {
       throw new Error("database is down")
     }
-    await expect(notifier.handoff(conversation("sales-1"), "Needs help")).resolves.toMatchObject({ delivered: 0 })
+    await expect(notifier.handoff(conversation("sales-1"))).resolves.toMatchObject({ delivered: 0 })
     expect(events[0]).toMatchObject({ type: "push_failed", needsReview: true })
     expect(events[0].summary).toContain("database is down")
   })
 
   it("does nothing, and logs nothing, when the recipient has no devices", async () => {
     const { notifier, sent, events } = setup()
-    expect(await notifier.handoff(conversation("sales-1"), "Needs help")).toEqual({ recipients: 1, devices: 0, delivered: 0 })
+    expect(await notifier.handoff(conversation("sales-1"))).toEqual({ recipients: 1, devices: 0, delivered: 0 })
     expect(sent).toEqual([])
     expect(events).toEqual([])
   })

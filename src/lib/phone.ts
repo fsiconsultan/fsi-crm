@@ -44,11 +44,18 @@ export type LeadMatch<T extends PhoneLead> =
   | { kind: "unique"; lead: T }
   | { kind: "ambiguous"; leads: T[] }
 
+// A WhatsApp id (Meta's wa_id) is always country code first, with no "+":
+// "819012345678" is Japanese, never an Indonesian "8..." mobile. Reading it as
+// if a "+" were there keeps the local rule away from it.
+export function normalizeWaId(waId: string): string | null {
+  return normalizePhone(`+${waId.replace(/^\s*\+/, "")}`)
+}
+
 // Finds the lead a WhatsApp number belongs to. When several leads share the
 // number it says so and returns all of them; the caller logs that for a person
 // to resolve. It never picks one silently.
-export function matchLeadByPhone<T extends PhoneLead>(leads: T[], phone: string): LeadMatch<T> {
-  const target = normalizePhone(phone)
+export function matchLeadByPhone<T extends PhoneLead>(leads: T[], waId: string): LeadMatch<T> {
+  const target = normalizeWaId(waId)
   if (!target) return { kind: "none" }
 
   const matches = leads.filter((lead) => (lead.phone_wa ?? normalizePhone(lead.phone)) === target)

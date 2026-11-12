@@ -15,19 +15,12 @@ export type NotifyResult = { recipients: number; devices: number; delivered: num
 
 export interface Notifier {
   // The AI asked for a person: the assigned salesperson, or every Admin when nobody is assigned.
-  handoff(conversation: NoticeConversation, reason: string): Promise<NotifyResult>
+  handoff(conversation: NoticeConversation): Promise<NotifyResult>
   // A conversation was assigned or reassigned to someone. actorId is null for automatic rules.
   assigned(conversation: NoticeConversation, toSalesId: string, actorId: string | null): Promise<NotifyResult>
 }
 
 const GONE = new Set([404, 410])
-const BODY_LIMIT = 120
-
-function clip(text: string) {
-  const flat = text.replace(/\s+/g, " ").trim()
-  return flat.length > BODY_LIMIT ? `${flat.slice(0, BODY_LIMIT - 3)}...` : flat
-}
-
 function title(conversation: NoticeConversation) {
   return conversation.profile_name?.trim() || formatPhone(conversation.wa_id)
 }
@@ -66,8 +59,19 @@ export function createNotifier(deps: {
       result.devices = targets.length
       const failures: string[] = []
 
-      for (const target of targets) {
-        const outcome = await sender.send(target, payload)
+      // All devices at once, so one slow push service delays nobody else.
+      const outcomes = await Promise.all(
+        targets.map((target) =>
+          sender.send(target, payload).catch((error: unknown) => ({
+            ok: false as const,
+            statusCode: null,
+            message: error instanceof Error ? error.message : "Unknown error",
+          })),
+        ),
+      )
+
+      for (const [i, outcome] of outcomes.entries()) {
+        const target = targets[i]
         if (outcome.ok) {
           result.delivered++
           await store.markSuccess(target.id, deps.now().toISOString())
@@ -105,7 +109,7 @@ export function createNotifier(deps: {
   }
 
   return {
-    async handoff(conversation, reason) {
+    async handoff(conversation) {
       let adminIds: string[] = []
       if (!conversation.assigned_sales_id) {
         try {
@@ -128,7 +132,9 @@ export function createNotifier(deps: {
         recipients,
         {
           title: title(conversation),
-          body: clip(`Needs a person: ${reason}`),
+          // Fixed text: the AI's reason can hold customer details, and a lock
+          // screen is public. The reason is in the inbox.
+          body: "Needs a person to take over.",
           url: `/inbox/${conversation.id}`,
           tag: `conversation-${conversation.id}`,
         },

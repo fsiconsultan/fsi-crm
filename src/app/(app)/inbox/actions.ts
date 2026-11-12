@@ -8,6 +8,7 @@ import { createAdminClient } from "@/lib/whatsapp/admin-client"
 import { cloudApiFromEnv } from "@/lib/whatsapp/cloud-api"
 import { inboxClient, reengageTemplate } from "@/lib/whatsapp/inbox"
 import { sendAndRecord, type OutboundContent } from "@/lib/whatsapp/outbound"
+import { safeLog } from "@/lib/whatsapp/store"
 import { createSupabaseStore } from "@/lib/whatsapp/supabase-store"
 
 export type ActionState = { error: string | null; ok?: boolean }
@@ -120,8 +121,20 @@ export async function assignConversation(_prev: ActionState, formData: FormData)
       const admin = createAdminClient()
       const notifier = admin ? notifierFromEnv(admin) : null
       if (!admin || !notifier) return
-      const { data } = await admin.from("wa_conversations").select("*").eq("id", conversationId).maybeSingle()
-      if (data) await notifier.assigned(data, salesId, profile.id)
+      try {
+        const { data, error } = await admin.from("wa_conversations").select("*").eq("id", conversationId).maybeSingle()
+        if (error || !data) throw new Error(error?.message ?? "the conversation could not be read")
+        await notifier.assigned(data, salesId, profile.id)
+      } catch (error) {
+        await safeLog(createSupabaseStore(admin), {
+          type: "push_failed",
+          conversationId,
+          severity: "warning",
+          needsReview: true,
+          summary: `The phone notification for this assignment was not sent: ${error instanceof Error ? error.message : "unknown error"}`,
+          actorSalesId: profile.id,
+        })
+      }
     })
   }
 

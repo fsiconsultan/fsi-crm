@@ -1,12 +1,12 @@
 import type { PushPayload, PushSender, PushStore, PushTarget, SendOutcome } from "../types"
 
-export function memoryPushStore(seed: { targets?: PushTarget[]; adminIds?: string[] } = {}) {
+export function memoryPushStore(seed: { targets?: PushTarget[]; adminIds?: string[]; inactive?: string[] } = {}) {
   const targets = [...(seed.targets ?? [])]
   const successes: string[] = []
   const failures: Record<string, number> = {}
   const store: PushStore = {
     async subscriptionsFor(ids) {
-      return targets.filter((t) => ids.includes(t.salesUserId))
+      return targets.filter((t) => ids.includes(t.salesUserId) && !seed.inactive?.includes(t.salesUserId))
     },
     async activeAdminIds() {
       return seed.adminIds ?? []

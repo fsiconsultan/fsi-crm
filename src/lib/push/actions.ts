@@ -33,6 +33,17 @@ export async function saveDevice(subscription: Keys, userAgent: string): Promise
   return { ok: true }
 }
 
+// True when this browser's subscription is saved for the signed-in user. A
+// device can stay subscribed in the browser after its row is gone (cleanup,
+// another user took the device over), and must then show as off.
+export async function isDeviceMine(endpoint: string): Promise<boolean> {
+  await getProfile()
+  const db = await inboxClient()
+  // RLS returns only the signed-in user's own rows.
+  const { data, error } = await db.from("push_subscriptions").select("id").eq("endpoint", endpoint).limit(1)
+  return !error && (data ?? []).length > 0
+}
+
 export async function removeDevice(endpoint: string): Promise<DeviceResult> {
   await getProfile()
   const db = await inboxClient()

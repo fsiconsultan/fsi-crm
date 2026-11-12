@@ -59,8 +59,16 @@ begin
     if v_user is null then
         raise exception 'No CRM profile for this user';
     end if;
-    if coalesce(p_endpoint, '') !~ '^https://' or coalesce(p_p256dh, '') = '' or coalesce(p_auth, '') = '' then
+    if exists (select 1 from public.sales_users where id = v_user and status = 'Inactive') then
+        raise exception 'This account is inactive';
+    end if;
+    if coalesce(p_p256dh, '') = '' or coalesce(p_auth, '') = '' then
         raise exception 'Incomplete push subscription';
+    end if;
+    -- Only the browsers' own push services. The server posts to this URL, so an
+    -- arbitrary address would let a user point it at any host.
+    if coalesce(p_endpoint, '') !~ '^https://(fcm\.googleapis\.com|updates\.push\.services\.mozilla\.com|([a-z0-9-]+\.)*push\.apple\.com|([a-z0-9-]+\.)*notify\.windows\.com)/' then
+        raise exception 'Not a recognised push service';
     end if;
 
     insert into public.push_subscriptions (sales_user_id, endpoint, p256dh, auth, user_agent)

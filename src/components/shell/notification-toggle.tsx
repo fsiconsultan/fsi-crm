@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Bell, BellOff } from "lucide-react"
-import { removeDevice, saveDevice } from "@/lib/push/actions"
+import { isDeviceMine, removeDevice, saveDevice } from "@/lib/push/actions"
 
 const PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
 
@@ -36,7 +36,9 @@ async function readState(): Promise<State> {
   if (Notification.permission === "denied") return "blocked"
   const registration = await navigator.serviceWorker.getRegistration("/")
   const subscription = await registration?.pushManager.getSubscription()
-  return subscription && Notification.permission === "granted" ? "on" : "off"
+  if (!subscription || Notification.permission !== "granted") return "off"
+  // Only "on" when the server will actually notify this user on this device.
+  return (await isDeviceMine(subscription.endpoint)) ? "on" : "off"
 }
 
 const NOTE: Partial<Record<State, string>> = {
@@ -70,6 +72,7 @@ export function NotificationToggle() {
   async function turnOn() {
     setBusy(true)
     setError(null)
+    let subscription: PushSubscription | null = null
     try {
       const permission = await Notification.requestPermission()
       if (permission !== "granted") {
@@ -78,20 +81,22 @@ export function NotificationToggle() {
       }
       const registration = await navigator.serviceWorker.register("/sw.js", { scope: "/" })
       await navigator.serviceWorker.ready
-      const subscription =
+      subscription =
         (await registration.pushManager.getSubscription()) ??
         (await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(PUBLIC_KEY!) }))
       const saved = await saveDevice(subscription.toJSON(), navigator.userAgent)
       if (!saved.ok) {
-        await subscription.unsubscribe()
+        await subscription.unsubscribe().catch(() => undefined)
         setError(saved.error)
         setState("off")
         return
       }
       setState("on")
     } catch {
-      setError("Notifications could not be turned on in this browser.")
-      setState(await readState().catch(() => "off" as const))
+      // Nothing is saved, so do not leave the browser subscribed or show "on".
+      await subscription?.unsubscribe().catch(() => undefined)
+      setError("Notifications could not be turned on. Check the connection and try again.")
+      setState(Notification.permission === "denied" ? "blocked" : "off")
     } finally {
       setBusy(false)
     }
@@ -109,7 +114,9 @@ export function NotificationToggle() {
           setError(removed.error)
           return
         }
-        await subscription.unsubscribe()
+        // The server will not notify this device any more, so it is off even
+        // if the browser fails to drop its subscription.
+        await subscription.unsubscribe().catch(() => undefined)
       }
       setState("off")
     } catch {

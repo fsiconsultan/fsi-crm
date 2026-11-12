@@ -66,6 +66,20 @@ describe("matchLeadByPhone", () => {
     expect(matchLeadByPhone(leads, "")).toEqual({ kind: "none" })
   })
 
+  it("matches a foreign lead when that customer writes in on WhatsApp", () => {
+    const foreign = [
+      { id: 21, phone: "+81 90 1234 5678" },
+      { id: 22, phone: "+86 138 0013 8000", phone_wa: normalizePhone("+86 138 0013 8000") },
+    ]
+    // Meta sends the number as digits only, country code first.
+    expect(matchLeadByPhone(foreign, "819012345678")).toEqual({ kind: "unique", lead: foreign[0] })
+    expect(matchLeadByPhone(foreign, "8613800138000")).toEqual({ kind: "unique", lead: foreign[1] })
+  })
+
+  it("still matches Indonesian numbers that WhatsApp sends as 62...", () => {
+    expect(matchLeadByPhone([{ id: 5, phone: "0812-3456-7890" }], "6281234567890")).toMatchObject({ kind: "unique" })
+  })
+
   it("prefers the stored phone_wa over re-reading phone", () => {
     const stored = [{ id: 9, phone: "see notes", phone_wa: "6281234567890" }]
     expect(matchLeadByPhone(stored, "+62 812 3456 7890")).toEqual({ kind: "unique", lead: stored[0] })
