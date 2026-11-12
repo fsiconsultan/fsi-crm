@@ -26,3 +26,6 @@ Follow `DESIGN.md` exactly (tokens in `src/app/globals.css`) and the antislop sk
 - Integration branch: `rebuild/nextjs` (draft PR into `main`). Each phase works on its own branch cut from it and opens a PR back into `rebuild/nextjs`.
 - Before pushing: `pnpm exec tsc --noEmit && pnpm lint && pnpm build`.
 - Dev server: `pnpm dev --port 3210`.
+
+## Mobile
+Salespeople use the CRM on their phones, including taking over WhatsApp chats from the AI. Build every screen mobile-first with the `antislop-layoutmobile` skill: no sideways-scrolling tables (use rows or cards), 16px inputs, 44px tap targets, sticky primary actions, safe-area insets, and a check at 375x812 in both themes before pushing.
