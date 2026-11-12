@@ -1,5 +1,6 @@
 import { safeLog, type WaStore } from "@/lib/whatsapp/store"
 import type { Conversation, Message } from "@/lib/whatsapp/types"
+import type { Notifier } from "@/lib/push/notify"
 import type { ChatMessage, ChatModel } from "./model"
 import { buildSystemPrompt } from "./prompt"
 import { cleanAnswers } from "./qualification"
@@ -32,9 +33,16 @@ export async function runAgent(input: {
   model: ChatModel
   conversation: Conversation
   now: Date
+  notifier?: Notifier | null
 }): Promise<AgentResult> {
   const { store, model, now } = input
-  const ctx: ToolContext = { store, conversation: input.conversation, now, handoffRequested: false }
+  const ctx: ToolContext = {
+    store,
+    conversation: input.conversation,
+    now,
+    handoffRequested: false,
+    notifier: input.notifier,
+  }
 
   const [history, qualification] = await Promise.all([
     store.listMessages(ctx.conversation.id, HISTORY_LIMIT),

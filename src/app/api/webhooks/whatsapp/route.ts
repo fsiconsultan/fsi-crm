@@ -1,6 +1,7 @@
 import { after } from "next/server"
 import { openAiModelFromEnv } from "@/lib/ai/openai-model"
 import { answerInbound } from "@/lib/ai/reply"
+import { notifierFromEnv } from "@/lib/push/server"
 import { createAdminClient } from "@/lib/whatsapp/admin-client"
 import { cloudApiFromEnv } from "@/lib/whatsapp/cloud-api"
 import { createSupabaseStore } from "@/lib/whatsapp/supabase-store"
@@ -34,10 +35,17 @@ export async function POST(request: Request) {
     now: new Date(),
   })
 
-  if (store && pending.length > 0) {
+  if (admin && store && pending.length > 0) {
     after(async () => {
-      const deps = { store, api: cloudApiFromEnv(), model: openAiModelFromEnv(), now: () => new Date() }
-      for (const item of pending) await answerInbound(item, deps)
+      const notifier = notifierFromEnv(admin)
+      const deps = { store, api: cloudApiFromEnv(), model: openAiModelFromEnv(), now: () => new Date(), notifier }
+      for (const item of pending) {
+        if (notifier && item.assignedTo) {
+          const conversation = await store.getConversation(item.conversationId).catch(() => null)
+          if (conversation) await notifier.assigned(conversation, item.assignedTo, null)
+        }
+        await answerInbound(item, deps)
+      }
     })
   }
 

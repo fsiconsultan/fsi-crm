@@ -9,6 +9,7 @@ import type { Role } from "@/lib/auth"
 import { cn } from "@/lib/cn"
 import { logout } from "@/app/login/actions"
 import { navFor } from "./nav"
+import { NotificationToggle } from "./notification-toggle"
 import { ThemeToggle } from "./theme-toggle"
 
 type SidebarUser = { name: string; role: Role; photoUrl: string | null }
@@ -78,6 +79,7 @@ function SidebarBody({ user, onNavigate }: { user: SidebarUser; onNavigate?: () 
       </nav>
 
       <div className="flex flex-col gap-1">
+        <NotificationToggle />
         <ThemeToggle />
         <form action={logout}>
           <button
