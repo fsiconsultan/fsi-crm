@@ -12,12 +12,18 @@ export function KpiCard({ data, period, salesId }: { data: Dashboard; period: Pe
   const closed = now + data.noDeals.now
   const inPeriod = { sales: salesId, sfrom: period.from, sto: period.to }
   const before = `the ${period.days} days before`
+  const { deals: undatedDeals, noDeals: undatedNoDeals } = data.closedUndated
 
   const rows = [
     {
       label: "Leads added",
       value: n(data.added.now),
-      detail: `${n(data.added.previous)} in ${before}`,
+      // No comparison that reaches back to the bulk import of earlier leads.
+      detail: data.added.includesImport
+        ? "Includes the import of leads from before this CRM"
+        : data.added.previous === null
+          ? `No comparison: ${before} include the import of earlier leads`
+          : `${n(data.added.previous)} in ${before}`,
       href: leadsHref({ sales: salesId, from: period.from, to: period.to, sort: "newest" }),
     },
     {
@@ -26,6 +32,18 @@ export function KpiCard({ data, period, salesId }: { data: Dashboard; period: Pe
       detail: null,
       href: leadsHref({ ...inPeriod, status: "No Deal" }),
     },
+    // Closed leads with no status date fall in no period; say how many instead of hiding them.
+    ...[
+      { label: "Deals with no date", count: undatedDeals, status: "Deal" as const },
+      { label: "No deals with no date", count: undatedNoDeals, status: "No Deal" as const },
+    ]
+      .filter((row) => row.count > 0)
+      .map((row) => ({
+        label: row.label,
+        value: n(row.count),
+        detail: "Not counted in any period",
+        href: leadsHref({ sales: salesId, status: row.status, view: "undated" }),
+      })),
   ]
 
   return (

@@ -17,6 +17,7 @@ export const metadata = { title: "Leads" }
 const NOTICES: Record<string, string> = {
   created: "The lead was added.",
   updated: "Your changes to the lead were saved.",
+  unchanged: "Nothing was changed, so the lead was not saved.",
 }
 
 export default async function LeadsPage({ searchParams }: PageProps<"/leads">) {

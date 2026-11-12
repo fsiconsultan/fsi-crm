@@ -1,32 +1,42 @@
 "use client"
 
 import Link from "next/link"
-import { useActionState } from "react"
-import { saveLead, type LeadField, type LeadFormState } from "@/app/(app)/leads/actions"
+import { useActionState, useEffect, useRef } from "react"
+import { createLead, editLead, type LeadField, type LeadFormState } from "@/app/(app)/leads/actions"
 import { Button, buttonClass } from "@/components/ui/button"
 import { controlClass } from "@/components/ui/control"
 import { Field } from "@/components/ui/field"
 import type { SalesUser } from "@/lib/data/leads"
-import { LEAD_STATUSES, LEAD_TYPES, NO_STATUS_LABEL } from "@/lib/leads/status"
+import { LEAD_STATUSES, LEAD_TYPES, NO_STATUS_LABEL, isLeadStatus } from "@/lib/leads/status"
 
 export function LeadForm({
   leadId,
+  loadedUpdatedAt,
   initial,
   salesUsers,
   back,
 }: {
   leadId: number | null
+  /** The row's updated_at when the page loaded; the edit is refused if it has changed since. */
+  loadedUpdatedAt: string
   initial: Record<LeadField, string>
   /** Only Admin assigns leads; null hides the field and the lead stays with its owner. */
   salesUsers: SalesUser[] | null
   back: string
 }) {
-  const [state, action, pending] = useActionState<LeadFormState, FormData>(saveLead, {
-    message: null,
-    errors: {},
-    values: initial,
-  })
+  const [state, action, pending] = useActionState<LeadFormState, FormData>(
+    leadId ? editLead.bind(null, leadId, loadedUpdatedAt) : createLead,
+    { message: null, errors: {}, values: initial },
+  )
   const { values, errors } = state
+
+  // `pending` only turns true after React re-renders, so two quick taps on
+  // Save could both submit and create the lead twice. This flag is set in the
+  // same tick as the first submit and cleared when its answer comes back.
+  const submitting = useRef(false)
+  useEffect(() => {
+    submitting.current = false
+  }, [state])
 
   // Shared attributes for one field. Selects also get a key on their Field so
   // React applies the value the server echoes back after a failed save.
@@ -40,8 +50,15 @@ export function LeadForm({
   })
 
   return (
-    <form action={action} noValidate className="flex flex-col gap-6">
-      {leadId ? <input type="hidden" name="id" value={leadId} /> : null}
+    <form
+      action={action}
+      onSubmit={(event) => {
+        if (submitting.current) event.preventDefault()
+        else submitting.current = true
+      }}
+      noValidate
+      className="flex flex-col gap-6"
+    >
       <input type="hidden" name="back" value={back} />
 
       {state.message ? (
@@ -82,11 +99,16 @@ export function LeadForm({
           key={`status:${values.status}`}
           htmlFor="status"
           label="Status"
-          hint={leadId ? "Changing it restarts the days-in-status count." : undefined}
+          hint={leadId ? "Changing it restarts the days-in-status count. A lead cannot go back to No status." : undefined}
           error={errors.status}
         >
           <select {...control("status")}>
+            {/* A stored value that is not in today's list stays selectable, so saving
+                other fields never swaps it for the first status in the list. */}
             {leadId && !initial.status ? <option value="">{NO_STATUS_LABEL} (leave as it is)</option> : null}
+            {leadId && initial.status && !isLeadStatus(initial.status) ? (
+              <option value={initial.status}>{initial.status} (leave as it is)</option>
+            ) : null}
             {LEAD_STATUSES.map((status) => (
               <option key={status} value={status}>
                 {status}

@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { CalendarClock, ChevronRight, CircleDashed, Hourglass, type LucideIcon } from "lucide-react"
+import { CalendarClock, CalendarX, ChevronRight, CircleDashed, Hourglass, type LucideIcon } from "lucide-react"
 import { Card, CardHeader } from "@/components/ui/card"
 import { EmptyState } from "@/components/ui/states"
 import { cn } from "@/lib/cn"
@@ -30,6 +30,15 @@ export function NeedsYouCard({ data, salesId }: { data: Dashboard; salesId: stri
       title: `${plural(data.stale, "lead", "leads")} stuck for more than ${STALE_DAYS} days`,
       detail: "Open leads whose status has not changed in that time, longest first.",
       href: leadsHref({ view: "stale", sales: salesId, sort: "longest" }),
+    })
+  }
+  if (data.undated > 0) {
+    items.push({
+      icon: CalendarX,
+      tint: "bg-surface-sunken text-ink",
+      title: plural(data.undated, "lead has a status but no date", "leads have a status but no date"),
+      detail: "Their time in status is unknown, so they are never counted as stuck.",
+      href: leadsHref({ view: "undated", sales: salesId }),
     })
   }
   if (data.noStatus > 0) {
