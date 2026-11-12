@@ -67,10 +67,37 @@ async function openConversation(
   return { conversation, assignedTo: assignment?.salesId ?? null }
 }
 
+// Moves the conversation's "last message" fields forward only, so a late,
+// older delivery cannot rewind the 24-hour window or the preview. Marks the
+// conversation as waiting for the AI when the AI is answering.
+async function touchConversation(store: WaStore, conversationId: string, message: InboundMessage, now: Date) {
+  const fresh = await store.getConversation(conversationId)
+  if (!fresh) return
+  const at = message.timestamp ?? now.toISOString()
+  const later = (value: string | null) => !value || new Date(at).getTime() >= new Date(value).getTime()
+
+  await store.updateConversation(conversationId, {
+    ...(later(fresh.last_inbound_at) ? { last_inbound_at: at } : {}),
+    ...(later(fresh.last_message_at)
+      ? { last_message_at: at, last_message_preview: (message.body ?? `[${message.messageType}]`).slice(0, 140) }
+      : {}),
+    ...(message.profileName ? { profile_name: message.profileName } : {}),
+    ...(fresh.mode === "bot" && !fresh.ai_pending_since ? { ai_pending_since: now.toISOString() } : {}),
+  })
+}
+
 async function storeInbound(store: WaStore, message: InboundMessage, now: Date): Promise<PendingReply | null> {
   // Meta retries a delivery until it gets a 200, so the same message can arrive
-  // more than once. Check first, and rely on the unique index for races.
-  if (await store.getMessageByWaId(message.waMessageId)) return null
+  // again. If an earlier attempt stored it and then failed, finish that work
+  // here (the conversation update is idempotent) instead of dropping it.
+  const existing = await store.getMessageByWaId(message.waMessageId)
+  if (existing) {
+    if (existing.direction !== "inbound") return null
+    await touchConversation(store, existing.conversation_id, message, now)
+    // Already answered (or a person replied): nothing more to queue.
+    if (await store.hasOutboundAfter(existing.conversation_id, existing.created_at)) return null
+    return { conversationId: existing.conversation_id, messageId: existing.id, assignedTo: null }
+  }
 
   const { conversation, assignedTo } = await openConversation(store, message)
 
@@ -84,15 +111,10 @@ async function storeInbound(store: WaStore, message: InboundMessage, now: Date):
     status: "received",
     waTimestamp: message.timestamp,
   })
+  // Another delivery stored it a moment ago; that one queues the reply.
   if (!stored) return null
 
-  const at = message.timestamp ?? now.toISOString()
-  await store.updateConversation(conversation.id, {
-    last_inbound_at: at,
-    last_message_at: at,
-    last_message_preview: (message.body ?? `[${message.messageType}]`).slice(0, 140),
-    ...(message.profileName ? { profile_name: message.profileName } : {}),
-  })
+  await touchConversation(store, conversation.id, message, now)
 
   if (message.messageType !== "text") {
     await safeLog(store, {
@@ -107,12 +129,24 @@ async function storeInbound(store: WaStore, message: InboundMessage, now: Date):
   return { conversationId: conversation.id, messageId: stored.id, assignedTo }
 }
 
-const RANK: Record<MessageStatus, number> = { received: 0, sent: 1, delivered: 2, read: 3, failed: 1 }
+const RANK: Record<MessageStatus, number> = { received: 0, pending: 0, sent: 1, delivered: 2, read: 3, failed: 1 }
 
-async function applyStatus(store: WaStore, update: StatusUpdate) {
+// Applies a delivery update to an outbound message. When the message's Meta id
+// is not stored yet (Meta can answer "failed" before the send is recorded), the
+// update is held and applied by sendAndRecord once the id is written.
+export async function applyStatus(store: WaStore, update: StatusUpdate) {
   const message = await store.getMessageByWaId(update.waMessageId)
-  // A status for a message we did not send from this app (or already ahead of it): nothing to do.
-  if (!message || message.direction !== "outbound") return
+  if (!message) {
+    await store.holdStatus({
+      waMessageId: update.waMessageId,
+      status: update.status,
+      errorCode: update.errorCode,
+      errorMessage: update.errorMessage,
+    })
+    return
+  }
+  // A status for a customer message, or one already ahead of this update: nothing to do.
+  if (message.direction !== "outbound") return
   const current = message.status as MessageStatus
   if (current === "failed" || current === update.status || RANK[update.status] < RANK[current]) return
   if (update.status === "failed" && (current === "delivered" || current === "read")) return

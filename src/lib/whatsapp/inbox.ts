@@ -67,7 +67,7 @@ export type InboxData = { conversations: ConversationSummary[]; reviewCount: num
 export async function loadInbox(viewerId: string): Promise<Loaded<InboxData>> {
   const db = await inboxClient()
 
-  const [list, review] = await Promise.all([
+  const [list, review, unanswered] = await Promise.all([
     db
       .from("wa_conversations")
       .select(SUMMARY_COLUMNS)
@@ -78,16 +78,18 @@ export async function loadInbox(viewerId: string): Promise<Loaded<InboxData>> {
       .select("id", { count: "exact", head: true })
       .eq("needs_review", true)
       .is("resolved_at", null),
+    unansweredQuery(db),
   ])
 
   if (list.error) return failed(list.error)
   if (review.error) return failed(review.error)
+  if (unanswered.error) return failed(unanswered.error)
 
   return {
     state: "ready",
     data: {
       conversations: (list.data ?? []).map((row) => summarize(row as unknown as Row, viewerId)).sort(byAttention),
-      reviewCount: review.count ?? 0,
+      reviewCount: (review.count ?? 0) + (unanswered.data ?? []).length,
     },
   }
 }
@@ -174,18 +176,45 @@ export type ReviewEvent = AutomationEvent & {
   conversation: { id: string; wa_id: string; profile_name: string | null } | null
 }
 
-export async function loadReview(): Promise<Loaded<ReviewEvent[]>> {
-  const db = await inboxClient()
-  const { data, error } = await db
-    .from("automation_events")
-    .select("*, conversation:wa_conversations(id, wa_id, profile_name)")
-    .eq("needs_review", true)
-    .is("resolved_at", null)
-    .order("created_at", { ascending: false })
-    .limit(200)
+// A customer message the AI has not finished answering after this long means a
+// run was cut off (timeout, platform limit) without logging anything.
+const UNANSWERED_AFTER_MS = 3 * 60 * 1000
 
-  if (error) return failed(error)
-  return { state: "ready", data: (data ?? []) as unknown as ReviewEvent[] }
+export type Unanswered = { id: string; wa_id: string; profile_name: string | null; ai_pending_since: string }
+export type ReviewData = { events: ReviewEvent[]; unanswered: Unanswered[] }
+
+function unansweredQuery(db: Awaited<ReturnType<typeof inboxClient>>) {
+  return db
+    .from("wa_conversations")
+    .select("id, wa_id, profile_name, ai_pending_since")
+    .eq("mode", "bot")
+    .lt("ai_pending_since", new Date(Date.now() - UNANSWERED_AFTER_MS).toISOString())
+    .order("ai_pending_since", { ascending: true })
+    .limit(100)
+}
+
+export async function loadReview(): Promise<Loaded<ReviewData>> {
+  const db = await inboxClient()
+  const [events, unanswered] = await Promise.all([
+    db
+      .from("automation_events")
+      .select("*, conversation:wa_conversations(id, wa_id, profile_name)")
+      .eq("needs_review", true)
+      .is("resolved_at", null)
+      .order("created_at", { ascending: false })
+      .limit(200),
+    unansweredQuery(db),
+  ])
+
+  if (events.error) return failed(events.error)
+  if (unanswered.error) return failed(unanswered.error)
+  return {
+    state: "ready",
+    data: {
+      events: (events.data ?? []) as unknown as ReviewEvent[],
+      unanswered: (unanswered.data ?? []) as Unanswered[],
+    },
+  }
 }
 
 export type Assignee = { id: string; name: string }

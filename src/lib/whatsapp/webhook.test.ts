@@ -10,7 +10,12 @@ import { handleDelivery, handleVerification } from "./webhook"
 const SECRET = "test-app-secret"
 const NOW = new Date("2026-11-12T03:00:00Z")
 
-function deliver(store: ReturnType<typeof createMemoryStore>["store"] | null, payload: unknown, signature?: string) {
+function deliver(
+  store: ReturnType<typeof createMemoryStore>["store"] | null,
+  payload: unknown,
+  signature?: string,
+  phoneNumberId?: string,
+) {
   const rawBody = JSON.stringify(payload)
   return handleDelivery({
     rawBody,
@@ -18,6 +23,7 @@ function deliver(store: ReturnType<typeof createMemoryStore>["store"] | null, pa
     appSecret: SECRET,
     store,
     now: NOW,
+    phoneNumberId,
   })
 }
 
@@ -72,15 +78,67 @@ describe("POST delivery", () => {
     ])
   })
 
-  it("is idempotent on Meta's message id: a retried delivery stores and queues nothing new", async () => {
+  it("is idempotent on Meta's message id: a retried delivery stores nothing new", async () => {
     const db = createMemoryStore()
-    await deliver(db.store, textMessage)
+    const first = await deliver(db.store, textMessage)
     const retry = await deliver(db.store, textMessage)
 
     expect(retry.status).toBe(200)
-    expect(retry.pending).toEqual([])
     expect(db.messages).toHaveLength(1)
     expect(db.conversations).toHaveLength(1)
+    // Not answered yet, so the retry queues the same message again (the AI run
+    // is claimed per conversation, so it is never answered twice).
+    expect(retry.pending).toEqual([{ ...first.pending[0], assignedTo: null }])
+  })
+
+  it("queues nothing on a retry once the message has been answered", async () => {
+    const db = createMemoryStore()
+    await deliver(db.store, textMessage)
+    await db.store.insertMessage({
+      conversationId: db.conversations[0].id,
+      direction: "outbound",
+      senderType: "bot",
+      body: "Halo!",
+      waMessageId: "wamid.BOT_1",
+      status: "sent",
+    })
+    expect((await deliver(db.store, textMessage)).pending).toEqual([])
+  })
+
+  it("finishes the conversation update on a retry when the first attempt failed half-way", async () => {
+    const db = createMemoryStore()
+    const update = db.store.updateConversation
+    db.store.updateConversation = async () => {
+      throw new Error("database is down")
+    }
+    expect((await deliver(db.store, textMessage)).status).toBe(500)
+    expect(db.conversations[0].last_inbound_at).toBeNull()
+
+    db.store.updateConversation = update
+    const retry = await deliver(db.store, textMessage)
+    expect(retry.status).toBe(200)
+    expect(db.conversations[0].last_inbound_at).not.toBeNull()
+    expect(retry.pending).toHaveLength(1)
+  })
+
+  it("never moves last_inbound_at or the preview backwards for a late, older message", async () => {
+    const db = createMemoryStore()
+    await deliver(db.store, textMessage)
+    const newer = db.conversations[0].last_inbound_at
+    const late = structuredClone(textMessage)
+    const message = late.entry[0].changes[0].value.messages[0]
+    message.id = "wamid.LATE_OLDER"
+    message.timestamp = String(Number(message.timestamp) - 3600)
+    message.text.body = "older message"
+    await deliver(db.store, late)
+    expect(db.conversations[0].last_inbound_at).toBe(newer)
+    expect(db.conversations[0].last_message_preview).not.toBe("older message")
+  })
+
+  it("marks the conversation as waiting for the AI when a message arrives in bot mode", async () => {
+    const db = createMemoryStore()
+    await deliver(db.store, textMessage)
+    expect(db.conversations[0].ai_pending_since).toBe(NOW.toISOString())
   })
 
   it("links the conversation to the one lead with that number and assigns its owner", async () => {
@@ -238,3 +296,39 @@ describe("status updates", () => {
     expect(db.events).toHaveLength(0)
   })
 })
+
+describe("which webhook changes are read", () => {
+  it("skips and logs a delivery for another phone number on the same Meta app", async () => {
+    const db = createMemoryStore()
+    const result = await deliver(db.store, textMessage, undefined, "OUR_NUMBER_ID")
+    expect(result.pending).toEqual([])
+    expect(db.messages).toHaveLength(0)
+    expect(db.events).toEqual([
+      expect.objectContaining({ type: "webhook_error", detail: { phone_number_ids: ["PHONE_NUMBER_ID_PLACEHOLDER"] } }),
+    ])
+  })
+
+  it("reads a delivery for our own phone number", async () => {
+    const db = createMemoryStore()
+    await deliver(db.store, textMessage, undefined, "PHONE_NUMBER_ID_PLACEHOLDER")
+    expect(db.messages).toHaveLength(1)
+  })
+
+  it("reads only 'messages' changes of a WhatsApp Business account", () => {
+    const otherField = structuredClone(textMessage)
+    otherField.entry[0].changes[0].field = "message_template_status_update"
+    expect(parseWebhook(otherField)).toEqual([])
+
+    const otherObject = { ...structuredClone(textMessage), object: "page" }
+    expect(parseWebhook(otherObject)).toEqual([])
+  })
+})
+
+describe("delivery updates that arrive before the send is recorded", () => {
+  it("holds an update for an unknown message id instead of dropping it", async () => {
+    const db = createMemoryStore()
+    await deliver(db.store, statuses)
+    expect(db.held.map((h) => h.waMessageId)).toEqual(["wamid.TEST_OUTBOUND_OK", "wamid.TEST_OUTBOUND_LATE"])
+  })
+})
+

@@ -20,6 +20,11 @@ export function isStatusEvent(value: unknown): value is StatusEvent {
   return typeof value === "string" && value in STATUS_RULES
 }
 
+function sameInstant(a: string | null, b: string | null) {
+  if (!a || !b) return false
+  return new Date(a).getTime() === new Date(b).getTime()
+}
+
 export type StatusOutcome =
   | { outcome: "changed"; from: string | null; to: string }
   | { outcome: "unchanged"; status: string }
@@ -69,8 +74,16 @@ export async function applyStatusEvent({ store, leadId, event, conversationId, n
 
   if (lead.status === rule.to) return { outcome: "unchanged", status: rule.to }
 
+  // The automation records the status it wrote and the exact time it wrote it.
+  // Both must still match: a person who moved the lead away and back to the
+  // same status, or saved it in the legacy app (which writes status_started_at
+  // as a date), changes the time.
   const lastAutomated = await store.lastAutomatedStatus(leadId)
-  if (lastAutomated === null || lastAutomated !== lead.status) {
+  if (
+    lastAutomated === null ||
+    lastAutomated.status !== lead.status ||
+    !sameInstant(lastAutomated.at, lead.status_started_at)
+  ) {
     return refuse(
       "status_change_refused",
       `The current status (${lead.status ?? "none"}) was set by a person, so it was left as it is.`,
@@ -84,9 +97,10 @@ export async function applyStatusEvent({ store, leadId, event, conversationId, n
     )
   }
 
+  const at = now.toISOString()
   let written: boolean
   try {
-    written = await store.updateLeadStatus(leadId, lead.status, rule.to, now.toISOString())
+    written = await store.updateLeadStatus(leadId, lead.status, rule.to, at)
   } catch {
     return refuse("status_change_failed", "The database rejected the update.")
   }
@@ -99,7 +113,7 @@ export async function applyStatusEvent({ store, leadId, event, conversationId, n
     conversationId,
     leadId,
     summary: `Lead #${leadId} moved from ${lead.status} to ${rule.to} (${event}).`,
-    detail: { event, from: lead.status, to: rule.to },
+    detail: { event, from: lead.status, to: rule.to, at },
   })
   return { outcome: "changed", from: lead.status, to: rule.to }
 }

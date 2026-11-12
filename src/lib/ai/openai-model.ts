@@ -2,6 +2,8 @@ import "server-only"
 import OpenAI from "openai"
 import type { ChatMessage, ChatModel } from "./model"
 
+const MODEL_TIMEOUT_MS = 15_000
+
 function toOpenAi(message: ChatMessage): OpenAI.Chat.Completions.ChatCompletionMessageParam {
   switch (message.role) {
     case "system":
@@ -33,18 +35,23 @@ export function openAiModelFromEnv(): ChatModel | null {
   const model = process.env.OPENAI_MODEL
   if (!apiKey || !model) return null
 
-  const client = new OpenAI({ apiKey })
+  // The SDK default is a 10-minute timeout with 2 retries, far past what one
+  // serverless run may take. Each call also gets what is left of the run.
+  const client = new OpenAI({ apiKey, timeout: MODEL_TIMEOUT_MS, maxRetries: 1 })
 
   return {
-    async complete({ messages, tools }) {
-      const completion = await client.chat.completions.create({
-        model,
-        messages: messages.map(toOpenAi),
-        tools: tools.map((tool) => ({
-          type: "function" as const,
-          function: { name: tool.name, description: tool.description, parameters: tool.parameters },
-        })),
-      })
+    async complete({ messages, tools, timeoutMs }) {
+      const completion = await client.chat.completions.create(
+        {
+          model,
+          messages: messages.map(toOpenAi),
+          tools: tools.map((tool) => ({
+            type: "function" as const,
+            function: { name: tool.name, description: tool.description, parameters: tool.parameters },
+          })),
+        },
+        { timeout: Math.min(MODEL_TIMEOUT_MS, timeoutMs ?? MODEL_TIMEOUT_MS) },
+      )
 
       const reply = completion.choices[0]?.message
       return {

@@ -5,12 +5,12 @@ type Step = Partial<ChatReply> | ((messages: ChatMessage[]) => Partial<ChatReply
 // A scripted ChatModel for tests: each call returns the next step and records
 // what the agent sent, so tests can assert on the prompt and tool results.
 export function fakeModel(steps: Step[]) {
-  const calls: Array<{ messages: ChatMessage[]; tools: ToolSpec[] }> = []
+  const calls: Array<{ messages: ChatMessage[]; tools: ToolSpec[]; timeoutMs?: number }> = []
   let index = 0
 
   const model: ChatModel = {
     async complete(input) {
-      calls.push({ messages: [...input.messages], tools: input.tools })
+      calls.push({ messages: [...input.messages], tools: input.tools, timeoutMs: input.timeoutMs })
       const step = steps[index++]
       if (!step) throw new Error("fakeModel ran out of scripted steps")
       const reply = typeof step === "function" ? await step(input.messages) : step

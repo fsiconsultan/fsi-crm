@@ -8,7 +8,17 @@ import { TOOLS, type Notice, type ToolContext } from "./tools"
 const HISTORY_LIMIT = 30
 const MAX_ROUNDS = 6
 
-export type AgentResult = { reply: string | null; handoffRequested: boolean }
+// stopped: staff took over during the run, so it ended without a reply.
+export type AgentResult = { reply: string | null; handoffRequested: boolean; stopped: boolean }
+
+// Leave room after the last model call for the send and the bookkeeping.
+const MIN_MODEL_TIME_MS = 2_000
+
+export class OutOfTimeError extends Error {
+  constructor() {
+    super("The assistant ran out of time before it could answer.")
+  }
+}
 
 function toChat(message: Message): ChatMessage | null {
   if (message.direction === "inbound") {
@@ -34,6 +44,8 @@ export async function runAgent(input: {
   now: Date
   // Collects phone notifications for the caller to send after the reply.
   notices?: Notice[]
+  // Epoch ms by which the run must be done (well under the function's maxDuration).
+  deadline: number
 }): Promise<AgentResult> {
   const { store, model, now } = input
   const ctx: ToolContext = {
@@ -64,12 +76,22 @@ export async function runAgent(input: {
 
   const specs = TOOLS.map(({ name, description, parameters }) => ({ name, description, parameters }))
 
+  // A person took over during the run: stop before doing anything else. The AI's
+  // own handoff also sets mode human; that only counts once someone is named.
+  const takenOver = async () => {
+    const current = await store.getConversation(ctx.conversation.id)
+    return !!current && current.mode === "human" && (!ctx.handoffRequested || current.taken_over_by !== null)
+  }
+
   for (let round = 0; round < MAX_ROUNDS; round++) {
-    const reply = await model.complete({ messages, tools: specs })
+    const left = input.deadline - Date.now()
+    if (left < MIN_MODEL_TIME_MS) throw new OutOfTimeError()
+    const reply = await model.complete({ messages, tools: specs, timeoutMs: left - MIN_MODEL_TIME_MS / 2 })
 
     if (reply.toolCalls.length === 0) {
-      return { reply: reply.content?.trim() || null, handoffRequested: ctx.handoffRequested }
+      return { reply: reply.content?.trim() || null, handoffRequested: ctx.handoffRequested, stopped: false }
     }
+    if (await takenOver()) return { reply: null, handoffRequested: ctx.handoffRequested, stopped: true }
 
     messages.push({ role: "assistant", content: reply.content, toolCalls: reply.toolCalls })
 

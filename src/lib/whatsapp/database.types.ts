@@ -398,6 +398,9 @@ export type Database = {
       }
       wa_conversations: {
         Row: {
+          ai_pending_since: string | null
+          ai_run_at: string | null
+          ai_run_id: string | null
           assigned_sales_id: string | null
           created_at: string
           handed_back_at: string | null
@@ -418,6 +421,9 @@ export type Database = {
         }
         ComputedFields: never
         Insert: {
+          ai_pending_since?: string | null
+          ai_run_at?: string | null
+          ai_run_id?: string | null
           assigned_sales_id?: string | null
           created_at?: string
           handed_back_at?: string | null
@@ -437,6 +443,9 @@ export type Database = {
           wa_id: string
         }
         Update: {
+          ai_pending_since?: string | null
+          ai_run_at?: string | null
+          ai_run_id?: string | null
           assigned_sales_id?: string | null
           created_at?: string
           handed_back_at?: string | null
@@ -583,6 +592,31 @@ export type Database = {
           },
         ]
       }
+      wa_status_backlog: {
+        Row: {
+          error_code: string | null
+          error_message: string | null
+          received_at: string
+          status: string
+          wa_message_id: string
+        }
+        ComputedFields: never
+        Insert: {
+          error_code?: string | null
+          error_message?: string | null
+          received_at?: string
+          status: string
+          wa_message_id: string
+        }
+        Update: {
+          error_code?: string | null
+          error_message?: string | null
+          received_at?: string
+          status?: string
+          wa_message_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -600,6 +634,16 @@ export type Database = {
           p_user_agent: string
         }
         Returns: string
+      }
+      wa_find_or_create_lead: {
+        Args: {
+          p_conversation_id: string
+          p_customer_name: string
+          p_notes: string
+          p_status: string
+          p_status_started_at: string
+        }
+        Returns: Json
       }
     }
     Enums: {

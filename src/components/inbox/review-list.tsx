@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { EmptyState } from "@/components/ui/states"
 import { formatPhone } from "@/lib/phone"
-import type { ReviewEvent } from "@/lib/whatsapp/inbox"
+import type { ReviewEvent, Unanswered } from "@/lib/whatsapp/inbox"
 import { ActionForm } from "./action-form"
 import { Chip } from "./chips"
 import { formatDateTime } from "./format"
@@ -58,18 +58,45 @@ function ReviewRow({ event }: { event: ReviewEvent }) {
   )
 }
 
-export function ReviewList({ events }: { events: ReviewEvent[] }) {
-  if (events.length === 0) {
+// A customer whose message the AI never finished answering (its run was cut off).
+// It leaves this list once the AI answers, or someone takes over.
+function UnansweredRow({ conversation }: { conversation: Unanswered }) {
+  return (
+    <li className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3 py-4 first:pt-0 last:pb-0">
+      <div className="min-w-0 flex-1 basis-64">
+        <div className="flex flex-wrap items-center gap-2">
+          <Chip tone="warning">Check</Chip>
+          <span className="text-[13px] font-medium text-ink">No reply yet</span>
+        </div>
+        <p className="mt-1 break-words text-sm text-ink">
+          The AI started answering this customer and did not finish. Take over to reply yourself.
+        </p>
+        <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-muted">
+          <span className="tabular-nums">
+            Waiting since <time dateTime={conversation.ai_pending_since}>{formatDateTime(conversation.ai_pending_since)}</time>
+          </span>
+          <Customer conversation={conversation} />
+        </p>
+      </div>
+    </li>
+  )
+}
+
+export function ReviewList({ events, unanswered }: { events: ReviewEvent[]; unanswered: Unanswered[] }) {
+  if (events.length === 0 && unanswered.length === 0) {
     return (
       <EmptyState
         title="Nothing needs review"
-        detail="Failed sends, refused status changes and duplicate phone matches appear here when they happen."
+        detail="Failed sends, refused status changes, duplicate phone matches and customers the AI did not finish answering appear here."
       />
     )
   }
 
   return (
     <ul className="flex flex-col divide-y divide-line">
+      {unanswered.map((conversation) => (
+        <UnansweredRow key={conversation.id} conversation={conversation} />
+      ))}
       {events.map((event) => (
         <ReviewRow key={event.id} event={event} />
       ))}
