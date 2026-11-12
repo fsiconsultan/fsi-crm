@@ -51,6 +51,9 @@ function ReplyControl({ data, template }: { data: ThreadData; template: Template
   if (conversation.mode !== "human") {
     return <DisabledReply reason="Take over the conversation to reply. The AI is answering for now." />
   }
+  if (!conversation.taken_over_by) {
+    return <DisabledReply reason="The AI asked for a person. Take over the conversation to reply." />
+  }
   if (!windowOpen) {
     return (
       <>

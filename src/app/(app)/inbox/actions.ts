@@ -125,8 +125,10 @@ async function send(conversationId: string, content: OutboundContent): Promise<A
     return fail(error instanceof Error ? error.message : "Could not load the conversation.")
   }
   if (!conversation) return fail(NOT_ALLOWED)
-  if (conversation.mode !== "human") {
-    return fail("Take over the conversation before replying, so the AI does not answer at the same time.")
+  // Replies need a named person on the conversation: it keeps the AI quiet and
+  // records who is answering.
+  if (conversation.mode !== "human" || !conversation.taken_over_by) {
+    return fail("Take over the conversation before replying.")
   }
 
   try {

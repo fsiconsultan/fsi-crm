@@ -344,8 +344,10 @@ alter table public.wa_qualifications enable row level security;
 alter table public.automation_events enable row level security;
 alter table public.assignment_history enable row level security;
 
+-- Supabase grants every privilege on new public tables to anon and authenticated
+-- by default. Take those away and grant back only what a policy below allows.
 revoke all on public.wa_conversations, public.wa_messages, public.wa_qualifications,
-    public.automation_events, public.assignment_history from anon;
+    public.automation_events, public.assignment_history from anon, authenticated;
 grant select, update on public.wa_conversations to authenticated;
 grant select, insert on public.wa_messages to authenticated;
 grant select on public.wa_qualifications to authenticated;

@@ -25,12 +25,15 @@ function confirm(input: { human: boolean; takenOverByViewer: boolean; took: bool
 export function TakeoverControl({
   conversationId,
   human,
+  claimed,
   takenOverByViewer,
   idleNote,
   children,
 }: {
   conversationId: string
   human: boolean
+  // A named person has taken the conversation over.
+  claimed: boolean
   takenOverByViewer: boolean
   idleNote: string
   children?: ReactNode
@@ -39,9 +42,11 @@ export function TakeoverControl({
   const [gave, giveAction, giving] = useActionState(handBack, INITIAL)
 
   const confirmation = confirm({ human, takenOverByViewer, took: !!took.ok, gave: !!gave.ok })
-  const form = human
-    ? { action: giveAction, pending: giving, label: "Hand back to AI", busy: "Handing back...", variant: "secondary" as const }
-    : { action: takeAction, pending: taking, label: "Take over", busy: "Taking over...", variant: "primary" as const }
+  const take = { action: takeAction, pending: taking, label: "Take over", busy: "Taking over...", variant: "primary" as const }
+  const give = { action: giveAction, pending: giving, label: "Hand back to AI", busy: "Handing back...", variant: "secondary" as const }
+  // Bot mode: take over. A person has it: hand back. The AI asked for a person and
+  // nobody has claimed it yet: both, so the takeover records who answered.
+  const forms = !human ? [take] : claimed ? [give] : [take, give]
 
   return (
     <div className="flex min-w-0 flex-col gap-2">
@@ -49,15 +54,17 @@ export function TakeoverControl({
         {confirmation ?? idleNote}
       </p>
       <div className="flex flex-wrap items-center gap-2">
-        <form action={form.action}>
-          <input type="hidden" name="conversationId" value={conversationId} />
-          <Button type="submit" variant={form.variant} disabled={form.pending}>
-            {form.pending ? form.busy : form.label}
-          </Button>
-        </form>
+        {forms.map((form) => (
+          <form key={form.label} action={form.action}>
+            <input type="hidden" name="conversationId" value={conversationId} />
+            <Button type="submit" variant={form.variant} disabled={form.pending}>
+              {form.pending ? form.busy : form.label}
+            </Button>
+          </form>
+        ))}
         {children}
       </div>
-      <FormError message={human ? gave.error : took.error} />
+      <FormError message={took.error ?? gave.error} />
     </div>
   )
 }

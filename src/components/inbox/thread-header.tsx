@@ -61,6 +61,7 @@ export function ThreadHeader({
         <TakeoverControl
           conversationId={conversation.id}
           human={conversation.mode === "human"}
+          claimed={conversation.taken_over_by !== null}
           takenOverByViewer={conversation.taken_over_by === viewer.id}
           idleNote={idleNote(data)}
         >

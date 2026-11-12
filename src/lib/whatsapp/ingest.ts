@@ -89,7 +89,7 @@ async function storeInbound(store: WaStore, message: InboundMessage, now: Date):
       type: "unsupported_message",
       conversationId: conversation.id,
       leadId: conversation.lead_id,
-      summary: `The customer sent a ${message.messageType} message. Only text is read automatically.`,
+      summary: `The customer sent a message of type "${message.messageType}". Only text is read automatically.`,
       detail: { message_type: message.messageType },
     })
   }

@@ -32,6 +32,8 @@ function ReviewBody({ review }: { review: Loaded<ReviewEvent[]> }) {
   )
 }
 
+export const metadata = { title: "Needs review" }
+
 export default async function ReviewPage() {
   await getProfile()
   const review = await loadReview()

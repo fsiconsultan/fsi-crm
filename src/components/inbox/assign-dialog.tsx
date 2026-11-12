@@ -52,7 +52,7 @@ export function AssignDialog({
         ref={dialog}
         aria-labelledby={titleId}
         // Margins place it: Tailwind's reset removes the browser's centering margin.
-        className="mx-0 mb-0 mt-auto w-full max-w-full overflow-hidden rounded-t-[var(--radius-card)] border border-line bg-surface text-ink shadow-xl md:m-auto md:max-w-sm md:rounded-[var(--radius-card)]"
+        className="mx-0 mb-0 mt-auto w-full max-w-full overflow-hidden backdrop:bg-black/40 rounded-t-[var(--radius-card)] border border-line bg-surface text-ink shadow-xl md:m-auto md:max-w-sm md:rounded-[var(--radius-card)]"
       >
         <div className="flex max-h-[85dvh] flex-col pb-[env(safe-area-inset-bottom)]">
           <div className="flex items-center justify-between gap-3 border-b border-line py-2 pl-4 pr-2">
