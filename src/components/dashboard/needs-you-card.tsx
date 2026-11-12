@@ -43,7 +43,7 @@ export function NeedsYouCard({ data, salesId }: { data: Dashboard; salesId: stri
   }
 
   return (
-    <Card>
+    <Card className="max-md:p-4">
       <CardHeader title="Needs you" />
       {items.length === 0 ? (
         <EmptyState

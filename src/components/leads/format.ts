@@ -11,6 +11,12 @@ export function whatsappHref(phone: string | null) {
   return digits.length >= 9 && digits.length <= 15 ? `https://wa.me/${digits}` : null
 }
 
+/** tel: link for a stored phone number, or null when it has too few digits to dial. */
+export function telHref(phone: string | null) {
+  const cleaned = (phone ?? "").replace(/[^\d+]/g, "")
+  return cleaned.replace(/\D/g, "").length >= 6 ? `tel:${cleaned}` : null
+}
+
 export function daysInStatus(statusStartedAt: string | null) {
   return statusStartedAt ? Math.max(0, daysBetween(dayOf(statusStartedAt), today())) : null
 }

@@ -34,7 +34,7 @@ export function LeadsFeedback({
             )}
           >
             <p className="py-2">
-              <span className={cn("font-medium", result.ok ? "text-positive" : "text-negative")}>
+              <span className={cn("font-medium", !result.ok && "text-negative")}>
                 {result.ok ? "Done. " : "Failed. "}
               </span>
               {result.message}

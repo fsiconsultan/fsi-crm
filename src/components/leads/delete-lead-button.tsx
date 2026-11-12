@@ -46,17 +46,19 @@ export function DeleteLeadButton({ leadId, leadName }: { leadId: number; leadNam
         <span className="sr-only">Delete {leadName}</span>
       </button>
 
-      <Dialog open={open} onClose={close} title={`Delete ${leadName}?`}>
-        <p className="text-sm text-muted">
-          This removes the lead and the records of its uploaded documents for everyone. It cannot be undone.
-        </p>
+      <Dialog
+        open={open}
+        onClose={close}
+        title={`Delete ${leadName}?`}
+        description="This removes the lead and the records of its uploaded documents for everyone. It cannot be undone."
+      >
         {error ? (
           <p role="alert" className="rounded-[var(--radius-control)] bg-negative-soft px-3 py-2 text-sm text-ink">
             {error}
           </p>
         ) : null}
-        <div className="mt-2 flex flex-wrap justify-end gap-2">
-          <Button variant="secondary" onClick={close} disabled={pending} autoFocus>
+        <div className="mt-4 flex flex-wrap justify-end gap-2">
+          <Button variant="secondary" onClick={close} disabled={pending} data-autofocus>
             Keep lead
           </Button>
           <button

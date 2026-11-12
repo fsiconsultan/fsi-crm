@@ -11,6 +11,9 @@ const compact = new Intl.NumberFormat("en-US", { notation: "compact", maximumFra
 
 const CHART_HEIGHT = 160
 
+// A phone has room for 8 readable bars; the older ones appear from the sm breakpoint.
+const WEEKS_ON_PHONE = 8
+
 // Answers "are new leads still coming in?". Hatched bars are past weeks, the
 // solid bar is the week in progress.
 export function WeeklyCard({ weeks }: { weeks: Dashboard["weeks"] }) {
@@ -25,8 +28,16 @@ export function WeeklyCard({ weeks }: { weeks: Dashboard["weeks"] }) {
   const outlier = cut ? weeks.find((week) => week.count === highest) : undefined
 
   return (
-    <Card>
-      <CardHeader title="New leads per week" meta={`Last ${WEEKS_SHOWN} weeks, by the day each lead was added`} />
+    <Card className="max-md:p-4">
+      <CardHeader
+        title="New leads per week"
+        meta={
+          <>
+            <span className="sm:hidden">Last {WEEKS_ON_PHONE} weeks</span>
+            <span className="max-sm:hidden">Last {WEEKS_SHOWN} weeks</span>, by the day each lead was added
+          </>
+        }
+      />
 
       {highest === 0 ? (
         <EmptyState
@@ -44,12 +55,17 @@ export function WeeklyCard({ weeks }: { weeks: Dashboard["weeks"] }) {
             {weeks.map((week, index) => {
               const clipped = cut && week.count > scale
               const height = week.count === 0 ? 0 : Math.max(2, Math.min(1, week.count / scale) * CHART_HEIGHT)
+              const onPhone = index >= weeks.length - WEEKS_ON_PHONE
+              const firstOnPhone = index === weeks.length - WEEKS_ON_PHONE
               const newMonth = index === 0 || week.start.slice(5, 7) !== weeks[index - 1].start.slice(5, 7)
               return (
-                <div key={week.start} className="flex min-w-0 flex-1 flex-col items-center gap-1">
+                <div
+                  key={week.start}
+                  className={cn("flex min-w-0 flex-1 flex-col items-center gap-1", !onPhone && "max-sm:hidden")}
+                >
                   <span
                     className={cn(
-                      "text-[11px] tabular-nums",
+                      "text-xs tabular-nums sm:text-[11px]",
                       week.current ? "font-medium text-ink" : "text-muted",
                     )}
                   >
@@ -66,11 +82,11 @@ export function WeeklyCard({ weeks }: { weeks: Dashboard["weeks"] }) {
                       {clipped ? <span className="absolute inset-x-0 top-2 h-1 bg-surface" /> : null}
                     </div>
                   </div>
-                  <span className={cn("text-[11px] tabular-nums", week.current ? "text-ink" : "text-muted")}>
+                  <span className={cn("text-xs tabular-nums sm:text-[11px]", week.current ? "text-ink" : "text-muted")}>
                     {Number(week.start.slice(8, 10))}
                   </span>
-                  <span className="h-4 text-[11px] text-muted">
-                    {newMonth ? formatDay(week.start).split(" ")[1] : ""}
+                  <span className={cn("h-4 text-[11px] text-muted", firstOnPhone && !newMonth && "sm:invisible")}>
+                    {newMonth || firstOnPhone ? formatDay(week.start).split(" ")[1] : ""}
                   </span>
                 </div>
               )
@@ -87,32 +103,40 @@ export function WeeklyCard({ weeks }: { weeks: Dashboard["weeks"] }) {
             <span>Each bar is labelled with the Monday it starts on.</span>
           </p>
           {outlier ? (
-            <p className="mt-2 text-xs text-muted">
+            <p
+              className={cn(
+                "mt-2 text-xs text-muted",
+                weeks.indexOf(outlier) < weeks.length - WEEKS_ON_PHONE && "max-sm:hidden",
+              )}
+            >
               The bar for the week of {formatDay(outlier.start)} is cut short: {n(outlier.count)} leads were added that
               week, against {n(second)} in the next busiest.
             </p>
           ) : null}
 
-          <table className="sr-only">
-            <caption>New leads per week, last {WEEKS_SHOWN} weeks</caption>
-            <thead>
-              <tr>
-                <th scope="col">Week starting</th>
-                <th scope="col">Leads added</th>
-              </tr>
-            </thead>
-            <tbody>
-              {weeks.map((week) => (
-                <tr key={week.start}>
-                  <th scope="row">
-                    {formatDay(week.start, true)}
-                    {week.current ? " (this week so far)" : ""}
-                  </th>
-                  <td>{week.count}</td>
+          {/* A table ignores the 1px width of sr-only, so the wrapper carries it. */}
+          <div className="sr-only">
+            <table>
+              <caption>New leads per week, last {WEEKS_SHOWN} weeks</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Week starting</th>
+                  <th scope="col">Leads added</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {weeks.map((week) => (
+                  <tr key={week.start}>
+                    <th scope="row">
+                      {formatDay(week.start, true)}
+                      {week.current ? " (this week so far)" : ""}
+                    </th>
+                    <td>{week.count}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </>
       )}
     </Card>

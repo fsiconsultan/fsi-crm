@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react"
 import { changeLeadStatus } from "@/app/(app)/leads/actions"
-import { inputClass } from "@/components/ui/field"
+import { controlClass } from "@/components/ui/control"
 import { cn } from "@/lib/cn"
 import { LEAD_STATUSES, LEAD_STATUS_SHORT, NO_STATUS_LABEL, isLeadStatus } from "@/lib/leads/status"
 import { useLeadFeedback } from "./feedback"
@@ -41,7 +41,7 @@ export function StatusSelect({
       value={value}
       disabled={pending}
       onChange={(event) => change(event.target.value)}
-      className={cn(inputClass, "pr-8", !value && "text-muted", pending && "opacity-60")}
+      className={cn(controlClass, "pr-8", !value && "text-muted", pending && "opacity-60")}
     >
       {/* Leads with no status, or a value from outside the list, keep showing what is stored. */}
       {!isLeadStatus(value) ? (

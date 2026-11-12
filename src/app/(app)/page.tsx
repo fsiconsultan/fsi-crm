@@ -47,7 +47,7 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
       <Suspense
         key={here}
         fallback={
-          <Card>
+          <Card className="max-md:p-4">
             <LoadingState label="Counting leads for this period…" />
           </Card>
         }
@@ -80,7 +80,7 @@ async function DashboardCards({
   } catch (error) {
     console.error(error)
     return (
-      <Card>
+      <Card className="max-md:p-4">
         <ErrorState
           title="The Overview could not be loaded"
           detail="The database did not answer one of the counts, so no numbers are shown rather than partial ones. Check your connection and try again. If it keeps failing, tell the admin."
@@ -97,7 +97,7 @@ async function DashboardCards({
 
   if (data.total === 0) {
     return (
-      <Card>
+      <Card className="max-md:p-4">
         {selected ? (
           <EmptyState
             title={`${selected.name} has no leads`}
@@ -141,9 +141,10 @@ async function DashboardCards({
         </div>
       ) : null}
       <KpiCard data={data} period={period} salesId={salesId} />
-      <PipelineCard data={data} salesId={salesId} />
+      {/* Second in the order so that on a phone it sits right under the KPI: it is what a salesperson acts on. */}
+      <NeedsYouCard data={data} salesId={salesId} />
       <div className="md:col-span-2 xl:col-span-1">
-        <NeedsYouCard data={data} salesId={salesId} />
+        <PipelineCard data={data} salesId={salesId} />
       </div>
       <div className={insights.length > 0 ? "md:col-span-2" : "md:col-span-2 xl:col-span-3"}>
         <WeeklyCard weeks={data.weeks} />

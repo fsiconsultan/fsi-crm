@@ -6,7 +6,7 @@ export default function LeadsLoading() {
   return (
     <>
       <PageHeader title="Leads" />
-      <Card>
+      <Card className="max-md:p-4">
         <LoadingState label="Loading leads…" />
       </Card>
     </>

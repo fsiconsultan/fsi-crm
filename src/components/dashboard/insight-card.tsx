@@ -19,9 +19,9 @@ export function InsightCard({ insights }: { insights: Insight[] }) {
   return (
     <section
       aria-label="Insights"
-      className="insight-gradient flex min-h-[340px] flex-col rounded-[var(--radius-card)] p-6 text-white"
+      className="insight-gradient flex min-h-[300px] flex-col rounded-[var(--radius-card)] p-4 text-white md:min-h-[340px] md:p-6"
     >
-      <header className="-mr-2 -mt-2 flex min-h-11 items-center justify-between gap-3">
+      <header className="-mr-2 flex md:-mt-2 min-h-11 items-center justify-between gap-3">
         <h2 className="text-[17px] font-medium leading-6">Worth knowing</h2>
         {insights.length > 1 ? (
           <div className="flex items-center gap-1">

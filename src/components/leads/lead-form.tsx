@@ -4,7 +4,8 @@ import Link from "next/link"
 import { useActionState } from "react"
 import { saveLead, type LeadField, type LeadFormState } from "@/app/(app)/leads/actions"
 import { Button, buttonClass } from "@/components/ui/button"
-import { Field, inputClass } from "@/components/ui/field"
+import { controlClass } from "@/components/ui/control"
+import { Field } from "@/components/ui/field"
 import type { SalesUser } from "@/lib/data/leads"
 import { LEAD_STATUSES, LEAD_TYPES, NO_STATUS_LABEL } from "@/lib/leads/status"
 
@@ -35,7 +36,7 @@ export function LeadForm({
     defaultValue: values[field],
     "aria-invalid": errors[field] ? true : undefined,
     "aria-describedby": errors[field] ? `${field}-error` : undefined,
-    className: inputClass,
+    className: controlClass,
   })
 
   return (
@@ -50,25 +51,25 @@ export function LeadForm({
       ) : null}
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <Field id="customer_name" label="Customer name" error={errors.customer_name}>
+        <Field htmlFor="customer_name" label="Customer name" error={errors.customer_name}>
           <input {...control("customer_name")} required autoComplete="off" />
         </Field>
-        <Field id="phone" label="Phone or WhatsApp" error={errors.phone}>
+        <Field htmlFor="phone" label="Phone or WhatsApp" error={errors.phone}>
           <input {...control("phone")} required type="tel" inputMode="tel" autoComplete="off" placeholder="0812 0000 0000" />
         </Field>
-        <Field id="email" label="Email" hint="Optional" error={errors.email}>
-          <input {...control("email")} type="email" autoComplete="off" placeholder="name@example.com" />
+        <Field htmlFor="email" label="Email" hint="Optional" error={errors.email}>
+          <input {...control("email")} type="email" inputMode="email" autoCapitalize="none" autoComplete="off" placeholder="name@example.com" />
         </Field>
-        <Field id="business" label="Business" hint="Optional" error={errors.business}>
+        <Field htmlFor="business" label="Business" hint="Optional" error={errors.business}>
           <input {...control("business")} autoComplete="off" />
         </Field>
-        <Field id="location" label="Location" hint="Optional" error={errors.location} className="md:col-span-2">
+        <Field htmlFor="location" label="Location" hint="Optional" error={errors.location} className="md:col-span-2">
           <input {...control("location")} autoComplete="off" />
         </Field>
       </div>
 
       <div className="grid grid-cols-1 gap-4 border-t border-line pt-6 md:grid-cols-2 xl:grid-cols-3">
-        <Field key={`type:${values.lead_type}`} id="lead_type" label="Lead type" error={errors.lead_type}>
+        <Field key={`type:${values.lead_type}`} htmlFor="lead_type" label="Lead type" error={errors.lead_type}>
           <select {...control("lead_type")}>
             {LEAD_TYPES.map((type) => (
               <option key={type} value={type}>
@@ -79,7 +80,7 @@ export function LeadForm({
         </Field>
         <Field
           key={`status:${values.status}`}
-          id="status"
+          htmlFor="status"
           label="Status"
           hint={leadId ? "Changing it restarts the days-in-status count." : undefined}
           error={errors.status}
@@ -94,7 +95,7 @@ export function LeadForm({
           </select>
         </Field>
         {salesUsers ? (
-          <Field key={`sales:${values.sales_id}`} id="sales_id" label="Salesperson" error={errors.sales_id}>
+          <Field key={`sales:${values.sales_id}`} htmlFor="sales_id" label="Salesperson" error={errors.sales_id}>
             <select {...control("sales_id")} required>
               <option value="">Choose a salesperson</option>
               {salesUsers.map((user) => (
@@ -109,25 +110,26 @@ export function LeadForm({
       </div>
 
       <div className="grid grid-cols-2 gap-4 border-t border-line pt-6 xl:grid-cols-4">
-        <Field id="follow_up_date" label="Follow-up date" error={errors.follow_up_date}>
+        <Field htmlFor="follow_up_date" label="Follow-up date" error={errors.follow_up_date}>
           <input {...control("follow_up_date")} type="date" />
         </Field>
-        <Field id="appointment" label="Appointment" error={errors.appointment}>
+        <Field htmlFor="appointment" label="Appointment" error={errors.appointment}>
           <input {...control("appointment")} type="date" />
         </Field>
-        <Field id="site_survey" label="Site survey" error={errors.site_survey}>
+        <Field htmlFor="site_survey" label="Site survey" error={errors.site_survey}>
           <input {...control("site_survey")} type="date" />
         </Field>
-        <Field id="quotation" label="Quotation" error={errors.quotation}>
+        <Field htmlFor="quotation" label="Quotation" error={errors.quotation}>
           <input {...control("quotation")} type="date" />
         </Field>
-        <Field id="notes" label="Notes" hint="Optional" error={errors.notes} className="col-span-2 xl:col-span-4">
-          <textarea {...control("notes")} rows={4} className={`${inputClass} py-2.5`} />
+        <Field htmlFor="notes" label="Notes" hint="Optional" error={errors.notes} className="col-span-2 xl:col-span-4">
+          <textarea {...control("notes")} rows={4} className={`${controlClass} py-2.5`} />
         </Field>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        <Button type="submit" variant="primary" disabled={pending}>
+      {/* On a phone the save bar stays at the bottom of the screen, above the home indicator. */}
+      <div className="flex gap-2 max-md:sticky max-md:bottom-0 max-md:z-10 max-md:-mx-4 max-md:-mb-4 max-md:rounded-b-[var(--radius-card)] max-md:border-t max-md:border-line max-md:bg-surface max-md:px-4 max-md:pb-[max(12px,env(safe-area-inset-bottom))] max-md:pt-3">
+        <Button type="submit" variant="primary" disabled={pending} className="max-md:flex-1">
           {pending ? "Saving…" : leadId ? "Save changes" : "Add lead"}
         </Button>
         <Link href={back} className={buttonClass("ghost")}>

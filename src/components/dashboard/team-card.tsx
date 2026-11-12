@@ -12,7 +12,7 @@ export function TeamCard({ team, period }: { team: TeamRow[]; period: Period }) 
   const widest = Math.max(...rows.map((row) => row.open), 1)
 
   return (
-    <Card>
+    <Card className="max-md:p-4">
       <CardHeader
         title="By salesperson"
         meta={`In pipeline means not yet Deal or No deal. Deals are for the ${period.label.toLowerCase()}.`}

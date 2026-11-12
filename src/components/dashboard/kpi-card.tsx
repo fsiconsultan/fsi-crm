@@ -29,7 +29,7 @@ export function KpiCard({ data, period, salesId }: { data: Dashboard; period: Pe
   ]
 
   return (
-    <Card>
+    <Card className="max-md:p-4">
       <CardHeader title="Deals won" meta={`${period.label}, ${period.rangeLabel}`} />
 
       <p className="text-[64px] font-light leading-none tracking-tight tabular-nums md:text-[72px]">{n(now)}</p>

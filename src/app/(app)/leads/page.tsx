@@ -42,7 +42,7 @@ export default async function LeadsPage({ searchParams }: PageProps<"/leads">) {
           </Link>
         }
       />
-      <Card>
+      <Card className="max-md:p-4">
         <LeadFilterBar key={here} filters={filters} salesUsers={salesUsers} />
         <LeadsFeedback key={notice ?? "none"} initial={notice ? { ok: true, message: notice } : null}>
           <Suspense key={here} fallback={<LoadingState label="Loading leads…" />}>

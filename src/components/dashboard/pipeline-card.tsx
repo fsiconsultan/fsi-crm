@@ -21,7 +21,7 @@ export function PipelineCard({ data, salesId }: { data: Dashboard; salesId: stri
   const withStatus = data.total - data.noStatus
 
   return (
-    <Card>
+    <Card className="max-md:p-4">
       <CardHeader
         title="Pipeline by status"
         meta={`Where ${plural(withStatus, "lead with a status stands", "leads with a status stand")} today`}

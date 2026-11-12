@@ -16,7 +16,7 @@ export function RecentCard({
   salesId: string
 }) {
   return (
-    <Card>
+    <Card className="max-md:p-4">
       <CardHeader
         title="Recently added"
         action={

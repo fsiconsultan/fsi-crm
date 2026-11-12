@@ -25,7 +25,7 @@ export default async function EditLeadPage({ params, searchParams }: PageProps<"
       {lead ? (
         <LeadFormCard lead={lead} salesUsers={salesUsers} back={backHref} />
       ) : (
-        <Card className="max-w-4xl">
+        <Card className="max-w-4xl max-md:p-4">
           <EmptyState
             title="This lead cannot be opened"
             detail="It was deleted, or it is assigned to someone else and you do not have access to it. Go back to the list to pick another lead."

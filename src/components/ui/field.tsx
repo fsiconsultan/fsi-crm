@@ -1,42 +1,50 @@
 import type { ReactNode } from "react"
 import { cn } from "@/lib/cn"
 
-/** Sizing and look of a text input or select, without a width. */
-export const controlClass =
-  "min-h-11 rounded-[var(--radius-control)] border border-line bg-surface px-3 text-sm text-ink placeholder:text-muted aria-[invalid=true]:border-negative md:min-h-10"
-
-export const inputClass = `${controlClass} w-full`
+// The border is darker than `line` so the edge of an input keeps 3:1 against
+// the card in both themes (WCAG 1.4.11).
+export const inputClass =
+  "min-h-11 w-full rounded-[var(--radius-control)] border border-[color-mix(in_srgb,var(--muted)_75%,transparent)] bg-surface px-3 text-sm text-ink placeholder:text-muted aria-[invalid=true]:border-negative disabled:cursor-not-allowed disabled:bg-surface-sunken disabled:text-muted"
 
 export function Field({
-  id,
   label,
-  hint,
+  htmlFor,
   error,
+  hint,
   className,
   children,
 }: {
-  id: string
   label: string
-  hint?: string
+  htmlFor: string
   error?: string
+  hint?: string
   className?: string
   children: ReactNode
 }) {
   return (
     <div className={cn("flex min-w-0 flex-col gap-1.5", className)}>
-      <label htmlFor={id} className="text-sm font-medium">
+      <label htmlFor={htmlFor} className="text-sm font-medium">
         {label}
       </label>
       {children}
-      {error ? (
-        <p id={`${id}-error`} className="text-[13px] text-negative">
-          {error}
-        </p>
-      ) : hint ? (
-        <p id={`${id}-hint`} className="text-[13px] text-muted">
+      {hint && !error ? (
+        <p id={`${htmlFor}-hint`} className="text-[13px] text-muted">
           {hint}
+        </p>
+      ) : null}
+      {error ? (
+        <p id={`${htmlFor}-error`} className="text-[13px] text-negative">
+          {error}
         </p>
       ) : null}
     </div>
   )
+}
+
+// aria wiring for an input inside <Field>.
+export function fieldAria(id: string, error?: string, hint?: string) {
+  return {
+    "aria-invalid": error ? true : undefined,
+    "aria-describedby": error ? `${id}-error` : hint ? `${id}-hint` : undefined,
+  } as const
 }

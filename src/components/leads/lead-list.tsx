@@ -82,7 +82,7 @@ export async function LeadList({
         <span />
       </div>
 
-      <ul className="divide-y divide-line">
+      <ul className="divide-y divide-line border-t border-line xl:border-t-0">
         {rows.map((lead) => (
           <LeadRow
             key={lead.id}
@@ -98,7 +98,7 @@ export async function LeadList({
           <p className="text-sm tabular-nums text-muted">
             Page {number.format(filters.page)} of {number.format(pages)}
           </p>
-          <div className="flex gap-2">
+          <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
             <PageLink href={filters.page > 1 ? leadsHref({ ...filters, page: filters.page - 1 }) : null}>
               Previous
             </PageLink>

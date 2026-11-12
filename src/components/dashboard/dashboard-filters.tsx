@@ -1,7 +1,7 @@
 "use client"
 
 import Form from "next/form"
-import { controlClass } from "@/components/ui/field"
+import { controlClass } from "@/components/ui/control"
 
 type Option = { value: string; label: string }
 
@@ -18,10 +18,10 @@ export function DashboardFilters({
   /** Admin only: the salesperson select. Null for everyone else. */
   salesOptions: Option[] | null
 }) {
-  const control = `${controlClass} max-w-full pr-8`
+  const control = `${controlClass} min-w-0 pr-8 max-md:flex-1 md:w-auto`
 
   return (
-    <Form action="/" className="flex flex-wrap items-center gap-2">
+    <Form action="/" className="flex items-center gap-2 max-md:w-[calc(100vw-2rem)]">
       <label htmlFor="period" className="sr-only">
         Date range
       </label>
