@@ -1,16 +1,17 @@
 "use client"
 
+import Link from "next/link"
 import { useState, useTransition } from "react"
 import { Trash2 } from "lucide-react"
-import { deleteLead } from "@/app/(app)/leads/actions"
+import { deleteLead, type ActionResult } from "@/app/(app)/leads/actions"
 import { Button, buttonClass } from "@/components/ui/button"
-import { Dialog } from "@/components/ui/dialog"
+import { Dialog, DialogFooter } from "@/components/ui/dialog"
 import { useLeadFeedback } from "./feedback"
 
 export function DeleteLeadButton({ leadId, leadName }: { leadId: number; leadName: string }) {
   const report = useLeadFeedback()
   const [open, setOpen] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<ActionResult | null>(null)
   const [pending, startTransition] = useTransition()
 
   const close = () => {
@@ -27,10 +28,13 @@ export function DeleteLeadButton({ leadId, leadName }: { leadId: number; leadNam
           setOpen(false)
           report(result)
         } else {
-          setError(result.message)
+          setError(result)
         }
       } catch {
-        setError("Nothing was deleted: the server could not be reached. Check your connection and try again.")
+        setError({
+          ok: false,
+          message: "Nothing was deleted: the server could not be reached. Check your connection and try again.",
+        })
       }
     })
   }
@@ -51,14 +55,22 @@ export function DeleteLeadButton({ leadId, leadName }: { leadId: number; leadNam
         onClose={close}
         busy={pending}
         title={`Delete ${leadName}?`}
-        description="This removes the lead and the records of its uploaded documents for everyone. It cannot be undone."
+        description="This removes the lead for everyone. It cannot be undone. A lead with uploaded documents cannot be deleted until they are removed on its customer page."
       >
         {error ? (
-          <p role="alert" className="rounded-[var(--radius-control)] bg-negative-soft px-3 py-2 text-sm text-ink">
-            {error}
-          </p>
+          <div role="alert" className="rounded-[var(--radius-control)] bg-negative-soft px-3 py-2 text-sm text-ink">
+            <p>{error.message}</p>
+            {error.link ? (
+              <Link
+                href={error.link.href}
+                className="mt-1 inline-flex min-h-11 items-center font-medium underline underline-offset-4 md:min-h-8"
+              >
+                {error.link.label}
+              </Link>
+            ) : null}
+          </div>
         ) : null}
-        <div className="mt-4 flex flex-wrap justify-end gap-2">
+        <DialogFooter>
           <Button variant="secondary" onClick={close} disabled={pending} data-autofocus>
             Keep lead
           </Button>
@@ -70,7 +82,7 @@ export function DeleteLeadButton({ leadId, leadName }: { leadId: number; leadNam
           >
             {pending ? "Deleting…" : "Delete lead"}
           </button>
-        </div>
+        </DialogFooter>
       </Dialog>
     </>
   )

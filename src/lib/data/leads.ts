@@ -61,6 +61,8 @@ function leadsQuery(supabase: Supabase, where: LeadWhere, head: boolean) {
       .lt("status_started_at", dayStart(addDays(today(), -STALE_DAYS)))
   } else if (where.view === "open") {
     query = query.in("status", OPEN_STATUSES)
+  } else if (where.view === "undated") {
+    query = query.not("status", "is", null).is("status_started_at", null)
   }
 
   return query

@@ -147,7 +147,7 @@ async function DashboardCards({
         <PipelineCard data={data} salesId={salesId} />
       </div>
       <div className={insights.length > 0 ? "md:col-span-2" : "md:col-span-2 xl:col-span-3"}>
-        <WeeklyCard weeks={data.weeks} />
+        <WeeklyCard weeks={data.weeks} afterImport={data.weeksAfterImport} />
       </div>
       {insights.length > 0 ? (
         <div className="md:col-span-2 xl:col-span-1">

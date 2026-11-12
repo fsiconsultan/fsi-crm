@@ -26,6 +26,8 @@ export function LeadRow({
   const whatsapp = whatsappHref(lead.phone)
   const tel = telHref(lead.phone)
   const days = lead.status ? daysInStatus(lead.status_started_at) : null
+  // Some leads were given a status without a date; their time in status is unknown, not zero.
+  const undated = Boolean(lead.status) && days === null
   const next = followUp(lead.follow_up_date)
   const place = [lead.business, lead.location].filter(Boolean).join(" · ")
 
@@ -107,13 +109,13 @@ export function LeadRow({
 
       <div className="col-span-2 text-[13px] max-xl:order-3 xl:col-span-1">
         <p className="tabular-nums text-ink">
-          {days !== null ? `${dayCount(days)} in status` : `Added ${addedOn(lead.created_at)}`}
+          {days !== null ? `${dayCount(days)} in status` : undated ? "Status date unknown" : `Added ${addedOn(lead.created_at)}`}
         </p>
         {next ? (
           <p className={next.overdue ? "font-medium text-negative" : "text-muted"}>
             {next.overdue ? `Follow-up was due ${next.label}` : `Follow up ${next.label}`}
           </p>
-        ) : days !== null ? (
+        ) : days !== null || undated ? (
           <p className="text-muted">Added {addedOn(lead.created_at)}</p>
         ) : null}
       </div>

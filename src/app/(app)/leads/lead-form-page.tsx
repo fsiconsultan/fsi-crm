@@ -31,7 +31,13 @@ export function LeadFormCard({
 
   return (
     <Card className="max-w-4xl max-md:p-4">
-      <LeadForm leadId={lead?.id ?? null} initial={initial} salesUsers={salesUsers} back={back} />
+      <LeadForm
+        leadId={lead?.id ?? null}
+        loadedUpdatedAt={lead?.updated_at ?? ""}
+        initial={initial}
+        salesUsers={salesUsers}
+        back={back}
+      />
     </Card>
   )
 }

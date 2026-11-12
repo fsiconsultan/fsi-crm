@@ -17,6 +17,13 @@ export const DEFAULT_PERIOD: PeriodKey = "30"
 
 export const WEEKS_SHOWN = 12
 
+// The leads that existed before this CRM were loaded in bulk: 2,138 on 18 and
+// 19 Sep, 552 on 25 Sep and 100 on 2 Oct 2026 (live data: rows with no
+// created_by, each batch written within a minute or two). Leads "added" on or
+// before this day are mostly that import, not new leads, so the weekly chart
+// starts after it and period comparisons that reach back to it are not shown.
+export const LEAD_IMPORT_LAST_DAY = "2026-10-02"
+
 export type Period = {
   key: PeriodKey
   label: string
@@ -55,10 +62,22 @@ export type Dashboard = {
   open: number
   deals: { now: number; previous: number }
   noDeals: { now: number }
-  added: { now: number; previous: number }
+  added: {
+    now: number
+    /** Null when the period before reaches back to the import, so a comparison would mislead. */
+    previous: number | null
+    /** The period itself reaches back to the import. */
+    includesImport: boolean
+  }
+  /** Leads with Deal or No deal but no status date; they fall in no period. */
+  closedUndated: { deals: number; noDeals: number }
+  /** Weeks after the import only, oldest first, at most WEEKS_SHOWN. */
   weeks: Array<{ start: string; count: number; current: boolean }>
+  /** True when earlier weeks were left out because they hold the import. */
+  weeksAfterImport: boolean
   followUpsDue: number
   stale: number
+  undated: number
   siteSurveys: number
   recent: Lead[]
   team: TeamRow[] | null
@@ -75,9 +94,11 @@ export async function getDashboard(options: {
   const base = { sales: salesId }
   const thisWeek = weekStart(today())
 
-  const weekStarts = Array.from({ length: WEEKS_SHOWN }, (_, index) =>
+  const allWeekStarts = Array.from({ length: WEEKS_SHOWN }, (_, index) =>
     addDays(thisWeek, -7 * (WEEKS_SHOWN - 1 - index)),
   )
+  const weekStarts = allWeekStarts.filter((start) => start > LEAD_IMPORT_LAST_DAY)
+  const comparePrevious = period.prevFrom > LEAD_IMPORT_LAST_DAY
 
   const [
     total,
@@ -88,9 +109,12 @@ export async function getDashboard(options: {
     noDealsNow,
     addedNow,
     addedPrevious,
+    dealsUndated,
+    noDealsUndated,
     weekCounts,
     followUpsDue,
     stale,
+    undated,
     siteSurveys,
     recent,
     teamRows,
@@ -102,10 +126,13 @@ export async function getDashboard(options: {
     countLeads({ ...base, status: "Deal", sfrom: period.prevFrom, sto: period.prevTo }),
     countLeads({ ...base, status: "No Deal", sfrom: period.from, sto: period.to }),
     countLeads({ ...base, from: period.from, to: period.to }),
-    countLeads({ ...base, from: period.prevFrom, to: period.prevTo }),
+    comparePrevious ? countLeads({ ...base, from: period.prevFrom, to: period.prevTo }) : null,
+    countLeads({ ...base, status: "Deal", view: "undated" }),
+    countLeads({ ...base, status: "No Deal", view: "undated" }),
     Promise.all(weekStarts.map((start) => countLeads({ ...base, from: start, to: addDays(start, 6) }))),
     countLeads({ ...base, view: "followup" }),
     countLeads({ ...base, view: "stale" }),
+    countLeads({ ...base, view: "undated" }),
     countSiteSurveys(salesId),
     recentLeads(base, 6),
     team
@@ -133,14 +160,17 @@ export async function getDashboard(options: {
     open: OPEN_STATUSES.reduce((sum, status) => sum + byStatus[status], 0),
     deals: { now: dealsNow, previous: dealsPrevious },
     noDeals: { now: noDealsNow },
-    added: { now: addedNow, previous: addedPrevious },
+    added: { now: addedNow, previous: addedPrevious, includesImport: period.from <= LEAD_IMPORT_LAST_DAY },
+    closedUndated: { deals: dealsUndated, noDeals: noDealsUndated },
     weeks: weekStarts.map((start, index) => ({
       start,
       count: weekCounts[index],
       current: start === thisWeek,
     })),
+    weeksAfterImport: weekStarts.length < allWeekStarts.length,
     followUpsDue,
     stale,
+    undated,
     siteSurveys,
     recent,
     team: teamRows,

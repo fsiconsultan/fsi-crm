@@ -24,6 +24,7 @@ export const LEAD_VIEWS = {
   followup: "Follow-up due today or earlier",
   stale: `In the same status for more than ${STALE_DAYS} days`,
   open: "In the pipeline (not yet Deal or No deal)",
+  undated: "Has a status but no date for it",
 } as const
 
 export type LeadView = keyof typeof LEAD_VIEWS
