@@ -15,13 +15,20 @@ export function normalizePhone(raw: string | null | undefined): string | null {
   let digits = first.replace(/\D/g, "")
   if (!digits) return null
 
-  if (digits.startsWith("00")) digits = digits.slice(2)
+  // Written with a country code ("+81 90...", "0081 90..."): only "62" means
+  // Indonesia, so the local "8..." rule below must not apply.
+  let international = /^[^\d]*\+/.test(first)
+  if (digits.startsWith("00")) {
+    digits = digits.slice(2)
+    international = true
+  }
 
   if (digits.startsWith("620")) digits = `62${digits.slice(3)}`
   else if (digits.startsWith("62")) {
     // Already in WhatsApp form.
   } else if (digits.startsWith("0")) digits = `62${digits.slice(1)}`
-  else if (digits.startsWith("8")) digits = `62${digits}`
+  // No country code starts with 0, so "+0812..." is a local number typed with a +.
+  else if (digits.startsWith("8") && !international) digits = `62${digits}`
   // Anything else is kept as an international number (61..., 33..., 49...).
 
   if (digits.startsWith("62") && digits.length < MIN_INDONESIAN_DIGITS) return null

@@ -24,6 +24,17 @@ describe("normalizePhone", () => {
     expect(normalizePhone("61412345678")).toBe("61412345678")
   })
 
+  it("does not turn foreign numbers starting with 8 into Indonesian ones", () => {
+    expect(normalizePhone("+81 90 1234 5678")).toBe("819012345678") // Japan
+    expect(normalizePhone("+86 138 0013 8000")).toBe("8613800138000") // China
+    expect(normalizePhone("0081 90 1234 5678")).toBe("819012345678")
+    expect(normalizePhone("WA: +81 90 1234 5678")).toBe("819012345678")
+  })
+
+  it("still reads a local number typed with a stray +", () => {
+    expect(normalizePhone("+0812 3456 7890")).toBe("6281234567890")
+  })
+
   it.each([null, undefined, "", "abc", "0", "81234567", "62812", "1234567890123456"])(
     "returns null for %s",
     (raw) => {

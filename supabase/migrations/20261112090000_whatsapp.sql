@@ -23,6 +23,7 @@ as $$
 declare
     v_first text;
     v_digits text;
+    v_international boolean;
 begin
     if p_phone is null then
         return null;
@@ -36,8 +37,13 @@ begin
         return null;
     end if;
 
+    -- Written with a country code ("+81 90...", "0081 90..."): only 62 means
+    -- Indonesia, so the local 8... rule below must not apply.
+    v_international := v_first ~ '^[^0-9]*\+';
+
     if v_digits like '00%' then
         v_digits := substr(v_digits, 3);           -- 0062812... international prefix
+        v_international := true;
     end if;
 
     if v_digits like '620%' then
@@ -46,7 +52,7 @@ begin
         null;                                       -- already 62812...
     elsif v_digits like '0%' then
         v_digits := '62' || substr(v_digits, 2);    -- 0812...
-    elsif v_digits like '8%' then
+    elsif v_digits like '8%' and not v_international then
         v_digits := '62' || v_digits;               -- 812...
     end if;
     -- Anything else is kept as an international number (61..., 33..., 49...).
