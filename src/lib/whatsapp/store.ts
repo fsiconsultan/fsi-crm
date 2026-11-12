@@ -1,4 +1,4 @@
-import type { Json } from "./database.types"
+import type { Json } from "@/lib/supabase/database.types"
 import type { Conversation, LeadRef, Message, MessageStatus, NewEvent, Qualification, SenderType } from "./types"
 
 export type JsonObject = { [key: string]: Json | undefined }

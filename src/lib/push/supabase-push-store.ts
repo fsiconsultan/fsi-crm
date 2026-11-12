@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
-import type { Database } from "@/lib/whatsapp/database.types"
+import type { Database } from "@/lib/supabase/database.types"
 import type { PushStore } from "./types"
 
 // Needs the admin client: it reads other users' devices to notify them.
