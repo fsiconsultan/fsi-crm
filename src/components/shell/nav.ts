@@ -1,4 +1,4 @@
-import { Funnel, LayoutGrid, UserCog, Users, type LucideIcon } from "lucide-react"
+import { Funnel, LayoutGrid, MessagesSquare, UserCog, Users, type LucideIcon } from "lucide-react"
 import type { Role } from "@/lib/auth"
 
 export type NavItem = {
@@ -14,6 +14,7 @@ export type NavItem = {
 export const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "Overview", icon: LayoutGrid, group: "main" },
   { href: "/leads", label: "Leads", icon: Funnel, group: "main" },
+  { href: "/inbox", label: "Inbox", icon: MessagesSquare, group: "main" },
   { href: "/customers", label: "Customers", icon: Users, group: "analyze" },
   { href: "/sales", label: "Sales team", icon: UserCog, group: "analyze", roles: ["Admin"] },
 ]
