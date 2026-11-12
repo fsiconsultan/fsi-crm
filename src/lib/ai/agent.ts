@@ -3,7 +3,7 @@ import type { Conversation, Message } from "@/lib/whatsapp/types"
 import type { ChatMessage, ChatModel } from "./model"
 import { buildSystemPrompt } from "./prompt"
 import { cleanAnswers } from "./qualification"
-import { TOOLS, type ToolContext } from "./tools"
+import { TOOLS, type Notice, type ToolContext } from "./tools"
 
 const HISTORY_LIMIT = 30
 const MAX_ROUNDS = 6
@@ -32,9 +32,17 @@ export async function runAgent(input: {
   model: ChatModel
   conversation: Conversation
   now: Date
+  // Collects phone notifications for the caller to send after the reply.
+  notices?: Notice[]
 }): Promise<AgentResult> {
   const { store, model, now } = input
-  const ctx: ToolContext = { store, conversation: input.conversation, now, handoffRequested: false }
+  const ctx: ToolContext = {
+    store,
+    conversation: input.conversation,
+    now,
+    handoffRequested: false,
+    notices: input.notices,
+  }
 
   const [history, qualification] = await Promise.all([
     store.listMessages(ctx.conversation.id, HISTORY_LIMIT),

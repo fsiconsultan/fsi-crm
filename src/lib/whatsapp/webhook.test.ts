@@ -67,7 +67,9 @@ describe("POST delivery", () => {
       status: "received",
       body: "Halo, saya mau tanya soal panel surya untuk villa saya.",
     })
-    expect(result.pending).toEqual([{ conversationId: db.conversations[0].id, messageId: db.messages[0].id }])
+    expect(result.pending).toEqual([
+      { conversationId: db.conversations[0].id, messageId: db.messages[0].id, assignedTo: null },
+    ])
   })
 
   it("is idempotent on Meta's message id: a retried delivery stores and queues nothing new", async () => {
@@ -92,6 +94,37 @@ describe("POST delivery", () => {
       expect.objectContaining({ toSalesId: "sales-1", rule: "lead_owner", assignedBy: null, leadId: 7 }),
     ])
     expect(db.leads[0].status).toBe("Quotation")
+  })
+
+  it("links a foreign customer's WhatsApp number to their lead (no duplicate)", async () => {
+    const payload = structuredClone(textMessage)
+    const value = payload.entry[0].changes[0].value
+    value.contacts[0].wa_id = "8613800138000"
+    value.messages[0].from = "8613800138000"
+    const db = createMemoryStore({
+      leads: [{ id: 9, customer_name: "Li", phone: "+86 138 0013 8000", phone_wa: "8613800138000", status: null, sales_id: "sales-1" }],
+    })
+    await deliver(db.store, payload)
+    expect(db.conversations[0]).toMatchObject({ lead_id: 9, assigned_sales_id: "sales-1" })
+  })
+
+  it("leaves a chat unassigned when the lead's salesperson is inactive", async () => {
+    const db = createMemoryStore({
+      leads: [{ id: 7, customer_name: "Existing", phone: "0812-0000-0001", phone_wa: "6281200000001", status: null, sales_id: "sales-1" }],
+      inactiveSales: ["sales-1"],
+    })
+    const result = await deliver(db.store, textMessage)
+    expect(db.conversations[0]).toMatchObject({ lead_id: 7, assigned_sales_id: null })
+    expect(result.pending[0].assignedTo).toBeNull()
+    expect(db.assignments).toEqual([])
+  })
+
+  it("tells the route who a first message was assigned to, so they can be notified", async () => {
+    const db = createMemoryStore({
+      leads: [{ id: 7, customer_name: "Existing", phone: "0812-0000-0001", phone_wa: "6281200000001", status: null, sales_id: "sales-1" }],
+    })
+    const first = await deliver(db.store, textMessage)
+    expect(first.pending[0].assignedTo).toBe("sales-1")
   })
 
   it("logs an ambiguous match for review instead of picking one of the duplicate leads", async () => {

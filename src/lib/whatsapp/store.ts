@@ -93,6 +93,8 @@ export interface WaStore {
   hasOpenEvent(conversationId: string, type: NewEvent["type"]): Promise<boolean>
 
   recordAssignment(input: NewAssignment): Promise<void>
+  // False when the salesperson is Inactive (or does not exist).
+  isSalesUserActive(salesId: string): Promise<boolean>
 }
 
 // Logging must never take the caller down with it.

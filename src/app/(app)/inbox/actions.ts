@@ -1,10 +1,14 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { after } from "next/server"
 import { getProfile, isAdmin } from "@/lib/auth"
+import { notifierFromEnv } from "@/lib/push/server"
+import { createAdminClient } from "@/lib/whatsapp/admin-client"
 import { cloudApiFromEnv } from "@/lib/whatsapp/cloud-api"
 import { inboxClient, reengageTemplate } from "@/lib/whatsapp/inbox"
 import { sendAndRecord, type OutboundContent } from "@/lib/whatsapp/outbound"
+import { safeLog } from "@/lib/whatsapp/store"
 import { createSupabaseStore } from "@/lib/whatsapp/supabase-store"
 
 export type ActionState = { error: string | null; ok?: boolean }
@@ -109,6 +113,30 @@ export async function assignConversation(_prev: ActionState, formData: FormData)
     assigned_by: profile.id,
   })
   if (history.error) problems.push(`the assignment history was not written (${history.error.message})`)
+
+  // Tell the new assignee on their phone, after the response. Reading their
+  // devices needs the secret-key client; it is created here on the server only.
+  if (salesId) {
+    after(async () => {
+      const admin = createAdminClient()
+      const notifier = admin ? notifierFromEnv(admin) : null
+      if (!admin || !notifier) return
+      try {
+        const { data, error } = await admin.from("wa_conversations").select("*").eq("id", conversationId).maybeSingle()
+        if (error || !data) throw new Error(error?.message ?? "the conversation could not be read")
+        await notifier.assigned(data, salesId, profile.id)
+      } catch (error) {
+        await safeLog(createSupabaseStore(admin), {
+          type: "push_failed",
+          conversationId,
+          severity: "warning",
+          needsReview: true,
+          summary: `The phone notification for this assignment was not sent: ${error instanceof Error ? error.message : "unknown error"}`,
+          actorSalesId: profile.id,
+        })
+      }
+    })
+  }
 
   revalidatePath("/inbox", "layout")
   return problems.length ? fail(`Assigned, but ${problems.join(" and ")}.`) : { error: null, ok: true }

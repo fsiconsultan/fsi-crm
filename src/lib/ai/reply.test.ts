@@ -4,6 +4,8 @@ import { signBody } from "@/lib/whatsapp/signature"
 import textMessage from "@/lib/whatsapp/testing/fixtures/text-message.json"
 import { createMemoryStore } from "@/lib/whatsapp/testing/memory-store"
 import { handleDelivery } from "@/lib/whatsapp/webhook"
+import { createNotifier } from "@/lib/push/notify"
+import { device, fakeSender, memoryPushStore } from "@/lib/push/testing/fakes"
 import { answerInbound, type ReplyDeps } from "./reply"
 import { call, fakeModel } from "./testing"
 
@@ -296,5 +298,78 @@ describe("AI reply", () => {
     expect(await answerInbound(pending, deps(db, fakeModel([{ content: "Halo!" }]).model, api))).toBe("send_failed")
     expect(db.messages.at(-1)).toMatchObject({ sender_type: "bot", status: "failed", error_code: "190" })
     expect(db.events.at(-1)).toMatchObject({ type: "send_failed", needs_review: true })
+  })
+
+  it("notifies the assigned salesperson's phone when the AI asks for a person", async () => {
+    const db = createMemoryStore({
+      leads: [{ id: 7, customer_name: "Existing", phone: "0812-0000-0001", phone_wa: "6281200000001", status: null, sales_id: "sales-1" }],
+    })
+    const pending = await receive(db, "Saya mau bicara dengan orang.")
+    const push = memoryPushStore({ targets: [device("phone", "sales-1")] })
+    const { sender, sent } = fakeSender()
+    const notifier = createNotifier({ store: push.store, sender, log: (e) => db.store.logEvent(e), now: () => NOW })
+    const { model } = fakeModel([
+      { toolCalls: [call("request_human_handoff", { reason: "Customer asked for a person." })] },
+      { content: "Baik, tim FSI akan membalas di sini." },
+    ])
+
+    expect(await answerInbound(pending, { ...deps(db, model), notifier })).toBe("sent")
+    expect(sent).toEqual([
+      expect.objectContaining({
+        endpoint: "https://push.example.test/phone",
+        payload: expect.objectContaining({ url: `/inbox/${db.conversations[0].id}` }),
+      }),
+    ])
+  })
+
+  it("a failing notification never blocks the handoff", async () => {
+    const db = createMemoryStore()
+    const pending = await receive(db, "Saya mau bicara dengan orang.")
+    const push = memoryPushStore({ targets: [device("phone", "admin-1")], adminIds: ["admin-1"] })
+    const { sender } = fakeSender({ "https://push.example.test/phone": { ok: false, statusCode: 500, message: "down" } })
+    const notifier = createNotifier({ store: push.store, sender, log: (e) => db.store.logEvent(e), now: () => NOW })
+    const { model } = fakeModel([
+      { toolCalls: [call("request_human_handoff", { reason: "Customer asked for a person." })] },
+      { content: "Baik, tim FSI akan membalas di sini." },
+    ])
+    const { api, sent } = fakeApi()
+
+    expect(await answerInbound(pending, { ...deps(db, model, api), notifier })).toBe("sent")
+    expect(db.conversations[0].mode).toBe("human")
+    expect(sent).toHaveLength(1)
+    expect(db.events.map((e) => e.type)).toEqual(expect.arrayContaining(["handoff_requested", "push_failed"]))
+  })
+
+  it("sends the customer's reply before any notification, even when the push service hangs", async () => {
+    const db = createMemoryStore()
+    const pending = await receive(db, "Saya mau bicara dengan orang.")
+    const push = memoryPushStore({ targets: [device("phone", "admin-1")], adminIds: ["admin-1"] })
+    let release: () => void = () => {}
+    let notified = false
+    const hanging = {
+      async send() {
+        await new Promise<void>((resolve) => (release = resolve))
+        notified = true
+        return { ok: true as const }
+      },
+    }
+    const notifier = createNotifier({ store: push.store, sender: hanging, log: (e) => db.store.logEvent(e), now: () => NOW })
+    const { model } = fakeModel([
+      { toolCalls: [call("request_human_handoff", { reason: "Customer asked for a person." })] },
+      { content: "Baik, tim FSI akan membalas di sini." },
+    ])
+    const { api, sent } = fakeApi()
+
+    const run = answerInbound(pending, { ...deps(db, model, api), notifier })
+    for (let i = 0; i < 50 && sent.length === 0; i++) await new Promise((r) => setTimeout(r, 0))
+
+    // The reply is out while the notification is still stuck.
+    expect(sent.map((s) => s.body)).toEqual(["Baik, tim FSI akan membalas di sini."])
+    expect(db.messages.at(-1)).toMatchObject({ sender_type: "bot", status: "sent" })
+    expect(notified).toBe(false)
+
+    release()
+    expect(await run).toBe("sent")
+    expect(notified).toBe(true)
   })
 })

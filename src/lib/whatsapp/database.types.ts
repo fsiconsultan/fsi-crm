@@ -1,5 +1,5 @@
-// Generated from a local database with the baseline and the Phase C migration
-// applied (supabase gen types typescript --local). The shared file
+// Generated from a local database with the baseline and the Phase C migrations
+// (WhatsApp, push subscriptions) applied (supabase gen types typescript --local). The shared file
 // src/lib/supabase/database.types.ts is generated from production, which does
 // not have these tables until the owner applies the migration. Once it has,
 // regenerate that file, point the imports here at it, and delete this one.
@@ -311,6 +311,51 @@ export type Database = {
           },
         ]
       }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          failure_count: number
+          id: string
+          last_success_at: string | null
+          p256dh: string
+          sales_user_id: string
+          user_agent: string | null
+        }
+        ComputedFields: never
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          failure_count?: number
+          id?: string
+          last_success_at?: string | null
+          p256dh: string
+          sales_user_id: string
+          user_agent?: string | null
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          failure_count?: number
+          id?: string
+          last_success_at?: string | null
+          p256dh?: string
+          sales_user_id?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_sales_user_id_fkey"
+            columns: ["sales_user_id"]
+            isOneToOne: false
+            referencedRelation: "sales_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sales_users: {
         Row: {
           "auth_user-id": string | null
@@ -546,6 +591,16 @@ export type Database = {
       get_login_email: { Args: { p_username: string }; Returns: string }
       is_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
       normalize_phone_wa: { Args: { p_phone: string }; Returns: string }
+      record_push_failure: { Args: { p_id: string }; Returns: undefined }
+      register_push_subscription: {
+        Args: {
+          p_auth: string
+          p_endpoint: string
+          p_p256dh: string
+          p_user_agent: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

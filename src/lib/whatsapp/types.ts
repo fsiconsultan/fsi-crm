@@ -38,6 +38,7 @@ export type EventType =
   | "tool_failed"
   | "unsupported_message"
   | "webhook_error"
+  | "push_failed"
 
 export type NewEvent = {
   type: EventType
