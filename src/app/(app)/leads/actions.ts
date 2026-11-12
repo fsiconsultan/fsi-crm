@@ -228,7 +228,16 @@ export async function deleteLead(leadId: number): Promise<ActionResult> {
 
   const { data, error } = await supabase.from("leads").delete().eq("id", id).select("id, customer_name")
 
-  if (error) return { ok: false, message: `Nothing was deleted: ${error.message}. Try again.` }
+  if (error) {
+    // 23503: another record still points at this lead.
+    return {
+      ok: false,
+      message:
+        error.code === "23503"
+          ? "Nothing was deleted: other records still point to this lead. Ask an Admin to check it."
+          : `Nothing was deleted: ${error.message}. Try again.`,
+    }
+  }
   if (!data?.length) return { ok: false, message: `Nothing was deleted. ${GONE}` }
 
   revalidateLeadViews()

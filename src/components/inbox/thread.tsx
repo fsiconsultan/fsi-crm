@@ -6,12 +6,12 @@ import { ReplyArea, type Template } from "./reply-area"
 import { ThreadDetails } from "./thread-details"
 import { ThreadHeader, type Viewer } from "./thread-header"
 
-function Messages({ data }: { data: ThreadData }) {
+function Messages({ data, now }: { data: ThreadData; now: Date }) {
   if (data.messages.length === 0) return <p className="text-sm text-muted">No messages yet.</p>
   return (
     <ol className="flex flex-col gap-2">
       {data.messages.map((message) => (
-        <MessageBubble key={message.id} message={message} senders={data.senders} />
+        <MessageBubble key={message.id} message={message} senders={data.senders} now={now} />
       ))}
     </ol>
   )
@@ -48,7 +48,7 @@ export function Thread({
       <ThreadHeader data={data} viewer={viewer} admin={admin} assignees={assignees} />
       <ThreadDetails data={data} events={events} />
       <MessageLog scrollKey={`${messages.length}:${last?.id ?? ""}`}>
-        <Messages data={data} />
+        <Messages data={data} now={now} />
       </MessageLog>
       <ReplyArea data={data} template={template} now={now} />
     </>

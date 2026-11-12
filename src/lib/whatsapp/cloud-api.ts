@@ -10,6 +10,7 @@ export type SendFailureKind =
   | "recipient_unreachable" // not on WhatsApp, blocked us, or not an allowed test number
   | "template" // template missing, paused or wrong parameters
   | "network" // could not reach Meta
+  | "timeout" // Meta did not answer in time; the message may or may not have gone out
   | "unknown"
 
 export type SendResult =
@@ -29,6 +30,9 @@ export type CloudApiConfig = {
 }
 
 const DEFAULT_GRAPH_VERSION = "v23.0"
+// A send that takes longer than this is reported as "not known" rather than
+// holding up the rest of the run.
+const GRAPH_TIMEOUT_MS = 10_000
 
 // Meta error codes: https://developers.facebook.com/docs/whatsapp/cloud-api/support/error-codes
 export function classifyMetaError(code: number | string | null | undefined, httpStatus?: number): SendFailureKind {
@@ -50,6 +54,7 @@ export const FAILURE_TEXT: Record<SendFailureKind, string> = {
   recipient_unreachable: "WhatsApp could not deliver to this number.",
   template: "WhatsApp rejected the template (missing, paused or wrong parameters).",
   network: "Could not reach WhatsApp. Check the connection and try again.",
+  timeout: "WhatsApp did not answer in time, so it is not known whether the message went out. Check WhatsApp before sending it again.",
   unknown: "WhatsApp rejected the message.",
 }
 
@@ -69,9 +74,13 @@ export function createCloudApi(config: CloudApiConfig): CloudApi {
         method: "POST",
         headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
         body: JSON.stringify({ messaging_product: "whatsapp", recipient_type: "individual", ...payload }),
+        signal: AbortSignal.timeout(GRAPH_TIMEOUT_MS),
       })
-    } catch {
-      return { ok: false, kind: "network", code: null, message: FAILURE_TEXT.network }
+    } catch (error) {
+      const timedOut = error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError")
+      return timedOut
+        ? { ok: false, kind: "timeout", code: null, message: FAILURE_TEXT.timeout }
+        : { ok: false, kind: "network", code: null, message: FAILURE_TEXT.network }
     }
 
     let json: {

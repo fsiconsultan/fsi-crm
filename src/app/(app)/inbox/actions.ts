@@ -20,6 +20,24 @@ function fail(error: string): ActionState {
   return { error }
 }
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+// Ids come from form fields; anything that is not a uuid never reaches the database.
+function uuidField(formData: FormData, name: string): string | null {
+  const value = String(formData.get(name) ?? "")
+  return UUID.test(value) ? value : null
+}
+
+// The database refuses a hand-back by someone other than the person who took
+// over (or an Admin); say so in plain words.
+function handoverMessage(message: string) {
+  if (message.includes("Only the person who took over")) {
+    return "Only the person who took over, or an Admin, can hand this conversation back."
+  }
+  if (message.includes("under your own name")) return NOT_ALLOWED
+  return message
+}
+
 function done(): ActionState {
   revalidatePath("/inbox", "layout")
   return { error: null, ok: true }
@@ -27,7 +45,8 @@ function done(): ActionState {
 
 // Staff take the conversation: the AI stops replying until it is handed back.
 export async function takeOver(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  const conversationId = String(formData.get("conversationId") ?? "")
+  const conversationId = uuidField(formData, "conversationId")
+  if (!conversationId) return fail(NOT_ALLOWED)
   const profile = await getProfile()
   const db = await inboxClient()
   const now = new Date().toISOString()
@@ -37,7 +56,7 @@ export async function takeOver(_prev: ActionState, formData: FormData): Promise<
     .update({ mode: "human", taken_over_by: profile.id, taken_over_at: now })
     .eq("id", conversationId)
     .select("id, lead_id")
-  if (error) return fail(`Could not take over: ${error.message}`)
+  if (error) return fail(`Could not take over: ${handoverMessage(error.message)}`)
   if (!data?.length) return fail(NOT_ALLOWED)
 
   const log = await db.from("automation_events").insert({
@@ -53,7 +72,8 @@ export async function takeOver(_prev: ActionState, formData: FormData): Promise<
 }
 
 export async function handBack(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  const conversationId = String(formData.get("conversationId") ?? "")
+  const conversationId = uuidField(formData, "conversationId")
+  if (!conversationId) return fail(NOT_ALLOWED)
   const profile = await getProfile()
   const db = await inboxClient()
 
@@ -62,7 +82,7 @@ export async function handBack(_prev: ActionState, formData: FormData): Promise<
     .update({ mode: "bot", handed_back_at: new Date().toISOString() })
     .eq("id", conversationId)
     .select("id, lead_id")
-  if (error) return fail(`Could not hand back: ${error.message}`)
+  if (error) return fail(`Could not hand back: ${handoverMessage(error.message)}`)
   if (!data?.length) return fail(NOT_ALLOWED)
 
   const log = await db.from("automation_events").insert({
@@ -78,8 +98,10 @@ export async function handBack(_prev: ActionState, formData: FormData): Promise<
 }
 
 export async function assignConversation(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  const conversationId = String(formData.get("conversationId") ?? "")
-  const salesId = String(formData.get("salesId") ?? "") || null
+  const conversationId = uuidField(formData, "conversationId")
+  if (!conversationId) return fail(NOT_ALLOWED)
+  const salesId = uuidField(formData, "salesId")
+  if (String(formData.get("salesId") ?? "") && !salesId) return fail("Choose someone from the list.")
   const profile = await getProfile()
   if (!isAdmin(profile)) return fail("Only an Admin can assign conversations.")
   const db = await inboxClient()
@@ -98,10 +120,21 @@ export async function assignConversation(_prev: ActionState, formData: FormData)
   const problems: string[] = []
 
   // A lead the AI created has no owner yet. Give it this one so the salesperson
-  // can open it. A lead that already has an owner is left alone.
+  // can open it. Only a lead the automation created (a server-written
+  // lead_created event): an existing lead matched by phone is left alone.
   if (salesId && current.data.lead_id) {
-    const lead = await db.from("leads").update({ sales_id: salesId }).eq("id", current.data.lead_id).is("sales_id", null)
-    if (lead.error) problems.push(`the lead owner was not set (${lead.error.message})`)
+    const created = await db
+      .from("automation_events")
+      .select("id")
+      .eq("lead_id", current.data.lead_id)
+      .eq("type", "lead_created")
+      .is("actor_sales_id", null)
+      .limit(1)
+    if (created.error) problems.push(`the lead owner was not checked (${created.error.message})`)
+    else if (created.data?.length) {
+      const lead = await db.from("leads").update({ sales_id: salesId }).eq("id", current.data.lead_id).is("sales_id", null)
+      if (lead.error) problems.push(`the lead owner was not set (${lead.error.message})`)
+    }
   }
 
   const history = await db.from("assignment_history").insert({
@@ -142,13 +175,20 @@ export async function assignConversation(_prev: ActionState, formData: FormData)
   return problems.length ? fail(`Assigned, but ${problems.join(" and ")}.`) : { error: null, ok: true }
 }
 
-async function send(conversationId: string, content: OutboundContent): Promise<ActionState> {
+async function send(conversationId: string | null, content: OutboundContent): Promise<ActionState> {
+  if (!conversationId) return fail(NOT_ALLOWED)
   const profile = await getProfile()
-  const store = createSupabaseStore(await inboxClient())
+
+  // Messages are written by the server only, so a reply can never be recorded
+  // as delivered when it was not sent. The read below goes through RLS first,
+  // so this user can only send in a conversation they are allowed to see.
+  const admin = createAdminClient()
+  if (!admin) return fail("Sending is not set up on the server yet (SUPABASE_SECRET_KEY is missing).")
+  const store = createSupabaseStore(admin)
 
   let conversation
   try {
-    conversation = await store.getConversation(conversationId)
+    conversation = await createSupabaseStore(await inboxClient()).getConversation(conversationId)
   } catch (error) {
     return fail(error instanceof Error ? error.message : "Could not load the conversation.")
   }
@@ -183,13 +223,13 @@ export async function sendReply(_prev: ActionState, formData: FormData): Promise
   const body = String(formData.get("body") ?? "").trim()
   if (!body) return fail("Write a message first.")
   if (body.length > MAX_REPLY_LENGTH) return fail(`WhatsApp messages are limited to ${MAX_REPLY_LENGTH} characters.`)
-  return send(String(formData.get("conversationId") ?? ""), { type: "text", body })
+  return send(uuidField(formData, "conversationId"), { type: "text", body })
 }
 
 export async function sendReengageTemplate(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const template = reengageTemplate()
   if (!template) return fail("No approved template is configured yet.")
-  return send(String(formData.get("conversationId") ?? ""), {
+  return send(uuidField(formData, "conversationId"), {
     type: "template",
     name: template.name,
     languageCode: template.languageCode,
@@ -199,7 +239,8 @@ export async function sendReengageTemplate(_prev: ActionState, formData: FormDat
 
 // Resolves an ambiguous phone match: a person picks the lead.
 export async function linkLead(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  const conversationId = String(formData.get("conversationId") ?? "")
+  const conversationId = uuidField(formData, "conversationId")
+  if (!conversationId) return fail(NOT_ALLOWED)
   const leadId = Number(formData.get("leadId"))
   if (!Number.isInteger(leadId)) return fail("Choose a lead to link.")
   const profile = await getProfile()
@@ -236,7 +277,8 @@ export async function linkLead(_prev: ActionState, formData: FormData): Promise<
 }
 
 export async function resolveEvent(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  const eventId = String(formData.get("eventId") ?? "")
+  const eventId = uuidField(formData, "eventId")
+  if (!eventId) return fail("This item was already reviewed or is no longer visible to you.")
   const profile = await getProfile()
   const db = await inboxClient()
 
@@ -254,6 +296,7 @@ export async function resolveEvent(_prev: ActionState, formData: FormData): Prom
 
 // Called when a thread is opened. A failure only leaves the unread mark in place.
 export async function markRead(conversationId: string) {
+  if (!UUID.test(conversationId)) return
   await getProfile()
   const db = await inboxClient()
   const { error } = await db

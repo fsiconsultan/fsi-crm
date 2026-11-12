@@ -109,10 +109,14 @@ or longer than 15 is treated as unusable.
 | AI creates a lead from WhatsApp | new lead starts at `New` | Only for leads the AI creates. |
 | `qualification_completed` (all answers saved) | `New` to `First Contact` | Only if the automation set the current status. |
 
-The automation records every status it writes. Before changing a status it
-checks that the current status is the one it last wrote. If it is not, a person
-set or changed it, and the change is refused and listed for review as "Status
-change refused". Leads with no status are never given one. Unknown events and
+The automation records every status it writes and the exact time it wrote it
+(server-written events only; staff cannot add these). Before changing a status
+it checks that the lead still has that status and that `status_started_at` is
+still that exact time. If not, a person set or changed it, and the change is
+refused and listed for review as "Status change refused". This also catches a
+person moving the lead away and back, and any save in the legacy app (which
+writes `status_started_at` as a date). It cannot tell apart an edit that
+changes neither field. Leads with no status are never given one. Unknown events and
 database errors are listed as "Status change failed".
 
 ### Takeover
@@ -121,12 +125,35 @@ database errors are listed as "Status change failed".
   does not reply while a conversation is in `human` mode, including to new
   customer messages. A reply the AI was still writing at the moment of takeover
   is dropped.
-- "Hand back to AI" sets it to `bot`. Only this turns AI replies back on.
+- "Hand back to AI" sets it to `bot`. Only this turns AI replies back on. Only
+  the person who took over, or an Admin, can hand it back; when the AI asked
+  for a person and nobody has taken over yet, anyone who can see it can.
+- A takeover is always recorded under the name of the person who did it.
 - The AI can ask for a person itself (customer asks for one, complains, or asks
   something out of scope). It sends one closing message, the conversation goes
   to `human` with nobody named, and a "Handoff requested" item is listed.
 - Staff replies require takeover first, so the AI and a person never answer at
-  the same time. Staff messages are stored with the sender.
+  the same time. Staff messages are stored with the sender, and are written by
+  the server after it sends them, so a message can never be recorded as
+  delivered when it was not.
+
+### How the AI handles busy conversations
+
+- One AI run per conversation at a time. A customer who sends "Halo" and then
+  "mau pasang solar" two seconds later gets one answer to both: the second
+  run sees the first is working and stops, and the first notices the new
+  message before it sends and starts again with both in view.
+- Right before sending, the run checks again that nobody took over. If someone
+  did, nothing is sent. Once a person takes over, the AI stops before running
+  any further step.
+- Lead creation happens in one locked database step, so two runs can never
+  create two leads for one conversation.
+- Each model call has a time limit, and the whole run must finish within 50
+  seconds (the webhook allows 60). A run that runs out of time is logged as an
+  AI error. A run cut off by the platform is listed in the review list as "No
+  reply yet" after 3 minutes.
+- A message the server stored as "pending" but never heard back about from
+  WhatsApp is shown as "Not confirmed, check WhatsApp".
 
 ### The 24-hour window
 
@@ -153,6 +180,7 @@ file when FSI's engineering rules, catalogue, pricing and calendar are ready.
 | `send_failed` | Meta rejected a message, or accepted it and failed to deliver it. |
 | `handoff_requested` | The AI asked for a person. |
 | `ai_not_configured`, `ai_error`, `tool_failed` | The AI could not answer or a step failed. |
+| No reply yet (not an event) | A customer message the AI started on and never finished, after 3 minutes. Clears when the AI answers or someone takes over. |
 
 Informational events (`lead_created`, `lead_linked`, `status_changed`,
 `takeover`, `handback`, `reply_suppressed`, `unsupported_message`) are logged

@@ -6,9 +6,9 @@ import { buttonClass } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { ErrorState } from "@/components/ui/states"
 import { getProfile } from "@/lib/auth"
-import { loadReview, type ReviewEvent, type Loaded } from "@/lib/whatsapp/inbox"
+import { loadReview, type ReviewData, type Loaded } from "@/lib/whatsapp/inbox"
 
-function ReviewBody({ review }: { review: Loaded<ReviewEvent[]> }) {
+function ReviewBody({ review }: { review: Loaded<ReviewData> }) {
   if (review.state === "not_set_up") return <InboxNotSetUp />
   if (review.state === "error") {
     return (
@@ -27,7 +27,7 @@ function ReviewBody({ review }: { review: Loaded<ReviewEvent[]> }) {
   }
   return (
     <Card>
-      <ReviewList events={review.data} />
+      <ReviewList events={review.data.events} unanswered={review.data.unanswered} />
     </Card>
   )
 }

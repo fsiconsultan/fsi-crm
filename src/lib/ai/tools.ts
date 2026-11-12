@@ -1,4 +1,3 @@
-import { matchLeadByPhone } from "@/lib/phone"
 import type { Notifier } from "@/lib/push/notify"
 import { decideAssignment } from "@/lib/whatsapp/assignment"
 import { safeLog, type WaStore } from "@/lib/whatsapp/store"
@@ -27,20 +26,31 @@ type Args = Record<string, unknown>
 const text = (value: unknown) => (typeof value === "string" && value.trim() ? value.trim() : undefined)
 
 export async function findOrCreateLead(ctx: ToolContext, args: Args) {
-  const { store, conversation } = ctx
-  if (conversation.lead_id) return { status: "linked", lead_id: conversation.lead_id }
+  const { store } = ctx
+  // Re-read: another run or a person may have linked a lead since this run started.
+  const conversation = (await store.getConversation(ctx.conversation.id)) ?? ctx.conversation
+  if (conversation.lead_id) {
+    ctx.conversation = conversation
+    return { status: "linked", lead_id: conversation.lead_id }
+  }
 
-  const match = matchLeadByPhone(await store.findLeadsByPhoneWa(conversation.wa_id), conversation.wa_id)
+  const statusStartedAt = ctx.now.toISOString()
+  const link = await store.findOrCreateLead(conversation.id, {
+    customerName: text(args.customer_name) ?? conversation.profile_name,
+    status: STATUS_FOR_NEW_WHATSAPP_LEAD,
+    statusStartedAt,
+    notes: "Created from a WhatsApp conversation.",
+  })
 
-  if (match.kind === "ambiguous") {
+  if (link.kind === "ambiguous") {
     if (!(await store.hasOpenEvent(conversation.id, "lead_match_ambiguous"))) {
       await safeLog(store, {
         type: "lead_match_ambiguous",
         conversationId: conversation.id,
         severity: "warning",
         needsReview: true,
-        summary: `${match.leads.length} leads share this WhatsApp number. The conversation is not linked to any of them yet.`,
-        detail: { lead_ids: match.leads.map((l) => l.id) },
+        summary: `${link.leadIds.length} leads share this WhatsApp number. The conversation is not linked to any of them yet.`,
+        detail: { lead_ids: link.leadIds },
       })
     }
     return {
@@ -49,33 +59,19 @@ export async function findOrCreateLead(ctx: ToolContext, args: Args) {
     }
   }
 
-  const created = match.kind === "none"
-  const lead = created
-    ? await store.createLead({
-        customerName: text(args.customer_name) ?? conversation.profile_name,
-        phone: `+${conversation.wa_id}`,
-        status: STATUS_FOR_NEW_WHATSAPP_LEAD,
-        statusStartedAt: ctx.now.toISOString(),
-        notes: "Created from a WhatsApp conversation.",
-      })
-    : match.lead
+  ctx.conversation = { ...conversation, lead_id: link.leadId }
+  if (link.kind === "existing") return { status: "linked", lead_id: link.leadId }
 
-  const ownerActive = lead.sales_id ? await store.isSalesUserActive(lead.sales_id) : false
+  const created = link.kind === "created"
+  const lead = await store.getLead(link.leadId)
+  const ownerActive = lead?.sales_id ? await store.isSalesUserActive(lead.sales_id) : false
   const assignment = conversation.assigned_sales_id ? null : decideAssignment(lead, ownerActive)
-  await store.updateConversation(conversation.id, {
-    lead_id: lead.id,
-    ...(assignment ? { assigned_sales_id: assignment.salesId } : {}),
-  })
-  ctx.conversation = {
-    ...conversation,
-    lead_id: lead.id,
-    assigned_sales_id: assignment?.salesId ?? conversation.assigned_sales_id,
-  }
-
   if (assignment) {
+    await store.updateConversation(conversation.id, { assigned_sales_id: assignment.salesId })
+    ctx.conversation = { ...ctx.conversation, assigned_sales_id: assignment.salesId }
     await store.recordAssignment({
       conversationId: conversation.id,
-      leadId: lead.id,
+      leadId: link.leadId,
       fromSalesId: null,
       toSalesId: assignment.salesId,
       rule: assignment.rule,
@@ -87,20 +83,20 @@ export async function findOrCreateLead(ctx: ToolContext, args: Args) {
   await safeLog(store, {
     type: created ? "lead_created" : "lead_linked",
     conversationId: conversation.id,
-    leadId: lead.id,
+    leadId: link.leadId,
     summary: created
-      ? `Lead #${lead.id} created from WhatsApp with status ${STATUS_FOR_NEW_WHATSAPP_LEAD}.`
-      : `WhatsApp number matched existing lead #${lead.id}.`,
-    // `to` lets the status guard see that the automation set this status.
-    detail: created ? { source: "whatsapp", to: STATUS_FOR_NEW_WHATSAPP_LEAD } : { source: "whatsapp" },
+      ? `Lead #${link.leadId} created from WhatsApp with status ${STATUS_FOR_NEW_WHATSAPP_LEAD}.`
+      : `WhatsApp number matched existing lead #${link.leadId}.`,
+    // `to` and `at` let the status guard see that the automation set this status, and when.
+    detail: created ? { source: "whatsapp", to: STATUS_FOR_NEW_WHATSAPP_LEAD, at: statusStartedAt } : { source: "whatsapp" },
   })
 
   const existing = await store.getQualification(conversation.id)
-  if (existing && existing.lead_id !== lead.id) {
-    await store.saveQualification(conversation.id, lead.id, cleanAnswers(existing.answers))
+  if (existing && existing.lead_id !== link.leadId) {
+    await store.saveQualification(conversation.id, link.leadId, cleanAnswers(existing.answers))
   }
 
-  return { status: created ? "created" : "linked", lead_id: lead.id }
+  return { status: created ? "created" : "linked", lead_id: link.leadId }
 }
 
 export async function saveQualificationAnswers(ctx: ToolContext, args: Args) {

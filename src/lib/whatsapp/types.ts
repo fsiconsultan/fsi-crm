@@ -6,7 +6,7 @@ export type Qualification = Tables<"wa_qualifications">
 export type AutomationEvent = Tables<"automation_events">
 
 export type ConversationMode = "bot" | "human"
-export type MessageStatus = "received" | "sent" | "delivered" | "read" | "failed"
+export type MessageStatus = "received" | "pending" | "sent" | "delivered" | "read" | "failed"
 export type SenderType = "customer" | "bot" | "human"
 
 // The slice of a lead the automation reads. It never needs the rest.
@@ -16,6 +16,7 @@ export type LeadRef = {
   phone: string | null
   phone_wa: string | null
   status: string | null
+  status_started_at: string | null
   sales_id: string | null
 }
 

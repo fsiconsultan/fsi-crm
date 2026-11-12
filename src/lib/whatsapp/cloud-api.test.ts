@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { createCloudApi } from "./cloud-api"
+import { applyStatus } from "./ingest"
 import { sendAndRecord } from "./outbound"
 import { createMemoryStore } from "./testing/memory-store"
 
@@ -69,6 +70,21 @@ describe("Cloud API client", () => {
   it("treats a 200 without a message id as a failure, not a success", async () => {
     const { fn } = fakeFetch(200, { messages: [] })
     expect((await createCloudApi({ ...config, fetch: fn }).sendText("6281200000001", "Halo")).ok).toBe(false)
+  })
+
+  it("reports a Meta call that took too long as 'not known', not as a plain failure", async () => {
+    const fn = (async () => {
+      throw new DOMException("The operation timed out.", "TimeoutError")
+    }) as unknown as typeof fetch
+    const result = await createCloudApi({ ...config, fetch: fn }).sendText("6281200000001", "Halo")
+    expect(result).toMatchObject({ ok: false, kind: "timeout" })
+    expect(!result.ok && result.message).toContain("not known")
+  })
+
+  it("passes a timeout signal on every Meta call", async () => {
+    const { fn, calls } = fakeFetch(200, { messages: [{ id: "wamid.OUT1" }] })
+    await createCloudApi({ ...config, fetch: fn }).sendText("6281200000001", "Halo")
+    expect(calls[0].init.signal).toBeInstanceOf(AbortSignal)
   })
 
   it("reports a network failure instead of throwing", async () => {
@@ -151,4 +167,46 @@ describe("sendAndRecord", () => {
     expect(db.messages[0]).toMatchObject({ status: "failed", error_code: "190", wa_message_id: null })
     expect(db.conversations[0].last_message_preview).toBeNull()
   })
+
+  it("stores the message as pending before calling Meta, then fills in the result", async () => {
+    const { db, conversation: c } = await conversation("2026-11-12T11:00:00Z")
+    let seenDuringSend: string | undefined
+    const api = {
+      async sendText() {
+        seenDuringSend = db.messages[0]?.status
+        return { ok: true as const, waMessageId: "wamid.FAST" }
+      },
+      async sendTemplate(): Promise<never> {
+        throw new Error("not used")
+      },
+    }
+    await sendAndRecord({ store: db.store, api, conversation: c, content: { type: "text", body: "Halo" }, sender: { type: "bot" }, now })
+    expect(seenDuringSend).toBe("pending")
+    expect(db.messages).toEqual([expect.objectContaining({ status: "sent", wa_message_id: "wamid.FAST" })])
+  })
+
+  it("applies a 'failed' update that Meta sent before the send was recorded", async () => {
+    const { db, conversation: c } = await conversation("2026-11-12T11:00:00Z")
+    const api = {
+      async sendText() {
+        // Meta's status webhook wins the race against our own write.
+        await applyStatus(db.store, {
+          kind: "status",
+          waMessageId: "wamid.RACE",
+          status: "failed",
+          errorCode: "131026",
+          errorMessage: "Message undeliverable",
+        })
+        return { ok: true as const, waMessageId: "wamid.RACE" }
+      },
+      async sendTemplate(): Promise<never> {
+        throw new Error("not used")
+      },
+    }
+    await sendAndRecord({ store: db.store, api, conversation: c, content: { type: "text", body: "Halo" }, sender: { type: "bot" }, now })
+    expect(db.messages[0]).toMatchObject({ status: "failed", error_code: "131026" })
+    expect(db.held).toEqual([])
+    expect(db.events).toContainEqual(expect.objectContaining({ type: "send_failed", needs_review: true }))
+  })
 })
+

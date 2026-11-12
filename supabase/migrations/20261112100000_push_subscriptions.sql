@@ -16,7 +16,8 @@
 -- device belongs to whoever turned notifications on last.
 create table public.push_subscriptions (
     id uuid primary key default gen_random_uuid(),
-    sales_user_id uuid not null references public.sales_users (id),
+    -- A device belongs to its user: deleting the user deletes their devices.
+    sales_user_id uuid not null references public.sales_users (id) on delete cascade,
     endpoint text not null unique,
     p256dh text not null,
     auth text not null,

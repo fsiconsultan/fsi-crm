@@ -26,6 +26,17 @@ const meta: Record<Kind, string> = {
 
 const DELIVERY: Record<string, string> = { sent: "Sent", delivered: "Delivered", read: "Read" }
 
+// A send that is still "pending" after this long was cut off before WhatsApp
+// answered, so whether it went out is unknown.
+const PENDING_STALE_MS = 2 * 60 * 1000
+
+function deliveryLabel(message: Message, now: Date) {
+  if (message.status !== "pending") return DELIVERY[message.status]
+  return now.getTime() - new Date(message.created_at).getTime() > PENDING_STALE_MS
+    ? "Not confirmed, check WhatsApp"
+    : "Sending"
+}
+
 function kindOf(message: Message): Kind {
   if (message.sender_type === "customer") return "inbound"
   return message.status === "failed" ? "failed" : "outbound"
@@ -54,9 +65,17 @@ function FailureDetail({ message }: { message: Message }) {
   )
 }
 
-export function MessageBubble({ message, senders }: { message: Message; senders: Record<string, string> }) {
+export function MessageBubble({
+  message,
+  senders,
+  now,
+}: {
+  message: Message
+  senders: Record<string, string>
+  now: Date
+}) {
   const kind = kindOf(message)
-  const delivery = kind === "outbound" ? DELIVERY[message.status] : undefined
+  const delivery = kind === "outbound" ? deliveryLabel(message, now) : undefined
 
   return (
     <li className={cn("flex", align[kind])}>

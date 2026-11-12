@@ -1,14 +1,17 @@
 import { normalizePhone } from "@/lib/phone"
-import type { WaStore } from "../store"
+import type { HeldStatus, WaStore } from "../store"
 import type { AutomationEvent, Conversation, LeadRef, Message, Qualification } from "../types"
 
 // In-memory WaStore for tests. It keeps the same guarantees the database gives:
 // unique wa_id, unique wa_message_id, compare-and-set on lead status. Reads
 // return copies, as a database does, so callers cannot see later writes.
-export function createMemoryStore(seed: { leads?: LeadRef[]; inactiveSales?: string[] } = {}) {
+type SeedLead = Omit<LeadRef, "status_started_at"> & { status_started_at?: string | null }
+
+export function createMemoryStore(seed: { leads?: SeedLead[]; inactiveSales?: string[] } = {}) {
   const conversations: Conversation[] = []
   const messages: Message[] = []
-  const leads: LeadRef[] = [...(seed.leads ?? [])]
+  const leads: LeadRef[] = (seed.leads ?? []).map((lead) => ({ status_started_at: null, ...lead }))
+  const held: HeldStatus[] = []
   const qualifications: Qualification[] = []
   const events: AutomationEvent[] = []
   const assignments: Array<Record<string, unknown>> = []
@@ -45,6 +48,9 @@ export function createMemoryStore(seed: { leads?: LeadRef[]; inactiveSales?: str
         last_message_at: null,
         last_message_preview: null,
         last_read_at: null,
+        ai_run_id: null,
+        ai_run_at: null,
+        ai_pending_since: null,
         created_at: now,
         updated_at: now,
       }
@@ -90,6 +96,31 @@ export function createMemoryStore(seed: { leads?: LeadRef[]; inactiveSales?: str
       if (patch.errorCode !== undefined) message.error_code = patch.errorCode
       if (patch.errorMessage !== undefined) message.error_message = patch.errorMessage
     },
+    async updateMessage(messageId, patch) {
+      const message = messages.find((m) => m.id === messageId)
+      if (!message) throw new Error("Update message: not found")
+      if (patch.waMessageId && messages.some((m) => m.wa_message_id === patch.waMessageId && m.id !== messageId)) {
+        throw new Error("Update message: duplicate wa_message_id")
+      }
+      Object.assign(message, {
+        wa_message_id: patch.waMessageId,
+        status: patch.status,
+        error_code: patch.errorCode,
+        error_message: patch.errorMessage,
+      })
+    },
+    async hasOutboundAfter(conversationId, createdAt) {
+      return messages.some((m) => m.conversation_id === conversationId && m.direction === "outbound" && m.created_at > createdAt)
+    },
+    async holdStatus(update) {
+      const i = held.findIndex((h) => h.waMessageId === update.waMessageId)
+      if (i >= 0) held.splice(i, 1)
+      held.push({ ...update })
+    },
+    async takeHeldStatus(waMessageId) {
+      const i = held.findIndex((h) => h.waMessageId === waMessageId)
+      return i >= 0 ? held.splice(i, 1)[0] : null
+    },
     async latestInboundMessageId(conversationId) {
       const inbound = messages.filter((m) => m.conversation_id === conversationId && m.direction === "inbound")
       return inbound.at(-1)?.id ?? null
@@ -101,22 +132,35 @@ export function createMemoryStore(seed: { leads?: LeadRef[]; inactiveSales?: str
       const lead = leads.find((l) => l.id === leadId)
       return lead ? { ...lead } : null
     },
-    async createLead(input) {
+    async findOrCreateLead(conversationId, input) {
+      // Synchronous from here on, so it is atomic like the locked SQL function.
+      const conversation = conversations.find((c) => c.id === conversationId)
+      if (!conversation) throw new Error("Find or create lead: conversation not found")
+      if (conversation.lead_id !== null) return { kind: "existing", leadId: conversation.lead_id }
+      const matches = leads.filter((l) => l.phone_wa === conversation.wa_id)
+      if (matches.length > 1) return { kind: "ambiguous", leadIds: matches.map((l) => l.id) }
+      if (matches.length === 1) {
+        conversation.lead_id = matches[0].id
+        return { kind: "linked", leadId: matches[0].id }
+      }
       const lead: LeadRef = {
         id: Math.max(0, ...leads.map((l) => l.id)) + 1,
         customer_name: input.customerName,
-        phone: input.phone,
-        phone_wa: normalizePhone(input.phone),
+        phone: `+${conversation.wa_id}`,
+        phone_wa: normalizePhone(`+${conversation.wa_id}`),
         status: input.status,
+        status_started_at: input.statusStartedAt,
         sales_id: null,
       }
       leads.push(lead)
-      return { ...lead }
+      conversation.lead_id = lead.id
+      return { kind: "created", leadId: lead.id }
     },
-    async updateLeadStatus(leadId, expected, to) {
+    async updateLeadStatus(leadId, expected, to, at) {
       const lead = leads.find((l) => l.id === leadId)
       if (!lead || lead.status !== expected) return false
       lead.status = to
+      lead.status_started_at = at
       return true
     },
     async getQualification(conversationId) {
@@ -148,13 +192,36 @@ export function createMemoryStore(seed: { leads?: LeadRef[]; inactiveSales?: str
     },
     async lastAutomatedStatus(leadId) {
       const last = events
-        .filter((e) => e.lead_id === leadId && (e.type === "status_changed" || e.type === "lead_created"))
+        .filter(
+          (e) =>
+            e.lead_id === leadId && e.actor_sales_id === null && (e.type === "status_changed" || e.type === "lead_created"),
+        )
         .at(-1)
-      const to = (last?.detail as { to?: unknown } | undefined)?.to
-      return typeof to === "string" ? to : null
+      const detail = last?.detail as { to?: unknown; at?: unknown } | undefined
+      if (typeof detail?.to !== "string") return null
+      return { status: detail.to, at: typeof detail.at === "string" ? detail.at : null }
     },
     async hasOpenEvent(conversationId, type) {
       return events.some((e) => e.conversation_id === conversationId && e.type === type && !e.resolved_at)
+    },
+    async claimAiRun(conversationId, runId, staleBefore) {
+      const c = conversations.find((x) => x.id === conversationId)
+      if (!c || (c.ai_run_id !== null && (c.ai_run_at ?? "") >= staleBefore)) return false
+      c.ai_run_id = runId
+      c.ai_run_at = new Date().toISOString()
+      return true
+    },
+    async confirmAiSend(conversationId, runId, afterOwnHandoff) {
+      const c = conversations.find((x) => x.id === conversationId)
+      if (!c || c.ai_run_id !== runId) return false
+      return afterOwnHandoff ? c.mode === "human" && c.taken_over_by === null : c.mode === "bot"
+    },
+    async releaseAiRun(conversationId, runId, clearPending) {
+      const c = conversations.find((x) => x.id === conversationId)
+      if (!c || c.ai_run_id !== runId) return
+      c.ai_run_id = null
+      c.ai_run_at = null
+      if (clearPending) c.ai_pending_since = null
     },
     async isSalesUserActive(salesId) {
       return !seed.inactiveSales?.includes(salesId)
@@ -164,5 +231,5 @@ export function createMemoryStore(seed: { leads?: LeadRef[]; inactiveSales?: str
     },
   }
 
-  return { store, conversations, messages, leads, qualifications, events, assignments }
+  return { store, conversations, messages, leads, qualifications, events, assignments, held }
 }

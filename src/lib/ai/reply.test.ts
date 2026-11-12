@@ -275,8 +275,8 @@ describe("AI reply", () => {
   it("logs a failing tool and tells the model it failed", async () => {
     const db = createMemoryStore()
     const pending = await receive(db)
-    db.store.createLead = async () => {
-      throw new Error("Create lead: permission denied")
+    db.store.findOrCreateLead = async () => {
+      throw new Error("Find or create lead: permission denied")
     }
     const { model, calls } = fakeModel([
       { toolCalls: [call("find_or_create_lead")] },
@@ -372,4 +372,117 @@ describe("AI reply", () => {
     expect(await run).toBe("sent")
     expect(notified).toBe(true)
   })
+
+  it("two messages two seconds apart give one lead and one reply that answers both", async () => {
+    const db = createMemoryStore()
+    const first = await receive(db, "Halo")
+    let second: Awaited<ReturnType<typeof receive>> | undefined
+    let secondOutcome: string | undefined
+    const { model, calls } = fakeModel([
+      // While the model works on "Halo", the customer writes again and that
+      // delivery's own run starts.
+      async () => {
+        second = await receive(db, "mau pasang solar", "wamid.TEST_INBOUND_0002")
+        secondOutcome = await answerInbound(second, deps(db, model2))
+        return { toolCalls: [call("find_or_create_lead", { customer_name: "Budi" })] }
+      },
+      { content: "Halo! (stale answer to the first message)" },
+      // Restarted with both messages in view.
+      { toolCalls: [call("find_or_create_lead", { customer_name: "Budi" })] },
+      { content: "Halo Pak, boleh tahu lokasinya?" },
+    ])
+    const model2 = fakeModel([{ content: "must not be used" }]).model
+    const { api, sent } = fakeApi()
+
+    expect(await answerInbound(first, deps(db, model, api))).toBe("sent")
+    expect(secondOutcome).toBe("skipped_busy")
+    expect(db.leads).toHaveLength(1)
+    expect(sent.map((m) => m.body)).toEqual(["Halo Pak, boleh tahu lokasinya?"])
+    // The restarted run saw both customer messages.
+    expect(calls[2].messages.filter((m) => m.role === "user").map((m) => m.content)).toEqual([
+      "Halo",
+      "mau pasang solar",
+    ])
+    expect(db.conversations[0].ai_run_id).toBeNull()
+    expect(db.conversations[0].ai_pending_since).toBeNull()
+  })
+
+  it("answers a message that arrived just after the last check, once the first run releases", async () => {
+    const db = createMemoryStore()
+    const first = await receive(db, "Halo")
+    const { model } = fakeModel([{ content: "Halo, ada yang bisa dibantu?" }, { content: "Tentu, di mana lokasinya?" }])
+    const { api, sent } = fakeApi()
+    const confirm = db.store.confirmAiSend
+    let injected = false
+    db.store.confirmAiSend = async (...args) => {
+      if (!injected) {
+        injected = true
+        await receive(db, "Saya mau pasang solar", "wamid.TEST_INBOUND_0002")
+      }
+      return confirm(...args)
+    }
+
+    expect(await answerInbound(first, deps(db, model, api))).toBe("sent")
+    expect(sent.map((m) => m.body)).toEqual(["Halo, ada yang bisa dibantu?", "Tentu, di mana lokasinya?"])
+  })
+
+  it("stops before running a tool once staff have taken over mid-run", async () => {
+    const db = createMemoryStore()
+    const pending = await receive(db)
+    const { model } = fakeModel([
+      async () => {
+        await db.store.updateConversation(db.conversations[0].id, { mode: "human", taken_over_by: "sales-1" })
+        return { toolCalls: [call("find_or_create_lead", { customer_name: "Budi" })] }
+      },
+    ])
+    const { api, sent } = fakeApi()
+
+    expect(await answerInbound(pending, deps(db, model, api))).toBe("suppressed_after_takeover")
+    expect(db.leads).toHaveLength(0)
+    expect(sent).toHaveLength(0)
+    expect(db.events.at(-1)).toMatchObject({ type: "reply_suppressed" })
+  })
+
+  it("does not start a second run while one holds the conversation", async () => {
+    const db = createMemoryStore()
+    const pending = await receive(db)
+    await db.store.claimAiRun(db.conversations[0].id, "other-run", new Date(0).toISOString())
+    const { model, calls } = fakeModel([{ content: "Halo" }])
+    expect(await answerInbound(pending, deps(db, model))).toBe("skipped_busy")
+    expect(calls).toHaveLength(0)
+  })
+
+  it("takes over a claim left by a run that was cut off", async () => {
+    const db = createMemoryStore()
+    const pending = await receive(db)
+    db.conversations[0].ai_run_id = "dead-run"
+    db.conversations[0].ai_run_at = new Date(Date.now() - 10 * 60 * 1000).toISOString()
+    expect(await answerInbound(pending, deps(db, fakeModel([{ content: "Halo" }]).model))).toBe("sent")
+  })
+
+  it("logs an error instead of running past the deadline", async () => {
+    const db = createMemoryStore()
+    const pending = await receive(db)
+    const { model, calls } = fakeModel([{ content: "too late" }])
+    const { api, sent } = fakeApi()
+
+    expect(await answerInbound(pending, { ...deps(db, model, api), deadline: Date.now() + 500 })).toBe("error")
+    expect(calls).toHaveLength(0)
+    expect(sent).toHaveLength(0)
+    expect(db.events.at(-1)).toMatchObject({ type: "ai_error", needs_review: true })
+    expect(db.events.at(-1)?.summary).toContain("ran out of time")
+    // Logged, so it is no longer waiting silently.
+    expect(db.conversations[0].ai_pending_since).toBeNull()
+  })
+
+  it("passes the time left in the run to each model call", async () => {
+    const db = createMemoryStore()
+    const pending = await receive(db)
+    const { model, calls } = fakeModel([{ content: "Halo" }])
+    await answerInbound(pending, { ...deps(db, model), deadline: Date.now() + 8000 })
+    expect(calls).toHaveLength(1)
+    expect(calls[0].timeoutMs).toBeGreaterThan(0)
+    expect(calls[0].timeoutMs).toBeLessThanOrEqual(8000)
+  })
 })
+

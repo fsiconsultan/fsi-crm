@@ -11,8 +11,11 @@ import { handleDelivery, handleVerification } from "@/lib/whatsapp/webhook"
 // proxy.ts skips this path: Meta is not a signed-in user. The signature check
 // in handleDelivery is what authenticates the caller.
 
-// Time for the AI reply that runs after the 200 has been sent.
+// Time for the AI reply that runs after the 200 has been sent. The AI work gets
+// a deadline well inside it, so a slow model ends in a logged error instead of
+// the platform cutting the run off silently.
 export const maxDuration = 60
+const AI_BUDGET_MS = 50_000
 
 export async function GET(request: Request) {
   const { status, body } = handleVerification(
@@ -33,12 +36,14 @@ export async function POST(request: Request) {
     appSecret: process.env.WHATSAPP_APP_SECRET,
     store,
     now: new Date(),
+    phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID,
   })
 
   if (admin && store && pending.length > 0) {
+    const deadline = Date.now() + AI_BUDGET_MS
     after(async () => {
       const notifier = notifierFromEnv(admin)
-      const deps = { store, api: cloudApiFromEnv(), model: openAiModelFromEnv(), now: () => new Date(), notifier }
+      const deps = { store, api: cloudApiFromEnv(), model: openAiModelFromEnv(), now: () => new Date(), notifier, deadline }
       for (const item of pending) {
         // The customer's answer comes first; the staff notification follows it.
         await answerInbound(item, deps)

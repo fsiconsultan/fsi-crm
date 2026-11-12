@@ -1,9 +1,9 @@
 import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js"
 import type { Database } from "./database.types"
-import type { JsonObject, WaStore } from "./store"
+import type { HeldStatus, JsonObject, WaStore } from "./store"
 import type { LeadRef } from "./types"
 
-const LEAD_COLUMNS = "id, customer_name, phone, phone_wa, status, sales_id"
+const LEAD_COLUMNS = "id, customer_name, phone, phone_wa, status, status_started_at, sales_id"
 const UNIQUE_VIOLATION = "23505"
 
 function check(error: PostgrestError | null, what: string) {
@@ -110,6 +110,58 @@ export function createSupabaseStore(db: SupabaseClient<Database>): WaStore {
       check(error, "Update message status")
     },
 
+    async updateMessage(id, patch) {
+      const { error } = await db
+        .from("wa_messages")
+        .update({
+          wa_message_id: patch.waMessageId,
+          status: patch.status,
+          error_code: patch.errorCode,
+          error_message: patch.errorMessage,
+        })
+        .eq("id", id)
+      check(error, "Update message")
+    },
+
+    async hasOutboundAfter(conversationId, createdAt) {
+      const { data, error } = await db
+        .from("wa_messages")
+        .select("id")
+        .eq("conversation_id", conversationId)
+        .eq("direction", "outbound")
+        .gt("created_at", createdAt)
+        .limit(1)
+      check(error, "Read replies")
+      return (data ?? []).length > 0
+    },
+
+    async holdStatus(update) {
+      const { error } = await db.from("wa_status_backlog").upsert(
+        {
+          wa_message_id: update.waMessageId,
+          status: update.status,
+          error_code: update.errorCode,
+          error_message: update.errorMessage,
+        },
+        { onConflict: "wa_message_id" },
+      )
+      check(error, "Hold delivery status")
+    },
+
+    async takeHeldStatus(waMessageId) {
+      const { data, error } = await db.from("wa_status_backlog").delete().eq("wa_message_id", waMessageId).select("*")
+      check(error, "Read held delivery status")
+      const row = data?.[0]
+      return row
+        ? {
+            waMessageId: row.wa_message_id,
+            status: row.status as HeldStatus["status"],
+            errorCode: row.error_code,
+            errorMessage: row.error_message,
+          }
+        : null
+    },
+
     async latestInboundMessageId(conversationId) {
       const { data, error } = await db
         .from("wa_messages")
@@ -135,21 +187,18 @@ export function createSupabaseStore(db: SupabaseClient<Database>): WaStore {
       return data as LeadRef | null
     },
 
-    async createLead(input) {
-      // phone_wa is filled by the leads_set_phone_wa trigger.
-      const { data, error } = await db
-        .from("leads")
-        .insert({
-          customer_name: input.customerName,
-          phone: input.phone,
-          status: input.status,
-          status_started_at: input.statusStartedAt,
-          notes: input.notes,
-        })
-        .select(LEAD_COLUMNS)
-        .single()
-      check(error, "Create lead")
-      return data as LeadRef
+    async findOrCreateLead(conversationId, input) {
+      const { data, error } = await db.rpc("wa_find_or_create_lead", {
+        p_conversation_id: conversationId,
+        p_customer_name: input.customerName ?? "",
+        p_status: input.status,
+        p_status_started_at: input.statusStartedAt,
+        p_notes: input.notes,
+      })
+      check(error, "Find or create lead")
+      const result = data as { kind: string; lead_id?: number; lead_ids?: number[] }
+      if (result.kind === "ambiguous") return { kind: "ambiguous", leadIds: result.lead_ids ?? [] }
+      return { kind: result.kind as "existing" | "linked" | "created", leadId: Number(result.lead_id) }
     },
 
     async updateLeadStatus(id, expected, to, at) {
@@ -193,17 +242,20 @@ export function createSupabaseStore(db: SupabaseClient<Database>): WaStore {
     },
 
     async lastAutomatedStatus(leadId) {
+      // Only server-written rows (no actor): staff cannot forge what the automation did.
       const { data, error } = await db
         .from("automation_events")
         .select("detail")
         .eq("lead_id", leadId)
+        .is("actor_sales_id", null)
         .in("type", ["status_changed", "lead_created"])
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle()
       check(error, "Read status history")
-      const to = (data?.detail as { to?: unknown } | null)?.to
-      return typeof to === "string" ? to : null
+      const detail = data?.detail as { to?: unknown; at?: unknown } | null
+      if (typeof detail?.to !== "string") return null
+      return { status: detail.to, at: typeof detail.at === "string" ? detail.at : null }
     },
 
     async hasOpenEvent(conversationId, type) {
@@ -234,6 +286,39 @@ export function createSupabaseStore(db: SupabaseClient<Database>): WaStore {
         assigned_by: input.assignedBy,
       })
       check(error, "Record assignment")
+    },
+
+    async claimAiRun(conversationId, runId, staleBefore) {
+      const { data, error } = await db
+        .from("wa_conversations")
+        .update({ ai_run_id: runId, ai_run_at: new Date().toISOString() })
+        .eq("id", conversationId)
+        .or(`ai_run_id.is.null,ai_run_at.lt.${staleBefore}`)
+        .select("id")
+      check(error, "Claim AI run")
+      return (data ?? []).length === 1
+    },
+
+    async confirmAiSend(conversationId, runId, afterOwnHandoff) {
+      const query = db
+        .from("wa_conversations")
+        .update({ ai_run_at: new Date().toISOString() })
+        .eq("id", conversationId)
+        .eq("ai_run_id", runId)
+      // Bot mode, or the AI's own handoff that nobody has claimed yet.
+      const guarded = afterOwnHandoff ? query.eq("mode", "human").is("taken_over_by", null) : query.eq("mode", "bot")
+      const { data, error } = await guarded.select("id")
+      check(error, "Confirm AI send")
+      return (data ?? []).length === 1
+    },
+
+    async releaseAiRun(conversationId, runId, clearPending) {
+      const { error } = await db
+        .from("wa_conversations")
+        .update({ ai_run_id: null, ai_run_at: null, ...(clearPending ? { ai_pending_since: null } : {}) })
+        .eq("id", conversationId)
+        .eq("ai_run_id", runId)
+      check(error, "Release AI run")
     },
   }
 }

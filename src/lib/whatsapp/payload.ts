@@ -105,15 +105,29 @@ function readStatus(raw: RawStatus): StatusUpdate | null {
 
 // Flattens a webhook body into the events we handle. Anything it does not
 // recognise is skipped, never thrown on.
-export function parseWebhook(payload: unknown): WebhookEvent[] {
+//
+// Only WhatsApp Business "messages" changes are read. When phoneNumberId is
+// given (WHATSAPP_PHONE_NUMBER_ID), changes for any other number on the same
+// Meta app are skipped and reported through onOtherNumber.
+export function parseWebhook(
+  payload: unknown,
+  options: { phoneNumberId?: string; onOtherNumber?: (phoneNumberId: string | null) => void } = {},
+): WebhookEvent[] {
   const events: WebhookEvent[] = []
   const body = payload as WebhookPayload | null
   if (!body || typeof body !== "object" || !Array.isArray(body.entry)) return events
+  if (body.object !== "whatsapp_business_account") return events
 
   for (const entry of body.entry) {
     for (const change of entry?.changes ?? []) {
+      if (change?.field !== "messages") continue
       const value = change?.value
       if (!value || typeof value !== "object") continue
+      const number = value.metadata?.phone_number_id ?? null
+      if (options.phoneNumberId && number !== options.phoneNumberId) {
+        options.onOtherNumber?.(number)
+        continue
+      }
 
       for (const raw of Array.isArray(value.messages) ? value.messages : []) {
         const message = readMessage(raw ?? {}, value)

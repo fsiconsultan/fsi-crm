@@ -156,17 +156,24 @@ create table public.wa_conversations (
     wa_id text not null unique,
     profile_name text,
     phone_number_id text,
-    lead_id bigint references public.leads (id),
+    lead_id bigint references public.leads (id) on delete set null,
     source text not null default 'whatsapp',
     mode text not null default 'bot',
-    assigned_sales_id uuid references public.sales_users (id),
-    taken_over_by uuid references public.sales_users (id),
+    assigned_sales_id uuid references public.sales_users (id) on delete set null,
+    taken_over_by uuid references public.sales_users (id) on delete set null,
     taken_over_at timestamptz,
     handed_back_at timestamptz,
     last_inbound_at timestamptz,
     last_message_at timestamptz,
     last_message_preview text,
     last_read_at timestamptz,
+    -- One AI run at a time per conversation: the run that set ai_run_id owns it
+    -- until it clears it (or ai_run_at is older than a run can last).
+    ai_run_id uuid,
+    ai_run_at timestamptz,
+    -- Set when a customer message is waiting for the AI, cleared when a run
+    -- finishes. Still set minutes later means a run was cut off: /inbox/review lists it.
+    ai_pending_since timestamptz,
     created_at timestamptz not null default now(),
     updated_at timestamptz not null default now(),
     constraint wa_conversations_mode_check check (mode = any (array['bot', 'human']))
@@ -186,7 +193,7 @@ create table public.wa_messages (
     conversation_id uuid not null references public.wa_conversations (id),
     direction text not null,
     sender_type text not null,
-    sender_sales_id uuid references public.sales_users (id),
+    sender_sales_id uuid references public.sales_users (id) on delete set null,
     message_type text not null default 'text',
     body text,
     wa_message_id text unique,
@@ -198,10 +205,21 @@ create table public.wa_messages (
     constraint wa_messages_direction_check check (direction = any (array['inbound', 'outbound'])),
     constraint wa_messages_sender_type_check check (sender_type = any (array['customer', 'bot', 'human'])),
     constraint wa_messages_status_check
-        check (status = any (array['received', 'sent', 'delivered', 'read', 'failed']))
+        check (status = any (array['received', 'pending', 'sent', 'delivered', 'read', 'failed']))
 );
 
 create index idx_wa_messages_conversation on public.wa_messages (conversation_id, created_at);
+
+-- Delivery updates that arrive before the message they describe has its Meta id
+-- stored (Meta can report "failed" within milliseconds of accepting a send).
+-- The server applies them once the id is written. Server only.
+create table public.wa_status_backlog (
+    wa_message_id text primary key,
+    status text not null,
+    error_code text,
+    error_message text,
+    received_at timestamptz not null default now()
+);
 
 -- 5. wa_qualifications --------------------------------------------------------
 -- The qualification answers the AI has collected for a conversation, as one
@@ -210,7 +228,7 @@ create index idx_wa_messages_conversation on public.wa_messages (conversation_id
 
 create table public.wa_qualifications (
     conversation_id uuid primary key references public.wa_conversations (id),
-    lead_id bigint references public.leads (id),
+    lead_id bigint references public.leads (id) on delete set null,
     answers jsonb not null default '{}'::jsonb,
     created_at timestamptz not null default now(),
     updated_at timestamptz not null default now()
@@ -227,16 +245,16 @@ create index idx_wa_qualifications_lead_id on public.wa_qualifications (lead_id)
 create table public.automation_events (
     id uuid primary key default gen_random_uuid(),
     conversation_id uuid references public.wa_conversations (id),
-    lead_id bigint references public.leads (id),
+    lead_id bigint references public.leads (id) on delete set null,
     type text not null,
     severity text not null default 'info',
     needs_review boolean not null default false,
     summary text not null,
     detail jsonb not null default '{}'::jsonb,
-    actor_sales_id uuid references public.sales_users (id),
+    actor_sales_id uuid references public.sales_users (id) on delete set null,
     created_at timestamptz not null default now(),
     resolved_at timestamptz,
-    resolved_by uuid references public.sales_users (id),
+    resolved_by uuid references public.sales_users (id) on delete set null,
     constraint automation_events_severity_check
         check (severity = any (array['info', 'warning', 'error']))
 );
@@ -254,11 +272,11 @@ create index idx_automation_events_lead on public.automation_events (lead_id, cr
 create table public.assignment_history (
     id uuid primary key default gen_random_uuid(),
     conversation_id uuid references public.wa_conversations (id),
-    lead_id bigint references public.leads (id),
-    from_sales_id uuid references public.sales_users (id),
-    to_sales_id uuid references public.sales_users (id),
+    lead_id bigint references public.leads (id) on delete set null,
+    from_sales_id uuid references public.sales_users (id) on delete set null,
+    to_sales_id uuid references public.sales_users (id) on delete set null,
     rule text not null,
-    assigned_by uuid references public.sales_users (id),
+    assigned_by uuid references public.sales_users (id) on delete set null,
     created_at timestamptz not null default now()
 );
 
@@ -369,9 +387,102 @@ begin
 end;
 $$;
 
+-- Applies to everyone signed in, Admins included: a takeover is recorded under
+-- the person who did it, and only that person or an Admin hands it back.
+create or replace function private.guard_wa_conversation_handover()
+returns trigger
+language plpgsql
+security definer
+set search_path to ''
+as $$
+declare
+    v_me uuid := (select private.current_sales_user_id());
+begin
+    -- A person (or the AI's own handoff) has the conversation: nothing is owed
+    -- by the AI any more, so it must not show as "waiting for a reply".
+    if new.mode = 'human' then
+        new.ai_pending_since := null;
+    end if;
+
+    if (select auth.uid()) is null then
+        return new;
+    end if;
+
+    if new.taken_over_by is distinct from old.taken_over_by
+       and new.taken_over_by is not null and new.taken_over_by is distinct from v_me then
+        raise exception 'A takeover can only be recorded under your own name';
+    end if;
+
+    if old.mode = 'human' and new.mode = 'bot'
+       and old.taken_over_by is not null and old.taken_over_by is distinct from v_me
+       and not (select public.is_admin()) then
+        raise exception 'Only the person who took over, or an Admin, can hand this conversation back';
+    end if;
+
+    return new;
+end;
+$$;
+
 create trigger wa_conversations_guard_update
     before update on public.wa_conversations
     for each row execute function private.guard_wa_conversation_update();
+
+create trigger wa_conversations_guard_handover
+    before update on public.wa_conversations
+    for each row execute function private.guard_wa_conversation_handover();
+
+-- Links a conversation to its lead, creating the lead when the number is new.
+-- One transaction with the conversation row locked, so two overlapping AI runs
+-- can never create two leads. Matches leads.phone_wa = wa_id (both are
+-- country code first digits). Server only.
+create or replace function public.wa_find_or_create_lead(
+    p_conversation_id uuid,
+    p_customer_name text,
+    p_status text,
+    p_status_started_at timestamptz,
+    p_notes text
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path to ''
+as $$
+declare
+    v_conversation public.wa_conversations;
+    v_ids bigint[];
+    v_lead_id bigint;
+begin
+    select * into v_conversation from public.wa_conversations where id = p_conversation_id for update;
+    if not found then
+        raise exception 'Conversation % not found', p_conversation_id;
+    end if;
+
+    if v_conversation.lead_id is not null then
+        return jsonb_build_object('kind', 'existing', 'lead_id', v_conversation.lead_id);
+    end if;
+
+    select array_agg(id order by id) into v_ids from public.leads where phone_wa = v_conversation.wa_id;
+
+    if coalesce(array_length(v_ids, 1), 0) > 1 then
+        return jsonb_build_object('kind', 'ambiguous', 'lead_ids', to_jsonb(v_ids));
+    end if;
+
+    if coalesce(array_length(v_ids, 1), 0) = 1 then
+        v_lead_id := v_ids[1];
+        update public.wa_conversations set lead_id = v_lead_id where id = p_conversation_id;
+        return jsonb_build_object('kind', 'linked', 'lead_id', v_lead_id);
+    end if;
+
+    insert into public.leads (customer_name, phone, status, status_started_at, notes)
+    values (p_customer_name, '+' || v_conversation.wa_id, p_status, p_status_started_at, p_notes)
+    returning id into v_lead_id;
+    update public.wa_conversations set lead_id = v_lead_id where id = p_conversation_id;
+    return jsonb_build_object('kind', 'created', 'lead_id', v_lead_id);
+end;
+$$;
+
+revoke all on function public.wa_find_or_create_lead(uuid, text, text, timestamptz, text) from public, anon, authenticated;
+grant execute on function public.wa_find_or_create_lead(uuid, text, text, timestamptz, text) to service_role;
 
 -- 9. row level security -------------------------------------------------------
 -- Same shape as the baseline: Admin sees everything; everyone else only what is
@@ -384,18 +495,26 @@ alter table public.wa_messages enable row level security;
 alter table public.wa_qualifications enable row level security;
 alter table public.automation_events enable row level security;
 alter table public.assignment_history enable row level security;
+alter table public.wa_status_backlog enable row level security;
 
 -- Supabase grants every privilege on new public tables to anon and authenticated
 -- by default. Take those away and grant back only what a policy below allows.
+-- Column lists matter: staff may change who is answering, mark read, link a
+-- lead and (Admin) assign, but never the customer's number, the 24-hour window
+-- timestamps or the AI run columns. Messages are written by the server only, so
+-- a reply can never be recorded as delivered when it was not sent.
 revoke all on public.wa_conversations, public.wa_messages, public.wa_qualifications,
-    public.automation_events, public.assignment_history from anon, authenticated;
-grant select, update on public.wa_conversations to authenticated;
-grant select, insert on public.wa_messages to authenticated;
+    public.automation_events, public.assignment_history, public.wa_status_backlog from anon, authenticated;
+grant select on public.wa_conversations to authenticated;
+grant update (mode, taken_over_by, taken_over_at, handed_back_at, last_read_at, lead_id, assigned_sales_id)
+    on public.wa_conversations to authenticated;
+grant select on public.wa_messages to authenticated;
 grant select on public.wa_qualifications to authenticated;
-grant select, insert, update on public.automation_events to authenticated;
+grant select, insert on public.automation_events to authenticated;
+grant update (resolved_at, resolved_by) on public.automation_events to authenticated;
 grant select, insert on public.assignment_history to authenticated;
 grant all on public.wa_conversations, public.wa_messages, public.wa_qualifications,
-    public.automation_events, public.assignment_history to service_role;
+    public.automation_events, public.assignment_history, public.wa_status_backlog to service_role;
 
 create policy wa_conversations_read on public.wa_conversations
     for select to authenticated
@@ -420,15 +539,6 @@ create policy wa_conversations_update on public.wa_conversations
 create policy wa_messages_read on public.wa_messages
     for select to authenticated
     using ((select private.can_access_wa_conversation(conversation_id)));
--- Staff can add their own outbound replies, nothing else.
-create policy wa_messages_insert_human on public.wa_messages
-    for insert to authenticated
-    with check (
-        direction = 'outbound'
-        and sender_type = 'human'
-        and sender_sales_id = (select private.current_sales_user_id())
-        and (select private.can_access_wa_conversation(conversation_id))
-    );
 
 create policy wa_qualifications_read on public.wa_qualifications
     for select to authenticated
@@ -441,15 +551,24 @@ create policy automation_events_read on public.automation_events
         or (conversation_id is not null and (select private.can_access_wa_conversation(conversation_id)))
         or (lead_id is not null and (select private.owns_lead(lead_id)))
     );
--- Staff actions (take over, hand back, failed reply) are logged under their own name.
+-- Staff actions (take over, hand back, link a lead) are logged under their own
+-- name, on a conversation they can see, for that conversation's lead only.
+-- Automation events (status changes and the like) are written by the server,
+-- with actor_sales_id null, and the status guard trusts only those.
 create policy automation_events_insert_own on public.automation_events
     for insert to authenticated
     with check (
-        actor_sales_id = (select private.current_sales_user_id())
+        type = any (array['takeover', 'handback', 'lead_linked'])
+        and actor_sales_id = (select private.current_sales_user_id())
         and conversation_id is not null
         and (select private.can_access_wa_conversation(conversation_id))
+        and (
+            lead_id is null
+            or lead_id = (select c.lead_id from public.wa_conversations c where c.id = conversation_id)
+        )
     );
--- Used to mark an event reviewed.
+-- Used to mark an event reviewed (only resolved_at and resolved_by are granted),
+-- under the reviewer's own name.
 create policy automation_events_resolve on public.automation_events
     for update to authenticated
     using (
@@ -458,9 +577,12 @@ create policy automation_events_resolve on public.automation_events
         or (lead_id is not null and (select private.owns_lead(lead_id)))
     )
     with check (
-        is_admin()
-        or (conversation_id is not null and (select private.can_access_wa_conversation(conversation_id)))
-        or (lead_id is not null and (select private.owns_lead(lead_id)))
+        resolved_by = (select private.current_sales_user_id())
+        and (
+            is_admin()
+            or (conversation_id is not null and (select private.can_access_wa_conversation(conversation_id)))
+            or (lead_id is not null and (select private.owns_lead(lead_id)))
+        )
     );
 
 create policy assignment_history_read on public.assignment_history

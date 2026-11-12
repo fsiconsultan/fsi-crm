@@ -20,5 +20,6 @@ export type ToolSpec = {
 export type ChatReply = { content: string | null; toolCalls: ToolCall[] }
 
 export interface ChatModel {
-  complete(input: { messages: ChatMessage[]; tools: ToolSpec[] }): Promise<ChatReply>
+  // timeoutMs: the most this one call may take; the agent passes what is left of its run.
+  complete(input: { messages: ChatMessage[]; tools: ToolSpec[]; timeoutMs?: number }): Promise<ChatReply>
 }
