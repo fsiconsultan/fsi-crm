@@ -4,7 +4,7 @@ import { useCallback, useId, useRef, useState } from "react"
 import { FileText, Trash2, Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { CardHeader } from "@/components/ui/card"
-import { Dialog } from "@/components/ui/dialog"
+import { Dialog, DialogFooter } from "@/components/ui/dialog"
 import { Field, inputClass } from "@/components/ui/field"
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/states"
 import {
@@ -282,31 +282,37 @@ export function DocumentsPanel({
                 </h3>
                 <ul className="divide-y divide-line">
                   {group.documents.map((doc) => (
-                    <li key={doc.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 py-3">
-                      <FileText aria-hidden="true" className="size-5 shrink-0 text-muted" strokeWidth={1.75} />
-                      <div className="min-w-0 flex-1 basis-40">
-                        <p className="break-words text-sm font-medium">{doc.file_name}</p>
-                        <p className="text-[13px] tabular-nums text-muted">
-                          {formatFileSize(doc.file_size)}, uploaded {formatDateTime(doc.uploaded_at)}
-                        </p>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button onClick={() => onOpen(doc)} aria-label={`Open ${doc.file_name}`}>
+                    <li key={doc.id} className="flex items-center gap-1 py-1">
+                      <button
+                        type="button"
+                        onClick={() => onOpen(doc)}
+                        aria-label={`Open ${doc.file_name}`}
+                        className="-mx-1 flex min-h-14 min-w-0 flex-1 items-center gap-3 rounded-[var(--radius-control)] px-1 py-2 text-left transition-colors duration-150 hover:bg-surface-sunken active:bg-surface-sunken"
+                      >
+                        <FileText aria-hidden="true" className="size-5 shrink-0 text-muted" strokeWidth={1.75} />
+                        <span className="min-w-0 flex-1">
+                          <span className="block break-words text-sm font-medium">{doc.file_name}</span>
+                          <span className="block text-[13px] tabular-nums text-muted">
+                            {formatFileSize(doc.file_size)}, uploaded {formatDateTime(doc.uploaded_at)}
+                          </span>
+                        </span>
+                        <span aria-hidden="true" className="shrink-0 text-sm font-medium underline underline-offset-2">
                           Open
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          onClick={() => {
-                            setDeleteError(null)
-                            setNotice(null)
-                            setToDelete(doc)
-                          }}
-                          aria-label={`Delete ${doc.file_name}`}
-                        >
-                          <Trash2 aria-hidden="true" className="size-4" />
-                          Delete
-                        </Button>
-                      </div>
+                        </span>
+                      </button>
+                      <Button
+                        variant="ghost"
+                        className="shrink-0 px-3"
+                        onClick={() => {
+                          setDeleteError(null)
+                          setNotice(null)
+                          setToDelete(doc)
+                        }}
+                        aria-label={`Delete ${doc.file_name}`}
+                      >
+                        <Trash2 aria-hidden="true" className="size-[18px]" />
+                        <span className="max-sm:sr-only">Delete</span>
+                      </Button>
                     </li>
                   ))}
                 </ul>
@@ -399,7 +405,7 @@ export function DocumentsPanel({
             {deleteError}
           </p>
         ) : null}
-        <div className="flex flex-wrap justify-end gap-2">
+        <DialogFooter>
           <Button onClick={() => setToDelete(null)} disabled={deleting} data-autofocus>
             Keep document
           </Button>
@@ -411,7 +417,7 @@ export function DocumentsPanel({
           >
             {deleting ? "Deleting…" : "Delete document"}
           </button>
-        </div>
+        </DialogFooter>
       </Dialog>
     </>
   )

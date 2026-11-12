@@ -4,7 +4,7 @@ import { useActionState, useEffect, useState } from "react"
 import { Pencil, UserPlus } from "lucide-react"
 import { createSalesperson, updateSalesperson, type SalesFormState } from "@/app/(app)/sales/actions"
 import { Button } from "@/components/ui/button"
-import { Dialog } from "@/components/ui/dialog"
+import { Dialog, DialogFooter } from "@/components/ui/dialog"
 import { Field, fieldAria, inputClass } from "@/components/ui/field"
 import { SALES_ROLES, SALES_STATUSES } from "./roles"
 
@@ -124,14 +124,14 @@ function AddForm({ onCancel, onSaved }: { onCancel: () => void; onSaved: (messag
 
       <FormMessage state={state} />
 
-      <div className="flex flex-wrap justify-end gap-2">
+      <DialogFooter>
         <Button onClick={onCancel} disabled={pending}>
           Cancel
         </Button>
         <Button type="submit" variant="primary" disabled={pending}>
           {pending ? "Creating account…" : "Create account"}
         </Button>
-      </div>
+      </DialogFooter>
     </form>
   )
 }
@@ -262,14 +262,14 @@ function EditForm({
 
       <FormMessage state={state} />
 
-      <div className="flex flex-wrap justify-end gap-2">
+      <DialogFooter>
         <Button onClick={onCancel} disabled={pending}>
           Cancel
         </Button>
         <Button type="submit" variant="primary" disabled={pending}>
           {pending ? "Saving…" : "Save changes"}
         </Button>
-      </div>
+      </DialogFooter>
     </form>
   )
 }

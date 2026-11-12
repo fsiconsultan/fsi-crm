@@ -23,7 +23,7 @@ export function CustomerList({ rows }: { rows: CustomerListRow[] }) {
           <li key={row.id}>
             <Link
               href={`/customers/${row.id}`}
-              className={`flex min-h-11 items-center justify-between gap-3 rounded-[var(--radius-control)] px-3 py-3 text-sm transition-colors duration-150 hover:bg-surface-sunken ${COLUMNS}`}
+              className={`flex min-h-11 items-center justify-between gap-3 rounded-[var(--radius-control)] px-1 py-3 text-sm transition-colors duration-150 hover:bg-surface-sunken active:bg-surface-sunken md:px-3 ${COLUMNS}`}
             >
               <span className="min-w-0 flex-1 md:contents">
                 <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">

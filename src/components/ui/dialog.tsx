@@ -6,6 +6,8 @@ import { X } from "lucide-react"
 // Modal on the native <dialog>: the browser traps focus, closes on Escape and
 // returns focus to the control that opened it. The shadow is the one allowed
 // elevation in DESIGN.md (dialogs float above the page).
+// On a phone it is a bottom sheet: full width, anchored to the bottom edge so
+// the fields and buttons sit under the thumb.
 export function Dialog({
   open,
   onClose,
@@ -41,7 +43,7 @@ export function Dialog({
       onClick={(event) => {
         if (event.target === ref.current) onClose()
       }}
-      className="m-auto max-h-[calc(100dvh-32px)] w-[min(560px,calc(100vw-32px))] overflow-y-auto rounded-[var(--radius-card)] border border-line bg-surface p-0 text-ink shadow-xl backdrop:bg-black/50"
+      className="m-auto max-h-[calc(100dvh-32px)] w-[min(560px,calc(100vw-32px))] overflow-y-auto overscroll-contain rounded-[var(--radius-card)] border border-line bg-surface p-0 text-ink shadow-xl backdrop:bg-black/50 max-sm:mb-0 max-sm:max-h-[calc(100dvh-24px)] max-sm:w-full max-sm:max-w-none max-sm:rounded-b-none max-sm:border-x-0 max-sm:border-b-0"
     >
       {open ? (
         <div className="p-5 md:p-6">
@@ -65,5 +67,15 @@ export function Dialog({
         </div>
       ) : null}
     </dialog>
+  )
+}
+
+// Action row for a dialog. It stays pinned to the bottom of the sheet while a
+// long form scrolls, and clears the home indicator on phones.
+export function DialogFooter({ children }: { children: ReactNode }) {
+  return (
+    <div className="sticky bottom-0 -mx-5 -mb-5 mt-1 flex flex-wrap justify-end gap-2 border-t border-line bg-surface px-5 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))] max-sm:[&>*]:flex-1 md:-mx-6 md:-mb-6 md:px-6 md:pb-6">
+      {children}
+    </div>
   )
 }

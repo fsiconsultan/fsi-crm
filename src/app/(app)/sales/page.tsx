@@ -22,7 +22,8 @@ export default async function SalesPage() {
     <>
       <PageHeader title="Sales team" actions={<AddSalesperson />} />
 
-      <Card>
+      {/* On a phone each person is their own card on the canvas, so the outer card steps back. */}
+      <Card className={team.ok && members.length > 0 ? "max-md:border-0 max-md:bg-transparent max-md:p-0" : undefined}>
         {!team.ok ? (
           <ErrorState
             title="The sales team could not be loaded"

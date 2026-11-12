@@ -35,27 +35,35 @@ export default async function CustomersPage({ searchParams }: PageProps<"/custom
     <>
       <PageHeader title="Customers" />
 
-      <Card>
-        <form action="/customers" role="search" className="mb-5 flex flex-wrap items-end gap-2">
-          <div className="flex min-w-0 flex-1 basis-64 flex-col gap-1.5">
-            <label htmlFor="customer-search" className="text-sm font-medium">
+      <Card className="max-md:p-4">
+        {/* On a phone the search stays pinned under the 60px top bar while the list scrolls. */}
+        <form
+          action="/customers"
+          role="search"
+          className="sticky top-[60px] z-20 -mx-4 -mt-4 mb-3 flex items-end gap-2 rounded-t-[var(--radius-card)] border-b border-line bg-surface px-4 py-3 md:static md:mx-0 md:mt-0 md:mb-5 md:flex-wrap md:rounded-none md:border-0 md:p-0"
+        >
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5 md:basis-64">
+            <label htmlFor="customer-search" className="sr-only text-sm font-medium md:not-sr-only">
               Find a customer
             </label>
             <input
               id="customer-search"
               name="q"
               type="search"
+              inputMode="search"
+              enterKeyHint="search"
+              autoComplete="off"
               defaultValue={query}
               placeholder="Name, phone, business or location"
               className={inputClass}
             />
           </div>
-          <Button type="submit" variant="primary">
+          <Button type="submit" variant="primary" className="max-md:min-w-11 max-md:px-3">
             <Search aria-hidden="true" className="size-4" />
-            Search
+            <span className="max-md:sr-only">Search</span>
           </Button>
           {query ? (
-            <Link href="/customers" className={buttonClass("secondary")}>
+            <Link href="/customers" className={buttonClass("secondary", "max-md:px-3")}>
               Clear
             </Link>
           ) : null}

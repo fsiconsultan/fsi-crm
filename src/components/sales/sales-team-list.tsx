@@ -17,7 +17,7 @@ export function SalesTeamList({
 
   return (
     <>
-      <p className="mb-3 text-[13px] tabular-nums text-muted">
+      <p className="mb-3 text-[13px] tabular-nums text-muted max-md:px-1">
         {members.length} {members.length === 1 ? "person" : "people"}, {active} active
       </p>
       <div aria-hidden="true" className={`hidden border-b border-line pb-2 text-[13px] text-muted ${COLUMNS}`}>
@@ -27,12 +27,12 @@ export function SalesTeamList({
         <span className="text-right">Assigned leads</span>
         <span className="w-[92px]" />
       </div>
-      <ul className="divide-y divide-line">
+      <ul className="flex flex-col gap-3 md:block md:divide-y md:divide-line">
         {members.map((member) => {
           const name = member.name ?? member.username ?? "Unnamed user"
           const inactive = member.status !== "Active"
           return (
-            <li key={member.id} className={`flex flex-wrap items-center gap-x-4 gap-y-3 py-3.5 ${COLUMNS}`}>
+            <li key={member.id} className={`flex flex-wrap items-center gap-x-4 gap-y-3 rounded-[var(--radius-card)] border border-line bg-surface p-4 md:rounded-none md:border-0 md:bg-transparent md:px-0 md:py-3.5 ${COLUMNS}`}>
               <div className="flex min-w-0 flex-1 basis-[calc(100%-124px)] items-center gap-3 md:basis-auto">
                 <Avatar name={name} photoUrl={member.photo_url ?? member.avatar_url} />
                 <div className="min-w-0">

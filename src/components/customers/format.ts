@@ -44,3 +44,11 @@ export function whatsappUrl(phone: string | null) {
   if (digits.length < 9 || digits.length > 15) return null
   return `https://wa.me/${digits}`
 }
+
+// tel: link for tap-to-call. Keeps a leading + so international numbers dial as typed.
+export function telUrl(phone: string | null) {
+  const raw = (phone ?? "").trim()
+  const digits = raw.replace(/\D/g, "")
+  if (digits.length < 6 || digits.length > 15) return null
+  return `tel:${raw.startsWith("+") ? "+" : ""}${digits}`
+}

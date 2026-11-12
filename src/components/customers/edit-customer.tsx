@@ -4,7 +4,7 @@ import { useActionState, useEffect, useState } from "react"
 import { Pencil } from "lucide-react"
 import { updateCustomer, type CustomerField, type CustomerFormState } from "@/app/(app)/customers/[id]/actions"
 import { Button } from "@/components/ui/button"
-import { Dialog } from "@/components/ui/dialog"
+import { Dialog, DialogFooter } from "@/components/ui/dialog"
 import { Field, fieldAria, inputClass } from "@/components/ui/field"
 import type { Tables } from "@/lib/supabase/database.types"
 import { LEAD_STATUSES, LEAD_TYPES, NO_STATUS_LABEL } from "@/lib/leads/status"
@@ -98,6 +98,7 @@ function EditForm({
           data-autofocus
             name="customer_name"
             autoComplete="off"
+            autoCapitalize="words"
             defaultValue={value("customer_name")}
             className={inputClass}
             {...fieldAria("customer_name", error("customer_name"))}
@@ -120,7 +121,10 @@ function EditForm({
             id="email"
             name="email"
             type="email"
+            inputMode="email"
             autoComplete="off"
+            autoCapitalize="none"
+            spellCheck={false}
             defaultValue={value("email")}
             className={inputClass}
             {...fieldAria("email", error("email"))}
@@ -240,14 +244,14 @@ function EditForm({
         </p>
       ) : null}
 
-      <div className="flex flex-wrap justify-end gap-2">
+      <DialogFooter>
         <Button onClick={onCancel} disabled={pending}>
           Cancel
         </Button>
         <Button type="submit" variant="primary" disabled={pending}>
           {pending ? "Saving…" : "Save changes"}
         </Button>
-      </div>
+      </DialogFooter>
     </form>
   )
 }

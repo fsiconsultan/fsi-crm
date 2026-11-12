@@ -1,4 +1,4 @@
-import { MessageCircle } from "lucide-react"
+import { Mail, MessageCircle, Phone } from "lucide-react"
 import { PageHeader } from "@/components/shell/page-header"
 import { Avatar } from "@/components/ui/avatar"
 import { buttonClass } from "@/components/ui/button"
@@ -8,7 +8,7 @@ import type { DocumentList } from "@/lib/data/documents"
 import type { SalesOption } from "@/lib/data/sales-users"
 import { DocumentsPanel } from "./documents-panel"
 import { EditCustomer } from "./edit-customer"
-import { formatDateTime, whatsappUrl } from "./format"
+import { formatDateTime, telUrl, whatsappUrl } from "./format"
 import { PipelineTimeline } from "./pipeline-timeline"
 import { StatusChip } from "./status-chip"
 
@@ -22,6 +22,9 @@ function Detail({ label, children }: { label: string; children: React.ReactNode 
 }
 
 const NONE = <span className="text-muted">Not recorded</span>
+
+// Thumb-sized on a phone (48px), back to the normal control height from sm up.
+const ACTION = "min-h-12 px-3 sm:min-h-11 sm:px-4 md:min-h-10"
 
 // One customer on one screen. The pipeline is the focal card: where the deal
 // stands is what staff open a profile to find out.
@@ -40,29 +43,48 @@ export function CustomerProfile({
   const id = customer.id
   const { salesperson, ...lead } = customer
   const whatsapp = whatsappUrl(customer.phone)
+  const call = telUrl(customer.phone)
+  const email = customer.email?.trim() || null
   const statusSince = formatDateTime(customer.status_started_at)
 
   return (
     <>
       <PageHeader
         title={customer.customer_name?.trim() || "Unnamed customer"}
-        actions={
-          <>
-            {whatsapp ? (
-              <a href={whatsapp} target="_blank" rel="noopener noreferrer" className={buttonClass("secondary")}>
-                <MessageCircle aria-hidden="true" className="size-4" />
-                WhatsApp
-                <span className="sr-only">(opens in a new tab)</span>
-              </a>
-            ) : null}
-            <EditCustomer customer={lead} salesOptions={salesOptions} />
-          </>
-        }
+        actions={<EditCustomer customer={lead} salesOptions={salesOptions} />}
       />
 
-      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-        <div className="flex min-w-0 flex-col gap-4">
-          <Card>
+      {/* Contact actions come first: on a phone this is what a salesperson opens the profile for. */}
+      {call || whatsapp || email ? (
+        <div className="mb-4 grid grid-cols-[repeat(auto-fit,minmax(96px,1fr))] gap-2 sm:flex sm:flex-wrap">
+          {call ? (
+            <a href={call} className={buttonClass("primary", ACTION)}>
+              <Phone aria-hidden="true" className="size-[18px] shrink-0" />
+              Call
+            </a>
+          ) : null}
+          {whatsapp ? (
+            <a href={whatsapp} target="_blank" rel="noopener noreferrer" className={buttonClass("secondary", ACTION)}>
+              <MessageCircle aria-hidden="true" className="size-[18px] shrink-0" />
+              WhatsApp
+              <span className="sr-only">(opens in a new tab)</span>
+            </a>
+          ) : null}
+          {email ? (
+            <a href={`mailto:${email}`} className={buttonClass("secondary", ACTION)}>
+              <Mail aria-hidden="true" className="size-[18px] shrink-0" />
+              Email
+            </a>
+          ) : null}
+          {/* Phase C: add the "Open WhatsApp conversation" link to /inbox/<conversation id> here, next to WhatsApp. */}
+        </div>
+      ) : null}
+
+      {/* Below lg the two columns dissolve (`contents`) so the cards can be ordered for a phone:
+          pipeline, notes, documents, then the reference details. */}
+      <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] lg:items-start">
+        <div className="contents lg:flex lg:min-w-0 lg:flex-col lg:gap-4">
+          <Card className="order-1 lg:order-none max-md:p-4">
             <CardHeader
               title="Pipeline"
               meta={statusSince ? `In this status since ${statusSince}` : undefined}
@@ -71,22 +93,32 @@ export function CustomerProfile({
             <PipelineTimeline customer={customer} />
           </Card>
 
-          <Card>
+          <Card className="order-3 lg:order-none max-md:p-4">
             <DocumentsPanel customerId={id} initial={documents} />
           </Card>
         </div>
 
-        <div className="flex min-w-0 flex-col gap-4">
-          <Card>
+        <div className="contents lg:flex lg:min-w-0 lg:flex-col lg:gap-4">
+          <Card className="order-4 lg:order-none max-md:p-4">
             <CardHeader title="Contact" />
             <dl className="divide-y divide-line">
               <Detail label="Phone">
-                {customer.phone?.trim() ? <span className="tabular-nums">{customer.phone.trim()}</span> : NONE}
+                {customer.phone?.trim() ? (
+                  call ? (
+                    <a href={call} className="-my-3 inline-flex min-h-11 items-center tabular-nums underline underline-offset-2">
+                      {customer.phone.trim()}
+                    </a>
+                  ) : (
+                    <span className="tabular-nums">{customer.phone.trim()}</span>
+                  )
+                ) : (
+                  NONE
+                )}
               </Detail>
               <Detail label="Email">
-                {customer.email?.trim() ? (
-                  <a href={`mailto:${customer.email.trim()}`} className="-my-3 inline-flex min-h-11 items-center underline underline-offset-2">
-                    {customer.email.trim()}
+                {email ? (
+                  <a href={`mailto:${email}`} className="-my-3 inline-flex min-h-11 items-center underline underline-offset-2">
+                    {email}
                   </a>
                 ) : (
                   NONE
@@ -98,7 +130,7 @@ export function CustomerProfile({
             </dl>
           </Card>
 
-          <Card>
+          <Card className="order-5 lg:order-none max-md:p-4">
             <CardHeader title="Salesperson" />
             {salesperson ? (
               <div className="flex items-center gap-3">
@@ -127,7 +159,7 @@ export function CustomerProfile({
             )}
           </Card>
 
-          <Card>
+          <Card className="order-2 lg:order-none max-md:p-4">
             <CardHeader title="Notes" />
             {customer.notes?.trim() ? (
               <p className="whitespace-pre-wrap break-words text-sm">{customer.notes.trim()}</p>
@@ -136,7 +168,7 @@ export function CustomerProfile({
             )}
           </Card>
 
-          <p className="px-1 text-[13px] text-muted">
+          <p className="order-6 px-1 text-[13px] text-muted lg:order-none">
             Added {formatDateTime(customer.created_at) ?? "at an unknown time"}
             {customer.updated_at ? `, last changed ${formatDateTime(customer.updated_at)}` : ""}
           </p>
