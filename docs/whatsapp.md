@@ -27,9 +27,10 @@ live once the items under "What FSI must supply" exist.
    own; it fills `leads.phone_wa` and nothing else. Until the migration is
    applied, `/inbox` shows "not set up yet" and the webhook answers 500 so Meta
    retries.
-2. **Types.** After applying, regenerate `src/lib/supabase/database.types.ts`,
-   point the imports of `src/lib/whatsapp/database.types.ts` at it, and delete
-   the Phase C copy.
+2. **Types.** `src/lib/supabase/database.types.ts` is generated from the live
+   project and includes the WhatsApp and push tables. Regenerate it after every
+   migration: `supabase gen types typescript --project-id yoyszukutqwoxxdolzcg
+   --schema public`.
 3. **Meta.** In the Meta app for the WhatsApp Business account:
    - Callback URL: `https://<production host>/api/webhooks/whatsapp`
    - Verify token: the value of `WHATSAPP_VERIFY_TOKEN`

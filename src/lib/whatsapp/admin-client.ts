@@ -1,6 +1,6 @@
 import "server-only"
 import { createClient, type SupabaseClient } from "@supabase/supabase-js"
-import type { Database } from "./database.types"
+import type { Database } from "@/lib/supabase/database.types"
 
 // Server-side client for the webhook and the agent. It uses the secret key, so
 // it bypasses RLS: Meta's servers are not a signed-in user. Used by the webhook
