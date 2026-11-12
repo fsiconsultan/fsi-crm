@@ -5,9 +5,8 @@ import { buttonClass } from "@/components/ui/button"
 import { Card, CardHeader } from "@/components/ui/card"
 import type { Customer } from "@/lib/data/customers"
 import type { DocumentList } from "@/lib/data/documents"
-import type { SalesOption } from "@/lib/data/sales-users"
 import { DocumentsPanel } from "./documents-panel"
-import { EditCustomer } from "./edit-customer"
+import { EditCustomer, type SalesChoices } from "./edit-customer"
 import { formatDateTime, telUrl, whatsappUrl } from "./format"
 import { PipelineTimeline } from "./pipeline-timeline"
 import { StatusChip } from "./status-chip"
@@ -36,8 +35,8 @@ export function CustomerProfile({
 }: {
   customer: Customer
   documents: DocumentList
-  // Present only for an Admin, who may reassign the customer.
-  salesOptions: SalesOption[] | null
+  // null unless the viewer is an Admin, who may reassign the customer.
+  salesOptions: SalesChoices
   admin: boolean
 }) {
   const id = customer.id
@@ -51,7 +50,13 @@ export function CustomerProfile({
     <>
       <PageHeader
         title={customer.customer_name?.trim() || "Unnamed customer"}
-        actions={<EditCustomer customer={lead} salesOptions={salesOptions} />}
+        actions={
+          <EditCustomer
+            customer={lead}
+            sales={salesOptions}
+            currentSalesName={salesperson ? (salesperson.name ?? salesperson.username) : null}
+          />
+        }
       />
 
       {/* Contact actions come first: on a phone this is what a salesperson opens the profile for. */}

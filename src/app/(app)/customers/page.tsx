@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { redirect } from "next/navigation"
 import { Search } from "lucide-react"
 import { CustomerList } from "@/components/customers/customer-list"
 import { PageHeader } from "@/components/shell/page-header"
@@ -28,6 +29,9 @@ export default async function CustomersPage({ searchParams }: PageProps<"/custom
   const page = Math.max(1, Number.parseInt(first(params.page) ?? "1", 10) || 1)
 
   const result = await listCustomers({ query, page })
+  // A page number past the end (an old link, or a search that now has fewer
+  // results) goes back to the first page instead of claiming there are no matches.
+  if (result.ok && result.rows.length === 0 && page > 1) redirect(pageHref(query, 1))
   const total = result.ok ? result.total : 0
   const pageCount = Math.max(1, Math.ceil(total / CUSTOMER_PAGE_SIZE))
 
@@ -87,16 +91,6 @@ export default async function CustomersPage({ searchParams }: PageProps<"/custom
               action={
                 <Link href="/customers" className={buttonClass("secondary")}>
                   Show all customers
-                </Link>
-              }
-            />
-          ) : page > 1 ? (
-            <EmptyState
-              title="There is no page here"
-              detail="The list is shorter than this page number."
-              action={
-                <Link href="/customers" className={buttonClass("secondary")}>
-                  Go to the first page
                 </Link>
               }
             />

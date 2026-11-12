@@ -65,7 +65,12 @@ export default async function CustomerPage({ params }: PageProps<"/customers/[id
   return (
     <>
       {back}
-      <CustomerProfile customer={customer} documents={documents} salesOptions={salesOptions} admin={admin} />
+      <CustomerProfile
+        customer={customer}
+        documents={documents}
+        salesOptions={salesOptions ? (salesOptions.ok ? salesOptions : { ok: false }) : null}
+        admin={admin}
+      />
     </>
   )
 }

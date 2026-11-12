@@ -83,6 +83,7 @@ export function DocumentsPanel({
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  const submitting = useRef(false)
   const formId = useId()
 
   const reload = useCallback(async () => {
@@ -95,7 +96,23 @@ export function DocumentsPanel({
 
   async function onUpload(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    const form = new FormData(event.currentTarget)
+    // Set before the first await, so a second tap cannot start a second upload.
+    if (submitting.current) return
+    submitting.current = true
+    try {
+      await runUpload(new FormData(event.currentTarget))
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : "unknown error"
+      setUpload({
+        phase: "failed",
+        message: `The upload stopped unexpectedly (${reason}). Reload the page to see whether the document was added before trying again.`,
+      })
+    } finally {
+      submitting.current = false
+    }
+  }
+
+  async function runUpload(form: FormData) {
     const file = form.get("file")
     const type = String(form.get("document_type") ?? "")
     setNotice(null)
@@ -165,8 +182,14 @@ export function DocumentsPanel({
     await reload()
   }
 
+  // Files live under `<lead id>/`. A record pointing anywhere else is refused,
+  // so a wrong row can never open or delete another customer's file.
+  const ownsPath = (doc: CustomerDocument) => doc.file_path.startsWith(`${customerId}/`)
+  const WRONG_PATH = "its record points outside this customer's folder. Tell the admin; nothing was changed."
+
   async function onOpen(doc: CustomerDocument) {
     setOpenError(null)
+    if (!ownsPath(doc)) return setOpenError(`"${doc.file_name}" was not opened: ${WRONG_PATH}`)
     // Opened before the request so the browser treats it as a user-initiated tab.
     const tab = window.open("", "_blank")
     const { data, error } = await createClient()
@@ -192,6 +215,7 @@ export function DocumentsPanel({
   async function onConfirmDelete() {
     if (!toDelete) return
     const target = toDelete
+    if (!ownsPath(target)) return setDeleteError(`Nothing was deleted: ${WRONG_PATH}`)
     setDeleting(true)
     setDeleteError(null)
     const supabase = createClient()
@@ -208,7 +232,13 @@ export function DocumentsPanel({
       // Storage reports "nothing removed" both when the file is already gone and
       // when the user may not delete it. A signed URL tells the two apart.
       const { data: stillThere, error: checkError } = await bucket.createSignedUrl(target.file_path, 30)
-      const alreadyGone = !stillThere?.signedUrl && /not.?found/i.test(checkError?.message ?? "")
+      // Storage answers a missing object with HTTP 400 and statusCode "404"
+      // (or a plain 404); the message is only a fallback.
+      const failure = checkError as { status?: number; statusCode?: string; message?: string } | null
+      const alreadyGone =
+        !stillThere?.signedUrl &&
+        failure !== null &&
+        (failure.status === 404 || failure.statusCode === "404" || /not.?found/i.test(failure.message ?? ""))
       if (!alreadyGone) {
         setDeleting(false)
         return setDeleteError(
@@ -390,9 +420,8 @@ export function DocumentsPanel({
 
       <Dialog
         open={toDelete !== null}
-        onClose={() => {
-          if (!deleting) setToDelete(null)
-        }}
+        onClose={() => setToDelete(null)}
+        busy={deleting}
         title="Delete this document?"
         description={
           toDelete

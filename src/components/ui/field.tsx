@@ -42,10 +42,10 @@ export function Field({
   )
 }
 
-// aria wiring for an input inside <Field>.
-export function fieldAria(id: string, error?: string, hint?: string) {
+// aria wiring for an input inside <Field>. Pass hasHint when the Field shows a hint.
+export function fieldAria(id: string, error?: string, hasHint = false) {
   return {
     "aria-invalid": error ? true : undefined,
-    "aria-describedby": error ? `${id}-error` : hint ? `${id}-hint` : undefined,
+    "aria-describedby": error ? `${id}-error` : hasHint ? `${id}-hint` : undefined,
   } as const
 }

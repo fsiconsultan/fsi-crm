@@ -35,20 +35,29 @@ export function todayInBali() {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Makassar" }).format(new Date())
 }
 
-// Staff type local numbers (0812...), so a leading 0 becomes Indonesia's 62.
-// Returns null when the stored value cannot be a phone number.
+// Staff type local numbers (0812...), so a leading 0 or 8 becomes Indonesia's 62.
+// A number written with + or 00 already carries its country code and is left
+// alone (+81 90... is Japan, not 62 81...). Returns null when the stored value
+// cannot be a phone number.
 export function whatsappUrl(phone: string | null) {
-  let digits = (phone ?? "").replace(/\D/g, "")
-  if (digits.startsWith("0")) digits = `62${digits.slice(1)}`
-  else if (digits.startsWith("8")) digits = `62${digits}`
+  const raw = phone ?? ""
+  const international = /^\D*\+/.test(raw)
+  let digits = raw.replace(/\D/g, "")
+  if (!international) {
+    if (digits.startsWith("00")) digits = digits.slice(2)
+    else if (digits.startsWith("0")) digits = `62${digits.slice(1)}`
+    else if (digits.startsWith("8")) digits = `62${digits}`
+  }
+  // 62 followed by the local trunk 0 (620812...) is a common typing mistake.
+  if (digits.startsWith("620")) digits = `62${digits.slice(3)}`
   if (digits.length < 9 || digits.length > 15) return null
   return `https://wa.me/${digits}`
 }
 
 // tel: link for tap-to-call. Keeps a leading + so international numbers dial as typed.
 export function telUrl(phone: string | null) {
-  const raw = (phone ?? "").trim()
+  const raw = phone ?? ""
   const digits = raw.replace(/\D/g, "")
   if (digits.length < 6 || digits.length > 15) return null
-  return `tel:${raw.startsWith("+") ? "+" : ""}${digits}`
+  return `tel:${/^\D*\+/.test(raw) ? "+" : ""}${digits}`
 }

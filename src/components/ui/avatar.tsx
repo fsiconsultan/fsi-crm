@@ -23,7 +23,9 @@ export function Avatar({
   size?: number
   className?: string
 }) {
-  if (photoUrl) {
+  // Only a web address or a site path is handed to the image loader; anything
+  // else stored in the column falls back to initials.
+  if (photoUrl && /^(https?:\/\/|\/)/.test(photoUrl)) {
     return (
       <Image
         src={photoUrl}

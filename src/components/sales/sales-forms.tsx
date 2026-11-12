@@ -31,6 +31,12 @@ function FormMessage({ state }: { state: SalesFormState }) {
 export function AddSalesperson() {
   const [open, setOpen] = useState(false)
   const [saved, setSaved] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [dirty, setDirty] = useState(false)
+  const close = () => {
+    setOpen(false)
+    setDirty(false)
+  }
 
   return (
     <>
@@ -51,15 +57,19 @@ export function AddSalesperson() {
       ) : null}
       <Dialog
         open={open}
-        onClose={() => setOpen(false)}
+        onClose={close}
+        busy={busy}
+        dismissOnBackdrop={!dirty}
         title="Add a salesperson"
         description="Creates a login. The account starts with the Sales role; change it afterwards with Edit."
       >
         <AddForm
-          onCancel={() => setOpen(false)}
+          onCancel={close}
+          onBusy={setBusy}
+          onDirty={() => setDirty(true)}
           onSaved={(message) => {
             setSaved(message)
-            setOpen(false)
+            close()
           }}
         />
       </Dialog>
@@ -67,8 +77,14 @@ export function AddSalesperson() {
   )
 }
 
-function AddForm({ onCancel, onSaved }: { onCancel: () => void; onSaved: (message: string) => void }) {
+type FormHooks = { onCancel: () => void; onBusy: (busy: boolean) => void; onDirty: () => void }
+
+function AddForm({ onCancel, onBusy, onDirty, onSaved }: FormHooks & { onSaved: (message: string) => void }) {
   const [state, action, pending] = useActionState(createSalesperson, INITIAL)
+
+  useEffect(() => {
+    onBusy(pending)
+  }, [pending, onBusy])
 
   useEffect(() => {
     if (state.result === "saved") onSaved(state.message)
@@ -77,7 +93,7 @@ function AddForm({ onCancel, onSaved }: { onCancel: () => void; onSaved: (messag
   const errors = state.fieldErrors
 
   return (
-    <form action={action} noValidate className="flex flex-col gap-4">
+    <form action={action} onChange={onDirty} noValidate className="flex flex-col gap-4">
       <Field label="Name" htmlFor="new-name" error={errors.name}>
         <input
           id="new-name"
@@ -103,7 +119,7 @@ function AddForm({ onCancel, onSaved }: { onCancel: () => void; onSaved: (messag
           spellCheck={false}
           defaultValue={state.values.username ?? ""}
           className={inputClass}
-          {...fieldAria("new-username", errors.username, "hint")}
+          {...fieldAria("new-username", errors.username, true)}
         />
       </Field>
       <Field
@@ -118,7 +134,7 @@ function AddForm({ onCancel, onSaved }: { onCancel: () => void; onSaved: (messag
           type="password"
           autoComplete="new-password"
           className={inputClass}
-          {...fieldAria("new-password", errors.password, "hint")}
+          {...fieldAria("new-password", errors.password, true)}
         />
       </Field>
 
@@ -141,6 +157,12 @@ type Member = { id: string; name: string | null; username: string | null; role: 
 export function EditSalesperson({ member, isSelf }: { member: Member; isSelf: boolean }) {
   const [open, setOpen] = useState(false)
   const [saved, setSaved] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [dirty, setDirty] = useState(false)
+  const close = () => {
+    setOpen(false)
+    setDirty(false)
+  }
   const displayName = member.name ?? member.username ?? "this person"
 
   return (
@@ -162,7 +184,9 @@ export function EditSalesperson({ member, isSelf }: { member: Member; isSelf: bo
       </Button>
       <Dialog
         open={open}
-        onClose={() => setOpen(false)}
+        onClose={close}
+        busy={busy}
+        dismissOnBackdrop={!dirty}
         title={`Edit ${displayName}`}
         description={
           isSelf
@@ -173,10 +197,12 @@ export function EditSalesperson({ member, isSelf }: { member: Member; isSelf: bo
         <EditForm
           member={member}
           isSelf={isSelf}
-          onCancel={() => setOpen(false)}
+          onCancel={close}
+          onBusy={setBusy}
+          onDirty={() => setDirty(true)}
           onSaved={() => {
             setSaved("Saved")
-            setOpen(false)
+            close()
           }}
         />
       </Dialog>
@@ -188,14 +214,19 @@ function EditForm({
   member,
   isSelf,
   onCancel,
+  onBusy,
+  onDirty,
   onSaved,
-}: {
+}: FormHooks & {
   member: Member
   isSelf: boolean
-  onCancel: () => void
   onSaved: () => void
 }) {
   const [state, action, pending] = useActionState(updateSalesperson.bind(null, member.id), INITIAL)
+
+  useEffect(() => {
+    onBusy(pending)
+  }, [pending, onBusy])
 
   useEffect(() => {
     if (state.result === "saved") onSaved()
@@ -206,7 +237,7 @@ function EditForm({
   const status = state.values.status ?? member.status ?? ""
 
   return (
-    <form action={action} noValidate className="flex flex-col gap-4">
+    <form action={action} onChange={onDirty} noValidate className="flex flex-col gap-4">
       <Field label="Name" htmlFor="edit-name" error={errors.name}>
         <input
           id="edit-name"
@@ -223,6 +254,7 @@ function EditForm({
           {/* A disabled select is not submitted, so the locked value travels in a hidden input. */}
           {isSelf ? <input type="hidden" name="role" value={role} /> : null}
           <select
+            key={role}
             id="edit-role"
             name={isSelf ? undefined : "role"}
             defaultValue={role}
@@ -241,6 +273,7 @@ function EditForm({
         <Field label="Status" htmlFor="edit-status" error={errors.status}>
           {isSelf ? <input type="hidden" name="status" value={status} /> : null}
           <select
+            key={status}
             id="edit-status"
             name={isSelf ? undefined : "status"}
             defaultValue={status}

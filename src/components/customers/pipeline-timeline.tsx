@@ -11,8 +11,9 @@ const STEPS = [
 ] as const
 
 // The five pipeline dates in the order the work happens. Markers reuse the
-// DESIGN.md motif: hatched = already happened, solid accent = today or still
-// ahead, hollow = no date yet. The text next to each marker says the same.
+// DESIGN.md motif: hatched = the date has passed, solid accent = today or still
+// ahead, hollow = no date yet. The text says the same, and says "Past", not
+// "Done": the row records a date, not whether the step took place.
 export function PipelineTimeline({ customer }: { customer: Customer }) {
   const today = todayInBali()
   const closed = customer.status === "Deal" || customer.status === "No Deal"
@@ -25,7 +26,7 @@ export function PipelineTimeline({ customer }: { customer: Customer }) {
         const day = value?.slice(0, 10) ?? null
         const past = day !== null && day < today
         const overdue = step.key === "follow_up_date" && past && !closed
-        const timing = !date ? null : day === today ? "Today" : overdue ? "Overdue" : past ? "Done" : "Upcoming"
+        const timing = !date ? null : day === today ? "Today" : overdue ? "Overdue" : past ? "Past" : "Upcoming"
         const last = index === STEPS.length - 1
 
         return (

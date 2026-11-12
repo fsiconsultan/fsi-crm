@@ -22,10 +22,18 @@ export type CustomerList =
   | { ok: true; rows: CustomerListRow[]; total: number }
   | { ok: false; message: string }
 
-// Double quotes and backslashes would end the quoted value in a PostgREST
-// `or` filter, so they are dropped from the search term.
+// Builds the quoted ILIKE pattern for a PostgREST `or` filter. Double quotes and
+// backslashes would end or escape the quoted value, so they are dropped. `%`
+// and `_` are escaped to match literally (the backslash is doubled because
+// PostgREST unescapes the quoted value first). PostgREST turns `*` into `%`
+// and has no escape for it, so a typed `*` becomes `_` (any one character).
 function searchPattern(query: string) {
-  const term = query.trim().slice(0, 100).replace(/["\\]/g, "")
+  const term = query
+    .trim()
+    .slice(0, 100)
+    .replace(/["\\]/g, "")
+    .replace(/[%_]/g, (char) => `\\\\${char}`)
+    .replace(/\*/g, "_")
   return term ? `"%${term}%"` : null
 }
 
