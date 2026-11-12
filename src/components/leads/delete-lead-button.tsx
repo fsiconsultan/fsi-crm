@@ -49,6 +49,7 @@ export function DeleteLeadButton({ leadId, leadName }: { leadId: number; leadNam
       <Dialog
         open={open}
         onClose={close}
+        busy={pending}
         title={`Delete ${leadName}?`}
         description="This removes the lead and the records of its uploaded documents for everyone. It cannot be undone."
       >

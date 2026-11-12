@@ -11,7 +11,7 @@ export function DeltaPill({ value, suffix = "" }: { value: number; suffix?: stri
         "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium tabular-nums",
         flat && "bg-surface-sunken text-muted",
         !flat && down && "bg-negative-soft text-negative",
-        !flat && !down && "bg-positive-soft text-positive",
+        !flat && !down && "bg-positive-soft text-[color-mix(in_srgb,var(--positive)_80%,var(--ink))]",
       )}
     >
       <span aria-hidden="true">{flat ? "•" : down ? "▼" : "▲"}</span>
