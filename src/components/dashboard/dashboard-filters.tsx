@@ -1,0 +1,65 @@
+"use client"
+
+import Form from "next/form"
+import { controlClass } from "@/components/ui/control"
+
+type Option = { value: string; label: string }
+
+// Changing either select reloads the Overview for that range and person.
+export function DashboardFilters({
+  period,
+  periods,
+  sales,
+  salesOptions,
+}: {
+  period: string
+  periods: Option[]
+  sales: string
+  /** Admin only: the salesperson select. Null for everyone else. */
+  salesOptions: Option[] | null
+}) {
+  const control = `${controlClass} min-w-0 pr-8 max-md:flex-1 md:w-auto`
+
+  return (
+    <Form action="/" className="flex items-center gap-2 max-md:w-[calc(100vw-2rem)]">
+      <label htmlFor="period" className="sr-only">
+        Date range
+      </label>
+      <select
+        id="period"
+        name="period"
+        defaultValue={period}
+        onChange={(event) => event.currentTarget.form?.requestSubmit()}
+        className={control}
+      >
+        {periods.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+
+      {salesOptions ? (
+        <>
+          <label htmlFor="sales" className="sr-only">
+            Salesperson
+          </label>
+          <select
+            id="sales"
+            name="sales"
+            defaultValue={sales}
+            onChange={(event) => event.currentTarget.form?.requestSubmit()}
+            className={control}
+          >
+            <option value="">Whole team</option>
+            {salesOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </>
+      ) : null}
+    </Form>
+  )
+}
