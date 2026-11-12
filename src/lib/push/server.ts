@@ -1,6 +1,6 @@
 import "server-only"
 import type { SupabaseClient } from "@supabase/supabase-js"
-import type { Database } from "@/lib/whatsapp/database.types"
+import type { Database } from "@/lib/supabase/database.types"
 import { createSupabaseStore } from "@/lib/whatsapp/supabase-store"
 import { safeLog } from "@/lib/whatsapp/store"
 import { createNotifier, type Notifier } from "./notify"

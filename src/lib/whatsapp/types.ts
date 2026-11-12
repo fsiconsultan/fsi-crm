@@ -1,4 +1,4 @@
-import type { Tables } from "./database.types"
+import type { Tables } from "@/lib/supabase/database.types"
 
 export type Conversation = Tables<"wa_conversations">
 export type Message = Tables<"wa_messages">

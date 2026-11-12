@@ -1,16 +1,13 @@
 import "server-only"
-import type { PostgrestError, SupabaseClient } from "@supabase/supabase-js"
+import type { PostgrestError } from "@supabase/supabase-js"
 import { cache } from "react"
 import { createClient } from "@/lib/supabase/server"
-import type { Database } from "./database.types"
 import type { AutomationEvent, Conversation, Message, Qualification } from "./types"
 import { isWindowOpen } from "./window"
 
-// The inbox reads as the signed-in user, so RLS decides what comes back. The
-// shared client is typed from production, which has no wa_* tables until the
-// migration is applied; this re-types it with the Phase C schema.
+// The inbox reads as the signed-in user, so RLS decides what comes back.
 export async function inboxClient() {
-  return (await createClient()) as unknown as SupabaseClient<Database>
+  return createClient()
 }
 
 // PostgREST answers PGRST205 (and Postgres 42P01) when a table does not exist:
