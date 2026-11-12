@@ -10,8 +10,8 @@ type Week = Dashboard["weeks"][number]
 
 // Past weeks hatched, the week in progress solid: the identity motif.
 const barTone = {
-  current: "bg-accent",
-  past: "hatch text-accent",
+  current: "bar-solid rounded-[6px]",
+  past: "hatch hatch-fade rounded-t-[6px] text-accent",
 } as const
 
 // Answers "are new leads still coming in?". Weeks that hold the one-off import
@@ -67,11 +67,11 @@ function WeeklyChart({ weeks, afterImport, meta }: { weeks: Week[]; afterImport:
           return (
             <div key={week.start} className="relative flex h-full min-w-0 flex-1 items-end justify-center">
               <div
-                className={`relative w-3/5 max-w-5 rounded-t-[3px] ${barTone[week.current ? "current" : "past"]}`}
+                className={`relative w-[62%] max-w-7 ${barTone[week.current ? "current" : "past"]}`}
                 style={{ height: `${share * 100}%` }}
               >
                 {week.current || clipped ? (
-                  <span className="absolute bottom-full left-1/2 mb-1 -translate-x-1/2 text-xs font-medium text-ink tabular-nums">
+                  <span className="absolute bottom-full left-1/2 mb-1.5 -translate-x-1/2 text-[13px] font-semibold text-ink tabular-nums">
                     {n(week.count)}
                   </span>
                 ) : null}

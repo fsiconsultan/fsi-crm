@@ -100,14 +100,27 @@ body {
   }
 }
 
-/* Identity motif: hatching marks history, totals and losses. Solid marks "now". */
+/* Identity motif, as drawn in docs/design/reference-overview.jpg: bold diagonal
+   stripes about as wide as the gaps between them, with nothing behind them.
+   Hatching marks history, totals and losses. Solid marks "now". */
 .hatch {
-  background-color: color-mix(in srgb, currentColor 14%, transparent);
   background-image: repeating-linear-gradient(
     135deg,
-    currentColor 0 1.5px,
-    transparent 1.5px 5px
+    currentColor 0 2px,
+    transparent 2px 4.5px
   );
+}
+
+/* Vertical history bars fade out toward the baseline, as in the reference. */
+.hatch-fade {
+  mask-image: linear-gradient(to bottom, #000 25%, rgb(0 0 0 / 0.3) 100%);
+}
+
+/* The one solid bar per chart ("now", or the final result): a soft glow in its
+   own color lifts it off the hatched bars. Used on two elements only. */
+.bar-solid {
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--accent) 88%, white), var(--accent));
+  box-shadow: 0 6px 14px -2px color-mix(in srgb, var(--accent) 45%, transparent);
 }
 
 /* Insight card only: navy to sun, a solar nod. Headline and body sit in the navy upper left,
@@ -130,3 +143,4 @@ body {
     opacity: 1;
   }
 }
+

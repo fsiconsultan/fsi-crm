@@ -39,7 +39,8 @@ Rule: one accent. Blue marks "now". Pink and green only carry meaning.
 
 ## Shape and elevation
 - Radius: cards 20px, controls and nav items 10px, pill controls and delta pills 999px, icon circles 999px.
-- Cards are flat: 1px `line` border, no shadow. Only popovers, menus and dialogs carry a shadow.
+- Cards are flat: 1px `line` border, no shadow. Only popovers, menus and dialogs carry a shadow, plus the one solid bar per chart (below).
+- Bars, measured from the reference: hatch stripes are bold (2px stripe, 2.5px gap, 135deg) with nothing behind them (`.hatch`). Vertical history bars have 6px rounded tops and fade toward the baseline (`.hatch-fade`). The solid bar (current week, final result) is fully rounded with a soft glow in its own color (`.bar-solid`); it is the only glow, at most two per screen.
 - Card padding 20px. Grid gap 12px. Page padding 24px (desktop), 16px (phone).
 
 ## Desktop layout (1280px and wider)

@@ -26,7 +26,7 @@ type Step = {
 const barTone: Record<Kind, string> = {
   total: "hatch text-muted",
   segment: "hatch text-negative",
-  result: "bg-accent",
+  result: "bar-solid",
 }
 
 const valueTone: Record<Kind, string> = {
@@ -131,13 +131,13 @@ function Waterfall({ data, salesId, withStatus }: { data: Dashboard; salesId: st
                   {step.kind === "total" ? "" : ` · ${percent(step.count, withStatus)}`}
                 </span>
               </span>
-              <span aria-hidden="true" className="relative block h-2.5">
+              <span aria-hidden="true" className="relative block h-3">
                 <span
-                  className={`absolute inset-y-0 rounded-[3px] ${barTone[step.kind]}`}
+                  className={`absolute inset-y-0 rounded-[4px] ${barTone[step.kind]}`}
                   style={{
                     left: `${step.start * 100}%`,
                     width: `${(step.end - step.start) * 100}%`,
-                    minWidth: step.count > 0 ? 3 : 0,
+                    minWidth: step.count > 0 ? (step.kind === "result" ? 18 : 4) : 0,
                   }}
                 />
               </span>
