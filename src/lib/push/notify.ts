@@ -70,17 +70,39 @@ export function createNotifier(deps: {
         ),
       )
 
+      // Bookkeeping errors do not change who was notified; they are logged once below.
+      const bookkeeping: string[] = []
+      const record = async (step: Promise<void>) => {
+        try {
+          await step
+        } catch (error) {
+          bookkeeping.push(error instanceof Error ? error.message : "unknown error")
+        }
+      }
+
       for (const [i, outcome] of outcomes.entries()) {
         const target = targets[i]
         if (outcome.ok) {
           result.delivered++
-          await store.markSuccess(target.id, deps.now().toISOString())
+          await record(store.markSuccess(target.id, deps.now().toISOString()))
         } else if (outcome.statusCode !== null && GONE.has(outcome.statusCode)) {
-          await store.remove(target.id)
+          // Only a push service saying the device is gone removes it; timeouts and 5xx do not.
+          await record(store.remove(target.id))
         } else {
           failures.push(`${outcome.statusCode ?? "no response"}: ${outcome.message}`)
-          await store.recordFailure(target.id)
+          await record(store.recordFailure(target.id))
         }
+      }
+
+      if (bookkeeping.length > 0) {
+        await log({
+          type: "push_failed",
+          conversationId: conversation.id,
+          leadId: conversation.lead_id,
+          severity: "warning",
+          summary: `Notification records for ${what} could not be updated: ${bookkeeping[0]}`,
+          detail: { errors: bookkeeping.slice(0, 5) },
+        })
       }
 
       if (failures.length > 0) {
@@ -111,7 +133,14 @@ export function createNotifier(deps: {
   return {
     async handoff(conversation) {
       let adminIds: string[] = []
-      if (!conversation.assigned_sales_id) {
+      // An Inactive assignee gets nothing, so the Admins hear about it instead.
+      let assignee = conversation.assigned_sales_id
+      try {
+        if (assignee && !(await store.isActive(assignee))) assignee = null
+      } catch {
+        assignee = null
+      }
+      if (!assignee) {
         try {
           adminIds = await store.activeAdminIds()
         } catch (error) {
@@ -126,7 +155,7 @@ export function createNotifier(deps: {
           return { recipients: 0, devices: 0, delivered: 0 }
         }
       }
-      const recipients = handoffRecipients({ assignedSalesId: conversation.assigned_sales_id, adminIds, actorId: null })
+      const recipients = handoffRecipients({ assignedSalesId: assignee, adminIds, actorId: null })
       return deliver(
         conversation,
         recipients,
@@ -134,7 +163,7 @@ export function createNotifier(deps: {
           title: title(conversation),
           // Fixed text: the AI's reason can hold customer details, and a lock
           // screen is public. The reason is in the inbox.
-          body: "Needs a person to take over.",
+          body: "Customer asked for a person",
           url: `/inbox/${conversation.id}`,
           tag: `conversation-${conversation.id}`,
         },
@@ -148,7 +177,7 @@ export function createNotifier(deps: {
         assignmentRecipients({ toSalesId, actorId }),
         {
           title: title(conversation),
-          body: "This conversation was assigned to you.",
+          body: "Assigned to you",
           url: `/inbox/${conversation.id}`,
           tag: `conversation-${conversation.id}`,
         },

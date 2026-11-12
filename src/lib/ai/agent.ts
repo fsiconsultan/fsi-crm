@@ -1,10 +1,9 @@
 import { safeLog, type WaStore } from "@/lib/whatsapp/store"
 import type { Conversation, Message } from "@/lib/whatsapp/types"
-import type { Notifier } from "@/lib/push/notify"
 import type { ChatMessage, ChatModel } from "./model"
 import { buildSystemPrompt } from "./prompt"
 import { cleanAnswers } from "./qualification"
-import { TOOLS, type ToolContext } from "./tools"
+import { TOOLS, type Notice, type ToolContext } from "./tools"
 
 const HISTORY_LIMIT = 30
 const MAX_ROUNDS = 6
@@ -33,7 +32,8 @@ export async function runAgent(input: {
   model: ChatModel
   conversation: Conversation
   now: Date
-  notifier?: Notifier | null
+  // Collects phone notifications for the caller to send after the reply.
+  notices?: Notice[]
 }): Promise<AgentResult> {
   const { store, model, now } = input
   const ctx: ToolContext = {
@@ -41,7 +41,7 @@ export async function runAgent(input: {
     conversation: input.conversation,
     now,
     handoffRequested: false,
-    notifier: input.notifier,
+    notices: input.notices,
   }
 
   const [history, qualification] = await Promise.all([

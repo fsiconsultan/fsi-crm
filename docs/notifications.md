@@ -7,19 +7,19 @@ conversation needs them. Tapping it opens `/inbox/<conversation id>`.
 
 | Event | Who is notified |
 |---|---|
-| The AI asks for a person (`request_human_handoff`) | The assigned salesperson. If nobody is assigned, every active Admin. |
+| The AI asks for a person (`request_human_handoff`) | The assigned salesperson. If nobody is assigned, or the assignee is Inactive, every active Admin. |
 | A conversation is assigned or reassigned | The new assignee. This covers an Admin assigning in the inbox and the automatic `lead_owner` rule. |
 
 The person who performed the action is never notified, and neither is anyone
 whose account is Inactive. The notification shows the customer's WhatsApp name
-(or number) and a fixed line ("Needs a person to take over." or "This
-conversation was assigned to you."), never the AI's reason or any message,
+(or number) as the title and a fixed line ("Customer asked for a person" or
+"Assigned to you"), never the AI's reason or any message,
 because lock screens are public.
 
 A failed notification never blocks the handoff, the assignment or the AI's reply
 to the customer: each send times out after 5 seconds, all of a person's devices
-are sent to at once, and the webhook answers the customer before notifying
-staff. Devices the
+are sent to at once, and notifications are only sent after the customer's
+reply has gone out (the agent queues them while it works). Devices the
 push service reports as gone (HTTP 404 or 410) are removed. Other failures are
 counted on the device and logged as `push_failed` in `automation_events`; when
 nobody could be reached the event is listed in `/inbox/review`.

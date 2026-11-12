@@ -25,6 +25,7 @@ export interface PushSender {
 export interface PushStore {
   subscriptionsFor(salesUserIds: string[]): Promise<PushTarget[]>
   activeAdminIds(): Promise<string[]>
+  isActive(salesUserId: string): Promise<boolean>
   markSuccess(id: string, at: string): Promise<void>
   recordFailure(id: string): Promise<void>
   remove(id: string): Promise<void>

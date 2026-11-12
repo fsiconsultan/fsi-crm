@@ -108,6 +108,17 @@ describe("POST delivery", () => {
     expect(db.conversations[0]).toMatchObject({ lead_id: 9, assigned_sales_id: "sales-1" })
   })
 
+  it("leaves a chat unassigned when the lead's salesperson is inactive", async () => {
+    const db = createMemoryStore({
+      leads: [{ id: 7, customer_name: "Existing", phone: "0812-0000-0001", phone_wa: "6281200000001", status: null, sales_id: "sales-1" }],
+      inactiveSales: ["sales-1"],
+    })
+    const result = await deliver(db.store, textMessage)
+    expect(db.conversations[0]).toMatchObject({ lead_id: 7, assigned_sales_id: null })
+    expect(result.pending[0].assignedTo).toBeNull()
+    expect(db.assignments).toEqual([])
+  })
+
   it("tells the route who a first message was assigned to, so they can be notified", async () => {
     const db = createMemoryStore({
       leads: [{ id: 7, customer_name: "Existing", phone: "0812-0000-0001", phone_wa: "6281200000001", status: null, sales_id: "sales-1" }],

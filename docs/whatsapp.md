@@ -95,7 +95,7 @@ or longer than 15 is treated as unusable.
 ### Assignment (`src/lib/whatsapp/assignment.ts`)
 
 - A conversation that matches an existing lead is assigned to that lead's
-  salesperson (rule `lead_owner`).
+  salesperson (rule `lead_owner`), unless that salesperson is Inactive.
 - Anything else is unassigned until an Admin assigns it in the inbox (rule
   `manual`). If its lead has no owner, the lead gets the same owner; a lead that
   already has an owner is not changed.

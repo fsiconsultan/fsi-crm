@@ -59,7 +59,7 @@ describe("notifier", () => {
     expect(sent.map((s) => s.endpoint)).toEqual(["https://push.example.test/phone", "https://push.example.test/laptop"])
     expect(sent[0].payload).toEqual({
       title: "Budi",
-      body: "Needs a person to take over.",
+      body: "Customer asked for a person",
       url: "/inbox/conv-1",
       tag: "conversation-conv-1",
     })
@@ -76,7 +76,17 @@ describe("notifier", () => {
     const { notifier, sent } = setup({ targets: [device("phone", "sales-1")] })
     await notifier.handoff({ ...conversation("sales-1"), profile_name: null })
     expect(sent[0].payload.title).toBe("+62 812 0000 0001")
-    expect(sent[0].payload.body).toBe("Needs a person to take over.")
+    expect(sent[0].payload.body).toBe("Customer asked for a person")
+  })
+
+  it("sends a handoff to the Admins when the assignee is inactive", async () => {
+    const { notifier, sent } = setup({
+      targets: [device("s1", "sales-1"), device("a1", "admin-1")],
+      adminIds: ["admin-1"],
+      inactive: ["sales-1"],
+    })
+    await notifier.handoff(conversation("sales-1"))
+    expect(sent.map((s) => s.endpoint)).toEqual(["https://push.example.test/a1"])
   })
 
   it("never notifies deactivated staff", async () => {
@@ -124,7 +134,7 @@ describe("notifier", () => {
     expect(sent).toEqual([
       expect.objectContaining({
         endpoint: "https://push.example.test/s1",
-        payload: expect.objectContaining({ body: "This conversation was assigned to you.", url: "/inbox/conv-1" }),
+        payload: expect.objectContaining({ body: "Assigned to you", url: "/inbox/conv-1" }),
       }),
     ])
   })
@@ -155,6 +165,31 @@ describe("notifier", () => {
     expect(events).toEqual([
       expect.objectContaining({ type: "push_failed", needsReview: true, conversationId: "conv-1", leadId: 7 }),
     ])
+  })
+
+  it("keeps a device that timed out or got a 5xx; only 404 and 410 remove it", async () => {
+    const { notifier, push } = setup(
+      { targets: [device("timeout", "sales-1"), device("server", "sales-1")] },
+      {
+        "https://push.example.test/timeout": { ok: false, statusCode: null, message: "Socket timeout" },
+        "https://push.example.test/server": { ok: false, statusCode: 503, message: "Unavailable" },
+      },
+    )
+    await notifier.handoff(conversation("sales-1"))
+    expect(push.targets.map((t) => t.id)).toEqual(["timeout", "server"])
+    expect(push.failures).toEqual({ timeout: 1, server: 1 })
+  })
+
+  it("logs a failed record update without affecting delivery", async () => {
+    const { notifier, push, events } = setup({ targets: [device("phone", "sales-1")] })
+    push.store.markSuccess = async () => {
+      throw new Error("Mark device delivered: connection reset")
+    }
+    expect(await notifier.handoff(conversation("sales-1"))).toMatchObject({ delivered: 1 })
+    expect(events).toHaveLength(1)
+    expect(events[0]).toMatchObject({ type: "push_failed", severity: "warning" })
+    expect(events[0].needsReview).toBeFalsy()
+    expect(events[0].summary).toContain("connection reset")
   })
 
   it("never throws when the subscription store is down; it logs instead", async () => {

@@ -5,7 +5,7 @@ import type { AutomationEvent, Conversation, LeadRef, Message, Qualification } f
 // In-memory WaStore for tests. It keeps the same guarantees the database gives:
 // unique wa_id, unique wa_message_id, compare-and-set on lead status. Reads
 // return copies, as a database does, so callers cannot see later writes.
-export function createMemoryStore(seed: { leads?: LeadRef[] } = {}) {
+export function createMemoryStore(seed: { leads?: LeadRef[]; inactiveSales?: string[] } = {}) {
   const conversations: Conversation[] = []
   const messages: Message[] = []
   const leads: LeadRef[] = [...(seed.leads ?? [])]
@@ -155,6 +155,9 @@ export function createMemoryStore(seed: { leads?: LeadRef[] } = {}) {
     },
     async hasOpenEvent(conversationId, type) {
       return events.some((e) => e.conversation_id === conversationId && e.type === type && !e.resolved_at)
+    },
+    async isSalesUserActive(salesId) {
+      return !seed.inactiveSales?.includes(salesId)
     },
     async recordAssignment(input) {
       assignments.push(input)

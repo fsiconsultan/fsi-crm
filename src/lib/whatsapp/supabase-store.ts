@@ -218,6 +218,12 @@ export function createSupabaseStore(db: SupabaseClient<Database>): WaStore {
       return (data ?? []).length > 0
     },
 
+    async isSalesUserActive(salesId) {
+      const { data, error } = await db.from("sales_users").select("status").eq("id", salesId).maybeSingle()
+      check(error, "Read salesperson")
+      return !!data && data.status !== "Inactive"
+    },
+
     async recordAssignment(input) {
       const { error } = await db.from("assignment_history").insert({
         conversation_id: input.conversationId,

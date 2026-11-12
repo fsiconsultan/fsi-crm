@@ -11,6 +11,9 @@ export function memoryPushStore(seed: { targets?: PushTarget[]; adminIds?: strin
     async activeAdminIds() {
       return seed.adminIds ?? []
     },
+    async isActive(id) {
+      return !seed.inactive?.includes(id)
+    },
     async markSuccess(id) {
       successes.push(id)
     },

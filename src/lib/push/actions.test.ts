@@ -13,7 +13,7 @@ vi.mock("@/lib/whatsapp/inbox", () => ({
 
 const { removeDevice, saveDevice } = await import("./actions")
 
-const subscription = { endpoint: "https://push.example.test/abc", keys: { p256dh: "key", auth: "auth" } }
+const subscription = { endpoint: "https://fcm.googleapis.com/fcm/send/abc", keys: { p256dh: "key", auth: "auth" } }
 
 describe("device subscription actions", () => {
   beforeEach(() => {
@@ -25,7 +25,7 @@ describe("device subscription actions", () => {
     rpc.mockResolvedValue({ error: null })
     expect(await saveDevice(subscription, "Mozilla/5.0 (iPhone)")).toEqual({ ok: true })
     expect(rpc).toHaveBeenCalledWith("register_push_subscription", {
-      p_endpoint: "https://push.example.test/abc",
+      p_endpoint: "https://fcm.googleapis.com/fcm/send/abc",
       p_p256dh: "key",
       p_auth: "auth",
       p_user_agent: "Mozilla/5.0 (iPhone)",
@@ -34,6 +34,12 @@ describe("device subscription actions", () => {
 
   it("refuses an incomplete subscription without calling the database", async () => {
     expect(await saveDevice({ endpoint: "https://push.example.test/abc" }, "ua")).toMatchObject({ ok: false })
+    expect(rpc).not.toHaveBeenCalled()
+  })
+
+  it("refuses an endpoint that is not a browser push service, without calling the database", async () => {
+    const result = await saveDevice({ ...subscription, endpoint: "https://evil.example/collect" }, "ua")
+    expect(result).toMatchObject({ ok: false })
     expect(rpc).not.toHaveBeenCalled()
   })
 

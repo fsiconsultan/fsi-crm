@@ -10,13 +10,16 @@ import { applyStatusEvent, STATUS_FOR_NEW_WHATSAPP_LEAD, STATUS_RULES } from "./
 
 // What a tool can reach. `conversation` is replaced when a tool changes it, so
 // later tools in the same run see the new state.
+export type Notice = (notifier: Notifier) => Promise<unknown>
+
 export type ToolContext = {
   store: WaStore
   conversation: Conversation
   now: Date
   handoffRequested: boolean
-  // Phone notifications; null until VAPID is configured. Never throws.
-  notifier?: Notifier | null
+  // Phone notifications to send once the customer's reply has gone out, so a
+  // slow push service can never delay the reply. Filled by the tools below.
+  notices?: Notice[]
 }
 
 type Args = Record<string, unknown>
@@ -57,7 +60,8 @@ export async function findOrCreateLead(ctx: ToolContext, args: Args) {
       })
     : match.lead
 
-  const assignment = conversation.assigned_sales_id ? null : decideAssignment(lead)
+  const ownerActive = lead.sales_id ? await store.isSalesUserActive(lead.sales_id) : false
+  const assignment = conversation.assigned_sales_id ? null : decideAssignment(lead, ownerActive)
   await store.updateConversation(conversation.id, {
     lead_id: lead.id,
     ...(assignment ? { assigned_sales_id: assignment.salesId } : {}),
@@ -77,7 +81,8 @@ export async function findOrCreateLead(ctx: ToolContext, args: Args) {
       rule: assignment.rule,
       assignedBy: null,
     })
-    await ctx.notifier?.assigned(ctx.conversation, assignment.salesId, null)
+    const assigned = ctx.conversation
+    ctx.notices?.push((notifier) => notifier.assigned(assigned, assignment.salesId, null))
   }
   await safeLog(store, {
     type: created ? "lead_created" : "lead_linked",
@@ -131,12 +136,12 @@ export async function requestHumanHandoff(ctx: ToolContext, args: Args) {
     summary: `The assistant asked for a person to take over: ${reason}`,
     detail: { reason },
   })
-  // After the handoff is recorded, so a failed notification cannot undo it.
-  // Re-read so an Admin's reassignment during this run picks the right person.
-  if (ctx.notifier) {
+  // Sent after the reply, and re-read then, so an Admin's reassignment during
+  // this run reaches the right person.
+  ctx.notices?.push(async (notifier) => {
     const current = await store.getConversation(conversation.id).catch(() => null)
-    await ctx.notifier.handoff(current ?? ctx.conversation)
-  }
+    return notifier.handoff(current ?? { ...conversation, mode: "human" })
+  })
   return { status: "handed_off", note: "Tell the customer a member of the FSI team will reply here, then stop." }
 }
 

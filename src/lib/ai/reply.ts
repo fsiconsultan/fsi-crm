@@ -4,6 +4,7 @@ import type { PendingReply } from "@/lib/whatsapp/ingest"
 import { sendAndRecord } from "@/lib/whatsapp/outbound"
 import { safeLog, type WaStore } from "@/lib/whatsapp/store"
 import { runAgent } from "./agent"
+import type { Notice } from "./tools"
 import type { ChatModel } from "./model"
 
 export type ReplyDeps = {
@@ -32,6 +33,7 @@ export type ReplyOutcome =
 export async function answerInbound(pending: PendingReply, deps: ReplyDeps): Promise<ReplyOutcome> {
   const { store, api, model } = deps
   let conversationId: string | null = pending.conversationId
+  const notices: Notice[] = []
 
   try {
     const conversation = await store.getConversation(pending.conversationId)
@@ -58,7 +60,7 @@ export async function answerInbound(pending: PendingReply, deps: ReplyDeps): Pro
       return "skipped_not_configured"
     }
 
-    const { reply, handoffRequested } = await runAgent({ store, model, conversation, now: deps.now(), notifier: deps.notifier })
+    const { reply, handoffRequested } = await runAgent({ store, model, conversation, now: deps.now(), notices })
 
     // Staff may have taken over while the model was thinking. Their takeover
     // wins: the AI reply is dropped. The one exception is the goodbye the AI
@@ -96,5 +98,10 @@ export async function answerInbound(pending: PendingReply, deps: ReplyDeps): Pro
       summary: `The assistant could not answer a customer message: ${error instanceof Error ? error.message : "unknown error"}`,
     })
     return "error"
+  } finally {
+    // Only now, with the customer's reply already sent (or the run over), do
+    // staff phones get notified. The notifier never throws.
+    const notifier = deps.notifier
+    if (notifier && notices.length > 0) await Promise.allSettled(notices.map((notice) => notice(notifier)))
   }
 }

@@ -1,11 +1,15 @@
 // FSI CRM service worker. It only shows notifications and opens the CRM when
 // one is tapped. It caches nothing: CRM data is never stored offline.
 
-// Only paths on this site; "//other.example" would otherwise leave the CRM.
+// Opens only a conversation on this site (/inbox/<uuid>); anything else opens
+// the inbox. Stops a payload like "//other.example" from leaving the CRM.
+const CONVERSATION_PATH = /^\/inbox\/[0-9a-f-]{36}$/
+
 function sameOriginPath(value) {
-  if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) return "/inbox"
+  if (typeof value !== "string") return "/inbox"
   try {
-    return new URL(value, self.location.origin).origin === self.location.origin ? value : "/inbox"
+    const url = new URL(value, self.location.origin)
+    return url.origin === self.location.origin && CONVERSATION_PATH.test(url.pathname) ? url.pathname : "/inbox"
   } catch {
     return "/inbox"
   }

@@ -23,7 +23,8 @@ async function openConversation(
   // First contact from this number: look for the lead it belongs to.
   const match = matchLeadByPhone(await store.findLeadsByPhoneWa(message.from), message.from)
   const lead = match.kind === "unique" ? match.lead : null
-  const assignment = decideAssignment(lead)
+  const ownerActive = lead?.sales_id ? await store.isSalesUserActive(lead.sales_id) : false
+  const assignment = decideAssignment(lead, ownerActive)
 
   const conversation = await store.createConversation({
     waId: message.from,

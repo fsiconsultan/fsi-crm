@@ -591,6 +591,7 @@ export type Database = {
       get_login_email: { Args: { p_username: string }; Returns: string }
       is_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
       normalize_phone_wa: { Args: { p_phone: string }; Returns: string }
+      record_push_failure: { Args: { p_id: string }; Returns: undefined }
       register_push_subscription: {
         Args: {
           p_auth: string

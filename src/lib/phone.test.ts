@@ -31,6 +31,35 @@ describe("normalizePhone", () => {
     expect(normalizePhone("WA: +81 90 1234 5678")).toBe("819012345678")
   })
 
+  it("treats +812... as foreign on purpose: a + means a country code follows", () => {
+    // An Indonesian number typed with "+" but without 62 cannot be told apart
+    // from a Japanese one ("+81 2..."), so it is kept as written.
+    expect(normalizePhone("+812 3456 7890")).toBe("81234567890")
+  })
+
+  it.each([
+    ["0812 3456 7890\n0813 1111 2222", "6281234567890"],
+    ["0812 3456 7890  0813 1111 2222", "6281234567890"],
+    ["0812 3456 7890 - 0813 1111 2222", "6281234567890"],
+    ["0812 3456 7890 dan 0813 1111 2222", "6281234567890"],
+    ["0812 3456 7890 DAN 0813 1111 2222", "6281234567890"],
+  ])("takes the first of two numbers in %j", (raw, expected) => {
+    expect(normalizePhone(raw)).toBe(expected)
+  })
+
+  it("skips a part that is not a number and takes the next valid one", () => {
+    expect(normalizePhone("kantor / 0813 1111 2222")).toBe("6281311112222")
+    expect(normalizePhone("123 dan +33 6 12 34 56 78")).toBe("33612345678")
+  })
+
+  it("still reads one number typed with a stray double space", () => {
+    expect(normalizePhone("0812  3456 7890")).toBe("6281234567890")
+  })
+
+  it("does not split inside a word containing 'dan'", () => {
+    expect(normalizePhone("Pak Dandi 0812 3456 7890")).toBe("6281234567890")
+  })
+
   it("still reads a local number typed with a stray +", () => {
     expect(normalizePhone("+0812 3456 7890")).toBe("6281234567890")
   })
@@ -74,6 +103,17 @@ describe("matchLeadByPhone", () => {
     // Meta sends the number as digits only, country code first.
     expect(matchLeadByPhone(foreign, "819012345678")).toEqual({ kind: "unique", lead: foreign[0] })
     expect(matchLeadByPhone(foreign, "8613800138000")).toEqual({ kind: "unique", lead: foreign[1] })
+  })
+
+  it.each([
+    ["8613800138000", ["+86 138 0013 8000", "0086 138 0013 8000", "+86-138-0013-8000", "+8613800138000"]],
+    ["33612345678", ["+33 6 12 34 56 78", "0033 6 12 34 56 78", "+33 (6) 12-34-56-78"]],
+    ["819012345678", ["+81 90 1234 5678", "0081 90-1234-5678", "WA: +81 90 1234 5678"]],
+  ])("matches a %s sender to a lead stored in any of its formats", (waId, formats) => {
+    for (const phone of formats) {
+      expect(matchLeadByPhone([{ id: 1, phone }], waId).kind).toBe("unique")
+      expect(matchLeadByPhone([{ id: 1, phone, phone_wa: normalizePhone(phone) }], waId).kind).toBe("unique")
+    }
   })
 
   it("still matches Indonesian numbers that WhatsApp sends as 62...", () => {

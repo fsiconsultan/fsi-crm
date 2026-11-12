@@ -33,17 +33,25 @@ export function createSupabasePushStore(db: SupabaseClient<Database>): PushStore
       return (data ?? []).filter((row) => row.status !== "Inactive").map((row) => row.id)
     },
 
+    async isActive(salesUserId) {
+      const { data, error } = await db.from("sales_users").select("status").eq("id", salesUserId).maybeSingle()
+      if (error) throw new Error(`Read staff status: ${error.message}`)
+      return !!data && data.status !== "Inactive"
+    },
+
     async markSuccess(id, at) {
-      await db.from("push_subscriptions").update({ last_success_at: at, failure_count: 0 }).eq("id", id)
+      const { error } = await db.from("push_subscriptions").update({ last_success_at: at, failure_count: 0 }).eq("id", id)
+      if (error) throw new Error(`Mark device delivered: ${error.message}`)
     },
 
     async recordFailure(id) {
-      const { data } = await db.from("push_subscriptions").select("failure_count").eq("id", id).maybeSingle()
-      if (data) await db.from("push_subscriptions").update({ failure_count: data.failure_count + 1 }).eq("id", id)
+      const { error } = await db.rpc("record_push_failure", { p_id: id })
+      if (error) throw new Error(`Count device failure: ${error.message}`)
     },
 
     async remove(id) {
-      await db.from("push_subscriptions").delete().eq("id", id)
+      const { error } = await db.from("push_subscriptions").delete().eq("id", id)
+      if (error) throw new Error(`Remove expired device: ${error.message}`)
     },
   }
 }

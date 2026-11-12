@@ -339,5 +339,37 @@ describe("AI reply", () => {
     expect(sent).toHaveLength(1)
     expect(db.events.map((e) => e.type)).toEqual(expect.arrayContaining(["handoff_requested", "push_failed"]))
   })
-})
 
+  it("sends the customer's reply before any notification, even when the push service hangs", async () => {
+    const db = createMemoryStore()
+    const pending = await receive(db, "Saya mau bicara dengan orang.")
+    const push = memoryPushStore({ targets: [device("phone", "admin-1")], adminIds: ["admin-1"] })
+    let release: () => void = () => {}
+    let notified = false
+    const hanging = {
+      async send() {
+        await new Promise<void>((resolve) => (release = resolve))
+        notified = true
+        return { ok: true as const }
+      },
+    }
+    const notifier = createNotifier({ store: push.store, sender: hanging, log: (e) => db.store.logEvent(e), now: () => NOW })
+    const { model } = fakeModel([
+      { toolCalls: [call("request_human_handoff", { reason: "Customer asked for a person." })] },
+      { content: "Baik, tim FSI akan membalas di sini." },
+    ])
+    const { api, sent } = fakeApi()
+
+    const run = answerInbound(pending, { ...deps(db, model, api), notifier })
+    for (let i = 0; i < 50 && sent.length === 0; i++) await new Promise((r) => setTimeout(r, 0))
+
+    // The reply is out while the notification is still stuck.
+    expect(sent.map((s) => s.body)).toEqual(["Baik, tim FSI akan membalas di sini."])
+    expect(db.messages.at(-1)).toMatchObject({ sender_type: "bot", status: "sent" })
+    expect(notified).toBe(false)
+
+    release()
+    expect(await run).toBe("sent")
+    expect(notified).toBe(true)
+  })
+})

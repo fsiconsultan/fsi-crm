@@ -9,7 +9,9 @@ import type { LeadRef } from "./types"
 // function when they are approved.
 export type AssignmentDecision = { salesId: string; rule: string } | null
 
-export function decideAssignment(lead: LeadRef | null): AssignmentDecision {
-  if (lead?.sales_id) return { salesId: lead.sales_id, rule: "lead_owner" }
+// ownerActive: false when the lead's salesperson is Inactive. Their chats then
+// stay unassigned for an Admin to hand out.
+export function decideAssignment(lead: LeadRef | null, ownerActive: boolean): AssignmentDecision {
+  if (lead?.sales_id && ownerActive) return { salesId: lead.sales_id, rule: "lead_owner" }
   return null
 }

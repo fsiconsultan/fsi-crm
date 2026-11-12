@@ -7,11 +7,23 @@ const MIN_DIGITS = 10
 const MIN_INDONESIAN_DIGITS = 11
 const MAX_DIGITS = 15
 
+// What separates two numbers in one field: "/", ",", ";", a newline, two or
+// more spaces, " - ", or the word "dan" ("and").
+const SEPARATORS = /[/,;\n]|\s{2,}|\s-\s|\bdan\b/i
+
+// A field can hold several numbers ("0812... / 0813..."). The first part that
+// is a valid number wins. If none is, the text up to the first "/", "," or ";"
+// is read as one number, so "0812  3456 7890" (a stray double space) still works.
 export function normalizePhone(raw: string | null | undefined): string | null {
   if (!raw) return null
+  for (const part of raw.split(SEPARATORS)) {
+    const number = normalizeOne(part)
+    if (number) return number
+  }
+  return normalizeOne(raw.split(/[/,;]/)[0])
+}
 
-  // A field can hold several numbers ("0812... / 0813..."); the first one wins.
-  const first = raw.split(/[/,;]/)[0]
+function normalizeOne(first: string): string | null {
   let digits = first.replace(/\D/g, "")
   if (!digits) return null
 

@@ -2,6 +2,7 @@
 
 import { getProfile } from "@/lib/auth"
 import { inboxClient } from "@/lib/whatsapp/inbox"
+import { isPushServiceEndpoint } from "./endpoints"
 
 export type DeviceResult = { ok: true } | { ok: false; error: string }
 
@@ -21,6 +22,7 @@ export async function saveDevice(subscription: Keys, userAgent: string): Promise
   await getProfile()
   const { endpoint, keys } = subscription
   if (!endpoint || !keys?.p256dh || !keys.auth) return { ok: false, error: "The browser returned an incomplete subscription." }
+  if (!isPushServiceEndpoint(endpoint)) return { ok: false, error: "This browser's notification service is not supported." }
 
   const db = await inboxClient()
   const { error } = await db.rpc("register_push_subscription", {
