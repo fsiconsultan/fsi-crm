@@ -1,4 +1,5 @@
 import type { CloudApi } from "@/lib/whatsapp/cloud-api"
+import type { Notifier } from "@/lib/push/notify"
 import type { PendingReply } from "@/lib/whatsapp/ingest"
 import { sendAndRecord } from "@/lib/whatsapp/outbound"
 import { safeLog, type WaStore } from "@/lib/whatsapp/store"
@@ -11,6 +12,8 @@ export type ReplyDeps = {
   // null until OPENAI_API_KEY and OPENAI_MODEL are set.
   model: ChatModel | null
   now: () => Date
+  // null until VAPID is configured.
+  notifier?: Notifier | null
 }
 
 export type ReplyOutcome =
@@ -55,7 +58,7 @@ export async function answerInbound(pending: PendingReply, deps: ReplyDeps): Pro
       return "skipped_not_configured"
     }
 
-    const { reply, handoffRequested } = await runAgent({ store, model, conversation, now: deps.now() })
+    const { reply, handoffRequested } = await runAgent({ store, model, conversation, now: deps.now(), notifier: deps.notifier })
 
     // Staff may have taken over while the model was thinking. Their takeover
     // wins: the AI reply is dropped. The one exception is the goodbye the AI

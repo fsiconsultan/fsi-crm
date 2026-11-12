@@ -1,4 +1,5 @@
 import { matchLeadByPhone } from "@/lib/phone"
+import type { Notifier } from "@/lib/push/notify"
 import { decideAssignment } from "@/lib/whatsapp/assignment"
 import { safeLog, type WaStore } from "@/lib/whatsapp/store"
 import type { Conversation } from "@/lib/whatsapp/types"
@@ -14,6 +15,8 @@ export type ToolContext = {
   conversation: Conversation
   now: Date
   handoffRequested: boolean
+  // Phone notifications; null until VAPID is configured. Never throws.
+  notifier?: Notifier | null
 }
 
 type Args = Record<string, unknown>
@@ -74,6 +77,7 @@ export async function findOrCreateLead(ctx: ToolContext, args: Args) {
       rule: assignment.rule,
       assignedBy: null,
     })
+    await ctx.notifier?.assigned(ctx.conversation, assignment.salesId, null)
   }
   await safeLog(store, {
     type: created ? "lead_created" : "lead_linked",
@@ -127,6 +131,8 @@ export async function requestHumanHandoff(ctx: ToolContext, args: Args) {
     summary: `The assistant asked for a person to take over: ${reason}`,
     detail: { reason },
   })
+  // After the handoff is recorded, so a failed notification cannot undo it.
+  await ctx.notifier?.handoff(ctx.conversation, reason)
   return { status: "handed_off", note: "Tell the customer a member of the FSI team will reply here, then stop." }
 }
 

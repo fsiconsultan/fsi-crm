@@ -5,11 +5,20 @@ import type { InboundMessage, StatusUpdate, WebhookEvent } from "./payload"
 import { safeLog, type WaStore } from "./store"
 import type { Conversation, MessageStatus } from "./types"
 
-export type PendingReply = { conversationId: string; messageId: string }
+export type PendingReply = {
+  conversationId: string
+  messageId: string
+  // Set when this message opened the conversation and a rule assigned it, so
+  // the route can notify that salesperson after acknowledging Meta.
+  assignedTo?: string | null
+}
 
-async function openConversation(store: WaStore, message: InboundMessage): Promise<Conversation> {
+async function openConversation(
+  store: WaStore,
+  message: InboundMessage,
+): Promise<{ conversation: Conversation; assignedTo: string | null }> {
   const existing = await store.getConversationByWaId(message.from)
-  if (existing) return existing
+  if (existing) return { conversation: existing, assignedTo: null }
 
   // First contact from this number: look for the lead it belongs to.
   const match = matchLeadByPhone(await store.findLeadsByPhoneWa(message.from), message.from)
@@ -54,7 +63,7 @@ async function openConversation(store: WaStore, message: InboundMessage): Promis
     })
   }
 
-  return conversation
+  return { conversation, assignedTo: assignment?.salesId ?? null }
 }
 
 async function storeInbound(store: WaStore, message: InboundMessage, now: Date): Promise<PendingReply | null> {
@@ -62,7 +71,7 @@ async function storeInbound(store: WaStore, message: InboundMessage, now: Date):
   // more than once. Check first, and rely on the unique index for races.
   if (await store.getMessageByWaId(message.waMessageId)) return null
 
-  const conversation = await openConversation(store, message)
+  const { conversation, assignedTo } = await openConversation(store, message)
 
   const stored = await store.insertMessage({
     conversationId: conversation.id,
@@ -94,7 +103,7 @@ async function storeInbound(store: WaStore, message: InboundMessage, now: Date):
     })
   }
 
-  return { conversationId: conversation.id, messageId: stored.id }
+  return { conversationId: conversation.id, messageId: stored.id, assignedTo }
 }
 
 const RANK: Record<MessageStatus, number> = { received: 0, sent: 1, delivered: 2, read: 3, failed: 1 }
