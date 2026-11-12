@@ -5,32 +5,15 @@ export function leadName(name: string | null) {
   return name?.trim() || "Unnamed lead"
 }
 
-/**
- * Digits to dial for a stored phone number, country code first, or null when
- * it cannot be a full number. Uses the WhatsApp normalizer so links and
- * WhatsApp matching read numbers the same way: "812...", "0812...", "62812..."
- * and "+62 812..." are Indonesian, "00" means international, and only the
- * first of several numbers in one field is used.
- */
-export function dialDigits(phone: string | null) {
-  // normalizePhone reads a leading 8 as an Indonesian mobile number with the
-  // country code missing. After a "+" it is a country code instead (+81 Japan,
-  // +86 China, +84 Vietnam), so those numbers are passed through unchanged.
-  const first = (phone ?? "").split(/[/,;]/)[0].trim()
-  if (/^\+\s*8/.test(first)) {
-    const digits = first.replace(/\D/g, "")
-    return digits.length >= 10 && digits.length <= 15 ? digits : null
-  }
-  return normalizePhone(phone)
-}
-
+// Call and WhatsApp links read a stored number with the same normalizer as
+// WhatsApp matching (src/lib/phone.ts), so both agree on what a number is.
 export function whatsappHref(phone: string | null) {
-  const digits = dialDigits(phone)
+  const digits = normalizePhone(phone)
   return digits ? `https://wa.me/${digits}` : null
 }
 
 export function telHref(phone: string | null) {
-  const digits = dialDigits(phone)
+  const digits = normalizePhone(phone)
   return digits ? `tel:+${digits}` : null
 }
 
