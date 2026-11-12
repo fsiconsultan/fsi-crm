@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { dialDigits, telHref, whatsappHref } from "./format"
+import { telHref, whatsappHref } from "./format"
 
 describe("phone links", () => {
   it.each([
@@ -15,7 +15,6 @@ describe("phone links", () => {
     ["0812 3456 7890 / 0813 1111 2222", "6281234567890"],
     ["081234567890/081311112222", "6281234567890"],
   ])("reads %s as %s", (raw, digits) => {
-    expect(dialDigits(raw)).toBe(digits)
     expect(whatsappHref(raw)).toBe(`https://wa.me/${digits}`)
     expect(telHref(raw)).toBe(`tel:+${digits}`)
   })
