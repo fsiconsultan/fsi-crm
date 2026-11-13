@@ -124,3 +124,47 @@ export async function listSalesUsers(): Promise<SalesUser[]> {
     status: user.status,
   }))
 }
+
+export type LeadHit = {
+  id: number
+  customer_name: string | null
+  phone: string | null
+  business: string | null
+  status: string | null
+}
+
+/** The command palette: leads whose name, phone or business contains the term (RLS-scoped). */
+export async function searchLeads(q: string, limit: number): Promise<LeadHit[]> {
+  if (!searchTerm(q)) return []
+  const supabase = await createClient()
+  const { data, error } = await leadsQuery(supabase, { q }, false)
+    .order("customer_name", { ascending: true, nullsFirst: false })
+    .order("id", { ascending: true })
+    .limit(limit)
+  if (error) throw new Error(`Searching leads failed: ${error.message}`)
+  return (data ?? []).map(({ id, customer_name, phone, business, status }) => ({
+    id,
+    customer_name,
+    phone,
+    business,
+    status,
+  }))
+}
+
+// PostgREST returns at most 1,000 rows per request, so an export reads in pages.
+const EXPORT_PAGE = 1000
+
+/** Every lead matching the filters, newest first, for a CSV export (RLS-scoped). */
+export async function exportLeads(where: LeadWhere): Promise<Lead[]> {
+  const supabase = await createClient()
+  const rows: Lead[] = []
+  for (let start = 0; ; start += EXPORT_PAGE) {
+    const { data, error } = await leadsQuery(supabase, where, false)
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .range(start, start + EXPORT_PAGE - 1)
+    if (error) throw new Error(`Exporting leads failed: ${error.message}`)
+    rows.push(...(data ?? []))
+    if (!data || data.length < EXPORT_PAGE) return rows
+  }
+}

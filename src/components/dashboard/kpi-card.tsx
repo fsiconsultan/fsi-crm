@@ -1,108 +1,139 @@
 import Link from "next/link"
+import { ChevronRight, MoreHorizontal } from "lucide-react"
 import { Card, CardHeader } from "@/components/ui/card"
 import { DeltaPill } from "@/components/ui/delta-pill"
+import { LinkMenu } from "@/components/ui/link-menu"
+import { cardMenuButtonClass } from "@/components/ui/pill"
+import { EmptyState } from "@/components/ui/states"
 import type { Dashboard, Period } from "@/lib/data/dashboard"
 import { leadsHref } from "@/lib/leads/filters"
-import { n, percent, plural } from "./format"
+import { n, plural } from "./format"
 
-// The page's focal point: deals won in the chosen period against the period before it.
+function pct(rate: number) {
+  return `${Math.round(rate * 100)}%`
+}
+
+type Row = { label: string; value: string; delta: number | null; href: string }
+
+// The page's focal point: the share of decided leads (Deal or No deal) that
+// became deals. Decided means the status date falls in the period; when no lead
+// was decided in it, the all-time rate is shown and the meta line says so.
 export function KpiCard({ data, period, salesId }: { data: Dashboard; period: Period; salesId: string }) {
-  const { now, previous } = data.deals
-  const scale = Math.max(now, previous, 1)
-  const closed = now + data.noDeals.now
-  const inPeriod = { sales: salesId, sfrom: period.from, sto: period.to }
-  const before = `the ${period.days} days before`
-  const { deals: undatedDeals, noDeals: undatedNoDeals } = data.closedUndated
+  const decided = data.deals.now + data.noDeals.now
+  const inPeriod = decided > 0
+  const dated = { sales: salesId, sfrom: period.from, sto: period.to }
 
-  const rows = [
+  return (
+    <Card className="flex h-full flex-col">
+      <CardHeader
+        title="Win rate"
+        meta={inPeriod ? `Leads decided ${period.shortRange}` : "All time, none decided in this period"}
+        action={
+          <LinkMenu
+            label="Win rate"
+            triggerLabel="Win rate options"
+            trigger={<MoreHorizontal aria-hidden="true" className="size-[18px]" />}
+            triggerClassName={cardMenuButtonClass}
+            items={[
+              { label: "Open deals won in this period", href: leadsHref({ ...dated, status: "Deal" }) },
+              { label: "Open no deals in this period", href: leadsHref({ ...dated, status: "No Deal" }) },
+            ]}
+          />
+        }
+      />
+      <KpiBody data={data} period={period} salesId={salesId} inPeriod={inPeriod} />
+    </Card>
+  )
+}
+
+function KpiBody({
+  data,
+  period,
+  salesId,
+  inPeriod,
+}: {
+  data: Dashboard
+  period: Period
+  salesId: string
+  inPeriod: boolean
+}) {
+  const won = inPeriod ? data.deals.now : data.byStatus["Deal"]
+  const total = inPeriod ? data.deals.now + data.noDeals.now : data.byStatus["Deal"] + data.byStatus["No Deal"]
+
+  if (total === 0) {
+    return <EmptyState title="No lead is decided yet" detail="The win rate appears once a lead is marked Deal or No deal." />
+  }
+
+  const rate = won / total
+  const decidedBefore = data.deals.previous + data.noDeals.previous
+  // Percentage points against the period before, only when both periods have decided leads.
+  const change = inPeriod && decidedBefore > 0 ? Math.round((rate - data.deals.previous / decidedBefore) * 1000) / 10 : null
+
+  const rows: Row[] = [
     {
-      label: "Leads added",
+      label: "Deals won",
+      value: n(data.deals.now),
+      delta: data.deals.now - data.deals.previous,
+      href: leadsHref({ sales: salesId, sfrom: period.from, sto: period.to, status: "Deal" }),
+    },
+    {
+      // A range that reaches back to the one-off import counts the import too.
+      label: data.added.includesImport ? "New leads, incl. import" : "New leads",
       value: n(data.added.now),
-      // No comparison that reaches back to the bulk import of earlier leads.
-      detail: data.added.includesImport
-        ? "Includes the import of leads from before this CRM"
-        : data.added.previous === null
-          ? `No comparison: ${before} include the import of earlier leads`
-          : `${n(data.added.previous)} in ${before}`,
+      delta: null,
       href: leadsHref({ sales: salesId, from: period.from, to: period.to, sort: "newest" }),
     },
-    {
-      label: "Marked no deal",
-      value: n(data.noDeals.now),
-      detail: null,
-      href: leadsHref({ ...inPeriod, status: "No Deal" }),
-    },
-    // Closed leads with no status date fall in no period; say how many instead of hiding them.
-    ...[
-      { label: "Deals with no date", count: undatedDeals, status: "Deal" as const },
-      { label: "No deals with no date", count: undatedNoDeals, status: "No Deal" as const },
-    ]
-      .filter((row) => row.count > 0)
-      .map((row) => ({
-        label: row.label,
-        value: n(row.count),
-        detail: "Not counted in any period",
-        href: leadsHref({ sales: salesId, status: row.status, view: "undated" }),
-      })),
+    { label: "Open pipeline", value: n(data.open), delta: null, href: leadsHref({ sales: salesId, view: "open" }) },
   ]
 
   return (
-    <Card className="max-md:p-4">
-      <CardHeader title="Deals won" meta={`${period.label}, ${period.rangeLabel}`} />
+    <>
+      <p className="-mt-1 text-[56px] font-normal leading-none tracking-[-0.04em] tabular-nums md:text-[72px]">{pct(rate)}</p>
 
-      <p className="text-[64px] font-light leading-none tracking-tight tabular-nums md:text-[72px]">{n(now)}</p>
-      <p className="mt-3 flex flex-wrap items-center gap-2 text-[13px] text-muted">
-        <DeltaPill value={now - previous} />
-        <span>
-          against {n(previous)} in {before}
-        </span>
-      </p>
-      <p className="mt-3 text-sm text-muted">
-        {closed > 0
-          ? `${percent(now, closed)} of the ${plural(closed, "lead", "leads")} closed in this period ended in a deal.`
-          : "No lead was closed as Deal or No deal in this period."}
+      <p className="mt-3 flex min-h-6 flex-wrap items-center gap-2 text-xs text-muted">
+        <DeltaLine change={change} days={period.days} inPeriod={inPeriod} />
       </p>
 
-      <dl className="mt-5 flex flex-col gap-2 text-[13px]">
-        <div className="grid grid-cols-[96px_minmax(0,1fr)_auto] items-center gap-3">
-          <dt className="text-ink">This period</dt>
-          <dd className="h-3 rounded-full bg-surface-sunken">
-            <div className="h-full rounded-full bg-accent" style={{ width: `${(now / scale) * 100}%` }} />
-          </dd>
-          <dd className="w-8 text-right tabular-nums">{n(now)}</dd>
+      <p className="mt-3 text-[13px]">
+        {n(won)} of {plural(total, "decided lead", "decided leads")} became {won === 1 ? "a deal" : "deals"}.
+      </p>
+
+      <div className="mt-4" role="img" aria-label={`Win rate ${pct(rate)}`}>
+        <div className="h-3 rounded-full bg-surface-raised">
+          <div className="hatch h-full rounded-full text-accent" style={{ width: pct(rate), minWidth: rate > 0 ? 6 : 0 }} />
         </div>
-        <div className="grid grid-cols-[96px_minmax(0,1fr)_auto] items-center gap-3">
-          <dt className="text-muted">Period before</dt>
-          <dd className="h-3 rounded-full bg-surface-sunken">
-            <div className="hatch h-full rounded-full text-accent" style={{ width: `${(previous / scale) * 100}%` }} />
-          </dd>
-          <dd className="w-8 text-right tabular-nums text-muted">{n(previous)}</dd>
+        <div aria-hidden="true" className="mt-1.5 flex justify-between text-[11px] text-muted">
+          <span>0%</span>
+          <span>100%</span>
         </div>
-      </dl>
+      </div>
 
       <ul className="mt-5 divide-y divide-line border-t border-line">
-        {now > 0 ? (
-          <li>
-            <Link
-              href={leadsHref({ ...inPeriod, status: "Deal" })}
-              className="flex min-h-11 items-center justify-between gap-3 text-sm hover:underline"
-            >
-              <span>{now === 1 ? "Open this deal" : `Open these ${n(now)} deals`}</span>
-            </Link>
-          </li>
-        ) : null}
         {rows.map((row) => (
           <li key={row.label}>
-            <Link href={row.href} className="group flex min-h-11 items-center justify-between gap-3 py-1.5 text-sm">
-              <span className="group-hover:underline">{row.label}</span>
-              <span className="text-right">
-                <span className="tabular-nums">{row.value}</span>
-                {row.detail ? <span className="block text-xs text-muted">{row.detail}</span> : null}
+            <Link href={row.href} className="group flex min-h-11 items-center justify-between gap-3 py-1">
+              <span className="text-[13px] text-muted group-hover:text-ink group-hover:underline">{row.label}</span>
+              <span className="flex items-center gap-2">
+                <span className="text-[15px] font-medium tabular-nums">{row.value}</span>
+                {row.delta !== null ? <DeltaPill value={row.delta} /> : null}
+                <ChevronRight aria-hidden="true" className="size-4 text-muted" />
               </span>
             </Link>
           </li>
         ))}
       </ul>
-    </Card>
+    </>
   )
+}
+
+function DeltaLine({ change, days, inPeriod }: { change: number | null; days: number; inPeriod: boolean }) {
+  if (change !== null) {
+    return (
+      <>
+        <DeltaPill value={change} suffix=" pts" />
+        <span>vs previous {days} days</span>
+      </>
+    )
+  }
+  return <span>{inPeriod ? "No lead was decided in the period before" : "Counts every lead marked Deal or No deal"}</span>
 }

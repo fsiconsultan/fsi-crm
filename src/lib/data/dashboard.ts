@@ -34,6 +34,10 @@ export type Period = {
   prevFrom: string
   prevTo: string
   rangeLabel: string
+  /** "14 Oct to 12 Nov": the header date chip. */
+  shortRange: string
+  /** The period before, same format: the chip's "vs" text. */
+  prevShortRange: string
 }
 
 export function resolvePeriod(key: string | undefined): Period {
@@ -50,6 +54,8 @@ export function resolvePeriod(key: string | undefined): Period {
     prevFrom: addDays(from, -days),
     prevTo: addDays(from, -1),
     rangeLabel: `${formatDay(from)} to ${formatDay(to, true)}`,
+    shortRange: `${formatDay(from)} to ${formatDay(to)}`,
+    prevShortRange: `${formatDay(addDays(from, -days))} to ${formatDay(addDays(from, -1))}`,
   }
 }
 
@@ -61,7 +67,7 @@ export type Dashboard = {
   noStatus: number
   open: number
   deals: { now: number; previous: number }
-  noDeals: { now: number }
+  noDeals: { now: number; previous: number }
   added: {
     now: number
     /** Null when the period before reaches back to the import, so a comparison would mislead. */
@@ -107,6 +113,7 @@ export async function getDashboard(options: {
     dealsNow,
     dealsPrevious,
     noDealsNow,
+    noDealsPrevious,
     addedNow,
     addedPrevious,
     dealsUndated,
@@ -125,6 +132,7 @@ export async function getDashboard(options: {
     countLeads({ ...base, status: "Deal", sfrom: period.from, sto: period.to }),
     countLeads({ ...base, status: "Deal", sfrom: period.prevFrom, sto: period.prevTo }),
     countLeads({ ...base, status: "No Deal", sfrom: period.from, sto: period.to }),
+    countLeads({ ...base, status: "No Deal", sfrom: period.prevFrom, sto: period.prevTo }),
     countLeads({ ...base, from: period.from, to: period.to }),
     comparePrevious ? countLeads({ ...base, from: period.prevFrom, to: period.prevTo }) : null,
     countLeads({ ...base, status: "Deal", view: "undated" }),
@@ -159,7 +167,7 @@ export async function getDashboard(options: {
     noStatus,
     open: OPEN_STATUSES.reduce((sum, status) => sum + byStatus[status], 0),
     deals: { now: dealsNow, previous: dealsPrevious },
-    noDeals: { now: noDealsNow },
+    noDeals: { now: noDealsNow, previous: noDealsPrevious },
     added: { now: addedNow, previous: addedPrevious, includesImport: period.from <= LEAD_IMPORT_LAST_DAY },
     closedUndated: { deals: dealsUndated, noDeals: noDealsUndated },
     weeks: weekStarts.map((start, index) => ({

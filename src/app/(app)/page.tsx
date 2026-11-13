@@ -16,6 +16,7 @@ import { EmptyState, ErrorState, LoadingState } from "@/components/ui/states"
 import { getProfile, isAdmin } from "@/lib/auth"
 import { PERIODS, getDashboard, resolvePeriod, type Dashboard, type Period } from "@/lib/data/dashboard"
 import { listSalesUsers, type SalesUser } from "@/lib/data/leads"
+import { countWaitingChats } from "@/lib/whatsapp/inbox"
 
 export const metadata = { title: "Overview" }
 
@@ -29,6 +30,7 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
   const team = admin ? await listSalesUsers().catch(() => null) : null
   const selected = typeof raw.sales === "string" ? team?.find((user) => user.id === raw.sales) : undefined
   const here = `/?period=${period.key}${selected ? `&sales=${selected.id}` : ""}`
+  const salesQuery = selected ? `&sales=${selected.id}` : ""
 
   return (
     <>
@@ -36,11 +38,30 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
         title="Overview"
         actions={
           <DashboardFilters
-            key={here}
-            period={period.key}
-            periods={Object.entries(PERIODS).map(([value, label]) => ({ value, label }))}
-            sales={selected?.id ?? ""}
-            salesOptions={team ? team.map((user) => ({ value: user.id, label: user.name })) : null}
+            range={period.shortRange}
+            // Deals are compared by status date, which is real data for every period.
+            compare={period.prevShortRange}
+            periods={Object.entries(PERIODS).map(([key, label]) => ({
+              label,
+              href: `/?period=${key}${salesQuery}`,
+              checked: key === period.key,
+            }))}
+            scope={
+              team
+                ? {
+                    label: selected?.name ?? "Whole team",
+                    options: [
+                      { label: "Whole team", href: `/?period=${period.key}`, checked: !selected },
+                      ...team.map((user) => ({
+                        label: user.name,
+                        href: `/?period=${period.key}&sales=${user.id}`,
+                        checked: user.id === selected?.id,
+                      })),
+                    ],
+                  }
+                : null
+            }
+            exportInput={{ period: period.key, sales: selected?.id ?? "" }}
           />
         }
       />
@@ -52,7 +73,14 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
           </Card>
         }
       >
-        <DashboardCards period={period} admin={admin} team={team} selected={selected} retryHref={here} />
+        <DashboardCards
+          period={period}
+          admin={admin}
+          team={team}
+          selected={selected}
+          retryHref={here}
+          viewerId={profile.id}
+        />
       </Suspense>
     </>
   )
@@ -64,12 +92,14 @@ async function DashboardCards({
   team,
   selected,
   retryHref,
+  viewerId,
 }: {
   period: Period
   admin: boolean
   team: SalesUser[] | null
   selected: SalesUser | undefined
   retryHref: string
+  viewerId: string
 }) {
   const salesId = selected?.id ?? ""
   const showTeam = admin && !selected && team !== null
@@ -129,39 +159,60 @@ async function DashboardCards({
 
   const insights = buildInsights(data, salesId)
   const owners = team ? new Map(team.map((user) => [user.id, user.name])) : null
+  const waitingChats = await countWaitingChats(viewerId)
 
   return (
-    <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
+    <>
       {admin && team === null ? (
-        <div className="md:col-span-2 xl:col-span-3">
+        <div className="mb-3">
           <ErrorState
             title="The sales team list could not be loaded"
-            detail="The numbers below are for the whole team, but the salesperson filter and the per-person table are missing. Reload the page to try again."
+            detail="The numbers are for the whole team, but the salesperson menu and the per-person table are missing. Reload to try again."
           />
         </div>
       ) : null}
-      <KpiCard data={data} period={period} salesId={salesId} />
-      {/* Second in the order so that on a phone it sits right under the KPI: it is what a salesperson acts on. */}
-      <NeedsYouCard data={data} salesId={salesId} />
-      <div className="md:col-span-2 xl:col-span-1">
-        <PipelineCard data={data} salesId={salesId} />
-      </div>
-      <div className={insights.length > 0 ? "md:col-span-2" : "md:col-span-2 xl:col-span-3"}>
-        <WeeklyCard weeks={data.weeks} afterImport={data.weeksAfterImport} />
-      </div>
-      {insights.length > 0 ? (
-        <div className="md:col-span-2 xl:col-span-1">
-          <InsightCard insights={insights} />
+
+      {/* DESIGN.md "Desktop layout": cards size to their content, never to the window height,
+          so a tall screen does not stretch them. Three columns at 1280px and wider (KPI and weekly | the tall
+          waterfall | insight and Needs you), two columns from 768px. Source order follows the
+          desktop columns so Tab moves the way the eye does; a phone restacks with `order`
+          into KPI, Needs you, insight, weekly, waterfall. */}
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:[grid-template-areas:'kpi_break'_'weekly_break'_'insight_needs'] xl:grid-cols-3 xl:[grid-template-areas:'kpi_break_insight'_'weekly_break_needs']">
+        <div className="order-1 min-w-0 md:order-none md:[grid-area:kpi]">
+          <KpiCard data={data} period={period} salesId={salesId} />
         </div>
-      ) : null}
-      {data.team ? (
-        <div className="md:col-span-2">
-          <TeamCard team={data.team} period={period} />
+        <div className="order-4 min-w-0 md:order-none md:[grid-area:weekly]">
+          <WeeklyCard weeks={data.weeks} afterImport={data.weeksAfterImport} />
         </div>
-      ) : null}
-      <div className={data.team ? "md:col-span-2 xl:col-span-1" : "md:col-span-2 xl:col-span-3"}>
+        <div className="order-5 min-w-0 md:order-none md:[grid-area:break]">
+          <PipelineCard data={data} salesId={salesId} />
+        </div>
+        {insights.length > 0 ? (
+          <div className="order-3 min-w-0 md:order-none md:[grid-area:insight]">
+            <InsightCard insights={insights} />
+          </div>
+        ) : null}
+        <div className={NEEDS_AREA[insights.length > 0 ? "beside" : "alone"]}>
+          <NeedsYouCard data={data} salesId={salesId} waitingChats={waitingChats} />
+        </div>
+      </div>
+
+      <div className={EXTRAS[data.team ? "team" : "solo"]}>
+        {data.team ? <TeamCard team={data.team} period={period} /> : null}
         <RecentCard leads={data.recent} owners={selected ? null : owners} salesId={salesId} />
       </div>
-    </div>
+    </>
   )
 }
+
+// With no insight to show, Needs you takes the insight slot too.
+const NEEDS_AREA = {
+  beside: "order-2 min-w-0 md:order-none md:[grid-area:needs]",
+  alone: "order-2 min-w-0 md:order-none md:[grid-area:insight-start/insight-start/needs-end/needs-end]",
+} as const
+
+// Below the grid, after a 24px gap (DESIGN.md): Admin's table beside the recent leads.
+const EXTRAS = {
+  team: "mt-6 grid grid-cols-1 items-start gap-3 xl:grid-cols-[2fr_1fr]",
+  solo: "mt-6 grid grid-cols-1 items-start gap-3",
+} as const

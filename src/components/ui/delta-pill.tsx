@@ -1,22 +1,24 @@
-import { cn } from "@/lib/cn"
+type Direction = "up" | "down" | "flat"
 
-// Shows a change against a named comparison period. Only render it when both
-// periods are real data (DESIGN.md, antislop R-17).
+const arrows: Record<Direction, { glyph: string; label: string; className: string }> = {
+  up: { glyph: "▲", label: "Up", className: "text-positive" },
+  down: { glyph: "▼", label: "Down", className: "text-negative" },
+  flat: { glyph: "•", label: "No change", className: "text-muted" },
+}
+
+// A small white pill with a pink or green arrow, as in the reference. Shows a
+// change against a named comparison period: render it only when both periods
+// are real data (DESIGN.md, antislop R-17).
 export function DeltaPill({ value, suffix = "" }: { value: number; suffix?: string }) {
-  const down = value < 0
-  const flat = value === 0
+  const direction: Direction = value > 0 ? "up" : value < 0 ? "down" : "flat"
+  const arrow = arrows[direction]
   return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium tabular-nums",
-        flat && "bg-surface-sunken text-muted",
-        !flat && down && "bg-negative-soft text-negative",
-        !flat && !down && "bg-positive-soft text-[color-mix(in_srgb,var(--positive)_80%,var(--ink))]",
-      )}
-    >
-      <span aria-hidden="true">{flat ? "•" : down ? "▼" : "▲"}</span>
-      <span className="sr-only">{flat ? "No change" : down ? "Down" : "Up"}</span>
-      {Math.abs(value).toLocaleString("en-US")}
+    <span className="inline-flex items-center gap-1 rounded-full border border-line bg-surface-raised px-2 py-0.5 text-xs font-medium text-ink tabular-nums">
+      <span aria-hidden="true" className={`text-[9px] ${arrow.className}`}>
+        {arrow.glyph}
+      </span>
+      <span className="sr-only">{arrow.label}</span>
+      {Math.abs(value).toLocaleString("en-US", { maximumFractionDigits: 1 })}
       {suffix}
     </span>
   )
