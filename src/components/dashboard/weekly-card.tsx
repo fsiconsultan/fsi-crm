@@ -59,8 +59,8 @@ function WeeklyChart({ weeks, afterImport, meta }: { weeks: Week[]; afterImport:
 
   return (
     <div className="flex flex-1 flex-col">
-      {/* A fixed height where the card sizes to its content; on the one-screen desktop grid it fills the card. */}
-      <div aria-hidden="true" className="flex h-44 items-end gap-1.5 pt-5 xl:h-auto xl:min-h-32 xl:flex-1">
+      {/* A fixed chart height at every width, so the bars never stretch with the window. */}
+      <div aria-hidden="true" className="flex h-44 items-end gap-1.5 pt-5">
         {weeks.map((week) => {
           const clipped = cut && week.count > scale
           const share = week.count === 0 ? 0 : Math.max(0.02, Math.min(1, week.count / scale))

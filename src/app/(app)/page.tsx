@@ -172,11 +172,12 @@ async function DashboardCards({
         </div>
       ) : null}
 
-      {/* DESIGN.md "Desktop layout": one screen at 1280px and wider (KPI and weekly | the tall
+      {/* DESIGN.md "Desktop layout": cards size to their content, never to the window height,
+          so a tall screen does not stretch them. Three columns at 1280px and wider (KPI and weekly | the tall
           waterfall | insight and Needs you), two columns from 768px. Source order follows the
           desktop columns so Tab moves the way the eye does; a phone restacks with `order`
           into KPI, Needs you, insight, weekly, waterfall. */}
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:[grid-template-areas:'kpi_break'_'weekly_break'_'insight_needs'] xl:min-h-[calc(100dvh-118px)] xl:grid-cols-3 xl:[grid-template-areas:'kpi_break_insight'_'weekly_break_needs'] xl:[grid-template-rows:minmax(min-content,55fr)_minmax(min-content,45fr)]">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:[grid-template-areas:'kpi_break'_'weekly_break'_'insight_needs'] xl:grid-cols-3 xl:[grid-template-areas:'kpi_break_insight'_'weekly_break_needs']">
         <div className="order-1 min-w-0 md:order-none md:[grid-area:kpi]">
           <KpiCard data={data} period={period} salesId={salesId} />
         </div>

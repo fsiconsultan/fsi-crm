@@ -52,10 +52,10 @@ export function PipelineCard({ data, salesId }: { data: Dashboard; salesId: stri
         meta={`${n(withStatus)} leads with a status, today`}
         action={
           <Link
-            href={leadsHref({ sales: salesId })}
+            href={salesId ? `/pipeline?sales=${salesId}` : "/pipeline"}
             className="-mr-2 inline-flex min-h-11 items-center gap-0.5 rounded-[var(--radius-control)] px-2 text-[13px] font-medium hover:underline md:min-h-9"
           >
-            Leads
+            Pipeline
             <ChevronRight aria-hidden="true" className="size-4" />
           </Link>
         }
@@ -111,10 +111,10 @@ function Waterfall({ data, salesId, withStatus }: { data: Dashboard; salesId: st
   const largest = OPEN_STATUSES.reduce((top, status) => (data.byStatus[status] > data.byStatus[top] ? status : top))
 
   return (
-    <div className="flex flex-1 flex-col">
-      <ol className="flex flex-1 flex-col">
+    <div className="flex flex-col">
+      <ol className="flex flex-col gap-1">
         {steps.map((step, index) => (
-          <li key={step.key} className="relative flex min-h-[52px] flex-1 flex-col justify-end">
+          <li key={step.key} className="relative flex flex-col justify-end">
             {index > 0 ? (
               // Dashed connector from the end of the bar above down to where this bar picks up.
               <span

@@ -108,7 +108,7 @@ function KpiBody({
         </div>
       </div>
 
-      <ul className="mt-4 divide-y divide-line border-t border-line xl:mt-auto">
+      <ul className="mt-5 divide-y divide-line border-t border-line">
         {rows.map((row) => (
           <li key={row.label}>
             <Link href={row.href} className="group flex min-h-11 items-center justify-between gap-3 py-1">
