@@ -406,7 +406,9 @@ function LeadCard({
         aria-busy={busy}
         style={toneStyle(status)}
         className={cn(
-          "tone-card relative rounded-[12px] border p-3 transition-[filter] duration-[120ms] hover:brightness-[0.98]",
+          "tone-card relative rounded-[12px] border p-3 transition-[border-color] duration-[120ms] hover:[border-color:color-mix(in_srgb,var(--tone)_55%,var(--line))]",
+          // No CSS filter here: a filter turns the card into the containing block for the
+          // fixed-position "Move to" menu and pushes the menu off screen.
           cardState[busy ? "busy" : "idle"],
         )}
       >
