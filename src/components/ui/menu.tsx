@@ -1,9 +1,9 @@
 "use client"
 
-import { useId, useState, type KeyboardEvent, type ReactNode } from "react"
+import { useId, useState, type CSSProperties, type KeyboardEvent, type ReactNode } from "react"
 import { cn } from "@/lib/cn"
 
-type Placement = "below-end" | "below-start" | "above-start"
+type Placement = "below-end" | "below-start" | "above-start" | "floating"
 
 // On phones every menu is a sheet above the bottom edge, so it never runs off a
 // narrow screen and sits under the thumb. From md up it drops from its button.
@@ -11,6 +11,27 @@ const placements: Record<Placement, string> = {
   "below-end": "md:right-0 md:top-full md:mt-2",
   "below-start": "md:left-0 md:top-full md:mt-2",
   "above-start": "md:left-0 md:bottom-full md:mb-2",
+  // For a button inside a scrolling container, which would clip a menu hung from
+  // it: fixed to the viewport at the place the button had when the menu opened.
+  floating: "md:fixed md:top-[var(--menu-top)] md:right-[var(--menu-right)] md:bottom-[var(--menu-bottom)]",
+}
+
+type MenuVars = CSSProperties & Record<`--menu-${string}`, string>
+
+const FLOATING_MIN_WIDTH = 224
+// Room a menu needs under its button before it opens upward instead.
+const FLOATING_ROOM = 340
+
+function floatingVars(button: HTMLElement): MenuVars {
+  const rect = button.getBoundingClientRect()
+  const below = window.innerHeight - rect.bottom
+  const up = below < FLOATING_ROOM && rect.top > below
+  const right = Math.min(window.innerWidth - rect.right, window.innerWidth - FLOATING_MIN_WIDTH - 8)
+  return {
+    "--menu-top": up ? "auto" : `${rect.bottom + 8}px`,
+    "--menu-bottom": up ? `${window.innerHeight - rect.top + 8}px` : "auto",
+    "--menu-right": `${Math.max(8, right)}px`,
+  }
 }
 
 const ITEM_SELECTOR = '[role="menuitem"], [role="menuitemradio"], [role="menuitemcheckbox"]'
@@ -62,6 +83,7 @@ export function Menu({
   children: (close: () => void) => ReactNode
 }) {
   const [open, setOpen] = useState<false | "first" | "last">(false)
+  const [vars, setVars] = useState<MenuVars>()
   const menuId = useId()
   const buttonId = useId()
 
@@ -71,10 +93,15 @@ export function Menu({
     if (returnFocus) document.getElementById(buttonId)?.focus()
   }
 
+  const openFrom = (button: HTMLElement, focus: "first" | "last") => {
+    if (placement === "floating") setVars(floatingVars(button))
+    setOpen(focus)
+  }
+
   const onButtonKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
       event.preventDefault()
-      setOpen(event.key === "ArrowDown" ? "first" : "last")
+      openFrom(event.currentTarget, event.key === "ArrowDown" ? "first" : "last")
     }
   }
 
@@ -108,7 +135,7 @@ export function Menu({
         aria-expanded={open !== false}
         aria-controls={open ? menuId : undefined}
         aria-label={triggerLabel}
-        onClick={() => (open ? close() : setOpen("first"))}
+        onClick={(event) => (open ? close() : openFrom(event.currentTarget, "first"))}
         onKeyDown={onButtonKeyDown}
         className={triggerClassName}
       >
@@ -117,7 +144,13 @@ export function Menu({
 
       {open ? (
         <>
-          <div aria-hidden="true" onClick={() => close(false)} className="fixed inset-0 z-40 max-md:bg-scrim/30" />
+          <div
+            aria-hidden="true"
+            onClick={() => close(false)}
+            // A floating menu does not follow its button, so scrolling closes it.
+            onWheel={placement === "floating" ? () => close(false) : undefined}
+            className="fixed inset-0 z-40 max-md:bg-scrim/30"
+          />
           <div
             ref={focusInitial}
             id={menuId}
@@ -125,6 +158,7 @@ export function Menu({
             aria-label={label}
             data-focus={open}
             onKeyDown={onMenuKeyDown}
+            style={placement === "floating" ? vars : undefined}
             className={cn(
               "z-50 flex flex-col gap-0.5 rounded-[14px] border border-line bg-surface-raised p-1.5 text-ink shadow-xl",
               "max-md:fixed max-md:inset-x-4 max-md:bottom-[max(1rem,env(safe-area-inset-bottom))] max-md:max-h-[70dvh] max-md:overflow-y-auto",

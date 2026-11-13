@@ -205,6 +205,153 @@ export type Database = {
           },
         ]
       }
+      lead_schedules: {
+        Row: {
+          all_day: boolean
+          booked_via: string | null
+          cancelled_at: string | null
+          completed_at: string | null
+          confirmed_at: string | null
+          confirmed_by: string | null
+          created_at: string
+          created_by: string | null
+          email_error: string | null
+          email_message_id: string | null
+          email_sent_at: string | null
+          email_status: string
+          ends_at: string | null
+          google_error: string | null
+          google_event_id: string | null
+          google_sync_status: string
+          google_synced_at: string | null
+          ics_sequence: number
+          id: string
+          kind: string
+          lead_email_snapshot: string | null
+          lead_id: number | null
+          location: string | null
+          notes: string | null
+          notify_lead: boolean
+          previous_starts_at: string | null
+          reschedule_count: number
+          sales_id: string | null
+          starts_at: string
+          status: string
+          title: string
+          time_zone: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          all_day?: boolean
+          booked_via?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          email_error?: string | null
+          email_message_id?: string | null
+          email_sent_at?: string | null
+          email_status?: string
+          ends_at?: string | null
+          google_error?: string | null
+          google_event_id?: string | null
+          google_sync_status?: string
+          google_synced_at?: string | null
+          ics_sequence?: number
+          id?: string
+          kind: string
+          lead_email_snapshot?: string | null
+          lead_id?: number | null
+          location?: string | null
+          notes?: string | null
+          notify_lead?: boolean
+          previous_starts_at?: string | null
+          reschedule_count?: number
+          sales_id?: string | null
+          starts_at: string
+          status?: string
+          title: string
+          time_zone?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          all_day?: boolean
+          booked_via?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          email_error?: string | null
+          email_message_id?: string | null
+          email_sent_at?: string | null
+          email_status?: string
+          ends_at?: string | null
+          google_error?: string | null
+          google_event_id?: string | null
+          google_sync_status?: string
+          google_synced_at?: string | null
+          ics_sequence?: number
+          id?: string
+          kind?: string
+          lead_email_snapshot?: string | null
+          lead_id?: number | null
+          location?: string | null
+          notes?: string | null
+          notify_lead?: boolean
+          previous_starts_at?: string | null
+          reschedule_count?: number
+          sales_id?: string | null
+          starts_at?: string
+          status?: string
+          title?: string
+          time_zone?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_schedules_confirmed_by_fkey"
+            columns: ["confirmed_by"]
+            isOneToOne: false
+            referencedRelation: "sales_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_schedules_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "sales_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_schedules_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_schedules_sales_id_fkey"
+            columns: ["sales_id"]
+            isOneToOne: false
+            referencedRelation: "sales_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_schedules_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "sales_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           appointment: string | null

@@ -2,6 +2,7 @@ import { after } from "next/server"
 import { openAiModelFromEnv } from "@/lib/ai/openai-model"
 import { answerInbound } from "@/lib/ai/reply"
 import { notifierFromEnv } from "@/lib/push/server"
+import { siteVisitBooking } from "@/lib/schedules/ai-booking"
 import { createAdminClient } from "@/lib/whatsapp/admin-client"
 import { cloudApiFromEnv } from "@/lib/whatsapp/cloud-api"
 import { createSupabaseStore } from "@/lib/whatsapp/supabase-store"
@@ -43,7 +44,8 @@ export async function POST(request: Request) {
     const deadline = Date.now() + AI_BUDGET_MS
     after(async () => {
       const notifier = notifierFromEnv(admin)
-      const deps = { store, api: cloudApiFromEnv(), model: openAiModelFromEnv(), now: () => new Date(), notifier, deadline }
+      const booking = siteVisitBooking(new URL(request.url).origin)
+      const deps = { store, api: cloudApiFromEnv(), model: openAiModelFromEnv(), now: () => new Date(), notifier, deadline, booking }
       for (const item of pending) {
         // The customer's answer comes first; the staff notification follows it.
         await answerInbound(item, deps)

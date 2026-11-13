@@ -1,6 +1,6 @@
 import "server-only"
 import { addDays, dayStart, today } from "@/lib/leads/dates"
-import { PAGE_SIZE, STALE_DAYS, type LeadFilters, type LeadSort } from "@/lib/leads/filters"
+import { PAGE_SIZE, STALE_DAYS, type LeadFilters, type LeadSort, type LeadView } from "@/lib/leads/filters"
 import { OPEN_STATUSES } from "@/lib/leads/status"
 import type { Tables } from "@/lib/supabase/database.types"
 import { createClient } from "@/lib/supabase/server"
@@ -10,7 +10,10 @@ export type Lead = Tables<"leads">
 export type SalesUser = { id: string; name: string; role: string | null; status: string | null }
 
 /** Everything that narrows which leads match; sorting and paging are separate. */
-export type LeadWhere = Partial<Omit<LeadFilters, "sort" | "page">>
+export type LeadWhere = Partial<Omit<LeadFilters, "sort" | "page">> & {
+  /** More views that must all hold as well as `view` (the pipeline's quick toggles can combine). */
+  views?: LeadView[]
+}
 
 type Supabase = Awaited<ReturnType<typeof createClient>>
 
@@ -31,7 +34,7 @@ function searchTerm(q: string) {
 
 // One place turns filters into a query, so a dashboard count and the list it
 // links to can never disagree. Runs as the signed-in user: RLS scopes the rows.
-function leadsQuery(supabase: Supabase, where: LeadWhere, head: boolean) {
+export function leadsQuery(supabase: Supabase, where: LeadWhere, head: boolean) {
   let query = supabase.from("leads").select("*", { count: "exact", head })
 
   const term = where.q ? searchTerm(where.q) : ""
@@ -51,18 +54,23 @@ function leadsQuery(supabase: Supabase, where: LeadWhere, head: boolean) {
   if (where.sfrom) query = query.gte("status_started_at", dayStart(where.sfrom))
   if (where.sto) query = query.lt("status_started_at", dayStart(addDays(where.sto, 1)))
 
-  if (where.view === "followup") {
-    query = query
-      .lte("follow_up_date", today())
-      .or('status.is.null,status.not.in.("Deal","No Deal")')
-  } else if (where.view === "stale") {
-    query = query
-      .in("status", OPEN_STATUSES)
-      .lt("status_started_at", dayStart(addDays(today(), -STALE_DAYS)))
-  } else if (where.view === "open") {
-    query = query.in("status", OPEN_STATUSES)
-  } else if (where.view === "undated") {
-    query = query.not("status", "is", null).is("status_started_at", null)
+  for (const view of [where.view, ...(where.views ?? [])]) {
+    if (view === "followup") {
+      query = query
+        .lte("follow_up_date", today())
+        .or('status.is.null,status.not.in.("Deal","No Deal")')
+    } else if (view === "stale") {
+      query = query
+        .in("status", OPEN_STATUSES)
+        .lt("status_started_at", dayStart(addDays(today(), -STALE_DAYS)))
+    } else if (view === "pipeline") {
+      // Every lead with a status, Deal and No deal included: the pipeline board's leads.
+      query = query.not("status", "is", null)
+    } else if (view === "open") {
+      query = query.in("status", OPEN_STATUSES)
+    } else if (view === "undated") {
+      query = query.not("status", "is", null).is("status_started_at", null)
+    }
   }
 
   return query

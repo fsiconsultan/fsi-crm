@@ -1,12 +1,16 @@
 import { cn } from "@/lib/cn"
 
-type Tone = "tinted" | "raised"
+type Tone = "tinted" | "raised" | "on" | "ghost"
 
 const tones: Record<Tone, string> = {
   // Header pills (scope, export) and the date chip's outer pill: a grey step on the canvas.
   tinted: "bg-line/70 text-ink hover:bg-line",
   // The date chip's inner pill: white control on the tinted pill, as in the reference.
   raised: "bg-surface-raised text-ink shadow-xs hover:bg-surface-sunken",
+  // A toggle pill that is switched on: the same ink fill as the active nav item.
+  on: "bg-ink text-ink-contrast hover:opacity-90",
+  // An unselected segment inside a tinted pill group (the leads quick views).
+  ghost: "text-ink hover:bg-line",
 }
 
 // 40px pill controls of the page header (DESIGN.md "Page header controls"), 44px on phones.

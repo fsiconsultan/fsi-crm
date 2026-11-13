@@ -2,21 +2,31 @@
 
 import Link from "next/link"
 import { useState, useTransition } from "react"
-import { Trash2 } from "lucide-react"
 import { deleteLead, type ActionResult } from "@/app/(app)/leads/actions"
-import { Button, buttonClass } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import { Dialog, DialogFooter } from "@/components/ui/dialog"
 import { useLeadFeedback } from "./feedback"
 
-export function DeleteLeadButton({ leadId, leadName }: { leadId: number; leadName: string }) {
+// Opened from a lead's "…" menu. The parent owns `open`, so the menu can close
+// first and the dialog hands focus back to the menu button when it closes.
+export function DeleteLeadDialog({
+  leadId,
+  leadName,
+  open,
+  onClose,
+}: {
+  leadId: number
+  leadName: string
+  open: boolean
+  onClose: () => void
+}) {
   const report = useLeadFeedback()
-  const [open, setOpen] = useState(false)
   const [error, setError] = useState<ActionResult | null>(null)
   const [pending, startTransition] = useTransition()
 
   const close = () => {
     if (pending) return
-    setOpen(false)
+    onClose()
     setError(null)
   }
 
@@ -25,7 +35,7 @@ export function DeleteLeadButton({ leadId, leadName }: { leadId: number; leadNam
       try {
         const result = await deleteLead(leadId)
         if (result.ok) {
-          setOpen(false)
+          onClose()
           report(result)
         } else {
           setError(result)
@@ -41,15 +51,6 @@ export function DeleteLeadButton({ leadId, leadName }: { leadId: number; leadNam
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className={buttonClass("ghost", "w-11 px-0 text-muted hover:text-negative md:w-10")}
-      >
-        <Trash2 aria-hidden="true" className="size-[18px]" strokeWidth={1.75} />
-        <span className="sr-only">Delete {leadName}</span>
-      </button>
-
       <Dialog
         open={open}
         onClose={close}

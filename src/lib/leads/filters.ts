@@ -10,21 +10,25 @@ export const PAGE_SIZE = 100
 export const STALE_DAYS = 14
 
 export const LEAD_SORTS = {
-  name: "Name, A to Z",
-  name_desc: "Name, Z to A",
   newest: "Newest added",
   oldest: "Oldest added",
-  longest: "Longest in status",
   followup: "Follow-up, soonest first",
+  longest: "Longest in status",
+  name: "Name, A to Z",
+  name_desc: "Name, Z to A",
 } as const
+
+export const DEFAULT_SORT: LeadSort = "newest"
 
 export type LeadSort = keyof typeof LEAD_SORTS
 
+// Short labels: they appear on the quick-view tabs and the filter chips.
 export const LEAD_VIEWS = {
-  followup: "Follow-up due today or earlier",
-  stale: `In the same status for more than ${STALE_DAYS} days`,
-  open: "In the pipeline (not yet Deal or No deal)",
-  undated: "Has a status but no date for it",
+  followup: "Follow-up due",
+  stale: `Stuck over ${STALE_DAYS} days`,
+  pipeline: "Has a status",
+  open: "Open, not yet Deal or No deal",
+  undated: "Status date missing",
 } as const
 
 export type LeadView = keyof typeof LEAD_VIEWS
@@ -57,7 +61,7 @@ export const DEFAULT_FILTERS: LeadFilters = {
   sfrom: "",
   sto: "",
   view: "",
-  sort: "name",
+  sort: "newest",
   page: 1,
 }
 
@@ -94,7 +98,7 @@ export function parseLeadFilters(raw: RawParams): LeadFilters {
     sfrom: day("sfrom"),
     sto: day("sto"),
     view: view in LEAD_VIEWS ? (view as LeadView) : "",
-    sort: sort in LEAD_SORTS ? (sort as LeadSort) : "name",
+    sort: sort in LEAD_SORTS ? (sort as LeadSort) : DEFAULT_SORT,
     page: Number.isFinite(page) && page > 0 ? page : 1,
   }
 }
@@ -109,5 +113,5 @@ export function leadsHref(filters: Partial<LeadFilters> = {}) {
 }
 
 export function hasActiveFilters(filters: LeadFilters) {
-  return leadsHref({ ...filters, sort: "name", page: 1 }) !== "/leads"
+  return leadsHref({ ...filters, sort: DEFAULT_SORT, page: 1 }) !== "/leads"
 }

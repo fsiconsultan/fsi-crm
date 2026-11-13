@@ -3,6 +3,7 @@ import type { Conversation, Message } from "@/lib/whatsapp/types"
 import type { ChatMessage, ChatModel } from "./model"
 import { buildSystemPrompt } from "./prompt"
 import { cleanAnswers } from "./qualification"
+import type { ScheduleBooking } from "./seams"
 import { TOOLS, type Notice, type ToolContext } from "./tools"
 
 const HISTORY_LIMIT = 30
@@ -46,6 +47,8 @@ export async function runAgent(input: {
   notices?: Notice[]
   // Epoch ms by which the run must be done (well under the function's maxDuration).
   deadline: number
+  // The schedule service for the scheduling tools; null or missing means not set up.
+  booking?: ScheduleBooking | null
 }): Promise<AgentResult> {
   const { store, model, now } = input
   const ctx: ToolContext = {
@@ -54,6 +57,7 @@ export async function runAgent(input: {
     now,
     handoffRequested: false,
     notices: input.notices,
+    booking: input.booking ?? null,
   }
 
   const [history, qualification] = await Promise.all([

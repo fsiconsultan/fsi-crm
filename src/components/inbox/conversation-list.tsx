@@ -15,7 +15,7 @@ const nameWeight: Record<"unread" | "read", string> = {
   read: "font-medium",
 }
 
-const ATTENTION: Record<NonNullable<ConversationSummary["attention"]>, string> = {
+export const ATTENTION: Record<NonNullable<ConversationSummary["attention"]>, string> = {
   handoff: "Waiting for staff",
   reply: "Waiting for your reply",
 }

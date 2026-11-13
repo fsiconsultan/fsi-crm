@@ -1,15 +1,19 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { ChevronLeft } from "lucide-react"
 import { CustomerProfile } from "@/components/customers/customer-profile"
+import { BackLink } from "@/components/customers/back-link"
+import { todayInBali } from "@/components/customers/format"
 import { PageHeader } from "@/components/shell/page-header"
 import { buttonClass } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { ErrorState } from "@/components/ui/states"
 import { getProfile, isAdmin } from "@/lib/auth"
-import { getCustomer, parseCustomerId } from "@/lib/data/customers"
+import type { LeadScheduleData } from "@/components/schedules/schedule-card"
+import { getCustomer, getCustomerChat, parseCustomerId } from "@/lib/data/customers"
 import { listDocuments } from "@/lib/data/documents"
+import { getLeadSchedules } from "@/lib/data/schedules"
+import { missingRequired } from "@/lib/integrations/env"
 import { listSalesOptions } from "@/lib/data/sales-users"
 import { createClient } from "@/lib/supabase/server"
 
@@ -23,26 +27,18 @@ export default async function CustomerPage({ params }: PageProps<"/customers/[id
   const profile = await getProfile()
   const admin = isAdmin(profile)
 
-  const [result, documents, salesOptions] = await Promise.all([
+  const [result, documents, salesOptions, chat, schedules] = await Promise.all([
     getCustomer(id),
     createClient().then((supabase) => listDocuments(supabase, id)),
     admin ? listSalesOptions() : null,
+    getCustomerChat(id, profile.id),
+    loadSchedules(id),
   ])
-
-  const back = (
-    <Link
-      href="/customers"
-      className="mb-2 inline-flex min-h-11 items-center gap-1 rounded-[var(--radius-control)] text-sm text-muted transition-colors duration-150 hover:text-ink"
-    >
-      <ChevronLeft aria-hidden="true" className="size-4" />
-      Customers
-    </Link>
-  )
 
   if (!result.ok) {
     return (
       <>
-        {back}
+        <BackLink />
         <PageHeader title="Customer" />
         <Card>
           <ErrorState
@@ -64,13 +60,30 @@ export default async function CustomerPage({ params }: PageProps<"/customers/[id
 
   return (
     <>
-      {back}
+      <BackLink />
       <CustomerProfile
         customer={customer}
         documents={documents}
+        chat={chat}
         salesOptions={salesOptions ? (salesOptions.ok ? salesOptions : { ok: false }) : null}
         admin={admin}
+        viewerId={profile.id}
+        today={todayInBali()}
+        schedules={schedules}
+        // Only whether the keys are set, never a value. A failed sync still shows on each schedule.
+        connections={{ googleConnected: missingRequired("calendar").length === 0, emailConnected: missingRequired("email").length === 0 }}
+        now={new Date().toISOString()}
       />
     </>
   )
+}
+
+async function loadSchedules(leadId: number): Promise<LeadScheduleData> {
+  try {
+    const { setUp, upcoming, overdue, past } = await getLeadSchedules(leadId)
+    return { ok: true, setUp, items: [...upcoming, ...overdue, ...past] }
+  } catch (error) {
+    console.error(error)
+    return { ok: false, message: error instanceof Error ? error.message : "Unknown error" }
+  }
 }

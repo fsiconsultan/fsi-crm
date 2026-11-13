@@ -1,7 +1,6 @@
 import Link from "next/link"
 import type { ReactNode } from "react"
-import { ChevronRight } from "lucide-react"
-import { Card, CardHeader } from "@/components/ui/card"
+import { Card, CardHeader, CardHeaderLink } from "@/components/ui/card"
 import { EmptyState } from "@/components/ui/states"
 import type { Dashboard } from "@/lib/data/dashboard"
 import { leadsHref } from "@/lib/leads/filters"
@@ -51,13 +50,7 @@ export function PipelineCard({ data, salesId }: { data: Dashboard; salesId: stri
         title="Where the pipeline stands"
         meta={`${n(withStatus)} leads with a status, today`}
         action={
-          <Link
-            href={salesId ? `/pipeline?sales=${salesId}` : "/pipeline"}
-            className="-mr-2 inline-flex min-h-11 items-center gap-0.5 rounded-[var(--radius-control)] px-2 text-[13px] font-medium hover:underline md:min-h-9"
-          >
-            Pipeline
-            <ChevronRight aria-hidden="true" className="size-4" />
-          </Link>
+<CardHeaderLink href={salesId ? `/pipeline?sales=${salesId}` : "/pipeline"}>Pipeline</CardHeaderLink>
         }
       />
       <Waterfall data={data} salesId={salesId} withStatus={withStatus} />

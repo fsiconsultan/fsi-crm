@@ -25,6 +25,20 @@ function sameInstant(a: string | null, b: string | null) {
   return new Date(a).getTime() === new Date(b).getTime()
 }
 
+// True when the lead's current status is the one the automation last wrote, at
+// the exact time it wrote it. The guard below and the pipeline board's "AI" or
+// "Person" marker both read it from here, so they cannot disagree.
+export function automationWroteStatus(
+  lastAutomated: { status: string; at: string | null } | null,
+  lead: { status: string | null; status_started_at: string | null },
+) {
+  return (
+    lastAutomated !== null &&
+    lastAutomated.status === lead.status &&
+    sameInstant(lastAutomated.at, lead.status_started_at)
+  )
+}
+
 export type StatusOutcome =
   | { outcome: "changed"; from: string | null; to: string }
   | { outcome: "unchanged"; status: string }
@@ -79,11 +93,7 @@ export async function applyStatusEvent({ store, leadId, event, conversationId, n
   // same status, or saved it in the legacy app (which writes status_started_at
   // as a date), changes the time.
   const lastAutomated = await store.lastAutomatedStatus(leadId)
-  if (
-    lastAutomated === null ||
-    lastAutomated.status !== lead.status ||
-    !sameInstant(lastAutomated.at, lead.status_started_at)
-  ) {
+  if (!automationWroteStatus(lastAutomated, lead)) {
     return refuse(
       "status_change_refused",
       `The current status (${lead.status ?? "none"}) was set by a person, so it was left as it is.`,

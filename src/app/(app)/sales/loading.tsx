@@ -5,9 +5,9 @@ import { LoadingState } from "@/components/ui/states"
 export default function SalesLoading() {
   return (
     <>
-      <PageHeader title="Sales team" />
-      <Card>
-        <LoadingState label="Loading the sales team…" />
+      <PageHeader title="Sales team" meta="Counting each person's leads…" />
+      <Card className="max-md:p-4">
+        <LoadingState label="Loading the team and their numbers…" />
       </Card>
     </>
   )

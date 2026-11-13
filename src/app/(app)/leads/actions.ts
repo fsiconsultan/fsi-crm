@@ -7,6 +7,8 @@ import { getProfile, isAdmin } from "@/lib/auth"
 import { isDay } from "@/lib/leads/dates"
 import { isUuid } from "@/lib/leads/filters"
 import { LEAD_TYPES, NO_STATUS_LABEL, isLeadStatus } from "@/lib/leads/status"
+import { userScheduleDeps } from "@/lib/schedules/deps"
+import { cancelSchedulesBeforeLeadDelete } from "@/lib/schedules/service"
 import { createClient } from "@/lib/supabase/server"
 
 export type ActionResult = {
@@ -58,6 +60,7 @@ const CHANGED = "Someone else changed this lead since your list loaded. Reload t
 function revalidateLeadViews() {
   revalidatePath("/leads")
   revalidatePath("/")
+  revalidatePath("/pipeline")
 }
 
 function parseId(value: unknown) {
@@ -201,7 +204,10 @@ export async function changeLeadStatus(leadId: number, from: string | null, to: 
 
 // One lead per call, on purpose: there is no bulk delete.
 export async function deleteLead(leadId: number): Promise<ActionResult> {
-  await getProfile()
+  // Only Admins may delete leads (owner decision 2026-11-13).
+  if (!isAdmin(await getProfile())) {
+    return { ok: false, message: "Nothing was deleted. Only an Admin can delete leads." }
+  }
   const id = parseId(leadId)
   if (id === null) return { ok: false, message: `Nothing was deleted. ${GONE}` }
 
@@ -226,6 +232,11 @@ export async function deleteLead(leadId: number): Promise<ActionResult> {
     }
   }
 
+  // Cancel the lead's schedules and remove their Google events first, so none
+  // is left on the calendar. A Google failure is logged for review and does
+  // not block the delete.
+  const schedules = await cancelSchedulesBeforeLeadDelete(await userScheduleDeps(), id)
+
   const { data, error } = await supabase.from("leads").delete().eq("id", id).select("id, customer_name")
 
   if (error) {
@@ -241,5 +252,8 @@ export async function deleteLead(leadId: number): Promise<ActionResult> {
   if (!data?.length) return { ok: false, message: `Nothing was deleted. ${GONE}` }
 
   revalidateLeadViews()
-  return { ok: true, message: `${data[0].customer_name || "The lead"} was deleted.` }
+  const calendarNote = schedules.googleFailures
+    ? ` ${schedules.googleFailures === 1 ? "1 Google Calendar event" : `${schedules.googleFailures} Google Calendar events`} could not be removed; see the review list.`
+    : ""
+  return { ok: true, message: `${data[0].customer_name || "The lead"} was deleted.${calendarNote}` }
 }

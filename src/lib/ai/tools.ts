@@ -4,7 +4,8 @@ import { safeLog, type WaStore } from "@/lib/whatsapp/store"
 import type { Conversation } from "@/lib/whatsapp/types"
 import type { ToolSpec } from "./model"
 import { cleanAnswers, missingAnswers, QUALIFICATION_FIELDS, type QualificationAnswers } from "./qualification"
-import { bookSiteVisit, calculateIndicativeSystem } from "./seams"
+import { calculateIndicativeSystem, type ScheduleBooking } from "./seams"
+import { scheduleTools } from "./scheduling"
 import { applyStatusEvent, STATUS_FOR_NEW_WHATSAPP_LEAD, STATUS_RULES } from "./status-rules"
 
 // What a tool can reach. `conversation` is replaced when a tool changes it, so
@@ -19,6 +20,8 @@ export type ToolContext = {
   // Phone notifications to send once the customer's reply has gone out, so a
   // slow push service can never delay the reply. Filled by the tools below.
   notices?: Notice[]
+  // The schedule service for the scheduling tools. Absent: they answer "not configured".
+  booking?: ScheduleBooking | null
 }
 
 type Args = Record<string, unknown>
@@ -168,7 +171,7 @@ const answerProperties = Object.fromEntries(
   QUALIFICATION_FIELDS.map((f) => [f.key, { type: "string", description: `${f.label}. ${f.hint}` }]),
 )
 
-type Tool = ToolSpec & { run: (ctx: ToolContext, args: Args) => Promise<unknown> }
+export type Tool = ToolSpec & { run: (ctx: ToolContext, args: Args) => Promise<unknown> }
 
 export const TOOLS: Tool[] = [
   {
@@ -227,14 +230,5 @@ export const TOOLS: Tool[] = [
     },
     run: (_ctx, args) => calculateIndicativeSystem(args),
   },
-  {
-    name: "book_site_visit",
-    description: "Book a site visit with an FSI representative.",
-    parameters: {
-      type: "object",
-      properties: { preferred_time: { type: "string" }, address: { type: "string" } },
-      additionalProperties: false,
-    },
-    run: (_ctx, args) => bookSiteVisit(args),
-  },
+  ...scheduleTools(requestHumanHandoff),
 ]

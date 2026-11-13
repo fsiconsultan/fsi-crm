@@ -6,6 +6,7 @@ import { safeLog, type WaStore } from "@/lib/whatsapp/store"
 import { runAgent } from "./agent"
 import type { Notice } from "./tools"
 import type { ChatModel } from "./model"
+import type { ScheduleBooking } from "./seams"
 
 export type ReplyDeps = {
   store: WaStore
@@ -21,6 +22,9 @@ export type ReplyDeps = {
   deadline?: number
   // Test hook: a fixed id for this run's claim.
   runId?: string
+  // Lets the assistant check availability and book, move or cancel its own
+  // bookings (owner approved 2026-11-13). Null or missing: "not set up".
+  booking?: ScheduleBooking | null
 }
 
 export type ReplyOutcome =
@@ -106,6 +110,7 @@ export async function answerInbound(pending: PendingReply, deps: ReplyDeps, dept
         now: deps.now(),
         notices,
         deadline,
+        booking: deps.booking,
       })
 
       if (stopped) {
