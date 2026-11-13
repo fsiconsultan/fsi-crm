@@ -100,7 +100,7 @@ function KpiBody({
 
       <div className="mt-4" role="img" aria-label={`Win rate ${pct(rate)}`}>
         <div className="h-3 rounded-full bg-surface-raised">
-          <div className="hatch h-full rounded-full text-accent" style={{ width: pct(rate), minWidth: rate > 0 ? 6 : 0 }} />
+          <div className="h-full rounded-full bg-accent" style={{ width: pct(rate), minWidth: rate > 0 ? 6 : 0 }} />
         </div>
         <div aria-hidden="true" className="mt-1.5 flex justify-between text-[11px] text-muted">
           <span>0%</span>

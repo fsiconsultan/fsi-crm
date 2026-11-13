@@ -26,6 +26,16 @@ export function formatShortTime(iso: string, now: Date) {
   return DAY_KEY.format(date) === DAY_KEY.format(now) ? TIME.format(date) : DAY.format(date)
 }
 
+// "now", "5 min ago", "3 h ago", "2 d ago", then the day and month.
+export function formatRelative(iso: string, now: Date) {
+  const minutes = Math.floor((now.getTime() - new Date(iso).getTime()) / 60_000)
+  if (minutes < 1) return "now"
+  if (minutes < 60) return `${minutes} min ago`
+  if (minutes < 24 * 60) return `${Math.floor(minutes / 60)} h ago`
+  if (minutes < 7 * 24 * 60) return `${Math.floor(minutes / (24 * 60))} d ago`
+  return DAY.format(new Date(iso))
+}
+
 export function displayName(conversation: Pick<ConversationSummary, "lead" | "profile_name" | "wa_id">) {
   return conversation.lead?.customer_name ?? conversation.profile_name ?? formatPhone(conversation.wa_id)
 }

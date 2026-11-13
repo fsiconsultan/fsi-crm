@@ -1,8 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { useState, useTransition } from "react"
-import { CalendarDays, Check, ChevronDown, Download, Users } from "lucide-react"
+import { useState, useTransition, type ReactNode } from "react"
+import { CalendarDays, Check, ChevronDown, Download, Users, type LucideIcon } from "lucide-react"
 import { exportOverviewCsv } from "@/app/(app)/actions"
 import { Menu, menuItemClass } from "@/components/ui/menu"
 import { pillClass } from "@/components/ui/pill"
@@ -44,7 +44,7 @@ export function DashboardFilters({
   compare: string | null
   periods: FilterOption[]
   /** Admin only: the salesperson menu. */
-  scope: { label: string; options: FilterOption[] } | null
+  scope: Scope | null
   exportInput: { period: string; sales: string }
 }) {
   return (
@@ -68,26 +68,69 @@ export function DashboardFilters({
         {compare ? <span className="truncate px-2 text-[13px] text-muted tabular-nums max-sm:hidden">vs {compare}</span> : null}
       </div>
 
-      {scope ? (
-        <Menu
-          label="Salesperson"
-          placement="below-end"
-          triggerClassName={pillClass("tinted", "max-w-[60vw] md:max-w-64")}
-          trigger={
-            <>
-              <Users aria-hidden="true" className="size-4 shrink-0" strokeWidth={1.75} />
-              <span className="truncate">{scope.label}</span>
-              <span className="sr-only">, change whose leads are counted</span>
-              <ChevronDown aria-hidden="true" className="size-4 shrink-0 text-muted" strokeWidth={1.75} />
-            </>
-          }
-        >
-          {(close) => <OptionItems options={scope.options} close={close} />}
-        </Menu>
-      ) : null}
+      {scope ? <ScopeMenu scope={scope} /> : null}
 
       <ExportButton input={exportInput} range={range} />
     </>
+  )
+}
+
+export type Scope = { label: string; options: FilterOption[] }
+
+/** A header pill that opens a menu of links: icon, the current choice, chevron. */
+export function PillMenu({
+  menuLabel,
+  icon: Icon,
+  text,
+  hint,
+  options,
+  extra,
+}: {
+  /** Accessible name of the menu, for example "Salesperson". */
+  menuLabel: string
+  icon: LucideIcon
+  /** The current choice, shown on the pill. */
+  text: string
+  /** Read after the choice by screen readers, for example ", change whose leads are shown". */
+  hint: string
+  options: FilterOption[]
+  /** More menu items after the options, for example one that opens a dialog. */
+  extra?: (close: () => void) => ReactNode
+}) {
+  return (
+    <Menu
+      label={menuLabel}
+      placement="below-end"
+      triggerClassName={pillClass("tinted", "max-w-[60vw] md:max-w-64")}
+      trigger={
+        <>
+          <Icon aria-hidden="true" className="size-4 shrink-0" strokeWidth={1.75} />
+          <span className="truncate">{text}</span>
+          <span className="sr-only">{hint}</span>
+          <ChevronDown aria-hidden="true" className="size-4 shrink-0 text-muted" strokeWidth={1.75} />
+        </>
+      }
+    >
+      {(close) => (
+        <>
+          <OptionItems options={options} close={close} />
+          {extra?.(close)}
+        </>
+      )}
+    </Menu>
+  )
+}
+
+/** The Admin's salesperson pill, shared by the Overview and the Pipeline page. */
+export function ScopeMenu({ scope }: { scope: Scope }) {
+  return (
+    <PillMenu
+      menuLabel="Salesperson"
+      icon={Users}
+      text={scope.label}
+      hint=", change whose leads are shown"
+      options={scope.options}
+    />
   )
 }
 

@@ -18,6 +18,9 @@ export interface Notifier {
   handoff(conversation: NoticeConversation): Promise<NotifyResult>
   // A conversation was assigned or reassigned to someone. actorId is null for automatic rules.
   assigned(conversation: NoticeConversation, toSalesId: string, actorId: string | null): Promise<NotifyResult>
+  // The AI booked, moved or cancelled an item: its salesperson, or every Admin when they are Inactive.
+  // `body` is fixed text from the scheduling tools (kind and time only, never the customer's words).
+  scheduleChanged(conversation: NoticeConversation, salesId: string, body: string): Promise<NotifyResult>
 }
 
 const GONE = new Set([404, 410])
@@ -130,7 +133,47 @@ export function createNotifier(deps: {
     return result
   }
 
+  // The person to tell, or every active Admin when they are Inactive or unknown.
+  async function activeOrAdmins(conversation: NoticeConversation, salesId: string | null, what: string): Promise<string[] | null> {
+    let person = salesId
+    try {
+      if (person && !(await store.isActive(person))) person = null
+    } catch {
+      person = null
+    }
+    if (person) return [person]
+    try {
+      return await store.activeAdminIds()
+    } catch (error) {
+      await log({
+        type: "push_failed",
+        conversationId: conversation.id,
+        leadId: conversation.lead_id,
+        severity: "warning",
+        needsReview: true,
+        summary: `Phone notifications for ${what} could not be sent: ${error instanceof Error ? error.message : "unknown error"}`,
+      })
+      return null
+    }
+  }
+
   return {
+    async scheduleChanged(conversation, salesId, body) {
+      const recipients = await activeOrAdmins(conversation, salesId, "a booking by the assistant")
+      if (!recipients) return { recipients: 0, devices: 0, delivered: 0 }
+      return deliver(
+        conversation,
+        [...new Set(recipients)],
+        {
+          title: title(conversation),
+          body,
+          url: conversation.lead_id ? `/customers/${conversation.lead_id}` : `/inbox/${conversation.id}`,
+          tag: `schedule-${conversation.id}`,
+        },
+        "a booking by the assistant",
+      )
+    },
+
     async handoff(conversation) {
       let adminIds: string[] = []
       // An Inactive assignee gets nothing, so the Admins hear about it instead.

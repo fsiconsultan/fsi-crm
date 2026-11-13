@@ -43,7 +43,7 @@ export function TeamCard({ team, period }: { team: TeamRow[]; period: Period }) 
               <span className="text-right tabular-nums">{n(total)}</span>
               <span className="hidden h-2.5 rounded-full bg-surface-sunken sm:block">
                 <span
-                  className="hatch block h-full rounded-full text-accent"
+                  className="block h-full rounded-full bg-accent"
                   style={{ width: `${(open / widest) * 100}%`, minWidth: open > 0 ? 4 : 0 }}
                 />
               </span>

@@ -10,6 +10,9 @@ function initials(name: string) {
     .join("")
 }
 
+// Initials stay 12px on list avatars; the large photo in the Change photo dialog needs bigger ones.
+const initialsSize = { small: "text-xs", large: "text-2xl" } as const
+
 // A person's uploaded photo, or their initials when they have none. Never a
 // generated face (antislop R-23).
 export function Avatar({
@@ -44,7 +47,8 @@ export function Avatar({
       aria-hidden="true"
       style={{ width: size, height: size }}
       className={cn(
-        "flex shrink-0 items-center justify-center rounded-full bg-surface-sunken text-xs font-medium text-ink ring-1 ring-line",
+        "flex shrink-0 items-center justify-center rounded-full bg-surface-sunken font-medium text-ink ring-1 ring-line",
+        initialsSize[size >= 64 ? "large" : "small"],
         className,
       )}
     >

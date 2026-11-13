@@ -1,184 +1,219 @@
-import { Mail, MessageCircle, Phone } from "lucide-react"
+import { StatusChip } from "@/components/leads/status-chip"
+import { groupSchedules } from "@/components/schedules/model"
+import { ScheduleCard, type LeadScheduleData } from "@/components/schedules/schedule-card"
+import { ScheduleProvider } from "@/components/schedules/schedule-provider"
 import { PageHeader } from "@/components/shell/page-header"
 import { Avatar } from "@/components/ui/avatar"
-import { buttonClass } from "@/components/ui/button"
 import { Card, CardHeader } from "@/components/ui/card"
-import type { Customer } from "@/lib/data/customers"
+import type { Customer, CustomerChat } from "@/lib/data/customers"
 import type { DocumentList } from "@/lib/data/documents"
+import { ChatCard } from "./chat-card"
 import { DocumentsPanel } from "./documents-panel"
-import { EditCustomer, type SalesChoices } from "./edit-customer"
-import { formatDateTime, telUrl, whatsappUrl } from "./format"
-import { PipelineTimeline } from "./pipeline-timeline"
-import { StatusChip } from "./status-chip"
+import type { SalesChoices } from "./edit-customer"
+import { customerName, formatDateTime, personName, readablePhone, telUrl, whatsappUrl } from "./format"
+import { ProfileActions } from "./profile-actions"
+import { EditLink, ProfileNotice, ProfileProvider } from "./profile-context"
+import { contactFields, type ContactKey } from "./profile-model"
+import { NextStepCard, StageCard } from "./stage-card"
 
-function Detail({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5 py-2.5">
-      <dt className="text-[13px] text-muted">{label}</dt>
-      <dd className="min-w-0 break-words text-sm">{children}</dd>
-    </div>
-  )
-}
+const Dot = () => <span aria-hidden="true">·</span>
 
-const NONE = <span className="text-muted">Not recorded</span>
-
-// Thumb-sized on a phone (48px), back to the normal control height from sm up.
-const ACTION = "min-h-12 px-3 sm:min-h-11 sm:px-4 md:min-h-10"
-
-// One customer on one screen. The pipeline is the focal card: where the deal
-// stands is what staff open a profile to find out.
+/**
+ * One customer on one screen. The header answers "who, where do they stand,
+ * who owns them"; the left column is the work (next step, stage, chat,
+ * documents), the right column the reference details.
+ */
 export function CustomerProfile({
   customer,
   documents,
+  chat,
   salesOptions,
   admin,
+  viewerId,
+  today,
+  schedules,
+  connections,
+  now,
 }: {
   customer: Customer
   documents: DocumentList
+  chat: CustomerChat
   // null unless the viewer is an Admin, who may reassign the customer.
   salesOptions: SalesChoices
   admin: boolean
+  viewerId: string
+  today: string
+  schedules: LeadScheduleData
+  /** Whether the Google Calendar and email keys are set (never their values). */
+  connections: { googleConnected: boolean; emailConnected: boolean }
+  /** UTC ISO of this render. */
+  now: string
 }) {
-  const id = customer.id
   const { salesperson, ...lead } = customer
-  const whatsapp = whatsappUrl(customer.phone)
-  const call = telUrl(customer.phone)
-  const email = customer.email?.trim() || null
-  const statusSince = formatDateTime(customer.status_started_at)
+  const name = customerName(customer.customer_name)
+  const owner = personName(salesperson)
+  const place = [customer.business?.trim(), customer.location?.trim()].filter(Boolean)
+  const scheduleReady = schedules.ok && schedules.setUp
+  const nextSchedule = scheduleReady ? (groupSchedules(schedules.items, now).upcoming[0] ?? null) : null
+  const owners = salesOptions?.ok
+    ? Object.fromEntries(salesOptions.options.map((person) => [person.id, person.name ?? person.username ?? "Unnamed user"]))
+    : null
 
   return (
-    <>
-      <PageHeader
-        title={customer.customer_name?.trim() || "Unnamed customer"}
-        actions={
-          <EditCustomer
-            customer={lead}
-            sales={salesOptions}
-            currentSalesName={salesperson ? (salesperson.name ?? salesperson.username) : null}
+    <ProfileProvider customer={lead} sales={salesOptions} currentSalesName={owner}>
+      <ScheduleProvider
+        lead={{ id: customer.id, name, location: customer.location, email: customer.email, salesId: customer.sales_id }}
+        env={{ admin, today, ...connections }}
+        sales={salesOptions}
+        enabled={scheduleReady}
+      >
+        {/* Room for the phone's pinned action bar, so the last card is never under it. */}
+        <div className="max-md:pb-20">
+          <PageHeader
+            title={name}
+            meta={
+              <span className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-[13px] text-muted">
+                <StatusChip status={customer.status} />
+                {place.map((part) => (
+                  <span key={part} className="contents">
+                    <Dot />
+                    <span className="text-ink">{part}</span>
+                  </span>
+                ))}
+                <Dot />
+                <span className="inline-flex items-center gap-1.5">
+                  {owner ? <Avatar name={owner} photoUrl={null} size={20} /> : null}
+                  <span className="text-ink">{owner ?? "No salesperson"}</span>
+                </span>
+              </span>
+            }
+            actions={
+              <ProfileActions
+                customerId={customer.id}
+                name={name}
+                status={customer.status}
+                call={telUrl(customer.phone)}
+                whatsapp={whatsappUrl(customer.phone)}
+                admin={admin}
+                documentCount={documents.ok ? documents.documents.length : null}
+              />
+            }
           />
-        }
-      />
+          <ProfileNotice />
 
-      {/* Contact actions come first: on a phone this is what a salesperson opens the profile for. */}
-      {call || whatsapp || email ? (
-        <div className="mb-4 grid grid-cols-[repeat(auto-fit,minmax(96px,1fr))] gap-2 sm:flex sm:flex-wrap">
-          {call ? (
-            <a href={call} className={buttonClass("primary", ACTION)}>
-              <Phone aria-hidden="true" className="size-[18px] shrink-0" />
-              Call
-            </a>
-          ) : null}
-          {whatsapp ? (
-            <a href={whatsapp} target="_blank" rel="noopener noreferrer" className={buttonClass("secondary", ACTION)}>
-              <MessageCircle aria-hidden="true" className="size-[18px] shrink-0" />
-              WhatsApp
-              <span className="sr-only">(opens in a new tab)</span>
-            </a>
-          ) : null}
-          {email ? (
-            <a href={`mailto:${email}`} className={buttonClass("secondary", ACTION)}>
-              <Mail aria-hidden="true" className="size-[18px] shrink-0" />
-              Email
-            </a>
-          ) : null}
-          {/* Phase C: add the "Open WhatsApp conversation" link to /inbox/<conversation id> here, next to WhatsApp. */}
+          <div className="grid items-start gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(300px,360px)]">
+            <div className="flex min-w-0 flex-col gap-3">
+              <NextStepCard customer={customer} today={today} next={nextSchedule} />
+              <ScheduleCard data={schedules} now={now} owners={owners} retryHref={`/customers/${customer.id}`} />
+              <StageCard customer={customer} today={today} />
+              <ChatCard chat={chat} viewerId={viewerId} retryHref={`/customers/${customer.id}`} />
+              <DocumentsPanel customerId={customer.id} initial={documents} />
+            </div>
+
+            <div className="flex min-w-0 flex-col gap-3">
+              <ContactCard customer={customer} />
+              <SalespersonCard customer={customer} admin={admin} />
+              <NotesCard notes={customer.notes} />
+              <p className="px-1 text-xs text-muted">
+                Added {formatDateTime(customer.created_at) ?? "at an unknown time"}
+                {customer.updated_at ? ` · Last changed ${formatDateTime(customer.updated_at)}` : ""}
+              </p>
+            </div>
+          </div>
+        </div>
+      </ScheduleProvider>
+    </ProfileProvider>
+  )
+}
+
+function ContactValue({ field, customer }: { field: { key: ContactKey; value: string }; customer: Customer }) {
+  const tel = telUrl(customer.phone)
+  if (field.key === "phone" && tel) {
+    const tone = readablePhone(customer.phone)?.readable ? "" : "text-muted"
+    return (
+      <a href={tel} className={`-my-3 inline-flex min-h-11 items-center tabular-nums underline decoration-line underline-offset-4 hover:decoration-ink ${tone}`}>
+        {field.value}
+      </a>
+    )
+  }
+  if (field.key === "email") {
+    return (
+      <a href={`mailto:${field.value}`} className="-my-3 inline-flex min-h-11 items-center break-all underline decoration-line underline-offset-4 hover:decoration-ink">
+        {field.value}
+      </a>
+    )
+  }
+  return <>{field.value}</>
+}
+
+function ContactCard({ customer }: { customer: Customer }) {
+  const { filled, missing } = contactFields(customer)
+  return (
+    <Card className="max-md:p-4">
+      <CardHeader title="Contact" />
+      {filled.length > 0 ? (
+        <dl className="-mt-2 divide-y divide-line">
+          {filled.map((field) => (
+            <div key={field.key} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5 py-2.5">
+              <dt className="text-[13px] text-muted">{field.label}</dt>
+              <dd className="min-w-0 break-words text-right text-sm">
+                <ContactValue field={field} customer={customer} />
+              </dd>
+            </div>
+          ))}
+        </dl>
+      ) : (
+        <p className="text-[13px] text-muted">No contact details saved yet.</p>
+      )}
+      {missing.length > 0 ? (
+        <div className="mt-2">
+          <EditLink field={missing[0]}>{filled.length > 0 ? "Add missing details" : "Add contact details"}</EditLink>
         </div>
       ) : null}
+    </Card>
+  )
+}
 
-      {/* Below lg the two columns dissolve (`contents`) so the cards can be ordered for a phone:
-          pipeline, notes, documents, then the reference details. */}
-      <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] lg:items-start">
-        <div className="contents lg:flex lg:min-w-0 lg:flex-col lg:gap-4">
-          <Card className="order-1 lg:order-none max-md:p-4">
-            <CardHeader
-              title="Pipeline"
-              meta={statusSince ? `In this status since ${statusSince}` : undefined}
-              action={<StatusChip status={customer.status} />}
-            />
-            <PipelineTimeline customer={customer} />
-          </Card>
-
-          <Card className="order-3 lg:order-none max-md:p-4">
-            <DocumentsPanel customerId={id} initial={documents} />
-          </Card>
+function SalespersonCard({ customer, admin }: { customer: Customer; admin: boolean }) {
+  const person = customer.salesperson
+  const name = personName(person)
+  return (
+    <Card className="max-md:p-4">
+      <CardHeader title="Salesperson" action={admin ? <EditLink field="sales_id">Reassign</EditLink> : undefined} />
+      {person && name ? (
+        <div className="flex items-center gap-3">
+          <Avatar name={name} photoUrl={person.photo_url ?? person.avatar_url} />
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium">{name}</p>
+            <p className="text-[13px] text-muted">
+              {person.role ?? "No role"}
+              {person.status === "Inactive" ? ", inactive" : ""}
+            </p>
+          </div>
         </div>
+      ) : (
+        <SalespersonEmpty assigned={Boolean(customer.sales_id)} admin={admin} />
+      )}
+    </Card>
+  )
+}
 
-        <div className="contents lg:flex lg:min-w-0 lg:flex-col lg:gap-4">
-          <Card className="order-4 lg:order-none max-md:p-4">
-            <CardHeader title="Contact" />
-            <dl className="divide-y divide-line">
-              <Detail label="Phone">
-                {customer.phone?.trim() ? (
-                  call ? (
-                    <a href={call} className="-my-3 inline-flex min-h-11 items-center tabular-nums underline underline-offset-2">
-                      {customer.phone.trim()}
-                    </a>
-                  ) : (
-                    <span className="tabular-nums">{customer.phone.trim()}</span>
-                  )
-                ) : (
-                  NONE
-                )}
-              </Detail>
-              <Detail label="Email">
-                {email ? (
-                  <a href={`mailto:${email}`} className="-my-3 inline-flex min-h-11 items-center underline underline-offset-2">
-                    {email}
-                  </a>
-                ) : (
-                  NONE
-                )}
-              </Detail>
-              <Detail label="Business">{customer.business?.trim() || NONE}</Detail>
-              <Detail label="Location">{customer.location?.trim() || NONE}</Detail>
-              <Detail label="Type">{customer.lead_type ?? NONE}</Detail>
-            </dl>
-          </Card>
+function SalespersonEmpty({ assigned, admin }: { assigned: boolean; admin: boolean }) {
+  if (assigned) return <p className="text-[13px] text-muted">Assigned, but you cannot see that person&apos;s profile.</p>
+  if (admin) return <p className="text-[13px] text-muted">Nobody is assigned. Use Reassign to give this customer to a salesperson.</p>
+  return <p className="text-[13px] text-muted">Nobody is assigned. Ask an Admin to assign this customer.</p>
+}
 
-          <Card className="order-5 lg:order-none max-md:p-4">
-            <CardHeader title="Salesperson" />
-            {salesperson ? (
-              <div className="flex items-center gap-3">
-                <Avatar
-                  name={salesperson.name ?? salesperson.username ?? "?"}
-                  photoUrl={salesperson.photo_url ?? salesperson.avatar_url}
-                />
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">
-                    {salesperson.name ?? salesperson.username ?? "Unnamed user"}
-                  </p>
-                  <p className="text-[13px] text-muted">
-                    {salesperson.role ?? "No role"}
-                    {salesperson.status === "Inactive" ? ", inactive" : ""}
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <p className="text-sm text-muted">
-                {customer.sales_id
-                  ? "Assigned, but you cannot see that person's profile."
-                  : admin
-                    ? "Nobody is assigned. Use Edit to assign a salesperson."
-                    : "Nobody is assigned."}
-              </p>
-            )}
-          </Card>
-
-          <Card className="order-2 lg:order-none max-md:p-4">
-            <CardHeader title="Notes" />
-            {customer.notes?.trim() ? (
-              <p className="whitespace-pre-wrap break-words text-sm">{customer.notes.trim()}</p>
-            ) : (
-              <p className="text-sm text-muted">No notes yet. Use Edit to add one.</p>
-            )}
-          </Card>
-
-          <p className="order-6 px-1 text-[13px] text-muted lg:order-none">
-            Added {formatDateTime(customer.created_at) ?? "at an unknown time"}
-            {customer.updated_at ? `, last changed ${formatDateTime(customer.updated_at)}` : ""}
-          </p>
-        </div>
-      </div>
-    </>
+function NotesCard({ notes }: { notes: string | null }) {
+  const text = notes?.trim()
+  return (
+    <Card className="max-md:p-4">
+      <CardHeader title="Notes" action={<EditLink field="notes">{text ? "Edit notes" : "Add a note"}</EditLink>} />
+      {text ? (
+        <p className="whitespace-pre-wrap break-words text-sm">{text}</p>
+      ) : (
+        <p className="text-[13px] text-muted">No notes yet. Write down what was agreed, so a colleague can pick up.</p>
+      )}
+    </Card>
   )
 }

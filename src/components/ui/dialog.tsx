@@ -15,6 +15,7 @@ export function Dialog({
   description,
   busy = false,
   dismissOnBackdrop = true,
+  onClosed,
   children,
 }: {
   open: boolean
@@ -26,6 +27,9 @@ export function Dialog({
   busy?: boolean
   // Pass false while a form has unsaved input, so a stray tap outside does not discard it.
   dismissOnBackdrop?: boolean
+  // Runs right after the dialog has closed, when the page can take focus again.
+  // For an opener that is gone by then (a card that moved), to focus its new place.
+  onClosed?: () => void
   children: ReactNode
 }) {
   const ref = useRef<HTMLDialogElement>(null)
@@ -36,10 +40,10 @@ export function Dialog({
   // second Escape that skips the cancel event), so the effect below can put it
   // back if the parent still wants it open.
   const [nativeCloses, setNativeCloses] = useState(0)
-  const latest = useRef({ open, busy, onClose })
+  const latest = useRef({ open, busy, onClose, onClosed })
 
   useEffect(() => {
-    latest.current = { open, busy, onClose }
+    latest.current = { open, busy, onClose, onClosed }
   })
 
   useEffect(() => {
@@ -50,7 +54,10 @@ export function Dialog({
       // showModal focuses the first control (Close); a dialog can mark a better start.
       dialog.querySelector<HTMLElement>("[data-autofocus]")?.focus()
     }
-    if (!open && dialog.open) dialog.close()
+    if (!open && dialog.open) {
+      dialog.close()
+      latest.current.onClosed?.()
+    }
   }, [open, nativeCloses])
 
   // The element's `open` attribute is watched directly instead of relying on

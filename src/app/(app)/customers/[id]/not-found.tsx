@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { BackLink } from "@/components/customers/back-link"
 import { PageHeader } from "@/components/shell/page-header"
 import { buttonClass } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -7,6 +8,7 @@ import { EmptyState } from "@/components/ui/states"
 export default function CustomerNotFound() {
   return (
     <>
+      <BackLink />
       <PageHeader title="Customer not found" />
       <Card>
         <EmptyState

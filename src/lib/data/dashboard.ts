@@ -89,6 +89,21 @@ export type Dashboard = {
   team: TeamRow[] | null
 }
 
+/** The counts behind the Needs you card. */
+export type NeedsYou = Pick<Dashboard, "followUpsDue" | "stale" | "undated" | "noStatus">
+
+// The non-admin Overview shows only Needs you from this file, so it runs these
+// four counts instead of the whole dashboard. RLS scopes them to the viewer's leads.
+export async function getNeedsYou(): Promise<NeedsYou> {
+  const [followUpsDue, stale, undated, noStatus] = await Promise.all([
+    countLeads({ view: "followup" }),
+    countLeads({ view: "stale" }),
+    countLeads({ view: "undated" }),
+    countLeads({ status: "none" }),
+  ])
+  return { followUpsDue, stale, undated, noStatus }
+}
+
 // Every number is a count query run as the signed-in user, so RLS decides the
 // scope and no lead rows leave the database except the handful of recent ones.
 export async function getDashboard(options: {

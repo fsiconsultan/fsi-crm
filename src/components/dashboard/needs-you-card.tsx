@@ -1,21 +1,11 @@
 import Link from "next/link"
 import { CalendarClock, CalendarX, ChevronRight, CircleDashed, Hourglass, MessageCircle, type LucideIcon } from "lucide-react"
 import { Card, CardHeader } from "@/components/ui/card"
+import { IconCircle, type Tint } from "@/components/ui/icon-circle"
 import { EmptyState } from "@/components/ui/states"
-import type { Dashboard } from "@/lib/data/dashboard"
+import type { NeedsYou } from "@/lib/data/dashboard"
 import { STALE_DAYS, leadsHref } from "@/lib/leads/filters"
 import { plural } from "./format"
-
-type Tint = "pink" | "amber" | "blue" | "grey"
-
-// Tinted icon circles as in the reference: pink is overdue, amber is waiting
-// too long, blue is a person waiting, grey is missing data.
-const tints: Record<Tint, string> = {
-  pink: "bg-negative-soft text-negative",
-  amber: "bg-warning-soft text-warning",
-  blue: "bg-accent-soft text-accent",
-  grey: "bg-surface-sunken text-ink",
-}
 
 type Item = { icon: LucideIcon; tint: Tint; title: string; detail: string; href: string }
 
@@ -27,7 +17,7 @@ export function NeedsYouCard({
   salesId,
   waitingChats,
 }: {
-  data: Dashboard
+  data: NeedsYou
   salesId: string
   /** Chats waiting for this person; null when the inbox is not available. */
   waitingChats: number | null
@@ -106,9 +96,7 @@ function NeedsYouList({ items }: { items: Item[] }) {
             href={item.href}
             className="group -mx-2 flex min-h-[52px] items-center gap-3 rounded-[var(--radius-control)] px-2 py-2 transition-colors duration-[120ms] hover:bg-surface-sunken"
           >
-            <span className={`flex size-8 shrink-0 items-center justify-center rounded-full ${tints[item.tint]}`}>
-              <item.icon aria-hidden="true" className="size-4" strokeWidth={1.75} />
-            </span>
+            <IconCircle icon={item.icon} tint={item.tint} />
             <span className="min-w-0 flex-1">
               <span className="block truncate text-[13px] font-medium">{item.title}</span>
               <span className="block truncate text-xs text-muted">{item.detail}</span>

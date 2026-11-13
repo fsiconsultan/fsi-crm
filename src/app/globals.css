@@ -35,6 +35,18 @@
   --on-insight-ink: #141414;
   /* Behind modal sheets and menus on phones, used with an opacity (bg-scrim/40). */
   --scrim: #000000;
+  /* Pipeline status tones (owner request 2026-11-13: a soft color per status on the board).
+     One saturated "dot" color per status; cards and lanes mix it softly into the surface. */
+  --st-new: #2f7fd8;
+  --st-first-contact: #5b5bd6;
+  --st-first-meeting: #14958a;
+  --st-quotation: #c27c0e;
+  --st-second-appointment: #8e4ec6;
+  --st-deal: #1f8a46;
+  --st-no-deal: #c42a5f;
+  --tone-card: 7%;
+  --tone-lane: 4%;
+  --tone-border: 24%;
   color-scheme: light;
 }
 
@@ -55,6 +67,16 @@
   --positive-soft: #15301f;
   --warning: #f2b95c;
   --warning-soft: #3a2c12;
+  --st-new: #6aa8f0;
+  --st-first-contact: #9393f0;
+  --st-first-meeting: #4cc4b8;
+  --st-quotation: #e6a845;
+  --st-second-appointment: #b88ae6;
+  --st-deal: #5fd18b;
+  --st-no-deal: #ff7aa6;
+  --tone-card: 12%;
+  --tone-lane: 6%;
+  --tone-border: 32%;
   color-scheme: dark;
 }
 
@@ -142,5 +164,37 @@ body {
   .group:focus-within .reveal-on-hover {
     opacity: 1;
   }
+}
+
+/* The pipeline board's "Undo" notice leaves after 8 seconds. This line shows how
+   long is left and its end dismisses the notice; it waits while the notice is
+   hovered or holds keyboard focus, so nobody loses the button mid-reach. */
+@keyframes undo-countdown {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+.undo-countdown {
+  transform-origin: left;
+  animation: undo-countdown 8s linear forwards;
+}
+:hover > .undo-countdown,
+:focus-within > .undo-countdown {
+  animation-play-state: paused;
+}
+
+/* Soft status tint for the pipeline board. Set --tone to one of the --st-* colors. */
+.tone-card {
+  background-color: color-mix(in srgb, var(--tone) var(--tone-card), var(--surface-raised));
+  border-color: color-mix(in srgb, var(--tone) var(--tone-border), var(--line));
+}
+.tone-lane {
+  background-color: color-mix(in srgb, var(--tone) var(--tone-lane), var(--surface));
+}
+.tone-dot {
+  background-color: var(--tone);
 }
 

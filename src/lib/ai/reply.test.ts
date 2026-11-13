@@ -227,7 +227,7 @@ describe("AI reply", () => {
       {
         toolCalls: [
           call("calculate_indicative_system", { monthly_pln_bill_idr: "Rp 4.000.000" }),
-          call("book_site_visit", { preferred_time: "besok pagi" }),
+          call("check_availability", { kind: "site_survey", date: "2026-11-13" }),
         ],
       },
       { content: "Tim FSI akan menyiapkan perhitungannya dan mengonfirmasi jadwal survey." },

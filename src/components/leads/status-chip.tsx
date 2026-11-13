@@ -1,21 +1,31 @@
-import { cn } from "@/lib/cn"
 import { LEAD_STATUS_SHORT, NO_STATUS_LABEL, isLeadStatus } from "@/lib/leads/status"
 
-// Green and pink tints only where they carry meaning: won and lost. The label
-// stays ink because green text on the green tint misses AA at this size.
+type Tone = "open" | "won" | "lost" | "none"
+
+// Read-only status pill. Blue tint for a lead still moving through the
+// pipeline, green and pink only where they carry meaning (won, lost), a quiet
+// grey for no status. The label stays ink: coloured text on its own tint misses
+// AA at 12px.
+const tones: Record<Tone, string> = {
+  open: "bg-accent-soft text-ink",
+  won: "bg-positive-soft text-ink",
+  lost: "bg-negative-soft text-ink",
+  none: "bg-surface-sunken text-muted",
+}
+
+function toneOf(status: string | null): Tone {
+  if (!status) return "none"
+  if (status === "Deal") return "won"
+  if (status === "No Deal") return "lost"
+  return "open"
+}
+
 export function StatusChip({ status }: { status: string | null }) {
-  const known = isLeadStatus(status)
   return (
     <span
-      className={cn(
-        "inline-flex max-w-full items-center truncate rounded-full px-2 py-0.5 text-xs font-medium",
-        status === "Deal" && "bg-positive-soft text-ink",
-        status === "No Deal" && "bg-negative-soft text-ink",
-        status && status !== "Deal" && status !== "No Deal" && "bg-surface-sunken text-ink",
-        !status && "border border-dashed border-line text-muted",
-      )}
+      className={`inline-flex max-w-full shrink-0 items-center truncate whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ${tones[toneOf(status)]}`}
     >
-      {known ? LEAD_STATUS_SHORT[status] : (status ?? NO_STATUS_LABEL)}
+      {isLeadStatus(status) ? LEAD_STATUS_SHORT[status] : (status ?? NO_STATUS_LABEL)}
     </span>
   )
 }

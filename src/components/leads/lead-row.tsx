@@ -1,132 +1,229 @@
 import Link from "next/link"
-import { MessageCircle, Pencil, Phone } from "lucide-react"
+import { MessageCircle, Phone } from "lucide-react"
+import { Avatar } from "@/components/ui/avatar"
 import { buttonClass } from "@/components/ui/button"
-import { cn } from "@/lib/cn"
 import type { Lead } from "@/lib/data/leads"
-import { DeleteLeadButton } from "./delete-lead-button"
-import { addedOn, dayCount, daysInStatus, followUp, leadName, telHref, whatsappHref } from "./format"
-import { StatusSelect } from "./status-select"
+import { addedOn, displayPhone, leadName, nextStep, telHref, whatsappHref, type NextStep } from "./format"
+import { RowMenu } from "./row-menu"
+import { StatusChip } from "./status-chip"
 
-// Column widths shared by the header and every row from the xl breakpoint up.
-// Below it a lead is a card: name and actions, details, call and WhatsApp, status.
-export const LEAD_GRID =
-  "xl:grid-cols-[minmax(0,1fr)_160px_196px_136px_92px] xl:items-center xl:gap-x-4"
-
-export function LeadRow({
-  lead,
-  owner,
-  editHref,
-}: {
+export type LeadItemProps = {
   lead: Lead
   /** Salesperson name; only passed for Admin, who sees more than their own leads. */
   owner?: string
   editHref: string
-}) {
-  const name = leadName(lead.customer_name)
-  const whatsapp = whatsappHref(lead.phone)
-  const tel = telHref(lead.phone)
-  const days = lead.status ? daysInStatus(lead.status_started_at) : null
-  // Some leads were given a status without a date; their time in status is unknown, not zero.
-  const undated = Boolean(lead.status) && days === null
-  const next = followUp(lead.follow_up_date)
+  /** Admin only. */
+  reassignHref: string | null
+}
+
+const nextTone: Record<NextStep["tone"], string> = {
+  overdue: "font-medium text-negative",
+  today: "font-medium text-ink",
+  plain: "text-ink",
+  quiet: "text-muted",
+}
+
+function NextStepText({ lead }: { lead: Lead }) {
+  const step = nextStep(lead)
+  return <span className={nextTone[step.tone]}>{step.text}</span>
+}
+
+function Place({ lead }: { lead: Lead }) {
   const place = [lead.business, lead.location].filter(Boolean).join(" · ")
+  return place ? <p className="truncate text-[13px] text-muted">{place}</p> : null
+}
+
+function PartnerTag({ lead }: { lead: Lead }) {
+  if (lead.lead_type !== "Partner") return null
+  return <span className="shrink-0 rounded-full bg-surface-sunken px-2 py-0.5 text-xs text-ink">Partner</span>
+}
+
+function Salesperson({ name }: { name: string }) {
+  return (
+    <span className="flex min-w-0 items-center gap-2">
+      <Avatar name={name} photoUrl={null} size={28} />
+      <span className="truncate">{name}</span>
+    </span>
+  )
+}
+
+// The name link stretches over the whole row or card (its ::after), so a tap
+// anywhere opens the customer. Phone links and the "…" menu are `relative` and
+// come later in the page, so they sit above it and keep their own action.
+const stretchedLink =
+  "after:absolute after:inset-0 after:rounded-[inherit] after:content-[''] focus-visible:outline-offset-4"
+
+const tableCell = "px-3 py-2 align-middle"
+
+/** One lead as a table row, from the xl breakpoint up. */
+export function LeadTableRow({ lead, owner, editHref, reassignHref }: LeadItemProps) {
+  const name = leadName(lead.customer_name)
+  const phone = displayPhone(lead.phone)
+  const tel = telHref(lead.phone)
+  const whatsapp = whatsappHref(lead.phone)
 
   return (
-    // The name link stretches over the whole row; the controls sit above it.
-    <li
-      className={cn(
-        "relative -mx-2 grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1.5 rounded-[var(--radius-control)] px-2 py-3 transition-colors duration-150 hover:bg-surface-sunken active:bg-surface-sunken xl:gap-y-2 xl:py-2.5",
-        LEAD_GRID,
-      )}
-    >
-      <div className="col-start-1 row-start-1 min-w-0">
+    <tr className="relative h-14 border-t border-line transition-colors duration-[120ms] hover:bg-surface-sunken">
+      <td className={`${tableCell} max-w-0 pl-2`}>
         <div className="flex min-w-0 items-center gap-2">
-          <Link
-            href={`/customers/${lead.id}`}
-            className="inline-flex min-h-11 min-w-0 items-center text-base font-medium after:absolute after:inset-0 after:rounded-[var(--radius-control)] xl:min-h-0 xl:text-sm"
-          >
-            <span className="truncate">{name}</span>
+          <Link href={`/customers/${lead.id}`} className={`truncate text-sm font-medium text-ink ${stretchedLink}`}>
+            {name}
           </Link>
-          {lead.lead_type === "Partner" ? (
-            <span className="shrink-0 rounded-full bg-surface-sunken px-2 py-0.5 text-xs text-muted">Partner</span>
-          ) : null}
+          <PartnerTag lead={lead} />
         </div>
-        {place ? <p className="truncate text-[13px] text-muted">{place}</p> : null}
-        {owner ? <p className="truncate text-[13px] text-muted xl:hidden">Assigned to {owner}</p> : null}
+        <Place lead={lead} />
+      </td>
+      <td className={tableCell}>
+        <PhoneCell phone={phone} tel={tel} whatsapp={whatsapp} name={name} />
+      </td>
+      <td className={tableCell}>
+        <StatusChip status={lead.status} />
+      </td>
+      {owner !== undefined ? (
+        <td className={`${tableCell} max-w-0 text-[13px]`}>
+          <Salesperson name={owner} />
+        </td>
+      ) : null}
+      <td className={`${tableCell} text-[13px] tabular-nums`}>
+        <NextStepText lead={lead} />
+      </td>
+      <td className={`${tableCell} whitespace-nowrap text-[13px] tabular-nums text-muted`}>{addedOn(lead.created_at)}</td>
+      <td className={`${tableCell} pr-2 text-right`}>
+        <div className="relative inline-flex">
+          <RowMenu
+            leadId={lead.id}
+            leadName={name}
+            status={lead.status}
+            editHref={editHref}
+            reassignHref={reassignHref}
+          />
+        </div>
+      </td>
+    </tr>
+  )
+}
+
+function PhoneCell({
+  phone,
+  tel,
+  whatsapp,
+  name,
+}: {
+  phone: ReturnType<typeof displayPhone>
+  tel: string | null
+  whatsapp: string | null
+  name: string
+}) {
+  if (!phone) return <span className="text-[13px] text-muted">No phone</span>
+  if (!tel || !whatsapp) return <span className="text-[13px] text-muted">{phone.text}</span>
+  return (
+    <span className="flex items-center gap-1">
+      <a
+        href={tel}
+        aria-label={`Call ${name}, ${phone.text}`}
+        className="relative whitespace-nowrap rounded-[6px] text-[13px] tabular-nums text-ink underline decoration-line underline-offset-4 hover:decoration-ink"
+      >
+        {phone.text}
+      </a>
+      <a
+        href={whatsapp}
+        target="_blank"
+        rel="noreferrer"
+        aria-label={`Message ${name} on WhatsApp`}
+        title="WhatsApp"
+        className="relative flex size-8 items-center justify-center rounded-full text-muted transition-colors duration-[120ms] hover:bg-line hover:text-ink"
+      >
+        <MessageCircle aria-hidden="true" className="size-4" strokeWidth={1.75} />
+      </a>
+    </span>
+  )
+}
+
+/** One lead as a card, below the xl breakpoint. */
+export function LeadCard({ lead, owner, editHref, reassignHref }: LeadItemProps) {
+  const name = leadName(lead.customer_name)
+  const phone = displayPhone(lead.phone)
+  const tel = telHref(lead.phone)
+  const whatsapp = whatsappHref(lead.phone)
+
+  return (
+    <article className="relative flex h-full flex-col gap-2 rounded-[14px] border border-line bg-surface-raised p-3 transition-colors duration-[120ms] hover:bg-surface-sunken">
+      <div className="flex min-w-0 items-start justify-between gap-2">
+        <h2 className="min-w-0 text-[15px] font-medium leading-snug">
+          <Link href={`/customers/${lead.id}`} className={`line-clamp-2 break-words ${stretchedLink}`}>
+            {name}
+          </Link>
+        </h2>
+        <StatusChip status={lead.status} />
       </div>
 
-      <div className="col-span-2 min-w-0 text-sm max-xl:order-4 max-xl:mt-1 xl:col-span-1">
-        {/* Phone: two thumb-sized buttons. */}
-        <div className="flex gap-2 xl:hidden">
-          {tel ? (
-            <a
-              href={tel}
-              aria-label={`Call ${name}, ${lead.phone}`}
-              className={buttonClass("secondary", "relative z-10 min-w-0 flex-1")}
-            >
-              <Phone aria-hidden="true" className="size-4 shrink-0" strokeWidth={1.75} />
-              <span className="truncate tabular-nums">{lead.phone}</span>
-            </a>
-          ) : (
-            <span className="flex min-h-11 flex-1 items-center text-muted">{lead.phone || "No phone number"}</span>
-          )}
-          {whatsapp ? (
-            <a
-              href={whatsapp}
-              target="_blank"
-              rel="noreferrer"
-              aria-label={`Message ${name} on WhatsApp`}
-              className={buttonClass("secondary", "relative z-10 shrink-0")}
-            >
-              <MessageCircle aria-hidden="true" className="size-4" strokeWidth={1.75} />
-              WhatsApp
-            </a>
-          ) : null}
+      <div className="min-w-0 text-[13px]">
+        <div className="flex min-w-0 items-center gap-2">
+          <PartnerTag lead={lead} />
+          <div className="min-w-0 flex-1">
+            <Place lead={lead} />
+          </div>
         </div>
-
-        {/* Desktop: the number itself opens WhatsApp. */}
-        <div className="hidden xl:block">
-          {whatsapp ? (
-            <a
-              href={whatsapp}
-              target="_blank"
-              rel="noreferrer"
-              aria-label={`Message ${name} on WhatsApp, ${lead.phone}`}
-              className="relative z-10 tabular-nums underline decoration-line underline-offset-4 hover:decoration-ink"
-            >
-              {lead.phone}
-            </a>
-          ) : (
-            <span className="tabular-nums text-muted">{lead.phone || "No phone"}</span>
-          )}
-          {owner ? <p className="truncate text-[13px] text-muted">{owner}</p> : null}
-        </div>
-      </div>
-
-      <div className="relative z-10 col-span-2 max-xl:order-5 xl:col-span-1">
-        <StatusSelect key={`${lead.id}:${lead.status}`} leadId={lead.id} leadName={name} status={lead.status} />
-      </div>
-
-      <div className="col-span-2 text-[13px] max-xl:order-3 xl:col-span-1">
-        <p className="tabular-nums text-ink">
-          {days !== null ? `${dayCount(days)} in status` : undated ? "Status date unknown" : `Added ${addedOn(lead.created_at)}`}
-        </p>
-        {next ? (
-          <p className={next.overdue ? "font-medium text-negative" : "text-muted"}>
-            {next.overdue ? `Follow-up was due ${next.label}` : `Follow up ${next.label}`}
+        {owner !== undefined ? (
+          <p className="mt-1 truncate text-muted">
+            Salesperson: <span className="text-ink">{owner}</span>
           </p>
-        ) : days !== null || undated ? (
-          <p className="text-muted">Added {addedOn(lead.created_at)}</p>
         ) : null}
+        <p className="mt-1 tabular-nums">
+          <NextStepText lead={lead} />
+        </p>
       </div>
 
-      <div className="relative z-10 col-start-2 row-start-1 flex items-start justify-end gap-1 xl:col-start-auto xl:row-start-auto xl:items-center">
-        <Link href={editHref} className={buttonClass("ghost", "w-11 px-0 text-muted hover:text-ink md:w-10")}>
-          <Pencil aria-hidden="true" className="size-[18px]" strokeWidth={1.75} />
-          <span className="sr-only">Edit {name}</span>
-        </Link>
-        <DeleteLeadButton leadId={lead.id} leadName={name} />
+      <div className="mt-auto flex items-center gap-2 pt-1">
+        <CardPhoneActions phone={phone} tel={tel} whatsapp={whatsapp} name={name} />
+        <div className="relative ml-auto">
+          <RowMenu
+            leadId={lead.id}
+            leadName={name}
+            status={lead.status}
+            editHref={editHref}
+            reassignHref={reassignHref}
+          />
+        </div>
       </div>
-    </li>
+    </article>
+  )
+}
+
+function CardPhoneActions({
+  phone,
+  tel,
+  whatsapp,
+  name,
+}: {
+  phone: ReturnType<typeof displayPhone>
+  tel: string | null
+  whatsapp: string | null
+  name: string
+}) {
+  if (!phone) return <span className="text-[13px] text-muted">No phone number</span>
+  if (!tel || !whatsapp) return <span className="min-w-0 truncate text-[13px] text-muted">{phone.text}</span>
+  return (
+    <>
+      <a
+        href={tel}
+        aria-label={`Call ${name}, ${phone.text}`}
+        title={phone.text}
+        className={buttonClass("secondary", "relative min-h-11 px-3")}
+      >
+        <Phone aria-hidden="true" className="size-4 shrink-0" strokeWidth={1.75} />
+        Call
+      </a>
+      <a
+        href={whatsapp}
+        target="_blank"
+        rel="noreferrer"
+        aria-label={`Message ${name} on WhatsApp`}
+        className={buttonClass("secondary", "relative min-h-11 px-3")}
+      >
+        <MessageCircle aria-hidden="true" className="size-4 shrink-0" strokeWidth={1.75} />
+        WhatsApp
+      </a>
+    </>
   )
 }

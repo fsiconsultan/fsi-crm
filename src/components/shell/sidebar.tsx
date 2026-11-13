@@ -202,6 +202,7 @@ function SidebarBody({
   const items = navFor(user.role)
   const main = items.filter((item) => item.group === "main")
   const analyze = items.filter((item) => item.group === "analyze")
+  const bottom = items.filter((item) => item.group === "bottom")
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col gap-5 p-4 md:rail:px-3">
@@ -232,7 +233,14 @@ function SidebarBody({
       </nav>
 
       <div className="flex flex-col gap-3">
-        <NotificationsLink waiting={waiting} onNavigate={onNavigate} />
+        <ul className="flex flex-col gap-1">
+          <li>
+            <NotificationsLink waiting={waiting} onNavigate={onNavigate} />
+          </li>
+          {bottom.map((item) => (
+            <NavLink key={item.href} item={item} pathname={pathname} onNavigate={onNavigate} />
+          ))}
+        </ul>
         <div className="border-t border-line pt-3">
           <ProfileMenu user={user} />
         </div>

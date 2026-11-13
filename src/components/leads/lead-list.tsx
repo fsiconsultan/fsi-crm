@@ -1,12 +1,37 @@
 import Link from "next/link"
 import { buttonClass } from "@/components/ui/button"
+import { pillClass } from "@/components/ui/pill"
 import { EmptyState } from "@/components/ui/states"
-import { cn } from "@/lib/cn"
 import { listLeads, type SalesUser } from "@/lib/data/leads"
-import { PAGE_SIZE, hasActiveFilters, leadsHref, type LeadFilters } from "@/lib/leads/filters"
-import { LEAD_GRID, LeadRow } from "./lead-row"
+import { PAGE_SIZE, STALE_DAYS, leadsHref, type LeadFilters } from "@/lib/leads/filters"
+import { activeQuickView, baseFilters, type QuickViewKey } from "@/lib/leads/quick-views"
+import { LeadCard, LeadTableRow, type LeadItemProps } from "./lead-row"
 
 const number = new Intl.NumberFormat("en-US")
+
+// What an empty tab means and the one thing that fills it.
+const EMPTY_TAB: Record<Exclude<QuickViewKey, "all">, { title: string; detail: string }> = {
+  followup: {
+    title: "No follow-ups are due",
+    detail: "Set a follow-up date on a customer to see it here on the day it is due.",
+  },
+  stale: {
+    title: "No lead is stuck",
+    detail: `A lead shows here when it stays in one open status for more than ${STALE_DAYS} days.`,
+  },
+  pipeline: {
+    title: "No lead has a status yet",
+    detail: "Open a customer and set a status to put them on the pipeline.",
+  },
+  none: {
+    title: "Every lead has a status",
+    detail: "New leads land here until someone sets their first status.",
+  },
+  deals: {
+    title: "No deals yet",
+    detail: "A lead shows here once its status is set to Deal.",
+  },
+}
 
 export async function LeadList({
   filters,
@@ -17,35 +42,8 @@ export async function LeadList({
 }) {
   const { rows, total } = await listLeads(filters)
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE))
-  const back = leadsHref(filters)
 
-  if (total === 0) {
-    return hasActiveFilters(filters) ? (
-      <EmptyState
-        title="No leads match these filters"
-        detail="Nothing fits the search and filters above. Loosen one of them, or clear them to see every lead you have access to."
-        action={
-          <Link href="/leads" className={buttonClass("secondary")}>
-            Clear filters
-          </Link>
-        }
-      />
-    ) : (
-      <EmptyState
-        title={salesUsers ? "There are no leads yet" : "No leads are assigned to you yet"}
-        detail={
-          salesUsers
-            ? "Add the first lead and assign it to a salesperson. It shows up here and on their Overview."
-            : "You only see leads assigned to you. Add one yourself, or ask an admin to assign existing leads to you."
-        }
-        action={
-          <Link href="/leads/new" className={buttonClass("primary")}>
-            Add a lead
-          </Link>
-        }
-      />
-    )
-  }
+  if (total === 0) return <NoLeads filters={filters} admin={salesUsers !== null} />
 
   if (rows.length === 0) {
     return (
@@ -61,65 +59,142 @@ export async function LeadList({
     )
   }
 
-  const first = (filters.page - 1) * PAGE_SIZE + 1
+  const back = encodeURIComponent(leadsHref(filters))
   const owners = salesUsers ? new Map(salesUsers.map((user) => [user.id, user.name])) : null
+  const items: LeadItemProps[] = rows.map((lead) => {
+    const editHref = `/leads/${lead.id}/edit?back=${back}`
+    return {
+      lead,
+      owner: owners ? (owners.get(lead.sales_id ?? "") ?? "Unassigned") : undefined,
+      editHref,
+      reassignHref: owners ? `${editHref}#sales_id` : null,
+    }
+  })
+  const first = (filters.page - 1) * PAGE_SIZE + 1
 
   return (
     <>
-      <p className="mb-2 text-[13px] text-muted">
-        Showing {number.format(first)} to {number.format(first + rows.length - 1)} of {number.format(total)}{" "}
-        {total === 1 ? "lead" : "leads"}
-      </p>
+      <table className="hidden w-full table-fixed border-collapse text-left xl:table">
+        <caption className="sr-only">
+          Leads {number.format(first)} to {number.format(first + rows.length - 1)} of {number.format(total)}. Each name opens the customer.
+        </caption>
+        <colgroup>
+          <col />
+          <col className="w-[13.5rem]" />
+          <col className="w-[10rem]" />
+          {owners ? <col className="w-[11rem]" /> : null}
+          <col className="w-[13rem]" />
+          <col className="w-[6.5rem]" />
+          <col className="w-[3.5rem]" />
+        </colgroup>
+        <thead>
+          <tr className="text-xs text-muted">
+            <th scope="col" className="px-3 pb-2 pl-2 font-normal">Customer</th>
+            <th scope="col" className="px-3 pb-2 font-normal">Phone</th>
+            <th scope="col" className="px-3 pb-2 font-normal">Status</th>
+            {owners ? <th scope="col" className="px-3 pb-2 font-normal">Salesperson</th> : null}
+            <th scope="col" className="px-3 pb-2 font-normal">Next step</th>
+            <th scope="col" className="px-3 pb-2 font-normal">Added</th>
+            <th scope="col" className="px-3 pb-2 pr-2 font-normal">
+              <span className="sr-only">Actions</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((item) => (
+            <LeadTableRow key={item.lead.id} {...item} />
+          ))}
+        </tbody>
+      </table>
 
-      <div
-        aria-hidden="true"
-        className={cn("hidden border-b border-line pb-2 text-[13px] text-muted xl:grid", LEAD_GRID)}
-      >
-        <span>Customer</span>
-        <span>{owners ? "WhatsApp, salesperson" : "WhatsApp"}</span>
-        <span>Status</span>
-        <span>Timing</span>
-        <span />
-      </div>
-
-      <ul className="divide-y divide-line border-t border-line xl:border-t-0">
-        {rows.map((lead) => (
-          <LeadRow
-            key={lead.id}
-            lead={lead}
-            owner={owners ? (owners.get(lead.sales_id ?? "") ?? "Unassigned") : undefined}
-            editHref={`/leads/${lead.id}/edit?back=${encodeURIComponent(back)}`}
-          />
+      <ul className="grid grid-cols-1 gap-2 lg:grid-cols-2 xl:hidden">
+        {items.map((item) => (
+          <li key={item.lead.id} className="min-w-0">
+            <LeadCard {...item} />
+          </li>
         ))}
       </ul>
 
-      {pages > 1 ? (
-        <nav aria-label="Pages" className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5">
-          <p className="text-sm tabular-nums text-muted">
-            Page {number.format(filters.page)} of {number.format(pages)}
-          </p>
-          <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
-            <PageLink href={filters.page > 1 ? leadsHref({ ...filters, page: filters.page - 1 }) : null}>
-              Previous
-            </PageLink>
-            <PageLink href={filters.page < pages ? leadsHref({ ...filters, page: filters.page + 1 }) : null}>
-              Next
-            </PageLink>
-          </div>
-        </nav>
-      ) : null}
+      <Pagination filters={filters} first={first} count={rows.length} total={total} pages={pages} />
     </>
   )
 }
 
+function NoLeads({ filters, admin }: { filters: LeadFilters; admin: boolean }) {
+  const tab = activeQuickView(filters)
+
+  if (!tab || Object.values(baseFilters(filters)).some(Boolean)) {
+    return (
+      <EmptyState
+        title="No leads match these filters"
+        detail="Nothing fits the search and filters above. Remove one of them, or clear them all to see every lead you have access to."
+        action={
+          <Link href="/leads" className={pillClass("tinted")}>
+            Clear all
+          </Link>
+        }
+      />
+    )
+  }
+
+  if (tab.key !== "all") return <EmptyState {...EMPTY_TAB[tab.key]} />
+
+  return (
+    <EmptyState
+      title={admin ? "There are no leads yet" : "No leads are assigned to you yet"}
+      detail={
+        admin
+          ? "Add the first lead and assign it to a salesperson. It shows up here and on their Overview."
+          : "You only see leads assigned to you. Add one yourself, or ask an admin to assign existing leads to you."
+      }
+      action={
+        <Link href="/leads/new" className={pillClass("on")}>
+          Add lead
+        </Link>
+      }
+    />
+  )
+}
+
+function Pagination({
+  filters,
+  first,
+  count,
+  total,
+  pages,
+}: {
+  filters: LeadFilters
+  first: number
+  count: number
+  total: number
+  pages: number
+}) {
+  return (
+    <nav aria-label="Pages" className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
+      <p className="text-[13px] tabular-nums text-muted">
+        {number.format(first)} to {number.format(first + count - 1)} of {number.format(total)}
+      </p>
+      {pages > 1 ? (
+        <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
+          <PageLink href={filters.page > 1 ? leadsHref({ ...filters, page: filters.page - 1 }) : null}>Previous</PageLink>
+          <PageLink href={filters.page < pages ? leadsHref({ ...filters, page: filters.page + 1 }) : null}>Next</PageLink>
+        </div>
+      ) : null}
+    </nav>
+  )
+}
+
 function PageLink({ href, children }: { href: string | null; children: string }) {
-  return href ? (
-    <Link href={href} className={buttonClass("secondary")}>
+  if (!href) {
+    return (
+      <span aria-disabled="true" className={pillClass("tinted", "cursor-not-allowed justify-center opacity-50 hover:bg-line/70")}>
+        {children}
+      </span>
+    )
+  }
+  return (
+    <Link href={href} className={pillClass("tinted", "justify-center")}>
       {children}
     </Link>
-  ) : (
-    <span aria-disabled="true" className={buttonClass("secondary", "cursor-not-allowed opacity-50 hover:bg-surface")}>
-      {children}
-    </span>
   )
 }

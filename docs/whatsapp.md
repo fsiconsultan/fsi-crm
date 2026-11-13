@@ -165,11 +165,28 @@ message. Outside it, a free-form reply is refused before it is sent and shown as
 
 ### What the AI will not do
 
-`calculate_indicative_system` and `book_site_visit` exist as tools but answer
-"not configured" (`src/lib/ai/seams.ts`). The assistant is instructed to say a
-representative will follow up, and never to state a price, system size, saving
-or visit time that a tool did not give it. Implement the two functions in that
-file when FSI's engineering rules, catalogue, pricing and calendar are ready.
+`calculate_indicative_system` exists as a tool but answers "not configured"
+(`src/lib/ai/seams.ts`). The assistant is instructed to say a representative
+will follow up, and never to state a price, system size, saving or time that a
+tool did not give it. Implement it when FSI's engineering rules, catalogue and
+pricing are ready.
+
+### Scheduling
+
+The assistant offers free times from `check_availability` only, in the
+customer's own local time and always written with its label (WIB, WITA or
+WIT), repeats the exact slot and waits for the customer's yes before
+`book_schedule`, and says a representative will confirm. It can move or cancel
+only bookings it made on this conversation's lead; anything else goes to a
+person. Rules, guards and setup: `docs/schedules.md`, "WhatsApp assistant".
+
+The customer's zone comes from the location they gave in this chat (the
+`location` qualification answer), else from `leads.location`. When neither
+names places in one zone (empty, unknown, or places in two zones),
+`check_availability` and `book_schedule` answer `needs_location`: the assistant
+asks which city or area the property is in, saves the answer with
+`save_qualification_answers` as `location`, and checks again. It never writes
+`leads.location`.
 
 ## Review list event types
 
@@ -181,11 +198,13 @@ file when FSI's engineering rules, catalogue, pricing and calendar are ready.
 | `send_failed` | Meta rejected a message, or accepted it and failed to deliver it. |
 | `handoff_requested` | The AI asked for a person. |
 | `ai_not_configured`, `ai_error`, `tool_failed` | The AI could not answer or a step failed. |
+| `schedule_ai_check_failed` | The assistant could not check the calendar or save a booking. |
 | No reply yet (not an event) | A customer message the AI started on and never finished, after 3 minutes. Clears when the AI answers or someone takes over. |
 
 Informational events (`lead_created`, `lead_linked`, `status_changed`,
-`takeover`, `handback`, `reply_suppressed`, `unsupported_message`) are logged
-but not listed for review.
+`takeover`, `handback`, `reply_suppressed`, `unsupported_message`,
+`schedule_ai_booked`, `schedule_ai_rescheduled`, `schedule_ai_cancelled`) are
+logged but not listed for review.
 
 ## What FSI must supply
 
@@ -197,8 +216,10 @@ but not listed for review.
    questions and the assistant's wording.
 5. A re-engagement template approved by Meta (optional but needed to write to
    customers after 24 hours).
-6. Engineering rules, catalogue and pricing for indicative calculations, and the
-   Google Calendar details for site visits (later phases).
+6. Engineering rules, catalogue and pricing for indicative calculations.
+7. Confirmation of the assistant's booking rules (working hours in the
+   customer's local time, minimum notice, lengths, kinds): `docs/schedules.md`,
+   "WhatsApp assistant".
 
 ## Testing
 

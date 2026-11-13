@@ -1,4 +1,5 @@
-// Progress toward a target. Hatched fill = progress so far, tick = target.
+// Progress toward a target. Solid fill = progress so far, tick = target.
+// (Name kept so imports stay stable; progress bars are solid per the owner, 2026-11-13.)
 export function HatchBar({
   value,
   max,
@@ -22,7 +23,7 @@ export function HatchBar({
       aria-valuenow={value}
       className="relative h-3 w-full rounded-full bg-surface-sunken"
     >
-      <div className="hatch h-full rounded-full text-accent" style={{ width: `${pct}%` }} />
+      <div className="h-full rounded-full bg-accent" style={{ width: `${pct}%` }} />
       {targetPct !== null ? (
         <div
           aria-hidden="true"
