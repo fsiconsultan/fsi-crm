@@ -1,6 +1,6 @@
 "use server"
 
-import { getProfile, isAdmin } from "@/lib/auth"
+import { canManageSettings, getProfile } from "@/lib/auth"
 import { testResend } from "@/lib/integrations/email"
 import {
   testGoogleCalendar,
@@ -13,11 +13,11 @@ import type { TestResult } from "@/lib/integrations/probe"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/whatsapp/admin-client"
 
-// Every action is reachable by a direct POST, so each one checks the Admin
+// Every action is reachable by a direct POST, so each one checks the Admin or Developer
 // role itself before anything else runs. Results carry plain text only.
 async function adminOnly(run: () => Promise<TestResult>): Promise<TestResult> {
   const profile = await getProfile()
-  if (!isAdmin(profile)) return { state: "denied" }
+  if (!canManageSettings(profile)) return { state: "denied" }
   return run()
 }
 

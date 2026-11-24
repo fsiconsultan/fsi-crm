@@ -8,7 +8,7 @@ const createAdminClient = vi.fn(() => null)
 
 vi.mock("@/lib/auth", () => ({
   getProfile: vi.fn(async () => ({ id: "user-1", role: role.current })),
-  isAdmin: (profile: { role: string }) => profile.role === "Admin",
+  canManageSettings: (profile: { role: string }) => profile.role === "Admin" || profile.role === "Developer",
 }))
 vi.mock("@/lib/supabase/server", () => ({ createClient }))
 vi.mock("@/lib/whatsapp/admin-client", () => ({ createAdminClient }))
@@ -42,8 +42,8 @@ describe("settings actions", () => {
     expect(createClient).not.toHaveBeenCalled()
   })
 
-  it("lets an Admin run them; unset keys come back as missing with no network call", async () => {
-    role.current = "Admin"
+  it.each(["Admin", "Developer"])("lets %s run them; unset keys come back as missing with no network call", async (name) => {
+    role.current = name
     vi.stubEnv("OPENAI_API_KEY", "")
     vi.stubEnv("OPENAI_MODEL", "")
     vi.stubEnv("WHATSAPP_ACCESS_TOKEN", "")

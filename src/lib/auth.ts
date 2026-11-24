@@ -3,7 +3,7 @@ import { cache } from "react"
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 
-export type Role = "Admin" | "Sales" | "Digital Marketing" | "Secretary"
+export type Role = "Admin" | "Sales" | "Digital Marketing" | "Secretary" | "Developer"
 
 export type Profile = {
   id: string
@@ -44,4 +44,10 @@ export const getProfile = cache(async (): Promise<Profile> => {
 
 export function isAdmin(profile: Profile) {
   return profile.role === "Admin"
+}
+
+// Admin or Developer: who may open and change settings. Data access still
+// follows isAdmin() and RLS, so a Developer sees no leads unless assigned.
+export function canManageSettings(profile: Profile) {
+  return profile.role === "Admin" || profile.role === "Developer"
 }
