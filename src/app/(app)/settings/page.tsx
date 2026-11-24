@@ -7,7 +7,7 @@ import type { ConnectionStatus } from "@/components/settings/status-pill"
 import { formatDateTime } from "@/components/inbox/format"
 import { PageHeader } from "@/components/shell/page-header"
 import { Card } from "@/components/ui/card"
-import { getProfile, isAdmin } from "@/lib/auth"
+import { canManageSettings, getProfile } from "@/lib/auth"
 import { loadSettingsActivity, type Fact, type LastEvent } from "@/lib/integrations/activity"
 import { envStatus, identifiersFor, missingRequired, type ServiceId } from "@/lib/integrations/env"
 import {
@@ -45,7 +45,7 @@ async function siteOrigin() {
 
 export default async function SettingsPage() {
   const profile = await getProfile()
-  if (!isAdmin(profile)) redirect("/")
+  if (!canManageSettings(profile)) redirect("/")
 
   const [activity, origin] = await Promise.all([loadSettingsActivity(), siteOrigin()])
 
@@ -92,7 +92,7 @@ export default async function SettingsPage() {
 
   return (
     <>
-      <PageHeader title="Settings" meta="Admin only. The CRM's connections to outside services." />
+      <PageHeader title="Settings" meta="Admin and Developer only. The CRM's connections to outside services." />
 
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         <ServiceCard

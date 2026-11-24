@@ -18,6 +18,190 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_chat_settings: {
+        Row: {
+          enabled: boolean
+          greeting_en: string | null
+          greeting_id: string | null
+          handover_keywords: string[]
+          handover_max_failed_answers: number
+          handover_message_en: string | null
+          handover_message_id: string | null
+          handover_on_human_request: boolean
+          id: number
+          language_mode: string
+          model: string | null
+          persona_name: string
+          provider: string
+          rules: string | null
+          tone: string
+          tone_custom: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          enabled?: boolean
+          greeting_en?: string | null
+          greeting_id?: string | null
+          handover_keywords?: string[]
+          handover_max_failed_answers?: number
+          handover_message_en?: string | null
+          handover_message_id?: string | null
+          handover_on_human_request?: boolean
+          id?: number
+          language_mode?: string
+          model?: string | null
+          persona_name?: string
+          provider?: string
+          rules?: string | null
+          tone?: string
+          tone_custom?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          enabled?: boolean
+          greeting_en?: string | null
+          greeting_id?: string | null
+          handover_keywords?: string[]
+          handover_max_failed_answers?: number
+          handover_message_en?: string | null
+          handover_message_id?: string | null
+          handover_on_human_request?: boolean
+          id?: number
+          language_mode?: string
+          model?: string | null
+          persona_name?: string
+          provider?: string
+          rules?: string | null
+          tone?: string
+          tone_custom?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_chat_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "sales_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_chat_trigger_rules: {
+        Row: {
+          auto_move: boolean
+          created_at: string
+          created_by: string | null
+          enabled: boolean
+          id: string
+          name: string
+          sort_order: number
+          target_status: string
+          trigger_description: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          auto_move?: boolean
+          created_at?: string
+          created_by?: string | null
+          enabled?: boolean
+          id?: string
+          name: string
+          sort_order?: number
+          target_status: string
+          trigger_description: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          auto_move?: boolean
+          created_at?: string
+          created_by?: string | null
+          enabled?: boolean
+          id?: string
+          name?: string
+          sort_order?: number
+          target_status?: string
+          trigger_description?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_chat_trigger_rules_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "sales_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_chat_trigger_rules_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "sales_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_knowledge_sources: {
+        Row: {
+          body: string | null
+          created_at: string
+          created_by: string | null
+          file_name: string | null
+          file_path: string | null
+          file_size: number | null
+          id: string
+          kind: string
+          mime_type: string | null
+          status: string
+          status_detail: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          created_by?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          id?: string
+          kind: string
+          mime_type?: string | null
+          status?: string
+          status_detail?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          created_by?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          id?: string
+          kind?: string
+          mime_type?: string | null
+          status?: string
+          status_detail?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_knowledge_sources_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "sales_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assignment_history: {
         Row: {
           assigned_by: string | null

@@ -1,4 +1,4 @@
-import { CalendarDays, Funnel, Kanban, LayoutGrid, MessagesSquare, Settings, UserCog, Users, type LucideIcon } from "lucide-react"
+import { CalendarDays, Funnel, Kanban, LayoutGrid, MessageSquareText, MessagesSquare, Settings, UserCog, Users, type LucideIcon } from "lucide-react"
 import type { Role } from "@/lib/auth"
 
 export type NavItem = {
@@ -19,7 +19,8 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/inbox", label: "Inbox", icon: MessagesSquare, group: "main" },
   { href: "/customers", label: "Customers", icon: Users, group: "analyze" },
   { href: "/sales", label: "Sales team", icon: UserCog, group: "analyze", roles: ["Admin"] },
-  { href: "/settings", label: "Settings", icon: Settings, group: "bottom", roles: ["Admin"] },
+  { href: "/ai-chat", label: "AI auto chat", icon: MessageSquareText, group: "bottom", roles: ["Admin", "Developer"] },
+  { href: "/settings", label: "Settings", icon: Settings, group: "bottom", roles: ["Admin", "Developer"] },
 ]
 
 export function navFor(role: Role) {
