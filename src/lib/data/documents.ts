@@ -15,7 +15,7 @@ export const SIGNED_URL_SECONDS = 120
 
 export type CustomerDocument = Pick<
   Tables<"customer_documents">,
-  "id" | "customer_id" | "document_type" | "file_name" | "file_path" | "file_size" | "uploaded_at"
+  "id" | "customer_id" | "document_type" | "file_name" | "file_path" | "file_size" | "mime_type" | "uploaded_at"
 >
 
 export type DocumentList =
@@ -28,12 +28,17 @@ export async function listDocuments(
 ): Promise<DocumentList> {
   const { data, error } = await supabase
     .from("customer_documents")
-    .select("id, customer_id, document_type, file_name, file_path, file_size, uploaded_at")
+    .select("id, customer_id, document_type, file_name, file_path, file_size, mime_type, uploaded_at")
     .eq("customer_id", customerId)
     .order("uploaded_at", { ascending: false })
 
   if (error) return { ok: false, message: error.message }
   return { ok: true, documents: data ?? [] }
+}
+
+// Photos (meter photos from the website) open in a viewer on the page; PDFs open in a tab.
+export function isImageDocument(doc: Pick<CustomerDocument, "mime_type">) {
+  return doc.mime_type.startsWith("image/")
 }
 
 export function isDocumentType(value: string): value is DocumentType {

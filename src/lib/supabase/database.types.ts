@@ -355,7 +355,7 @@ export type Database = {
           id: string
           mime_type: string
           uploaded_at: string
-          uploaded_by: string
+          uploaded_by: string | null
         }
         Insert: {
           customer_id: number
@@ -366,7 +366,7 @@ export type Database = {
           id?: string
           mime_type: string
           uploaded_at?: string
-          uploaded_by: string
+          uploaded_by?: string | null
         }
         Update: {
           customer_id?: number
@@ -377,7 +377,7 @@ export type Database = {
           id?: string
           mime_type?: string
           uploaded_at?: string
-          uploaded_by?: string
+          uploaded_by?: string | null
         }
         Relationships: [
           {
@@ -553,8 +553,10 @@ export type Database = {
           phone: string | null
           phone_wa: string | null
           quotation: string | null
+          quote_details: Json | null
           sales_id: string | null
           site_survey: string | null
+          source: string | null
           status: string | null
           status_started_at: string | null
           updated_at: string | null
@@ -576,8 +578,10 @@ export type Database = {
           phone?: string | null
           phone_wa?: string | null
           quotation?: string | null
+          quote_details?: Json | null
           sales_id?: string | null
           site_survey?: string | null
+          source?: string | null
           status?: string | null
           status_started_at?: string | null
           updated_at?: string | null
@@ -599,8 +603,10 @@ export type Database = {
           phone?: string | null
           phone_wa?: string | null
           quotation?: string | null
+          quote_details?: Json | null
           sales_id?: string | null
           site_survey?: string | null
+          source?: string | null
           status?: string | null
           status_started_at?: string | null
           updated_at?: string | null
@@ -916,12 +922,64 @@ export type Database = {
         }
         Relationships: []
       }
+      website_submissions: {
+        Row: {
+          form: string
+          lead_id: number | null
+          photo_path: string | null
+          received_at: string
+          submission_id: string
+        }
+        Insert: {
+          form: string
+          lead_id?: number | null
+          photo_path?: string | null
+          received_at?: string
+          submission_id: string
+        }
+        Update: {
+          form?: string
+          lead_id?: number | null
+          photo_path?: string | null
+          received_at?: string
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_submissions_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
       get_login_email: { Args: { p_username: string }; Returns: string }
+      ingest_website_lead: {
+        Args: {
+          p_email: string
+          p_form: string
+          p_location: string | null
+          p_name: string
+          p_note: string
+          p_phone: string
+          p_quote_details: Json | null
+          p_source: string
+          p_submission_id: string
+        }
+        Returns: {
+          created: boolean
+          lead_id: number
+          other_matches: number[]
+          photo_path: string | null
+          replayed: boolean
+        }[]
+      }
       is_admin: { Args: never; Returns: boolean }
       normalize_phone_wa: { Args: { p_phone: string }; Returns: string }
       record_push_failure: { Args: { p_id: string }; Returns: undefined }
