@@ -6,6 +6,8 @@ import { daysInStatus, followUp, leadName } from "@/components/leads/format"
 import { today } from "@/lib/leads/dates"
 import { LEAD_STATUSES, type LeadStatus } from "@/lib/leads/status"
 import { leadWhere, type MoverFilter, type PipelineFilters } from "@/lib/pipeline/filters"
+import { sourceLabels } from "@/lib/pipeline/labels"
+import { columnOrder } from "@/lib/pipeline/order"
 import { createClient } from "@/lib/supabase/server"
 import { countLeads, leadsQuery } from "./leads"
 
@@ -41,6 +43,17 @@ async function automatedStatuses(supabase: Supabase, leadIds: number[]) {
   return latestAutomated(leadIds, data, data.length < EVENT_LIMIT)
 }
 
+/** Leads on this page that have a WhatsApp conversation. A failed read only hides the pill. */
+async function whatsAppLeadIds(supabase: Supabase, leadIds: number[]) {
+  if (leadIds.length === 0) return new Set<number>()
+  const { data, error } = await supabase.from("wa_conversations").select("lead_id").in("lead_id", leadIds)
+  if (error) {
+    console.error(`Reading WhatsApp links for the pipeline failed: ${error.message}`)
+    return new Set<number>()
+  }
+  return new Set(data.flatMap((row) => (row.lead_id === null ? [] : [row.lead_id])))
+}
+
 /** The leads whose current status the automation set, for the "Moved last by" filter. */
 export type MoverScope = { mover: MoverFilter; aiIds: number[] } | null
 
@@ -71,7 +84,7 @@ export async function moverScope(mover: MoverFilter | ""): Promise<MoverScope> {
 }
 
 /**
- * One page of a column, longest in the status first (leads with no status date
+ * One page of a column, in columnOrder (leads with no status date
  * last), under the board's filters. Built by the same query builder as the
  * leads list and the Overview counts, so "stuck" and "follow-up due" mean the
  * same thing everywhere. Runs as the signed-in user: RLS scopes the rows. The
@@ -97,9 +110,10 @@ export async function loadColumn(options: {
     return scope.aiIds.length > 0 ? query.not("id", "in", `(${scope.aiIds.join(",")})`) : query
   }
 
+  const oldestFirst = columnOrder(status) === "oldest_first"
   const { data, count, error } = await filtered()
-    .order("status_started_at", { ascending: true, nullsFirst: false })
-    .order("id", { ascending: true })
+    .order("status_started_at", { ascending: oldestFirst, nullsFirst: false })
+    .order("id", { ascending: oldestFirst })
     .range(offset, offset + COLUMN_PAGE - 1)
 
   // PGRST103: the offset is past the last row (cards were moved away meanwhile). An empty page.
@@ -113,10 +127,8 @@ export async function loadColumn(options: {
   }
 
   const rows = data ?? []
-  const automated = await automatedStatuses(
-    supabase,
-    rows.map((row) => row.id),
-  )
+  const ids = rows.map((row) => row.id)
+  const [automated, whatsApp] = await Promise.all([automatedStatuses(supabase, ids), whatsAppLeadIds(supabase, ids)])
 
   const cards: PipelineLead[] = rows.map((row) => ({
     id: row.id,
@@ -127,6 +139,7 @@ export async function loadColumn(options: {
     daysInStatus: daysInStatus(row.status_started_at),
     followUp: followUp(row.follow_up_date),
     mover: lastMover(row, automated.get(row.id)),
+    labels: sourceLabels(row.source, whatsApp.has(row.id)),
   }))
 
   return { cards, total }

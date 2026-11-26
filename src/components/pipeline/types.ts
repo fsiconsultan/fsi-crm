@@ -1,4 +1,5 @@
 import type { LeadStatus } from "@/lib/leads/status"
+import type { SourceLabel } from "@/lib/pipeline/labels"
 
 export type Mover = "ai" | "person"
 
@@ -15,6 +16,8 @@ export type PipelineLead = {
   followUp: { label: string; overdue: boolean } | null
   /** Who set the current status; null when it cannot be determined. */
   mover: Mover | null
+  /** Where the lead came from: website quote form, WhatsApp. Empty for staff-entered leads. */
+  labels: SourceLabel[]
   /** Moved on this screen since it loaded, so it is not where the server's order puts it. */
   moved?: boolean
 }

@@ -14,6 +14,7 @@ import { cn } from "@/lib/cn"
 import { LEAD_STATUSES, LEAD_STATUS_SHORT, type LeadStatus } from "@/lib/leads/status"
 import { toneStyle } from "@/lib/leads/status-tone"
 import { pipelineHref, type PipelineFilters } from "@/lib/pipeline/filters"
+import { SOURCE_LABEL_TEXT, type SourceLabel } from "@/lib/pipeline/labels"
 import {
   boardReducer,
   hasMore,
@@ -413,15 +414,18 @@ function LeadCard({
         )}
       >
         {/* The name link covers the card; the Move to button sits above it. */}
-        <Link
-          ref={focusRef}
-          id={cardDomId(lead.id)}
-          href={`/customers/${lead.id}`}
-          draggable={false}
-          className="block text-sm font-medium leading-5 after:absolute after:inset-0 after:rounded-[12px]"
-        >
-          <span className="line-clamp-2 break-words">{lead.name}</span>
-        </Link>
+        <div className="flex items-start gap-2">
+          <Link
+            ref={focusRef}
+            id={cardDomId(lead.id)}
+            href={`/customers/${lead.id}`}
+            draggable={false}
+            className="block min-w-0 flex-1 text-sm font-medium leading-5 after:absolute after:inset-0 after:rounded-[12px]"
+          >
+            <span className="line-clamp-2 break-words">{lead.name}</span>
+          </Link>
+          <SourcePills labels={lead.labels} />
+        </div>
         {place ? <p className="mt-0.5 truncate text-xs text-muted">{place}</p> : null}
 
         <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs tabular-nums text-muted">
@@ -478,4 +482,28 @@ function FollowUp({ followUp }: { followUp: PipelineLead["followUp"] }) {
   if (!followUp) return null
   if (followUp.overdue) return <Chip tone="negative">Follow-up overdue, {followUp.label}</Chip>
   return <span>Follow-up {followUp.label}</span>
+}
+
+const SOURCE_PILL_TONE: Record<SourceLabel, string> = {
+  web_quote: "bg-warning-soft text-warning",
+  // Mixed with ink: plain positive green on its soft tint is 4.38:1, under AA for 11px text.
+  whatsapp: "bg-positive-soft text-[color-mix(in_srgb,var(--positive)_85%,var(--ink))]",
+}
+
+// Where the lead came from, top right of the card: orange for the website quote
+// form, green for WhatsApp. Text, not just color, carries the meaning.
+function SourcePills({ labels }: { labels: SourceLabel[] }) {
+  if (labels.length === 0) return null
+  return (
+    <span className="flex max-w-[60%] shrink-0 flex-wrap justify-end gap-1">
+      {labels.map((label) => (
+        <span
+          key={label}
+          className={`inline-flex items-center whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-medium leading-4 ${SOURCE_PILL_TONE[label]}`}
+        >
+          {SOURCE_LABEL_TEXT[label]}
+        </span>
+      ))}
+    </span>
+  )
 }
