@@ -1,0 +1,163 @@
+"use client"
+
+import Link from "next/link"
+import { useActionState, useEffect, useRef } from "react"
+import { createLead, editLead, type LeadField, type LeadFormState } from "@/app/(app)/leads/actions"
+import { Button, buttonClass } from "@/components/ui/button"
+import { controlClass } from "@/components/ui/control"
+import { Field } from "@/components/ui/field"
+import type { SalesUser } from "@/lib/data/leads"
+import { LEAD_STATUSES, LEAD_TYPES, NO_STATUS_LABEL, isLeadStatus } from "@/lib/leads/status"
+
+export function LeadForm({
+  leadId,
+  loadedUpdatedAt,
+  initial,
+  salesUsers,
+  back,
+}: {
+  leadId: number | null
+  /** The row's updated_at when the page loaded; the edit is refused if it has changed since. */
+  loadedUpdatedAt: string
+  initial: Record<LeadField, string>
+  /** Only Admin assigns leads; null hides the field and the lead stays with its owner. */
+  salesUsers: SalesUser[] | null
+  back: string
+}) {
+  const [state, action, pending] = useActionState<LeadFormState, FormData>(
+    leadId ? editLead.bind(null, leadId, loadedUpdatedAt) : createLead,
+    { message: null, errors: {}, values: initial },
+  )
+  const { values, errors } = state
+
+  // `pending` only turns true after React re-renders, so two quick taps on
+  // Save could both submit and create the lead twice. This flag is set in the
+  // same tick as the first submit and cleared when its answer comes back.
+  const submitting = useRef(false)
+  useEffect(() => {
+    submitting.current = false
+  }, [state])
+
+  // Shared attributes for one field. Selects also get a key on their Field so
+  // React applies the value the server echoes back after a failed save.
+  const control = (field: LeadField) => ({
+    id: field,
+    name: field,
+    defaultValue: values[field],
+    "aria-invalid": errors[field] ? true : undefined,
+    "aria-describedby": errors[field] ? `${field}-error` : undefined,
+    className: controlClass,
+  })
+
+  return (
+    <form
+      action={action}
+      onSubmit={(event) => {
+        if (submitting.current) event.preventDefault()
+        else submitting.current = true
+      }}
+      noValidate
+      className="flex flex-col gap-6"
+    >
+      <input type="hidden" name="back" value={back} />
+
+      {state.message ? (
+        <p role="alert" className="rounded-[var(--radius-control)] bg-negative-soft px-4 py-3 text-sm text-ink">
+          {state.message}
+        </p>
+      ) : null}
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <Field htmlFor="customer_name" label="Customer name" error={errors.customer_name}>
+          <input {...control("customer_name")} required autoComplete="off" />
+        </Field>
+        <Field htmlFor="phone" label="Phone or WhatsApp" error={errors.phone}>
+          <input {...control("phone")} required type="tel" inputMode="tel" autoComplete="off" placeholder="0812 0000 0000" />
+        </Field>
+        <Field htmlFor="email" label="Email" hint="Optional" error={errors.email}>
+          <input {...control("email")} type="email" inputMode="email" autoCapitalize="none" autoComplete="off" placeholder="name@example.com" />
+        </Field>
+        <Field htmlFor="business" label="Business" hint="Optional" error={errors.business}>
+          <input {...control("business")} autoComplete="off" />
+        </Field>
+        <Field htmlFor="location" label="Location" hint="Optional" error={errors.location} className="md:col-span-2">
+          <input {...control("location")} autoComplete="off" />
+        </Field>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 border-t border-line pt-6 md:grid-cols-2 xl:grid-cols-3">
+        <Field key={`type:${values.lead_type}`} htmlFor="lead_type" label="Lead type" error={errors.lead_type}>
+          <select {...control("lead_type")}>
+            {LEAD_TYPES.map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field
+          key={`status:${values.status}`}
+          htmlFor="status"
+          label="Status"
+          hint={leadId ? "Changing it restarts the days-in-status count. A lead cannot go back to No status." : undefined}
+          error={errors.status}
+        >
+          <select {...control("status")}>
+            {/* A stored value that is not in today's list stays selectable, so saving
+                other fields never swaps it for the first status in the list. */}
+            {leadId && !initial.status ? <option value="">{NO_STATUS_LABEL} (leave as it is)</option> : null}
+            {leadId && initial.status && !isLeadStatus(initial.status) ? (
+              <option value={initial.status}>{initial.status} (leave as it is)</option>
+            ) : null}
+            {LEAD_STATUSES.map((status) => (
+              <option key={status} value={status}>
+                {status}
+              </option>
+            ))}
+          </select>
+        </Field>
+        {salesUsers ? (
+          <Field key={`sales:${values.sales_id}`} htmlFor="sales_id" label="Salesperson" error={errors.sales_id}>
+            <select {...control("sales_id")} required>
+              <option value="">Choose a salesperson</option>
+              {salesUsers.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.name}
+                  {user.status === "Inactive" ? " (inactive)" : ""}
+                </option>
+              ))}
+            </select>
+          </Field>
+        ) : null}
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 border-t border-line pt-6 xl:grid-cols-4">
+        <Field htmlFor="follow_up_date" label="Follow-up date" error={errors.follow_up_date}>
+          <input {...control("follow_up_date")} type="date" />
+        </Field>
+        <Field htmlFor="appointment" label="Appointment" error={errors.appointment}>
+          <input {...control("appointment")} type="date" />
+        </Field>
+        <Field htmlFor="site_survey" label="Site survey" error={errors.site_survey}>
+          <input {...control("site_survey")} type="date" />
+        </Field>
+        <Field htmlFor="quotation" label="Quotation" error={errors.quotation}>
+          <input {...control("quotation")} type="date" />
+        </Field>
+        <Field htmlFor="notes" label="Notes" hint="Optional" error={errors.notes} className="col-span-2 xl:col-span-4">
+          <textarea {...control("notes")} rows={4} className={`${controlClass} py-2.5`} />
+        </Field>
+      </div>
+
+      {/* On a phone the save bar stays at the bottom of the screen, above the home indicator. */}
+      <div className="flex gap-2 max-md:sticky max-md:bottom-0 max-md:z-10 max-md:-mx-4 max-md:-mb-4 max-md:rounded-b-[var(--radius-card)] max-md:border-t max-md:border-line max-md:bg-surface max-md:px-4 max-md:pb-[max(12px,env(safe-area-inset-bottom))] max-md:pt-3">
+        <Button type="submit" variant="primary" disabled={pending} className="max-md:flex-1">
+          {pending ? "Saving…" : leadId ? "Save changes" : "Add lead"}
+        </Button>
+        <Link href={back} className={buttonClass("ghost")}>
+          Cancel
+        </Link>
+      </div>
+    </form>
+  )
+}

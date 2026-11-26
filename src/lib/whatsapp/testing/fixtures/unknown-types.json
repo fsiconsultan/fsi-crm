@@ -1,0 +1,49 @@
+{
+  "object": "whatsapp_business_account",
+  "entry": [
+    {
+      "id": "WABA_ID_PLACEHOLDER",
+      "changes": [
+        {
+          "field": "messages",
+          "value": {
+            "messaging_product": "whatsapp",
+            "metadata": {
+              "display_phone_number": "620000000000",
+              "phone_number_id": "PHONE_NUMBER_ID_PLACEHOLDER"
+            },
+            "contacts": [{ "profile": { "name": "Test Customer" }, "wa_id": "6281200000001" }],
+            "messages": [
+              {
+                "from": "6281200000001",
+                "id": "wamid.TEST_IMAGE_0001",
+                "timestamp": "1794444100",
+                "type": "image",
+                "image": { "mime_type": "image/jpeg", "sha256": "PLACEHOLDER", "id": "MEDIA_ID_PLACEHOLDER" }
+              },
+              {
+                "from": "6281200000001",
+                "id": "wamid.TEST_REACTION_0001",
+                "timestamp": "1794444101",
+                "type": "reaction",
+                "reaction": { "message_id": "wamid.TEST_INBOUND_0001", "emoji": "+" }
+              },
+              {
+                "from": "6281200000001",
+                "id": "wamid.TEST_FUTURE_0001",
+                "timestamp": "1794444102",
+                "type": "a_type_meta_adds_next_year",
+                "a_type_meta_adds_next_year": { "anything": [1, 2, 3] }
+              },
+              { "type": "text" },
+              null
+            ]
+          }
+        },
+        { "field": "account_update", "value": { "event": "SOMETHING_ELSE" } },
+        { "field": "messages" }
+      ]
+    },
+    null
+  ]
+}
