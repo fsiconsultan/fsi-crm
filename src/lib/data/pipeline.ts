@@ -6,6 +6,7 @@ import { daysInStatus, followUp, leadName } from "@/components/leads/format"
 import { today } from "@/lib/leads/dates"
 import { LEAD_STATUSES, type LeadStatus } from "@/lib/leads/status"
 import { leadWhere, type MoverFilter, type PipelineFilters } from "@/lib/pipeline/filters"
+import { columnOrder } from "@/lib/pipeline/order"
 import { createClient } from "@/lib/supabase/server"
 import { countLeads, leadsQuery } from "./leads"
 
@@ -71,7 +72,7 @@ export async function moverScope(mover: MoverFilter | ""): Promise<MoverScope> {
 }
 
 /**
- * One page of a column, longest in the status first (leads with no status date
+ * One page of a column, in columnOrder (leads with no status date
  * last), under the board's filters. Built by the same query builder as the
  * leads list and the Overview counts, so "stuck" and "follow-up due" mean the
  * same thing everywhere. Runs as the signed-in user: RLS scopes the rows. The
@@ -97,9 +98,10 @@ export async function loadColumn(options: {
     return scope.aiIds.length > 0 ? query.not("id", "in", `(${scope.aiIds.join(",")})`) : query
   }
 
+  const oldestFirst = columnOrder(status) === "oldest_first"
   const { data, count, error } = await filtered()
-    .order("status_started_at", { ascending: true, nullsFirst: false })
-    .order("id", { ascending: true })
+    .order("status_started_at", { ascending: oldestFirst, nullsFirst: false })
+    .order("id", { ascending: oldestFirst })
     .range(offset, offset + COLUMN_PAGE - 1)
 
   // PGRST103: the offset is past the last row (cards were moved away meanwhile). An empty page.
