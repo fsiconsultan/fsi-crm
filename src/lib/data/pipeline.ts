@@ -6,6 +6,7 @@ import { daysInStatus, followUp, leadName } from "@/components/leads/format"
 import { today } from "@/lib/leads/dates"
 import { LEAD_STATUSES, type LeadStatus } from "@/lib/leads/status"
 import { leadWhere, type MoverFilter, type PipelineFilters } from "@/lib/pipeline/filters"
+import { sourceLabels } from "@/lib/pipeline/labels"
 import { columnOrder } from "@/lib/pipeline/order"
 import { createClient } from "@/lib/supabase/server"
 import { countLeads, leadsQuery } from "./leads"
@@ -40,6 +41,17 @@ async function automatedStatuses(supabase: Supabase, leadIds: number[]) {
     return new Map<number, AutomatedStatus | null>()
   }
   return latestAutomated(leadIds, data, data.length < EVENT_LIMIT)
+}
+
+/** Leads on this page that have a WhatsApp conversation. A failed read only hides the pill. */
+async function whatsAppLeadIds(supabase: Supabase, leadIds: number[]) {
+  if (leadIds.length === 0) return new Set<number>()
+  const { data, error } = await supabase.from("wa_conversations").select("lead_id").in("lead_id", leadIds)
+  if (error) {
+    console.error(`Reading WhatsApp links for the pipeline failed: ${error.message}`)
+    return new Set<number>()
+  }
+  return new Set(data.flatMap((row) => (row.lead_id === null ? [] : [row.lead_id])))
 }
 
 /** The leads whose current status the automation set, for the "Moved last by" filter. */
@@ -115,10 +127,8 @@ export async function loadColumn(options: {
   }
 
   const rows = data ?? []
-  const automated = await automatedStatuses(
-    supabase,
-    rows.map((row) => row.id),
-  )
+  const ids = rows.map((row) => row.id)
+  const [automated, whatsApp] = await Promise.all([automatedStatuses(supabase, ids), whatsAppLeadIds(supabase, ids)])
 
   const cards: PipelineLead[] = rows.map((row) => ({
     id: row.id,
@@ -129,6 +139,7 @@ export async function loadColumn(options: {
     daysInStatus: daysInStatus(row.status_started_at),
     followUp: followUp(row.follow_up_date),
     mover: lastMover(row, automated.get(row.id)),
+    labels: sourceLabels(row.source, whatsApp.has(row.id)),
   }))
 
   return { cards, total }

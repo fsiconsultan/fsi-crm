@@ -23,6 +23,7 @@ function card(id: number, extra: Partial<PipelineLead> = {}): PipelineLead {
     daysInStatus: 30,
     followUp: null,
     mover: "ai",
+    labels: [],
     ...extra,
   }
 }
